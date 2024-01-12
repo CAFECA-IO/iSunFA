@@ -1,19 +1,48 @@
-import { Inter } from 'next/font/google';
+import Head from 'next/head';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import React from 'react';
+import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
+import { ILocale } from '../interfaces/locale';
+import LandingPageBody from '../components/landing_page_body/landing_page_body';
 
-const inter = Inter({ subsets: ['latin'] });
-
-export default function Home() {
+function LandingPage() {
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">pages/index.tsx</code>
-        </p>
-      </div>
-    </main>
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+        <title>iSunFA</title>
+        <meta
+          name="description"
+          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+        />
+        <meta name="author" content="CAFECA" />
+        <meta name="keywords" content="區塊鏈,人工智慧,會計" />
+
+        <meta property="og:title" content="iSunFA" />
+        <meta
+          property="og:description"
+          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+        />
+      </Head>
+
+      {/*  Info:(20230712 - Julian) Navbar */}
+      <LandingNavBar />
+
+      <main>
+        <LandingPageBody />
+      </main>
+    </>
   );
 }
+
+const getStaticPropsFunction = async ({ locale }: ILocale) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
+
+export const getStaticProps = getStaticPropsFunction;
+
+export default LandingPage;
