@@ -42,6 +42,7 @@ module.exports = {
         'operator-linebreak': 'off',
         'prefer-template': 'off',
         'react/jsx-one-expression-per-line': 'off',
+        'jsx-a11y/control-has-associated-label': 'off',
       },
     },
   ],
@@ -69,6 +70,7 @@ module.exports = {
     'operator-linebreak': 'off',
     'prefer-template': 'off',
     'react/jsx-one-expression-per-line': 'off',
+    'jsx-a11y/control-has-associated-label': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

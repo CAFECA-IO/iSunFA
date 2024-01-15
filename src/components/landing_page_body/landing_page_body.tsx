@@ -163,7 +163,6 @@ function LandingPageBody() {
                 className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryBlue hover:text-primaryBlue disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
                 <AiOutlineLeft className="text-2xl" />
-                ``
               </button>
               <button
                 type="button"
@@ -172,7 +171,6 @@ function LandingPageBody() {
                 className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryBlue hover:text-primaryBlue disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
                 <AiOutlineRight className="text-2xl" />
-                ``
               </button>
             </div>
           </div>
