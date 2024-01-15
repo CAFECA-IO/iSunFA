@@ -160,7 +160,7 @@ function LandingPageBody() {
                 type="button"
                 disabled={scrollLeftState <= 0}
                 onClick={slideLeft}
-                className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryBlue hover:text-primaryBlue disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
+                className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryYellow hover:text-primaryYellow disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
                 <AiOutlineLeft className="text-2xl" />
               </button>
@@ -168,7 +168,7 @@ function LandingPageBody() {
                 type="button"
                 disabled={scrollLeftState >= SCROLL_END}
                 onClick={slideRight}
-                className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryBlue hover:text-primaryBlue disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
+                className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryYellow hover:text-primaryYellow disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
                 <AiOutlineRight className="text-2xl" />
               </button>

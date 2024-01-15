@@ -59,7 +59,7 @@ function I18n() {
       </div>
       <div ref={targetRef}>
         <ul
-          className={`absolute left-0 top-12 grid h-auto w-full grid-cols-1 rounded bg-darkPurple2 font-sans ${
+          className={`absolute left-0 top-12 grid h-auto w-full grid-cols-1 rounded bg-secondaryBlue font-sans ${
             componentVisible ? 'visible grid-rows-1 opacity-100' : 'invisible grid-rows-0 opacity-0'
           } drop-shadow-lg transition-all duration-300 ease-in-out`}
         >
