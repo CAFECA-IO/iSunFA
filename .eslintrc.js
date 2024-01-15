@@ -41,6 +41,7 @@ module.exports = {
         'jsx-a11y/no-noninteractive-element-interactions': 'off',
         'operator-linebreak': 'off',
         'prefer-template': 'off',
+        'react/jsx-one-expression-per-line': 'off',
       },
     },
   ],
@@ -67,6 +68,7 @@ module.exports = {
     'max-len': 'off',
     'operator-linebreak': 'off',
     'prefer-template': 'off',
+    'react/jsx-one-expression-per-line': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題
