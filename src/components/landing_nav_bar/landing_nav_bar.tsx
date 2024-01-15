@@ -1,14 +1,10 @@
-// TODO: temp solution (20240112 - Shirley)
-/* eslint-disable */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
-
 import { BFAURL } from '../../constants/url';
-
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import I18n from '../../components/i18n/i18n';
+import I18n from '../i18n/i18n';
 
 import { TranslateFunction } from '../../interfaces/locale';
 
@@ -30,7 +26,7 @@ function LandingNavBar() {
   }, []);
 
   /* Info:(20230814 - Julian) Change Navbar Background Style */
-  const bgStyle = scroll >= 300 ? 'bg-darkPurple shadow-xl' : 'bg-transparent';
+  const bgStyle = scroll >= 300 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
   /* Info: (20230712 - Julian) close menu when click outer */
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
@@ -45,7 +41,7 @@ function LandingNavBar() {
       <ul className="flex flex-1 space-x-5">
         <li>
           <Link href={BFAURL.HOME}>
-            <Image src="/logo/logo.svg" width={190} height={40} alt="iSunFA_logo" />
+            <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
           </Link>
         </li>
         <li>
@@ -55,16 +51,18 @@ function LandingNavBar() {
       <ul className="flex items-center space-x-10">
         <li>
           {/* ToDo: (20230727 - Julian) contact us page */}
+          {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
           <Link href={BFAURL.CONTACT_US}>{t('NAV_BAR.CONTACT_US')}</Link>
         </li>
         <li>
-          <Link
+          {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
+          {/* <Link
             href={BFAURL.APP}
             target="_blank"
-            className="rounded-lg bg-violet px-10 py-3 text-white hover:bg-hoverWhite hover:text-black"
+            className="rounded-lg bg-primaryYellow text-secondaryBlue px-10 py-3 hover:bg-hoverWhite"
           >
             {t('NAV_BAR.LAUNCH_APP')}
-          </Link>
+          </Link> */}
         </li>
       </ul>
     </div>
@@ -74,32 +72,34 @@ function LandingNavBar() {
   const mobileNavBar = (
     <div
       ref={targetRef}
-      className="relative flex h-80px w-screen items-center justify-center bg-darkPurple p-4 text-white shadow-xl lg:hidden"
+      className="relative flex h-80px w-screen items-center justify-center bg-secondaryBlue p-4 text-white shadow-xl lg:hidden"
     >
       {/* Info: (20230712 - Julian) hamburger */}
-      <button className="absolute left-4 p-10px" onClick={clickMenuHandler}>
+      <button className="absolute left-4 p-10px" onClick={clickMenuHandler} type="button">
         <Image src="/icons/hamburger.svg" width={24} height={24} alt="hamburger_icon" />
       </button>
       <div className="">
         <Link href={BFAURL.HOME}>
-          <Image src="/logo/logo_small.svg" width={44} height={60} alt="iSunFA_logo" />
+          <Image src="/logo/isunfa_logo_small.svg" width={50} height={60} alt="iSunFA_logo" />
         </Link>
       </div>
       <ul
-        className={`absolute left-0 top-0 mt-80px flex h-screen w-80vw flex-col items-center overflow-hidden bg-darkPurple2 px-5 ${
+        className={`absolute left-0 top-0 mt-80px flex h-screen w-80vw flex-col items-center overflow-hidden bg-secondaryBlue px-5 ${
           componentVisible ? 'visible translate-x-0' : 'invisible -translate-x-full'
         } drop-shadow-xlSide transition-all duration-300 ease-in-out`}
       >
         <li className="px-10 py-4">
           {/* ToDo: (20230727 - Julian) contact us page */}
+          {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
           <Link href={BFAURL.CONTACT_US} className="px-10 py-4">
             {t('NAV_BAR.CONTACT_US')}
           </Link>
         </li>
         <li className="px-10 py-4">
-          <Link href={BFAURL.APP} target="_blank" className="px-10 py-4">
+          {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
+          {/* <Link href={BFAURL.APP} target="_blank" className="px-10 py-4">
             {t('NAV_BAR.LAUNCH_APP')}
-          </Link>
+          </Link> */}
         </li>
         <li className="px-10 py-4">
           <I18n />

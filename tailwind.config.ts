@@ -3,6 +3,9 @@ module.exports = {
   content: ['./src/**/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      aspectRatio: {
+        '4/3': '4 / 3',
+      },
       colors: {
         darkPurple: '#24274A',
         darkPurple2: '#2C315B',
@@ -32,6 +35,9 @@ module.exports = {
         primaryBlue: '#11FFF5',
         'primaryBlue-500': 'rgba(17, 255, 245, 0.5)',
         hoverWhite: '#F0F0F0',
+
+        primaryYellow: '#FFA502',
+        secondaryBlue: '#1A2E50',
       },
       backgroundImage: {
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
@@ -275,6 +281,8 @@ module.exports = {
         '80vh': '80vh',
         '95vh': '95vh',
         '120vh': '120vh',
+        '140vh': '140vh',
+        '150vh': '150vh',
 
         '70vw': '70vw',
         '80vw': '80vw',
@@ -336,6 +344,7 @@ module.exports = {
       fontFamily: {
         inter: ['Inter', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
+        barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
       },
       maxWidth: {
         '80px': '80px',

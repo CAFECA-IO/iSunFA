@@ -1,12 +1,4 @@
-// TODO: (20240112 - Shirley) temp solution
-// eslint-disable-next-line spaced-comment
-/* eslint-disable no-console */
-/* eslint-disable jsx-a11y/label-has-associated-control */
-/* eslint-disable react/button-has-type */
-/* eslint-disable jsx-a11y/control-has-associated-label */
-/* eslint-disable react/jsx-one-expression-per-line */
-import React from 'react';
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
@@ -31,14 +23,14 @@ function LandingPageBody() {
   };
 
   useEffect(() => {
-    if (!scrl.current) return;
+    // Info: return `undefined` to fit the eslint rule `consistent-return` (20240115 - Shirley)
+    if (!scrl.current) return undefined;
+
     /* Info:(20230815 - Julian) 設定監聽事件，將捲軸位置更新到 scrollLeft */
     const { scrollLeft } = scrl.current; // Destructuring here
     const onScroll = () => setScrollLeftState(scrollLeft);
     scrl.current.addEventListener('scroll', onScroll);
 
-    // TODO: (20240112 - Shirley) temp solution
-    // eslint-disable-next-line consistent-return
     return () => {
       if (scrl.current) scrl.current.removeEventListener('scroll', onScroll);
     };
@@ -49,7 +41,7 @@ function LandingPageBody() {
   const slideRight = () => slide(200);
 
   const massiveDataList = massiveDataContent.map(({ icon, text, alt }, index) => (
-    // TODO: (20240112 - Shirley) temp solution
+    // Info: (20240112 - Shirley) it's ok to use index as key in this case
     // eslint-disable-next-line react/no-array-index-key
     <div key={index} className="flex flex-col items-center space-y-4 px-4">
       <div className="relative h-50px w-50px">
@@ -61,7 +53,7 @@ function LandingPageBody() {
 
   const servicesList = servicesContent.map(({ image, alt, description }, index) => (
     <div
-      // TODO: (20240112 - Shirley) temp solution
+      // Info: (20240112 - Shirley) it's ok to use index as key in this case
       // eslint-disable-next-line react/no-array-index-key
       key={index}
       className="relative flex flex-col items-center rounded-2xl bg-purpleLinear p-10 drop-shadow-101"
@@ -95,16 +87,19 @@ function LandingPageBody() {
   ));
 
   return (
-    <div className="flex min-h-screen w-screen flex-col overflow-hidden font-inter">
+    <div className="flex min-h-screen w-screen flex-col overflow-hidden font-inter bg-secondaryBlue">
       {/* Info:(20230815 - Julian) Pipe Background Image */}
-      <div className="relative flex h-120vh w-full flex-col items-center bg-pipe bg-auto bg-right bg-no-repeat lg:bg-cover lg:bg-top-4">
+      <div className="relative flex h-140vh w-full flex-col items-center bg-pipe bg-auto bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
         {/* Info:(20230711 - Julian) Main Title Block */}
         <div className="flex h-screen w-full flex-col items-center justify-center space-y-10 px-4 py-12 text-center">
-          <h6 className="font-roboto text-6xl font-bold tracking-wider lg:text-7xl">
+          <h6 className="hollowYellow font-roboto text-6xl font-bold tracking-wider lg:text-7xl">
             {t('LANDING_PAGE.MAIN_TITLE')}
           </h6>
-          <h1 className="text-2xl font-bold tracking-wide text-hoverWhite lg:text-6xl">
-            {t('LANDING_PAGE.MAIN_SUBTITLE')}
+          <h1 className="text-2xl font-bold tracking-widest text-hoverWhite lg:text-6xl">
+            {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
+          </h1>
+          <h1 className="text-2xl font-bold tracking-widest text-hoverWhite lg:text-6xl">
+            {t('LANDING_PAGE.MAIN_SUBTITLE_2')}
           </h1>
           {/* Info:(20230711 - Julian) Arrow */}
           <Link href="#iSunFA_101" scroll={false} className="absolute bottom-80 lg:bottom-20">
@@ -113,15 +108,18 @@ function LandingPageBody() {
         </div>
       </div>
 
-      <div className="flex h-fit w-full flex-col items-center bg-lightBalls bg-cover bg-top bg-no-repeat lg:pb-52">
+      <div className="flex h-fit w-full flex-col px-5 items-center lg:pb-52">
         {/* Info:(20230815 - Julian) iSunFA 101 Block */}
-        <div id="iSunFA_101" className="w-full px-4 py-12 lg:px-20 lg:py-120px">
-          <div className="flex flex-col items-center space-y-10 rounded-2xl bg-101 bg-cover bg-center bg-no-repeat px-4 py-12 drop-shadow-101 lg:flex-row lg:space-x-20 lg:space-y-0 lg:p-20">
-            <div className="flex h-full flex-col items-center space-y-10 whitespace-nowrap lg:w-1/2 lg:items-start">
+        <div id="iSunFA_101" className="w-full py-0 lg:px-0 lg:py-120px">
+          <div
+            // style={{ minHeight: '500px', borderRadius: '25px' }}
+            className="flex flex-col items-center space-y-10 bg-101 bg-cover bg-center bg-no-repeat px-5 py-28 drop-shadow-101 lg:min-h-500px min-h-200px lg:flex-row lg:space-x-20 lg:space-y-0 lg:py-20 lg:px-28 xl:px-40"
+          >
+            <div className="flex h-full flex-col items-center space-y-5 lg:space-y-10 whitespace-nowrap lg:w-1/2 lg:items-start">
               <h2 className="text-32px font-bold lg:text-6xl">
                 {t('LANDING_PAGE.iSunFA_101_TITLE')}:
               </h2>
-              <div className="w-fit rounded-xl bg-darkPurple3 px-5 py-10px text-lg">
+              <div className="w-fit rounded-xl bg-primaryYellow px-5 py-10px text-lg text-secondaryBlue font-bold">
                 {t('LANDING_PAGE.iSunFA_101_SUBTITLE')}
               </div>
             </div>
@@ -134,7 +132,7 @@ function LandingPageBody() {
         {/* Info:(20230711 - Julian) Features Block */}
         <div className="flex flex-col items-center space-y-16 px-4 py-20 text-center font-roboto lg:h-450px lg:px-20">
           <div className="flex flex-col">
-            <h3 className="text-xl font-bold text-primaryBlue">
+            <h3 className="text-xl font-bold text-primaryYellow">
               {t('LANDING_PAGE.FEATURES_SUBTITLE')}
             </h3>
             <h2 className="text-2xl font-bold lg:text-5xl">{t('LANDING_PAGE.FEATURES_TITLE')}</h2>
@@ -144,31 +142,37 @@ function LandingPageBody() {
         </div>
       </div>
 
-      <div className="flex h-fit w-full flex-col items-center bg-lightBallsReverse bg-cover bg-top bg-no-repeat pb-100px">
+      <div className="flex h-fit w-full flex-col items-center pb-100px">
         {/* Info:(20230815 - Julian) Services Block */}
         <div className="relative flex w-full flex-col space-y-20 py-20">
           <div className="flex items-center justify-center space-x-20 px-20">
             {/* Info:(20230711 - Julian) Services Title */}
             <h2 className="text-center text-2xl font-bold leading-loose lg:text-6xl">
               {t('LANDING_PAGE.SERVICES_TITLE_1')}
-              <span className="text-primaryBlue">{t('LANDING_PAGE.SERVICES_TITLE_HIGHLIGHT')}</span>
+              <span className="text-primaryYellow">
+                {t('LANDING_PAGE.SERVICES_TITLE_HIGHLIGHT')}
+              </span>
               {t('LANDING_PAGE.SERVICES_TITLE_2')}
             </h2>
             {/* Info:(20230711 - Julian) Arrow button, only show on desktop */}
             <div className="hidden items-center space-x-6 lg:flex">
               <button
+                type="button"
                 disabled={scrollLeftState <= 0}
                 onClick={slideLeft}
                 className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryBlue hover:text-primaryBlue disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
                 <AiOutlineLeft className="text-2xl" />
+                ``
               </button>
               <button
+                type="button"
                 disabled={scrollLeftState >= SCROLL_END}
                 onClick={slideRight}
                 className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryBlue hover:text-primaryBlue disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
                 <AiOutlineRight className="text-2xl" />
+                ``
               </button>
             </div>
           </div>
@@ -189,7 +193,7 @@ function LandingPageBody() {
           <div className="mb-20 flex w-full flex-col items-center space-y-10 lg:hidden">
             <h2 className="text-2xl font-bold">
               {t('LANDING_PAGE.WHY_iSunFA_TITLE')}
-              <span className="text-primaryBlue">
+              <span className="text-primaryYellow">
                 {t('LANDING_PAGE.WHY_iSunFA_TITLE_HIGHLIGHT')}
               </span>
             </h2>
@@ -210,7 +214,7 @@ function LandingPageBody() {
           <div className="ml-20 hidden flex-col space-y-10 lg:flex">
             <h2 className="text-6xl font-bold">
               {t('LANDING_PAGE.WHY_iSunFA_TITLE')}
-              <span className="text-primaryBlue">
+              <span className="text-primaryYellow">
                 {t('LANDING_PAGE.WHY_iSunFA_TITLE_HIGHLIGHT')}
               </span>
             </h2>

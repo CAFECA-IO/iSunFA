@@ -14,7 +14,7 @@ const Custom404 = () => {
   return (
     <>
       <Head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon/favicon.ico" />
         <title>{headTitle}</title>
       </Head>
 

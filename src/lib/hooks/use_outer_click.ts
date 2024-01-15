@@ -1,7 +1,4 @@
-// TODO: temp solution (20230112 - Shirley)
-/* eslint-disable operator-linebreak */
 import { useEffect, useRef } from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import useStateRef from 'react-usestateref';
 
 function useOuterClick<T extends HTMLElement>(initialVisibleState: boolean) {

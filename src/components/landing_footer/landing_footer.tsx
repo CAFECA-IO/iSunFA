@@ -1,5 +1,3 @@
-// TODO: temp solution (20240112 - Shirley)
-/* eslint-disable */
 import Link from 'next/link';
 import Image from 'next/image';
 import { BiLogoGithub } from 'react-icons/bi';
@@ -16,22 +14,22 @@ import {
 
 function LandingFooter() {
   return (
-    <div className="flex flex-col space-y-12 bg-darkPurple px-4 py-12 font-roboto font-roboto drop-shadow-xlReverse lg:px-20">
+    <div className="flex flex-col space-y-12 bg-secondaryBlue px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-20">
       <div className="flex flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
         <Link href={BFAURL.HOME}>
           {/* Info:(20230711 - Julian) Desktop Logo */}
           <Image
             className="hidden lg:block"
-            src={'/logo/iSunFA_logo_small.svg'}
-            alt="iSunFAaa_logo"
+            src="/logo/isunfa_logo_small.svg"
+            alt="iSunFA_logo"
             width={75}
             height={100}
           />
           {/* Info:(20230711 - Julian) Mobile Logo */}
           <Image
             className="block lg:hidden"
-            src={'/logo/iSunFAaa_logo.svg'}
-            alt="iSunFAaa_logo"
+            src="/logo/isunfa_logo.svg"
+            alt="iSunFA_logo"
             width={192}
             height={40}
           />

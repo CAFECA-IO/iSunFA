@@ -23,11 +23,12 @@
     "SEARCH_PLACEHOLDER": "想知道什麼？"
   },
   "LANDING_PAGE": {
-    "MAIN_TITLE": "稗法",
-    "MAIN_SUBTITLE": "區塊鏈人工智慧鑑識會計與審計",
-    "iSunFA_101_TITLE": "稗法基礎入門",
+    "MAIN_TITLE": "陽光智能會計",
+    "MAIN_SUBTITLE_1": "區塊鏈人工智慧",
+    "MAIN_SUBTITLE_2": "鑑識會計與審計",
+    "iSunFA_101_TITLE": "陽光智能會計基礎入門",
     "iSunFA_101_SUBTITLE": "通往成功的指南",
-    "iSunFA_101_CONTENT": "稗法整合區塊鏈與人工智慧，為鑑識會計與審計提供完美的合規解決方案。稗法提供即時帳務與資產監控、智能異常檢測和持續審計服務，以保障企業資產的安全，使一切活動符合監管標準。憑藉稗法讓投資人放心，免除合規擔憂，企業得以專注於創新發展。",
+    "iSunFA_101_CONTENT": "陽光智能會計整合區塊鏈與人工智慧，為鑑識會計與審計提供完美的合規解決方案。陽光智能會計提供即時帳務與資產監控、智能異常檢測和持續審計服務，以保障企業資產的安全，使一切活動符合監管標準。憑藉陽光智能會計讓投資人放心，免除合規擔憂，企業得以專注於創新發展。",
     "FEATURES_SUBTITLE": "我們的特色",
     "FEATURES_TITLE": "龐大數據即時比對",
     "MASSIVE_DATA_WALLET": "分析超過 2 億個交易地址",
@@ -44,7 +45,7 @@
     "SERVICES_DESCRIPTION_4": "區塊鏈系統安全測試",
     "SERVICES_DESCRIPTION_5": "智能合約安全測試",
     "WHY_iSunFA_TITLE": "為何選擇",
-    "WHY_iSunFA_TITLE_HIGHLIGHT": "稗法？",
+    "WHY_iSunFA_TITLE_HIGHLIGHT": "陽光智能會計？",
     "WHY_iSunFA_DESCRIPTION_1": "您目前持有的虛擬貨幣資產安全嗎？",
     "WHY_iSunFA_DESCRIPTION_2": "當您的公司投資於虛擬貨幣資產時，應該如何進行管理和核算？",
     "WHY_iSunFA_DESCRIPTION_3": "金融科技初創如何確保合規？",
@@ -335,8 +336,8 @@
     "BINANCE_COLDWALLET": "幣安冷錢包"
   },
   "FOOTER": {
-    "POWERED_BY": "技術支持 稗法",
-    "ANNOUNCEMENT": "稗法：提供人工智慧審計與審核，去中心化的區塊鏈瀏覽器和分析平台",
+    "POWERED_BY": "技術支持 陽光智能會計",
+    "ANNOUNCEMENT": "陽光智能會計：提供人工智慧審計與審核，去中心化的區塊鏈瀏覽器和分析平台",
     "COMPANY_INFO": "公司資訊"
   },
   "PLUGIN": {

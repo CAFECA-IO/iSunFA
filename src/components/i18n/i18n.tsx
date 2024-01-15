@@ -1,5 +1,3 @@
-// TODO: temp solution (20240112 - Shirley)
-/* eslint-disable */
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -27,6 +25,8 @@ function I18n() {
     };
 
     return (
+      // Info: it's okay to use index as key in this case (20240115 - Shirley)
+      // eslint-disable-next-line react/no-array-index-key
       <li key={index} className="py-2 hover:cursor-pointer hover:bg-purpleLinear">
         <Link
           locale={item.value}
@@ -55,7 +55,7 @@ function I18n() {
         >
           {currentLanguage}
         </div>
-        <span className="-mt-2 h-12px w-12px rotate-45 border-b-2 border-r-2 border-white"></span>
+        <span className="-mt-2 h-12px w-12px rotate-45 border-b-2 border-r-2 border-white" />
       </div>
       <div ref={targetRef}>
         <ul
@@ -77,15 +77,15 @@ function I18n() {
         onClick={clickMenuHandler}
       >
         <div className="flex">{currentLanguage}</div>
-        <span className="ml-2 h-12px w-12px -rotate-45 border-b-2 border-r-2 border-white"></span>
+        <span className="ml-2 h-12px w-12px -rotate-45 border-b-2 border-r-2 border-white" />
       </div>
       <ul
         className={`absolute left-0 top-0 flex h-95vh w-full flex-col items-center rounded  ${
           componentVisible ? 'visible translate-x-0' : 'invisible translate-x-full'
-        } bg-darkPurple2 py-2 font-sans transition-all duration-300 ease-in-out`}
+        } bg-secondaryBlue py-2 font-sans transition-all duration-300 ease-in-out`}
       >
         <li className="w-full px-6 py-2" onClick={clickMenuHandler}>
-          <span className="block h-12px w-12px rotate-135 border-b-2 border-r-2 border-white"></span>
+          <span className="block h-12px w-12px rotate-135 border-b-2 border-r-2 border-white" />
         </li>
         {subMenu}
       </ul>

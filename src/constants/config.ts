@@ -126,31 +126,31 @@ export const servicesContent = [
 
 export const whyUsContent = [
   {
-    image: '/icons/safety_1.svg',
+    image: '/icons/safety.png',
     alt: 'safety icon',
     description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_1',
   },
   {
-    image: '/icons/financial_report.svg',
+    image: '/icons/financial_report.png',
     alt: 'financial report icon',
     description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_2',
   },
   {
-    image: '/icons/compliance.svg',
+    image: '/icons/compliance.png',
     alt: 'compliance icon',
     description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_3',
   },
   {
-    image: '/icons/accountant.svg',
+    image: '/icons/accountant.png',
     alt: 'accountant icon',
     description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_4',
   },
 ];
 
 /* Info: (20230814 - Julian) ----- Landing Footer ----- */
-export const iSunFAAddress = process.env.iSunFA_ADDRESS_IN_ENGLISH;
-export const iSunFAAddressOnMap = process.env.iSunFA_ADDRESS_ON_GOOGLE_MAP;
-export const iSunFAPhone = process.env.iSunFA_PHONE_NUMBER;
+export const iSunFAAddress = process.env.I_SUN_FA_ADDRESS_IN_ENGLISH;
+export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
+export const iSunFAPhone = process.env.I_SUN_FA_PHONE_NUMBER;
 export const githubLink = process.env.GITHUB_LINK;
 
 /* Info: (20230814 - Julian) ----- Reports ----- */
