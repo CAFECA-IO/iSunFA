@@ -1,0 +1,35 @@
+    <svg width="950" height="60" viewBox="0 0 950 60" fill="none"  xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gradient" y1="0" y2="1">
+          <stop stop-color="#9747FF" offset="0" />
+          <stop stop-color="#11FFF5" offset="1" />
+        </linearGradient>
+      </defs>
+      <g>
+        <text
+          id="text"
+          y="50"
+          font-family="inter"
+          font-size="56"
+          font-weight="700"
+          stroke-width="3"
+          stroke="url(#gradient)"
+          fill="transparent"
+        >
+          Comprehensive Income Statements
+        </text>
+      </g>
+      <g>
+        <text
+          id="text"
+          x="5"
+          y="55"
+          font-family="inter"
+          font-size="56"
+          font-weight="700"
+          fill="#fff"
+        >
+          Comprehensive Income Statements
+        </text>
+      </g>
+    </svg>
