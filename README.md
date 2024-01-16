@@ -1,40 +1,86 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# iSunFA
+歡迎來到 iSunFA 區塊鏈會計與人工智能審計技術的官方網站專案。iSunFA 陽光智能會計是一個融合區塊鏈技術和人工智能審計的先進會計解決方案，旨在提供更加透明、安全和高效的財務管理體驗。此份文件將說明如何完成 iSunFA 官方網站的環境準備與部署。
+> 最後更新於 2024-01-16
 
-## Getting Started
+## 部署流程
+1. 環境準備
+2. 管理帳號設定
+3. SWAP 設定
+4. 執行環境準備
+5. 原始碼下載與編譯
+6. 最終檢查
 
-First, run the development server:
+### 環境準備
+請確保您的系統滿足以下最低要求：
+- Ubuntu 22.04
+- 1 Core CPU
+- 2 GB Ram
+- 20 GB Disk Space
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 管理帳號設定
+```shell
+# 建立 iSunFA 帳號
+useradd -m -s /usr/bin/bash isunfa
+```
+```shell
+# 設定 iSunFA 登入密碼
+passwd isunfa
+New password:
+```
+```shell
+# 授權 iSunFA sudo 權限
+sudo usermod -g sudo isunfa
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### SWAP 設定
+```shell
+# 建立 swap 檔案
+sudo fallocate -l 4G /swapfile
+```
+Enabling the Swap File
+```shell
+# 設定 swap 與開機啟動程序
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
+```
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### 執行環境準備
+```shell
+# 安裝必要函式庫
+sudo apt-get update
+sudo apt-get install openssl libtool autoconf automake uuid-dev build-essential gcc g++ software-properties-common unzip make git libcap2-bin -y
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+### Install Node
+```shell
+# 安裝 nodejs, pm2 並授予 80 443 port 權限
+bash <(curl https://raw.githubusercontent.com/Luphia/SIMPLE/master/shell/install-env.sh -kL)
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### 原始碼下載與編譯
+```shell
+# 資料夾建立與授權移轉
+sudo mkdir /workspace
+sudo chown isunfa /workspace -R
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+# 下載原始碼
+cd /workspace
+git clone https://github.com/CAFECA-IO/iSunFA
 
-## Learn More
+# 安裝函式庫
+cd /workspace/iSunFA
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# 編譯
+npm run build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 啟動專案
+pm2 start npm --name iSunFA -- start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### 最終檢查
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## 聯繫我們
+如果您對iSunFA感興趣或有任何疑問，請隨時聯繫我們的客戶支持團隊。我們期待著與您一起開啟更加先進、高效的財務管理體驗，讓您的企業在數字時代更上一層樓。
