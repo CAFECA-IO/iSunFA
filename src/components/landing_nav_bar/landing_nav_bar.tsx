@@ -52,7 +52,9 @@ function LandingNavBar() {
         <li>
           {/* ToDo: (20230727 - Julian) contact us page */}
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
-          <Link href={BFAURL.CONTACT_US}>{t('NAV_BAR.CONTACT_US')}</Link>
+          <Link href={BFAURL.CONTACT_US} className="text-white hover:text-primaryYellow">
+            {t('NAV_BAR.CONTACT_US')}
+          </Link>
         </li>
         <li>
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
@@ -91,7 +93,7 @@ function LandingNavBar() {
         <li className="px-10 py-4">
           {/* ToDo: (20230727 - Julian) contact us page */}
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
-          <Link href={BFAURL.CONTACT_US} className="px-10 py-4">
+          <Link href={BFAURL.CONTACT_US} className="px-10 py-4 hover:text-primaryYellow">
             {t('NAV_BAR.CONTACT_US')}
           </Link>
         </li>
