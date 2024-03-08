@@ -39,7 +39,7 @@ export const default30DayPeriod = {
 
 export const ITEM_PER_PAGE = 10;
 
-export const copyright = 'iSunFA @ 2023. All rights reserved.';
+export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
 /* Info: (20230711 - Julian) ----- Landing Page ----- */
 export const SCROLL_END = 530;

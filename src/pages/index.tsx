@@ -27,10 +27,10 @@ function LandingPage() {
         />
       </Head>
 
-      {/*  Info:(20230712 - Julian) Navbar */}
+      {/*  Info: (20230712 - Julian) Navbar */}
       <LandingNavBar />
 
-      <main>
+      <main className="text-white">
         <LandingPageBody />
       </main>
     </>
