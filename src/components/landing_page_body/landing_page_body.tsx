@@ -4,36 +4,46 @@ import Link from 'next/link';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { useTranslation } from 'next-i18next';
 import LandingFooter from '../landing_footer/landing_footer';
-import {
-  SCROLL_END,
-  massiveDataContent,
-  servicesContent,
-  whyUsContent,
-} from '../../constants/config';
+import { massiveDataContent, servicesContent, whyUsContent } from '../../constants/config';
 import { TranslateFunction } from '../../interfaces/locale';
 
 function LandingPageBody() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
   const scrl = useRef<HTMLDivElement>(null);
-  const [scrollLeftState, setScrollLeftState] = useState(0);
+  const [isAtScrollStart, setIsAtScrollStart] = useState(true);
+  const [isAtScrollEnd, setIsAtScrollEnd] = useState(false);
 
-  /* Info:(20230815 - Julian) slide X scroll function */
+  const checkScrollPosition = () => {
+    if (!scrl.current) return;
+
+    /* Info: (20240301 - Shirley)
+    `scroll.current.scrollWidth` 是整個 scroll bar 的寬度，元素的總滾動寬度，包括看不見的部分。
+    `scroll.current.scrollLeft` 是目前捲軸的位置，當前元素的水平滾動偏移量，表示元素滾動條的左邊距離元素左邊的距離。改變這個值可以使元素水平滾動。
+    `scroll.current.clientWidth` 個屬性表示元素內部可視區域的寬度，不包括滾動條、邊框和外邊距的寬度。
+    */
+    const isAtEnd = scrl.current.scrollWidth - scrl.current.scrollLeft <= scrl.current.clientWidth;
+    const isAtStart = scrl.current.scrollLeft === 0;
+    setIsAtScrollEnd(isAtEnd);
+    setIsAtScrollStart(isAtStart);
+  };
+
   const slide = (shift: number) => {
-    if (scrl.current) scrl.current.scrollLeft += shift;
+    if (scrl.current) {
+      scrl.current.scrollLeft += shift;
+      checkScrollPosition();
+    }
   };
 
   useEffect(() => {
-    // Info: return `undefined` to fit the eslint rule `consistent-return` (20240115 - Shirley)
-    if (!scrl.current) return undefined;
-
-    /* Info:(20230815 - Julian) 設定監聽事件，將捲軸位置更新到 scrollLeft */
-    const { scrollLeft } = scrl.current; // Destructuring here
-    const onScroll = () => setScrollLeftState(scrollLeft);
-    scrl.current.addEventListener('scroll', onScroll);
-
-    return () => {
-      if (scrl.current) scrl.current.removeEventListener('scroll', onScroll);
+    const handleScroll = () => {
+      checkScrollPosition();
     };
+
+    // Info: 因為 scrl 可能在 useEffect 的 cleanup function 執行後改變，所以複製 scrl.current 為 currentScrl，並用 currentScrl 來設定監聽事件 (20240301 - Shirley)
+    const currentScrl = scrl.current;
+    currentScrl?.addEventListener('scroll', handleScroll);
+
+    return () => currentScrl?.removeEventListener('scroll', handleScroll);
   }, []);
 
   /* Info:(20230815 - Julian) Slide Function */
@@ -56,7 +66,7 @@ function LandingPageBody() {
       // Info: (20240112 - Shirley) it's ok to use index as key in this case
       // eslint-disable-next-line react/no-array-index-key
       key={index}
-      className="relative flex flex-col items-center rounded-2xl bg-purpleLinear p-10 drop-shadow-101"
+      className="relative flex flex-col items-center rounded-2xl bg-secondaryBlue p-10 drop-shadow-101 z-10"
     >
       {/* Info:(20230815 - Julian) Image */}
       <div className="absolute -top-20 h-220px w-220px">
@@ -158,7 +168,7 @@ function LandingPageBody() {
             <div className="hidden items-center space-x-6 lg:flex">
               <button
                 type="button"
-                disabled={scrollLeftState <= 0}
+                disabled={isAtScrollStart}
                 onClick={slideLeft}
                 className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryYellow hover:text-primaryYellow disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
@@ -166,7 +176,7 @@ function LandingPageBody() {
               </button>
               <button
                 type="button"
-                disabled={scrollLeftState >= SCROLL_END}
+                disabled={isAtScrollEnd}
                 onClick={slideRight}
                 className="rounded border border-hoverWhite p-3 text-hoverWhite transition-all duration-150 ease-in-out hover:border-primaryYellow hover:text-primaryYellow disabled:opacity-50 disabled:hover:border-hoverWhite disabled:hover:text-hoverWhite"
               >
@@ -180,8 +190,10 @@ function LandingPageBody() {
             className="flex flex-col items-center space-y-28 scroll-smooth px-4 lg:flex-row lg:space-x-10 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20"
           >
             {servicesList}
+            <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat" />
+
             {/* Info:(20230815 - Julian) pink background */}
-            <div className="absolute -right-20 top-60 -z-10 hidden h-255px w-700px rounded-2xl bg-101 bg-cover bg-no-repeat lg:block" />
+            {/* <div className="absolute -right-20 top-60 -z-10 hidden h-255px w-700px rounded-2xl bg-101 bg-cover bg-no-repeat lg:block" /> */}
           </div>
         </div>
 

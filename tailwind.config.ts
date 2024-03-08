@@ -233,6 +233,7 @@ module.exports = {
         '700px': '700px',
         '726px': '726px',
         '800px': '800px',
+        '900px': '900px',
         '950px': '950px',
         '1000px': '1000px',
         '1200px': '1200px',
@@ -374,6 +375,7 @@ module.exports = {
       },
       backgroundSize: {
         150: '150%',
+        50: '50%',
       },
       backgroundPosition: {
         'top-4': 'center top -2.5rem',
