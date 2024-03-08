@@ -190,10 +190,9 @@ function LandingPageBody() {
             className="flex flex-col items-center space-y-28 scroll-smooth px-4 lg:flex-row lg:space-x-10 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20"
           >
             {servicesList}
-            <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat" />
 
-            {/* Info:(20230815 - Julian) pink background */}
-            {/* <div className="absolute -right-20 top-60 -z-10 hidden h-255px w-700px rounded-2xl bg-101 bg-cover bg-no-repeat lg:block" /> */}
+            {/* Info:(20240308 - Shirley) background img */}
+            <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden" />
           </div>
         </div>
 
