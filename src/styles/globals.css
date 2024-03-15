@@ -60,6 +60,35 @@ a {
   display: none;
 }
 
+.customGradient {
+  background: radial-gradient(
+    71.04% 80.27% at 28.64% 85.83%,
+    #ffa502 0%,
+    #f49e01 1%,
+    #c17d01 9%,
+    #935f01 17%,
+    #6b4500 26%,
+    #4a3000 34%,
+    #2f1e00 44%,
+    #1a1000 54%,
+    #0b0700 65%,
+    #020100 79%,
+    #000000 100%
+  );
+  background-blend-mode: color-dodge;
+}
+
+.customRadialGradient {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 24, 64, 0.7) 0%, rgba(0, 24, 64, 0) 100%);
+}
+
+@media (max-width: 768px) {
+  .fixed-top-right {
+    top: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+  }
+}
+
 @page {
   size: 595px 842px;
   margin: 0cm;

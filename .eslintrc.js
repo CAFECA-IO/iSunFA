@@ -43,6 +43,8 @@ module.exports = {
         'prefer-template': 'off',
         'react/jsx-one-expression-per-line': 'off',
         'jsx-a11y/control-has-associated-label': 'off',
+        // 'arrow-parens': 'off',
+        'react/self-closing-comp': 'off',
       },
     },
   ],
@@ -71,6 +73,8 @@ module.exports = {
     'prefer-template': 'off',
     'react/jsx-one-expression-per-line': 'off',
     'jsx-a11y/control-has-associated-label': 'off',
+    // 'arrow-parens': 'off',
+    'react/self-closing-comp': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

@@ -37,9 +37,16 @@ module.exports = {
         hoverWhite: '#F0F0F0',
 
         primaryYellow: '#FFA502',
-        secondaryBlue: '#1A2E50',
+        secondaryBlue: '#001840',
+        tertiaryBlue: '#304872',
       },
       backgroundImage: {
+        web: 'url("/elements/web.svg")',
+        light_up: 'url("/elements/light_up.svg")',
+        light_down: 'url("/elements/light_down.svg")',
+        mask: 'url("/elements/mask.svg")',
+        blended_light: 'url("/elements/blended_light.svg")',
+
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:
           'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
@@ -75,19 +82,50 @@ module.exports = {
         '7xl': ['72px', 1],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
+
+        h1: '44px',
+        h2: '36px',
+        h3: '32px',
+        h4: '28px',
+        h5: '24px',
+        h6: '20px',
+      },
+      lineHeight: {
+        h1: '52px',
+        h2: '44px',
+        h3: '40px',
+        h4: '36px',
+        h5: '32px',
+        h6: '32px',
       },
       screens: {
-        /* Info: (20230627 - Julian) 等同於 @media (min-width: ...px) */
+        /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
         xxs: '370px',
         xs: '500px',
         a4: '595px',
-        sm: '640px',
-        md: '768px',
-        lg: '1024px',
+        // sm: '640px',
+        // md: '768px',
+        // lg: '1024px',
         xl: '1280px',
         '2xl': '1536px',
         '3xl': '1600px',
+
+        sm: '320px',
+        md: '744px',
+        lg: '1440px',
+
+        desktop: '1440px',
+        tablet: '744px',
+        mobile: '320px',
       },
+      container: {
+        center: true,
+        padding: '1rem',
+        // screens: {
+        //   lg: '1280px',
+        // },
+      },
+
       spacing: {
         /* Info: (20230627 - Julian) 適用範圍
          * width / height / padding / margin / top / bottom / right / left */
@@ -204,6 +242,8 @@ module.exports = {
         '410px': '410px',
         '420px': '420px',
         '430px': '430px',
+        '432px': '432px',
+
         '438px': '438px',
         '440px': '440px',
         '450px': '450px',
@@ -213,6 +253,8 @@ module.exports = {
         '500px': '500px',
         '505px': '505px',
         '510px': '510px',
+        '515px': '515px',
+
         '520px': '520px',
         '530px': '530px',
         '540px': '540px',
@@ -233,24 +275,52 @@ module.exports = {
         '700px': '700px',
         '726px': '726px',
         '800px': '800px',
+        '865px': '865px',
+
         '900px': '900px',
         '950px': '950px',
         '1000px': '1000px',
         '1200px': '1200px',
         '1500px': '1500px',
         '2000px': '2000px',
+        '0.1rem': '0.1rem',
+        '1.4rem': '1.4rem',
+        '1.6rem': '1.6rem',
+        '1.8rem': '1.8rem',
         '2rem': '2rem',
+        '2.3rem': '2.3rem',
+        '2.5rem': '2.5rem',
         '3rem': '3rem',
+        '3.3rem': '3.3rem',
+        '3.5rem': '3.5rem',
         '4rem': '4rem',
         '5rem': '5rem',
         '6rem': '6rem',
+        '6.2rem': '6.2rem',
         '7rem': '7rem',
         '8rem': '8rem',
         '9rem': '9rem',
         '11rem': '11rem',
+        '12rem': '12rem',
         '13rem': '13rem',
         '15rem': '15rem',
+        '16rem': '16rem',
+        '17rem': '17rem',
+        '18rem': '18rem',
+        '19rem': '19rem',
         '20rem': '20rem',
+        '22rem': '22rem',
+        '24rem': '24rem',
+        '25rem': '25rem',
+        '26rem': '26rem',
+        '28rem': '28rem',
+        '30rem': '30rem',
+        '32rem': '32rem',
+        '34rem': '34rem',
+        '36rem': '36rem',
+        '38rem': '38rem',
+        '40rem': '40rem',
+        '42rem': '42rem',
 
         0.5: '50%',
         '1/2': '50%',
@@ -333,6 +403,12 @@ module.exports = {
         purple: '0px 0px 6px 0px #AB50FF',
         violet:
           '0px 0px 12px 0px rgba(175, 80, 255, 0.30), 0px 0px 24px 0px rgba(175, 80, 255, 0.30) inset',
+
+        custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
+        custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',
+        custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
+        custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
+        custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -341,6 +417,15 @@ module.exports = {
         xlSide: '4px 0px 24px rgba(0, 0, 0, 0.40)',
         purple: '0 2px 10px #AB50FF',
         101: '0px 4px 70px rgba(0, 0, 0, 0.40)',
+
+        custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
+        custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',
+        custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
+        custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
+        custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
+
+        '3xl': '0 35px 35px rgba(0, 0, 0, 0.25)',
+        '4xl': ['0 35px 35px rgba(0, 0, 0, 0.25)', '0 45px 65px rgba(0, 0, 0, 0.15)'],
       },
       fontFamily: {
         inter: ['Inter', 'sans-serif', 'ui-sans-serif', 'system-ui'],
@@ -370,6 +455,7 @@ module.exports = {
         135: '135deg',
       },
       borderWidth: {
+        '0.5px': '0.5px',
         '3px': '3px',
         '5px': '5px',
       },
@@ -379,6 +465,8 @@ module.exports = {
       },
       backgroundPosition: {
         'top-4': 'center top -2.5rem',
+        'top-10': 'center top -10rem right -2.5rm',
+        // 'right-4': 'right -2.5rem center',
       },
     },
   },
