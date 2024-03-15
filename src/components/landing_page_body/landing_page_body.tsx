@@ -192,7 +192,7 @@ function LandingPageBody() {
             {servicesList}
 
             {/* Info:(20240308 - Shirley) background img */}
-            <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden" />
+            <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden lg:block" />
           </div>
         </div>
 
