@@ -28,7 +28,7 @@ module.exports = {
         'react/jsx-props-no-spreading': 'off',
         'no-console': 'error',
         'tailwindcss/no-contradicting-classname': 'error',
-        'tailwindcss/classnames-order': 'off',
+        'tailwindcss/classnames-order': 'warn',
         'tailwindcss/enforces-negative-arbitrary-values': 'error',
         'tailwindcss/enforces-shorthand': 'off',
         'tailwindcss/migration-from-tailwind-2': 'error',
@@ -45,6 +45,8 @@ module.exports = {
         'jsx-a11y/control-has-associated-label': 'off',
         // 'arrow-parens': 'off',
         'react/self-closing-comp': 'off',
+        'react/function-component-definition': 'off',
+        'arrow-body-style': 'off',
       },
     },
   ],
@@ -75,6 +77,8 @@ module.exports = {
     'jsx-a11y/control-has-associated-label': 'off',
     // 'arrow-parens': 'off',
     'react/self-closing-comp': 'off',
+    'react/function-component-definition': 'off',
+    'arrow-body-style': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

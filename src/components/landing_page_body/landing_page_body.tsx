@@ -56,7 +56,7 @@ function LandingPageBody() {
         // Info: (20240112 - Shirley) it's ok to use index as key in this case
         // eslint-disable-next-line react/no-array-index-key
         key={index}
-        className="relative flex flex-col items-center rounded-2xl bg-tertiaryBlue py-10 px-10 drop-shadow-101 z-10 h-300px space-y-14 mx-0"
+        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-tertiaryBlue px-10 py-10 drop-shadow-101"
       >
         {/* Info:(20230815 - Shirley) Image */}
         <div className="absolute -top-10 h-100px w-100px " style={{}}>
@@ -73,7 +73,7 @@ function LandingPageBody() {
         {/* <div className="h-80px" /> */}
 
         {/* Info:(20240315 - Shirley) Number animation */}
-        <div className="flex items-baseline space-x-2 font-bold w-full justify-center">
+        <div className="flex w-full items-baseline justify-center space-x-2 font-bold">
           {' '}
           <NumberAnimation targetNumber={targetNumber} />
           <p className="text-h4 leading-h4">{unit}</p>
@@ -119,7 +119,7 @@ function LandingPageBody() {
 
       <p className="text-h5 leading-h5 text-primaryYellow">{t(title)}</p>
 
-      <p className="text-white text-base">{t(description)}</p>
+      <p className="text-base text-white">{t(description)}</p>
     </div>
   ));
 
@@ -132,18 +132,18 @@ function LandingPageBody() {
 
       <div className="relative h-500px">
         {/* ----- Dot & Line components ----- */}
-        <div className="flex items-center px-12 pt-10 rounded-lg ">
+        <div className="flex items-center rounded-lg px-12 pt-10 ">
           {/* ----- filled circle ----- */}
           <div
-            className={`absolute left-1.8rem w-27px h-27px rounded-full bg-primaryYellow z-10`}
+            className={`absolute left-1.8rem z-10 h-27px w-27px rounded-full bg-primaryYellow`}
           ></div>
 
           {/* ----- filled circle bg ----- */}
-          <div className={`absolute left-1.4rem w-40px h-40px rounded-full bg-tertiaryBlue`}></div>
+          <div className={`absolute left-1.4rem h-40px w-40px rounded-full bg-tertiaryBlue`}></div>
 
           {/* ----- Line ----- */}
           <div
-            className={`absolute top-5 left-2.3rem h-400px w-1px border-5px border-solid border-tertiaryBlue`}
+            className={`absolute left-2.3rem top-5 h-400px w-1px border-5px border-solid border-tertiaryBlue`}
           />
 
           {/* <span className="ml-2.5rem space-y-2">
@@ -191,7 +191,7 @@ function LandingPageBody() {
       {/* Info: NOTE mix-blend-exclusion, mix-blend-lighten, mix-blend-plus-lighter, mix-blend-screen */}
       {/* <div className="absolute top-0 right-0 flex h-140vh w-full flex-col items-center bg-light_up mix-blend-screen bg-auto bg-center bg-no-repeat lg:bg-auto lg:bg-top-4" /> */}
 
-      <div className="flex min-h-screen w-screen flex-col overflow-hidden font-barlow bg-secondaryBlue">
+      <div className="flex min-h-screen w-screen flex-col overflow-hidden bg-secondaryBlue font-barlow">
         {/* Info:(20230815 - Shirley) Pipe Background Image */}
         {/* <div
         className="absolute inset-0 bg-light_up bg-auto bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"
@@ -302,8 +302,8 @@ function LandingPageBody() {
         {/* <div className="absolute -top-40 -right-56 flex h-140vh w-full flex-col items-center bg-light_up mix-blend-exclusion bg-auto bg-center bg-no-repeat lg:bg-auto " /> */}
         <div className="relative flex h-140vh w-screen flex-col items-center bg-web bg-contain bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
-          <div className="absolute w-screen h-screen mix-blend-screen">
-            <div className="absolute w-900px h-500px top-0 right-0 bg-light_up bg-blend-color-dodge">
+          <div className="absolute h-screen w-screen mix-blend-screen">
+            <div className="absolute right-0 top-0 h-500px w-900px bg-light_up bg-blend-color-dodge">
               {/* <img
                 className="w-[401px] h-[339px] bg-blend-color-dodge"
                 alt="Vector"
@@ -319,7 +319,7 @@ function LandingPageBody() {
           {/* <div className="relative flex h-140vh w-full flex-col items-center bg-light_up mix-blend-screen bg-auto bg-center bg-no-repeat lg:bg-auto lg:bg-top-4" /> */}
 
           {/* Info:(20230711 - Shirley) Main Title Block */}
-          <div className="flex h-screen w-full flex-col items-start justify-center space-y-10 ml-40 px-4 py-12 text-start z-5">
+          <div className="z-5 ml-40 flex h-screen w-full flex-col items-start justify-center space-y-10 px-4 py-12 text-start">
             <div className="flex flex-col space-y-5">
               {' '}
               <h1 className="text-6xl font-bold tracking-wider text-primaryYellow lg:text-7xl">
@@ -329,7 +329,7 @@ function LandingPageBody() {
                 {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
               </h1>
             </div>
-            <div className="text-base font-bold max-w-md tablet:max-w-xl tracking-widest text-hoverWhite lg:text-base desktop:max-w-2xl">
+            <div className="max-w-md text-base font-bold tracking-widest text-hoverWhite tablet:max-w-xl lg:text-base desktop:max-w-2xl">
               <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</p>
               <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</p>
               <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</p>
@@ -343,7 +343,7 @@ function LandingPageBody() {
             </Link> */}
 
             <button
-              className="flex items-center space-x-2 bg-primaryYellow text-tertiaryBlue font-bold px-6 py-3 rounded-lg"
+              className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-tertiaryBlue"
               type="button"
             >
               <p className="">Try Now</p>
@@ -356,18 +356,18 @@ function LandingPageBody() {
 
         {/* Info:(20230815 - Shirley) How we work */}
 
-        <div className="flex h-fit w-full flex-col py-20 lg:pt-52 lg:pb-20">
-          <h1 className="text-h1 font-bold tracking-wider w-full flex justify-center text-white lg:text-h1">
+        <div className="flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-52">
+          <h1 className="flex w-full justify-center text-h1 font-bold tracking-wider text-white lg:text-h1">
             {/* FIXME: i18n */}
             How we work
           </h1>
           <div className="flex">
-            <div className="relative pt-40 ml-1/8">
+            <div className="relative ml-1/8 pt-40">
               {' '}
               {/* <div> */}
               <div className="flex flex-col justify-center">{verticalDotLine}</div>{' '}
-              <div className="flex flex-col justify-center -mt-6.2rem">{verticalDotLine}</div>
-              <div className="flex flex-col justify-center -mt-6.2rem">{verticalDotLine}</div>
+              <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
+              <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
             </div>
             {/* </div> */}
 
@@ -386,8 +386,8 @@ function LandingPageBody() {
               </div>
             </div> */}
 
-            <div className="flex flex-col space-y-32 mt-44">
-              <div className="flex space-x-2 mr-10">
+            <div className="mt-44 flex flex-col space-y-32">
+              <div className="mr-10 flex space-x-2">
                 <div className="relative h-300px w-600px">
                   <Image
                     src="/elements/how_we_work_1.png"
@@ -396,18 +396,18 @@ function LandingPageBody() {
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
-                <div className="mt-20 lg:mt-20 max-w-lg flex flex-col space-y-5 lg:space-y-8">
+                <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
                   {' '}
-                  <p className="text-h3 leading-h3 lg:text-h1 text-primaryYellow lg:leading-h1">
+                  <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_1')}
                   </p>
-                  <p className="text-white text-base">
+                  <p className="text-base text-white">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1')}
                   </p>
                 </div>
               </div>
 
-              <div className="flex space-x-2 mr-10">
+              <div className="mr-10 flex space-x-2">
                 <div className="relative h-300px w-600px">
                   <Image
                     src="/elements/how_we_work_2.png"
@@ -416,18 +416,18 @@ function LandingPageBody() {
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
-                <div className="mt-20 lg:mt-20 max-w-lg flex flex-col space-y-5 lg:space-y-8">
+                <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
                   {' '}
-                  <p className="text-h3 leading-h3 lg:text-h1 text-primaryYellow lg:leading-h1">
+                  <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_2')}
                   </p>
-                  <p className="text-white text-base">
+                  <p className="text-base text-white">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2')}
                   </p>
                 </div>
               </div>
 
-              <div className="flex space-x-2 mr-10">
+              <div className="mr-10 flex space-x-2">
                 <div className="relative h-300px w-600px">
                   <Image
                     src="/elements/how_we_work_3.png"
@@ -436,12 +436,12 @@ function LandingPageBody() {
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
-                <div className="mt-20 lg:mt-20 max-w-lg flex flex-col space-y-5 lg:space-y-8">
+                <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
                   {' '}
-                  <p className="text-h3 leading-h3 lg:text-h1 text-primaryYellow lg:leading-h1">
+                  <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_3')}
                   </p>
-                  <p className="text-white text-base">
+                  <p className="text-base text-white">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3')}
                   </p>
                 </div>
@@ -490,7 +490,7 @@ function LandingPageBody() {
           {/* Info: (20240315 - Shirley) Blocks with number animation */}
           <div
             // ref={scrl}
-            className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:flex-row lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20 lg:justify-evenly lg:w-full"
+            className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20"
 
             // className="flex flex-col items-center space-y-28 scroll-smooth px-4 lg:flex-row lg:space-x-10 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20"
           >
@@ -501,9 +501,9 @@ function LandingPageBody() {
           </div>
 
           {/* Info:(20240315 - Shirley) Features Block */}
-          <div className="flex flex-col items-center space-y-16 px-4 pt-20 lg:py-20 mt-20 lg:mb-40 text-center lg:h-450px lg:px-20">
+          <div className="mt-20 flex flex-col items-center space-y-16 px-4 pt-20 text-center lg:mb-40 lg:h-450px lg:px-20 lg:py-20">
             <div className="flex flex-col">
-              <h3 className="text-h1 leading-h1 font-bold text-white">
+              <h3 className="text-h1 font-bold leading-h1 text-white">
                 {t('LANDING_PAGE.FEATURES_SUBTITLE')}
               </h3>
               {/* <h2 className="text-2xl font-bold lg:text-5xl">{t('LANDING_PAGE.FEATURES_TITLE')}</h2> */}
@@ -521,7 +521,7 @@ function LandingPageBody() {
                   />
                 </div>
 
-                <div className="relative h-300px w-432px bottom-19rem left-32rem">
+                <div className="relative bottom-19rem left-32rem h-300px w-432px">
                   <Image
                     src="/elements/ipad.png"
                     alt="how we work"
@@ -535,12 +535,12 @@ function LandingPageBody() {
             {/* <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">{massiveDataList}</div> */}
           </div>
 
-          <div className="mx-20 gap-20 lg:mt-40 mb-40 lg:mx-40 grid grid-cols-1 lg:gap-10 lg:flex-1 lg:grid-cols-3">
+          <div className="mx-20 mb-40 grid grid-cols-1 gap-20 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10">
             {heroList}
           </div>
 
           <div className="flex w-full justify-center space-x-5">
-            <div className="relative h-400px w-400px mt-20">
+            <div className="relative mt-20 h-400px w-400px">
               <Image
                 src="/elements/contract_blue.svg"
                 alt="contract_blue"

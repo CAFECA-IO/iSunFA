@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest --coverage",
-    "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|ts|json)\"",
-    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+    "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
     "validate": "npm run test && npm run check-format && npm run lint",
     "production": "next start -p 80"
   },
@@ -34,7 +34,6 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/tailwindcss": "^3.1.0",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
     "autoprefixer": "^10.4.16",
