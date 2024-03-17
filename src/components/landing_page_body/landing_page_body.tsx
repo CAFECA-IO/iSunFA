@@ -204,13 +204,122 @@ function LandingPageBody() {
       /> */}
         {/* <div className="relative flex h-140vh w-full flex-col items-center bg-mask bg-auto bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"> */}
         {/* TODO: make this bg-light_up fixed at the top-right corner responsively */}
+        {/* <div className="flex flex-col justify-center mix-blend-screen max-w-[950px]">
+          <img
+            loading="lazy"
+            srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&"
+            className="w-full bg-blend-screen mix-blend-screen aspect-[1.54] fill-[radial-gradient(86.31%_87.08%_at_18.22%_91.72%,#FFA502_0%,#F49E01_1%,#C17D01_9%,#935F01_17%,#6B4500_26%,#4A3000_34%,#2F1E00_44%,#1A1000_54%,#0B0700_65%,#020100_79%,#000_100%)] max-md:max-w-full"
+          />
+        </div> */}
+
+        {/* <img
+          loading="lazy"
+          srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&"
+          className="w-full bg-blend-screen aspect-[1.54] fill-[radial-gradient(86.31%_87.08%_at_18.22%_91.72%,#FFA502_0%,#F49E01_1%,#C17D01_9%,#935F01_17%,#6B4500_26%,#4A3000_34%,#2F1E00_44%,#1A1000_54%,#0B0700_65%,#020100_79%,#000_100%)] max-md:max-w-full"
+        /> */}
+
+        {/* FIXME: it works but should overlay more vectors? */}
+        {/* <div className="relative w-screen h-screen mix-blend-screen">
+          <div className="absolute w-[700px] h-[620px] top-0 right-0">
+            <img
+              className="w-[401px] h-[339px] bg-blend-color-dodge"
+              alt="Vector"
+              src="/elements/light_up.svg"
+          </div>
+        </div>
+
+        <div className="relative w-[1440px] h-[6764px]">
+          <div className="absolute w-[1440px] h-[1687px] top-[5285px] left-0">
+            <img
+              className="absolute w-[1440px] h-[1115px] top-[572px] left-0"
+              alt="Shadow"
+              src="shadow-02.svg"
+            />
+            <img
+              className="absolute w-[1440px] h-[820px] top-0 left-0"
+              alt="Light"
+              src="light-04.svg"
+            />
+          </div>
+          <img
+            className="absolute w-[1440px] h-[1163px] top-[3500px] left-0"
+            alt="Light"
+            src="light-03.svg"
+          />
+          <div className="absolute w-[1440px] h-[3404px] top-0 left-0">
+            <img
+              className="absolute w-[1440px] h-[1131px] top-[2273px] left-0"
+              alt="Light"
+              src="light-02.svg"
+            />
+            <img
+              className="absolute w-[1440px] h-[1148px] top-[1370px] left-0"
+              alt="Light"
+              src="light-01.svg"
+            />
+            <img
+              className="absolute w-[1440px] h-[1112px] top-0 left-0 mix-blend-screen"
+              alt="Web"
+              src="web.svg"
+            />
+            <div className="absolute w-[1432px] h-[1227px] top-[4px] left-0">
+              <div className="relative h-[1131px] top-[-4px] [background:linear-gradient(180deg,rgba(0,24,64,0)_32.5%,rgb(0,24,64)_85.5%)]">
+                <img
+                  className="absolute w-[856px] h-[1079px] top-0 left-0 bg-blend-color-dodge"
+                  alt="Shadow"
+                  src="shadow.svg"
+                />
+              </div>
+            </div>
+            <img
+              className="absolute w-[1440px] h-[1267px] top-[193px] left-0"
+              alt="Green light"
+              src="green-light.svg"
+            />
+            <img
+              className="absolute w-[1440px] h-[1089px] top-[313px] left-0 mix-blend-screen"
+              alt="Light down"
+              src="light-down.png"
+            />
+            <img
+              className="absolute w-[1440px] h-[620px] top-0 left-0 mix-blend-screen"
+              alt="Light up"
+              src="light-up.svg"
+            />
+          </div>
+        </div> */}
+
+        {/* FIXME: It works! */}
+        {/* <div className="relative">
+          {' '}
+          <img
+            loading="lazy"
+            src="https://cdn.builder.io/api/v1/image/assets/TEMP/bcbc01dc26ea922042dd2a656788155f0479259a2ef18bd8fd2f0c44d075fd67?apiKey=0e17b0b875f041659e186639705112b1&"
+            className="w-full bg-blend-screen mix-blend-screen aspect-[0.36] fill-[radial-gradient(50.34%_49.91%_at_49.96%_51.15%,#008669_0%,#00765C_11%,#00211A_72%,#000_100%)]"
+          />
+        </div> */}
 
         {/* <div className="absolute -top-40 -right-56 flex h-140vh w-full flex-col items-center bg-light_up mix-blend-exclusion bg-auto bg-center bg-no-repeat lg:bg-auto " /> */}
-        <div className="relative flex h-140vh w-full flex-col items-center bg-web bg-contain bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
+        <div className="relative flex h-140vh w-screen flex-col items-center bg-web bg-contain bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
+          {/* Info: ---light_up svg--- (20240318 - Shirley) */}
+          <div className="absolute w-screen h-screen mix-blend-screen">
+            <div className="absolute w-900px h-500px top-0 right-0 bg-light_up bg-blend-color-dodge">
+              {/* <img
+                className="w-[401px] h-[339px] bg-blend-color-dodge"
+                alt="Vector"
+                src="/elements/light_up.svg"
+              /> */}
+              {/* <img
+              className="w-[950px] h-[620px] left-0 bg-blend-screen absolute top-0"
+              alt="Vector"
+              src="vector.svg"
+            /> */}
+            </div>
+          </div>
           {/* <div className="relative flex h-140vh w-full flex-col items-center bg-light_up mix-blend-screen bg-auto bg-center bg-no-repeat lg:bg-auto lg:bg-top-4" /> */}
 
           {/* Info:(20230711 - Shirley) Main Title Block */}
-          <div className="flex h-screen w-full flex-col items-start justify-center space-y-10 ml-40 px-4 py-12 text-start ">
+          <div className="flex h-screen w-full flex-col items-start justify-center space-y-10 ml-40 px-4 py-12 text-start z-5">
             <div className="flex flex-col space-y-5">
               {' '}
               <h1 className="text-6xl font-bold tracking-wider text-primaryYellow lg:text-7xl">
@@ -220,13 +329,13 @@ function LandingPageBody() {
                 {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
               </h1>
             </div>
-            <ul className="text-base font-bold max-w-md tablet:max-w-xl tracking-widest text-hoverWhite lg:text-base desktop:max-w-2xl list-disc pl-5">
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
-            </ul>
+            <div className="text-base font-bold max-w-md tablet:max-w-xl tracking-widest text-hoverWhite lg:text-base desktop:max-w-2xl">
+              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</p>
+              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</p>
+              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</p>
+              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</p>
+              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</p>
+            </div>
 
             {/* Info:(20230711 - Shirley) Arrow */}
             {/* <Link href="#iSunFA_101" scroll={false} className="absolute bottom-80 lg:bottom-20">
@@ -247,7 +356,7 @@ function LandingPageBody() {
 
         {/* Info:(20230815 - Shirley) How we work */}
 
-        <div className="flex h-fit w-full flex-col px-5 py-20 lg:pt-52 lg:pb-20">
+        <div className="flex h-fit w-full flex-col py-20 lg:pt-52 lg:pb-20">
           <h1 className="text-h1 font-bold tracking-wider w-full flex justify-center text-white lg:text-h1">
             {/* FIXME: i18n */}
             How we work
@@ -441,7 +550,7 @@ function LandingPageBody() {
             </div>{' '}
             {/* <div className="flex flex-col">
               <p>Technical Patents</p> */}
-            <div className="max-w-1/2">
+            <div className="max-w-[700px]">
               {' '}
               {/* autoSlide */}
               <Carousel autoSlide>

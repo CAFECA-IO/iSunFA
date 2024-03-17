@@ -64,6 +64,10 @@ module.exports = {
         contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
         headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
       },
+      zIndex: {
+        '-1': '-1',
+        5: '5',
+      },
       fontSize: {
         xxs: ['10px', '12px'],
         xs: ['12px', '16px'],
@@ -217,6 +221,7 @@ module.exports = {
         '200px': '200px',
         '220px': '220px',
         '225px': '225px',
+        '236px': '236px',
         '240px': '240px',
         '250px': '250px',
         '254px': '254px',
@@ -275,6 +280,7 @@ module.exports = {
         '700px': '700px',
         '726px': '726px',
         '800px': '800px',
+        '850px': '850px',
         '865px': '865px',
 
         '900px': '900px',
@@ -354,6 +360,8 @@ module.exports = {
         '120vh': '120vh',
         '140vh': '140vh',
         '150vh': '150vh',
+
+        '140vw': '140vw',
 
         '70vw': '70vw',
         '80vw': '80vw',

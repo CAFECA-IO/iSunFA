@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface CarouselProps {
   children: JSX.Element[];
@@ -15,18 +15,45 @@ export default function Carousel({
 }: CarouselProps) {
   const [curr, setCurr] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isInView, setIsInView] = useState(false); // New state to track if the carousel is in view
+  const carouselRef = useRef(null); // Reference to the carousel element
 
   const prev = () => setCurr(curr => (curr === 0 ? children.length - 1 : curr - 1));
   const next = () => setCurr(curr => (curr === children.length - 1 ? 0 : curr + 1));
 
   useEffect(() => {
-    if (!autoSlide || isPaused) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        console.log('Carousel is in view:', entry.isIntersecting); // Debugging
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        root: null, // Observes intersections relative to the viewport
+        rootMargin: '0px',
+        threshold: 0.1, // Adjusted to 0 for debugging
+      }
+    );
+
+    if (carouselRef.current) {
+      observer.observe(carouselRef.current);
+    }
+
+    return () => {
+      if (carouselRef.current) {
+        observer.unobserve(carouselRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log('isInView', isInView);
+    if (!autoSlide || isPaused || !isInView) return;
     const slideInterval = setInterval(next, autoSlideInterval);
     return () => clearInterval(slideInterval);
-  }, [isPaused]);
+  }, [isPaused, isInView]); // Add isInView to the dependency array
 
   return (
-    <div className="flex flex-col mt-10">
+    <div className="flex flex-col mt-10" ref={carouselRef}>
       <p className="text-h2 leading-h2 ml-24">Technical Patents</p>
       <div
         className="overflow-hidden relative hover:cursor-pointer"
