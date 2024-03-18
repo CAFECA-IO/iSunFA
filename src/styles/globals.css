@@ -82,6 +82,14 @@ a {
   background: radial-gradient(50% 50% at 50% 50%, rgba(0, 24, 64, 0.7) 0%, rgba(0, 24, 64, 0) 100%);
 }
 
+/* Custom bottom shadow */
+.bottomShadow {
+  @apply shadow-lg;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
   .fixed-top-right {
     top: 20px; /* Adjust as needed */

@@ -66,9 +66,9 @@ function LandingNavBar() {
   /* Info: (20230712 - Julian) desktop navbar */
   const desktopNavBar = (
     <div
-      className={`font-barlow -ml-5 hidden h-80px w-screen items-center px-20 py-3 ${bgStyle} text-white transition-all duration-300 ease-in-out lg:flex`}
+      className={`-ml-5 hidden h-80px w-screen items-center px-20 py-3 font-barlow ${bgStyle} text-white transition-all duration-300 ease-in-out lg:flex`}
     >
-      <ul className="flex flex-1 space-x-10 items-center">
+      <ul className="flex flex-1 items-center space-x-10">
         <li>
           <Link href={BFAURL.HOME}>
             <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
@@ -77,44 +77,44 @@ function LandingNavBar() {
         <li>
           <Link href={BFAURL.COMING_SOON} className="flex space-x-2">
             <Image src="/elements/icon_wrapper.svg" width={20} height={20} alt="nav_icon" />{' '}
-            <p className="text-white text-base">About</p>
+            <p className="text-base text-white">About</p>
           </Link>
         </li>
         <li>
           <Link href={BFAURL.COMING_SOON} className="flex space-x-2">
             {' '}
             <Image src="/elements/icon_wrapper_1.svg" width={20} height={20} alt="nav_icon" />
-            <p className="text-white text-base">Features</p>
+            <p className="text-base text-white">Features</p>
           </Link>
         </li>
         <li>
           <Link href={BFAURL.CONTACT_US} className="flex space-x-2">
             {' '}
             <Image src="/elements/icon_wrapper_2.svg" width={20} height={20} alt="nav_icon" />
-            <p className="text-white text-base"> {t('NAV_BAR.CONTACT_US')}</p>
+            <p className="text-base text-white"> {t('NAV_BAR.CONTACT_US')}</p>
           </Link>
         </li>
         {/* TODO: refactor i18n (20240315 - Shirley) */}
         <li>{/* <I18n /> */}</li>
       </ul>
 
-      <ul className="flex items-center space-x-4 mr-10">
+      <ul className="mr-10 flex items-center space-x-4">
         {/* TODO: refactor i18n (20240315 - Shirley) */}
         <div ref={dropdown}>
           <li>
             <button
-              className={`absolute top-3 right-18rem flex flex-col items-center justify-center space-x-2 font-bold  hover:bg-tertiaryBlue rounded-full ${dropdownOpen ? 'bg-tertiaryBlue p-4' : 'p-4'}`}
+              className={`absolute right-18rem top-3 flex flex-col items-center justify-center space-x-2 rounded-full  font-bold hover:bg-tertiaryBlue ${dropdownOpen ? 'bg-tertiaryBlue p-4' : 'p-4'}`}
               type="button"
               onClick={toggleDropdown}
             >
               <Image src="/elements/globe.svg" width={24} height={24} alt="i18n" />
               <ul
-                className={`flex flex-col items-center justify-center mx-auto text-center space-y-4 py-8 ${dropdownOpen ? 'block' : 'hidden'}`}
+                className={`mx-auto flex flex-col items-center justify-center space-y-4 py-8 text-center ${dropdownOpen ? 'block' : 'hidden'}`}
               >
                 {languages.map((lang: { label: string; code: string }) => (
                   <li
                     key={lang.code}
-                    className="mr-2 text-primaryYellow font-bold hover:text-white cursor-pointer"
+                    className="mr-2 cursor-pointer font-bold text-primaryYellow hover:text-white"
                     onClick={() => changeLanguage(lang.code)}
                   >
                     {lang.label}
@@ -127,7 +127,7 @@ function LandingNavBar() {
         <li>
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
           <button
-            className="flex items-center space-x-2 bg-primaryYellow text-tertiaryBlue font-bold px-6 py-3 rounded-lg"
+            className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-tertiaryBlue"
             type="button"
           >
             <p className="">Try Now</p>
@@ -152,7 +152,7 @@ function LandingNavBar() {
   const mobileNavBar = (
     <div
       ref={targetRef}
-      className="relative flex -ml-5 w-screen h-80px items-center justify-center bg-secondaryBlue p-4 text-white shadow-xl lg:hidden"
+      className="relative -ml-5 flex h-80px w-screen items-center justify-center bg-secondaryBlue p-4 text-white shadow-xl lg:hidden"
     >
       {/* Info: (20230712 - Julian) hamburger */}
       <button className="absolute left-4 p-10px" onClick={clickMenuHandler} type="button">

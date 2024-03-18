@@ -4,7 +4,13 @@ module.exports = {
   theme: {
     extend: {
       aspectRatio: {
+        '1/1': '1 / 1',
+        '1/1.18': '1 / 1.18',
+        '3/1': '3 / 1',
+        '3/2': '3 / 2',
         '4/3': '4 / 3',
+        '16/9': '16 / 9',
+        '21/9': '21 / 9',
       },
       colors: {
         darkPurple: '#24274A',
@@ -46,6 +52,13 @@ module.exports = {
         light_down: 'url("/elements/light_down.svg")',
         mask: 'url("/elements/mask.svg")',
         blended_light: 'url("/elements/blended_light.svg")',
+        green_light: 'url("/elements/green_light.svg")',
+        shadow_01: 'url("/elements/shadow_01.svg")',
+        light_01: 'url("/elements/light_01.svg")',
+        light_02: 'url("/elements/light_02.svg")',
+        light_03: 'url("/elements/light_03.svg")',
+        light_04: 'url("/elements/light_04.svg")',
+        customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:
@@ -282,11 +295,13 @@ module.exports = {
         '800px': '800px',
         '850px': '850px',
         '865px': '865px',
-
         '900px': '900px',
         '950px': '950px',
         '1000px': '1000px',
+        '1100px': '1100px',
         '1200px': '1200px',
+        '1400px': '1400px',
+        '1440px': '1440px',
         '1500px': '1500px',
         '2000px': '2000px',
         '0.1rem': '0.1rem',
@@ -356,6 +371,7 @@ module.exports = {
         '95%': '95%',
 
         '80vh': '80vh',
+        '90vh': '90vh',
         '95vh': '95vh',
         '120vh': '120vh',
         '140vh': '140vh',

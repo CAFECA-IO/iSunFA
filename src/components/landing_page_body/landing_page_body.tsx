@@ -9,6 +9,7 @@ import { TranslateFunction } from '../../interfaces/locale';
 import NumberAnimation from '../number_animation/number_animation';
 import Carousel from '../carousel/carousel';
 import Card from '../card/card';
+import ContactForm from '../contact_form/contact_form';
 
 function LandingPageBody() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -67,7 +68,16 @@ function LandingPageBody() {
             fill
             style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
           />
-          <div className="shadow-md shadow-black"></div>
+          <div className="relative left-0 top-7rem">
+            <Image
+              className=""
+              src={`/elements/bottom_shadow.svg`}
+              alt={alt}
+              width={75}
+              height={15}
+              // style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
+            />
+          </div>
         </div>
         {/* Info:(20240315 - Shirley) Number animation */}
         {/* <div className="h-80px" /> */}
@@ -300,10 +310,13 @@ function LandingPageBody() {
         </div> */}
 
         {/* <div className="absolute -top-40 -right-56 flex h-140vh w-full flex-col items-center bg-light_up mix-blend-exclusion bg-auto bg-center bg-no-repeat lg:bg-auto " /> */}
-        <div className="relative flex h-140vh w-screen flex-col items-center bg-web bg-contain bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
+
+        <div className="relative flex flex-col items-center">
+          {/* Info: web background image (20240318 - Shirley) */}
+          <div className="absolute right-0 top-0 flex aspect-4/3 w-1400px flex-col items-center bg-web bg-cover bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"></div>
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-screen">
-            <div className="absolute right-0 top-0 h-500px w-900px bg-light_up bg-blend-color-dodge">
+            <div className="absolute right-0 top-0 h-500px w-900px bg-light_up bg-no-repeat bg-blend-color-dodge">
               {/* <img
                 className="w-[401px] h-[339px] bg-blend-color-dodge"
                 alt="Vector"
@@ -316,9 +329,59 @@ function LandingPageBody() {
             /> */}
             </div>
           </div>
+          {/* Info: ---light_up svg--- (20240318 - Shirley) */}
+          {/* <div className="absolute flex h-screen w-screen items-end justify-center mix-blend-screen">
+            <div className="bg-green_light w-1400px h-1200px -translate-x-1/2 transform"></div>
+          </div> */}
           {/* <div className="relative flex h-140vh w-full flex-col items-center bg-light_up mix-blend-screen bg-auto bg-center bg-no-repeat lg:bg-auto lg:bg-top-4" /> */}
-
+          {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
+          {/* <div className="w-1400px absolute left-0 top-20 flex aspect-4/3 mix-blend-screen">
+            {' '}
+            <div className="bg-shadow_01 w-1400px absolute right-0 top-0 z-0 aspect-4/3 bg-contain bg-no-repeat bg-blend-color-dodge"></div>
+          </div> */}
+          {/* Info: WI: shadow_01 svg */}
+          <div className="absolute bottom-0 left-0 flex h-300px w-full bg-customGradient "></div>
+          {/* Info: WII: shadow_01 svg */}
+          {/* <div className="absolute h-full w-full ">
+            <img
+              className="w-1400px absolute right-0 top-0 flex h-fit bg-blend-color-dodge"
+              alt="Shadow"
+              src="/elements/shadow_01.svg"
+            />
+          </div> */}
+          {/* <div className="h-[1227px] w-[1432px]">
+            <div className="relative top-[-4px] h-[1131px] [background:linear-gradient(180deg,rgba(0,24,64,0)_32.5%,rgb(0,24,64)_85.5%)]">
+              <img
+                className="absolute left-0 top-0 h-[1079px] w-[856px] bg-blend-color-dodge"
+                alt="Shadow"
+                src="/elements/shadow_01.svg"
+              />
+            </div>
+          </div> */}
+          {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
+          {/* Info: ---green_light svg--- (20240318 - Shirley) */}
+          <div className="absolute h-screen w-screen mix-blend-color-dodge">
+            {' '}
+            {/*mix-blend-luminosity */}
+            <div className="absolute -right-1/3 top-20 h-1200px w-1400px bg-green_light bg-contain bg-no-repeat bg-blend-color-dodge"></div>
+            {/* <div className="bg-shadow_01 w-1400px absolute bottom-0 right-0 h-1200px bg-blend-color-dodge"></div> */}
+          </div>
+          {/* Info: ---green_light svg--- (20240318 - Shirley) */}
           {/* Info:(20230711 - Shirley) Main Title Block */}
+          {/* Info: ---light_down svg--- (20240318 - Shirley) */}
+          <div className="absolute h-screen w-screen mix-blend-screen">
+            {' '}
+            <div className="bottomShadow absolute -top-36 left-0 z-10 h-1200px w-1400px bg-light_down bg-cover bg-no-repeat bg-blend-color-dodge shadow-md"></div>
+          </div>
+          {/* Info: ---light_down svg--- (20240318 - Shirley) */}
+          {/* Info: iSunFA 字體 (20240318 - Shirley) */}
+          <div className="absolute right-40 top-56">
+            <img
+              loading="lazy"
+              src="https://cdn.builder.io/api/v1/image/assets/TEMP/d4d54b292624b59c73dd8c28e337e2259c6cb43b26a731ecd8d1f013564d1931?apiKey=0e17b0b875f041659e186639705112b1&"
+              className="aspect-[0.87] w-full grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full"
+            />
+          </div>
           <div className="z-5 ml-40 flex h-screen w-full flex-col items-start justify-center space-y-10 px-4 py-12 text-start">
             <div className="flex flex-col space-y-5">
               {' '}
@@ -351,12 +414,13 @@ function LandingPageBody() {
             </button>
           </div>
         </div>
+
         {/* </div> */}
         {/* </div> */}
 
         {/* Info:(20230815 - Shirley) How we work */}
 
-        <div className="flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-52">
+        <div className="flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-30rem">
           <h1 className="flex w-full justify-center text-h1 font-bold tracking-wider text-white lg:text-h1">
             {/* FIXME: i18n */}
             How we work
@@ -539,6 +603,27 @@ function LandingPageBody() {
             {heroList}
           </div>
 
+          {/* Info: ----- Partners (20240318 - Shirley) ----- */}
+          <div className="flex w-full flex-col flex-wrap content-center justify-center p-20 max-md:max-w-full max-md:px-5">
+            <div className="mt-10 items-center justify-center px-16 py-2.5 text-center text-3xl font-bold tracking-tighter text-white max-md:max-w-full max-md:px-5">
+              Join 10+ companies already on the path to growth
+            </div>
+            <div className="mb-4 mt-20 flex w-[388px] max-w-full justify-between gap-5 self-center max-md:mt-10">
+              <img
+                loading="lazy"
+                src="https://cdn.builder.io/api/v1/image/assets/TEMP/ac89e42fea1664fc20628447e4c467981b2a7917d2f218339003d8a10442c356?apiKey=0e17b0b875f041659e186639705112b1&"
+                className="aspect-[3.85] w-[154px] max-w-full shrink-0 self-start"
+              />
+              <img
+                loading="lazy"
+                src="https://cdn.builder.io/api/v1/image/assets/TEMP/e0f0f194cc2b06eb64fe288595d1376d36cfa208efdb59a1e38301d868537587?apiKey=0e17b0b875f041659e186639705112b1&"
+                className="aspect-[3.7] w-[154px] max-w-full shrink-0"
+              />
+            </div>
+          </div>
+          {/* Info: ----- Partners (20240318 - Shirley) ----- */}
+
+          {/* Info: ----- Carousel (20240318 - Shirley) ----- */}
           <div className="flex w-full justify-center space-x-5">
             <div className="relative mt-20 h-400px w-400px">
               <Image
@@ -570,6 +655,105 @@ function LandingPageBody() {
               {/* </div> */}
             </div>
           </div>
+          {/* Info: ----- Carousel (20240318 - Shirley) ----- */}
+
+          {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
+          <div className="flex w-full flex-col justify-center px-16 py-20 max-md:max-w-full max-md:px-5">
+            <div className="mx-5 mb-20 mt-32 max-md:my-10 max-md:mr-2.5 max-md:max-w-full">
+              <div className="flex gap-5 max-md:flex-col max-md:gap-0">
+                <div className="flex w-6/12 flex-col max-md:ml-0 max-md:w-full">
+                  <div className="flex grow flex-col justify-center max-md:mt-10 max-md:max-w-full">
+                    <div className="justify-center pt-2 text-5xl font-semibold leading-[51.92px] tracking-tighter text-white max-md:max-w-full">
+                      Why iSun FA
+                    </div>
+                    <div className="mt-10 flex flex-col max-md:max-w-full">
+                      <div className="flex gap-4 max-md:flex-wrap">
+                        <div className="my-auto flex items-center justify-center">
+                          <img
+                            loading="lazy"
+                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                            className="aspect-square w-8"
+                          />
+                        </div>
+                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                          Aligns with various international accounting standards and regulations.
+                        </div>
+                      </div>
+                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                        <div className="my-auto flex items-center justify-center">
+                          <img
+                            loading="lazy"
+                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                            className="aspect-square w-8"
+                          />
+                        </div>
+                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                          Enables auditors to review enterprise data anytime and take immediate
+                          action when issues arise.
+                        </div>
+                      </div>
+                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                        <div className="my-auto flex items-center justify-center">
+                          <img
+                            loading="lazy"
+                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                            className="aspect-square w-8"
+                          />
+                        </div>
+                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                          Facilitating faster identification and resolution of potential risks and
+                          problems, thereby reducing business risks.
+                        </div>
+                      </div>
+                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                        <div className="my-auto flex items-center justify-center">
+                          <img
+                            loading="lazy"
+                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                            className="aspect-square w-8"
+                          />
+                        </div>
+                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                          Complies with regulations requiring continuous auditing in certain
+                          industries and jurisdictions.
+                        </div>
+                      </div>
+                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                        <div className="my-auto flex items-center justify-center">
+                          <img
+                            loading="lazy"
+                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                            className="aspect-square w-8"
+                          />
+                        </div>
+                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                          Demonstrates the enterprise's ongoing commitment to monitoring and
+                          supervision of operations to investors, enhancing trust and transparency
+                          in the company.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex w-1/2 flex-col max-md:ml-0 max-md:w-full">
+                  <img
+                    loading="lazy"
+                    src="/elements/partial_mac.png"
+                    // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&"
+                    className="aspect-[1.18] w-full grow self-stretch max-md:mt-10 max-md:max-w-full"
+                  />
+                  {/* <Image
+                    src="/elements/partial_mac.png"
+                    alt="partial mac"
+                    className="aspect-[1.18] w-full grow self-stretch max-md:mt-10 max-md:max-w-full"
+                    fill
+                    style={{ objectFit: 'contain' }}
+                  /> */}
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
 
           {/* <div className="flex flex-col items-center space-y-16 px-4 py-20 text-center lg:h-450px lg:px-20">
             <div className="flex flex-col lg:flex-row space-x-5 h-500px">
@@ -581,6 +765,12 @@ function LandingPageBody() {
           </div>
 
           <div className="py-40">t</div> */}
+
+          {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
+          <div id="contact-us">
+            <ContactForm />
+          </div>
+          {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
         </div>
 
         {/* Info:(20230711 - Shirley) Footer */}
