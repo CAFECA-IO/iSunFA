@@ -135,11 +135,6 @@ function LandingPageBody() {
 
   const verticalDotLine = (
     <>
-      {/* eslint-disable */}
-      {/* dashed vertical line */}
-
-      {/* <div className={`ml-12 h-10 w-1px border-0.5px border-dashed border-gray-50`} /> */}
-
       <div className="relative h-500px">
         {/* ----- Dot & Line components ----- */}
         <div className="flex items-center rounded-lg px-12 pt-10 ">
@@ -155,13 +150,6 @@ function LandingPageBody() {
           <div
             className={`absolute left-2.3rem top-5 h-400px w-1px border-5px border-solid border-tertiaryBlue`}
           />
-
-          {/* <span className="ml-2.5rem space-y-2">
-            <div className="font-bold text-base">title</div>
-            <div className="text-gray-750 text-xs font-normal leading-5 tracking-normal">
-              content
-            </div>
-          </span> */}
         </div>
       </div>
     </>
@@ -180,31 +168,19 @@ function LandingPageBody() {
       <div className="flex min-h-screen w-screen flex-col overflow-hidden bg-secondaryBlue font-barlow">
         <div className="relative flex flex-col items-center">
           {/* Info: web background image (20240318 - Shirley) */}
-          <div className="absolute right-0 top-0 flex aspect-4/3 w-1400px flex-col items-center bg-web bg-cover bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"></div>
+          <div className="absolute right-0 top-0 flex aspect-4/3 w-1400px flex-col items-center bg-web bg-cover bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
+            {' '}
+            <div className="absolute -bottom-2 left-0 flex aspect-21/9 w-full bg-customGradient bg-cover bg-no-repeat"></div>
+          </div>
+          {/* <div className="bg-background_pattern absolute right-0 top-0 flex h-screen w-screen flex-col items-center bg-cover bg-center bg-no-repeat mix-blend-screen lg:bg-cover lg:bg-top-4"></div> */}
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-screen">
-            <div className="absolute right-0 top-0 h-500px w-900px bg-light_up bg-no-repeat bg-blend-color-dodge">
-              {/* <img
-                className="w-[401px] h-[339px] bg-blend-color-dodge"
-                alt="Vector"
-                src="/elements/light_up.svg"
-              /> */}
-              {/* <img
-              className="w-[950px] h-[620px] left-0 bg-blend-screen absolute top-0"
-              alt="Vector"
-              src="vector.svg"
-            /> */}
-            </div>
+            <div className="absolute right-0 top-0 h-500px w-900px bg-light_up bg-no-repeat bg-blend-color-dodge"></div>
           </div>
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
-
           {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
-          {/* <div className="w-1400px absolute left-0 top-20 flex aspect-4/3 mix-blend-screen">
-            {' '}
-            <div className="bg-shadow_01 w-1400px absolute right-0 top-0 z-0 aspect-4/3 bg-contain bg-no-repeat bg-blend-color-dodge"></div>
-          </div> */}
           {/* Info: WI: shadow_01 svg */}
-          <div className="absolute -bottom-40 left-0 flex h-1000px w-full bg-customGradient bg-cover bg-no-repeat"></div>
+          {/* <div className="absolute -bottom-40 left-0 flex aspect-21/9 w-full bg-customGradient bg-cover bg-no-repeat"></div> */}
           {/* Info: WII: shadow_01 svg */}
           {/* <div className="absolute h-full w-full ">
             <img
@@ -213,6 +189,7 @@ function LandingPageBody() {
               src="/elements/shadow_01.svg"
             />
           </div> */}
+          {/* Info: WIII: shadow_01 svg */}
           {/* <div className="h-[1227px] w-[1432px]">
             <div className="relative top-[-4px] h-[1131px] [background:linear-gradient(180deg,rgba(0,24,64,0)_32.5%,rgb(0,24,64)_85.5%)]">
               <img
@@ -223,31 +200,28 @@ function LandingPageBody() {
             </div>
           </div> */}
           {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
-          {/* Info: ---green_light svg--- (20240318 - Shirley) */}
+          {/* Info: ---green_light svg--- (20240318 - Shirley) */} {/*mix-blend-luminosity */}
           <div className="absolute h-screen w-screen mix-blend-color-dodge">
             {' '}
-            {/*mix-blend-luminosity */}
             <div className="absolute -right-1/3 top-20 h-1200px w-1400px bg-green_light bg-contain bg-no-repeat bg-blend-color-dodge"></div>
-            {/* <div className="bg-shadow_01 w-1400px absolute bottom-0 right-0 h-1200px bg-blend-color-dodge"></div> */}
           </div>
           {/* Info: ---green_light svg--- (20240318 - Shirley) */}
-
           {/* Info:(20230711 - Shirley) Main Title Block */}
           {/* Info: ---light_down svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-screen">
             {' '}
-            <div className="bottomShadow absolute -top-36 left-0 z-10 h-1200px w-1400px bg-light_down bg-cover bg-no-repeat bg-blend-color-dodge shadow-md"></div>
+            <div className="bottomShadow absolute -top-36 left-0 z-10 h-1800px w-1400px bg-light_down bg-cover bg-no-repeat bg-blend-color-dodge shadow-md"></div>
           </div>
           {/* Info: ---light_down svg--- (20240318 - Shirley) */}
           {/* Info: iSunFA 大字 (20240318 - Shirley) */}
-          <div className="absolute right-40 top-56">
+          <div className="absolute -right-0 top-56">
             <img
               loading="lazy"
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/d4d54b292624b59c73dd8c28e337e2259c6cb43b26a731ecd8d1f013564d1931?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="aspect-[0.87] w-full grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full"
+              className="aspect-0.87 w-4/5 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full"
             />
           </div>
-          <div className="z-5 ml-40 flex h-screen w-full flex-col items-start justify-center space-y-10 px-4 py-12 text-start">
+          <div className="z-5 -mt-20 ml-40 flex h-screen w-full flex-col items-start justify-center space-y-10 px-4 py-12 text-start">
             <div className="flex flex-col space-y-5">
               {' '}
               <h1 className="text-6xl font-bold tracking-wider text-primaryYellow lg:text-7xl">
@@ -276,33 +250,19 @@ function LandingPageBody() {
         </div>
 
         {/* Info:(20230815 - Shirley) How we work */}
-        <div className="absolute h-screen w-screen mix-blend-screen">
-          <div className="absolute right-0 top-0 h-500px w-900px bg-light_01 bg-no-repeat bg-blend-color-dodge">
-            {/* <img
-                className="w-[401px] h-[339px] bg-blend-color-dodge"
-                alt="Vector"
-                src="/elements/light_up.svg"
-              /> */}
-            {/* <img
-              className="w-[950px] h-[620px] left-0 bg-blend-screen absolute top-0"
-              alt="Vector"
-              src="vector.svg"
-            /> */}
+        {/* <div className="absolute h-screen w-screen mix-blend-screen">
+          <div className="absolute right-0 top-0 h-500px w-900px bg-light_01 bg-no-repeat bg-blend-color-dodge"></div>
+        </div> */}
+        {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
+        <div className="relative">
+          {' '}
+          <div className="absolute h-screen w-screen mix-blend-screen">
+            <div className="absolute right-0 top-0 aspect-0.87 w-1400px bg-light_01 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
         </div>
-
-        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-20">
-          {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
-          <div className="relative">
-            {' '}
-            <div className="absolute h-screen w-screen mix-blend-screen">
-              <div className="absolute right-0 top-0 h-full w-1200px bg-light_01 bg-no-repeat bg-blend-color-dodge"></div>
-            </div>
-          </div>
-          {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
-
+        {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
+        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-48">
           <h1 className="flex w-full justify-center pt-28 text-h1 font-bold tracking-wider text-white lg:text-h1">
-            {/* FIXME: i18n */}
             {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
           </h1>
           <div className="flex">
@@ -318,7 +278,7 @@ function LandingPageBody() {
                 <div className="relative h-300px w-600px">
                   <Image
                     src="/elements/how_we_work_1.png"
-                    alt="how we work"
+                    alt="how we work - privacy"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
@@ -338,7 +298,7 @@ function LandingPageBody() {
                 <div className="relative h-300px w-600px">
                   <Image
                     src="/elements/how_we_work_2.png"
-                    alt="how we work"
+                    alt="how we work - accuracy"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
@@ -358,7 +318,7 @@ function LandingPageBody() {
                 <div className="relative h-300px w-600px">
                   <Image
                     src="/elements/how_we_work_3.png"
-                    alt="how we work"
+                    alt="how we work - compliance"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
@@ -375,22 +335,24 @@ function LandingPageBody() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Info: (20240315 - Shirley) Blocks with number animation */}
-          <div className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
-            {numberBlockList}
+        {/* Info: (20240315 - Shirley) Blocks with number animation */}
+        <div className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
+          {numberBlockList}
 
-            {/* Info:(20240308 - Shirley) background img */}
-            {/* <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden lg:block" /> */}
+          {/* Info:(20240308 - Shirley) background img */}
+          {/* <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden lg:block" /> */}
+        </div>
+
+        {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
+        <div className="relative">
+          {' '}
+          <div className="absolute h-screen w-screen mix-blend-screen">
+            <div className="absolute -top-20 left-0 h-full w-1200px bg-light_02 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
-
-          {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
-          <div className="relative">
-            {' '}
-            <div className="absolute h-screen w-screen mix-blend-screen">
-              <div className="absolute -top-20 left-0 h-full w-1200px bg-light_02 bg-no-repeat bg-blend-color-dodge"></div>
-            </div>
-          </div>
+        </div>
+        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-20">
           {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
           {/* Info:(20240315 - Shirley) Features Block */}
           <div className="mt-20 flex flex-col items-center space-y-16 px-4 pt-20 text-center lg:mb-40 lg:h-450px lg:px-20 lg:py-20">
@@ -426,12 +388,13 @@ function LandingPageBody() {
           <div className="mx-20 mb-40 grid grid-cols-1 gap-20 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10">
             {heroList}
           </div>
-
+        </div>
+        <div>
           {/* Info: ----- light_03 svg ----- (20240318 - Shirley) */}
           <div className="relative">
             {' '}
             <div className="absolute h-screen w-screen mix-blend-screen">
-              <div className="absolute -top-0 right-0 h-full w-1200px bg-light_03 bg-no-repeat bg-blend-color-dodge"></div>
+              <div className="absolute -top-0 right-0 aspect-0.87 w-1400px bg-light_03 bg-no-repeat bg-blend-color-dodge"></div>
             </div>
           </div>
           {/* Info: ----- light_03 svg ----- (20240318 - Shirley) */}
@@ -585,12 +548,12 @@ function LandingPageBody() {
         <div className="relative">
           {' '}
           <div className="absolute h-screen w-screen mix-blend-screen">
-            <div className="absolute -top-24rem left-0 h-full w-1200px bg-light_04 bg-no-repeat bg-blend-color-dodge"></div>
+            <div className="absolute -top-24rem left-0 h-1200px w-1400px bg-light_04 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
         </div>
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
-        <div id="contact-us" className="h-1000px">
+        <div id="contact-us" className="mb-20 h-1000px">
           <div className="relative h-500px w-full">
             {' '}
             <Image

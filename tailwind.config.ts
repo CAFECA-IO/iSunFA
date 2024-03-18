@@ -11,6 +11,7 @@ module.exports = {
         '4/3': '4 / 3',
         '16/9': '16 / 9',
         '21/9': '21 / 9',
+        0.87: '87 / 100',
       },
       colors: {
         darkPurple: '#24274A',
@@ -60,6 +61,7 @@ module.exports = {
         light_04: 'url("/elements/light_04.svg")',
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
         contact_bg: 'url("/elements/contact_bg.svg")',
+        background_pattern: 'url("/elements/background_pattern.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:
@@ -304,6 +306,10 @@ module.exports = {
         '1400px': '1400px',
         '1440px': '1440px',
         '1500px': '1500px',
+        '1600px': '1600px',
+        '1700px': '1700px',
+        '1800px': '1800px',
+        '1900px': '1900px',
         '2000px': '2000px',
         '0.1rem': '0.1rem',
         '1.4rem': '1.4rem',
@@ -368,6 +374,13 @@ module.exports = {
         '1/11': '9.09090909090909%',
         '2/11': '18.181818181818183%',
         '10/11': '90.909%',
+        '1/12': '8.333333%',
+        '1/13': '7.692307692307692%',
+        '2/13': '15.384615384615385%',
+        '3/13': '23.076923076923077%',
+        '1/14': '7.142857142857143%',
+        '1/15': '6.666666666666667%',
+        '1/16': '6.25%',
         '1/3': '33.333333%',
         '95%': '95%',
 

@@ -152,7 +152,7 @@ function LandingNavBar() {
   const mobileNavBar = (
     <div
       ref={targetRef}
-      className="relative -ml-5 flex h-80px w-screen items-center justify-center bg-secondaryBlue p-4 text-white shadow-xl lg:hidden"
+      className={`${bgStyle} relative -ml-5 flex h-80px w-screen items-center justify-center p-4 text-white lg:hidden`}
     >
       {/* Info: (20230712 - Julian) hamburger */}
       <button className="absolute left-4 p-10px" onClick={clickMenuHandler} type="button">
