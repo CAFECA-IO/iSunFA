@@ -42,6 +42,7 @@ function LandingNavBar() {
 
   /* Info:(20230814 - Julian) Scroll Position */
   const [scroll, setScroll] = useState(0);
+
   const handleScroll = () => {
     const position = window.scrollY;
     setScroll(position);
@@ -56,7 +57,7 @@ function LandingNavBar() {
   }, []);
 
   /* Info:(20230814 - Julian) Change Navbar Background Style */
-  const bgStyle = scroll >= 300 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
+  const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
   /* Info: (20230712 - Julian) close menu when click outer */
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
@@ -77,14 +78,14 @@ function LandingNavBar() {
         <li>
           <Link href={BFAURL.COMING_SOON} className="flex space-x-2">
             <Image src="/elements/icon_wrapper.svg" width={20} height={20} alt="nav_icon" />{' '}
-            <p className="text-base text-white">About</p>
+            <p className="text-base text-white">{t('NAV_BAR.ABOUT')}</p>
           </Link>
         </li>
         <li>
           <Link href={BFAURL.COMING_SOON} className="flex space-x-2">
             {' '}
             <Image src="/elements/icon_wrapper_1.svg" width={20} height={20} alt="nav_icon" />
-            <p className="text-base text-white">Features</p>
+            <p className="text-base text-white">{t('NAV_BAR.FEATURES')}</p>
           </Link>
         </li>
         <li>
@@ -125,12 +126,11 @@ function LandingNavBar() {
           </li>
         </div>
         <li>
-          {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
           <button
             className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-tertiaryBlue"
             type="button"
           >
-            <p className="">Try Now</p>
+            <p className="">{t('NAV_BAR.TRY_NOW')}</p>
             <Image src="/elements/arrow.svg" width={20} height={20} alt="arrow_right" />
           </button>
         </li>

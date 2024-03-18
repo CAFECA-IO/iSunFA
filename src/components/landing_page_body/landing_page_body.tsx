@@ -168,149 +168,16 @@ function LandingPageBody() {
   );
 
   const carouselItems = [
-    {
-      title: 'Efficient Peer-to-Peer Network Architecture',
-      content:
-        'Through a bio-inspired routing model and role-based mechanism, we develop a highly efficient peer-to-peer network architecture. This system enables fast communication and protocol execution, supporting a blockchain system operating near traditional database efficiency. This ensures seamless handling of vast access requests from zero-knowledge bookkeeping (zk-bookkeeping) while minimizing data tampering risks.',
-    },
-    {
-      title: 'Decentralized Identity Verification',
-      content:
-        'We authenticate user identity using elliptic curve digital signature technology. Users provide proof of identity, validity period, purpose, and supplementary information, generating a time-limited and authorized identity certificate using a designated private key. This independent verification process ensures each zero-knowledge bookkeeping entry is endorsed by professionals or enterprises, deterring errors in bookkeeping.',
-    },
-    {
-      title: 'ZK- Proof Blockchain Preservation of Evidence',
-      content:
-        'Our method transforms data into matrix format, incorporating noise data and performing coordinate axis rotations. This process creates verifiable metadata consistent with the original data but cannot be reversed to obtain the original data.',
-    },
-    {
-      title:
-        'Real-Time Generation of Accounting Reports Based on ZK- Proof Blockchain Preservation of Evidence',
-      content:
-        'By embedding difference value metadata of accounting reports into the noise injection process, we achieve zero-knowledge bookkeeping. This enables real-time generation of accounting reports, including reporting period, list of included metadata, and environmental parameters like exchange rates, based on zero-knowledge blockchain certification.',
-    },
-    {
-      title: 'Audit Method Based on ZK- Proof Blockchain Preservation of Evidence',
-      content:
-        'Using specific algorithms, audits are swiftly conducted to verify the existence, order, and accuracy of metadata in accounting reports. The zero-knowledge proof method confirms metadata authenticity and consistency with the blockchain. This ensures an efficient audit method based on zero-knowledge blockchain certification.',
-    },
+    { title: 'LANDING_PAGE.CAROUSEL_TITLE_1', content: 'LANDING_PAGE.CAROUSEL_CONTENT_1' },
+    { title: 'LANDING_PAGE.CAROUSEL_TITLE_2', content: 'LANDING_PAGE.CAROUSEL_CONTENT_2' },
+    { title: 'LANDING_PAGE.CAROUSEL_TITLE_3', content: 'LANDING_PAGE.CAROUSEL_CONTENT_3' },
+    { title: 'LANDING_PAGE.CAROUSEL_TITLE_4', content: 'LANDING_PAGE.CAROUSEL_CONTENT_4' },
+    { title: 'LANDING_PAGE.CAROUSEL_TITLE_5', content: 'LANDING_PAGE.CAROUSEL_CONTENT_5' },
   ];
 
   return (
     <div>
-      {/* Info: NOTE mix-blend-exclusion, mix-blend-lighten, mix-blend-plus-lighter, mix-blend-screen */}
-      {/* <div className="absolute top-0 right-0 flex h-140vh w-full flex-col items-center bg-light_up mix-blend-screen bg-auto bg-center bg-no-repeat lg:bg-auto lg:bg-top-4" /> */}
-
       <div className="flex min-h-screen w-screen flex-col overflow-hidden bg-secondaryBlue font-barlow">
-        {/* Info:(20230815 - Shirley) Pipe Background Image */}
-        {/* <div
-        className="absolute inset-0 bg-light_up bg-auto bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"
-        style={{
-          maskImage: "url('/elements/mask.svg')",
-          maskSize: 'cover',
-          maskRepeat: 'no-repeat',
-          maskPosition: 'center',
-        }}
-      /> */}
-        {/* <div className="relative flex h-140vh w-full flex-col items-center bg-mask bg-auto bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"> */}
-        {/* TODO: make this bg-light_up fixed at the top-right corner responsively */}
-        {/* <div className="flex flex-col justify-center mix-blend-screen max-w-[950px]">
-          <img
-            loading="lazy"
-            srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&"
-            className="w-full bg-blend-screen mix-blend-screen aspect-[1.54] fill-[radial-gradient(86.31%_87.08%_at_18.22%_91.72%,#FFA502_0%,#F49E01_1%,#C17D01_9%,#935F01_17%,#6B4500_26%,#4A3000_34%,#2F1E00_44%,#1A1000_54%,#0B0700_65%,#020100_79%,#000_100%)] max-md:max-w-full"
-          />
-        </div> */}
-
-        {/* <img
-          loading="lazy"
-          srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/b599a051-ca21-4adf-abeb-05bea5efc568?apiKey=0e17b0b875f041659e186639705112b1&"
-          className="w-full bg-blend-screen aspect-[1.54] fill-[radial-gradient(86.31%_87.08%_at_18.22%_91.72%,#FFA502_0%,#F49E01_1%,#C17D01_9%,#935F01_17%,#6B4500_26%,#4A3000_34%,#2F1E00_44%,#1A1000_54%,#0B0700_65%,#020100_79%,#000_100%)] max-md:max-w-full"
-        /> */}
-
-        {/* FIXME: it works but should overlay more vectors? */}
-        {/* <div className="relative w-screen h-screen mix-blend-screen">
-          <div className="absolute w-[700px] h-[620px] top-0 right-0">
-            <img
-              className="w-[401px] h-[339px] bg-blend-color-dodge"
-              alt="Vector"
-              src="/elements/light_up.svg"
-          </div>
-        </div>
-
-        <div className="relative w-[1440px] h-[6764px]">
-          <div className="absolute w-[1440px] h-[1687px] top-[5285px] left-0">
-            <img
-              className="absolute w-[1440px] h-[1115px] top-[572px] left-0"
-              alt="Shadow"
-              src="shadow-02.svg"
-            />
-            <img
-              className="absolute w-[1440px] h-[820px] top-0 left-0"
-              alt="Light"
-              src="light-04.svg"
-            />
-          </div>
-          <img
-            className="absolute w-[1440px] h-[1163px] top-[3500px] left-0"
-            alt="Light"
-            src="light-03.svg"
-          />
-          <div className="absolute w-[1440px] h-[3404px] top-0 left-0">
-            <img
-              className="absolute w-[1440px] h-[1131px] top-[2273px] left-0"
-              alt="Light"
-              src="light-02.svg"
-            />
-            <img
-              className="absolute w-[1440px] h-[1148px] top-[1370px] left-0"
-              alt="Light"
-              src="light-01.svg"
-            />
-            <img
-              className="absolute w-[1440px] h-[1112px] top-0 left-0 mix-blend-screen"
-              alt="Web"
-              src="web.svg"
-            />
-            <div className="absolute w-[1432px] h-[1227px] top-[4px] left-0">
-              <div className="relative h-[1131px] top-[-4px] [background:linear-gradient(180deg,rgba(0,24,64,0)_32.5%,rgb(0,24,64)_85.5%)]">
-                <img
-                  className="absolute w-[856px] h-[1079px] top-0 left-0 bg-blend-color-dodge"
-                  alt="Shadow"
-                  src="shadow.svg"
-                />
-              </div>
-            </div>
-            <img
-              className="absolute w-[1440px] h-[1267px] top-[193px] left-0"
-              alt="Green light"
-              src="green-light.svg"
-            />
-            <img
-              className="absolute w-[1440px] h-[1089px] top-[313px] left-0 mix-blend-screen"
-              alt="Light down"
-              src="light-down.png"
-            />
-            <img
-              className="absolute w-[1440px] h-[620px] top-0 left-0 mix-blend-screen"
-              alt="Light up"
-              src="light-up.svg"
-            />
-          </div>
-        </div> */}
-
-        {/* FIXME: It works! */}
-        {/* <div className="relative">
-          {' '}
-          <img
-            loading="lazy"
-            src="https://cdn.builder.io/api/v1/image/assets/TEMP/bcbc01dc26ea922042dd2a656788155f0479259a2ef18bd8fd2f0c44d075fd67?apiKey=0e17b0b875f041659e186639705112b1&"
-            className="w-full bg-blend-screen mix-blend-screen aspect-[0.36] fill-[radial-gradient(50.34%_49.91%_at_49.96%_51.15%,#008669_0%,#00765C_11%,#00211A_72%,#000_100%)]"
-          />
-        </div> */}
-
-        {/* <div className="absolute -top-40 -right-56 flex h-140vh w-full flex-col items-center bg-light_up mix-blend-exclusion bg-auto bg-center bg-no-repeat lg:bg-auto " /> */}
-
         <div className="relative flex flex-col items-center">
           {/* Info: web background image (20240318 - Shirley) */}
           <div className="absolute right-0 top-0 flex aspect-4/3 w-1400px flex-col items-center bg-web bg-cover bg-center bg-no-repeat lg:bg-cover lg:bg-top-4"></div>
@@ -330,17 +197,14 @@ function LandingPageBody() {
             </div>
           </div>
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
-          {/* <div className="absolute flex h-screen w-screen items-end justify-center mix-blend-screen">
-            <div className="bg-green_light w-1400px h-1200px -translate-x-1/2 transform"></div>
-          </div> */}
-          {/* <div className="relative flex h-140vh w-full flex-col items-center bg-light_up mix-blend-screen bg-auto bg-center bg-no-repeat lg:bg-auto lg:bg-top-4" /> */}
+
           {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
           {/* <div className="w-1400px absolute left-0 top-20 flex aspect-4/3 mix-blend-screen">
             {' '}
             <div className="bg-shadow_01 w-1400px absolute right-0 top-0 z-0 aspect-4/3 bg-contain bg-no-repeat bg-blend-color-dodge"></div>
           </div> */}
           {/* Info: WI: shadow_01 svg */}
-          <div className="absolute bottom-0 left-0 flex h-300px w-full bg-customGradient "></div>
+          <div className="absolute -bottom-40 left-0 flex h-1000px w-full bg-customGradient bg-cover bg-no-repeat"></div>
           {/* Info: WII: shadow_01 svg */}
           {/* <div className="absolute h-full w-full ">
             <img
@@ -367,6 +231,7 @@ function LandingPageBody() {
             {/* <div className="bg-shadow_01 w-1400px absolute bottom-0 right-0 h-1200px bg-blend-color-dodge"></div> */}
           </div>
           {/* Info: ---green_light svg--- (20240318 - Shirley) */}
+
           {/* Info:(20230711 - Shirley) Main Title Block */}
           {/* Info: ---light_down svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-screen">
@@ -374,7 +239,7 @@ function LandingPageBody() {
             <div className="bottomShadow absolute -top-36 left-0 z-10 h-1200px w-1400px bg-light_down bg-cover bg-no-repeat bg-blend-color-dodge shadow-md"></div>
           </div>
           {/* Info: ---light_down svg--- (20240318 - Shirley) */}
-          {/* Info: iSunFA 字體 (20240318 - Shirley) */}
+          {/* Info: iSunFA 大字 (20240318 - Shirley) */}
           <div className="absolute right-40 top-56">
             <img
               loading="lazy"
@@ -392,63 +257,61 @@ function LandingPageBody() {
                 {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
               </h1>
             </div>
-            <div className="max-w-md text-base font-bold tracking-widest text-hoverWhite tablet:max-w-xl lg:text-base desktop:max-w-2xl">
-              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</p>
-              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</p>
-              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</p>
-              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</p>
-              <p>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</p>
-            </div>
-
-            {/* Info:(20230711 - Shirley) Arrow */}
-            {/* <Link href="#iSunFA_101" scroll={false} className="absolute bottom-80 lg:bottom-20">
-              <Image src="/animations/arrow_down.gif" alt="scroll arrow" width={50} height={50} />
-            </Link> */}
+            <ul className="max-w-md list-disc pl-3 text-base tracking-widest text-hoverWhite tablet:max-w-xl lg:text-base desktop:max-w-2xl">
+              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
+              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
+              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
+              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
+              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
+            </ul>
 
             <button
               className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-tertiaryBlue"
               type="button"
             >
-              <p className="">Try Now</p>
+              <p className="">{t('NAV_BAR.TRY_NOW')}</p>
               <Image src="/elements/arrow.svg" width={20} height={20} alt="arrow_right" />
             </button>
           </div>
         </div>
 
-        {/* </div> */}
-        {/* </div> */}
-
         {/* Info:(20230815 - Shirley) How we work */}
+        <div className="absolute h-screen w-screen mix-blend-screen">
+          <div className="absolute right-0 top-0 h-500px w-900px bg-light_01 bg-no-repeat bg-blend-color-dodge">
+            {/* <img
+                className="w-[401px] h-[339px] bg-blend-color-dodge"
+                alt="Vector"
+                src="/elements/light_up.svg"
+              /> */}
+            {/* <img
+              className="w-[950px] h-[620px] left-0 bg-blend-screen absolute top-0"
+              alt="Vector"
+              src="vector.svg"
+            /> */}
+          </div>
+        </div>
 
-        <div className="flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-30rem">
-          <h1 className="flex w-full justify-center text-h1 font-bold tracking-wider text-white lg:text-h1">
+        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-20">
+          {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
+          <div className="relative">
+            {' '}
+            <div className="absolute h-screen w-screen mix-blend-screen">
+              <div className="absolute right-0 top-0 h-full w-1200px bg-light_01 bg-no-repeat bg-blend-color-dodge"></div>
+            </div>
+          </div>
+          {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
+
+          <h1 className="flex w-full justify-center pt-28 text-h1 font-bold tracking-wider text-white lg:text-h1">
             {/* FIXME: i18n */}
-            How we work
+            {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
           </h1>
           <div className="flex">
             <div className="relative ml-1/8 pt-40">
               {' '}
-              {/* <div> */}
               <div className="flex flex-col justify-center">{verticalDotLine}</div>{' '}
               <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
               <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
             </div>
-            {/* </div> */}
-
-            {/* <div className="relative pt-40">
-              {' '}
-              <div>
-                <div className="ml-1/6 flex flex-col justify-center">{verticalDotLine}</div>{' '}
-                <div className="absolute h-1/2 w-1/2 top-48 left-56">
-                  <Image
-                    src="/elements/how_we_work_1.png"
-                    alt="how we work"
-                    fill
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-              </div>
-            </div> */}
 
             <div className="mt-44 flex flex-col space-y-32">
               <div className="mr-10 flex space-x-2">
@@ -512,58 +375,23 @@ function LandingPageBody() {
               </div>
             </div>
           </div>
-          {/* <div>
-            <div className="ml-1/6 flex flex-col justify-center">{verticalDotLine}</div>{' '}
-            <div className="absolute h-1/2 w-1/2 top-96 left-56">
-              <Image
-                src="/elements/how_we_work_2.png"
-                alt="how we work"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-          </div> */}
-
-          {/* <div>
-            {' '}
-            <div className="relative h-full w-full bg-gray-300">
-              <div className="absolute top-1/3 left-0 w-1 h-1 bg-blue-500"></div>
-              <div className="absolute top-2/3 left-0 w-1 h-1 bg-blue-500"></div>
-              <div className="absolute top-3/3 left-0 w-1 h-1 bg-blue-500"></div>
-            </div>
-          </div> */}
-          {/* <div id="iSunFA_101" className="w-full py-0 lg:px-0 lg:py-120px">
-            <div
-              // style={{ minHeight: '500px', borderRadius: '25px' }}
-              className="flex flex-col items-center space-y-10 bg-101 bg-cover bg-center bg-no-repeat px-5 py-28 drop-shadow-101 lg:min-h-500px min-h-200px lg:flex-row lg:space-x-20 lg:space-y-0 lg:py-20 lg:px-28 xl:px-40"
-            >
-              <div className="flex h-full flex-col items-center space-y-5 lg:space-y-10 whitespace-nowrap lg:w-1/2 lg:items-start">
-                <h2 className="text-32px font-bold lg:text-6xl">
-                  {t('LANDING_PAGE.iSunFA_101_TITLE')}:
-                </h2>
-                <div className="w-fit rounded-xl bg-primaryYellow px-5 py-10px text-lg text-secondaryBlue font-bold">
-                  {t('LANDING_PAGE.iSunFA_101_SUBTITLE')}
-                </div>
-              </div>
-              <div className="lg:w-2/3">
-                <p className="text-base lg:text-xl">{t('LANDING_PAGE.iSunFA_101_CONTENT')}</p>
-              </div>
-            </div>
-          </div> */}
 
           {/* Info: (20240315 - Shirley) Blocks with number animation */}
-          <div
-            // ref={scrl}
-            className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20"
-
-            // className="flex flex-col items-center space-y-28 scroll-smooth px-4 lg:flex-row lg:space-x-10 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20"
-          >
+          <div className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
             {numberBlockList}
 
             {/* Info:(20240308 - Shirley) background img */}
             {/* <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden lg:block" /> */}
           </div>
 
+          {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
+          <div className="relative">
+            {' '}
+            <div className="absolute h-screen w-screen mix-blend-screen">
+              <div className="absolute -top-20 left-0 h-full w-1200px bg-light_02 bg-no-repeat bg-blend-color-dodge"></div>
+            </div>
+          </div>
+          {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
           {/* Info:(20240315 - Shirley) Features Block */}
           <div className="mt-20 flex flex-col items-center space-y-16 px-4 pt-20 text-center lg:mb-40 lg:h-450px lg:px-20 lg:py-20">
             <div className="flex flex-col">
@@ -572,14 +400,12 @@ function LandingPageBody() {
               </h3>
               {/* <h2 className="text-2xl font-bold lg:text-5xl">{t('LANDING_PAGE.FEATURES_TITLE')}</h2> */}
             </div>
-            {/* container mx-auto pl-1/2 */}
             <div className="flex justify-center pr-1/10">
-              {/* flex */}
               <div className="relative">
                 <div className="relative h-515px w-865px">
                   <Image
                     src="/elements/mac.png"
-                    alt="how we work"
+                    alt="feature intro - mac"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
@@ -588,25 +414,31 @@ function LandingPageBody() {
                 <div className="relative bottom-19rem left-32rem h-300px w-432px">
                   <Image
                     src="/elements/ipad.png"
-                    alt="how we work"
+                    alt="feature intro - ipad"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
               </div>
             </div>
-
-            {/* <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">{massiveDataList}</div> */}
           </div>
 
           <div className="mx-20 mb-40 grid grid-cols-1 gap-20 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10">
             {heroList}
           </div>
 
+          {/* Info: ----- light_03 svg ----- (20240318 - Shirley) */}
+          <div className="relative">
+            {' '}
+            <div className="absolute h-screen w-screen mix-blend-screen">
+              <div className="absolute -top-0 right-0 h-full w-1200px bg-light_03 bg-no-repeat bg-blend-color-dodge"></div>
+            </div>
+          </div>
+          {/* Info: ----- light_03 svg ----- (20240318 - Shirley) */}
           {/* Info: ----- Partners (20240318 - Shirley) ----- */}
           <div className="flex w-full flex-col flex-wrap content-center justify-center p-20 max-md:max-w-full max-md:px-5">
-            <div className="mt-10 items-center justify-center px-16 py-2.5 text-center text-3xl font-bold tracking-tighter text-white max-md:max-w-full max-md:px-5">
-              Join 10+ companies already on the path to growth
+            <div className="mt-10 items-center justify-center px-16 py-2.5 text-center text-3xl font-semibold tracking-tighter text-white max-md:max-w-full max-md:px-5">
+              {t('LANDING_PAGE.PARTNER_SECTION_TITLE')}
             </div>
             <div className="mb-4 mt-20 flex w-[388px] max-w-full justify-between gap-5 self-center max-md:mt-10">
               <img
@@ -624,7 +456,7 @@ function LandingPageBody() {
           {/* Info: ----- Partners (20240318 - Shirley) ----- */}
 
           {/* Info: ----- Carousel (20240318 - Shirley) ----- */}
-          <div className="flex w-full justify-center space-x-5">
+          <div className="mt-20 flex w-full justify-center space-x-5">
             <div className="relative mt-20 h-400px w-400px">
               <Image
                 src="/elements/contract_blue.svg"
@@ -633,129 +465,112 @@ function LandingPageBody() {
                 style={{ objectFit: 'contain' }}
               />
             </div>{' '}
-            {/* <div className="flex flex-col">
-              <p>Technical Patents</p> */}
-            <div className="max-w-[700px]">
+            <div className="max-w-700px">
               {' '}
-              {/* autoSlide */}
               <Carousel autoSlide>
-                {/* {slides.map((slide, i) => (
-            <img
-              key={i}
-              src={slide}
-              alt={`slide-${i}`}
-              // style={{ width: "100%" }}
-              // className="max-w-[500px]"
-            />
-          ))} */}
                 {carouselItems.map(({ title, content }, i) => (
-                  <Card key={i} title={title} content={content} />
+                  <Card key={i} title={t(title)} content={t(content)} />
                 ))}
               </Carousel>
-              {/* </div> */}
             </div>
           </div>
           {/* Info: ----- Carousel (20240318 - Shirley) ----- */}
+        </div>
 
-          {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
-          <div className="flex w-full flex-col justify-center px-16 py-20 max-md:max-w-full max-md:px-5">
-            <div className="mx-5 mb-20 mt-32 max-md:my-10 max-md:mr-2.5 max-md:max-w-full">
-              <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                <div className="flex w-6/12 flex-col max-md:ml-0 max-md:w-full">
-                  <div className="flex grow flex-col justify-center max-md:mt-10 max-md:max-w-full">
-                    <div className="justify-center pt-2 text-5xl font-semibold leading-[51.92px] tracking-tighter text-white max-md:max-w-full">
-                      Why iSun FA
+        {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
+        <div className="flex w-full flex-col justify-center px-16 py-20 max-md:max-w-full max-md:px-5">
+          <div className="mx-5 mb-20 mt-32 max-md:my-10 max-md:mr-2.5 max-md:max-w-full">
+            <div className="flex gap-5 max-md:flex-col max-md:gap-0">
+              <div className="mt-24 flex w-6/12 flex-col max-md:ml-0 max-md:w-full">
+                <div className="flex grow flex-col justify-center max-md:mt-10 max-md:max-w-full">
+                  <div className="justify-center pt-2 text-5xl font-semibold leading-[51.92px] tracking-tighter text-white max-md:max-w-full">
+                    {t('LANDING_PAGE.WHY_ISUNFA_SECTION_TITLE')}
+                  </div>
+                  <div className="mt-10 flex flex-col max-md:max-w-full">
+                    <div className="flex gap-4 max-md:flex-wrap">
+                      <div className="my-auto flex items-center justify-center">
+                        <img
+                          loading="lazy"
+                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                          className="aspect-square w-8"
+                        />
+                      </div>
+                      <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                        {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_1')}
+                      </div>
                     </div>
-                    <div className="mt-10 flex flex-col max-md:max-w-full">
-                      <div className="flex gap-4 max-md:flex-wrap">
-                        <div className="my-auto flex items-center justify-center">
-                          <img
-                            loading="lazy"
-                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                            className="aspect-square w-8"
-                          />
-                        </div>
-                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
-                          Aligns with various international accounting standards and regulations.
-                        </div>
+                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                      <div className="my-auto flex items-center justify-center">
+                        <img
+                          loading="lazy"
+                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                          className="aspect-square w-8"
+                        />
                       </div>
-                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
-                        <div className="my-auto flex items-center justify-center">
-                          <img
-                            loading="lazy"
-                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                            className="aspect-square w-8"
-                          />
-                        </div>
-                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
-                          Enables auditors to review enterprise data anytime and take immediate
-                          action when issues arise.
-                        </div>
+                      <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                        {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_2')}
                       </div>
-                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
-                        <div className="my-auto flex items-center justify-center">
-                          <img
-                            loading="lazy"
-                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                            className="aspect-square w-8"
-                          />
-                        </div>
-                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
-                          Facilitating faster identification and resolution of potential risks and
-                          problems, thereby reducing business risks.
-                        </div>
+                    </div>
+                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                      <div className="my-auto flex items-center justify-center">
+                        <img
+                          loading="lazy"
+                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                          className="aspect-square w-8"
+                        />
                       </div>
-                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
-                        <div className="my-auto flex items-center justify-center">
-                          <img
-                            loading="lazy"
-                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                            className="aspect-square w-8"
-                          />
-                        </div>
-                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
-                          Complies with regulations requiring continuous auditing in certain
-                          industries and jurisdictions.
-                        </div>
+                      <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                        {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_3')}
                       </div>
-                      <div className="mt-10 flex gap-4 max-md:flex-wrap">
-                        <div className="my-auto flex items-center justify-center">
-                          <img
-                            loading="lazy"
-                            src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                            className="aspect-square w-8"
-                          />
-                        </div>
-                        <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
-                          Demonstrates the enterprise's ongoing commitment to monitoring and
-                          supervision of operations to investors, enhancing trust and transparency
-                          in the company.
-                        </div>
+                    </div>
+                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                      <div className="my-auto flex items-center justify-center">
+                        <img
+                          loading="lazy"
+                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                          className="aspect-square w-8"
+                        />
+                      </div>
+                      <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                        {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_4')}
+                      </div>
+                    </div>
+                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                      <div className="my-auto flex items-center justify-center">
+                        <img
+                          loading="lazy"
+                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
+                          className="aspect-square w-8"
+                        />
+                      </div>
+                      <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
+                        {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_5')}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex w-1/2 flex-col max-md:ml-0 max-md:w-full">
-                  <img
-                    loading="lazy"
-                    src="/elements/partial_mac.png"
-                    // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&"
-                    className="aspect-[1.18] w-full grow self-stretch max-md:mt-10 max-md:max-w-full"
-                  />
-                  {/* <Image
+              </div>
+              <div className="flex w-1/2 flex-col max-md:ml-0 max-md:w-full">
+                <img
+                  loading="lazy"
+                  src="/elements/partial_mac.png"
+                  // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&"
+                  className="absolute right-0 aspect-[1.18] w-800px grow self-stretch max-md:mt-10 max-md:max-w-full"
+                />
+                {/* <Image
                     src="/elements/partial_mac.png"
                     alt="partial mac"
                     className="aspect-[1.18] w-full grow self-stretch max-md:mt-10 max-md:max-w-full"
                     fill
                     style={{ objectFit: 'contain' }}
                   /> */}
-                </div>
               </div>
             </div>
           </div>
-          {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
+        </div>
+        {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
 
-          {/* <div className="flex flex-col items-center space-y-16 px-4 py-20 text-center lg:h-450px lg:px-20">
+        {/* <div className="flex flex-col items-center space-y-16 px-4 py-20 text-center lg:h-450px lg:px-20">
             <div className="flex flex-col lg:flex-row space-x-5 h-500px">
               <div className="flex flex-col items-center space-y-10">
                 <h2 className="text-2xl font-bold lg:text-5xl">test</h2>
@@ -766,12 +581,31 @@ function LandingPageBody() {
 
           <div className="py-40">t</div> */}
 
-          {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
-          <div id="contact-us">
-            <ContactForm />
+        {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
+        <div className="relative">
+          {' '}
+          <div className="absolute h-screen w-screen mix-blend-screen">
+            <div className="absolute -top-24rem left-0 h-full w-1200px bg-light_04 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
-          {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
         </div>
+        {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
+        {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
+        <div id="contact-us" className="h-1000px">
+          <div className="relative h-500px w-full">
+            {' '}
+            <Image
+              src="/elements/contact_bg.svg"
+              alt="contact_bg"
+              fill
+              style={{ objectFit: 'cover' }}
+            />
+            <div className="absolute inset-0 flex justify-center">
+              {' '}
+              <ContactForm />
+            </div>
+          </div>
+        </div>
+        {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
 
         {/* Info:(20230711 - Shirley) Footer */}
         <LandingFooter />

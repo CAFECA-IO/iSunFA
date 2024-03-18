@@ -59,6 +59,7 @@ module.exports = {
         light_03: 'url("/elements/light_03.svg")',
         light_04: 'url("/elements/light_04.svg")',
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
+        contact_bg: 'url("/elements/contact_bg.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:

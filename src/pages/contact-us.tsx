@@ -15,7 +15,7 @@ import { FormAnimation } from '../constants/form_animation';
 
 function ContactUsPage() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
-  const headTitle = `${t('CONTACT_US_PAGE.TITLE')} - iSunFA`;
+  const headTitle = `${t('CONTACT_US.TITLE')} - iSunFA`;
 
   // Info: (20230731 - Julian) 信件送出的時間
   const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
@@ -135,7 +135,7 @@ function ContactUsPage() {
       } transition-all duration-300 ease-in-out`}
     >
       <h1 className="w-full text-center text-5xl font-bold drop-shadow-purple lg:text-left">
-        {t('CONTACT_US_PAGE.TITLE')}
+        {t('CONTACT_US.TITLE')}
       </h1>
 
       {/* Info:(20230731 - Julian) Input part */}
@@ -145,7 +145,7 @@ function ContactUsPage() {
           {/* Info:(20230731 - Julian) Name */}
           <div className="flex flex-col items-start space-y-2">
             <label className="text-sm" htmlFor="nameInput">
-              {t('CONTACT_US_PAGE.NAME')}
+              {t('CONTACT_US.NAME')}
             </label>
             <input
               id="Name"
@@ -159,7 +159,7 @@ function ContactUsPage() {
           {/* Info:(20230731 - Julian) Phone Number */}
           <div className="flex flex-col items-start space-y-2">
             <label className="text-sm" htmlFor="phoneInput">
-              {t('CONTACT_US_PAGE.PHONE')}
+              {t('CONTACT_US.PHONE')}
             </label>
             <input
               id="Phone"
@@ -175,14 +175,14 @@ function ContactUsPage() {
         {/* Info:(20230731 - Julian) Email */}
         <div className="flex w-full flex-col items-start space-y-2">
           <label className="text-sm" htmlFor="emailInput">
-            {t('CONTACT_US_PAGE.EMAIL')}
+            {t('CONTACT_US.EMAIL')}
             <span
               className={`ml-4 text-xs text-red-300 ${
                 // Info:(20230731 - Julian) 信箱不符合格式 && 信箱有輸入內容時，才顯示紅字
                 inputEmail !== '' && !emailIsValid ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              {t('CONTACT_US_PAGE.EMAIL_VERIFY')}
+              {t('CONTACT_US.EMAIL_VERIFY')}
             </span>
           </label>
           <input
@@ -198,7 +198,7 @@ function ContactUsPage() {
         {/* Info:(20230731 - Julian) Message */}
         <div className="flex w-full flex-col items-start space-y-2">
           <label className="text-sm" htmlFor="messageInput">
-            {t('CONTACT_US_PAGE.MESSAGE')}
+            {t('CONTACT_US.MESSAGE')}
           </label>
           <textarea
             id="Message"
@@ -207,7 +207,7 @@ function ContactUsPage() {
             onChange={messageChangeHandler}
             value={inputMessage || ''}
             className="w-full border border-violet bg-transparent px-4 py-3 text-base text-white shadow-purple placeholder:text-lilac placeholder:text-opacity-90"
-            placeholder={t('CONTACT_US_PAGE.MESSAGE_PLACEHOLDER')}
+            placeholder={t('CONTACT_US.MESSAGE_PLACEHOLDER')}
             required
           />
         </div>
@@ -220,7 +220,7 @@ function ContactUsPage() {
           disabled={!emailIsValid}
           className="rounded-lg bg-violet px-10 py-3 text-white hover:bg-hoverWhite hover:text-black disabled:bg-lilac disabled:text-white"
         >
-          {t('CONTACT_US_PAGE.SUBMIT')}
+          {t('CONTACT_US.SUBMIT')}
         </button>
       </div>
     </form>
@@ -237,25 +237,25 @@ function ContactUsPage() {
         /* Info:(20230731 - Julian) Loading animation */
         <div className="flex flex-col items-center space-y-10">
           <Image src="/animations/Loading.svg" width={100} height={100} alt="loading_animation" />
-          <p className="text-sm">{t('CONTACT_US_PAGE.SENDING')}</p>
+          <p className="text-sm">{t('CONTACT_US.SENDING')}</p>
         </div>
       ) : animation === FormAnimation.SUCCESS ? (
         /* Info:(20230731 - Julian) Success animation */
         <div className="flex flex-col items-center space-y-10">
           <Image src="/animations/success.gif" width={150} height={150} alt="loading_animation" />
-          <p className="text-sm">{t('CONTACT_US_PAGE.SUCCESS')}</p>
+          <p className="text-sm">{t('CONTACT_US.SUCCESS')}</p>
         </div>
       ) : animation === FormAnimation.ERROR ? (
         /* Info:(20230731 - Julian) Error animation */
         <div className="flex flex-col items-center">
           <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
-          <p className="text-sm">{t('CONTACT_US_PAGE.ERROR')}</p>
+          <p className="text-sm">{t('CONTACT_US.ERROR')}</p>
           <button
             type="button"
             onClick={retryHandler}
             className="mt-6 rounded-lg bg-violet px-10 py-3 text-white hover:bg-hoverWhite hover:text-black"
           >
-            {t('CONTACT_US_PAGE.TRY_AGAIN')}
+            {t('CONTACT_US.TRY_AGAIN')}
           </button>
         </div>
       ) : null}
