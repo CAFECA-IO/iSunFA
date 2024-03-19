@@ -842,7 +842,7 @@ function LandingPageBody() {
         </div>
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
-        <div id="contact-us" className="mb-20 h-1000px">
+        <div id="contact-us" className="-mt-4 mb-20 h-1000px">
           <div className="relative h-500px w-full">
             {' '}
             <Image
