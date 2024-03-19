@@ -66,7 +66,7 @@ function LandingPageBody1() {
       // Info: (20240112 - Shirley) it's ok to use index as key in this case
       // eslint-disable-next-line react/no-array-index-key
       key={index}
-      className="relative flex flex-col items-center rounded-2xl bg-secondaryBlue p-10 drop-shadow-101 z-10"
+      className="relative z-10 flex flex-col items-center rounded-2xl bg-secondaryBlue p-10 drop-shadow-101"
     >
       {/* Info:(20230815 - Julian) Image */}
       <div className="absolute -top-20 h-220px w-220px">
@@ -97,7 +97,7 @@ function LandingPageBody1() {
   ));
 
   return (
-    <div className="flex min-h-screen w-screen flex-col overflow-hidden font-inter bg-secondaryBlue">
+    <div className="flex min-h-screen w-screen flex-col overflow-hidden bg-secondaryBlue font-inter">
       {/* Info:(20230815 - Julian) Pipe Background Image */}
       <div className="relative flex h-140vh w-full flex-col items-center bg-pipe bg-auto bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
         {/* Info:(20230711 - Julian) Main Title Block */}
@@ -118,18 +118,18 @@ function LandingPageBody1() {
         </div>
       </div>
 
-      <div className="flex h-fit w-full flex-col px-5 items-center lg:pb-52">
+      <div className="flex h-fit w-full flex-col items-center px-5 lg:pb-52">
         {/* Info:(20230815 - Julian) iSunFA 101 Block */}
         <div id="iSunFA_101" className="w-full py-0 lg:px-0 lg:py-120px">
           <div
             // style={{ minHeight: '500px', borderRadius: '25px' }}
-            className="flex flex-col items-center space-y-10 bg-101 bg-cover bg-center bg-no-repeat px-5 py-28 drop-shadow-101 lg:min-h-500px min-h-200px lg:flex-row lg:space-x-20 lg:space-y-0 lg:py-20 lg:px-28 xl:px-40"
+            className="flex min-h-200px flex-col items-center space-y-10 bg-101 bg-cover bg-center bg-no-repeat px-5 py-28 drop-shadow-101 xl:px-40 lg:min-h-500px lg:flex-row lg:space-x-20 lg:space-y-0 lg:px-28 lg:py-20"
           >
-            <div className="flex h-full flex-col items-center space-y-5 lg:space-y-10 whitespace-nowrap lg:w-1/2 lg:items-start">
+            <div className="flex h-full flex-col items-center space-y-5 whitespace-nowrap lg:w-1/2 lg:items-start lg:space-y-10">
               <h2 className="text-32px font-bold lg:text-6xl">
                 {t('LANDING_PAGE.iSunFA_101_TITLE')}:
               </h2>
-              <div className="w-fit rounded-xl bg-primaryYellow px-5 py-10px text-lg text-secondaryBlue font-bold">
+              <div className="w-fit rounded-xl bg-primaryYellow px-5 py-10px text-lg font-bold text-secondaryBlue">
                 {t('LANDING_PAGE.iSunFA_101_SUBTITLE')}
               </div>
             </div>
@@ -192,7 +192,7 @@ function LandingPageBody1() {
             {servicesList}
 
             {/* Info:(20240308 - Shirley) background img */}
-            <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden lg:block" />
+            <div className="absolute -right-20 top-48 hidden h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat lg:block" />
           </div>
         </div>
 

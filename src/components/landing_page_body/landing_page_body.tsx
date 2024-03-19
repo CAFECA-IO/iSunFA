@@ -10,6 +10,10 @@ import NumberAnimation from '../number_animation/number_animation';
 import Carousel from '../carousel/carousel';
 import Card from '../card/card';
 import ContactForm from '../contact_form/contact_form';
+import { Button } from '../button/button';
+import { cn } from '../../lib/utils/common';
+
+const IS_BUTTON_DISABLED_TEMP = true;
 
 function LandingPageBody() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -171,6 +175,8 @@ function LandingPageBody() {
           <div className="absolute right-0 top-0 flex aspect-4/3 w-1400px flex-col items-center bg-web bg-cover bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
             {' '}
             <div className="absolute -bottom-2 left-0 flex aspect-21/9 w-full bg-customGradient bg-cover bg-no-repeat"></div>
+            {/* Info: WI: shadow_01 svg */}
+            <div className="absolute -bottom-0 left-0 flex aspect-21/9 w-full bg-customGradient bg-cover bg-no-repeat"></div>
           </div>
           {/* <div className="bg-background_pattern absolute right-0 top-0 flex h-screen w-screen flex-col items-center bg-cover bg-center bg-no-repeat mix-blend-screen lg:bg-cover lg:bg-top-4"></div> */}
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
@@ -219,39 +225,71 @@ function LandingPageBody() {
           </div>
           {/* Info: ---green_light_right svg--- (20240318 - Shirley) */}
           {/* Info:(20230711 - Shirley) Main Title Block */}
-          {/* Info: iSunFA 大字 (20240318 - Shirley) */}
-          <div className="absolute -right-0 top-56">
-            <img
-              loading="lazy"
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/d4d54b292624b59c73dd8c28e337e2259c6cb43b26a731ecd8d1f013564d1931?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="aspect-0.87 w-4/5 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full"
-            />
-          </div>
-          <div className="z-5 -mt-20 ml-40 flex h-screen w-full flex-col items-start justify-center space-y-10 px-4 py-12 text-start">
-            <div className="flex flex-col space-y-5">
-              {' '}
-              <h1 className="text-6xl font-bold tracking-wider text-primaryYellow lg:text-7xl">
-                {t('LANDING_PAGE.MAIN_TITLE')}
-              </h1>
-              <h1 className="text-2xl font-bold tracking-widest text-hoverWhite lg:text-6xl">
-                {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
-              </h1>
-            </div>
-            <ul className="max-w-md list-disc pl-3 text-base tracking-widest text-hoverWhite tablet:max-w-xl lg:text-base desktop:max-w-2xl">
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
-              <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
-            </ul>
 
-            <button
-              className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-tertiaryBlue"
+          <div className="items-around flex w-9/10 justify-center">
+            {/* Info: iSunFA Call to action (20240319 - SHirley) */}
+            <div className="z-5 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start">
+              <div className="flex flex-col space-y-5">
+                {' '}
+                <h1 className="text-6xl font-bold tracking-wider text-primaryYellow lg:text-7xl">
+                  {t('LANDING_PAGE.MAIN_TITLE')}
+                </h1>
+                <h1 className="text-2xl font-bold tracking-widest text-hoverWhite lg:text-6xl">
+                  {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
+                </h1>
+              </div>
+              <ul className="max-w-md list-disc pl-3 text-base tracking-widest text-hoverWhite tablet:max-w-xl lg:text-base desktop:max-w-2xl">
+                <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
+                <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
+                <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
+                <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
+                <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
+              </ul>
+
+              {/* <button
+              className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-secondaryBlue"
               type="button"
-            >
-              <p className="">{t('NAV_BAR.TRY_NOW')}</p>
-              <Image src="/elements/arrow.svg" width={20} height={20} alt="arrow_right" />
-            </button>
+            > */}
+              <Button className="flex space-x-3" disabled={IS_BUTTON_DISABLED_TEMP}>
+                <p
+                  className={cn(
+                    'text-base leading-6 tracking-normal',
+                    IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
+                    'group-hover:text-white'
+                  )}
+                >
+                  {t('NAV_BAR.TRY_NOW')}
+                </p>
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
+                    className={cn(
+                      `fill-current`,
+                      IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
+                      `group-hover:text-white`
+                    )}
+                  />
+                </svg>
+              </Button>
+              {/* </button> */}
+            </div>
+            {/* Info: iSunFA 大字 (20240318 - Shirley) */}
+            <div className="ml-1/12 mt-1/10 flex h-screen items-start">
+              <img
+                loading="lazy"
+                src="https://cdn.builder.io/api/v1/image/assets/TEMP/d4d54b292624b59c73dd8c28e337e2259c6cb43b26a731ecd8d1f013564d1931?apiKey=0e17b0b875f041659e186639705112b1&"
+                className="aspect-0.87 w-9/10 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full"
+              />
+            </div>
           </div>
         </div>
 

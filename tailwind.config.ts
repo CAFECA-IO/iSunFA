@@ -12,6 +12,7 @@ module.exports = {
         '16/9': '16 / 9',
         '21/9': '21 / 9',
         0.87: '87 / 100',
+        0.56: '56 / 100',
       },
       colors: {
         darkPurple: '#24274A',
@@ -19,7 +20,7 @@ module.exports = {
         darkPurple3: '#1F2243',
         darkPurple4: '#3F497A',
 
-        lightWhite: '#F2F2F2',
+        lightWhite: '#FCFCFF',
 
         lightGreen: '#3DD08C',
         lightGreen2: '#21AD6C',
@@ -46,6 +47,8 @@ module.exports = {
         primaryYellow: '#FFA502',
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
+        lightGray: '#CED1D7',
+        lightGray2: '#828998',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',

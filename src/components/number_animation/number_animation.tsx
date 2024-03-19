@@ -39,7 +39,7 @@ const NumberAnimation = ({ targetNumber }: NumberAnimationProps) => {
   }, [targetNumber]);
 
   return (
-    <div ref={ref} className="text-h2 leading-h2 font-bold text-primaryYellow">
+    <div ref={ref} className="text-h2 font-bold leading-h2 text-primaryYellow">
       {number}
     </div>
   );
