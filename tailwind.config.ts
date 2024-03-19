@@ -125,23 +125,10 @@ module.exports = {
       },
       screens: {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
-        xxs: '370px',
-        xs: '500px',
-        a4: '595px',
-        // sm: '640px',
-        // md: '768px',
-        // lg: '1024px',
-        xl: '1280px',
-        '2xl': '1536px',
-        '3xl': '1600px',
 
-        sm: '320px',
-        md: '744px',
-        lg: '1440px',
-
-        desktop: '1440px',
-        tablet: '744px',
-        mobile: '320px',
+        sm: '320px', // mobile
+        md: '744px', // tablet
+        lg: '1440px', // desktop
       },
       container: {
         center: true,
@@ -498,6 +485,7 @@ module.exports = {
       rotate: {
         135: '135deg',
       },
+      translate: { '100%': '100%', '140%': '140%' },
       borderWidth: {
         '0.5px': '0.5px',
         '3px': '3px',
@@ -511,6 +499,25 @@ module.exports = {
         'top-4': 'center top -2.5rem',
         'top-10': 'center top -10rem right -2.5rm',
         // 'right-4': 'right -2.5rem center',
+      },
+      keyframes: {
+        slideBottomToTop: {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        slideLeftToRight: {
+          '0%': { transform: 'translateX(-120%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        slideRightBottomToCenter: {
+          '0%': { transform: 'translate(100%, 100%)' },
+          '100%': { transform: 'translate(0, 0)' },
+        },
+      },
+      animation: {
+        slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
+        slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
+        slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
       },
     },
   },

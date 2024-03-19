@@ -17,8 +17,125 @@ const IS_BUTTON_DISABLED_TEMP = true;
 
 function LandingPageBody() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
+  const animeRef1 = useRef(null);
+  const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
 
-  const textSlides = Array.from({ length: 5 });
+  const animeRef21 = useRef(null);
+  const [isAnimeRef21Visible, setIsAnimeRef21Visible] = useState(false);
+  const animeRef22 = useRef(null);
+  const [isAnimeRef22Visible, setIsAnimeRef22Visible] = useState(false);
+  const animeRef23 = useRef(null);
+  const [isAnimeRef23Visible, setIsAnimeRef23Visible] = useState(false);
+
+  const animeRef31 = useRef(null);
+  const [isAnimeRef31Visible, setIsAnimeRef31Visible] = useState(false);
+  const animeRef32 = useRef(null);
+  const [isAnimeRef32Visible, setIsAnimeRef32Visible] = useState(false);
+
+  // const scrollHandler = () => {
+  //   if (animeRef1.current) {
+  //     const rect = (animeRef1.current as HTMLElement).getBoundingClientRect();
+  //     const rectTop = rect.top;
+  //     const windowHeight = window.innerHeight;
+  //     const rectVisible = 200;
+
+  //     console.log('rectTop', rectTop, 'windowHeight', windowHeight);
+  //     setIsAnimeRef1Visible(rectTop < windowHeight);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   window.addEventListener('scroll', scrollHandler, { passive: true });
+  //   return () => {
+  //     window.removeEventListener('scroll', scrollHandler);
+  //   };
+  // }, []);
+
+  useEffect(() => {
+    const waitForCTA = setTimeout(() => {
+      setIsAnimeRef1Visible(true);
+    }, 500);
+    return () => {
+      clearTimeout(waitForCTA);
+    };
+  }, []);
+
+  const scrollHandler21 = () => {
+    if (animeRef21.current) {
+      const rect = (animeRef21.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      console.log('rectTop', rectTop, 'windowHeight', windowHeight);
+      // setIsAnimeRef1Visible(rectTop < windowHeight);
+      setIsAnimeRef21Visible(rectTop < windowHeight);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler21, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler21);
+    };
+  }, []);
+  const scrollHandler22 = () => {
+    if (animeRef22.current) {
+      const rect = (animeRef22.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      console.log('rectTop', rectTop, 'windowHeight', windowHeight);
+      // setIsAnimeRef1Visible(rectTop < windowHeight);
+      setIsAnimeRef22Visible(rectTop < windowHeight);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler22, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler22);
+    };
+  }, []);
+
+  const scrollHandler23 = () => {
+    if (animeRef23.current) {
+      const rect = (animeRef23.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      console.log('rectTop', rectTop, 'windowHeight', windowHeight);
+      // setIsAnimeRef1Visible(rectTop < windowHeight);
+      setIsAnimeRef23Visible(rectTop < windowHeight);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler23, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler23);
+    };
+  }, []);
+
+  // useEffect(() => {
+  //   const observer = new IntersectionObserver(([entry]) => {
+  //     console.log('entry', entry.isIntersecting);
+  //     if (entry.isIntersecting) {
+  //       setIsAnimeRef1Visible(true);
+  //     } else {
+  //       setIsAnimeRef1Visible(false);
+  //     }
+  //   });
+
+  //   if (animeRef1.current) {
+  //     observer.observe(animeRef1.current);
+  //   }
+
+  //   return () => {
+  //     if (animeRef1.current) {
+  //       observer.unobserve(animeRef1.current);
+  //     }
+  //   };
+  // }, []);
 
   const massiveDataList = massiveDataContent.map(({ icon, text, alt }, index) => (
     // Info: (20240112 - Shirley) it's ok to use index as key in this case
@@ -124,9 +241,7 @@ function LandingPageBody() {
   ];
 
   const heroList = heroDescriptions.map(({ image, alt, description, title }, index) => (
-    // TODO: (20240112 - Shirley) temp solution
-    // eslint-disable-next-line react/no-array-index-key
-    <div key={index} className="flex flex-col items-center space-y-6 text-center">
+    <div key={image} className="flex flex-col items-center space-y-6 text-center">
       <div className="relative h-80px w-80px">
         <Image src={image} alt={alt} fill style={{ objectFit: 'contain' }} />
       </div>
@@ -228,7 +343,10 @@ function LandingPageBody() {
 
           <div className="items-around flex w-9/10 justify-center">
             {/* Info: iSunFA Call to action (20240319 - SHirley) */}
-            <div className="z-5 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start">
+            <div
+              ref={animeRef1}
+              className={`${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start transition-all duration-1000`}
+            >
               <div className="flex flex-col space-y-5">
                 {' '}
                 <h1 className="text-6xl font-bold tracking-wider text-primaryYellow lg:text-7xl">
@@ -238,7 +356,7 @@ function LandingPageBody() {
                   {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
                 </h1>
               </div>
-              <ul className="max-w-md list-disc pl-3 text-base tracking-widest text-hoverWhite tablet:max-w-xl lg:text-base desktop:max-w-2xl">
+              <ul className="tablet:max-w-xl desktop:max-w-2xl max-w-md list-disc pl-3 text-base tracking-widest text-hoverWhite lg:text-base">
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
@@ -283,11 +401,12 @@ function LandingPageBody() {
               {/* </button> */}
             </div>
             {/* Info: iSunFA 大字 (20240318 - Shirley) */}
-            <div className="ml-1/12 mt-1/10 flex h-screen items-start">
+            <div className=""></div>
+            <div className={`ml-1/12 mt-1/10 flex h-screen items-start `}>
               <img
                 loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/d4d54b292624b59c73dd8c28e337e2259c6cb43b26a731ecd8d1f013564d1931?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-0.87 w-9/10 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full"
+                src="/elements/isunfa_pop.svg"
+                className={`aspect-0.87 w-9/10 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full ${isAnimeRef1Visible ? 'animate-slideBottomToTop' : 'hidden'}`}
               />
             </div>
           </div>
@@ -318,8 +437,11 @@ function LandingPageBody() {
             </div>
 
             <div className="mt-44 flex flex-col space-y-32">
-              <div className="mr-10 flex space-x-2">
-                <div className="relative h-300px w-600px">
+              <div
+                ref={animeRef21}
+                className={`${isAnimeRef21Visible ? `translate-x-0 translate-y-0` : `translate-x-140% translate-y-140%`} mr-10 flex space-x-2 duration-1000`}
+              >
+                <div className={`relative h-300px w-600px`}>
                   <Image
                     src="/elements/how_we_work_1.png"
                     alt="how we work - privacy"
@@ -327,6 +449,7 @@ function LandingPageBody() {
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
+
                 <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
                   {' '}
                   <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
@@ -338,8 +461,11 @@ function LandingPageBody() {
                 </div>
               </div>
 
-              <div className="mr-10 flex space-x-2">
-                <div className="relative h-300px w-600px">
+              <div
+                ref={animeRef22}
+                className={`${isAnimeRef22Visible ? `translate-x-0 translate-y-0` : `translate-x-140% translate-y-140%`} mr-10 flex space-x-2 duration-1000`}
+              >
+                <div className={`relative h-300px w-600px`}>
                   <Image
                     src="/elements/how_we_work_2.png"
                     alt="how we work - accuracy"
@@ -358,8 +484,11 @@ function LandingPageBody() {
                 </div>
               </div>
 
-              <div className="mr-10 flex space-x-2">
-                <div className="relative h-300px w-600px">
+              <div
+                ref={animeRef23}
+                className={`${isAnimeRef23Visible ? `translate-x-0 translate-y-0` : `translate-x-140% translate-y-140%`} mr-10 flex space-x-2 duration-1000`}
+              >
+                <div className={`relative h-300px w-600px`}>
                   <Image
                     src="/elements/how_we_work_3.png"
                     alt="how we work - compliance"
@@ -564,29 +693,11 @@ function LandingPageBody() {
                   // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&"
                   className="absolute right-0 aspect-[1.18] w-800px grow self-stretch max-md:mt-10 max-md:max-w-full"
                 />
-                {/* <Image
-                    src="/elements/partial_mac.png"
-                    alt="partial mac"
-                    className="aspect-[1.18] w-full grow self-stretch max-md:mt-10 max-md:max-w-full"
-                    fill
-                    style={{ objectFit: 'contain' }}
-                  /> */}
               </div>
             </div>
           </div>
         </div>
         {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
-
-        {/* <div className="flex flex-col items-center space-y-16 px-4 py-20 text-center lg:h-450px lg:px-20">
-            <div className="flex flex-col lg:flex-row space-x-5 h-500px">
-              <div className="flex flex-col items-center space-y-10">
-                <h2 className="text-2xl font-bold lg:text-5xl">test</h2>
-                <p className="text-base lg:text-lg">content</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="py-40">t</div> */}
 
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         <div className="relative">
