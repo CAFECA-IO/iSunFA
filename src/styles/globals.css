@@ -90,6 +90,20 @@ a {
     0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
+/* Hide horizontal scrollbar */
+/* For Webkit browser */
+.hideScrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* For Firefox */
+.hideScrollbar {
+  scrollbar-width: none;
+}
+
+.list-disc {
+  list-style-type: disc;
+}
+
 @media (max-width: 768px) {
   .fixed-top-right {
     top: 20px; /* Adjust as needed */

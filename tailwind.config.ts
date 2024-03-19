@@ -13,6 +13,7 @@ module.exports = {
         '21/9': '21 / 9',
         0.87: '87 / 100',
         0.56: '56 / 100',
+        1.18: '118 / 100',
       },
       colors: {
         darkPurple: '#24274A',
@@ -513,11 +514,16 @@ module.exports = {
           '0%': { transform: 'translate(100%, 100%)' },
           '100%': { transform: 'translate(0, 0)' },
         },
+        slideRightToCenter: {
+          '0%': { transform: 'translateX(10%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
         slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
         slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
+        slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
       },
     },
   },

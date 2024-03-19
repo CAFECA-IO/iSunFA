@@ -31,6 +31,168 @@ function LandingPageBody() {
   const [isAnimeRef31Visible, setIsAnimeRef31Visible] = useState(false);
   const animeRef32 = useRef(null);
   const [isAnimeRef32Visible, setIsAnimeRef32Visible] = useState(false);
+  const animeRef33 = useRef(null);
+  const [isAnimeRef33Visible, setIsAnimeRef33Visible] = useState(false);
+
+  const animeRef41 = useRef(null);
+  const [isAnimeRef41Visible, setIsAnimeRef41Visible] = useState(false);
+  const animeRef42 = useRef(null);
+  const [isAnimeRef42Visible, setIsAnimeRef42Visible] = useState(false);
+
+  const animeRef51 = useRef(null);
+  const [isAnimeRef51Visible, setIsAnimeRef51Visible] = useState(false);
+  const animeRef52 = useRef(null);
+  const [isAnimeRef52Visible, setIsAnimeRef52Visible] = useState(false);
+  const animeRef53 = useRef(null);
+  const [isAnimeRef53Visible, setIsAnimeRef53Visible] = useState(false);
+  const animeRef54 = useRef(null);
+  const [isAnimeRef54Visible, setIsAnimeRef54Visible] = useState(false);
+  const animeRef55 = useRef(null);
+  const [isAnimeRef55Visible, setIsAnimeRef55Visible] = useState(false);
+  const animeRef56 = useRef(null);
+  const [isAnimeRef56Visible, setIsAnimeRef56Visible] = useState(false);
+
+  const animeRef61 = useRef(null);
+  const [isAnimeRef61Visible, setIsAnimeRef61Visible] = useState(false);
+
+  useEffect(() => {
+    const waitForCTA = setTimeout(() => {
+      setIsAnimeRef1Visible(true);
+    }, 500);
+    return () => {
+      clearTimeout(waitForCTA);
+    };
+  }, []);
+
+  const scrollHandler = () => {
+    const BUFFER = 200;
+    if (animeRef21.current) {
+      const rect = (animeRef21.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef21Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef22.current) {
+      const rect = (animeRef22.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef22Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef23.current) {
+      const rect = (animeRef23.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef23Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef31.current) {
+      const rect = (animeRef31.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef31Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef32.current) {
+      const rect = (animeRef32.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef32Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef33.current) {
+      const rect = (animeRef33.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef33Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef41.current) {
+      const rect = (animeRef41.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef41Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef42.current) {
+      const rect = (animeRef42.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef42Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef51.current) {
+      const rect = (animeRef51.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef51Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef52.current) {
+      const rect = (animeRef52.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef52Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef53.current) {
+      const rect = (animeRef53.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef53Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef54.current) {
+      const rect = (animeRef54.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef54Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef55.current) {
+      const rect = (animeRef55.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef55Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef56.current) {
+      const rect = (animeRef56.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef56Visible(rectTop < windowHeight);
+    }
+
+    if (animeRef61.current) {
+      const rect = (animeRef61.current as HTMLElement).getBoundingClientRect();
+      const rectTop = rect.top;
+      const windowHeight = window.innerHeight;
+
+      setIsAnimeRef61Visible(rectTop < windowHeight - 200);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', scrollHandler);
+    };
+  }, []);
 
   // const scrollHandler = () => {
   //   if (animeRef1.current) {
@@ -50,71 +212,6 @@ function LandingPageBody() {
   //     window.removeEventListener('scroll', scrollHandler);
   //   };
   // }, []);
-
-  useEffect(() => {
-    const waitForCTA = setTimeout(() => {
-      setIsAnimeRef1Visible(true);
-    }, 500);
-    return () => {
-      clearTimeout(waitForCTA);
-    };
-  }, []);
-
-  const scrollHandler21 = () => {
-    if (animeRef21.current) {
-      const rect = (animeRef21.current as HTMLElement).getBoundingClientRect();
-      const rectTop = rect.top;
-      const windowHeight = window.innerHeight;
-
-      console.log('rectTop', rectTop, 'windowHeight', windowHeight);
-      // setIsAnimeRef1Visible(rectTop < windowHeight);
-      setIsAnimeRef21Visible(rectTop < windowHeight);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', scrollHandler21, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', scrollHandler21);
-    };
-  }, []);
-  const scrollHandler22 = () => {
-    if (animeRef22.current) {
-      const rect = (animeRef22.current as HTMLElement).getBoundingClientRect();
-      const rectTop = rect.top;
-      const windowHeight = window.innerHeight;
-
-      console.log('rectTop', rectTop, 'windowHeight', windowHeight);
-      // setIsAnimeRef1Visible(rectTop < windowHeight);
-      setIsAnimeRef22Visible(rectTop < windowHeight);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', scrollHandler22, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', scrollHandler22);
-    };
-  }, []);
-
-  const scrollHandler23 = () => {
-    if (animeRef23.current) {
-      const rect = (animeRef23.current as HTMLElement).getBoundingClientRect();
-      const rectTop = rect.top;
-      const windowHeight = window.innerHeight;
-
-      console.log('rectTop', rectTop, 'windowHeight', windowHeight);
-      // setIsAnimeRef1Visible(rectTop < windowHeight);
-      setIsAnimeRef23Visible(rectTop < windowHeight);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', scrollHandler23, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', scrollHandler23);
-    };
-  }, []);
 
   // useEffect(() => {
   //   const observer = new IntersectionObserver(([entry]) => {
@@ -283,8 +380,8 @@ function LandingPageBody() {
   ];
 
   return (
-    <div>
-      <div className="flex min-h-screen w-screen flex-col overflow-hidden bg-secondaryBlue font-barlow">
+    <div className="">
+      <div className="flex min-h-screen w-screen flex-col overflow-hidden bg-secondaryBlue font-barlow ">
         <div className="relative flex flex-col items-center">
           {/* Info: web background image (20240318 - Shirley) */}
           <div className="absolute right-0 top-0 flex aspect-4/3 w-1400px flex-col items-center bg-web bg-cover bg-center bg-no-repeat lg:bg-cover lg:bg-top-4">
@@ -345,7 +442,7 @@ function LandingPageBody() {
             {/* Info: iSunFA Call to action (20240319 - SHirley) */}
             <div
               ref={animeRef1}
-              className={`${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start transition-all duration-1000`}
+              className={`overflow-x-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start transition-all duration-1000`}
             >
               <div className="flex flex-col space-y-5">
                 {' '}
@@ -356,18 +453,14 @@ function LandingPageBody() {
                   {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
                 </h1>
               </div>
-              <ul className="tablet:max-w-xl desktop:max-w-2xl max-w-md list-disc pl-3 text-base tracking-widest text-hoverWhite lg:text-base">
+              <ol className="max-w-md list-disc text-base tracking-widest text-hoverWhite md:max-w-xl lg:max-w-2xl lg:text-base">
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
                 <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
-              </ul>
+              </ol>
 
-              {/* <button
-              className="flex items-center space-x-2 rounded-lg bg-primaryYellow px-6 py-3 font-bold text-secondaryBlue"
-              type="button"
-            > */}
               <Button className="flex space-x-3" disabled={IS_BUTTON_DISABLED_TEMP}>
                 <p
                   className={cn(
@@ -402,7 +495,7 @@ function LandingPageBody() {
             </div>
             {/* Info: iSunFA 大字 (20240318 - Shirley) */}
             <div className=""></div>
-            <div className={`ml-1/12 mt-1/10 flex h-screen items-start `}>
+            <div className={`ml-1/12 mt-1/10 flex h-screen items-start`}>
               <img
                 loading="lazy"
                 src="/elements/isunfa_pop.svg"
@@ -424,7 +517,7 @@ function LandingPageBody() {
           </div>
         </div>
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
-        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-48">
+        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-0">
           <h1 className="flex w-full justify-center pt-28 text-h1 font-bold tracking-wider text-white lg:text-h1">
             {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
           </h1>
@@ -439,7 +532,7 @@ function LandingPageBody() {
             <div className="mt-44 flex flex-col space-y-32">
               <div
                 ref={animeRef21}
-                className={`${isAnimeRef21Visible ? `translate-x-0 translate-y-0` : `translate-x-140% translate-y-140%`} mr-10 flex space-x-2 duration-1000`}
+                className={`overflow-x-hidden ${isAnimeRef21Visible ? `translate-x-0` : `translate-x-140%`} mr-10 flex space-x-2 duration-1000`}
               >
                 <div className={`relative h-300px w-600px`}>
                   <Image
@@ -463,7 +556,7 @@ function LandingPageBody() {
 
               <div
                 ref={animeRef22}
-                className={`${isAnimeRef22Visible ? `translate-x-0 translate-y-0` : `translate-x-140% translate-y-140%`} mr-10 flex space-x-2 duration-1000`}
+                className={`overflow-x-hidden ${isAnimeRef22Visible ? `translate-x-0` : `translate-x-140%`} mr-10 flex space-x-2 duration-1000`}
               >
                 <div className={`relative h-300px w-600px`}>
                   <Image
@@ -486,7 +579,7 @@ function LandingPageBody() {
 
               <div
                 ref={animeRef23}
-                className={`${isAnimeRef23Visible ? `translate-x-0 translate-y-0` : `translate-x-140% translate-y-140%`} mr-10 flex space-x-2 duration-1000`}
+                className={`overflow-x-hidden ${isAnimeRef23Visible ? `translate-x-0` : `translate-x-140%`} mr-10 flex space-x-2 duration-1000`}
               >
                 <div className={`relative h-300px w-600px`}>
                   <Image
@@ -527,17 +620,21 @@ function LandingPageBody() {
         </div>
         <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-20">
           {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
+
           {/* Info:(20240315 - Shirley) Features Block */}
           <div className="mt-20 flex flex-col items-center space-y-16 px-4 pt-20 text-center lg:mb-40 lg:h-450px lg:px-20 lg:py-20">
             <div className="flex flex-col">
               <h3 className="text-h1 font-bold leading-h1 text-white">
                 {t('LANDING_PAGE.FEATURES_SUBTITLE')}
               </h3>
-              {/* <h2 className="text-2xl font-bold lg:text-5xl">{t('LANDING_PAGE.FEATURES_TITLE')}</h2> */}
             </div>
             <div className="flex justify-center pr-1/10">
               <div className="relative">
-                <div className="relative h-515px w-865px">
+                <div
+                  ref={animeRef31}
+                  // Info: 從左邊移到中間 (20240319 - Shirley)
+                  className={`overflow-x-hidden ${isAnimeRef31Visible ? `translate-x-0` : `-translate-x-140%`} relative h-515px w-865px duration-1000`}
+                >
                   <Image
                     src="/elements/mac.png"
                     alt="feature intro - mac"
@@ -546,7 +643,11 @@ function LandingPageBody() {
                   />
                 </div>
 
-                <div className="relative bottom-19rem left-32rem h-300px w-432px">
+                <div
+                  ref={animeRef32}
+                  // Info: 從右邊移到中間 (20240319 - Shirley)
+                  className={`overflow-x-hidden ${isAnimeRef32Visible ? `translate-x-0` : `translate-x-140%`} relative bottom-19rem left-32rem h-300px w-432px duration-1000`}
+                >
                   <Image
                     src="/elements/ipad.png"
                     alt="feature intro - ipad"
@@ -558,7 +659,11 @@ function LandingPageBody() {
             </div>
           </div>
 
-          <div className="mx-20 mb-40 grid grid-cols-1 gap-20 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10">
+          <div
+            ref={animeRef33}
+            // Info: 從下面移到中間 (20240319 - Shirley)
+            className={`overflow-x-hidden ${isAnimeRef33Visible ? `translate-y-0` : `translate-y-140%`} mx-20 mb-40 grid grid-cols-1 gap-20 duration-1000 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10`}
+          >
             {heroList}
           </div>
         </div>
@@ -573,19 +678,26 @@ function LandingPageBody() {
           {/* Info: ----- light_03 svg ----- (20240318 - Shirley) */}
           {/* Info: ----- Partners (20240318 - Shirley) ----- */}
           <div className="flex w-full flex-col flex-wrap content-center justify-center p-20 max-md:max-w-full max-md:px-5">
-            <div className="mt-10 items-center justify-center px-16 py-2.5 text-center text-3xl font-semibold tracking-tighter text-white max-md:max-w-full max-md:px-5">
+            <div
+              ref={animeRef41}
+              // Info: 從左邊移到中間的動畫 (20240319 - Shirley)
+              className={`overflow-x-hidden ${isAnimeRef41Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 items-center justify-center px-16 py-2.5 text-center text-3xl font-semibold tracking-tighter text-white duration-1000 max-md:max-w-full max-md:px-5`}
+            >
               {t('LANDING_PAGE.PARTNER_SECTION_TITLE')}
             </div>
-            <div className="mb-4 mt-20 flex w-[388px] max-w-full justify-between gap-5 self-center max-md:mt-10">
+            <div
+              ref={animeRef42}
+              className={` mb-4 mt-20 flex w-[388px] max-w-full justify-between gap-5 self-center max-md:mt-10`}
+            >
               <img
                 loading="lazy"
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/ac89e42fea1664fc20628447e4c467981b2a7917d2f218339003d8a10442c356?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-[3.85] w-[154px] max-w-full shrink-0 self-start"
+                className={`overflow-x-hidden ${isAnimeRef42Visible ? `translate-x-0` : `-translate-x-100%`} aspect-[3.85] w-[154px] max-w-full shrink-0 self-start duration-1000`}
               />
               <img
                 loading="lazy"
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/e0f0f194cc2b06eb64fe288595d1376d36cfa208efdb59a1e38301d868537587?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-[3.7] w-[154px] max-w-full shrink-0"
+                className={`overflow-x-hidden ${isAnimeRef42Visible ? `translate-x-0` : `-translate-x-100%`} aspect-[3.7] w-[154px] max-w-full shrink-0 duration-1000`}
               />
             </div>
           </div>
@@ -619,11 +731,17 @@ function LandingPageBody() {
             <div className="flex gap-5 max-md:flex-col max-md:gap-0">
               <div className="mt-24 flex w-6/12 flex-col max-md:ml-0 max-md:w-full">
                 <div className="flex grow flex-col justify-center max-md:mt-10 max-md:max-w-full">
-                  <div className="justify-center pt-2 text-5xl font-semibold leading-[51.92px] tracking-tighter text-white max-md:max-w-full">
+                  <div
+                    ref={animeRef51}
+                    className={`overflow-x-hidden ${isAnimeRef51Visible ? `translate-x-0` : `-translate-x-140%`} justify-center pt-2 text-5xl font-semibold leading-[51.92px] tracking-tighter text-white duration-1000 max-md:max-w-full`}
+                  >
                     {t('LANDING_PAGE.WHY_ISUNFA_SECTION_TITLE')}
                   </div>
                   <div className="mt-10 flex flex-col max-md:max-w-full">
-                    <div className="flex gap-4 max-md:flex-wrap">
+                    <div
+                      ref={animeRef51}
+                      className={`overflow-x-hidden ${isAnimeRef51Visible ? `translate-x-0` : `-translate-x-140%`} flex gap-4 duration-1000 max-md:flex-wrap`}
+                    >
                       <div className="my-auto flex items-center justify-center">
                         <img
                           loading="lazy"
@@ -635,7 +753,10 @@ function LandingPageBody() {
                         {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_1')}
                       </div>
                     </div>
-                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                    <div
+                      ref={animeRef52}
+                      className={`overflow-x-hidden ${isAnimeRef52Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
+                    >
                       <div className="my-auto flex items-center justify-center">
                         <img
                           loading="lazy"
@@ -647,7 +768,10 @@ function LandingPageBody() {
                         {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_2')}
                       </div>
                     </div>
-                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                    <div
+                      ref={animeRef53}
+                      className={`overflow-x-hidden ${isAnimeRef53Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
+                    >
                       <div className="my-auto flex items-center justify-center">
                         <img
                           loading="lazy"
@@ -659,7 +783,10 @@ function LandingPageBody() {
                         {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_3')}
                       </div>
                     </div>
-                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                    <div
+                      ref={animeRef54}
+                      className={`overflow-x-hidden ${isAnimeRef54Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
+                    >
                       <div className="my-auto flex items-center justify-center">
                         <img
                           loading="lazy"
@@ -671,7 +798,10 @@ function LandingPageBody() {
                         {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_4')}
                       </div>
                     </div>
-                    <div className="mt-10 flex gap-4 max-md:flex-wrap">
+                    <div
+                      ref={animeRef55}
+                      className={`overflow-x-hidden ${isAnimeRef55Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
+                    >
                       <div className="my-auto flex items-center justify-center">
                         <img
                           loading="lazy"
@@ -686,12 +816,16 @@ function LandingPageBody() {
                   </div>
                 </div>
               </div>
-              <div className="flex w-1/2 flex-col max-md:ml-0 max-md:w-full">
+
+              <div className={` flex flex-col max-md:ml-0`}>
                 <img
                   loading="lazy"
                   src="/elements/partial_mac.png"
-                  // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/55b5c36e4b48f510985142e60e93b8e18b76a5d4d1adde370ca71347b1d791f3?apiKey=0e17b0b875f041659e186639705112b1&"
-                  className="absolute right-0 aspect-[1.18] w-800px grow self-stretch max-md:mt-10 max-md:max-w-full"
+                  // TODO: 從右邊移到中間，但會出現水平捲軸，先 comment out (20240319 - Shirley)
+                  // ref={animeRef56}
+                  // className={`overflow-x-hidden ${isAnimeRef56Visible ? `translate-x-0` : `translate-x-140%`} absolute right-0 aspect-[1.18] w-800px grow self-stretch duration-1000 max-md:mt-10 max-md:max-w-full`}
+                  ref={animeRef56}
+                  className={`absolute right-0 aspect-1.18 w-800px grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
                 />
               </div>
             </div>
@@ -717,7 +851,10 @@ function LandingPageBody() {
               fill
               style={{ objectFit: 'cover' }}
             />
-            <div className="absolute inset-0 flex justify-center">
+            <div
+              ref={animeRef61}
+              className={` ${isAnimeRef61Visible ? `translate-x-0` : `-translate-x-140%`} absolute inset-0 flex justify-center duration-1000`}
+            >
               {' '}
               <ContactForm />
             </div>
