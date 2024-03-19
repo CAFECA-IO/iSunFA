@@ -175,9 +175,15 @@ function LandingPageBody() {
           {/* <div className="bg-background_pattern absolute right-0 top-0 flex h-screen w-screen flex-col items-center bg-cover bg-center bg-no-repeat mix-blend-screen lg:bg-cover lg:bg-top-4"></div> */}
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-screen">
-            <div className="absolute right-0 top-0 h-500px w-900px bg-light_up bg-no-repeat bg-blend-color-dodge"></div>
+            <div className="absolute right-0 top-0 h-1800px w-900px bg-light_up bg-no-repeat bg-blend-color-dodge"></div>
           </div>
           {/* Info: ---light_up svg--- (20240318 - Shirley) */}
+          {/* Info: ---light_down svg--- (20240318 - Shirley) */}
+          <div className="absolute h-screen w-screen mix-blend-screen">
+            {' '}
+            <div className="bottomShadow absolute -left-1/10 -top-1/3 z-0 h-1800px w-1400px bg-light_down bg-contain bg-no-repeat bg-blend-color-dodge shadow-md"></div>
+          </div>
+          {/* Info: ---light_down svg--- (20240318 - Shirley) */}
           {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
           {/* Info: WI: shadow_01 svg */}
           {/* <div className="absolute -bottom-40 left-0 flex aspect-21/9 w-full bg-customGradient bg-cover bg-no-repeat"></div> */}
@@ -200,19 +206,19 @@ function LandingPageBody() {
             </div>
           </div> */}
           {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
-          {/* Info: ---green_light svg--- (20240318 - Shirley) */} {/*mix-blend-luminosity */}
+          {/* Info: ---green_light_left svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-color-dodge">
             {' '}
-            <div className="absolute -right-1/3 top-20 h-1200px w-1400px bg-green_light bg-contain bg-no-repeat bg-blend-color-dodge"></div>
+            <div className="absolute -right-0 top-1/3 h-1200px w-1400px bg-green_light_left bg-contain bg-no-repeat bg-blend-color-dodge"></div>
           </div>
-          {/* Info: ---green_light svg--- (20240318 - Shirley) */}
+          {/* Info: ---green_light_left svg--- (20240318 - Shirley) */}
+
+          {/* Info: ---green_light_right svg--- (20240318 - Shirley) */}
+          <div className="absolute h-screen w-screen mix-blend-color-dodge">
+            <div className="absolute right-0 top-20 h-1200px w-1400px bg-green_light_right bg-contain bg-no-repeat bg-blend-color-dodge"></div>
+          </div>
+          {/* Info: ---green_light_right svg--- (20240318 - Shirley) */}
           {/* Info:(20230711 - Shirley) Main Title Block */}
-          {/* Info: ---light_down svg--- (20240318 - Shirley) */}
-          <div className="absolute h-screen w-screen mix-blend-screen">
-            {' '}
-            <div className="bottomShadow absolute -top-36 left-0 z-10 h-1800px w-1400px bg-light_down bg-cover bg-no-repeat bg-blend-color-dodge shadow-md"></div>
-          </div>
-          {/* Info: ---light_down svg--- (20240318 - Shirley) */}
           {/* Info: iSunFA 大字 (20240318 - Shirley) */}
           <div className="absolute -right-0 top-56">
             <img
@@ -256,7 +262,7 @@ function LandingPageBody() {
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
         <div className="relative">
           {' '}
-          <div className="absolute h-screen w-screen mix-blend-screen">
+          <div className="absolute h-screen w-screen mix-blend-color-dodge">
             <div className="absolute right-0 top-0 aspect-0.87 w-1400px bg-light_01 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
         </div>
@@ -348,7 +354,7 @@ function LandingPageBody() {
         {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
         <div className="relative">
           {' '}
-          <div className="absolute h-screen w-screen mix-blend-screen">
+          <div className="absolute h-screen w-screen mix-blend-color-dodge">
             <div className="absolute -top-20 left-0 h-full w-1200px bg-light_02 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
         </div>
@@ -393,7 +399,7 @@ function LandingPageBody() {
           {/* Info: ----- light_03 svg ----- (20240318 - Shirley) */}
           <div className="relative">
             {' '}
-            <div className="absolute h-screen w-screen mix-blend-screen">
+            <div className="absolute h-screen w-screen mix-blend-color-dodge">
               <div className="absolute -top-0 right-0 aspect-0.87 w-1400px bg-light_03 bg-no-repeat bg-blend-color-dodge"></div>
             </div>
           </div>
@@ -547,7 +553,7 @@ function LandingPageBody() {
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         <div className="relative">
           {' '}
-          <div className="absolute h-screen w-screen mix-blend-screen">
+          <div className="absolute h-screen w-screen mix-blend-color-dodge">
             <div className="absolute -top-24rem left-0 h-1200px w-1400px bg-light_04 bg-no-repeat bg-blend-color-dodge"></div>
           </div>
         </div>

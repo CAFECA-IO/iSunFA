@@ -62,6 +62,8 @@ module.exports = {
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
         contact_bg: 'url("/elements/contact_bg.svg")',
         background_pattern: 'url("/elements/background_pattern.svg")',
+        green_light_left: 'url("/elements/green_light_left.svg")',
+        green_light_right: 'url("/elements/green_light_right.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:
@@ -357,6 +359,7 @@ module.exports = {
         '2/5': '40%',
         '3/5': '60%',
         '4/5': '80%',
+        '1/6': '16.7%',
         '1/8': '12.5%',
         '3/8': '37.5%',
         '5/8': '62.5%',
