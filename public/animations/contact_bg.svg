@@ -1,0 +1,66 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g clip-path="url(#clip0_185_72780)">
+        <!-- 背景 -->
+        <rect width="1080" height="1080" fill="#001840"/>
+        <clipPath id="clip0_185_72780">
+            <rect width="1080" height="1080" fill="white"/>
+        </clipPath>
+        
+        <!-- 橘色部分 -->
+        <g filter="url(#filter1_f_185_72780)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M1.68506 -127.918C52.2861 -118.649 88.436 -78.3842 131.759 -51.8041C170.422 -28.0836 216.735 -13.8747 244.496 21.0541C272.082 55.7616 271.279 102.625 286.993 143.506C304.893 190.076 350.63 230.81 344.028 280.004C337.502 328.64 289.292 361.746 253.037 396.542C219.271 428.951 182.296 457.66 138.846 476.934C95.6989 496.073 49.1492 511.388 1.68506 508.038C-44.7693 504.759 -85.2339 479.666 -126.027 458.238C-165.241 437.639 -204.432 416.7 -233.686 384.4C-263.471 351.514 -279.096 310.6 -296.209 270.338C-315.611 224.688 -356.466 178.055 -341.414 130.938C-326.082 82.9482 -253.096 76.0995 -221.365 36.0694C-188.483 -5.41364 -198.127 -72.5633 -154.932 -104.321C-112.555 -135.476 -50.8777 -137.547 1.68506 -127.918Z" fill="url(#paint1_linear_185_72780)"/>
+            <animateTransform
+                attributeName="transform"
+                type="translate"
+                dur="20s"
+                repeatCount="indefinite"
+                values="0 0; 1000 0; 0 0"
+            />
+        </g>
+        <defs>
+            <linearGradient id="paint1_linear_185_72780" x1="0" y1="-133.003" x2="0" y2="508.5" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFB632"/>
+                <stop offset="1" stop-color="#FFA502"/>
+            </linearGradient>
+            <filter id="filter1_f_185_72780" x="-644.675" y="-433.003" width="1289.35" height="1241.5" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feGaussianBlur stdDeviation="150" result="effect1_foregroundBlur_185_72780"/>
+            </filter>
+        </defs>
+
+        <!-- 藍色部分 -->
+        <g filter="url(#filter0_f_185_72780)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M1418.29 756.201C1393.31 808.879 1336.83 836.52 1294.03 876.084C1255.83 911.392 1226.39 957.906 1178.41 977.943C1130.73 997.853 1077.14 983.054 1025.74 988.125C967.181 993.902 907.44 1031.91 852.812 1010.06C798.803 988.468 774.439 925.823 744.747 875.772C717.093 829.157 694.595 780.124 684.77 726.803C675.012 673.851 670.611 618.309 687.905 567.309C704.832 517.394 745.115 480.52 781.282 442.197C816.048 405.358 851.199 368.645 896.584 346.192C942.792 323.331 994.207 318.367 1045.3 311.58C1103.22 303.884 1168.35 272.98 1218.2 303.464C1268.97 334.513 1256.16 416.501 1293.15 463.15C1331.47 511.492 1411.33 520.872 1435.56 577.624C1459.34 633.3 1444.24 701.48 1418.29 756.201Z" fill="url(#paint0_linear_185_72780)"/>
+            <animateTransform
+                attributeName="transform"
+                type="translate"
+                dur="20s"
+                repeatCount="indefinite"
+                values="200 100; -1000 100; 200 100"
+            />
+        </g>
+        <defs>
+            <linearGradient id="paint0_linear_185_72780" x1="1424.61" y1="755.865" x2="687.852" y2="565.326" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#11FFF5"/>
+                <stop offset="1" stop-color="#12CFFF"/>
+            </linearGradient>
+            <filter id="filter0_f_185_72780" x="376.188" y="-9.71484" width="1371.26" height="1326.49" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feGaussianBlur stdDeviation="150" result="effect1_foregroundBlur_185_72780"/>
+            </filter>
+        </defs>
+
+        <!-- 模糊 -->
+        <g filter="url(#filter2_b_185_72780)">
+            <rect width="1080" height="1080" fill="#001840" fill-opacity="0.5"/>
+        </g>
+        <filter id="filter2_b_185_72780" x="-160" y="-160" width="1400" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feGaussianBlur in="BackgroundImageFix" stdDeviation="80"/>
+            <feComposite in2="SourceAlpha" operator="in" result="effect1_backgroundBlur_185_72780"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_backgroundBlur_185_72780" result="shape"/>
+        </filter>
+    </g>
+</svg>

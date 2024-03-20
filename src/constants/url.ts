@@ -1,7 +1,7 @@
 export const BFAURL = {
   HOME: '/',
   COMING_SOON: '/coming-soon',
-  CONTACT_US: '/contact-us',
+  CONTACT_US: '/#contact-us',
   APP: '/app',
   CHAINS: '/app/chains',
   CURRENCIES: '/app/currencies',
