@@ -183,7 +183,7 @@ function ContactForm() {
       onSubmit={submitHandler}
       className={`${
         showAnim ? 'invisible opacity-0' : 'visible opacity-100'
-      } mt-20 flex w-800px max-w-full flex-col rounded-[40px] bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5`}
+      } mt-20 flex w-620px max-w-full flex-col rounded-[40px] bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5 lg:w-800px`}
     >
       <div className="flex flex-col">
         <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">

@@ -66,11 +66,11 @@ function LandingNavBar() {
   /* Info: (20230712 - Julian) desktop navbar */
   const desktopNavBar = (
     <div
-      className={`-ml-5 hidden h-80px w-screen items-center px-20 py-3 font-barlow ${bgStyle} text-white transition-all duration-300 ease-in-out lg:flex`}
+      className={`hidden h-80px w-screen items-center px-10 py-3 font-barlow lg:px-20 ${bgStyle} text-white transition-all duration-300 ease-in-out md:flex`}
     >
-      <ul className="flex flex-1 items-center space-x-10">
+      <ul className="flex flex-1 items-center space-x-5 lg:space-x-10">
         <li>
-          <Link href={BFAURL.HOME}>
+          <Link href={BFAURL.HOME} className="h-50px w-140px shrink-0">
             <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
           </Link>
         </li>
@@ -222,12 +222,12 @@ function LandingNavBar() {
         <li>{/* <I18n /> */}</li>
       </ul>
 
-      <ul className="mr-10 flex items-center space-x-0">
+      <ul className=" flex items-center space-x-0 lg:mr-10">
         {/* TODO: refactor i18n (20240315 - Shirley) */}
         <div ref={dropdown}>
           <li>
             <button
-              className={`absolute right-18rem top-3 flex flex-col items-center justify-center space-x-2 rounded-full  font-bold hover:bg-tertiaryBlue ${dropdownOpen ? 'bg-tertiaryBlue p-4' : 'p-4'}`}
+              className={`absolute right-11rem top-3 flex flex-col items-center justify-center space-x-2 rounded-full font-bold  hover:bg-tertiaryBlue lg:right-18rem ${dropdownOpen ? 'bg-tertiaryBlue p-4' : 'p-4'}`}
               type="button"
               onClick={toggleDropdown}
             >
@@ -298,13 +298,13 @@ function LandingNavBar() {
   const mobileNavBar = (
     <div
       ref={targetRef}
-      className={`${bgStyle} relative -ml-5 flex h-80px w-screen items-center justify-center p-4 text-white lg:hidden`}
+      className={`${bgStyle} relative flex h-80px w-screen shrink-0 items-center justify-center p-4 text-white md:hidden`}
     >
       {/* Info: (20230712 - Julian) hamburger */}
       <button className="absolute left-4 p-10px" onClick={clickMenuHandler} type="button">
         <Image src="/icons/hamburger.svg" width={24} height={24} alt="hamburger_icon" />
       </button>
-      <div className="">
+      <div>
         <Link href={BFAURL.HOME}>
           <Image src="/logo/isunfa_logo_small.svg" width={50} height={60} alt="iSunFA_logo" />
         </Link>
@@ -330,7 +330,7 @@ function LandingNavBar() {
   );
 
   return (
-    <div className="container fixed inset-x-0 top-0 z-40 mx-auto max-w-full font-inter">
+    <div className="fixed inset-x-0 top-0 z-40 mx-auto max-w-full font-inter">
       {desktopNavBar}
       {mobileNavBar}
     </div>

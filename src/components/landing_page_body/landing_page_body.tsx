@@ -1,10 +1,7 @@
-/* eslint-disable */
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
-import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { useTranslation } from 'next-i18next';
 import LandingFooter from '../landing_footer/landing_footer';
-import { massiveDataContent, whyUsContent } from '../../constants/config';
 import { TranslateFunction } from '../../interfaces/locale';
 import NumberAnimation from '../number_animation/number_animation';
 import Carousel from '../carousel/carousel';
@@ -49,8 +46,6 @@ function LandingPageBody() {
   const [isAnimeRef54Visible, setIsAnimeRef54Visible] = useState(false);
   const animeRef55 = useRef(null);
   const [isAnimeRef55Visible, setIsAnimeRef55Visible] = useState(false);
-  const animeRef56 = useRef(null);
-  const [isAnimeRef56Visible, setIsAnimeRef56Visible] = useState(false);
 
   const animeRef61 = useRef(null);
   const [isAnimeRef61Visible, setIsAnimeRef61Visible] = useState(false);
@@ -65,7 +60,6 @@ function LandingPageBody() {
   }, []);
 
   const scrollHandler = () => {
-    const BUFFER = 200;
     if (animeRef21.current) {
       const rect = (animeRef21.current as HTMLElement).getBoundingClientRect();
       const rectTop = rect.top;
@@ -170,14 +164,6 @@ function LandingPageBody() {
       setIsAnimeRef55Visible(rectTop < windowHeight);
     }
 
-    if (animeRef56.current) {
-      const rect = (animeRef56.current as HTMLElement).getBoundingClientRect();
-      const rectTop = rect.top;
-      const windowHeight = window.innerHeight;
-
-      setIsAnimeRef56Visible(rectTop < windowHeight);
-    }
-
     if (animeRef61.current) {
       const rect = (animeRef61.current as HTMLElement).getBoundingClientRect();
       const rectTop = rect.top;
@@ -193,57 +179,6 @@ function LandingPageBody() {
       window.removeEventListener('scroll', scrollHandler);
     };
   }, []);
-
-  // const scrollHandler = () => {
-  //   if (animeRef1.current) {
-  //     const rect = (animeRef1.current as HTMLElement).getBoundingClientRect();
-  //     const rectTop = rect.top;
-  //     const windowHeight = window.innerHeight;
-  //     const rectVisible = 200;
-
-  //     console.log('rectTop', rectTop, 'windowHeight', windowHeight);
-  //     setIsAnimeRef1Visible(rectTop < windowHeight);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   window.addEventListener('scroll', scrollHandler, { passive: true });
-  //   return () => {
-  //     window.removeEventListener('scroll', scrollHandler);
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   const observer = new IntersectionObserver(([entry]) => {
-  //     console.log('entry', entry.isIntersecting);
-  //     if (entry.isIntersecting) {
-  //       setIsAnimeRef1Visible(true);
-  //     } else {
-  //       setIsAnimeRef1Visible(false);
-  //     }
-  //   });
-
-  //   if (animeRef1.current) {
-  //     observer.observe(animeRef1.current);
-  //   }
-
-  //   return () => {
-  //     if (animeRef1.current) {
-  //       observer.unobserve(animeRef1.current);
-  //     }
-  //   };
-  // }, []);
-
-  const massiveDataList = massiveDataContent.map(({ icon, text, alt }, index) => (
-    // Info: (20240112 - Shirley) it's ok to use index as key in this case
-    // eslint-disable-next-line react/no-array-index-key
-    <div key={index} className="flex flex-col items-center space-y-4 px-4">
-      <div className="relative h-50px w-50px">
-        <Image src={icon} alt={alt} fill style={{ objectFit: 'contain' }} />
-      </div>
-      <p className="text-base font-normal lg:text-lg">{t(text)}</p>
-    </div>
-  ));
 
   const numberBlockContent = [
     {
@@ -337,7 +272,7 @@ function LandingPageBody() {
     },
   ];
 
-  const heroList = heroDescriptions.map(({ image, alt, description, title }, index) => (
+  const heroList = heroDescriptions.map(({ image, alt, description, title }) => (
     <div key={image} className="flex flex-col items-center space-y-6 text-center">
       <div className="relative h-80px w-80px">
         <Image src={image} alt={alt} fill style={{ objectFit: 'contain' }} />
@@ -350,25 +285,21 @@ function LandingPageBody() {
   ));
 
   const verticalDotLine = (
-    <>
-      <div className="relative h-500px">
-        {/* ----- Dot & Line components ----- */}
-        <div className="flex items-center rounded-lg px-12 pt-10 ">
-          {/* ----- filled circle ----- */}
-          <div
-            className={`absolute left-1.8rem z-10 h-27px w-27px rounded-full bg-primaryYellow`}
-          ></div>
+    <div className="relative h-500px">
+      {/* ----- Dot & Line components ----- */}
+      <div className="flex items-center rounded-lg px-12 pt-10 ">
+        {/* ----- filled circle ----- */}
+        <div className={`absolute left-1.8rem z-10 h-27px w-27px rounded-full bg-primaryYellow`} />
 
-          {/* ----- filled circle bg ----- */}
-          <div className={`absolute left-1.4rem h-40px w-40px rounded-full bg-tertiaryBlue`}></div>
+        {/* ----- filled circle bg ----- */}
+        <div className={`absolute left-1.4rem h-40px w-40px rounded-full bg-tertiaryBlue`}></div>
 
-          {/* ----- Line ----- */}
-          <div
-            className={`absolute left-2.3rem top-5 h-400px w-1px border-5px border-solid border-tertiaryBlue`}
-          />
-        </div>
+        {/* ----- Line ----- */}
+        <div
+          className={`absolute left-2.3rem top-5 h-400px w-1px border-5px border-solid border-tertiaryBlue`}
+        />
       </div>
-    </>
+    </div>
   );
 
   const carouselItems = [
@@ -402,28 +333,6 @@ function LandingPageBody() {
             <div className="bottomShadow absolute -left-1/10 -top-1/3 z-0 h-1800px w-1400px bg-light_down bg-contain bg-no-repeat bg-blend-color-dodge shadow-md"></div>
           </div>
           {/* Info: ---light_down svg--- (20240318 - Shirley) */}
-          {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
-          {/* Info: WI: shadow_01 svg */}
-          {/* <div className="absolute -bottom-40 left-0 flex aspect-21/9 w-full bg-customGradient bg-cover bg-no-repeat"></div> */}
-          {/* Info: WII: shadow_01 svg */}
-          {/* <div className="absolute h-full w-full ">
-            <img
-              className="w-1400px absolute right-0 top-0 flex h-fit bg-blend-color-dodge"
-              alt="Shadow"
-              src="/elements/shadow_01.svg"
-            />
-          </div> */}
-          {/* Info: WIII: shadow_01 svg */}
-          {/* <div className="h-[1227px] w-[1432px]">
-            <div className="relative top-[-4px] h-[1131px] [background:linear-gradient(180deg,rgba(0,24,64,0)_32.5%,rgb(0,24,64)_85.5%)]">
-              <img
-                className="absolute left-0 top-0 h-[1079px] w-[856px] bg-blend-color-dodge"
-                alt="Shadow"
-                src="/elements/shadow_01.svg"
-              />
-            </div>
-          </div> */}
-          {/* Info: ---shadow_01 svg--- (20240318 - Shirley) */}
           {/* Info: ---green_light_left svg--- (20240318 - Shirley) */}
           <div className="absolute h-screen w-screen mix-blend-color-dodge">
             {' '}
@@ -438,11 +347,11 @@ function LandingPageBody() {
           {/* Info: ---green_light_right svg--- (20240318 - Shirley) */}
           {/* Info:(20230711 - Shirley) Main Title Block */}
 
-          <div className="items-around flex w-9/10 justify-center">
+          <div className="items-around flex w-full justify-center lg:w-9/10">
             {/* Info: iSunFA Call to action (20240319 - SHirley) */}
             <div
               ref={animeRef1}
-              className={`overflow-x-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start transition-all duration-1000`}
+              className={`overflow-x-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 -ml-40 flex h-screen w-3/5 flex-col items-start justify-start space-y-10 px-0 pb-12 pt-1/6 text-start transition-all duration-1000 lg:-ml-0`}
             >
               <div className="flex flex-col space-y-5">
                 {' '}
@@ -494,9 +403,11 @@ function LandingPageBody() {
               {/* </button> */}
             </div>
             {/* Info: iSunFA 大字 (20240318 - Shirley) */}
-            <div className=""></div>
-            <div className={`ml-1/12 mt-1/10 flex h-screen items-start`}>
+            <div className={`mt-1/10 hidden h-screen items-start lg:flex`}>
+              {/* TODO: 用 <Image> 優化 (20240320 - Shirley) */}
+              {/* eslint-disable @next/next/no-img-element */}
               <img
+                alt="isunfa_pop"
                 loading="lazy"
                 src="/elements/isunfa_pop.svg"
                 className={`aspect-0.87 w-9/10 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full ${isAnimeRef1Visible ? 'animate-slideBottomToTop' : 'hidden'}`}
@@ -506,9 +417,6 @@ function LandingPageBody() {
         </div>
 
         {/* Info:(20230815 - Shirley) How we work */}
-        {/* <div className="absolute h-screen w-screen mix-blend-screen">
-          <div className="absolute right-0 top-0 h-500px w-900px bg-light_01 bg-no-repeat bg-blend-color-dodge"></div>
-        </div> */}
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
         <div className="relative">
           {' '}
@@ -517,24 +425,25 @@ function LandingPageBody() {
           </div>
         </div>
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
-        <div className="container mx-auto flex h-fit w-full flex-col py-20 lg:pb-20 lg:pt-0">
+        <div className="container mx-auto flex h-fit w-full flex-col pb-20 pt-40 lg:pb-20 lg:pt-0">
           <h1 className="flex w-full justify-center pt-28 text-h1 font-bold tracking-wider text-white lg:text-h1">
             {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
           </h1>
+
           <div className="flex">
-            <div className="relative ml-1/8 pt-40">
+            <div className="absolute left-1/16 top-80rem lg:relative lg:left-auto lg:top-auto lg:ml-1/8 lg:pt-40">
               {' '}
               <div className="flex flex-col justify-center">{verticalDotLine}</div>{' '}
               <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
               <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
             </div>
 
-            <div className="mt-44 flex flex-col space-y-32">
+            <div className="mt-20 flex flex-col space-y-32 lg:mt-44">
               <div
                 ref={animeRef21}
-                className={`overflow-x-hidden ${isAnimeRef21Visible ? `translate-x-0` : `translate-x-140%`} mr-10 flex space-x-2 duration-1000`}
+                className={`overflow-x-hidden ${isAnimeRef21Visible ? `translate-x-0` : `translate-x-140%`} ml-2 mt-10 flex duration-1000 md:space-x-2 lg:ml-0 lg:mr-10`}
               >
-                <div className={`relative h-300px w-600px`}>
+                <div className={`relative h-300px w-450px lg:w-600px`}>
                   <Image
                     src="/elements/how_we_work_1.png"
                     alt="how we work - privacy"
@@ -543,7 +452,17 @@ function LandingPageBody() {
                   />
                 </div>
 
-                <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
+                <div className="mt-20 hidden flex-col space-y-5 lg:mt-20 lg:flex lg:max-w-lg lg:space-y-8">
+                  {' '}
+                  <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+                    {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_1')}
+                  </p>
+                  <p className="text-base text-white">
+                    {t('LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1')}
+                  </p>
+                </div>
+
+                <div className="-ml-10 mt-20 flex w-1/3 flex-col space-y-5 lg:hidden">
                   {' '}
                   <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_1')}
@@ -556,17 +475,28 @@ function LandingPageBody() {
 
               <div
                 ref={animeRef22}
-                className={`overflow-x-hidden ${isAnimeRef22Visible ? `translate-x-0` : `translate-x-140%`} mr-10 flex space-x-2 duration-1000`}
+                className={`overflow-x-hidden ${isAnimeRef22Visible ? `translate-x-0` : `translate-x-140%`}  ml-2 mt-10 flex duration-1000 md:space-x-2 lg:ml-0 lg:mr-10`}
               >
-                <div className={`relative h-300px w-600px`}>
+                <div className={`relative h-300px w-450px lg:w-600px`}>
                   <Image
                     src="/elements/how_we_work_2.png"
-                    alt="how we work - accuracy"
+                    alt="how we work - privacy"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
-                <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
+
+                <div className="mt-20 hidden flex-col space-y-5 lg:mt-20 lg:flex lg:max-w-lg lg:space-y-8">
+                  {' '}
+                  <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+                    {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_2')}
+                  </p>
+                  <p className="text-base text-white">
+                    {t('LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2')}
+                  </p>
+                </div>
+
+                <div className="-ml-10 mt-20 flex w-1/3 flex-col space-y-5 lg:hidden">
                   {' '}
                   <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_2')}
@@ -579,17 +509,28 @@ function LandingPageBody() {
 
               <div
                 ref={animeRef23}
-                className={`overflow-x-hidden ${isAnimeRef23Visible ? `translate-x-0` : `translate-x-140%`} mr-10 flex space-x-2 duration-1000`}
+                className={`overflow-x-hidden ${isAnimeRef23Visible ? `translate-x-0` : `translate-x-140%`} ml-2 mt-10 flex duration-1000 md:space-x-2 lg:ml-0 lg:mr-10`}
               >
-                <div className={`relative h-300px w-600px`}>
+                <div className={`relative h-300px w-450px lg:w-600px`}>
                   <Image
                     src="/elements/how_we_work_3.png"
-                    alt="how we work - compliance"
+                    alt="how we work - privacy"
                     fill
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
-                <div className="mt-20 flex max-w-lg flex-col space-y-5 lg:mt-20 lg:space-y-8">
+
+                <div className="mt-20 hidden flex-col space-y-5 lg:mt-20 lg:flex lg:max-w-lg lg:space-y-8">
+                  {' '}
+                  <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+                    {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_3')}
+                  </p>
+                  <p className="text-base text-white">
+                    {t('LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3')}
+                  </p>
+                </div>
+
+                <div className="-ml-10 mt-20 flex w-1/3 flex-col space-y-5 lg:hidden">
                   {' '}
                   <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
                     {t('LANDING_PAGE.PRIVACY_BLOCK_TITLE_3')}
@@ -606,9 +547,6 @@ function LandingPageBody() {
         {/* Info: (20240315 - Shirley) Blocks with number animation */}
         <div className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
           {numberBlockList}
-
-          {/* Info:(20240308 - Shirley) background img */}
-          {/* <div className="absolute -right-20 top-48 h-255px w-900px rounded-2xl bg-101 bg-cover bg-no-repeat hidden lg:block" /> */}
         </div>
 
         {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
@@ -622,7 +560,7 @@ function LandingPageBody() {
           {/* Info: ----- light_02 svg ----- (20240318 - Shirley) */}
 
           {/* Info:(20240315 - Shirley) Features Block */}
-          <div className="mt-20 flex flex-col items-center space-y-16 px-4 pt-20 text-center lg:mb-40 lg:h-450px lg:px-20 lg:py-20">
+          <div className="flex flex-col items-center space-y-16 px-4 pt-20 text-center lg:mb-40 lg:h-450px lg:px-20 lg:py-20">
             <div className="flex flex-col">
               <h3 className="text-h1 font-bold leading-h1 text-white">
                 {t('LANDING_PAGE.FEATURES_SUBTITLE')}
@@ -633,7 +571,7 @@ function LandingPageBody() {
                 <div
                   ref={animeRef31}
                   // Info: 從左邊移到中間 (20240319 - Shirley)
-                  className={`overflow-x-hidden ${isAnimeRef31Visible ? `translate-x-0` : `-translate-x-140%`} relative h-515px w-865px duration-1000`}
+                  className={`overflow-x-hidden ${isAnimeRef31Visible ? `translate-x-0` : `-translate-x-140%`} relative h-515px w-650px duration-1000 lg:w-865px`}
                 >
                   <Image
                     src="/elements/mac.png"
@@ -646,7 +584,7 @@ function LandingPageBody() {
                 <div
                   ref={animeRef32}
                   // Info: 從右邊移到中間 (20240319 - Shirley)
-                  className={`overflow-x-hidden ${isAnimeRef32Visible ? `translate-x-0` : `translate-x-140%`} relative bottom-19rem left-32rem h-300px w-432px duration-1000`}
+                  className={`overflow-x-hidden ${isAnimeRef32Visible ? `translate-x-0` : `translate-x-140%`} relative bottom-21rem left-20rem h-300px w-330px duration-1000 lg:bottom-19rem lg:left-32rem lg:w-432px`}
                 >
                   <Image
                     src="/elements/ipad.png"
@@ -662,7 +600,7 @@ function LandingPageBody() {
           <div
             ref={animeRef33}
             // Info: 從下面移到中間 (20240319 - Shirley)
-            className={`overflow-x-hidden ${isAnimeRef33Visible ? `translate-y-0` : `translate-y-140%`} mx-20 mb-40 grid grid-cols-1 gap-20 duration-1000 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10`}
+            className={`overflow-x-hidden ${isAnimeRef33Visible ? `lg:translate-y-0` : `lg:translate-y-140%`} mx-20 mb-40 grid grid-cols-1 gap-20 duration-1000 lg:mx-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10`}
           >
             {heroList}
           </div>
@@ -687,24 +625,30 @@ function LandingPageBody() {
             </div>
             <div
               ref={animeRef42}
-              className={` mb-4 mt-20 flex w-[388px] max-w-full justify-between gap-5 self-center max-md:mt-10`}
+              className={` mb-4 mt-20 flex w-388px max-w-full justify-between gap-5 self-center max-md:mt-10`}
             >
-              <img
+              <Image
+                width={154}
+                height={40}
+                alt="partner logo"
                 loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/ac89e42fea1664fc20628447e4c467981b2a7917d2f218339003d8a10442c356?apiKey=0e17b0b875f041659e186639705112b1&"
-                className={`overflow-x-hidden ${isAnimeRef42Visible ? `translate-x-0` : `-translate-x-100%`} aspect-[3.85] w-[154px] max-w-full shrink-0 self-start duration-1000`}
+                src="/elements/partner_1.svg"
+                className={`${isAnimeRef42Visible ? `translate-x-0` : `-translate-x-100%`} duration-1000`}
               />
-              <img
+              <Image
+                width={154}
+                height={40}
+                alt="partner logo"
                 loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/e0f0f194cc2b06eb64fe288595d1376d36cfa208efdb59a1e38301d868537587?apiKey=0e17b0b875f041659e186639705112b1&"
-                className={`overflow-x-hidden ${isAnimeRef42Visible ? `translate-x-0` : `-translate-x-100%`} aspect-[3.7] w-[154px] max-w-full shrink-0 duration-1000`}
+                src="/elements/partner_2.svg"
+                className={`${isAnimeRef42Visible ? `translate-x-0` : `-translate-x-100%`} duration-1000`}
               />
             </div>
           </div>
           {/* Info: ----- Partners (20240318 - Shirley) ----- */}
 
           {/* Info: ----- Carousel (20240318 - Shirley) ----- */}
-          <div className="mt-20 flex w-full justify-center space-x-5">
+          <div className="mt-20 flex w-full flex-col items-center justify-center space-x-5 lg:flex-row">
             <div className="relative mt-20 h-400px w-400px">
               <Image
                 src="/elements/contract_blue.svg"
@@ -716,8 +660,8 @@ function LandingPageBody() {
             <div className="max-w-700px">
               {' '}
               <Carousel autoSlide>
-                {carouselItems.map(({ title, content }, i) => (
-                  <Card key={i} title={t(title)} content={t(content)} />
+                {carouselItems.map(({ title, content }) => (
+                  <Card key={title} title={t(title)} content={t(content)} />
                 ))}
               </Carousel>
             </div>
@@ -728,12 +672,12 @@ function LandingPageBody() {
         {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
         <div className="flex w-full flex-col justify-center px-16 py-20 max-md:max-w-full max-md:px-5">
           <div className="mx-5 mb-20 mt-32 max-md:my-10 max-md:mr-2.5 max-md:max-w-full">
-            <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-              <div className="mt-24 flex w-6/12 flex-col max-md:ml-0 max-md:w-full">
+            <div className="flex gap-5 max-lg:flex-col max-md:gap-0">
+              <div className="mt-24 flex flex-col max-lg:ml-0 max-lg:w-1/2">
                 <div className="flex grow flex-col justify-center max-md:mt-10 max-md:max-w-full">
                   <div
                     ref={animeRef51}
-                    className={`overflow-x-hidden ${isAnimeRef51Visible ? `translate-x-0` : `-translate-x-140%`} justify-center pt-2 text-5xl font-semibold leading-[51.92px] tracking-tighter text-white duration-1000 max-md:max-w-full`}
+                    className={`overflow-x-hidden ${isAnimeRef51Visible ? `translate-x-0` : `-translate-x-140%`} justify-center pt-2 text-5xl font-semibold leading-h1 tracking-tighter text-white duration-1000 max-md:max-w-full`}
                   >
                     {t('LANDING_PAGE.WHY_ISUNFA_SECTION_TITLE')}
                   </div>
@@ -743,10 +687,12 @@ function LandingPageBody() {
                       className={`overflow-x-hidden ${isAnimeRef51Visible ? `translate-x-0` : `-translate-x-140%`} flex gap-4 duration-1000 max-md:flex-wrap`}
                     >
                       <div className="my-auto flex items-center justify-center">
-                        <img
+                        <Image
                           loading="lazy"
-                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                          className="aspect-square w-8"
+                          src="/elements/yellow_check.svg"
+                          width={32}
+                          height={32}
+                          alt="yellow check icon"
                         />
                       </div>
                       <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
@@ -758,10 +704,12 @@ function LandingPageBody() {
                       className={`overflow-x-hidden ${isAnimeRef52Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
                     >
                       <div className="my-auto flex items-center justify-center">
-                        <img
+                        <Image
                           loading="lazy"
-                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                          className="aspect-square w-8"
+                          src="/elements/yellow_check.svg"
+                          width={32}
+                          height={32}
+                          alt="yellow check icon"
                         />
                       </div>
                       <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
@@ -773,10 +721,12 @@ function LandingPageBody() {
                       className={`overflow-x-hidden ${isAnimeRef53Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
                     >
                       <div className="my-auto flex items-center justify-center">
-                        <img
+                        <Image
                           loading="lazy"
-                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                          className="aspect-square w-8"
+                          src="/elements/yellow_check.svg"
+                          width={32}
+                          height={32}
+                          alt="yellow check icon"
                         />
                       </div>
                       <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
@@ -788,10 +738,12 @@ function LandingPageBody() {
                       className={`overflow-x-hidden ${isAnimeRef54Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
                     >
                       <div className="my-auto flex items-center justify-center">
-                        <img
+                        <Image
                           loading="lazy"
-                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                          className="aspect-square w-8"
+                          src="/elements/yellow_check.svg"
+                          width={32}
+                          height={32}
+                          alt="yellow check icon"
                         />
                       </div>
                       <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
@@ -803,10 +755,12 @@ function LandingPageBody() {
                       className={`overflow-x-hidden ${isAnimeRef55Visible ? `translate-x-0` : `-translate-x-140%`} mt-10 flex gap-4 duration-1000 max-md:flex-wrap`}
                     >
                       <div className="my-auto flex items-center justify-center">
-                        <img
+                        <Image
                           loading="lazy"
-                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/b880f4b7d821e02397c0aa900c3983624e79fa2188034ee58d5b17f48db59804?apiKey=0e17b0b875f041659e186639705112b1&"
-                          className="aspect-square w-8"
+                          src="/elements/yellow_check.svg"
+                          width={32}
+                          height={32}
+                          alt="yellow check icon"
                         />
                       </div>
                       <div className="w-fit grow justify-center text-base font-medium leading-6 tracking-normal text-slate-300 max-md:max-w-full">
@@ -817,15 +771,25 @@ function LandingPageBody() {
                 </div>
               </div>
 
-              <div className={` flex flex-col max-md:ml-0`}>
-                <img
+              <div className={`hidden flex-col max-lg:ml-0 lg:flex`}>
+                <Image
+                  alt="partial mac"
+                  width={800}
+                  height={472}
                   loading="lazy"
                   src="/elements/partial_mac.png"
-                  // TODO: 從右邊移到中間，但會出現水平捲軸，先 comment out (20240319 - Shirley)
-                  // ref={animeRef56}
-                  // className={`overflow-x-hidden ${isAnimeRef56Visible ? `translate-x-0` : `translate-x-140%`} absolute right-0 aspect-[1.18] w-800px grow self-stretch duration-1000 max-md:mt-10 max-md:max-w-full`}
-                  ref={animeRef56}
-                  className={`absolute right-0 aspect-1.18 w-800px grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
+                  className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
+                />
+              </div>
+
+              <div className="flex h-750px lg:hidden">
+                <Image
+                  alt="partial mac"
+                  width={800}
+                  height={800}
+                  loading="lazy"
+                  src="/elements/partial_mac_md.png"
+                  className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
                 />
               </div>
             </div>
@@ -837,16 +801,16 @@ function LandingPageBody() {
         <div className="relative">
           {' '}
           <div className="absolute h-screen w-screen mix-blend-color-dodge">
-            <div className="absolute -top-24rem left-0 h-1200px w-1400px bg-light_04 bg-no-repeat bg-blend-color-dodge"></div>
+            <div className="absolute -left-20 -top-96rem h-1200px w-1400px bg-light_04 bg-no-repeat bg-blend-color-dodge lg:-top-24rem lg:left-0"></div>
           </div>
         </div>
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
-        <div id="contact-us" className="-mt-4 mb-20 h-1000px">
+        <div id="contact-us" className="mb-20 h-1000px md:-mt-20 lg:-mt-4">
           <div className="relative h-500px w-full">
             {' '}
             <Image
-              src="/elements/contact_bg.svg"
+              src="/animations/contact_bg.svg"
               alt="contact_bg"
               fill
               style={{ objectFit: 'cover' }}
@@ -863,7 +827,9 @@ function LandingPageBody() {
         {/* Info: ----- Contact form ----- (20240318 - Shirley) */}
 
         {/* Info:(20230711 - Shirley) Footer */}
-        <LandingFooter />
+        <div className="">
+          <LandingFooter />
+        </div>
       </div>
     </div>
   );

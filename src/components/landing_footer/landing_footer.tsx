@@ -14,8 +14,8 @@ import {
 
 function LandingFooter() {
   return (
-    <div className="flex flex-col space-y-12 bg-secondaryBlue px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-20">
-      <div className="flex flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
+    <div className="flex flex-col space-y-12 bg-secondaryBlue px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-28">
+      <div className="flex w-full flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
         <Link href={BFAURL.HOME}>
           {/* Info:(20230711 - Julian) Desktop Logo */}
           <Image
@@ -43,14 +43,21 @@ function LandingFooter() {
               className="flex items-center space-x-2"
             >
               <FiMapPin className="text-2xl" />
-              <p className="w-256px lg:w-auto">{iSunFAAddress}</p>
+              <p className="w-280px lg:w-auto">{iSunFAAddress}</p>
             </Link>
             <Link href={`tel:${iSunFAPhone}`} className="flex items-center space-x-2">
               <BsTelephone className="text-2xl" />
               <p>{iSunFAPhone}</p>
             </Link>
           </div>
-          <Link href={githubLink ?? ''} target="_blank" className="px-6 py-4">
+        </div>
+
+        <div className="flex w-full flex-1 justify-center border-t border-white lg:justify-end lg:border-t-0">
+          <Link
+            href={githubLink ?? ''}
+            target="_blank"
+            className="px-6 py-4 lg:border-l lg:border-white"
+          >
             <BiLogoGithub className="text-40px" />
           </Link>
         </div>
