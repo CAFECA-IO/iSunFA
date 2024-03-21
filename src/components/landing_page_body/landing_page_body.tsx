@@ -336,7 +336,7 @@ function LandingPageBody() {
       {howWeWorkItems.map(({ ref, isVisible, imageUrl, alt, title, content }) => (
         <div
           ref={ref}
-          className={`overflow-x-hidden ${isVisible ? `translate-x-0` : `translate-x-140%`} ml-5 mt-0 flex flex-col items-center justify-center duration-1000 md:mt-20 md:flex-row md:justify-start md:space-x-2 lg:ml-0 lg:mr-10 lg:mt-28`}
+          className={`overflow-x-hidden ${isVisible ? `translate-x-0` : `translate-x-140%`} -mt-14 flex h-900px w-full flex-col items-center justify-center pl-10 pt-10 duration-1000 md:mt-20 md:h-fit md:flex-row md:justify-start md:space-x-2 lg:mr-10 lg:mt-28 lg:pl-0`}
         >
           <div className={`relative mt-0 h-300px w-full md:w-full lg:mt-0 lg:w-600px`}>
             <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} />
@@ -348,7 +348,7 @@ function LandingPageBody() {
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
               {t(title)}
             </p>
-            <p className="text-base text-white">{t(content)}</p>
+            <p className="text-white md:text-base">{t(content)}</p>
           </div>
 
           {/* Info: ----- below 1440 px ----- (20240321 - Shirley) */}
@@ -357,7 +357,7 @@ function LandingPageBody() {
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
               {t(title)}
             </p>
-            <p className="w-full text-base text-white">{t(content)}</p>
+            <p className="w-full text-sm text-white">{t(content)}</p>
           </div>
         </div>
       ))}
@@ -375,7 +375,7 @@ function LandingPageBody() {
   return (
     <div className="">
       <div className="flex min-h-screen w-screen flex-col bg-secondaryBlue font-barlow">
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center lg:h-1000px">
           {/* Info: web background image (20240318 - Shirley) */}
           <div className="absolute right-0 top-22rem flex aspect-1/1 w-120vw flex-col items-center bg-web bg-cover bg-center bg-no-repeat md:aspect-4/3 lg:top-0 lg:w-1400px lg:bg-cover lg:bg-top-4">
             {' '}
@@ -481,7 +481,6 @@ function LandingPageBody() {
           </div>
         </div>
 
-        {/* Info:(20230815 - Shirley) How we work */}
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
         <div className="relative">
           {' '}
@@ -491,6 +490,7 @@ function LandingPageBody() {
         </div>
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
 
+        {/* Info:(20230815 - Shirley) How we work */}
         <div className="container mx-auto flex h-fit w-full flex-col pb-20 pt-40 md:pt-56 lg:pb-20 lg:pt-0">
           <h1 className="z-10 flex w-full justify-center pt-28 text-h4 font-bold tracking-wider text-white md:text-h1">
             {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
@@ -508,7 +508,7 @@ function LandingPageBody() {
               </div>
             </div>
 
-            <div className="ml-10 mt-20 flex flex-col space-y-32 md:ml-8 md:mt-32 lg:-ml-0 lg:mt-16">
+            <div className="ml-10 mt-0 flex flex-col space-y-32 md:ml-8 md:mt-32 lg:-ml-0 lg:mt-16">
               {howWeWorkList}
             </div>
           </div>
