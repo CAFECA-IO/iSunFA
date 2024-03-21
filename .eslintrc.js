@@ -28,7 +28,7 @@ module.exports = {
         'react/jsx-props-no-spreading': 'off',
         'no-console': 'error',
         'tailwindcss/no-contradicting-classname': 'error',
-        'tailwindcss/classnames-order': 'warn',
+        'tailwindcss/classnames-order': 'off',
         'tailwindcss/enforces-negative-arbitrary-values': 'error',
         'tailwindcss/enforces-shorthand': 'off',
         'tailwindcss/migration-from-tailwind-2': 'error',
