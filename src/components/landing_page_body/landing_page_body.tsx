@@ -298,7 +298,7 @@ function LandingPageBody() {
 
         {/* ----- Line ----- */}
         <div
-          className={`absolute left-2.3rem top-5 h-400px w-1px border-5px border-solid border-tertiaryBlue`}
+          className={`absolute left-2.3rem top-5 h-800px w-1px border-5px border-solid border-tertiaryBlue md:h-400px`}
         />
       </div>
     </div>
@@ -357,7 +357,7 @@ function LandingPageBody() {
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
               {t(title)}
             </p>
-            <p className="text-base text-white">{t(content)}</p>
+            <p className="w-full text-base text-white">{t(content)}</p>
           </div>
         </div>
       ))}
@@ -491,8 +491,8 @@ function LandingPageBody() {
         </div>
         {/* Info: ----- light_01 svg ----- (20240318 - Shirley) */}
 
-        <div className="container mx-auto flex h-fit w-full flex-col pb-20 pt-40 lg:pb-20 lg:pt-0">
-          <h1 className="z-10 flex w-full justify-center pt-28 text-h1 font-bold tracking-wider text-white lg:text-h1">
+        <div className="container mx-auto flex h-fit w-full flex-col pb-20 pt-40 md:pt-56 lg:pb-20 lg:pt-0">
+          <h1 className="z-10 flex w-full justify-center pt-28 text-h4 font-bold tracking-wider text-white md:text-h1">
             {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
           </h1>
 
@@ -500,18 +500,22 @@ function LandingPageBody() {
             <div className="absolute left-1/15 top-71rem md:left-1/10 md:top-78rem lg:relative lg:left-auto lg:top-auto lg:ml-1/8 lg:pt-40">
               {' '}
               <div className="flex flex-col justify-center">{verticalDotLine}</div>{' '}
-              <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
-              <div className="-mt-6.2rem flex flex-col justify-center">{verticalDotLine}</div>
+              <div className="mt-18rem flex flex-col justify-center md:-mt-6.2rem">
+                {verticalDotLine}
+              </div>
+              <div className="mt-18rem flex flex-col justify-center md:-mt-6.2rem">
+                {verticalDotLine}
+              </div>
             </div>
 
-            <div className="ml-10 mt-10 flex flex-col space-y-32 md:ml-0 md:mt-32 lg:-ml-0 lg:mt-16">
+            <div className="ml-10 mt-20 flex flex-col space-y-32 md:ml-8 md:mt-32 lg:-ml-0 lg:mt-16">
               {howWeWorkList}
             </div>
           </div>
         </div>
 
         {/* Info: (20240315 - Shirley) Blocks with number animation */}
-        <div className="mt-20 flex flex-col items-center space-y-28 scroll-smooth px-4 md:mt-52 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
+        <div className="mt-48 flex flex-col items-center space-y-28 scroll-smooth px-4 md:mt-52 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
           {numberBlockList}
         </div>
 
@@ -526,9 +530,9 @@ function LandingPageBody() {
 
         {/* Info:(20240315 - Shirley) Features Block */}
         <div className="container mx-auto flex h-fit w-full flex-col pt-10 md:pt-20 lg:pb-20 lg:pt-20">
-          <div className="flex flex-col items-center space-y-3 px-4 text-center md:space-y-10 md:pt-20 lg:mb-40 lg:h-450px lg:space-y-16 lg:px-20 lg:py-20">
+          <div className="flex flex-col items-center space-y-3 px-4 pt-20 text-center md:space-y-10 md:pt-20 lg:mb-40 lg:h-450px lg:space-y-16 lg:px-20 lg:py-20">
             <div className="flex flex-col">
-              <h3 className="text-h1 font-bold leading-h1 text-white">
+              <h3 className="text-h5 font-bold leading-h5 text-white md:text-h1 md:leading-h1">
                 {t('LANDING_PAGE.FEATURES_SUBTITLE')}
               </h3>
             </div>
@@ -636,7 +640,7 @@ function LandingPageBody() {
         </div>
 
         {/* Info: ----- why iSunFA (20240318 - Shirley) ----- */}
-        <div className="flex w-full flex-col justify-center px-16 py-20 max-md:max-w-full max-md:px-5">
+        <div className="flex w-full flex-col justify-center px-16 max-md:max-w-full max-md:px-5 md:py-20">
           <div className="mx-5 mb-20 mt-32 max-md:my-10 max-md:mr-2.5 max-md:max-w-full">
             <div className="flex gap-5 max-lg:flex-col max-md:gap-0">
               <div className="mt-24 flex flex-col max-lg:ml-0 lg:w-1/2">
