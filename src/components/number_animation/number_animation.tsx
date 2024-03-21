@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface NumberAnimationProps {
   targetNumber: number;
@@ -7,39 +6,39 @@ interface NumberAnimationProps {
 
 const NumberAnimation = ({ targetNumber }: NumberAnimationProps) => {
   const [number, setNumber] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
+  const numberRef = React.useRef(null);
+
+  const scrollHandler = () => {
+    const element = numberRef.current;
+    if (!element) return;
+    const position = (element as HTMLDivElement).getBoundingClientRect();
+
+    // Check if element is within viewport
+    if (position.top >= 0 && position.bottom <= window.innerHeight) {
+      const interval = setInterval(() => {
+        setNumber((prevNumber: number) => {
+          if (prevNumber < targetNumber) {
+            return prevNumber + 1;
+          }
+          clearInterval(interval);
+          return prevNumber;
+        });
+      }, 10);
+    } else {
+      setNumber(0); // Reset number when element is out of view
+    }
+  };
 
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        const interval = setInterval(() => {
-          setNumber((prevNumber: number) => {
-            if (prevNumber < targetNumber) {
-              return prevNumber + 1;
-            } else {
-              clearInterval(interval);
-              return prevNumber;
-            }
-          });
-        }, 10); // Adjust the speed of the animation by changing the interval duration
-      } else {
-        setNumber(0);
-      }
-    });
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
+    window.addEventListener('scroll', scrollHandler);
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
+      window.removeEventListener('scroll', scrollHandler);
     };
   }, [targetNumber]);
 
   return (
-    <div ref={ref} className="text-h2 font-bold leading-h2 text-primaryYellow">
+    <div ref={numberRef} className="text-h2 font-bold leading-h2 text-primaryYellow">
       {number}
     </div>
   );
