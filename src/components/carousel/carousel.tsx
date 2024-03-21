@@ -56,7 +56,9 @@ export default function Carousel({
 
   return (
     <div className="mt-10 flex flex-col" ref={carouselRef}>
-      <p className="ml-24 text-h2 leading-h2">{t('LANDING_PAGE.CAROUSEL_SECTION_TITLE')}</p>
+      <p className="ml-16 text-h6 leading-h6 md:ml-24 md:text-h2 md:leading-h2">
+        {t('LANDING_PAGE.CAROUSEL_SECTION_TITLE')}
+      </p>
       <div
         className="relative overflow-hidden hover:cursor-pointer"
         onMouseEnter={() => setIsPaused(true)}
@@ -72,7 +74,7 @@ export default function Carousel({
             </div>
           ))}
         </div>
-        {/* Info: 往前往後的按鈕 */}
+        {/* Info: 往前往後的按鈕 (20240315 - Shirley)*/}
         <div className="absolute inset-0 flex items-center justify-between p-0">
           <button
             onClick={prev}
@@ -88,8 +90,8 @@ export default function Carousel({
           </button>
         </div>
 
-        {/* Info: 點點點 */}
-        <div className="absolute bottom-4 left-0 right-0">
+        {/* Info: 點點點 (20240315 - Shirley)*/}
+        <div className="absolute bottom-4 left-1/2 -translate-x-2/3 transform lg:-translate-x-4/5">
           <div className="flex items-center justify-center gap-2">
             {children.map((_, i) => (
               <div

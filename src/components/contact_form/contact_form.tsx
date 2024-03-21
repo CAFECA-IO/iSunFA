@@ -125,22 +125,16 @@ function ContactForm() {
     }
   };
 
-  // Automatically resize the textarea to fit initial content (if any)
   const messageChangeHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
-    autoResize();
-  };
-
-  const validateEmail = (email: string) => {
-    const re = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-    return re.test(email);
+    // autoResize();   // Info: Automatically resize the textarea to fit initial content (if any) (20240321 - Shirley)
   };
 
   const animPart = (
     <div
       className={`${
         showAnim ? 'relative' : 'hidden'
-      } mx-auto mt-20 flex h-700px w-800px max-w-full flex-col items-center justify-center rounded-[40px] bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5`}
+      } mx-auto mt-20 flex h-700px w-800px max-w-full flex-col items-center justify-center rounded-2xl bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5`}
     >
       <div
         className={`absolute left-0 top-0 ${
@@ -183,7 +177,7 @@ function ContactForm() {
       onSubmit={submitHandler}
       className={`${
         showAnim ? 'invisible opacity-0' : 'visible opacity-100'
-      } mt-20 flex w-620px max-w-full flex-col rounded-[40px] bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5 lg:w-800px`}
+      } mt-20 flex w-330px max-w-full flex-col rounded-2xl bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5 md:w-620px lg:w-800px`}
     >
       <div className="flex flex-col">
         <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">
@@ -246,30 +240,17 @@ function ContactForm() {
             onChange={messageChangeHandler}
             rows={3}
             value={inputMessage}
-            // onChange={e => setMessage(e.target.value)}
-            className="rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400"
+            className="min-h-120px rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400"
             placeholder={t('CONTACT_US.MESSAGE_PLACEHOLDER')}
             required
           ></textarea>
         </div>
         <div className="mt-4 flex w-full justify-end">
-          {/* <button
-            type="submit"
-            className="group mt-4 flex items-center justify-center gap-2 self-end rounded-md bg-primaryYellow px-6 py-2.5 hover:bg-primaryYellow/70 max-md:px-5"
-          > */}
           <Button className="space-x-3">
             <span className="text-base font-semibold leading-6 tracking-normal text-secondaryBlue group-hover:text-white">
               {t('CONTACT_US.SUBMIT')}
             </span>
             <span>
-              {/* <Image
-          src="/elements/sender.svg"
-          className="fill-current text-red-200 group-hover:text-white"
-          width={20}
-          height={20}
-          alt="sender"
-        /> */}
-
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -286,7 +267,6 @@ function ContactForm() {
               </svg>
             </span>
           </Button>
-          {/* </button> */}
         </div>
       </div>
     </form>
@@ -298,97 +278,9 @@ function ContactForm() {
         className={`${showAnim ? `hidden` : `flex`} w-full items-center justify-center px-16 py-20 max-md:max-w-full max-md:px-5`}
       >
         {formPart}
-
-        {/* {formSubmitted && (
-        // FIXME: Add a proper success message
-        <div className="mt-4 text-center text-green-500">Thank you for contacting us!</div>
-      )} */}
       </div>
       {animPart}
     </div>
-
-    // <div className="flex w-full items-center justify-center px-16 py-20 max-md:max-w-full max-md:px-5">
-    //         <div className="mt-20 flex w-[800px] max-w-full flex-col rounded-[40px] bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5">
-    //           <div className="flex flex-col max-md:max-w-full">
-    //             <div className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400 max-md:max-w-full">
-    //               Get In Touch
-    //             </div>
-    //             <div className="mt-2 text-base font-medium leading-6 tracking-normal text-white max-md:max-w-full">
-    //               Our Staff will contact with you as soon as possible.
-    //             </div>
-    //           </div>
-    //           <div className="mt-12 flex flex-col max-md:mt-10 max-md:max-w-full">
-    //             <div className="flex flex-col whitespace-nowrap pb-4 max-md:max-w-full">
-    //               <div className="flex items-start gap-1 pb-2 pr-20 text-base leading-6 max-md:flex-wrap max-md:pr-5">
-    //                 <div className="justify-center font-medium tracking-normal text-white">
-    //                   Name
-    //                 </div>
-    //                 <div className="justify-center text-red-400">*</div>
-    //               </div>
-    //               <div className="flex flex-col justify-center rounded text-xl leading-7 tracking-tight text-slate-400 max-md:max-w-full">
-    //                 <div className="flex flex-col justify-center rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 max-md:max-w-full">
-    //                   {/* TODO: Change it to input */}
-    //                   <div className="justify-center max-md:max-w-full">example</div>
-    //                 </div>
-    //               </div>
-    //             </div>
-    //             <div className="mt-4 flex flex-col whitespace-nowrap pb-4 max-md:max-w-full">
-    //               <div className="flex items-start gap-1 pb-2 pr-20 text-base leading-6 max-md:flex-wrap max-md:pr-5">
-    //                 <div className="justify-center font-medium tracking-normal text-white">
-    //                   E-Mail
-    //                 </div>
-    //                 <div className="justify-center text-red-400">*</div>
-    //               </div>
-    //               <div className="flex flex-col justify-center rounded text-xl leading-7 tracking-tight text-slate-400 max-md:max-w-full">
-    //                 <div className="flex flex-col justify-center rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 max-md:max-w-full">
-    //                   {/* TODO: Change it to input */}
-    //                   <div className="justify-center max-md:max-w-full">example</div>
-    //                 </div>
-    //               </div>
-    //             </div>
-    //             <div className="mt-4 flex flex-col pb-4 max-md:max-w-full">
-    //               <div className="flex flex-col items-start pb-2 text-base font-medium leading-6 tracking-normal text-white max-md:max-w-full max-md:pr-5">
-    //                 <div className="justify-center">Phone Number</div>
-    //               </div>
-    //               <div className="flex flex-col justify-center whitespace-nowrap rounded text-xl leading-7 tracking-tight text-slate-400 max-md:max-w-full">
-    //                 <div className="flex flex-col justify-center rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 max-md:max-w-full">
-    //                   {/* TODO: Change it to input */}
-    //                   <div className="justify-center max-md:max-w-full">example</div>
-    //                 </div>
-    //               </div>
-    //             </div>
-    //             <div className="mt-4 flex flex-col pb-4 max-md:max-w-full">
-    //               <div className="flex gap-1 pb-2 pr-20 text-base leading-6 max-md:flex-wrap max-md:pr-5">
-    //                 <div className="justify-center font-medium tracking-normal text-white">
-    //                   What go you want to say...
-    //                 </div>
-    //                 <div className="justify-center self-start whitespace-nowrap text-red-400">
-    //                   *
-    //                 </div>
-    //               </div>
-    //               <div className="flex flex-col justify-center text-xl leading-7 tracking-tight text-slate-400 max-md:max-w-full">
-    //                 <div className="justify-center rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-3.5 py-2 max-md:max-w-full">
-    //                   Autosize height based on content lines
-    //                   <br />
-    //                   <br />
-    //                 </div>
-    //               </div>
-    //             </div>
-    //             <div className="mt-4 flex justify-center gap-2 self-end rounded-md bg-amber-400 px-6 py-2.5 max-md:px-5">
-    //               <div className="text-base font-semibold leading-6 tracking-normal text-blue-950">
-    //                 Submit
-    //               </div>
-    //               <div className="my-auto flex items-center justify-center">
-    //                 <img
-    //                   loading="lazy"
-    //                   src="https://cdn.builder.io/api/v1/image/assets/TEMP/3a06b56acae9973cbe89c34274ba3940cff29f74bbf07e2ea634bdd13e456ba7?apiKey=0e17b0b875f041659e186639705112b1&"
-    //                   className="aspect-square w-5"
-    //                 />
-    //               </div>
-    //             </div>
-    //           </div>
-    //         </div>
-    //       </div>
   );
 }
 

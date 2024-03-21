@@ -22,16 +22,16 @@ function LandingFooter() {
             className="hidden lg:block"
             src="/logo/isunfa_logo_small.svg"
             alt="iSunFA_logo"
-            width={75}
-            height={100}
+            width={88}
+            height={68}
           />
           {/* Info:(20230711 - Julian) Mobile Logo */}
           <Image
             className="block lg:hidden"
-            src="/logo/isunfa_logo.svg"
+            src="/logo/isunfa_logo_small.svg"
             alt="iSunFA_logo"
-            width={192}
-            height={40}
+            width={88}
+            height={68}
           />
         </Link>
 
