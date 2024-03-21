@@ -75,7 +75,7 @@ export default function Carousel({
           ))}
         </div>
         {/* Info: 往前往後的按鈕 (20240315 - Shirley)*/}
-        <div className="absolute inset-0 flex items-center justify-between p-0">
+        <div className="absolute inset-0 z-10 flex items-center justify-between p-0">
           <button
             onClick={prev}
             className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
