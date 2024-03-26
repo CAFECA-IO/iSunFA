@@ -27,7 +27,6 @@ export default function Carousel({
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        console.log('Carousel is in view:', entry.isIntersecting);
         setIsInView(entry.isIntersecting);
       },
       {

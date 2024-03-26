@@ -1,6 +1,6 @@
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import NumberAnimation from '../number_animation/number_animation';
+import NumberAnimation, { MobileNumberAnimation } from '../number_animation/number_animation';
 import { TranslateFunction } from '../../interfaces/locale';
 
 const NumberAnimationSection = () => {
@@ -65,7 +65,12 @@ const NumberAnimationSection = () => {
         {/* Info:(20240315 - Shirley) Number animation */}
         <div className="flex w-full items-baseline justify-center space-x-2 font-bold">
           {' '}
-          <NumberAnimation targetNumber={targetNumber} />
+          <div className="hidden lg:flex">
+            <NumberAnimation targetNumber={targetNumber} />
+          </div>
+          <div className="flex lg:hidden">
+            <MobileNumberAnimation targetNumber={targetNumber} />
+          </div>
           <p className="text-h4 leading-h4">{unit}</p>
         </div>
 
