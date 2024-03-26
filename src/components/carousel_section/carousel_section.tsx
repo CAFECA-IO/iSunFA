@@ -23,6 +23,7 @@ const CarouselSection = () => {
           alt="contract_blue"
           fill
           style={{ objectFit: 'contain' }}
+          loading="lazy"
         />
       </div>{' '}
       <div className="max-w-350px md:max-w-700px">

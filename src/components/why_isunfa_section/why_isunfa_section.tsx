@@ -87,21 +87,21 @@ const WhyISunFASection = () => {
                   <div className="my-auto flex items-center justify-center">
                     <div className="hidden md:flex">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={32}
                         height={32}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
                     <div className="z-10 flex md:hidden">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={20}
                         height={20}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
@@ -118,21 +118,21 @@ const WhyISunFASection = () => {
                   <div className="my-auto flex items-center justify-center">
                     <div className="hidden md:flex">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={32}
                         height={32}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
                     <div className="z-10 flex md:hidden">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={20}
                         height={20}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
@@ -149,21 +149,21 @@ const WhyISunFASection = () => {
                   <div className="my-auto flex items-center justify-center">
                     <div className="hidden md:flex">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={32}
                         height={32}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
                     <div className="z-10 flex md:hidden">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={20}
                         height={20}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
@@ -180,21 +180,21 @@ const WhyISunFASection = () => {
                   <div className="my-auto flex items-center justify-center">
                     <div className="hidden md:flex">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={32}
                         height={32}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
                     <div className="z-10 flex md:hidden">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={20}
                         height={20}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
@@ -211,21 +211,21 @@ const WhyISunFASection = () => {
                   <div className="my-auto flex items-center justify-center">
                     <div className="hidden md:flex">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={32}
                         height={32}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
                     <div className="z-10 flex md:hidden">
                       <Image
-                        loading="lazy"
                         src="/elements/yellow_check.svg"
                         width={20}
                         height={20}
                         alt="yellow check icon"
+                        loading="lazy"
                       />
                     </div>
 
@@ -244,8 +244,8 @@ const WhyISunFASection = () => {
               alt="partial mac"
               width={800}
               height={472}
-              loading="lazy"
               src="/elements/partial_mac.png"
+              loading="lazy"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>
@@ -256,8 +256,8 @@ const WhyISunFASection = () => {
               alt="partial mac"
               width={800}
               height={800}
-              loading="lazy"
               src="/elements/partial_mac_md.png"
+              loading="lazy"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>

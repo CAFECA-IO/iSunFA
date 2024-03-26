@@ -1,4 +1,3 @@
-import ContactForm from '../contact_form/contact_form';
 import LandingFooter from '../landing_footer/landing_footer';
 import HowWeWork from '../how_we_work/how_we_work';
 import CTASection from '../cta_section/cta_section';
@@ -7,6 +6,7 @@ import FeatureSection from '../feature_section/feature_section';
 import CarouselSection from '../carousel_section/carousel_section';
 import WhyISunFASection from '../why_isunfa_section/why_isunfa_section';
 import PartnersSection from '../partners_section/partners_section';
+import ContactFormSection from '../contact_form_section/contact_form_section';
 
 function LandingPageBody() {
   return (
@@ -119,7 +119,7 @@ function LandingPageBody() {
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
 
         {/* Info: ----- Contact form section ----- (20240318 - Shirley) */}
-        <ContactForm />
+        <ContactFormSection />
         {/* Info: ----- Contact form section ----- (20240318 - Shirley) */}
 
         {/* Info:(20230711 - Shirley) Footer */}

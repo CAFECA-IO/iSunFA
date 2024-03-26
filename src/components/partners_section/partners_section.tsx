@@ -50,18 +50,18 @@ const PartnersSection = () => {
         className={`mb-4 mt-20 flex w-388px max-w-full flex-col items-center justify-center gap-5 space-y-10 self-center max-md:mt-10 md:flex-row md:flex-wrap md:justify-between md:space-y-0`}
       >
         <Image
+          loading="lazy"
           width={154}
           height={40}
           alt="partner logo"
-          loading="lazy"
           src="/elements/partner_1.svg"
           className={`${isAnimeRef42Visible ? `translate-x-0` : `md:-translate-x-100%`} duration-1000`}
         />
         <Image
+          loading="lazy"
           width={154}
           height={40}
           alt="partner logo"
-          loading="lazy"
           src="/elements/partner_2.svg"
           className={`${isAnimeRef42Visible ? `translate-x-0` : `md:-translate-x-100%`} duration-1000`}
         />

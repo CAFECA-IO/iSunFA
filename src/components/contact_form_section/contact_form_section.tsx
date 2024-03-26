@@ -28,6 +28,7 @@ const ContactFormSection = () => {
       <div className="relative h-500px w-full">
         {' '}
         <Image
+          loading="lazy"
           src="/animations/contact_bg.svg"
           alt="contact_bg"
           fill
@@ -35,7 +36,7 @@ const ContactFormSection = () => {
         />
         <div
           ref={animeRef61}
-          className={` ${isAnimeRef61Visible ? `translate-x-0` : `md:-translate-x-140%`} absolute inset-0 flex justify-center duration-1000`}
+          className={` ${isAnimeRef61Visible ? `translate-x-0` : `lg:-translate-x-140%`} absolute inset-0 flex justify-center duration-1000`}
         >
           {' '}
           <ContactForm />

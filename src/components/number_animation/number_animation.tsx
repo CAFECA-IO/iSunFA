@@ -23,7 +23,7 @@ const NumberAnimation = ({ targetNumber }: NumberAnimationProps) => {
           clearInterval(interval);
           return prevNumber;
         });
-      }, 10);
+      }, 500);
     } else {
       setNumber(0); // Reset number when element is out of view
     }

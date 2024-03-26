@@ -46,6 +46,7 @@ const NumberAnimationSection = () => {
             alt={alt}
             fill
             style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
+            loading="lazy"
           />
           <div className="relative left-0 top-7rem">
             <Image
@@ -54,7 +55,7 @@ const NumberAnimationSection = () => {
               alt={alt}
               width={75}
               height={15}
-              // style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
+              loading="lazy"
             />
           </div>
         </div>

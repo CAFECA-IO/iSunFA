@@ -100,7 +100,7 @@ const HowWeWork = () => {
           className={`overflow-x-hidden ${isVisible ? `translate-x-0` : `md:translate-x-140%`} -mt-14 flex h-900px w-full flex-col items-center justify-center pl-10 pt-10 duration-1000 md:mt-20 md:h-fit md:flex-row md:justify-start md:space-x-2 lg:mr-10 lg:mt-28 lg:pl-0`}
         >
           <div className={`relative mt-0 h-300px w-full md:w-full lg:mt-0 lg:w-600px`}>
-            <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} />
+            <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
           </div>
 
           {/* Info: ----- 1440 px and above ----- (20240321 - Shirley) */}
