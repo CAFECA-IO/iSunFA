@@ -27,7 +27,6 @@ export default function Carousel({
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        console.log('Carousel is in view:', entry.isIntersecting);
         setIsInView(entry.isIntersecting);
       },
       {
@@ -80,13 +79,25 @@ export default function Carousel({
             onClick={prev}
             className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
           >
-            <Image src="/elements/arrow_left.svg" alt="arrow_left" width={24} height={24} />
+            <Image
+              loading="lazy"
+              src="/elements/arrow_left.svg"
+              alt="arrow_left"
+              width={24}
+              height={24}
+            />
           </button>
           <button
             onClick={next}
             className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
           >
-            <Image src="/elements/arrow_right.svg" alt="arrow_left" width={24} height={24} />
+            <Image
+              loading="lazy"
+              src="/elements/arrow_right.svg"
+              alt="arrow_left"
+              width={24}
+              height={24}
+            />
           </button>
         </div>
 
