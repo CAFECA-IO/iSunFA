@@ -22,8 +22,6 @@ const NumberAnimation = ({ targetNumber }: NumberAnimationProps) => {
       const interval = setInterval(() => {
         setNumber((prevNumber: number) => {
           if (prevNumber < targetNumber) {
-            // eslint-disable-next-line no-console
-            console.log('now timestamp', new Date().getTime());
             return prevNumber + 1;
           }
 
@@ -65,8 +63,6 @@ export const MobileNumberAnimation = ({ targetNumber }: NumberAnimationProps) =>
       const interval = setInterval(() => {
         setNumber((prevNumber: number) => {
           if (prevNumber < targetNumber) {
-            // eslint-disable-next-line no-console
-            console.log('now timestamp in mobile', new Date().getTime());
             return prevNumber + 1;
           }
 
