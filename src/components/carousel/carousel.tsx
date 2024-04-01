@@ -18,40 +18,61 @@ export default function Carousel({
   const { t }: { t: TranslateFunction } = useTranslation('common');
   const [curr, setCurr] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isInView, setIsInView] = useState(false);
+  // const [isInView, setIsInView] = useState(false);
   const carouselRef = useRef(null);
+
+  // const [touchStart, setTouchStart] = useState(0);
+  // const [touchEnd, setTouchEnd] = useState(0);
+
+  // const handleTouchStart = (e: React.TouchEvent) => {
+  //   setTouchStart(e.targetTouches[0].clientX);
+  // };
+
+  // const handleTouchMove = (e: React.TouchEvent) => {
+  //   setTouchEnd(e.targetTouches[0].clientX);
+  // };
+
+  // const handleTouchEnd = () => {
+  //   if (touchStart - touchEnd > 150) {
+  //     next();
+  //   }
+
+  //   if (touchStart - touchEnd < -150) {
+  //     prev();
+  //   }
+  // };
 
   const prev = () => setCurr(curr => (curr === 0 ? children.length - 1 : curr - 1));
   const next = () => setCurr(curr => (curr === children.length - 1 ? 0 : curr + 1));
 
+  // useEffect(() => {
+  //   const observer = new IntersectionObserver(
+  //     ([entry]) => {
+  //       setIsInView(entry.isIntersecting);
+  //     },
+  //     {
+  //       root: null,
+  //       rootMargin: '0px',
+  //       threshold: 0.1,
+  //     }
+  //   );
+
+  //   if (carouselRef.current) {
+  //     observer.observe(carouselRef.current);
+  //   }
+
+  //   return () => {
+  //     if (carouselRef.current) {
+  //       observer.unobserve(carouselRef.current);
+  //     }
+  //   };
+  // }, []);
+
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1,
-      }
-    );
-
-    if (carouselRef.current) {
-      observer.observe(carouselRef.current);
-    }
-
-    return () => {
-      if (carouselRef.current) {
-        observer.unobserve(carouselRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!autoSlide || isPaused || !isInView) return;
+    if (!autoSlide || isPaused) return;
     const slideInterval = setInterval(next, autoSlideInterval);
     return () => clearInterval(slideInterval);
-  }, [isPaused, isInView]);
+  }, [isPaused]);
 
   return (
     <div className="mt-10 flex flex-col" ref={carouselRef}>
@@ -62,9 +83,12 @@ export default function Carousel({
         className="relative overflow-hidden hover:cursor-pointer"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        // onTouchStart={handleTouchStart}
+        // onTouchMove={handleTouchMove}
+        // onTouchEnd={handleTouchEnd}
       >
         <div
-          className={`flex flex-row transition-transform duration-500 ease-out`}
+          className={`flex flex-row transition-transform duration-0 ease-out lg:duration-500`}
           style={{ transform: `translateX(-${curr * 100}%)` }}
         >
           {children.map((child, i) => (
@@ -77,27 +101,15 @@ export default function Carousel({
         <div className="absolute inset-0 z-10 flex items-center justify-between p-0">
           <button
             onClick={prev}
-            className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
+            className="px-3 py-40 text-white shadow hover:cursor-pointer md:px-10"
           >
-            <Image
-              loading="lazy"
-              src="/elements/arrow_left.svg"
-              alt="arrow_left"
-              width={24}
-              height={24}
-            />
+            <Image src="/elements/arrow_left.svg" alt="arrow_left" width={24} height={24} />
           </button>
           <button
             onClick={next}
-            className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
+            className="px-3 py-40 text-white shadow hover:cursor-pointer md:px-10"
           >
-            <Image
-              loading="lazy"
-              src="/elements/arrow_right.svg"
-              alt="arrow_left"
-              width={24}
-              height={24}
-            />
+            <Image src="/elements/arrow_right.svg" alt="arrow_left" width={24} height={24} />
           </button>
         </div>
 

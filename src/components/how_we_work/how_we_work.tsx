@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
@@ -22,21 +23,21 @@ const HowWeWork = () => {
       setIsAnimeRef21Visible(rectTop < windowHeight);
     }
 
-    if (animeRef22.current) {
-      const rect = (animeRef22.current as HTMLElement).getBoundingClientRect();
-      const rectTop = rect.top;
-      const windowHeight = window.innerHeight;
+    // if (animeRef22.current) {
+    //   const rect = (animeRef22.current as HTMLElement).getBoundingClientRect();
+    //   const rectTop = rect.top;
+    //   const windowHeight = window.innerHeight;
 
-      setIsAnimeRef22Visible(rectTop < windowHeight);
-    }
+    //   setIsAnimeRef22Visible(rectTop < windowHeight);
+    // }
 
-    if (animeRef23.current) {
-      const rect = (animeRef23.current as HTMLElement).getBoundingClientRect();
-      const rectTop = rect.top;
-      const windowHeight = window.innerHeight;
+    // if (animeRef23.current) {
+    //   const rect = (animeRef23.current as HTMLElement).getBoundingClientRect();
+    //   const rectTop = rect.top;
+    //   const windowHeight = window.innerHeight;
 
-      setIsAnimeRef23Visible(rectTop < windowHeight);
-    }
+    //   setIsAnimeRef23Visible(rectTop < windowHeight);
+    // }
   };
 
   useEffect(() => {
@@ -69,22 +70,29 @@ const HowWeWork = () => {
       ref: animeRef21,
       isVisible: isAnimeRef21Visible,
       imageUrl: '/elements/how_we_work_1.png',
+      mobileImageUrl: '/elements/mobile/how_we_work_1_mobile.png',
       alt: 'how we work - privacy',
       title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_1',
       content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1',
     },
     {
       ref: animeRef22,
-      isVisible: isAnimeRef22Visible,
+      isVisible: isAnimeRef21Visible,
+
+      // isVisible: isAnimeRef22Visible,
       imageUrl: '/elements/how_we_work_2.png',
+      mobileImageUrl: '/elements/mobile/how_we_work_2_mobile.png',
       alt: 'how we work - privacy',
       title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_2',
       content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2',
     },
     {
       ref: animeRef23,
-      isVisible: isAnimeRef23Visible,
+      isVisible: isAnimeRef21Visible,
+
+      // isVisible: isAnimeRef23Visible,
       imageUrl: '/elements/how_we_work_3.png',
+      mobileImageUrl: '/elements/mobile/how_we_work_3_mobile.png',
       alt: 'how we work - privacy',
       title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_3',
       content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3',
@@ -93,35 +101,41 @@ const HowWeWork = () => {
 
   const howWeWorkList = (
     <div>
-      {howWeWorkItems.map(({ ref, isVisible, imageUrl, alt, title, content }) => (
-        <div
-          key={title}
-          ref={ref}
-          className={`overflow-x-hidden ${isVisible ? `translate-x-0` : `md:translate-x-140%`} -mt-14 flex h-900px w-full flex-col items-center justify-center pl-10 pt-10 duration-1000 md:mt-20 md:h-fit md:flex-row md:justify-start md:space-x-2 lg:mr-10 lg:mt-28 lg:pl-0`}
-        >
-          <div className={`relative mt-0 h-300px w-full md:w-full lg:mt-0 lg:w-600px`}>
-            <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
-          </div>
+      {howWeWorkItems.map(
+        ({ ref, isVisible, imageUrl, mobileImageUrl, alt, title, content }, index) => (
+          <div
+            key={title}
+            ref={ref}
+            className={`overflow-x-hidden ${isVisible ? `translate-x-0` : `md:translate-x-140%`} ${index !== 0 ? `-mt-36` : `-mt-14`} flex h-900px w-full flex-col items-center justify-center pl-10 pt-10 duration-1000 md:mt-20 md:h-fit md:flex-row md:justify-start md:space-x-2 lg:mr-10 lg:mt-28 lg:pl-0`}
+          >
+            <div className={`relative mt-0 hidden aspect-4/3 lg:mt-0 lg:block lg:w-400px`}>
+              <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} />
+            </div>
 
-          {/* Info: ----- 1440 px and above ----- (20240321 - Shirley) */}
-          <div className="mt-20 hidden flex-col space-y-5 text-start lg:mt-0 lg:flex lg:max-w-lg lg:space-y-8">
-            {' '}
-            <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
-              {t(title)}
-            </p>
-            <p className="text-white md:text-base">{t(content)}</p>
-          </div>
+            <div className={`relative mb-0 mt-20 flex aspect-4/3 w-full lg:hidden`}>
+              <Image src={mobileImageUrl} alt={alt} fill style={{ objectFit: 'contain' }} />
+            </div>
 
-          {/* Info: ----- below 1440 px ----- (20240321 - Shirley) */}
-          <div className="-mt-16 flex w-full flex-col space-y-5 text-wrap text-center md:-mt-0 md:text-start lg:hidden">
-            {' '}
-            <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
-              {t(title)}
-            </p>
-            <p className="w-full text-sm text-white">{t(content)}</p>
+            {/* Info: ----- 1440 px and above ----- (20240321 - Shirley) */}
+            <div className="mt-20 hidden flex-col space-y-5 text-start lg:mt-0 lg:flex lg:max-w-lg lg:space-y-8">
+              {' '}
+              <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+                {t(title)}
+              </p>
+              <p className="text-white md:text-base">{t(content)}</p>
+            </div>
+
+            {/* Info: ----- below 1440 px ----- (20240321 - Shirley) */}
+            <div className="flex w-full flex-col space-y-5 text-wrap text-center md:-mt-0 md:text-start lg:hidden">
+              {' '}
+              <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+                {t(title)}
+              </p>
+              <p className="w-full text-sm text-white">{t(content)}</p>
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      )}
     </div>
   );
 

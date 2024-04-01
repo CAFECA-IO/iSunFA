@@ -1,6 +1,7 @@
+/* eslint-disable */
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import NumberAnimation, { MobileNumberAnimation } from '../number_animation/number_animation';
+import NumberAnimation from '../number_animation/number_animation';
 import { TranslateFunction } from '../../interfaces/locale';
 
 const NumberAnimationSection = () => {
@@ -8,21 +9,21 @@ const NumberAnimationSection = () => {
 
   const numberBlockContent = [
     {
-      image: '/elements/lightening_1.png',
+      image: '/elements/lightening_1.svg',
       alt: 'lighting_1',
       description: 'LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_1',
       targetNumber: 150,
       unit: 'X',
     },
     {
-      image: '/elements/clock.png',
+      image: '/elements/clock.svg',
       alt: 'clock',
       description: 'LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_2',
       targetNumber: 85,
       unit: '%',
     },
     {
-      image: '/elements/robot_hand.png',
+      image: '/elements/robot_hand.svg',
       alt: 'robot_hand',
       description: 'LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_3',
       targetNumber: 24,
@@ -46,7 +47,6 @@ const NumberAnimationSection = () => {
             alt={alt}
             fill
             style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
-            loading="lazy"
           />
           <div className="relative left-0 top-7rem">
             <Image
@@ -55,7 +55,6 @@ const NumberAnimationSection = () => {
               alt={alt}
               width={75}
               height={15}
-              loading="lazy"
             />
           </div>
         </div>
@@ -65,12 +64,10 @@ const NumberAnimationSection = () => {
         {/* Info:(20240315 - Shirley) Number animation */}
         <div className="flex w-full items-baseline justify-center space-x-2 font-bold">
           {' '}
-          <div className="hidden lg:flex">
-            <NumberAnimation targetNumber={targetNumber} />
-          </div>
-          <div className="flex lg:hidden">
+          <div className="">{/* <NumberAnimation targetNumber={targetNumber} /> */}</div>
+          {/* <div className="flex lg:hidden">
             <MobileNumberAnimation targetNumber={targetNumber} />
-          </div>
+          </div> */}
           <p className="text-h4 leading-h4">{unit}</p>
         </div>
 

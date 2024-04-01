@@ -1,10 +1,10 @@
 /* eslint-disable */
-import React, { useEffect, useRef, useState } from 'react';
-import { TranslateFunction } from '../../interfaces/locale';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { FormAnimation } from '../../constants/form_animation';
 import Image from 'next/image';
 import { Button } from '../button/button';
+import { FormAnimation } from '../../constants/form_animation';
+import { TranslateFunction } from '../../interfaces/locale';
 
 function ContactForm() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -48,7 +48,7 @@ function ContactForm() {
 
     // Info: (20230731 - Julian) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 3000));
     // Info: (20230731 - Julian) 清空表單
     setInputName('');
     setInputPhone('');
@@ -67,7 +67,7 @@ function ContactForm() {
 
     // Info: (20230731 - Julian) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 3000));
 
     // Info: (20230731 - Julian) call API
     const res = await fetch('/api/email', {
@@ -117,13 +117,14 @@ function ContactForm() {
     }
   };
 
-  const autoResize = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto'; // Reset height so the scrollHeight measurement is accurate
-      textarea.style.height = textarea.scrollHeight + 'px';
-    }
-  };
+  // Info: adjust the height of input (20240401 - Shirley)
+  // const autoResize = () => {
+  //   const textarea = textareaRef.current;
+  //   if (textarea) {
+  //     textarea.style.height = 'auto'; // Reset height so the scrollHeight measurement is accurate
+  //     textarea.style.height = textarea.scrollHeight + 'px';
+  //   }
+  // };
 
   const messageChangeHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);

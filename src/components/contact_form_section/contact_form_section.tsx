@@ -28,11 +28,18 @@ const ContactFormSection = () => {
       <div className="relative h-500px w-full">
         {' '}
         <Image
-          loading="lazy"
           src="/animations/contact_bg.svg"
           alt="contact_bg"
           fill
           style={{ objectFit: 'cover' }}
+          className="hidden lg:flex"
+        />
+        <Image
+          src="/elements/contact_bg_static.svg"
+          alt="contact_bg_static"
+          fill
+          style={{ objectFit: 'cover' }}
+          className="flex lg:hidden"
         />
         <div
           ref={animeRef61}

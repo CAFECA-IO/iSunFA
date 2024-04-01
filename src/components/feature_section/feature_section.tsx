@@ -70,7 +70,7 @@ const FeatureSection = () => {
   const heroList = heroDescriptions.map(({ image, alt, description, title }) => (
     <div key={image} className="flex flex-col items-center space-y-6 text-center">
       <div className="relative h-48px w-48px md:h-80px md:w-80px">
-        <Image src={image} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
+        <Image src={image} alt={alt} fill style={{ objectFit: 'contain' }} />
       </div>
 
       <p className="text-h6 leading-h6 text-primaryYellow md:text-h5 md:leading-h5">{t(title)}</p>
@@ -101,7 +101,15 @@ const FeatureSection = () => {
                 alt="feature intro - mac"
                 fill
                 style={{ objectFit: 'contain' }}
-                loading="lazy"
+                className="hidden lg:flex"
+              />
+
+              <Image
+                src="/elements/mobile/mac.png"
+                alt="feature intro - mac"
+                fill
+                style={{ objectFit: 'contain' }}
+                className="flex lg:hidden"
               />
             </div>
 
@@ -115,7 +123,15 @@ const FeatureSection = () => {
                 alt="feature intro - ipad"
                 fill
                 style={{ objectFit: 'contain' }}
-                loading="lazy"
+                className="hidden lg:flex"
+              />
+
+              <Image
+                src="/elements/mobile/ipad.png"
+                alt="feature intro - mac"
+                fill
+                style={{ objectFit: 'contain' }}
+                className="flex lg:hidden"
               />
             </div>
           </div>

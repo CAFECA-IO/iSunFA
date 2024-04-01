@@ -91,7 +91,6 @@ const WhyISunFASection = () => {
                         width={32}
                         height={32}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -101,7 +100,6 @@ const WhyISunFASection = () => {
                         width={20}
                         height={20}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -122,7 +120,6 @@ const WhyISunFASection = () => {
                         width={32}
                         height={32}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -132,7 +129,6 @@ const WhyISunFASection = () => {
                         width={20}
                         height={20}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -153,7 +149,6 @@ const WhyISunFASection = () => {
                         width={32}
                         height={32}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -163,7 +158,6 @@ const WhyISunFASection = () => {
                         width={20}
                         height={20}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -184,7 +178,6 @@ const WhyISunFASection = () => {
                         width={32}
                         height={32}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -194,7 +187,6 @@ const WhyISunFASection = () => {
                         width={20}
                         height={20}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -215,7 +207,6 @@ const WhyISunFASection = () => {
                         width={32}
                         height={32}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -225,7 +216,6 @@ const WhyISunFASection = () => {
                         width={20}
                         height={20}
                         alt="yellow check icon"
-                        loading="lazy"
                       />
                     </div>
 
@@ -239,25 +229,23 @@ const WhyISunFASection = () => {
           </div>
 
           {/* Info: mac img for 1440 px and above (20240321- Shirlrey) */}
-          <div className={`hidden flex-col max-lg:ml-0 lg:flex`}>
+          <div className={`hidden aspect-1/1 w-screen lg:flex`}>
             <Image
               alt="partial mac"
               width={800}
               height={472}
               src="/elements/partial_mac.png"
-              loading="lazy"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>
 
           {/* Info: mac img for width below 1440 px (20240321- Shirlrey) */}
-          <div className="flex h-350px md:h-750px lg:hidden">
+          <div className="flex aspect-0.87 w-screen md:h-850px lg:hidden">
             <Image
               alt="partial mac"
               width={800}
               height={800}
-              src="/elements/partial_mac_md.png"
-              loading="lazy"
+              src="/elements/mobile/partial_mac_md.png"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>
