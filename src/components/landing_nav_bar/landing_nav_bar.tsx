@@ -15,12 +15,24 @@ import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { createChallenge } from '../../lib/utils/authorization';
 import { ISUNFA_API } from '../../constants/config';
+import { ICredential } from '../../interfaces/webauthn';
+import { useUser } from '../../contexts/user_context';
+
+const languages = [
+  { label: 'EN', code: 'en' },
+  { label: '繁', code: 'tw' },
+  { label: '简', code: 'cn' },
+];
 
 function LandingNavBar() {
+  const { user, setUser } = useUser();
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const router = useRouter();
   const { asPath } = router;
+  /* Info: (20230814 - Shirley) Scroll Position */
+  const [scroll, setScroll] = useState(0);
+  // const [user, setUser] = useState<ICredential>({} as ICredential);
 
   const {
     targetRef: dropdownRef,
@@ -30,19 +42,19 @@ function LandingNavBar() {
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-  const languages = [
-    { label: 'EN', code: 'en' },
-    { label: '繁', code: 'tw' },
-    { label: '简', code: 'cn' },
-  ];
+  /* Info: (20230712 - Shirley) close menu when click outer */
+  const {
+    targetRef: menuRef,
+    componentVisible: menuVisible,
+    setComponentVisible: setMenuVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const clickMenuHandler = () => setMenuVisible(!menuVisible);
 
   const changeLanguage = (code: string) => {
     router.push(asPath, asPath, { locale: code });
     setDropdownOpen(false);
   };
-
-  /* Info: (20230814 - Shirley) Scroll Position */
-  const [scroll, setScroll] = useState(0);
 
   const handleScroll = () => {
     const position = window.scrollY;
@@ -60,35 +72,7 @@ function LandingNavBar() {
   /* Info:(20230814 - Shirley) Change Navbar Background Style */
   const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
-  /* Info: (20230712 - Shirley) close menu when click outer */
-  const {
-    targetRef: menuRef,
-    componentVisible: menuVisible,
-    setComponentVisible: setMenuVisible,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const clickMenuHandler = () => setMenuVisible(!menuVisible);
-
-  // async function createChallenge(message: string) {
-  //   const arrayBuffer = utils.toBuffer(message);
-  //   let challenge = utils.toBase64url(arrayBuffer);
-  //   challenge = utils.toBase64url(arrayBuffer);
-  //   challenge = challenge.replace(/=/g, '');
-  //   return challenge;
-  // }
-
-  // const challenge = 'RklETzIuVEVTVC5sb2dpbi0xNzExNzAxNjUwNTQ3LWhlbGxv';
-  // const name = 'Arnaud';
-  // const options = {
-  //   authenticatorType: 'auto',
-  //   userVerification: 'required',
-  //   timeout: 60000,
-  //   attestation: true,
-  //   userHandle: 'Optional server-side user id. Must not reveal personal information.',
-  //   debug: false,
-  // };
-
-  const tryBtnClickHandler = async () => {
+  const signUpClickHandler = async () => {
     // FIDO2.TEST.login-1711701650547-hello
     const newChallenge = await createChallenge(
       'FIDO2.TEST.reg-' + (1712116850 + 60000).toString() + '-hello'
@@ -97,12 +81,12 @@ function LandingNavBar() {
     // eslint-disable-next-line no-console
     console.log('newChallenge:', newChallenge);
 
-    const registration = await client.register('Shirley', newChallenge, {
-      authenticatorType: 'auto',
+    const registration = await client.register('User', newChallenge, {
+      authenticatorType: 'both',
       userVerification: 'required',
       timeout: 60000,
       attestation: true,
-      userHandle: 'demo-user-id-1223',
+      userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
       debug: false,
     });
 
@@ -113,18 +97,30 @@ function LandingNavBar() {
       },
       body: JSON.stringify({ registration }),
     });
-    // const register = await client.register('Arnaud', challenge, {
-    //   authenticatorType: 'auto',
-    //   userVerification: 'required',
-    //   timeout: 60000,
-    //   attestation: true,
-    //   userHandle: 'Optional server-side user id. Must not reveal personal information.',
-    //   debug: false,
-    // });
+
+    const data = (await rs.json()).payload as ICredential;
+
+    setUser(data);
     // eslint-disable-next-line no-console
-    console.log('registeration:', registration);
+    console.log('registration:', registration);
     // eslint-disable-next-line no-console
-    console.log('rs for login API:', rs);
+    console.log('rs data for signOut API:', data);
+  };
+
+  const signOutClickHandler = async () => {
+    const rs = await fetch(ISUNFA_API.SIGN_OUT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ credential: user }),
+    });
+
+    const data = (await rs.json()).payload as ICredential;
+
+    setUser({} as ICredential);
+    // eslint-disable-next-line no-console
+    console.log('rs data for signOut API:', data);
   };
 
   /* Info: (20230712 - Shirley) desktop navbar */
@@ -332,40 +328,59 @@ function LandingNavBar() {
           </li>
         </div>
         <li>
-          <Button
-            onClick={tryBtnClickHandler}
-            className="flex space-x-3"
-            disabled={IS_BUTTON_DISABLED_TEMP}
-          >
-            <p
-              className={cn(
-                'text-base leading-6 tracking-normal',
-                IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                'group-hover:text-white'
-              )}
+          {user.publicKey ? (
+            <Button
+              onClick={signOutClickHandler}
+              className="flex space-x-3"
+              disabled={IS_BUTTON_DISABLED_TEMP}
             >
-              {t('NAV_BAR.TRY_NOW')}
-            </p>
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
+              <p
                 className={cn(
-                  `fill-current`,
-                  IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
-                  `group-hover:text-white`
+                  'text-base leading-6 tracking-normal',
+                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
+                  'group-hover:text-white'
                 )}
-              />
-            </svg>
-          </Button>
+              >
+                Sign Out
+                {/* {t('NAV_BAR.TRY_NOW')} */}
+              </p>
+            </Button>
+          ) : (
+            <Button
+              onClick={signUpClickHandler}
+              className="flex space-x-3"
+              disabled={IS_BUTTON_DISABLED_TEMP}
+            >
+              <p
+                className={cn(
+                  'text-base leading-6 tracking-normal',
+                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
+                  'group-hover:text-white'
+                )}
+              >
+                {t('NAV_BAR.TRY_NOW')}
+              </p>
+
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
+                  className={cn(
+                    `fill-current`,
+                    IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
+                    `group-hover:text-white`
+                  )}
+                />
+              </svg>
+            </Button>
+          )}
         </li>
         <li>
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}

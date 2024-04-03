@@ -2,9 +2,11 @@ import { REPORT_PATH } from './url';
 
 export const ISUNFA_API = {
   SIGN_UP: '/api/auth/sign-up',
-  SING_IN: '/api/auth/sign-in',
+  SIGN_IN: '/api/auth/sign-in',
   SIGN_OUT: '/api/auth/sign-out',
 };
+
+export const AUTH_PERIOD = 60 * 60; // 1 hr
 
 export const TBD_API_URL = 'https://api.tidebit-defi.com/api';
 export const TBD_API_VERSION = 'v1';

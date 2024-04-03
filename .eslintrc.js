@@ -63,6 +63,8 @@ module.exports = {
         'react/jsx-max-props-per-line': 'off',
         'react/jsx-tag-spacing': 'off',
         'react/jsx-wrap-multilines': 'off',
+        'no-else-return': 'off',
+        'import/no-extraneous-dependencies': 'off',
       },
     },
   ],

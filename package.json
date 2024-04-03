@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.1+8",
+  "version": "0.1.1+9",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -17,6 +17,7 @@
     "@passwordless-id/webauthn": "^1.5.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "cookie": "^0.6.0",
     "eslint-config-airbnb": "^19.0.4",
     "i18next": "^23.7.16",
     "next": "14.0.4",
@@ -35,6 +36,7 @@
     "@babel/eslint-plugin": "^7.23.5",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
+    "@types/cookie": "^0.6.0",
     "@types/jest": "^29.5.11",
     "@types/node": "^20",
     "@types/react": "^18",
