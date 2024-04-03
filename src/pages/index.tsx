@@ -27,7 +27,7 @@ function LandingPage() {
         />
       </Head>
 
-      {/*  Info: (20230712 - Julian) Navbar */}
+      {/*  Info: (20230712 - Shirley) Navbar */}
       <nav className="">
         <LandingNavBar />
       </nav>

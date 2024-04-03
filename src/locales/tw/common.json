@@ -9,7 +9,8 @@
     "LAUNCH_APP": "啟動應用程式",
     "FEATURES": "特色",
     "ABOUT": "關於",
-    "TRY_NOW": "立即嘗試"
+    "TRY_NOW": "立即嘗試",
+    "SIGN_OUT": "登出"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",

@@ -35,21 +35,21 @@ function ContactForm() {
     setInputEmail(event.target.value);
   };
 
-  // Info: (20230731 - Julian) 送出失敗事件處理
+  // Info: (20230731 - Shirley) 送出失敗事件處理
   const failedProcess = async () => {
     setAnimation(FormAnimation.ERROR);
     setShowAnim(true);
   };
 
-  // Info: (20230731 - Julian) 送出成功事件處理
+  // Info: (20230731 - Shirley) 送出成功事件處理
   const successProcess = async () => {
     setAnimation(FormAnimation.SUCCESS);
     setShowAnim(true);
 
-    // Info: (20230731 - Julian) 3 秒顯示動畫
+    // Info: (20230731 - Shirley) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
     await new Promise(resolve => setTimeout(resolve, 3000));
-    // Info: (20230731 - Julian) 清空表單
+    // Info: (20230731 - Shirley) 清空表單
     setInputName('');
     setInputPhone('');
     setInputEmail('');
@@ -57,7 +57,7 @@ function ContactForm() {
     setShowAnim(false);
   };
 
-  // Info: (20230731 - Julian) 送出信件
+  // Info: (20230731 - Shirley) 送出信件
   const sendEmail = async () => {
     const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
 
@@ -65,11 +65,11 @@ function ContactForm() {
       comment: `<h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p>`,
     };
 
-    // Info: (20230731 - Julian) 3 秒顯示動畫
+    // Info: (20230731 - Shirley) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Info: (20230731 - Julian) call API
+    // Info: (20230731 - Shirley) call API
     const res = await fetch('/api/email', {
       method: 'POST',
       body: JSON.stringify(emailData),
@@ -87,13 +87,13 @@ function ContactForm() {
     }
   };
 
-  // Info: (20230731 - Julian) 點擊送出按鈕
+  // Info: (20230731 - Shirley) 點擊送出按鈕
   const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
-    // Info: (20230731 - Julian) 先驗證信箱格式，不符合就直接 return
+    // Info: (20230731 - Shirley) 先驗證信箱格式，不符合就直接 return
     if (!emailIsValid) return;
     event.preventDefault();
 
-    // Info: (20230731 - Julian) 顯示 loading 動畫
+    // Info: (20230731 - Shirley) 顯示 loading 動畫
     setAnimation(FormAnimation.LOADING);
     setShowAnim(true);
 
@@ -104,9 +104,9 @@ function ContactForm() {
     }
   };
 
-  // Info: (20230731 - Julian) 點擊重試按鈕
+  // Info: (20230731 - Shirley) 點擊重試按鈕
   const retryHandler = async () => {
-    // Info: (20230731 - Julian) 顯示 loading 動畫
+    // Info: (20230731 - Shirley) 顯示 loading 動畫
     setAnimation(FormAnimation.LOADING);
     setShowAnim(true);
 
@@ -143,19 +143,19 @@ function ContactForm() {
       >
         {/* eslint-disable no-nested-ternary */}
         {animation === FormAnimation.LOADING ? (
-          /* Info:(20230731 - Julian) Loading animation */
+          /* Info:(20230731 - Shirley) Loading animation */
           <div className="flex flex-col items-center space-y-10">
             <Image src="/animations/Loading.svg" width={100} height={100} alt="loading_animation" />
             <p className="text-sm">{t('CONTACT_US.SENDING')}</p>
           </div>
         ) : animation === FormAnimation.SUCCESS ? (
-          /* Info:(20230731 - Julian) Success animation */
+          /* Info:(20230731 - Shirley) Success animation */
           <div className="flex flex-col items-center space-y-10">
             <Image src="/animations/success.gif" width={150} height={150} alt="loading_animation" />
             <p className="text-sm">{t('CONTACT_US.SUCCESS')}</p>
           </div>
         ) : animation === FormAnimation.ERROR ? (
-          /* Info:(20230731 - Julian) Error animation */
+          /* Info:(20230731 - Shirley) Error animation */
           <div className="flex flex-col items-center">
             <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
             <p className="text-sm">{t('CONTACT_US.ERROR')}</p>

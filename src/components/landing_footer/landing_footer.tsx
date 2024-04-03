@@ -17,7 +17,7 @@ function LandingFooter() {
     <div className="flex flex-col space-y-12 bg-secondaryBlue px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-28">
       <div className="flex w-full flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
         <Link href={BFAURL.HOME}>
-          {/* Info:(20230711 - Julian) Desktop Logo */}
+          {/* Info:(20230711 - Shirley) Desktop Logo */}
           <Image
             className="hidden lg:block"
             src="/logo/isunfa_logo_small.svg"
@@ -25,7 +25,7 @@ function LandingFooter() {
             width={88}
             height={68}
           />
-          {/* Info:(20230711 - Julian) Mobile Logo */}
+          {/* Info:(20230711 - Shirley) Mobile Logo */}
           <Image
             className="block lg:hidden"
             src="/logo/isunfa_logo_small.svg"
@@ -63,7 +63,7 @@ function LandingFooter() {
         </div>
       </div>
 
-      {/* Info:(20230711 - Julian) Copyright */}
+      {/* Info:(20230711 - Shirley) Copyright */}
       <div className="flex justify-center text-sm lg:justify-end">{copyright}</div>
     </div>
   );

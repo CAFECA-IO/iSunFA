@@ -18,7 +18,7 @@ const Custom404 = () => {
         <title>{headTitle}</title>
       </Head>
 
-      {/* Info:(20230731 - Julian) Navbar */}
+      {/* Info:(20230731 - Shirley) Navbar */}
       <LandingNavBar />
 
       <main className="flex min-h-screen flex-col justify-between">
@@ -32,7 +32,7 @@ const Custom404 = () => {
           </div>
         </div>
       </main>
-      {/* Info:(20230731 - Julian) Footer */}
+      {/* Info:(20230731 - Shirley) Footer */}
       <LandingFooter />
     </>
   );
