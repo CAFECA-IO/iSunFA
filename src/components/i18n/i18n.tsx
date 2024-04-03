@@ -8,7 +8,7 @@ function I18n() {
 
   const [currentLanguage, setCurrentLanguage] = useState('Language');
 
-  /* Info: (20230712 - Julian) close menu when click outer */
+  /* Info: (20230712 - Shirley) close menu when click outer */
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
   const clickMenuHandler = () => setComponentVisible(!componentVisible);
 
@@ -41,7 +41,7 @@ function I18n() {
     );
   });
 
-  /* Info: (20230712 - Julian) Desktop menu */
+  /* Info: (20230712 - Shirley) Desktop menu */
   const desktopMenu = (
     <div className="relative hidden w-140px rounded lg:flex">
       <div
@@ -69,7 +69,7 @@ function I18n() {
     </div>
   );
 
-  /* Info: (20230712 - Julian) Moblie menu */
+  /* Info: (20230712 - Shirley) Moblie menu */
   const moblieMenu = (
     <div ref={targetRef} className="flex w-140px rounded lg:hidden">
       <div

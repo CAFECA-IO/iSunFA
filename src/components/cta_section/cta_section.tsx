@@ -84,7 +84,6 @@ const CTASection = () => {
         {/* eslint-disable @next/next/no-img-element */}
         <img
           alt="isunfa_pop"
-          loading="lazy"
           src="/elements/isunfa_pop.svg"
           className={`aspect-0.87 w-9/10 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full ${isAnimeRef1Visible ? 'animate-slideBottomToTop' : 'hidden'}`}
         />

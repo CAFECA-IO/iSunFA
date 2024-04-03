@@ -41,7 +41,7 @@ export const ITEM_PER_PAGE = 10;
 
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
-/* Info: (20230711 - Julian) ----- Landing Page ----- */
+/* Info: (20230711 - Shirley) ----- Landing Page ----- */
 export const SCROLL_END = 530;
 
 export const massiveDataContent = [
@@ -147,13 +147,13 @@ export const whyUsContent = [
   },
 ];
 
-/* Info: (20230814 - Julian) ----- Landing Footer ----- */
+/* Info: (20230814 - Shirley) ----- Landing Footer ----- */
 export const iSunFAAddress = process.env.I_SUN_FA_ADDRESS_IN_ENGLISH;
 export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
 export const iSunFAPhone = process.env.I_SUN_FA_PHONE_NUMBER;
 export const githubLink = process.env.GITHUB_LINK;
 
-/* Info: (20230814 - Julian) ----- Reports ----- */
+/* Info: (20230814 - Shirley) ----- Reports ----- */
 export const CLOSING_TIME = 57600;
 
 export const A4_SIZE = {
@@ -184,7 +184,7 @@ export const pluginReportsList = [
   },
 ];
 
-/* Info: (20230814 - Julian) ----- Chains ----- */
+/* Info: (20230814 - Shirley) ----- Chains ----- */
 export const chainList = ['eth', 'bit', 'usdt', 'bnb', 'isun'];
 
 export const chainIdToCurrencyName = [

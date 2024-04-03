@@ -38,7 +38,7 @@ function LandingNavBar() {
     setDropdownOpen(false);
   };
 
-  /* Info:(20230814 - Julian) Scroll Position */
+  /* Info: (20230814 - Shirley) Scroll Position */
   const [scroll, setScroll] = useState(0);
 
   const handleScroll = () => {
@@ -54,10 +54,10 @@ function LandingNavBar() {
     };
   }, []);
 
-  /* Info:(20230814 - Julian) Change Navbar Background Style */
+  /* Info:(20230814 - Shirley) Change Navbar Background Style */
   const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
-  /* Info: (20230712 - Julian) close menu when click outer */
+  /* Info: (20230712 - Shirley) close menu when click outer */
   const {
     targetRef: menuRef,
     componentVisible: menuVisible,
@@ -66,7 +66,7 @@ function LandingNavBar() {
 
   const clickMenuHandler = () => setMenuVisible(!menuVisible);
 
-  /* Info: (20230712 - Julian) desktop navbar */
+  /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
     <div
       className={`hidden h-80px w-screen items-center px-10 py-3 font-barlow lg:px-20 ${bgStyle} text-white transition-all duration-300 ease-in-out md:flex`}
@@ -316,7 +316,7 @@ function LandingNavBar() {
     </div>
   );
 
-  /* Info: (20230712 - Julian) mobile navbar */
+  /* Info: (20230712 - Shirley) mobile navbar */
   const mobileNavBar = (
     <div
       className={`${bgStyle} flex h-80px w-screen shrink-0 items-center justify-between gap-5 p-4 pr-5 text-white shadow-xl md:hidden`}
@@ -373,7 +373,7 @@ function LandingNavBar() {
             </div>
           </div>
         </div>
-        {/* Info: (20230712 - Julian) hamburger */}
+        {/* Info: (20230712 - Shirley) hamburger */}
         <div ref={menuRef}>
           <button className="flex items-center" onClick={clickMenuHandler} type="button">
             <RxHamburgerMenu size={25} className="text-white hover:text-primaryYellow" />
