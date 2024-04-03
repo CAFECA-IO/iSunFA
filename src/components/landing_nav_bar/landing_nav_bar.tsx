@@ -14,6 +14,7 @@ import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { createChallenge } from '../../lib/utils/authorization';
+import { ISUNFA_API } from '../../constants/config';
 
 function LandingNavBar() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -112,7 +113,7 @@ function LandingNavBar() {
       // }
     );
 
-    const rs = await fetch('/api/auth/login', {
+    const rs = await fetch(ISUNFA_API.SIGN_UP, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
