@@ -23,7 +23,7 @@ export async function createChallenge(message: string) {
 export const challenge = 'RklETzIuVEVTVC5sb2dpbi0xNzExNzAxNjUwNTQ3LWhlbGxv';
 export const name = 'Arnaud';
 export const options: RegisterOptions = {
-  userHandle: 'Optional server-side user id. Must not reveal personal information.',
+  userHandle: 'demo-user-id-1223',
   attestation: true,
 
   userVerification: 'required',

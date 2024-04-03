@@ -97,21 +97,14 @@ function LandingNavBar() {
     // eslint-disable-next-line no-console
     console.log('newChallenge:', newChallenge);
 
-    // const registration = await client.register(name, newChallenge, options);
-
-    // const challenge = 'a7c61ef9-dc23-4806-b486-2428938a547e';
-    const registration = await client.register(
-      'Shirley',
-      newChallenge
-      // , {
-      //   authenticatorType: 'auto',
-      //   userVerification: 'required',
-      //   timeout: 60000,
-      //   attestation: true,
-      //   userHandle: 'Optional server-side user id. Must not reveal personal information.',
-      //   debug: false,
-      // }
-    );
+    const registration = await client.register('Shirley', newChallenge, {
+      authenticatorType: 'auto',
+      userVerification: 'required',
+      timeout: 60000,
+      attestation: true,
+      userHandle: 'demo-user-id-1223',
+      debug: false,
+    });
 
     const rs = await fetch(ISUNFA_API.SIGN_UP, {
       method: 'POST',
