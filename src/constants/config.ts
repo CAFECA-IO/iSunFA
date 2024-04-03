@@ -8,6 +8,9 @@ export const ISUNFA_API = {
 
 export const AUTH_PERIOD = 60 * 60; // 1 hr
 
+export const DUMMY_CHALLENGE = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
+export const DUMMY_TIMESTAMP = 1712176850;
+
 export const TBD_API_URL = 'https://api.tidebit-defi.com/api';
 export const TBD_API_VERSION = 'v1';
 

@@ -1,16 +1,12 @@
-// Sign-in by webauthn
-// import cookie from 'cookie';
-// import { server } from '@passwordless-id/webauthn';
+// TODO: check if the user's public key is registered on the server (20240403 - Shirley)
 import type { NextApiRequest, NextApiResponse } from 'next';
-// import { getDomain } from '../../../lib/utils/common';
 import { ICredential } from '../../../interfaces/webauthn';
 
 type Data = {
   payload: string | ICredential;
 };
 
-// const CREDENTIALS_ARRAY: ICredential[] = [];
-const REGISTRATION_ARRAY: { credential: ICredential }[] = [
+const EXAMPLE_REGISTRATION_ARRAY: { credential: ICredential }[] = [
   {
     credential: {
       id: 'KiUmnebT-CH4Bk9iSekfcpxEtc4',
@@ -27,11 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       throw new Error('Only POST requests are allowed');
     }
 
-    // const cookies = cookie.parse(req.headers.cookie || '');
-
-    // Loop through REGISTRATION_ARRAY to find the credential id if it's the same as the one in the request
-    // If it's the same, return the credential
-    const credentials = REGISTRATION_ARRAY;
+    const credentials = EXAMPLE_REGISTRATION_ARRAY;
 
     const credentialId = req.body.credential.id;
 
@@ -42,18 +34,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!isRegistered) {
       throw new Error('User not found');
     }
-
-    // eslint-disable-next-line no-console
-    console.log('isRegistered', isRegistered);
-
-    // if (!user) {
-    //   throw new Error('User not found');
-    // }
-
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // if (!isMatch) {
-    //   throw new Error('Invalid credentials');
-    // }
 
     res.status(200).json({ payload: 'Success!' });
   } catch (error) {

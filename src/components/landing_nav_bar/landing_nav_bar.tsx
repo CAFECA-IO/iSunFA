@@ -14,7 +14,7 @@ import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { createChallenge } from '../../lib/utils/authorization';
-import { ISUNFA_API } from '../../constants/config';
+import { DUMMY_TIMESTAMP, ISUNFA_API } from '../../constants/config';
 import { ICredential } from '../../interfaces/webauthn';
 import { useUser } from '../../contexts/user_context';
 
@@ -32,7 +32,6 @@ function LandingNavBar() {
   const { asPath } = router;
   /* Info: (20230814 - Shirley) Scroll Position */
   const [scroll, setScroll] = useState(0);
-  // const [user, setUser] = useState<ICredential>({} as ICredential);
 
   const {
     targetRef: dropdownRef,
@@ -73,54 +72,54 @@ function LandingNavBar() {
   const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
   const signUpClickHandler = async () => {
-    // FIDO2.TEST.login-1711701650547-hello
-    const newChallenge = await createChallenge(
-      'FIDO2.TEST.reg-' + (1712116850 + 60000).toString() + '-hello'
-    );
+    try {
+      const newChallenge = await createChallenge(
+        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
+      );
 
-    // eslint-disable-next-line no-console
-    console.log('newChallenge:', newChallenge);
+      const registration = await client.register('User', newChallenge, {
+        authenticatorType: 'both',
+        userVerification: 'required',
+        timeout: 60000,
+        attestation: true,
+        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
+        debug: false,
+      });
 
-    const registration = await client.register('User', newChallenge, {
-      authenticatorType: 'both',
-      userVerification: 'required',
-      timeout: 60000,
-      attestation: true,
-      userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
-      debug: false,
-    });
+      const rs = await fetch(ISUNFA_API.SIGN_UP, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ registration }),
+      });
 
-    const rs = await fetch(ISUNFA_API.SIGN_UP, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ registration }),
-    });
+      const data = (await rs.json()).payload as ICredential;
 
-    const data = (await rs.json()).payload as ICredential;
-
-    setUser(data);
-    // eslint-disable-next-line no-console
-    console.log('registration:', registration);
-    // eslint-disable-next-line no-console
-    console.log('rs data for signOut API:', data);
+      setUser(data);
+    } catch (error) {
+      // Deprecated: dev (20240410 - Shirley)
+      // eslint-disable-next-line no-console
+      console.error('signUpClickHandler error:', error);
+    }
   };
 
   const signOutClickHandler = async () => {
-    const rs = await fetch(ISUNFA_API.SIGN_OUT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ credential: user }),
-    });
+    try {
+      await fetch(ISUNFA_API.SIGN_OUT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential: user }),
+      });
 
-    const data = (await rs.json()).payload as ICredential;
-
-    setUser({} as ICredential);
-    // eslint-disable-next-line no-console
-    console.log('rs data for signOut API:', data);
+      setUser({} as ICredential);
+    } catch (error) {
+      // Deprecated: dev (20240410 - Shirley)
+      // eslint-disable-next-line no-console
+      console.error('signOutClickHandler error:', error);
+    }
   };
 
   /* Info: (20230712 - Shirley) desktop navbar */
