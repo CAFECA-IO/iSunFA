@@ -4,14 +4,16 @@ import { RxHamburgerMenu } from 'react-icons/rx';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import { client } from '@passwordless-id/webauthn';
+
 import { BFAURL } from '../../constants/url';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 
 import { TranslateFunction } from '../../interfaces/locale';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
-
-const IS_BUTTON_DISABLED_TEMP = true;
+import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
+import { createChallenge } from '../../lib/utils/authorization';
 
 function LandingNavBar() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -65,6 +67,71 @@ function LandingNavBar() {
   } = useOuterClick<HTMLDivElement>(false);
 
   const clickMenuHandler = () => setMenuVisible(!menuVisible);
+
+  // async function createChallenge(message: string) {
+  //   const arrayBuffer = utils.toBuffer(message);
+  //   let challenge = utils.toBase64url(arrayBuffer);
+  //   challenge = utils.toBase64url(arrayBuffer);
+  //   challenge = challenge.replace(/=/g, '');
+  //   return challenge;
+  // }
+
+  // const challenge = 'RklETzIuVEVTVC5sb2dpbi0xNzExNzAxNjUwNTQ3LWhlbGxv';
+  // const name = 'Arnaud';
+  // const options = {
+  //   authenticatorType: 'auto',
+  //   userVerification: 'required',
+  //   timeout: 60000,
+  //   attestation: true,
+  //   userHandle: 'Optional server-side user id. Must not reveal personal information.',
+  //   debug: false,
+  // };
+
+  const tryBtnClickHandler = async () => {
+    // FIDO2.TEST.login-1711701650547-hello
+    const newChallenge = await createChallenge(
+      'FIDO2.TEST.reg-' + (1712116850 + 60000).toString() + '-hello'
+    );
+
+    // eslint-disable-next-line no-console
+    console.log('newChallenge:', newChallenge);
+
+    // const registration = await client.register(name, newChallenge, options);
+
+    // const challenge = 'a7c61ef9-dc23-4806-b486-2428938a547e';
+    const registration = await client.register(
+      'Shirley',
+      newChallenge
+      // , {
+      //   authenticatorType: 'auto',
+      //   userVerification: 'required',
+      //   timeout: 60000,
+      //   attestation: true,
+      //   userHandle: 'Optional server-side user id. Must not reveal personal information.',
+      //   debug: false,
+      // }
+    );
+
+    const rs = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ registration }),
+    });
+    // const register = await client.register('Arnaud', challenge, {
+    //   authenticatorType: 'auto',
+    //   userVerification: 'required',
+    //   timeout: 60000,
+    //   attestation: true,
+    //   userHandle: 'Optional server-side user id. Must not reveal personal information.',
+    //   debug: false,
+    // });
+    // eslint-disable-next-line no-console
+    console.log('registeration:', registration);
+    // eslint-disable-next-line no-console
+    console.log('rs for login API:', rs);
+  };
 
   /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
@@ -271,7 +338,11 @@ function LandingNavBar() {
           </li>
         </div>
         <li>
-          <Button className="flex space-x-3" disabled={IS_BUTTON_DISABLED_TEMP}>
+          <Button
+            onClick={tryBtnClickHandler}
+            className="flex space-x-3"
+            disabled={IS_BUTTON_DISABLED_TEMP}
+          >
             <p
               className={cn(
                 'text-base leading-6 tracking-normal',
