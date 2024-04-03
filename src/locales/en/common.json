@@ -9,7 +9,8 @@
     "LAUNCH_APP": "Launch App",
     "FEATURES": "Features",
     "ABOUT": "About",
-    "TRY_NOW": "Try Now"
+    "TRY_NOW": "Try Now",
+    "SIGN_OUT": "Sign Out"
   },
   "USER": {
     "MY_ADDRESS": "My Address page",

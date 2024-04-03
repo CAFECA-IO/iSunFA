@@ -69,6 +69,7 @@ const CTASection = () => {
     console.log('rs data for signOut API:', data);
   };
 
+  /*
   // const signInClickHandler = async () => {
   //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
   //   const authentication = await client.authenticate([], challenge, {
@@ -87,6 +88,7 @@ const CTASection = () => {
   //   // eslint-disable-next-line no-console
   //   console.log('authentication', authentication);
   // };
+  */
 
   useEffect(() => {
     const waitForCTA = setTimeout(() => {
@@ -126,7 +128,7 @@ const CTASection = () => {
           {user.publicKey ? (
             <Button
               onClick={signOutClickHandler}
-              className="flex space-x-3"
+              className="flex w-full space-x-3 lg:w-fit"
               disabled={IS_BUTTON_DISABLED_TEMP}
             >
               <p
@@ -136,15 +138,14 @@ const CTASection = () => {
                   'group-hover:text-white'
                 )}
               >
-                Sign Out
-                {/* {t('NAV_BAR.TRY_NOW')} */}
+                {t('NAV_BAR.SIGN_OUT')}
               </p>
             </Button>
           ) : (
             <Button
               // onClick={signInClickHandler}
               onClick={signUpClickHandler}
-              className="flex space-x-3"
+              className="flex w-full space-x-3 lg:w-fit"
               disabled={IS_BUTTON_DISABLED_TEMP}
             >
               <p
