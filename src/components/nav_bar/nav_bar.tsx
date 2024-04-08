@@ -6,11 +6,18 @@ import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { useUser } from '../../contexts/user_context';
 import Image from 'next/image';
+import useOuterClick from '../../lib/hooks/use_outer_click';
 
 const NavBar = () => {
   const { user, signOut } = useUser();
 
-  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  // const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+
+  const {
+    targetRef: userMenuRef,
+    componentVisible: isUserMenuOpen,
+    setComponentVisible: setIsUserMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const avatarClickHandler = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
@@ -82,7 +89,7 @@ const NavBar = () => {
         <button
           type="button"
           onClick={logOutClickHandler}
-          className="mt-3 flex gap-2 rounded-md px-6 py-2.5 hover:opacity-70"
+          className="mt-3 flex w-full gap-2 rounded-md px-6 py-2.5 hover:opacity-70"
         >
           <div className="my-auto flex items-center justify-center">
             <img
@@ -99,7 +106,7 @@ const NavBar = () => {
   ) : null;
 
   const displayedLogInBtn = user ? (
-    <div>
+    <div ref={userMenuRef}>
       <button onClick={avatarClickHandler}>
         {/* Info: avatar svg (20240408 - Shirley) */}
         {/* <svg

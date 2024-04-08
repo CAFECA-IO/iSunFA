@@ -22,11 +22,7 @@ const LoginPageBody = () => {
           <div className="order-2 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1">
             <div className="pointer-events-none -mt-[20px] flex grow flex-col justify-start max-lg:max-w-full md:-mt-[50px] lg:-mt-[65px]">
               <div className="relative flex h-full w-full flex-col overflow-hidden py-0 max-lg:max-w-full">
-                <img
-                  src="/elements/login_bg.svg"
-                  // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&"
-                  className="size-full object-cover"
-                />
+                <img src="/elements/login_bg.svg" className="size-full object-cover" />
               </div>
             </div>
           </div>
