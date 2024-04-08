@@ -13,6 +13,7 @@ const buttonVariants = cva(
         // TODO: add more variants (20240319 - Shirley)
         // outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         // secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        secondary2: 'bg-secondaryBlue2 text-white hover:bg-secondaryBlue2/80',
       },
       size: {
         default: 'px-6 py-3',

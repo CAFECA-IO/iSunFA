@@ -7,6 +7,7 @@ export const ISUNFA_API = {
 };
 
 export const ISUNFA_ROUTE = {
+  LANDING_PAGE: '/',
   LOGIN: '/auth/login',
 };
 

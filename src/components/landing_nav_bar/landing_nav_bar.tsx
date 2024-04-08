@@ -12,7 +12,6 @@ import { TranslateFunction } from '../../interfaces/locale';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
-import { useUser } from '../../contexts/user_context';
 import { ISUNFA_ROUTE } from '../../constants/config';
 
 const languages = [
@@ -22,7 +21,6 @@ const languages = [
 ];
 
 function LandingNavBar() {
-  const { user, signUp, signOut } = useUser();
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const router = useRouter();
@@ -67,26 +65,6 @@ function LandingNavBar() {
 
   /* Info:(20230814 - Shirley) Change Navbar Background Style */
   const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
-
-  const signUpClickHandler = async () => {
-    try {
-      await signUp();
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signUpClickHandler error:', error);
-    }
-  };
-
-  const signOutClickHandler = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signOutClickHandler error:', error);
-    }
-  };
 
   /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
@@ -325,59 +303,6 @@ function LandingNavBar() {
               </svg>
             </Button>{' '}
           </Link>
-
-          {/* {user.publicKey ? (
-            <Button
-              onClick={signOutClickHandler}
-              className="flex space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.SIGN_OUT')}
-              </p>
-            </Button>
-          ) : (
-            <Button
-              onClick={signUpClickHandler}
-              className="flex space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.TRY_NOW')}
-              </p>
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
-                  className={cn(
-                    `fill-current`,
-                    IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
-                    `group-hover:text-white`
-                  )}
-                />
-              </svg>
-            </Button>
-          )} */}
         </li>
         <li>
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
@@ -611,28 +536,8 @@ function LandingNavBar() {
           </Link>
         </li>
         <li className="w-full px-6 py-4">
-          {user.publicKey ? (
-            <Button
-              onClick={signOutClickHandler}
-              className="flex w-90vw space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.SIGN_OUT')}
-              </p>
-            </Button>
-          ) : (
-            <Button
-              onClick={signUpClickHandler}
-              className="flex w-90vw space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
+          <Link href={ISUNFA_ROUTE.LOGIN}>
+            <Button className="flex space-x-3" disabled={IS_BUTTON_DISABLED_TEMP}>
               <p
                 className={cn(
                   'text-base leading-6 tracking-normal',
@@ -661,8 +566,8 @@ function LandingNavBar() {
                   )}
                 />
               </svg>
-            </Button>
-          )}
+            </Button>{' '}
+          </Link>
         </li>
 
         {/* TODO: separate i18n component (20240403 - Shirley) */}

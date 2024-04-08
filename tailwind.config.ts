@@ -52,6 +52,8 @@ module.exports = {
         lightGray2: '#828998',
         navyBlue: '#002462',
         primaryYellow2: '#996301',
+        secondaryBlue2: '#304872',
+        darkBlue: '#1570EF',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',

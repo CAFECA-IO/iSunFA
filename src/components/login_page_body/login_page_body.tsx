@@ -1,16 +1,28 @@
 /* eslint-disable */
 import React from 'react';
+import { Button } from '../button/button';
+import { useUser } from '../../contexts/user_context';
 
 const LoginPageBody = () => {
+  const { signUp } = useUser();
+
+  const logInClickHandler = async () => {
+    try {
+      await signUp();
+    } catch (error) {
+      // Deprecated: dev (20240410 - Shirley)
+      // eslint-disable-next-line no-console
+      console.error('signUp error:', error);
+    }
+  };
   return (
     <div>
       <div className="bg-gray-100">
         <div className="flex gap-5 max-lg:flex-col max-lg:gap-0">
-          <div className="order-1 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1">
-            <div className="-mt-[40px] flex grow flex-col justify-start max-lg:max-w-full md:-mt-[100px] lg:-mt-[70px]">
+          <div className="order-2 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1">
+            <div className="pointer-events-none -mt-[20px] flex grow flex-col justify-start max-lg:max-w-full md:-mt-[50px] lg:-mt-[65px]">
               <div className="relative flex h-full w-full flex-col overflow-hidden py-0 max-lg:max-w-full">
                 <img
-                  loading="lazy"
                   src="/elements/login_bg.svg"
                   // srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/c2d0a045aa974ae712e426285be84b742d773af94f8477ecef6f3aa41485ac65?apiKey=0e17b0b875f041659e186639705112b1&"
                   className="size-full object-cover"
@@ -18,7 +30,7 @@ const LoginPageBody = () => {
               </div>
             </div>
           </div>
-          <div className="order-2 ml-5 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-2">
+          <div className="order-1 ml-5 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-2">
             <div className="flex grow flex-col justify-center pb-20 max-lg:max-w-full">
               <div className="mt-16 flex flex-col items-center px-20 max-lg:mt-10 max-lg:max-w-full max-lg:px-5">
                 <div className="flex flex-col items-center justify-center self-stretch px-20 max-lg:max-w-full max-lg:px-5">
@@ -35,36 +47,55 @@ const LoginPageBody = () => {
                     <div className="flex aspect-square flex-col items-center justify-center rounded-[999px] bg-gray-300 px-16 max-lg:px-5">
                       <div className="flex items-center justify-center max-lg:mx-2">
                         <img
-                          loading="lazy"
                           src="https://cdn.builder.io/api/v1/image/assets/TEMP/60fe1728445a73d0ea2384aff945f6a9b3ebfd57b0593bb94f4f534a3493f21c?apiKey=0e17b0b875f041659e186639705112b1&"
                           className="aspect-square w-16"
                         />
                       </div>
                     </div>
                   </div>
-                  <div className="mt-10 flex justify-center gap-2 rounded-md bg-slate-600 px-8 py-3.5 max-lg:px-5">
+                  <Button
+                    variant={'secondary2'}
+                    onClick={logInClickHandler}
+                    className="mt-10 flex justify-center gap-2 rounded-md px-2 py-3.5 max-lg:px-5"
+                  >
                     <div className="text-lg font-medium leading-7 tracking-normal text-white">
                       Log in with Device
                     </div>
                     <div className="my-auto flex items-center justify-center">
-                      <img
-                        loading="lazy"
-                        src="https://cdn.builder.io/api/v1/image/assets/TEMP/d65bcc008096cb9f16416c920b31e5637c6f2ad5fb5e7ca86d7112607a8ca888?apiKey=0e17b0b875f041659e186639705112b1&"
-                        className="aspect-square w-6"
-                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="25"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 25 24"
+                      >
+                        <g>
+                          <path
+                            fill="#FCFDFF"
+                            fillRule="evenodd"
+                            d="M8.664 1.001h7.677c.528 0 .982 0 1.357.03.395.033.788.104 1.167.297a3 3 0 011.311 1.311c.193.379.264.772.296 1.167.031.375.03.83.03 1.357V18.84c0 .527.001.982-.03 1.356-.032.395-.103.789-.296 1.167a3 3 0 01-1.311 1.311c-.378.193-.772.264-1.167.297-.375.03-.83.03-1.357.03H8.665c-.527 0-.982 0-1.356-.03-.395-.033-.789-.104-1.167-.297a3 3 0 01-1.311-1.31c-.193-.38-.264-.773-.296-1.168a17.9 17.9 0 01-.031-1.356V5.163c0-.528 0-.982.03-1.357.033-.395.104-.788.297-1.167A3 3 0 016.14 1.33c.378-.194.772-.265 1.167-.297.374-.03.83-.03 1.356-.03zM7.471 3.025c-.272.022-.373.06-.422.085a1 1 0 00-.437.437c-.025.05-.063.15-.085.422-.023.283-.024.656-.024 1.232v13.6c0 .577 0 .949.024 1.232.022.272.06.373.085.422a1 1 0 00.437.437c.05.025.15.063.422.085.283.023.655.024 1.232.024h7.6c.576 0 .949 0 1.232-.024.272-.022.372-.06.422-.085a1 1 0 00.437-.437c.025-.05.063-.15.085-.422.023-.283.024-.655.024-1.232v-13.6c0-.576 0-.949-.024-1.232-.022-.272-.06-.372-.085-.422a1 1 0 00-.437-.437c-.05-.025-.15-.063-.422-.085-.283-.023-.655-.024-1.232-.024h-7.6c-.577 0-.949 0-1.232.024zm3.532 14.476a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </g>
+                      </svg>
                     </div>
-                  </div>
-                  <div className="mt-10 flex w-[137px] max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-blue-600">
+                  </Button>
+                  <button
+                    type="button"
+                    className="mt-10 flex max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-darkBlue hover:opacity-70"
+                  >
                     <div className="justify-center rounded-md">Register my Device</div>
-                  </div>
+                  </button>
                 </div>
                 <div className="mt-32 flex justify-center gap-1 rounded-md px-4 py-2 max-lg:mt-10">
-                  <div className="text-sm font-medium leading-5 tracking-normal text-sky-950">
+                  <button
+                    type="button"
+                    className="text-sm font-medium leading-5 tracking-normal text-secondaryBlue hover:opacity-70"
+                  >
                     Login Environment Tips
-                  </div>
+                  </button>
                   <div className="my-auto flex items-center justify-center">
                     <img
-                      loading="lazy"
                       src="https://cdn.builder.io/api/v1/image/assets/TEMP/4b8136d5ec9c9c5e03705f7b20b01e8334a90bebee9a8f507f4ec5dbad2f1971?apiKey=0e17b0b875f041659e186639705112b1&"
                       className="aspect-square w-4"
                     />

@@ -7,21 +7,21 @@ import { checkFIDO2Cookie, createChallenge } from '../lib/utils/authorization';
 import { DUMMY_TIMESTAMP, ISUNFA_API } from '../constants/config';
 
 interface UserContextType {
-  user: ICredential;
+  user: ICredential | null;
   setUser: (user: ICredential) => void;
-  signUp: () => void;
-  signOut: () => void;
+  signUp: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType>({
   user: {} as ICredential,
   setUser: () => {},
-  signUp: () => {},
-  signOut: () => {},
+  signUp: async () => {},
+  signOut: async () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser, userRef] = useStateRef<ICredential>({} as ICredential);
+  const [user, setUser, userRef] = useStateRef<ICredential | null>(null);
 
   const signUp = async () => {
     try {
@@ -66,7 +66,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ credential: user }),
       });
 
-      setUser({} as ICredential);
+      setUser(null);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
