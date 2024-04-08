@@ -1,11 +1,11 @@
 {
   "name": "iSunFA",
-  "version": "0.1.1+10",
+  "version": "0.1.1+11",
   "private": false,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3000",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.tx,.tsx .",
     "test": "jest --coverage",
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
