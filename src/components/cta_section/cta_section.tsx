@@ -1,17 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { client } from '@passwordless-id/webauthn';
 import { TranslateFunction } from '../../interfaces/locale';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { useUser } from '../../contexts/user_context';
-import { DUMMY_TIMESTAMP, ISUNFA_API } from '../../constants/config';
-import { ICredential } from '../../interfaces/webauthn';
-import { createChallenge } from '../../lib/utils/authorization';
 
 const CTASection = () => {
-  const { user, setUser } = useUser();
+  const { user, signUp, signOut } = useUser();
 
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -20,30 +16,7 @@ const CTASection = () => {
 
   const signUpClickHandler = async () => {
     try {
-      const newChallenge = await createChallenge(
-        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
-      );
-
-      const registration = await client.register('User', newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000,
-        attestation: true,
-        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
-        debug: false,
-      });
-
-      const rs = await fetch(ISUNFA_API.SIGN_UP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ registration }),
-      });
-
-      const data = (await rs.json()).payload as ICredential;
-
-      setUser(data);
+      signUp();
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -53,15 +26,7 @@ const CTASection = () => {
 
   const signOutClickHandler = async () => {
     try {
-      await fetch(ISUNFA_API.SIGN_OUT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ credential: user }),
-      });
-
-      setUser({} as ICredential);
+      signOut();
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console

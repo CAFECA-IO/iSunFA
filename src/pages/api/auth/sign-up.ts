@@ -61,8 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     res.setHeader(
       'Set-Cookie',
       cookie.serialize('FIDO2', JSON.stringify(CREDENTIALS_ARRAY), {
-        httpOnly: true,
-        // sameSite: 'none',
+        // httpOnly: true,
         expires: expiration,
         path: '/',
       })
