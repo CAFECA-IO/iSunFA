@@ -32,7 +32,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const registration = await client.register('User', newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
-        timeout: 60000,
+        timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
         attestation: true,
         userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,

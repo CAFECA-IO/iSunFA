@@ -4,12 +4,12 @@ import { cn } from '../../lib/utils/common';
 
 // Info: 用 cva 來定義 button 的樣式 (20240319 - Shirley)
 const buttonVariants = cva(
-  '"gap ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100',
+  '"gap space-x-2 ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100',
   {
     variants: {
       variant: {
         default:
-          'bg-primaryYellow text-primary-foreground hover:bg-primaryYellow/50 disabled:bg-lightGray disabled:cursor-default',
+          'bg-primaryYellow text-primary-foreground hover:bg-primaryYellow/70 disabled:bg-lightGray disabled:cursor-default',
         // TODO: add more variants (20240319 - Shirley)
         // outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         // secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',

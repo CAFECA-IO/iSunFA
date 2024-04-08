@@ -6,6 +6,10 @@ export const ISUNFA_API = {
   SIGN_OUT: '/api/auth/sign-out',
 };
 
+export const ISUNFA_ROUTE = {
+  LOGIN: '/auth/login',
+};
+
 export const AUTH_PERIOD = 60 * 60; // 1 hr
 
 export const DUMMY_CHALLENGE = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
