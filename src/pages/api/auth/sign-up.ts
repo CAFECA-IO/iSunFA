@@ -1,7 +1,7 @@
 import cookie from 'cookie';
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDomain } from '../../../lib/utils/common';
+import { getDomains } from '../../../lib/utils/common';
 import { ICredential, IUser } from '../../../interfaces/webauthn';
 import { DUMMY_CHALLENGE } from '../../../constants/config';
 
@@ -17,18 +17,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       throw new Error('Only POST requests are allowed');
     }
 
-    const origin = getDomain() || process.env.DOMAIN_FOR_DEVELOPMENT || 'http://localhost:3000/';
+    const { host } = req.headers;
+    const { origin } = req.headers;
+
+    const origins = getDomains();
+    const filteredOrigins = origins.filter((o: string) => o.includes(origin as string));
+    // eslint-disable-next-line no-console
+    console.log('filteredOrigins', filteredOrigins);
 
     const { registration } = req.body;
 
     const expected = {
       challenge: DUMMY_CHALLENGE,
-      origin,
+      origin: (target: string) => origins.includes(target), // Info: Any origin in the list of allowed origins is valid (20240408 - Shirley)
     };
+
+    // eslint-disable-next-line no-console
+    console.log(
+      'origins',
+      origins,
+      'expected',
+      expected,
+      'host',
+      host,
+      'origin',
+      origin,
+      'registration',
+      registration
+    );
+
     const registrationParsed = (await server.verifyRegistration(registration, expected)) as IUser;
     const { credential } = registrationParsed;
 
     CREDENTIALS_ARRAY.push(credential);
+
+    // eslint-disable-next-line no-console
+    console.log('CREDENTIALS_ARRAY', CREDENTIALS_ARRAY);
 
     const expiration = new Date();
 
@@ -38,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       'Set-Cookie',
       cookie.serialize('FIDO2', JSON.stringify(CREDENTIALS_ARRAY), {
         httpOnly: true,
-        sameSite: 'strict',
+        // sameSite: 'none',
         expires: expiration,
         path: '/',
       })
@@ -46,9 +70,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     res.status(200).json({ payload: credential });
   } catch (error) {
-    // TODO: handle authentification error (20240403 - Shirley)
+    // TODO: handle authentication error (20240403 - Shirley)
     // eslint-disable-next-line no-console
-    console.log('error', error);
+    console.log('error in sign-up', error);
     res.status(400).json({ payload: 'error' });
   }
 }

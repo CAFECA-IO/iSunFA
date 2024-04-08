@@ -1,11 +1,11 @@
 {
   "name": "iSunFA",
-  "version": "0.1.1+10",
+  "version": "0.1.1+11",
   "private": false,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3000",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.tx,.tsx .",
     "test": "jest --coverage",
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
@@ -29,7 +29,7 @@
     "react-i18next": "^14.0.0",
     "react-icons": "^5.0.1",
     "react-usestateref": "^1.0.8",
-    "sharp": "^0.33.2",
+    "sharp": "^0.33.3",
     "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {
