@@ -1,73 +1,17 @@
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { client } from '@passwordless-id/webauthn';
 import { TranslateFunction } from '../../interfaces/locale';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
-import { useUser } from '../../contexts/user_context';
-import { DUMMY_TIMESTAMP, ISUNFA_API } from '../../constants/config';
-import { ICredential } from '../../interfaces/webauthn';
-import { createChallenge } from '../../lib/utils/authorization';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
 const CTASection = () => {
-  const { user, setUser } = useUser();
-
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
-
-  const signUpClickHandler = async () => {
-    try {
-      const newChallenge = await createChallenge(
-        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
-      );
-
-      const registration = await client.register('User', newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000,
-        attestation: true,
-        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
-        debug: false,
-      });
-
-      const rs = await fetch(ISUNFA_API.SIGN_UP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ registration }),
-      });
-
-      const data = (await rs.json()).payload as ICredential;
-
-      setUser(data);
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.log('signUpClickHandler error:', error);
-    }
-  };
-
-  const signOutClickHandler = async () => {
-    try {
-      await fetch(ISUNFA_API.SIGN_OUT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ credential: user }),
-      });
-
-      setUser({} as ICredential);
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.log('signOutClickHandler error:', error);
-    }
-  };
 
   /* TODO: implement sign-in check (20240403 - Shirley)
   // const signInClickHandler = async () => {
@@ -124,61 +68,38 @@ const CTASection = () => {
           </ol>
         </div>
 
-        <div className="z-5 flex w-full justify-center px-5 md:w-auto">
-          {user.publicKey ? (
-            <Button
-              onClick={signOutClickHandler}
-              className="flex w-full space-x-3 lg:w-fit"
-              disabled={IS_BUTTON_DISABLED_TEMP}
+        <Link href={ISUNFA_ROUTE.LOGIN} className="z-5 flex w-full justify-center px-5 md:w-auto">
+          <Button className="flex w-full space-x-3 lg:w-fit" disabled={IS_BUTTON_DISABLED_TEMP}>
+            <p
+              className={cn(
+                'text-base leading-6 tracking-normal',
+                IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
+                'group-hover:text-white'
+              )}
             >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.SIGN_OUT')}
-              </p>
-            </Button>
-          ) : (
-            <Button
-              // onClick={signInClickHandler}
-              onClick={signUpClickHandler}
-              className="flex w-full space-x-3 lg:w-fit"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.TRY_NOW')}
-              </p>
+              {t('NAV_BAR.TRY_NOW')}
+            </p>
 
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
-                  className={cn(
-                    `fill-current`,
-                    IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
-                    `group-hover:text-white`
-                  )}
-                />
-              </svg>
-            </Button>
-          )}
-        </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
+                className={cn(
+                  `fill-current`,
+                  IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
+                  `group-hover:text-white`
+                )}
+              />
+            </svg>
+          </Button>
+        </Link>
       </div>
       {/* Info: iSunFA 大字 (20240318 - Shirley) */}
       <div className={`mt-1/10 hidden h-screen items-start lg:flex`}>

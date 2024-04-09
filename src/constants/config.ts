@@ -1,29 +1,3 @@
-import { REPORT_PATH } from './url';
-
-export const ISUNFA_API = {
-  SIGN_UP: '/api/auth/sign-up',
-  SIGN_IN: '/api/auth/sign-in',
-  SIGN_OUT: '/api/auth/sign-out',
-};
-
-export const AUTH_PERIOD = 60 * 60; // 1 hr
-
-export const DUMMY_CHALLENGE = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
-export const DUMMY_TIMESTAMP = 1712176850;
-
-export const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://www.isunfa.com',
-  'https://isunfa.com',
-];
-
-export const TBD_API_URL = 'https://api.tidebit-defi.com/api';
-export const TBD_API_VERSION = 'v1';
-
-export const BFA_API_URL = '/api';
-export const BFA_API_VERSION = 'v1';
-
 export const MONTH_LIST = [
   'DATE_PICKER.JAN',
   'DATE_PICKER.FEB',
@@ -54,8 +28,6 @@ export const default30DayPeriod = {
   startTimeStamp: Math.floor(Date.now() / 1000) - 86400 * 30,
   endTimeStamp: Math.floor(Date.now() / 1000),
 };
-
-export const ITEM_PER_PAGE = 10;
 
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
@@ -171,44 +143,20 @@ export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
 export const iSunFAPhone = process.env.I_SUN_FA_PHONE_NUMBER;
 export const githubLink = process.env.GITHUB_LINK;
 
-/* Info: (20230814 - Shirley) ----- Reports ----- */
-export const CLOSING_TIME = 57600;
+export const AUTH_PERIOD = 60 * 60; // 1 hr
 
-export const A4_SIZE = {
-  WIDTH: 595,
-  HEIGHT: 842,
+export const COOKIE_NAME = {
+  FIDO2: 'FIDO2',
+  CREDENTIALS: 'CREDENTIALS',
+  USER_INFO: 'USER_INFO',
 };
 
-export const pluginReportsList = [
-  {
-    name: 'PLUGIN.COMPREHENSIVE_INCOME_STATEMENT',
-    imageSrc: '/icons/income_statement_icon.svg',
-    linkPath: `${REPORT_PATH.INCOME_STATEMENTS}`,
-  },
-  {
-    name: 'PLUGIN.BALANCE_SHEET',
-    imageSrc: '/icons/balance_sheet_icon.svg',
-    linkPath: `${REPORT_PATH.BALANCE_SHEETS}`,
-  },
-  {
-    name: 'PLUGIN.CASH_FLOW_STATEMENT',
-    imageSrc: '/icons/cash_flow_statement_icon.svg',
-    linkPath: `${REPORT_PATH.CASH_FLOW_STATEMENTS}`,
-  },
-  {
-    name: 'PLUGIN.RED_FLAG_ANALYSIS',
-    imageSrc: '/icons/red_flags_icon.svg',
-    linkPath: `${REPORT_PATH.RED_FLAGS}`,
-  },
-];
+export const DUMMY_CHALLENGE = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
+export const DUMMY_TIMESTAMP = 1712176850;
 
-/* Info: (20230814 - Shirley) ----- Chains ----- */
-export const chainList = ['eth', 'bit', 'usdt', 'bnb', 'isun'];
-
-export const chainIdToCurrencyName = [
-  { id: 'eth', name: 'Ethereum' },
-  { id: 'btc', name: 'Bitcoin' },
-  { id: 'usdt', name: 'Tether' },
-  { id: 'bnb', name: 'Binance Coin' },
-  { id: 'isun', name: 'iSunCloud' },
+export const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://www.isunfa.com',
+  'https://isunfa.com',
 ];

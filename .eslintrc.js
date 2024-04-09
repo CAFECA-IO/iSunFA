@@ -65,6 +65,7 @@ module.exports = {
         'react/jsx-wrap-multilines': 'off',
         'no-else-return': 'off',
         'import/no-extraneous-dependencies': 'off',
+        'no-nested-ternary': 'off',
       },
     },
   ],
@@ -116,6 +117,7 @@ module.exports = {
     'react/jsx-max-props-per-line': 'off',
     'react/jsx-tag-spacing': 'off',
     'react/jsx-wrap-multilines': 'off',
+    'no-nested-ternary': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

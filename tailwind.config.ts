@@ -46,11 +46,19 @@ module.exports = {
         hoverWhite: '#F0F0F0',
 
         primaryYellow: '#FFA502',
+        primaryYellow2: '#996301',
+
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
+
         lightGray: '#CED1D7',
         lightGray2: '#828998',
+        lightGray3: '#C1C9D5',
+        lightGray4: '#7F8A9D',
+
         navyBlue: '#002462',
+        navyBlue2: '#27354E',
+        darkBlue: '#1570EF',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',
@@ -91,6 +99,11 @@ module.exports = {
         '-10': '-10',
         '-1': '-1',
         5: '5',
+        10: '10',
+        20: '20',
+        30: '30',
+        40: '40',
+        50: '50',
         60: '60',
         70: '70',
         80: '80',

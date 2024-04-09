@@ -4,19 +4,14 @@ import { RxHamburgerMenu } from 'react-icons/rx';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
-import { client } from '@passwordless-id/webauthn';
 
-import { BFAURL } from '../../constants/url';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 
 import { TranslateFunction } from '../../interfaces/locale';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
-import { createChallenge } from '../../lib/utils/authorization';
-import { DUMMY_TIMESTAMP, ISUNFA_API } from '../../constants/config';
-import { ICredential } from '../../interfaces/webauthn';
-import { useUser } from '../../contexts/user_context';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
 const languages = [
   { label: 'EN', code: 'en' },
@@ -25,7 +20,6 @@ const languages = [
 ];
 
 function LandingNavBar() {
-  const { user, setUser } = useUser();
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const router = useRouter();
@@ -71,57 +65,6 @@ function LandingNavBar() {
   /* Info:(20230814 - Shirley) Change Navbar Background Style */
   const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
-  const signUpClickHandler = async () => {
-    try {
-      const newChallenge = await createChallenge(
-        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
-      );
-
-      const registration = await client.register('User', newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000,
-        attestation: true,
-        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
-        debug: false,
-      });
-
-      const rs = await fetch(ISUNFA_API.SIGN_UP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ registration }),
-      });
-
-      const data = (await rs.json()).payload as ICredential;
-
-      setUser(data);
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signUpClickHandler error:', error);
-    }
-  };
-
-  const signOutClickHandler = async () => {
-    try {
-      await fetch(ISUNFA_API.SIGN_OUT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ credential: user }),
-      });
-
-      setUser({} as ICredential);
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signOutClickHandler error:', error);
-    }
-  };
-
   /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
     <div
@@ -129,14 +72,14 @@ function LandingNavBar() {
     >
       <ul className="flex flex-1 items-center space-x-5 lg:space-x-10">
         <li>
-          <Link href={BFAURL.HOME} className="h-50px w-140px shrink-0">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-50px w-140px shrink-0">
             <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
           </Link>
         </li>
         <li>
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               <svg
@@ -192,7 +135,7 @@ function LandingNavBar() {
         <li>
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               {' '}
@@ -249,7 +192,7 @@ function LandingNavBar() {
         </li>
         <li>
           <Link
-            href={BFAURL.CONTACT_US}
+            href={ISUNFA_ROUTE.CONTACT_US}
             className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
           >
             {' '}
@@ -327,28 +270,8 @@ function LandingNavBar() {
           </li>
         </div>
         <li>
-          {user.publicKey ? (
-            <Button
-              onClick={signOutClickHandler}
-              className="flex space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.SIGN_OUT')}
-              </p>
-            </Button>
-          ) : (
-            <Button
-              onClick={signUpClickHandler}
-              className="flex space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
+          <Link href={ISUNFA_ROUTE.LOGIN}>
+            <Button className="flex space-x-3" disabled={IS_BUTTON_DISABLED_TEMP}>
               <p
                 className={cn(
                   'text-base leading-6 tracking-normal',
@@ -377,13 +300,13 @@ function LandingNavBar() {
                   )}
                 />
               </svg>
-            </Button>
-          )}
+            </Button>{' '}
+          </Link>
         </li>
         <li>
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
           {/* <Link
-            href={BFAURL.APP}
+            href={ISUNFA_ROUTE.APP}
             target="_blank"
             className="rounded-lg bg-primaryYellow text-secondaryBlue px-10 py-3 hover:bg-hoverWhite"
           >
@@ -401,7 +324,7 @@ function LandingNavBar() {
     >
       {/* Info: logo (20240321 - Shirley) */}
       <div>
-        <Link href={BFAURL.HOME}>
+        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           <Image src="/logo/isunfa_logo.svg" width={150} height={30} alt="iSunFA_logo" />
         </Link>
       </div>
@@ -467,7 +390,7 @@ function LandingNavBar() {
         <li className="w-full px-6 py-4">
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               <svg
@@ -524,7 +447,7 @@ function LandingNavBar() {
         <li className="w-full px-6 py-4">
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               {' '}
@@ -583,7 +506,7 @@ function LandingNavBar() {
         <li className="w-full px-6 py-4">
           {/* Info: contact us section (20240321 - Shirley) */}
           <Link
-            href={BFAURL.CONTACT_US}
+            href={ISUNFA_ROUTE.CONTACT_US}
             className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
           >
             {' '}
@@ -612,28 +535,8 @@ function LandingNavBar() {
           </Link>
         </li>
         <li className="w-full px-6 py-4">
-          {user.publicKey ? (
-            <Button
-              onClick={signOutClickHandler}
-              className="flex w-90vw space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
-              <p
-                className={cn(
-                  'text-base leading-6 tracking-normal',
-                  IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
-                  'group-hover:text-white'
-                )}
-              >
-                {t('NAV_BAR.SIGN_OUT')}
-              </p>
-            </Button>
-          ) : (
-            <Button
-              onClick={signUpClickHandler}
-              className="flex w-90vw space-x-3"
-              disabled={IS_BUTTON_DISABLED_TEMP}
-            >
+          <Link href={ISUNFA_ROUTE.LOGIN}>
+            <Button className="flex space-x-3" disabled={IS_BUTTON_DISABLED_TEMP}>
               <p
                 className={cn(
                   'text-base leading-6 tracking-normal',
@@ -662,8 +565,8 @@ function LandingNavBar() {
                   )}
                 />
               </svg>
-            </Button>
-          )}
+            </Button>{' '}
+          </Link>
         </li>
 
         {/* TODO: separate i18n component (20240403 - Shirley) */}
