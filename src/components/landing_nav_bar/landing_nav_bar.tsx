@@ -5,14 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 
-import { BFAURL } from '../../constants/url';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 
 import { TranslateFunction } from '../../interfaces/locale';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
-import { ISUNFA_ROUTE } from '../../constants/config';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
 const languages = [
   { label: 'EN', code: 'en' },
@@ -73,14 +72,14 @@ function LandingNavBar() {
     >
       <ul className="flex flex-1 items-center space-x-5 lg:space-x-10">
         <li>
-          <Link href={BFAURL.HOME} className="h-50px w-140px shrink-0">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-50px w-140px shrink-0">
             <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
           </Link>
         </li>
         <li>
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               <svg
@@ -136,7 +135,7 @@ function LandingNavBar() {
         <li>
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               {' '}
@@ -193,7 +192,7 @@ function LandingNavBar() {
         </li>
         <li>
           <Link
-            href={BFAURL.CONTACT_US}
+            href={ISUNFA_ROUTE.CONTACT_US}
             className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
           >
             {' '}
@@ -307,7 +306,7 @@ function LandingNavBar() {
         <li>
           {/* TODO: (20230115 - Shirley) hide the button as temporary solution */}
           {/* <Link
-            href={BFAURL.APP}
+            href={ISUNFA_ROUTE.APP}
             target="_blank"
             className="rounded-lg bg-primaryYellow text-secondaryBlue px-10 py-3 hover:bg-hoverWhite"
           >
@@ -325,7 +324,7 @@ function LandingNavBar() {
     >
       {/* Info: logo (20240321 - Shirley) */}
       <div>
-        <Link href={BFAURL.HOME}>
+        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           <Image src="/logo/isunfa_logo.svg" width={150} height={30} alt="iSunFA_logo" />
         </Link>
       </div>
@@ -391,7 +390,7 @@ function LandingNavBar() {
         <li className="w-full px-6 py-4">
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               <svg
@@ -448,7 +447,7 @@ function LandingNavBar() {
         <li className="w-full px-6 py-4">
           {!IS_BUTTON_DISABLED_TEMP ? (
             <Link
-              href={BFAURL.COMING_SOON}
+              href={ISUNFA_ROUTE.COMING_SOON}
               className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
             >
               {' '}
@@ -507,7 +506,7 @@ function LandingNavBar() {
         <li className="w-full px-6 py-4">
           {/* Info: contact us section (20240321 - Shirley) */}
           <Link
-            href={BFAURL.CONTACT_US}
+            href={ISUNFA_ROUTE.CONTACT_US}
             className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
           >
             {' '}

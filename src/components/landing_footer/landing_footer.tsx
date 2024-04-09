@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { BiLogoGithub } from 'react-icons/bi';
 import { BsTelephone } from 'react-icons/bs';
 import { FiMapPin } from 'react-icons/fi';
-import { BFAURL } from '../../constants/url';
+import { ISUNFA_ROUTE } from '../../constants/url';
 import {
   copyright,
   iSunFAAddress,
@@ -16,7 +16,7 @@ function LandingFooter() {
   return (
     <div className="flex flex-col space-y-12 bg-secondaryBlue px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-28">
       <div className="flex w-full flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
-        <Link href={BFAURL.HOME}>
+        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           {/* Info:(20230711 - Shirley) Desktop Logo */}
           <Image
             className="hidden lg:block"

@@ -5,7 +5,7 @@ import { TranslateFunction } from '../../interfaces/locale';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
-import { ISUNFA_ROUTE } from '../../constants/config';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
 const CTASection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');

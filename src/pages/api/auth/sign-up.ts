@@ -2,13 +2,14 @@ import cookie from 'cookie';
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDomains } from '../../../lib/utils/common';
-import { ICredential, IUser } from '../../../interfaces/webauthn';
-import { DUMMY_CHALLENGE } from '../../../constants/config';
+import { ICredential, IUserAuth } from '../../../interfaces/webauthn';
+import { COOKIE_NAME, DUMMY_CHALLENGE } from '../../../constants/config';
 
 type Data = {
-  payload: string | ICredential;
+  payload: null | IUserAuth;
 };
 
+const USERINFO_ARRAY: IUserAuth[] = [];
 const CREDENTIALS_ARRAY: ICredential[] = [];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
@@ -17,15 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       throw new Error('Only POST requests are allowed');
     }
 
-    const { host } = req.headers;
-    const { origin } = req.headers;
-
-    const origins = getDomains();
-    const filteredOrigins = origins.filter((o: string) => o.includes(origin as string));
-    // eslint-disable-next-line no-console
-    console.log('filteredOrigins', filteredOrigins);
+    // // eslint-disable-next-line no-console
+    // console.log('req.body in signUp', req.body);
 
     const { registration } = req.body;
+
+    const origins = getDomains();
 
     const expected = {
       challenge: DUMMY_CHALLENGE,
@@ -33,45 +31,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
 
     // eslint-disable-next-line no-console
-    console.log(
-      'origins',
-      origins,
-      'expected',
-      expected,
-      'host',
-      host,
-      'origin',
-      origin,
-      'registration',
-      registration
-    );
+    console.log('registration as param in signUp API', registration);
 
-    const registrationParsed = (await server.verifyRegistration(registration, expected)) as IUser;
+    const registrationParsed = (await server.verifyRegistration(
+      registration,
+      expected
+    )) as IUserAuth;
     const { credential } = registrationParsed;
 
+    USERINFO_ARRAY.push(registrationParsed);
     CREDENTIALS_ARRAY.push(credential);
 
     // eslint-disable-next-line no-console
-    console.log('CREDENTIALS_ARRAY', CREDENTIALS_ARRAY);
+    console.log('registrationParsed', registrationParsed);
 
     const expiration = new Date();
 
     expiration.setHours(expiration.getHours() + 1);
 
+    // res.setHeader(
+    //   'Set-Cookie',
+    //   cookie.serialize(COOKIE_NAME.USER_INFO, JSON.stringify(USERINFO_ARRAY), {
+    //     // httpOnly: true,
+    //     expires: expiration,
+    //     path: '/',
+    //   })
+    // );
+
     res.setHeader(
       'Set-Cookie',
-      cookie.serialize('FIDO2', JSON.stringify(CREDENTIALS_ARRAY), {
+      cookie.serialize(COOKIE_NAME.FIDO2, JSON.stringify(CREDENTIALS_ARRAY), {
         // httpOnly: true,
         expires: expiration,
         path: '/',
       })
     );
 
-    res.status(200).json({ payload: credential });
+    res.status(200).json({ payload: registrationParsed });
   } catch (error) {
     // TODO: handle authentication error (20240403 - Shirley)
     // eslint-disable-next-line no-console
     console.log('error in sign-up', error);
-    res.status(400).json({ payload: 'error' });
+    res.status(400).json({ payload: null });
   }
 }

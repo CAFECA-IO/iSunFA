@@ -1,3 +1,3 @@
 export interface RegisterFormModalProps {
-  userName: string;
+  username: string;
 }

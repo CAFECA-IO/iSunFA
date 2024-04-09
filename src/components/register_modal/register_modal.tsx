@@ -7,7 +7,7 @@ interface IRegisterModal extends RegisterFormModalProps {
   modalVisibilityHandler: () => void;
 }
 
-const RegisterModal = ({ userName, isModalVisible, modalVisibilityHandler }: IRegisterModal) => {
+const RegisterModal = ({ username, isModalVisible, modalVisibilityHandler }: IRegisterModal) => {
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="flex max-w-[407px] flex-col rounded-2xl border border-solid border-gray-300 bg-white shadow-xl">
       <div className="flex gap-2.5 bg-white py-4 pl-10 pr-5">
@@ -52,7 +52,7 @@ const RegisterModal = ({ userName, isModalVisible, modalVisibilityHandler }: IRe
       </div>
       <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal">
         <div className="flex gap-3">
-          <div className="justify-center rounded-md px-4 py-2 text-sky-950">Cancel</div>
+          <div className="justify-center rounded-md px-4 py-2 text-secondaryBlue">Cancel</div>
           <div className="justify-center rounded-md bg-slate-600 px-4 py-2 text-white">
             Register
           </div>

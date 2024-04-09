@@ -7,11 +7,13 @@ import { GlobalProvider } from '../contexts/global_context';
 
 function App({ Component, pageProps }: AppProps) {
   return (
-    <UserProvider>
-      <GlobalProvider>
-        <Component {...pageProps} />
-      </GlobalProvider>
-    </UserProvider>
+    <div className="selection:bg-primaryYellow selection:text-tertiaryBlue">
+      <UserProvider>
+        <GlobalProvider>
+          <Component {...pageProps} />
+        </GlobalProvider>
+      </UserProvider>{' '}
+    </div>
   );
 }
 

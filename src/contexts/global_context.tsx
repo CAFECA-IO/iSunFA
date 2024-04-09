@@ -21,9 +21,9 @@ const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
-  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(true);
+  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    userName: '',
+    username: '',
   });
 
   const passKeySupportModalVisibilityHandler = () => {
@@ -59,7 +59,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <RegisterFormModal
         isModalVisible={isRegisterModalVisible}
         modalVisibilityHandler={registerModalVisibilityHandler}
-        userName={registerModalData.userName}
       />
 
       {children}

@@ -46,13 +46,18 @@ module.exports = {
         hoverWhite: '#F0F0F0',
 
         primaryYellow: '#FFA502',
+        primaryYellow2: '#996301',
+
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
+
         lightGray: '#CED1D7',
         lightGray2: '#828998',
+        lightGray3: '#C1C9D5',
+        lightGray4: '#7F8A9D',
+
         navyBlue: '#002462',
-        primaryYellow2: '#996301',
-        secondaryBlue2: '#304872',
+        navyBlue2: '#27354E',
         darkBlue: '#1570EF',
       },
       backgroundImage: {

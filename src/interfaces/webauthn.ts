@@ -1,4 +1,4 @@
-export interface IUser {
+export interface IUserAuth {
   username: string;
   credential: ICredential;
   client: IClient;

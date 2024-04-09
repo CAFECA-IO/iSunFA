@@ -1,35 +1,58 @@
+/* eslint-disable */
 import { client } from '@passwordless-id/webauthn';
 
 import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
-import { ICredential } from '../interfaces/webauthn';
+import { ICredential, IUserAuth } from '../interfaces/webauthn';
 import { checkFIDO2Cookie, createChallenge } from '../lib/utils/authorization';
-import { DUMMY_TIMESTAMP, ISUNFA_API } from '../constants/config';
+import { DUMMY_TIMESTAMP } from '../constants/config';
+import { DEFAULT_USER_NAME } from '../constants/display';
+import { ISUNFA_API } from '../constants/url';
 
-interface UserContextType {
-  user: ICredential | null;
-  setUser: (user: ICredential) => void;
-  signUp: () => Promise<void>;
-  signOut: () => Promise<void>;
+interface SignUpProps {
+  username?: string;
 }
 
-const UserContext = createContext<UserContextType>({
-  user: {} as ICredential,
-  setUser: () => {},
+interface UserContextType {
+  credential: ICredential | null;
+  signUp: ({ username }: SignUpProps) => Promise<void>;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
+  userAuth: IUserAuth | null;
+}
+
+export const UserContext = createContext<UserContextType>({
+  credential: {} as ICredential,
   signUp: async () => {},
+  signIn: async () => {},
   signOut: async () => {},
+  userAuth: {} as IUserAuth,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser, userRef] = useStateRef<ICredential | null>(null);
+  const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
+  const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
 
-  const signUp = async () => {
+  const signUp = async ({ username }: SignUpProps) => {
+    const name = username || DEFAULT_USER_NAME;
+    console.log('signUp called');
+
     try {
+      // const preflight = await fetch(ISUNFA_API.SIGN_UP, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ test: name }),
+      // });
+
+      // console.log('prefight:', preflight);
+
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
       );
 
-      const registration = await client.register('User', newChallenge, {
+      const registration = await client.register(name, newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
@@ -46,9 +69,56 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ registration }),
       });
 
-      const data = (await rs.json()).payload as ICredential;
+      const data = (await rs.json()).payload as IUserAuth;
+      const credential = data.credential as ICredential;
 
-      setUser(data);
+      setUserAuth(data);
+      setCredential(credential);
+
+      // TODO: workaround for demo for registration (20240409 - Shirley)
+      if (data) {
+        const registrationArray = JSON.parse(localStorage.getItem('registrationArray') || '[]');
+        registrationArray.push(data);
+        localStorage.setItem('registrationArray', JSON.stringify(registrationArray));
+      }
+    } catch (error) {
+      // Deprecated: dev (20240410 - Shirley)
+      // eslint-disable-next-line no-console
+      console.error('signUp error:', error);
+    }
+  };
+
+  // TODO: refactor the signIn function (20240409 - Shirley)
+  const signIn = async () => {
+    console.log('signIn called');
+    try {
+      const newChallenge = await createChallenge(
+        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
+      );
+
+      const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
+        authenticatorType: 'both',
+        userVerification: 'required',
+        timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
+        attestation: true,
+        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
+        debug: false,
+      });
+
+      // TODO: refactor the signIn function (20240409 - Shirley)
+      const rs = await fetch(ISUNFA_API.SIGN_UP, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ registration }),
+      });
+
+      const data = (await rs.json()).payload as IUserAuth;
+      const credential = data.credential as ICredential;
+
+      setUserAuth(data);
+      setCredential(credential);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -63,10 +133,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ credential: user }),
+        body: JSON.stringify({ credential }),
       });
 
-      setUser(null);
+      setCredential(null);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -74,10 +144,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
-    const credential = checkFIDO2Cookie();
+    const credentialFromCookie = checkFIDO2Cookie();
     // eslint-disable-next-line no-console
-    console.log('in userContext, credential:', credential);
+    console.log('in userContext, credential:', credentialFromCookie);
 
     /* TODO: verify the cookie content (20240408 - Shirley)
     // const expected = {
@@ -90,12 +161,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // const auth = await server.verifyAuthentication();
     */
 
-    if (credential) {
-      setUser(credential[0]);
+    if (credentialFromCookie) {
+      setCredential(credentialFromCookie[0]);
     }
-
-    // eslint-disable-next-line no-console
-    console.log('userRef.current:', userRef.current, 'if credential:', !!credential);
   };
 
   const init = async () => {
@@ -111,8 +179,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ user: userRef.current, setUser, signUp, signOut }),
-    [userRef.current]
+    () => ({
+      credential: credentialRef.current,
+      signUp,
+      signIn,
+      signOut,
+      userAuth: userAuthRef.current,
+    }),
+    [credentialRef.current]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };

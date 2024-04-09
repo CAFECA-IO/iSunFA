@@ -2,17 +2,32 @@
 import React from 'react';
 import { Button } from '../button/button';
 import { useUser } from '../../contexts/user_context';
+import { useGlobal } from '../../contexts/global_context';
 
 const LoginPageBody = () => {
-  const { signUp } = useUser();
+  const { signUp, signIn } = useUser();
+  const {
+    registerModalData,
+    registerModalVisibilityHandler,
+    registerModalDataHandler,
+    passKeySupportModalVisibilityHandler,
+  } = useGlobal();
+
+  const registerClickHandler = async () => {
+    registerModalVisibilityHandler();
+  };
+
+  const showPassKeySupport = () => {
+    passKeySupportModalVisibilityHandler();
+  };
 
   const logInClickHandler = async () => {
     try {
-      await signUp();
+      await signIn();
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
-      console.error('signUp error:', error);
+      console.error('signIn error:', error);
     }
   };
   return (
@@ -50,7 +65,7 @@ const LoginPageBody = () => {
                     </div>
                   </div>
                   <Button
-                    variant={'secondary2'}
+                    variant={'tertiary'}
                     onClick={logInClickHandler}
                     className="mt-10 flex justify-center gap-2 rounded-md px-2 py-3.5 max-lg:px-5"
                   >
@@ -77,6 +92,7 @@ const LoginPageBody = () => {
                     </div>
                   </Button>
                   <button
+                    onClick={registerClickHandler}
                     type="button"
                     className="mt-10 flex max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-darkBlue hover:opacity-70"
                   >
@@ -85,6 +101,7 @@ const LoginPageBody = () => {
                 </div>
                 <div className="mt-32 flex justify-center gap-1 rounded-md px-4 py-2 max-lg:mt-10">
                   <button
+                    onClick={showPassKeySupport}
                     type="button"
                     className="text-sm font-medium leading-5 tracking-normal text-secondaryBlue hover:opacity-70"
                   >

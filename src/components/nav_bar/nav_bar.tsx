@@ -1,15 +1,16 @@
 /* eslint-disable */
 import Link from 'next/link';
 import React from 'react';
-import { ISUNFA_ROUTE } from '../../constants/config';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { useUser } from '../../contexts/user_context';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
+import { ISUNFA_ROUTE } from '../../constants/url';
+import { DEFAULT_USER_NAME } from '../../constants/display';
 
 const NavBar = () => {
-  const { user, signOut } = useUser();
+  const { credential: credential, userAuth, signOut } = useUser();
 
   // const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
 
@@ -43,44 +44,44 @@ const NavBar = () => {
         />
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-secondaryBlue">
-            Joyce
+            {userAuth?.username ?? DEFAULT_USER_NAME}
           </div>
-          <div className="flex flex-col justify-center rounded-md p-2.5">
+          <button className="flex flex-col justify-center rounded-md p-2.5">
             <div className="flex items-center justify-center">
               <img
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/81424e1f4bb6c5d2f3b559ea40f9f188932a4c8bd82176e3de86e8257c95ec6e?apiKey=0e17b0b875f041659e186639705112b1&"
                 className="aspect-square w-4"
               />
             </div>
-          </div>
+          </button>
         </div>
         <div className="mt-3 flex flex-col justify-center">
           <div className="flex flex-col justify-center">
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
-        <div className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/b2440bc7dff988603a015147398e81878220ce5264999f173e13e28a3f19ba26?apiKey=0e17b0b875f041659e186639705112b1&"
               className="aspect-square w-5"
             />
           </div>
-          <div className="text-base font-medium leading-6 tracking-normal text-sky-950">
+          <div className="text-base font-medium leading-6 tracking-normal text-secondaryBlue">
             Subscription & Bills
           </div>
-        </div>
-        <div className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
+        </button>
+        <button className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/d483779fe7b5d1853e7ad9a6a31acef6c171fae39e7875d3e3e346af17601c37?apiKey=0e17b0b875f041659e186639705112b1&"
               className="aspect-square w-5"
             />
           </div>
-          <div className="text-base font-medium leading-6 tracking-normal text-sky-950">
+          <div className="text-base font-medium leading-6 tracking-normal text-secondaryBlue">
             Setting
           </div>
-        </div>
+        </button>
         <div className="mt-3 flex flex-col justify-center py-2.5">
           <div className="flex flex-col justify-center">
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
@@ -97,7 +98,7 @@ const NavBar = () => {
               className="aspect-square w-5"
             />
           </div>
-          <div className="text-base font-medium leading-6 tracking-normal text-secondaryBlue2">
+          <div className="text-base font-medium leading-6 tracking-normal text-tertiaryBlue">
             Logout
           </div>
         </button>
@@ -105,36 +106,10 @@ const NavBar = () => {
     </div>
   ) : null;
 
-  const displayedLogInBtn = user ? (
+  const displayedLogInBtn = credential ? (
     <div ref={userMenuRef}>
       <button onClick={avatarClickHandler}>
         {/* Info: avatar svg (20240408 - Shirley) */}
-        {/* <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="55"
-          height="55"
-          fill="none"
-          viewBox="0 0 201 200"
-        >
-          <path
-            fill="#CDD1D9"
-            d="M.5 100C.5 44.772 45.272 0 100.5 0s100 44.772 100 100-44.772 100-100 100S.5 155.228.5 100z"
-          ></path>
-          <g clipPath="url(#clip0_13_13411)">
-            <path
-              fill="#7F8A9D"
-              fillRule="evenodd"
-              d="M100.5 68.013c-11.942 0-21.623 9.68-21.623 21.622 0 8.151 4.51 15.249 11.17 18.934a31.953 31.953 0 00-19.976 20.439 2.286 2.286 0 002.177 2.984h56.503a2.284 2.284 0 002.176-2.984 31.956 31.956 0 00-19.975-20.439c6.661-3.685 11.171-10.782 11.171-18.934 0-11.942-9.681-21.622-21.623-21.622z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-          <defs>
-            <clipPath id="clip0_13_13411">
-              <path fill="#fff" d="M0 0H64V64H0z" transform="translate(68.5 68)"></path>
-            </clipPath>
-          </defs>
-        </svg> */}
-
         <img
           srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&"
           className="mx-auto aspect-square w-14 self-center"
@@ -173,60 +148,83 @@ const NavBar = () => {
   return (
     <div className="flex gap-5 bg-white px-20 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
       <div className="my-auto flex flex-1 items-center">
-        {/* <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="hover:cursor-pointer">
-          <button>
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/79eb16f9c7866b8e853d6895f4b61e254cf0997890a7f98b21eaffb1f1a2e768?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="my-auto aspect-[5] w-[147px] max-w-full shrink-0"
-            />
-          </button>
-        </Link> */}
-
         <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           <Image src="/logo/isunfa_logo_light.svg" width={150} height={30} alt="iSunFA_logo" />
         </Link>
 
         {/* TODO: links on mobile (20240408 - Shirley) */}
         <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
-          <div className="flex justify-center gap-2 rounded-md px-6 py-2.5 max-md:px-5 lg:ml-10">
+          <Link
+            href={`${credential ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
+            className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-secondaryBlue hover:text-primaryYellow max-md:px-5 lg:ml-10"
+          >
             <div className="my-auto flex items-center justify-center">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/d31529544b7dc38d8d030195243241524f2df1ac1d2b511f595847c2f5b6ea0f?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-square w-5"
-              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 20 20"
+              >
+                <g>
+                  <path
+                    className={`fill-current`}
+                    fillRule="evenodd"
+                    d="M6.462 1.501h7.08c.667 0 1.226 0 1.684.037.479.04.934.125 1.365.345a3.5 3.5 0 011.53 1.53l-.891.453.891-.454c.22.432.305.887.344 1.366.038.458.038 1.017.037 1.683v7.08c0 .666 0 1.226-.037 1.684-.04.478-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.431.22-.886.305-1.365.344-.458.037-1.018.037-1.683.037h-7.08c-.667 0-1.226 0-1.684-.037-.479-.04-.934-.124-1.366-.344l.454-.891-.454.89a3.5 3.5 0 01-1.53-1.529c-.22-.432-.304-.887-.343-1.365-.038-.458-.038-1.018-.038-1.684v-7.08c0-.666 0-1.225.038-1.683.039-.479.124-.934.344-1.366a3.5 3.5 0 011.53-1.53c.431-.22.886-.304 1.365-.344.458-.037 1.017-.037 1.683-.037zm-2.96 7v5c0 .717.001 1.194.031 1.56.03.356.08.518.133.621a1.5 1.5 0 00.655.656c.103.052.266.103.62.132.368.03.845.031 1.561.031v-8h-3zm4-2h-4c0-.716.001-1.194.031-1.56.03-.356.08-.518.133-.62a1.5 1.5 0 01.655-.656c.103-.053.266-.104.62-.133.368-.03.845-.03 1.561-.03h7c.717 0 1.194 0 1.561.03.355.029.518.08.62.133a1.5 1.5 0 01.656.655c.052.103.104.265.133.62.03.367.03.845.03 1.561h-9zm1 2v8h5c.717 0 1.194 0 1.561-.03.355-.03.518-.081.62-.133a1.5 1.5 0 00.656-.656c.052-.103.104-.265.133-.62.03-.367.03-.844.03-1.56v-5h-8z"
+                    clipRule="evenodd"
+                  ></path>
+                </g>
+              </svg>
             </div>
-            <div className="text-base font-medium leading-6 tracking-normal text-sky-950">
-              Dashboard
-            </div>
-          </div>
-          <div className="flex justify-center gap-2 rounded-md px-6 py-2.5 max-md:px-5">
+            <div className="text-base font-medium leading-6 tracking-normal">Dashboard</div>
+          </Link>
+          <Link
+            href={ISUNFA_ROUTE.CONTACT_US}
+            className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-secondaryBlue hover:text-primaryYellow max-md:px-5"
+          >
             <div className="my-auto flex items-center justify-center">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/00785578cffc6d10414ae2447b0f22fb917caedb58d13d8cbd490b0e0829c798?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-square w-5"
-              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 20 20"
+              >
+                <g>
+                  <path
+                    className={`fill-current`}
+                    fillRule="evenodd"
+                    d="M5.629 2.334H14.376c.666 0 1.225 0 1.683.038.479.039.934.124 1.366.344a3.5 3.5 0 011.53 1.53c.209.41.296.843.337 1.296.047.152.055.31.03.462.014.375.014.804.014 1.29v5.414c0 .666 0 1.225-.038 1.683-.039.479-.124.934-.344 1.366a3.5 3.5 0 01-1.53 1.53c-.431.22-.886.304-1.365.343-.458.038-1.017.038-1.683.038H5.629c-.666 0-1.225 0-1.683-.038-.48-.039-.934-.124-1.366-.344a3.5 3.5 0 01-1.53-1.53c-.22-.431-.304-.886-.344-1.365C.67 13.933.67 13.374.67 12.708V7.294c0-.486 0-.915.015-1.29a1 1 0 01.028-.462c.042-.453.13-.885.339-1.297a3.5 3.5 0 011.53-1.53c.431-.22.886-.304 1.365-.343.458-.038 1.017-.038 1.683-.038zm-2.96 5.421v4.913c0 .716 0 1.194.03 1.56.03.355.081.518.134.62a1.5 1.5 0 00.655.656c.103.053.265.104.62.133.367.03.845.03 1.561.03h8.667c.716 0 1.194 0 1.56-.03.355-.029.518-.08.62-.133a1.5 1.5 0 00.656-.655c.053-.103.104-.266.133-.62.03-.367.03-.845.03-1.561V7.755l-5.23 3.661a58.34 58.34 0 00-.103.073c-.445.313-.87.61-1.355.732a2.666 2.666 0 01-1.29 0c-.485-.121-.91-.42-1.354-.732l-.103-.073-5.23-3.66zm14.58-2.38l-6.29 4.403c-.62.433-.719.483-.795.502a.667.667 0 01-.323 0c-.076-.019-.176-.069-.794-.502l-6.29-4.403c.022-.101.049-.17.076-.222a1.5 1.5 0 01.655-.655c.103-.053.265-.104.62-.133.367-.03.845-.03 1.561-.03h8.667c.716 0 1.194 0 1.56.03.355.03.518.08.62.133a1.5 1.5 0 01.656.655c.027.053.053.12.077.222z"
+                    clipRule="evenodd"
+                  ></path>
+                </g>
+              </svg>
             </div>
-            <div className="text-base font-medium leading-6 tracking-normal text-sky-950">
-              Contact us
-            </div>
-          </div>
+            <div className="text-base font-medium leading-6 tracking-normal">Contact us</div>
+          </Link>
         </div>
       </div>
       {/* TODO: icons on mobile (20240408 - Shirley) */}
       <div className="hidden lg:flex">
         {' '}
-        <img
-          src="https://cdn.builder.io/api/v1/image/assets/TEMP/2877bbab5cccb7768a604540dd0cd835d42ae35e297c9ff8683f42d4f47d452d?apiKey=0e17b0b875f041659e186639705112b1&"
-          className="aspect-[0.96] w-[54px] shrink-0"
-        />
-        <img
-          src="https://cdn.builder.io/api/v1/image/assets/TEMP/647bd813d087045224639d423f9d557bee48cba56c3c1cf8b1b3ad253b6b8444?apiKey=0e17b0b875f041659e186639705112b1&"
-          className="aspect-square w-14 shrink-0"
-        />
-        <img
-          src="https://cdn.builder.io/api/v1/image/assets/TEMP/5ff6657b0681d98b7c58359e8d3861a8b640576f5b4bd6873fa523bdb17b1110?apiKey=0e17b0b875f041659e186639705112b1&"
-          className="aspect-square w-14 shrink-0"
-        />
+        <button>
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets/TEMP/2877bbab5cccb7768a604540dd0cd835d42ae35e297c9ff8683f42d4f47d452d?apiKey=0e17b0b875f041659e186639705112b1&"
+            className="aspect-[0.96] w-[54px] shrink-0"
+          />
+        </button>
+        <button>
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets/TEMP/647bd813d087045224639d423f9d557bee48cba56c3c1cf8b1b3ad253b6b8444?apiKey=0e17b0b875f041659e186639705112b1&"
+            className="aspect-square w-14 shrink-0"
+          />
+        </button>
+        <button>
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets/TEMP/5ff6657b0681d98b7c58359e8d3861a8b640576f5b4bd6873fa523bdb17b1110?apiKey=0e17b0b875f041659e186639705112b1&"
+            className="aspect-square w-14 shrink-0"
+          />
+        </button>
       </div>
 
       <div className="flex flex-col items-start justify-center">

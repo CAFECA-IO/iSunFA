@@ -13,7 +13,9 @@ const buttonVariants = cva(
         // TODO: add more variants (20240319 - Shirley)
         // outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         // secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        secondary2: 'bg-secondaryBlue2 text-white hover:bg-secondaryBlue2/80',
+        tertiary: 'bg-tertiaryBlue text-white hover:bg-tertiaryBlue/80',
+        // outline:
+        //   'border border-navyBlue2 text-navyBlue2 hover:border-primaryYellow group-hover:border-primaryYellow group-hover:text-primaryYellow',
       },
       size: {
         default: 'px-6 py-3',

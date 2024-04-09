@@ -3,19 +3,18 @@ import Head from 'next/head';
 import React, { useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '../../components/nav_bar/nav_bar';
-import LoginPageBody from '../../components/login_page_body/login_page_body';
 import { ILocale } from '../../interfaces/locale';
 import { useUser } from '../../contexts/user_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
 
-const LoginPage = () => {
+const DashboardPage = () => {
   const router = useRouter();
+
   const { credential } = useUser();
 
   useEffect(() => {
-    if (credential) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-      // window.location.href = '/users/dashboard';
+    if (!credential) {
+      router.push(ISUNFA_ROUTE.LOGIN);
     }
   }, [credential]);
 
@@ -26,7 +25,7 @@ const LoginPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Login - iSunFA</title>
+        <title>Dashboard - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -46,7 +45,9 @@ const LoginPage = () => {
           <NavBar />
         </div>
 
-        <LoginPageBody />
+        <div className="flex h-screen w-screen items-center justify-center bg-white text-xl text-black">
+          Dashboard
+        </div>
       </div>
     </>
   );
@@ -60,4 +61,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default LoginPage;
+export default DashboardPage;
