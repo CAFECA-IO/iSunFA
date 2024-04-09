@@ -8,7 +8,7 @@ export const ISUNFA_API = {
 
 export const ISUNFA_ROUTE = {
   LANDING_PAGE: '/',
-  LOGIN: '/auth/login',
+  LOGIN: '/users/login',
 };
 
 export const AUTH_PERIOD = 60 * 60; // 1 hr
