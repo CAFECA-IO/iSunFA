@@ -59,7 +59,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         attestation: true,
         userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
-        // discoverable: 'required',
+        // discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
 
       const rs = await fetch(ISUNFA_API.SIGN_UP, {
@@ -93,33 +93,73 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async () => {
     console.log('signIn called');
     try {
+      // const signInClickHandler = async () => {
+      //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
+      //   const authentication = await client.authenticate([], challenge, {
+      //     authenticatorType: 'both',
+      //     userVerification: 'required',
+      //     timeout: 60000,
+      //   });
+
+      //   const isSignedIn = await fetch(ISUNFA_API.SIGN_IN, {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({ authentication }),
+      //   });
+      //   // eslint-disable-next-line no-console
+      //   console.log('authentication', authentication);
+      // };
+
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
       );
 
-      const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
+      const authentication = await client.authenticate([], newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
-        attestation: true,
-        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
       });
 
-      // TODO: refactor the signIn function (20240409 - Shirley)
-      const rs = await fetch(ISUNFA_API.SIGN_UP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ registration }),
-      });
+      console.log('in signIn, authentication:', authentication);
 
-      const data = (await rs.json()).payload as IUserAuth;
-      const credential = data.credential as ICredential;
+      // const rs = await fetch(ISUNFA_API.SIGN_IN, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ authentication }),
+      // });
 
-      setUserAuth(data);
-      setCredential(credential);
+      // const data = (await rs.json()).payload;
+
+      // console.log('in signIn, rs:', rs);
+
+      // const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
+      //   authenticatorType: 'both',
+      //   userVerification: 'required',
+      //   timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
+      //   attestation: true,
+      //   userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
+      //   debug: false,
+      // });
+
+      // // TODO: refactor the signIn function (20240409 - Shirley)
+      // const rs = await fetch(ISUNFA_API.SIGN_UP, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ registration }),
+      // });
+
+      // const data = (await rs.json()).payload as IUserAuth;
+      // const credential = data.credential as ICredential;
+
+      // setUserAuth(data);
+      // setCredential(credential);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
