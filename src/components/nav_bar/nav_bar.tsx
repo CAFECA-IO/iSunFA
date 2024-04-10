@@ -60,7 +60,7 @@ const NavBar = () => {
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
-        <button className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-md px-4 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/b2440bc7dff988603a015147398e81878220ce5264999f173e13e28a3f19ba26?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -71,7 +71,7 @@ const NavBar = () => {
             Subscription & Bills
           </div>
         </button>
-        <button className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-md px-4 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/d483779fe7b5d1853e7ad9a6a31acef6c171fae39e7875d3e3e346af17601c37?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -90,7 +90,7 @@ const NavBar = () => {
         <button
           type="button"
           onClick={logOutClickHandler}
-          className="mt-3 flex w-full gap-2 rounded-md px-6 py-2.5 hover:opacity-70"
+          className="mt-3 flex w-full gap-2 rounded-md px-4 py-2.5 hover:opacity-70"
         >
           <div className="my-auto flex items-center justify-center">
             <img

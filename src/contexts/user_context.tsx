@@ -59,6 +59,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         attestation: true,
         userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
+        // discoverable: 'required',
       });
 
       const rs = await fetch(ISUNFA_API.SIGN_UP, {
