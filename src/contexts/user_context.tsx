@@ -112,11 +112,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       //   console.log('authentication', authentication);
       // };
 
-      const getRegisteredUser = JSON.parse(localStorage.getItem('registrationArray') || '[]');
-      const user = getRegisteredUser.find(
-        (u: IUserAuth) => u.username === DEFAULT_USER_NAME
-      ) as IUserAuth;
-      console.log('user in signIn:', user);
+      /* TODO: get user from localStorage (20240409 - Shirley)
+      // const getRegisteredUser = JSON.parse(localStorage.getItem('registrationArray') || '[]');
+      // const user = getRegisteredUser.find(
+      //   (u: IUserAuth) => u.username === DEFAULT_USER_NAME
+      // ) as IUserAuth;
+      // console.log('user in signIn:', user);
+      */
 
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
@@ -131,6 +133,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log('in signIn, authentication:', authentication);
 
+      /* TODO: get user from localStorage (20240409 - Shirley)
       if (!!user) {
         const existChallenge = user.client.challenge;
         const originArrayBuffer = utils.parseBase64url(existChallenge);
@@ -139,12 +142,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         // eslint-disable-next-line no-console
         console.log('originTimestamp:', originTimestamp);
       }
+      */
 
       // TODO: uncomment
       if (authentication) {
-        const { credential } = user;
-        setUsername(user.username);
-        setCredential(credential);
+        // const { credential } = user;
+        // setUsername(user.username);
+        setCredential({} as ICredential);
       }
 
       // const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
