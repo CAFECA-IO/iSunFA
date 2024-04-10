@@ -99,21 +99,36 @@ const LoginPageBody = () => {
                     <div className="justify-center rounded-md">Register my Device</div>
                   </button>
                 </div>
-                <div className="mt-32 flex justify-center gap-1 rounded-md px-4 py-2 max-lg:mt-10">
-                  <button
+                <button
+                  type="button"
+                  onClick={showPassKeySupport}
+                  className="mt-32 flex justify-center gap-1 rounded-md px-4 py-2 hover:opacity-70 max-lg:mt-10"
+                >
+                  <div
                     onClick={showPassKeySupport}
-                    type="button"
-                    className="text-sm font-medium leading-5 tracking-normal text-secondaryBlue hover:opacity-70"
+                    className="text-sm font-medium leading-5 tracking-normal text-secondaryBlue"
                   >
                     Login Environment Tips
-                  </button>
-                  <div className="my-auto flex items-center justify-center">
-                    <img
-                      src="https://cdn.builder.io/api/v1/image/assets/TEMP/4b8136d5ec9c9c5e03705f7b20b01e8334a90bebee9a8f507f4ec5dbad2f1971?apiKey=0e17b0b875f041659e186639705112b1&"
-                      className="aspect-square w-4"
-                    />
                   </div>
-                </div>
+                  <div className="my-auto flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="17"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 17 16"
+                    >
+                      <g>
+                        <path
+                          fill="#001840"
+                          fillRule="evenodd"
+                          d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        ></path>
+                      </g>
+                    </svg>
+                  </div>
+                </button>
               </div>
             </div>
           </div>

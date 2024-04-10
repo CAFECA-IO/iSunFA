@@ -10,7 +10,7 @@ import { ISUNFA_ROUTE } from '../../constants/url';
 import { DEFAULT_USER_NAME } from '../../constants/display';
 
 const NavBar = () => {
-  const { credential: credential, userAuth, signOut } = useUser();
+  const { credential: credential, signOut, username } = useUser();
 
   // const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
 
@@ -44,9 +44,9 @@ const NavBar = () => {
         />
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-secondaryBlue">
-            {userAuth?.username ?? DEFAULT_USER_NAME}
+            {credential ? (!!username ? username : DEFAULT_USER_NAME) : ''}
           </div>
-          <button className="flex flex-col justify-center rounded-md p-2.5">
+          <button className="flex shrink-0 flex-col justify-center rounded-md p-2.5">
             <div className="flex items-center justify-center">
               <img
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/81424e1f4bb6c5d2f3b559ea40f9f188932a4c8bd82176e3de86e8257c95ec6e?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -60,7 +60,7 @@ const NavBar = () => {
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
-        <button className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-md px-4 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/b2440bc7dff988603a015147398e81878220ce5264999f173e13e28a3f19ba26?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -71,7 +71,7 @@ const NavBar = () => {
             Subscription & Bills
           </div>
         </button>
-        <button className="mt-3 flex gap-2 rounded-md px-6 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-md px-4 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/d483779fe7b5d1853e7ad9a6a31acef6c171fae39e7875d3e3e346af17601c37?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -90,7 +90,7 @@ const NavBar = () => {
         <button
           type="button"
           onClick={logOutClickHandler}
-          className="mt-3 flex w-full gap-2 rounded-md px-6 py-2.5 hover:opacity-70"
+          className="mt-3 flex w-full gap-2 rounded-md px-4 py-2.5 hover:opacity-70"
         >
           <div className="my-auto flex items-center justify-center">
             <img

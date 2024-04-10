@@ -1,13 +1,14 @@
 /* eslint-disable */
-import { client } from '@passwordless-id/webauthn';
+import { client, utils } from '@passwordless-id/webauthn';
 
 import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { ICredential, IUserAuth } from '../interfaces/webauthn';
 import { checkFIDO2Cookie, createChallenge } from '../lib/utils/authorization';
-import { DUMMY_TIMESTAMP } from '../constants/config';
+import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '../constants/config';
 import { DEFAULT_USER_NAME } from '../constants/display';
 import { ISUNFA_API } from '../constants/url';
+import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 
 interface SignUpProps {
   username?: string;
@@ -19,6 +20,7 @@ interface UserContextType {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   userAuth: IUserAuth | null;
+  username: string | null;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -27,27 +29,19 @@ export const UserContext = createContext<UserContextType>({
   signIn: async () => {},
   signOut: async () => {},
   userAuth: {} as IUserAuth,
+  username: '',
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
+  const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_USER_NAME;
     console.log('signUp called');
 
     try {
-      // const preflight = await fetch(ISUNFA_API.SIGN_UP, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ test: name }),
-      // });
-
-      // console.log('prefight:', preflight);
-
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
       );
@@ -57,8 +51,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         userVerification: 'required',
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
         attestation: true,
-        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
+        userHandle: FIDO2_USER_HANDLE, // TODO: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
+        discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
 
       const rs = await fetch(ISUNFA_API.SIGN_UP, {
@@ -72,6 +67,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const data = (await rs.json()).payload as IUserAuth;
       const credential = data.credential as ICredential;
 
+      setUsername(data.username);
       setUserAuth(data);
       setCredential(credential);
 
@@ -89,36 +85,95 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // TODO: refactor the signIn function (20240409 - Shirley)
+  /* TODO: (20240410 - Shirley)
+      拿登入聲明書 / 用戶條款 / challenge
+      先檢查 cookie ，然後檢查是否有 credential 、驗證 credential 有沒有過期或亂寫，
+      拿著 credential 跟 server 去拿 member 資料、付錢資料
+  */
   const signIn = async () => {
     console.log('signIn called');
     try {
+      // const signInClickHandler = async () => {
+      //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
+      //   const authentication = await client.authenticate([], challenge, {
+      //     authenticatorType: 'both',
+      //     userVerification: 'required',
+      //     timeout: 60000,
+      //   });
+
+      //   const isSignedIn = await fetch(ISUNFA_API.SIGN_IN, {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({ authentication }),
+      //   });
+      //   // eslint-disable-next-line no-console
+      //   console.log('authentication', authentication);
+      // };
+
+      /* TODO: get user from localStorage (20240409 - Shirley)
+      // const getRegisteredUser = JSON.parse(localStorage.getItem('registrationArray') || '[]');
+      // const user = getRegisteredUser.find(
+      //   (u: IUserAuth) => u.username === DEFAULT_USER_NAME
+      // ) as IUserAuth;
+      // console.log('user in signIn:', user);
+      */
+
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
       );
 
-      const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
+      const authentication: AuthenticationEncoded = await client.authenticate([], newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
-        attestation: true,
-        userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
       });
 
-      // TODO: refactor the signIn function (20240409 - Shirley)
-      const rs = await fetch(ISUNFA_API.SIGN_UP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ registration }),
-      });
+      console.log('in signIn, authentication:', authentication);
 
-      const data = (await rs.json()).payload as IUserAuth;
-      const credential = data.credential as ICredential;
+      /* TODO: get user from localStorage (20240409 - Shirley)
+      if (!!user) {
+        const existChallenge = user.client.challenge;
+        const originArrayBuffer = utils.parseBase64url(existChallenge);
+        const originChallenge = utils.parseBuffer(originArrayBuffer);
+        const originTimestamp = originChallenge.split('-')[1];
+        // eslint-disable-next-line no-console
+        console.log('originTimestamp:', originTimestamp);
+      }
+      */
 
-      setUserAuth(data);
-      setCredential(credential);
+      // TODO: uncomment
+      if (authentication) {
+        // const { credential } = user;
+        // setUsername(user.username);
+        setCredential({} as ICredential);
+      }
+
+      // const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
+      //   authenticatorType: 'both',
+      //   userVerification: 'required',
+      //   timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
+      //   attestation: true,
+      //   userHandle: 'iSunFA-', // TODO: optional userId less than 64 bytes (20240403 - Shirley)
+      //   debug: false,
+      // });
+
+      // // TODO: refactor the signIn function (20240409 - Shirley)
+      // const rs = await fetch(ISUNFA_API.SIGN_UP, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ registration }),
+      // });
+
+      // const data = (await rs.json()).payload as IUserAuth;
+      // const credential = data.credential as ICredential;
+
+      // setUserAuth(data);
+      // setCredential(credential);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -136,6 +191,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ credential }),
       });
 
+      setUserAuth(null);
+      setUsername(null);
       setCredential(null);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
@@ -185,6 +242,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       signIn,
       signOut,
       userAuth: userAuthRef.current,
+      username: usernameRef.current,
     }),
     [credentialRef.current]
   );

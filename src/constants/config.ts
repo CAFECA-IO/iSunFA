@@ -157,6 +157,10 @@ export const DUMMY_TIMESTAMP = 1712176850;
 export const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3003',
   'https://www.isunfa.com',
   'https://isunfa.com',
 ];
+
+export const FIDO2_USER_HANDLE = 'iSunFA-User';
