@@ -6,17 +6,18 @@ import NavBar from '../../components/nav_bar/nav_bar';
 import { ILocale } from '../../interfaces/locale';
 import { useUser } from '../../contexts/user_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
+import DashboardPageBody from '../../components/dashboard_page_body/dashboard_page_body';
 
 const DashboardPage = () => {
   const router = useRouter();
 
-  const { credential } = useUser();
+  const { signedIn } = useUser();
 
   useEffect(() => {
-    if (!credential) {
+    if (!signedIn) {
       router.push(ISUNFA_ROUTE.LOGIN);
     }
-  }, [credential]);
+  }, [signedIn]);
 
   return (
     <>
@@ -40,14 +41,16 @@ const DashboardPage = () => {
         />
       </Head>
 
-      <div className="h-screen bg-white">
+      <div className="h-screen font-barlow">
         <div className="">
           <NavBar />
         </div>
 
-        <div className="flex h-screen w-screen items-center justify-center bg-white text-xl text-black">
+        <DashboardPageBody />
+
+        {/* <div className="flex h-screen w-screen items-center justify-center bg-white text-xl text-black">
           Dashboard
-        </div>
+        </div> */}
       </div>
     </>
   );

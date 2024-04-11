@@ -50,6 +50,7 @@ module.exports = {
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
+        tertiaryBlue2: '#002462B2',
 
         lightGray: '#CED1D7',
         lightGray2: '#828998',

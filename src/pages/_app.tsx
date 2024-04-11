@@ -4,14 +4,17 @@ import type { AppProps } from 'next/app';
 import React from 'react';
 import { UserProvider } from '../contexts/user_context';
 import { GlobalProvider } from '../contexts/global_context';
+import { DashboardProvider } from '../contexts/dashboard_context';
 
 function App({ Component, pageProps }: AppProps) {
   return (
     <div className="selection:bg-primaryYellow selection:text-tertiaryBlue">
       <UserProvider>
-        <GlobalProvider>
-          <Component {...pageProps} />
-        </GlobalProvider>
+        <DashboardProvider>
+          <GlobalProvider>
+            <Component {...pageProps} />
+          </GlobalProvider>
+        </DashboardProvider>
       </UserProvider>{' '}
     </div>
   );
