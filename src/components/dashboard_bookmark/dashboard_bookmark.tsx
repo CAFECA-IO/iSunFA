@@ -5,36 +5,47 @@ import { Button } from '../button/button';
 import { useGlobal } from '../../contexts/global_context';
 import { BOOKMARK_LIST } from '../../constants/config';
 import { useDashboard } from '../../contexts/dashboard_context';
+import useStateRef from 'react-usestateref';
 
 const DashboardBookmark = () => {
   const { addBookmarkModalVisibilityHandler } = useGlobal();
   const { bookmarkList } = useDashboard();
-  const [bookmark, setBookmark] = React.useState<string[]>(bookmarkList);
-  const [btnSelected, setBtnSelected] = React.useState<string[]>([]);
-  const [contractBtnClicked, setContractBtnClicked] = React.useState(false);
-  const [employeesBtnClicked, setEmployeesBtnClicked] = React.useState(false);
-  const [accountingBtnClicked, setAccountingBtnClicked] = React.useState(false);
+  const [bookmark, setBookmark] = useStateRef<string[]>(bookmarkList);
+  const [btnSelected, setBtnSelected, btnSelectedRef] = useStateRef<string[]>([]);
+  const [contractBtnClicked, setContractBtnClicked, contractBtnClickedRef] = useStateRef(false);
+  const [employeesBtnClicked, setEmployeesBtnClicked, employeesBtnClickedRef] = useStateRef(false);
+  const [accountingBtnClicked, setAccountingBtnClicked, accountingBtnClickedRef] =
+    useStateRef(false);
   console.log('bookmarkList useDashboard', bookmarkList);
 
   const contractBtnClickHandler = () => {
     setContractBtnClicked(prev => !prev);
-    setBtnSelected(prev => [...prev, 'Contract']);
   };
 
   const employeesBtnClickHandler = () => {
     setEmployeesBtnClicked(prev => !prev);
-    setBtnSelected(prev => [...prev, 'Employees']);
   };
 
   const accountingBtnClickHandler = () => {
     setAccountingBtnClicked(prev => !prev);
-    setBtnSelected(prev => [...prev, 'Accounting']);
   };
 
   const removeBtnClickHandler = () => {
+    // if `contractBtnClicked` is true, add 'Contract' to btnSelected
+    if (contractBtnClickedRef.current) {
+      setBtnSelected(prev => [...prev, 'Contract']);
+    }
+    // if `employeesBtnClicked` is true, add 'Employees' to btnSelected
+    if (employeesBtnClickedRef.current) {
+      setBtnSelected(prev => [...prev, 'Employees']);
+    }
+    // if `accountingBtnClicked` is true, add 'Accounting' to btnSelected
+    if (accountingBtnClickedRef.current) {
+      setBtnSelected(prev => [...prev, 'Accounting']);
+    }
     setBookmark(prev => {
       // Info: filter out all items that are in btnSelected, and return the rest (20240411 - Shirley)
-      return prev.filter(item => !btnSelected.includes(item));
+      return prev.filter(item => !btnSelectedRef.current.includes(item));
     });
 
     setContractBtnClicked(false);
