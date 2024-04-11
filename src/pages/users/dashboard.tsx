@@ -10,13 +10,13 @@ import { ISUNFA_ROUTE } from '../../constants/url';
 const DashboardPage = () => {
   const router = useRouter();
 
-  const { credential } = useUser();
+  const { signedIn } = useUser();
 
   useEffect(() => {
-    if (!credential) {
+    if (!signedIn) {
       router.push(ISUNFA_ROUTE.LOGIN);
     }
-  }, [credential]);
+  }, [signedIn]);
 
   return (
     <>

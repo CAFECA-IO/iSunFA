@@ -10,9 +10,7 @@ import { ISUNFA_ROUTE } from '../../constants/url';
 import { DEFAULT_USER_NAME } from '../../constants/display';
 
 const NavBar = () => {
-  const { credential: credential, signOut, username } = useUser();
-
-  // const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const { credential: credential, signedIn, signOut, username } = useUser();
 
   const {
     targetRef: userMenuRef,
@@ -31,7 +29,7 @@ const NavBar = () => {
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
-      console.error('signOut error:', error);
+      console.error('logOutClickHandler error:', error);
     }
   };
 
@@ -44,7 +42,7 @@ const NavBar = () => {
         />
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-secondaryBlue">
-            {credential ? (!!username ? username : DEFAULT_USER_NAME) : ''}
+            {signedIn ? (!!username ? username : DEFAULT_USER_NAME) : ''}
           </div>
           <button className="flex shrink-0 flex-col justify-center rounded-md p-2.5">
             <div className="flex items-center justify-center">
@@ -106,7 +104,7 @@ const NavBar = () => {
     </div>
   ) : null;
 
-  const displayedLogInBtn = credential ? (
+  const displayedLogInBtn = signedIn ? (
     <div ref={userMenuRef}>
       <button onClick={avatarClickHandler}>
         {/* Info: avatar svg (20240408 - Shirley) */}
@@ -152,10 +150,10 @@ const NavBar = () => {
           <Image src="/logo/isunfa_logo_light.svg" width={150} height={30} alt="iSunFA_logo" />
         </Link>
 
-        {/* TODO: links on mobile (20240408 - Shirley) */}
+        {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
         <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
           <Link
-            href={`${credential ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
+            href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
             className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-secondaryBlue hover:text-primaryYellow max-md:px-5 lg:ml-10"
           >
             <div className="my-auto flex items-center justify-center">
@@ -232,18 +230,6 @@ const NavBar = () => {
       </div>
 
       <div className="my-auto"> {displayedLogInBtn}</div>
-      {/* <div className="my-auto flex justify-center gap-2 rounded-md bg-amber-400 px-6 py-2.5 max-md:px-5">
-          <div className="text-base font-medium leading-6 tracking-normal text-yellow-700">
-            Login
-          </div>
-          <div className="my-auto flex items-center justify-center">
-            <img
-              
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/f7da9ae0cb7bd4d6c21e7d51cd1728937f71260ad3120a353c5bf91d4664141f?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="aspect-square w-5"
-            />
-          </div>
-        </div> */}
     </div>
   );
 };

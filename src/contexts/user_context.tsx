@@ -21,6 +21,7 @@ interface UserContextType {
   signOut: () => Promise<void>;
   userAuth: IUserAuth | null;
   username: string | null;
+  signedIn: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -30,9 +31,11 @@ export const UserContext = createContext<UserContextType>({
   signOut: async () => {},
   userAuth: {} as IUserAuth,
   username: '',
+  signedIn: false,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const [signedIn, setSignedIn, signedInRef] = useStateRef(false);
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
@@ -70,6 +73,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setUsername(data.username);
       setUserAuth(data);
       setCredential(credential);
+      setSignedIn(true);
 
       // TODO: workaround for demo for registration (20240409 - Shirley)
       if (data) {
@@ -149,6 +153,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         // const { credential } = user;
         // setUsername(user.username);
         setCredential({} as ICredential);
+        setSignedIn(true);
+        writeCookie();
       }
 
       // const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
@@ -194,6 +200,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setUserAuth(null);
       setUsername(null);
       setCredential(null);
+      setSignedIn(false);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -220,7 +227,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (credentialFromCookie) {
       setCredential(credentialFromCookie[0]);
+      setSignedIn(true);
+
+      console.log('in setPrivateData, credential:', credentialRef.current);
     }
+  };
+
+  const readCookie = async () => {
+    const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
+
+    const FIDO2 = cookie ? cookie.split('=')[1] : null;
+
+    if (FIDO2) {
+      const decoded = decodeURIComponent(FIDO2);
+      const credential = JSON.parse(decoded) as ICredential;
+      return credential;
+    }
+
+    return null;
+  };
+
+  const writeCookie = async () => {
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours() + 1);
+
+    const credential = await readCookie();
+    console.log('credential:', credential);
+    // const credentialArray =
+
+    document.cookie = `FIDO2=${encodeURIComponent(JSON.stringify(credentialRef.current))}; expires=${expiration.toUTCString()}; path=/`;
   };
 
   const init = async () => {
@@ -243,6 +278,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
+      signedIn: signedInRef.current,
     }),
     [credentialRef.current]
   );

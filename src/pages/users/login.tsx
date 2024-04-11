@@ -10,14 +10,14 @@ import { ISUNFA_ROUTE } from '../../constants/url';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { credential } = useUser();
+  const { signedIn } = useUser();
 
   useEffect(() => {
-    if (credential) {
+    if (signedIn) {
       router.push(ISUNFA_ROUTE.DASHBOARD);
       // window.location.href = '/users/dashboard';
     }
-  }, [credential]);
+  }, [signedIn]);
 
   return (
     <>
