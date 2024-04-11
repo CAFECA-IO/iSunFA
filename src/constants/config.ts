@@ -164,3 +164,4 @@ export const ALLOWED_ORIGINS = [
 ];
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
+export const BOOKMARK_LIST = ['Contract', 'Employees', 'Accounting'];

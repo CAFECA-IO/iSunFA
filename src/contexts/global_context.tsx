@@ -2,6 +2,7 @@ import React, { useState, useContext, createContext } from 'react';
 import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '../components/register_form_modal/register_form_modal';
+import AddBookmarkModal from '../components/add_bookmark_modal/add_bookmark_modal';
 
 interface IGlobalContext {
   isPasskeySupportModalVisible: boolean;
@@ -11,6 +12,9 @@ interface IGlobalContext {
   registerModalVisibilityHandler: () => void;
   registerModalData: RegisterFormModalProps;
   registerModalDataHandler: (data: RegisterFormModalProps) => void;
+
+  isAddBookmarkModalVisible: boolean;
+  addBookmarkModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -26,6 +30,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     username: '',
   });
 
+  const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
+
   const passKeySupportModalVisibilityHandler = () => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
   };
@@ -38,6 +44,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setRegisterModalData(data);
   };
 
+  const addBookmarkModalVisibilityHandler = () => {
+    setIsAddBookmarkModalVisible(!isAddBookmarkModalVisible);
+  };
+
   // TODO: test if this is the correct way to pass the value (20240409 - Shirley)
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
@@ -47,6 +57,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     registerModalVisibilityHandler,
     registerModalData,
     registerModalDataHandler,
+    isAddBookmarkModalVisible,
+    addBookmarkModalVisibilityHandler,
   };
 
   return (
@@ -59,6 +71,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <RegisterFormModal
         isModalVisible={isRegisterModalVisible}
         modalVisibilityHandler={registerModalVisibilityHandler}
+      />
+
+      <AddBookmarkModal
+        isModalVisible={isAddBookmarkModalVisible}
+        modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />
 
       {children}
