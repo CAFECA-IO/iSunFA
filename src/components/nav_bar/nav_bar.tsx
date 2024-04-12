@@ -7,7 +7,7 @@ import { useUser } from '../../contexts/user_context';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '../../constants/url';
-import { DEFAULT_USER_NAME } from '../../constants/display';
+import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 
 const NavBar = () => {
   const { credential: credential, signedIn, signOut, username } = useUser();
@@ -42,7 +42,7 @@ const NavBar = () => {
         />
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-secondaryBlue">
-            {signedIn ? (!!username ? username : DEFAULT_USER_NAME) : ''}
+            {signedIn ? (!!username ? username : DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           <button className="flex shrink-0 flex-col justify-center rounded-md p-2.5">
             <div className="flex items-center justify-center">

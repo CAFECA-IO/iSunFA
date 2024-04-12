@@ -1,234 +1,142 @@
-/* eslint-disable */
-
 import React from 'react';
+import useStateRef from 'react-usestateref';
 import { Button } from '../button/button';
 import { useGlobal } from '../../contexts/global_context';
-import { BOOKMARK_LIST } from '../../constants/config';
 import { useDashboard } from '../../contexts/dashboard_context';
-import useStateRef from 'react-usestateref';
 
 const DashboardBookmark = () => {
   const { addBookmarkModalVisibilityHandler } = useGlobal();
-  const { bookmarkList } = useDashboard();
-  const [bookmark, setBookmark] = useStateRef<string[]>(bookmarkList);
-  const [btnSelected, setBtnSelected, btnSelectedRef] = useStateRef<string[]>([]);
-  const [contractBtnClicked, setContractBtnClicked, contractBtnClickedRef] = useStateRef(false);
-  const [employeesBtnClicked, setEmployeesBtnClicked, employeesBtnClickedRef] = useStateRef(false);
-  const [accountingBtnClicked, setAccountingBtnClicked, accountingBtnClickedRef] =
-    useStateRef(false);
-  console.log('bookmarkList useDashboard', bookmarkList);
+  const { bookmarkList, removeBookmark } = useDashboard();
+  const [tempSelectedList, setTempSelectedList] = useStateRef<string[]>([]);
 
-  const contractBtnClickHandler = () => {
-    setContractBtnClicked(prev => !prev);
-  };
+  const buttonSelectedHandler = (name: string) => {
+    bookmarkList[name].tempSelectedOnSection = !bookmarkList[name].tempSelectedOnSection;
 
-  const employeesBtnClickHandler = () => {
-    setEmployeesBtnClicked(prev => !prev);
-  };
-
-  const accountingBtnClickHandler = () => {
-    setAccountingBtnClicked(prev => !prev);
+    if (bookmarkList[name].tempSelectedOnSection) {
+      setTempSelectedList((prev: string[]) => [...prev, name]);
+    } else {
+      setTempSelectedList((prev: string[]) => prev.filter((item: string) => item !== name));
+    }
   };
 
   const removeBtnClickHandler = () => {
-    // if `contractBtnClicked` is true, add 'Contract' to btnSelected
-    if (contractBtnClickedRef.current) {
-      setBtnSelected(prev => [...prev, 'Contract']);
-    }
-    // if `employeesBtnClicked` is true, add 'Employees' to btnSelected
-    if (employeesBtnClickedRef.current) {
-      setBtnSelected(prev => [...prev, 'Employees']);
-    }
-    // if `accountingBtnClicked` is true, add 'Accounting' to btnSelected
-    if (accountingBtnClickedRef.current) {
-      setBtnSelected(prev => [...prev, 'Accounting']);
-    }
-    setBookmark(prev => {
-      // Info: filter out all items that are in btnSelected, and return the rest (20240411 - Shirley)
-      return prev.filter(item => !btnSelectedRef.current.includes(item));
+    Object.entries(bookmarkList).forEach(([key, value]) => {
+      if (value.tempSelectedOnSection) {
+        removeBookmark(key);
+      }
     });
-
-    setContractBtnClicked(false);
-    setEmployeesBtnClicked(false);
-    setAccountingBtnClicked(false);
+    setTempSelectedList([]);
   };
 
   const addBtnClickHandler = () => {
-    // setBookmark(prev => [...prev, 'New']);
     addBookmarkModalVisibilityHandler();
+    setTempSelectedList([]);
   };
+
+  const displayedBookmarkList = Object.entries(bookmarkList)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    .filter(([key, value]) => value.added)
+    .map(([key, value]) => {
+      return (
+        <Button
+          key={key}
+          onClick={() => buttonSelectedHandler(bookmarkList[key].name)}
+          type="button"
+          className={`${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-md border px-8 py-3.5 max-md:px-5`}
+        >
+          <div className="my-auto flex items-center justify-center">{bookmarkList[key].icon}</div>
+          <div className="text-lg font-medium leading-7 tracking-normal">
+            {bookmarkList[key].name}
+          </div>
+        </Button>
+      );
+    });
+
+  const displayedRemoveOrAddButton =
+    tempSelectedList.length > 0 ? (
+      <Button
+        onClick={removeBtnClickHandler}
+        className={`${tempSelectedList.length > 0 ? `bg-tertiaryBlue text-white hover:bg-tertiaryBlue/80` : `bg-transparent hover:bg-tertiaryBlue hover:text-white`} my-auto flex flex-col justify-center rounded-md border border-solid border-tertiaryBlue p-4 text-tertiaryBlue`}
+      >
+        <div className="flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="none"
+            viewBox="0 0 20 20"
+          >
+            <g clipPath="url(#clip0_340_150763)">
+              <path
+                fill="#FCFDFF"
+                fillRule="evenodd"
+                d="M9.306.918H10.7c.441 0 .817 0 1.126.025.324.026.64.084.941.238.455.232.825.602 1.056 1.056.154.302.212.617.239.942.024.296.025.654.025 1.072h3.416a.75.75 0 110 1.5h-.916v8.615c0 .673 0 1.224-.037 1.672-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.448.036-.998.036-1.672.036H8.138c-.674 0-1.224 0-1.672-.036-.463-.038-.882-.119-1.272-.318a3.25 3.25 0 01-1.42-1.42c-.2-.39-.28-.81-.318-1.272-.037-.448-.037-.999-.037-1.672V5.75h-.917a.75.75 0 010-1.5H5.92c0-.418.001-.776.025-1.072.027-.325.085-.64.239-.942a2.417 2.417 0 011.056-1.056c.301-.154.617-.212.941-.238.309-.025.685-.025 1.126-.025zM6.67 5.75H4.92v8.583c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.168.33.435.597.765.765l-.34.668.34-.668c.144.073.343.129.713.159.38.03.869.031 1.581.031h3.667c.712 0 1.201 0 1.58-.031.371-.03.57-.086.714-.16a1.75 1.75 0 00.765-.764c.073-.144.129-.343.16-.714.03-.379.03-.868.03-1.58V5.75H6.67zm5.917-1.5H7.419c0-.433.002-.724.02-.95.02-.232.052-.328.08-.383a.917.917 0 01.4-.4c.056-.028.152-.061.383-.08.24-.02.555-.02 1.034-.02h1.333c.48 0 .793 0 1.034.02.231.019.327.052.382.08a.917.917 0 01.4.4c.029.055.062.151.08.383.019.226.02.517.02.95zm-4.25 4.583a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75zm3.333 0a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75z"
+                clipRule="evenodd"
+              ></path>
+            </g>
+            <defs>
+              <clipPath id="clip0_340_150763">
+                <path fill="#fff" d="M0 0H20V20H0z"></path>
+              </clipPath>
+            </defs>
+          </svg>
+        </div>
+      </Button>
+    ) : (
+      // {/* Info: add button (20240411 - Shirley) */}
+      <Button
+        onClick={addBtnClickHandler}
+        className={`${tempSelectedList.length > 0 ? `bg-tertiaryBlue text-white hover:bg-tertiaryBlue/80` : `bg-transparent hover:bg-tertiaryBlue hover:text-white`} my-auto flex flex-col justify-center rounded-md border border-solid border-tertiaryBlue p-4 text-tertiaryBlue`}
+      >
+        <div className="flex items-center justify-center">
+          {tempSelectedList.length > 0 ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <g clipPath="url(#clip0_340_150763)">
+                <path
+                  fill="#FCFDFF"
+                  fillRule="evenodd"
+                  d="M9.306.918H10.7c.441 0 .817 0 1.126.025.324.026.64.084.941.238.455.232.825.602 1.056 1.056.154.302.212.617.239.942.024.296.025.654.025 1.072h3.416a.75.75 0 110 1.5h-.916v8.615c0 .673 0 1.224-.037 1.672-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.448.036-.998.036-1.672.036H8.138c-.674 0-1.224 0-1.672-.036-.463-.038-.882-.119-1.272-.318a3.25 3.25 0 01-1.42-1.42c-.2-.39-.28-.81-.318-1.272-.037-.448-.037-.999-.037-1.672V5.75h-.917a.75.75 0 010-1.5H5.92c0-.418.001-.776.025-1.072.027-.325.085-.64.239-.942a2.417 2.417 0 011.056-1.056c.301-.154.617-.212.941-.238.309-.025.685-.025 1.126-.025zM6.67 5.75H4.92v8.583c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.168.33.435.597.765.765l-.34.668.34-.668c.144.073.343.129.713.159.38.03.869.031 1.581.031h3.667c.712 0 1.201 0 1.58-.031.371-.03.57-.086.714-.16a1.75 1.75 0 00.765-.764c.073-.144.129-.343.16-.714.03-.379.03-.868.03-1.58V5.75H6.67zm5.917-1.5H7.419c0-.433.002-.724.02-.95.02-.232.052-.328.08-.383a.917.917 0 01.4-.4c.056-.028.152-.061.383-.08.24-.02.555-.02 1.034-.02h1.333c.48 0 .793 0 1.034.02.231.019.327.052.382.08a.917.917 0 01.4.4c.029.055.062.151.08.383.019.226.02.517.02.95zm-4.25 4.583a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75zm3.333 0a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+              <defs>
+                <clipPath id="clip0_340_150763">
+                  <path fill="#fff" d="M0 0H20V20H0z"></path>
+                </clipPath>
+              </defs>
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M10.0025 3.16776C10.5548 3.16776 11.0025 3.61547 11.0025 4.16776V9.00109H15.8359C16.3881 9.00109 16.8359 9.4488 16.8359 10.0011C16.8359 10.5534 16.3881 11.0011 15.8359 11.0011H11.0025V15.8344C11.0025 16.3867 10.5548 16.8344 10.0025 16.8344C9.45024 16.8344 9.00252 16.3867 9.00252 15.8344V11.0011H4.16919C3.6169 11.0011 3.16919 10.5534 3.16919 10.0011C3.16919 9.4488 3.6169 9.00109 4.16919 9.00109H9.00252V4.16776C9.00252 3.61547 9.45024 3.16776 10.0025 3.16776Z"
+                className="fill-current"
+              />
+            </svg>
+          )}
+        </div>
+      </Button>
+    );
 
   return (
     <div>
       <div className="dashboardBookmarkShadow mt-12 flex w-full gap-5 rounded-3xl bg-white px-6 py-6 max-lg:flex-wrap max-md:mt-10 max-md:max-w-full max-md:px-5">
-        <div className="flex flex-1 gap-5 max-md:flex-wrap">
-          {bookmark.includes('Contract') && (
-            <Button
-              onClick={contractBtnClickHandler}
-              className={`${contractBtnClicked ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-md border px-8 py-3.5 max-md:px-5`}
-            >
-              <div className="my-auto flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    className="fill-current"
-                    fillRule="evenodd"
-                    d="M8.762 1.001h5.24a1 1 0 01.708.293l6 6a1 1 0 01.293.707v9.241c0 .805 0 1.47-.044 2.01-.046.563-.145 1.08-.392 1.565a4 4 0 01-1.748 1.748c-.485.247-1.002.346-1.564.392-.541.044-1.206.044-2.01.044H8.761c-.805 0-1.47 0-2.01-.044-.563-.046-1.08-.145-1.565-.392a4 4 0 01-1.748-1.748c-.247-.485-.346-1.002-.392-1.564-.044-.541-.044-1.206-.044-2.01V6.76c0-.805 0-1.47.044-2.01.046-.563.145-1.08.392-1.565a4 4 0 011.748-1.748c.485-.247 1.002-.346 1.564-.392.541-.044 1.206-.044 2.01-.044zM6.914 3.04c-.438.035-.663.1-.819.18a2 2 0 00-.874.874c-.08.157-.145.38-.18.82-.037.45-.038 1.032-.038 1.888v10.4c0 .857 0 1.439.037 1.89.036.438.101.662.18.818a2 2 0 00.875.874c.156.08.38.145.819.18.45.037 1.032.038 1.889.038h6.4c.857 0 1.439 0 1.889-.038.438-.035.663-.1.819-.18a2 2 0 00.874-.874c.08-.156.145-.38.18-.819.037-.45.038-1.032.038-1.889v-8.2H15.57c-.252 0-.498 0-.706-.017a2.022 2.022 0 01-.77-.2 2 2 0 01-.874-.875 2.022 2.022 0 01-.201-.77c-.017-.208-.017-.454-.017-.706V3.001h-4.2c-.857 0-1.439 0-1.889.038zm8.089 1.376l2.586 2.586h-1.986a8.189 8.189 0 01-.589-.011v-.013a8.205 8.205 0 01-.011-.576V4.415zm-8 4.586a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2h-8a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2h-8a1 1 0 01-1-1z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-              </div>
-              <div className="text-lg font-medium leading-7 tracking-normal">Contract</div>
-            </Button>
-          )}
-          {bookmark.includes('Employees') && (
-            <Button
-              onClick={employeesBtnClickHandler}
-              className={`${employeesBtnClicked ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-md border px-8 py-3.5 max-md:px-5`}
-            >
-              <div className="my-auto flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <g clipPath="url(#clip0_331_33311)">
-                    <path
-                      className="fill-current"
-                      fillRule="evenodd"
-                      d="M9.503 4.001a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm-5.5 3.5a5.5 5.5 0 1111 0 5.5 5.5 0 01-11 0zm11.104-4.477a1 1 0 011.34-.45 5.5 5.5 0 010 9.855 1 1 0 01-.89-1.791 3.5 3.5 0 000-6.274 1 1 0 01-.45-1.34zM9.503 16c-2.447 0-4.67 1.333-6.109 3.493-.089.134-.158.237-.214.327a2.614 2.614 0 00-.096.162c.146.017.354.018.741.018H15.18c.388 0 .595-.001.742-.018-.021-.039-.051-.09-.096-.162-.057-.09-.125-.193-.215-.327C14.173 17.334 11.95 16 9.503 16zM1.73 18.385c1.75-2.628 4.558-4.384 7.773-4.384 3.214 0 6.022 1.756 7.773 4.384l.024.036c.154.23.317.477.432.71.138.281.237.604.214.99-.019.308-.12.593-.242.82a2.02 2.02 0 01-.548.655c-.33.25-.684.337-.998.373a8.534 8.534 0 01-.933.032H3.78c-.33 0-.657 0-.933-.032-.314-.036-.669-.124-.998-.373l.603-.797m14.656-5.41a1 1 0 011.343-.445c1.634.821 3.016 2.129 4.016 3.74l.034.054c.149.238.343.548.406.957.073.473-.055.925-.246 1.268a2.009 2.009 0 01-.948.879c-.383.163-.798.16-1.123.16h-.088a1 1 0 110-2c.215 0 .328-.002.409-.007l.002-.004a.127.127 0 00.003-.006 11.598 11.598 0 00-.149-.247c-.822-1.325-1.937-2.365-3.214-3.006a1 1 0 01-.445-1.343zM1.73 18.385l-.023.036.024-.036zm-.023.036c-.154.23-.318.477-.432.71l.432-.71zm-.432.71a1.934 1.934 0 00-.214.99l.214-.99zm-.214.99c.019.308.12.593.242.82l-.242-.82zm.242.82c.121.226.302.47.548.655l-.548-.655z"
-                      clipRule="evenodd"
-                    ></path>
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_331_33311">
-                      <path fill="#fff" d="M0 0H24V24H0z"></path>
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <div className="text-lg font-medium leading-7 tracking-normal">Employees</div>
-            </Button>
-          )}
-
-          {bookmark.includes('Accounting') && (
-            <Button
-              onClick={accountingBtnClickHandler}
-              className={`${accountingBtnClicked ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-md border px-8 py-3.5 max-md:px-5`}
-            >
-              <div className="my-auto flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <g clipPath="url(#clip0_331_33319)">
-                    <path
-                      className="fill-current"
-                      fillRule="evenodd"
-                      d="M7.762 2.001h8.482c.805 0 1.47 0 2.01.044.563.046 1.08.145 1.565.392a4 4 0 011.748 1.748c.247.485.346 1.002.392 1.564.044.541.044 1.206.044 2.01v8.483c0 .805 0 1.47-.044 2.01-.046.563-.145 1.08-.392 1.565a4 4 0 01-1.748 1.748c-.485.247-1.002.346-1.564.392-.541.044-1.206.044-2.01.044H7.761c-.805 0-1.47 0-2.01-.044-.563-.046-1.08-.145-1.565-.392a4 4 0 01-1.748-1.748c-.247-.485-.346-1.002-.392-1.564-.044-.541-.044-1.206-.044-2.01V7.76c0-.805 0-1.47.044-2.01.046-.563.145-1.08.392-1.565a4 4 0 011.748-1.748c.485-.247 1.002-.346 1.564-.392.541-.044 1.206-.044 2.01-.044zM5.914 4.04c-.438.035-.663.1-.819.18a2 2 0 00-.874.874c-.08.157-.145.38-.18.82-.037.45-.038 1.032-.038 1.888v8.4c0 .857 0 1.439.037 1.89.036.438.101.662.18.818a2 2 0 00.875.874c.156.08.38.145.819.18.45.037 1.032.038 1.889.038h8.4c.857 0 1.439 0 1.889-.038.438-.035.663-.1.819-.18a2 2 0 00.874-.874c.08-.156.145-.38.18-.819.037-.45.038-1.032.038-1.889v-8.4c0-.856 0-1.439-.038-1.889-.035-.438-.1-.662-.18-.819a2 2 0 00-.874-.874c-.157-.08-.38-.145-.82-.18C17.642 4.002 17.06 4 16.204 4h-8.4c-.857 0-1.439 0-1.889.038zM8.503 5.5a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 010-2h1v-1a1 1 0 011-1zm8.293.293a1 1 0 111.414 1.414l-11 11a1 1 0 01-1.414-1.414l11-11zm-4.293 9.707a1 1 0 011-1h4a1 1 0 110 2h-4a1 1 0 01-1-1z"
-                      clipRule="evenodd"
-                    ></path>
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_331_33319">
-                      <path fill="#fff" d="M0 0H24V24H0z"></path>
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <div className="text-lg font-medium leading-7 tracking-normal">Accounting</div>
-            </Button>
-          )}
-        </div>
-
-        {/* Info: remove button (20240411 - Shirley) */}
-        {contractBtnClicked || employeesBtnClicked || accountingBtnClicked ? (
-          <Button
-            onClick={removeBtnClickHandler}
-            className={`${contractBtnClicked || employeesBtnClicked || accountingBtnClicked ? `bg-tertiaryBlue text-white hover:bg-tertiaryBlue/80` : `bg-transparent hover:bg-tertiaryBlue hover:text-white`} my-auto flex flex-col justify-center rounded-md border border-solid border-tertiaryBlue p-4 text-tertiaryBlue`}
-          >
-            <div className="flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 20 20"
-              >
-                <g clipPath="url(#clip0_340_150763)">
-                  <path
-                    fill="#FCFDFF"
-                    fillRule="evenodd"
-                    d="M9.306.918H10.7c.441 0 .817 0 1.126.025.324.026.64.084.941.238.455.232.825.602 1.056 1.056.154.302.212.617.239.942.024.296.025.654.025 1.072h3.416a.75.75 0 110 1.5h-.916v8.615c0 .673 0 1.224-.037 1.672-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.448.036-.998.036-1.672.036H8.138c-.674 0-1.224 0-1.672-.036-.463-.038-.882-.119-1.272-.318a3.25 3.25 0 01-1.42-1.42c-.2-.39-.28-.81-.318-1.272-.037-.448-.037-.999-.037-1.672V5.75h-.917a.75.75 0 010-1.5H5.92c0-.418.001-.776.025-1.072.027-.325.085-.64.239-.942a2.417 2.417 0 011.056-1.056c.301-.154.617-.212.941-.238.309-.025.685-.025 1.126-.025zM6.67 5.75H4.92v8.583c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.168.33.435.597.765.765l-.34.668.34-.668c.144.073.343.129.713.159.38.03.869.031 1.581.031h3.667c.712 0 1.201 0 1.58-.031.371-.03.57-.086.714-.16a1.75 1.75 0 00.765-.764c.073-.144.129-.343.16-.714.03-.379.03-.868.03-1.58V5.75H6.67zm5.917-1.5H7.419c0-.433.002-.724.02-.95.02-.232.052-.328.08-.383a.917.917 0 01.4-.4c.056-.028.152-.061.383-.08.24-.02.555-.02 1.034-.02h1.333c.48 0 .793 0 1.034.02.231.019.327.052.382.08a.917.917 0 01.4.4c.029.055.062.151.08.383.019.226.02.517.02.95zm-4.25 4.583a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75zm3.333 0a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
-                <defs>
-                  <clipPath id="clip0_340_150763">
-                    <path fill="#fff" d="M0 0H20V20H0z"></path>
-                  </clipPath>
-                </defs>
-              </svg>
-            </div>
-          </Button>
-        ) : (
-          // {/* Info: add button (20240411 - Shirley) */}
-          <Button
-            onClick={addBtnClickHandler}
-            className={`${contractBtnClicked || employeesBtnClicked || accountingBtnClicked ? `bg-tertiaryBlue text-white hover:bg-tertiaryBlue/80` : `bg-transparent hover:bg-tertiaryBlue hover:text-white`} my-auto flex flex-col justify-center rounded-md border border-solid border-tertiaryBlue p-4 text-tertiaryBlue`}
-          >
-            <div className="flex items-center justify-center">
-              {contractBtnClicked || employeesBtnClicked || accountingBtnClicked ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  viewBox="0 0 20 20"
-                >
-                  <g clipPath="url(#clip0_340_150763)">
-                    <path
-                      fill="#FCFDFF"
-                      fillRule="evenodd"
-                      d="M9.306.918H10.7c.441 0 .817 0 1.126.025.324.026.64.084.941.238.455.232.825.602 1.056 1.056.154.302.212.617.239.942.024.296.025.654.025 1.072h3.416a.75.75 0 110 1.5h-.916v8.615c0 .673 0 1.224-.037 1.672-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.448.036-.998.036-1.672.036H8.138c-.674 0-1.224 0-1.672-.036-.463-.038-.882-.119-1.272-.318a3.25 3.25 0 01-1.42-1.42c-.2-.39-.28-.81-.318-1.272-.037-.448-.037-.999-.037-1.672V5.75h-.917a.75.75 0 010-1.5H5.92c0-.418.001-.776.025-1.072.027-.325.085-.64.239-.942a2.417 2.417 0 011.056-1.056c.301-.154.617-.212.941-.238.309-.025.685-.025 1.126-.025zM6.67 5.75H4.92v8.583c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.168.33.435.597.765.765l-.34.668.34-.668c.144.073.343.129.713.159.38.03.869.031 1.581.031h3.667c.712 0 1.201 0 1.58-.031.371-.03.57-.086.714-.16a1.75 1.75 0 00.765-.764c.073-.144.129-.343.16-.714.03-.379.03-.868.03-1.58V5.75H6.67zm5.917-1.5H7.419c0-.433.002-.724.02-.95.02-.232.052-.328.08-.383a.917.917 0 01.4-.4c.056-.028.152-.061.383-.08.24-.02.555-.02 1.034-.02h1.333c.48 0 .793 0 1.034.02.231.019.327.052.382.08a.917.917 0 01.4.4c.029.055.062.151.08.383.019.226.02.517.02.95zm-4.25 4.583a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75zm3.333 0a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75z"
-                      clipRule="evenodd"
-                    ></path>
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_340_150763">
-                      <path fill="#fff" d="M0 0H20V20H0z"></path>
-                    </clipPath>
-                  </defs>
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M10.0025 3.16776C10.5548 3.16776 11.0025 3.61547 11.0025 4.16776V9.00109H15.8359C16.3881 9.00109 16.8359 9.4488 16.8359 10.0011C16.8359 10.5534 16.3881 11.0011 15.8359 11.0011H11.0025V15.8344C11.0025 16.3867 10.5548 16.8344 10.0025 16.8344C9.45024 16.8344 9.00252 16.3867 9.00252 15.8344V11.0011H4.16919C3.6169 11.0011 3.16919 10.5534 3.16919 10.0011C3.16919 9.4488 3.6169 9.00109 4.16919 9.00109H9.00252V4.16776C9.00252 3.61547 9.45024 3.16776 10.0025 3.16776Z"
-                    className="fill-current"
-                  />
-                </svg>
-              )}
-            </div>
-          </Button>
-        )}
+        <div className="flex flex-1 flex-wrap gap-5">{displayedBookmarkList}</div>
+        {/* Info: remove or add button (20240411 - Shirley) */}
+        {displayedRemoveOrAddButton}
       </div>
 
       <div className="flex h-800px w-full items-center justify-center">
