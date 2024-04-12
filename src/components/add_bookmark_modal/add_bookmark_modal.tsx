@@ -71,7 +71,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                   type="button"
                   className={`${
                     selectedBookmark.includes(key) ? 'bg-tertiaryBlue2 text-white' : ''
-                  } flex gap-3 rounded-md px-3 py-2 text-navyBlue2 hover:bg-tertiaryBlue2 hover:bg-opacity-70 hover:text-white`}
+                  } mt-1 flex gap-3 rounded-md px-3 py-2 text-navyBlue2 hover:bg-tertiaryBlue2 hover:bg-opacity-70 hover:text-white`}
                 >
                   <div className="my-auto flex flex-col justify-center">
                     {bookmarkList[key].icon}

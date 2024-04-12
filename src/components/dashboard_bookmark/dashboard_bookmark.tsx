@@ -31,6 +31,9 @@ const DashboardBookmark = () => {
   const addBtnClickHandler = () => {
     addBookmarkModalVisibilityHandler();
     setTempSelectedList([]);
+    Object.keys(bookmarkList).forEach((key: string) => {
+      bookmarkList[key] = { ...bookmarkList[key], tempSelectedOnSection: false };
+    });
   };
 
   const displayedBookmarkList = Object.entries(bookmarkList)
