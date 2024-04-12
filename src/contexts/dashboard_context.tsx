@@ -60,7 +60,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: false,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -105,7 +105,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: false,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -216,7 +216,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: false,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -255,7 +255,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: false,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },

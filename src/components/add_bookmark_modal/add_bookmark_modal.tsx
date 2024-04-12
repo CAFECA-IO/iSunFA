@@ -49,7 +49,6 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const addBtnClickHandler = () => {
-    console.log('in addBtnClickHandler', selectedBookmark);
     addBookmarks(selectedBookmark);
     addBookmarkModalVisibilityHandler();
   };
