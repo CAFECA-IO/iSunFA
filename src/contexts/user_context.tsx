@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react';
 import { ICredential, IUserAuth } from '../interfaces/webauthn';
 import { checkFIDO2Cookie, createChallenge } from '../lib/utils/authorization';
 import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '../constants/config';
-import { DEFAULT_USER_NAME } from '../constants/display';
+import { DEFAULT_DISPLAYED_USER_NAME } from '../constants/display';
 import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 
@@ -41,7 +41,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const signUp = async ({ username }: SignUpProps) => {
-    const name = username || DEFAULT_USER_NAME;
+    const name = username || DEFAULT_DISPLAYED_USER_NAME;
     console.log('signUp called');
 
     try {

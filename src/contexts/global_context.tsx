@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useContext, createContext } from 'react';
 import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
@@ -48,7 +49,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAddBookmarkModalVisible(!isAddBookmarkModalVisible);
   };
 
-  // TODO: test if this is the correct way to pass the value (20240409 - Shirley)
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     isPasskeySupportModalVisible,

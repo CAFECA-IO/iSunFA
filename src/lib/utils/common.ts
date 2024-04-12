@@ -9,3 +9,8 @@ export function cn(...inputs: ClassValue[]) {
 export function getDomains() {
   return ALLOWED_ORIGINS;
 }
+
+// truncate the string to the given length
+export function truncateString(str: string, length: number) {
+  return str.length > length ? str.slice(0, length) + '...' : str;
+}

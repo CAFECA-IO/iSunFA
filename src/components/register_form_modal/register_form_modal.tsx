@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useRef } from 'react';
 import { RegisterFormModalProps } from '../../interfaces/modals';
 import { UserContext, useUser } from '../../contexts/user_context';
 import { Button } from '../button/button';
-import { DEFAULT_USER_NAME } from '../../constants/display';
+import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 
 interface IRegisterFormModal {
   isModalVisible: boolean;
@@ -15,7 +15,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
   const inputRef = useRef<HTMLInputElement>(null);
 
   const registerClickHandler = async () => {
-    const name = inputRef.current?.value || DEFAULT_USER_NAME;
+    const name = inputRef.current?.value || DEFAULT_DISPLAYED_USER_NAME;
     signUp({ username: name });
     inputRef.current?.value && (inputRef.current.value = '');
     modalVisibilityHandler();
