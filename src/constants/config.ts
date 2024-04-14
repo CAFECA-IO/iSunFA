@@ -1,11 +1,3 @@
-import { REPORT_PATH } from './url';
-
-export const TBD_API_URL = 'https://api.tidebit-defi.com/api';
-export const TBD_API_VERSION = 'v1';
-
-export const BFA_API_URL = '/api';
-export const BFA_API_VERSION = 'v1';
-
 export const MONTH_LIST = [
   'DATE_PICKER.JAN',
   'DATE_PICKER.FEB',
@@ -37,11 +29,9 @@ export const default30DayPeriod = {
   endTimeStamp: Math.floor(Date.now() / 1000),
 };
 
-export const ITEM_PER_PAGE = 10;
-
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
-/* Info: (20230711 - Julian) ----- Landing Page ----- */
+/* Info: (20230711 - Shirley) ----- Landing Page ----- */
 export const SCROLL_END = 530;
 
 export const massiveDataContent = [
@@ -147,50 +137,31 @@ export const whyUsContent = [
   },
 ];
 
-/* Info: (20230814 - Julian) ----- Landing Footer ----- */
+/* Info: (20230814 - Shirley) ----- Landing Footer ----- */
 export const iSunFAAddress = process.env.I_SUN_FA_ADDRESS_IN_ENGLISH;
 export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
 export const iSunFAPhone = process.env.I_SUN_FA_PHONE_NUMBER;
 export const githubLink = process.env.GITHUB_LINK;
 
-/* Info: (20230814 - Julian) ----- Reports ----- */
-export const CLOSING_TIME = 57600;
+export const AUTH_PERIOD = 60 * 60; // 1 hr
 
-export const A4_SIZE = {
-  WIDTH: 595,
-  HEIGHT: 842,
+export const COOKIE_NAME = {
+  FIDO2: 'FIDO2',
+  CREDENTIALS: 'CREDENTIALS',
+  USER_INFO: 'USER_INFO',
 };
 
-export const pluginReportsList = [
-  {
-    name: 'PLUGIN.COMPREHENSIVE_INCOME_STATEMENT',
-    imageSrc: '/icons/income_statement_icon.svg',
-    linkPath: `${REPORT_PATH.INCOME_STATEMENTS}`,
-  },
-  {
-    name: 'PLUGIN.BALANCE_SHEET',
-    imageSrc: '/icons/balance_sheet_icon.svg',
-    linkPath: `${REPORT_PATH.BALANCE_SHEETS}`,
-  },
-  {
-    name: 'PLUGIN.CASH_FLOW_STATEMENT',
-    imageSrc: '/icons/cash_flow_statement_icon.svg',
-    linkPath: `${REPORT_PATH.CASH_FLOW_STATEMENTS}`,
-  },
-  {
-    name: 'PLUGIN.RED_FLAG_ANALYSIS',
-    imageSrc: '/icons/red_flags_icon.svg',
-    linkPath: `${REPORT_PATH.RED_FLAGS}`,
-  },
+export const DUMMY_CHALLENGE = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
+export const DUMMY_TIMESTAMP = 1712176850;
+
+export const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3003',
+  'https://www.isunfa.com',
+  'https://isunfa.com',
 ];
 
-/* Info: (20230814 - Julian) ----- Chains ----- */
-export const chainList = ['eth', 'bit', 'usdt', 'bnb', 'isun'];
-
-export const chainIdToCurrencyName = [
-  { id: 'eth', name: 'Ethereum' },
-  { id: 'btc', name: 'Bitcoin' },
-  { id: 'usdt', name: 'Tether' },
-  { id: 'bnb', name: 'Binance Coin' },
-  { id: 'isun', name: 'iSunCloud' },
-];
+export const FIDO2_USER_HANDLE = 'iSunFA-User';
+export const BOOKMARK_LIST = ['Contract', 'Employees', 'Accounting'];

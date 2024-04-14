@@ -1,0 +1,6 @@
+export const IS_BUTTON_DISABLED_TEMP = false;
+
+export const INTERVAL_NUMBER_ANIMATION_MOBILE = 1000;
+export const INTERVAL_NUMBER_ANIMATION_DESKTOP = 10;
+
+export const DEFAULT_DISPLAYED_USER_NAME = 'User';

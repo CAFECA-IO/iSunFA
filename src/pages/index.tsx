@@ -27,10 +27,12 @@ function LandingPage() {
         />
       </Head>
 
-      {/*  Info: (20230712 - Julian) Navbar */}
-      <LandingNavBar />
+      {/*  Info: (20230712 - Shirley) Navbar */}
+      <nav className="">
+        <LandingNavBar />
+      </nav>
 
-      <main className="text-white">
+      <main className="w-screen overflow-hidden text-white">
         <LandingPageBody />
       </main>
     </>

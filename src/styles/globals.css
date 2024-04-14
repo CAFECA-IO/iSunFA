@@ -60,17 +60,102 @@ a {
   display: none;
 }
 
+.customGradient {
+  background: radial-gradient(
+    71.04% 80.27% at 28.64% 85.83%,
+    #ffa502 0%,
+    #f49e01 1%,
+    #c17d01 9%,
+    #935f01 17%,
+    #6b4500 26%,
+    #4a3000 34%,
+    #2f1e00 44%,
+    #1a1000 54%,
+    #0b0700 65%,
+    #020100 79%,
+    #000000 100%
+  );
+  background-blend-mode: color-dodge;
+}
+
+.customRadialGradient {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 24, 64, 0.7) 0%, rgba(0, 24, 64, 0) 100%);
+}
+
+/* Custom bottom shadow */
+.bottomShadow {
+  @apply shadow-lg;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide horizontal scrollbar */
+/* For Webkit browser */
+.hideScrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* For Firefox */
+.hideScrollbar {
+  scrollbar-width: none;
+}
+
+.list-disc {
+  list-style-type: disc;
+}
+
+.dashboardBookmarkShadow {
+  border-radius: var(--Radius-L, 20px);
+  background: var(--Surface-Nuetural-Surface_Lv2, #fff);
+  box-shadow:
+    0px 50px 17px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0)),
+    0px 28px 15px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)),
+    0px 11px 13px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)),
+    0px 6px 10px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)),
+    0px 2px 5px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.1));
+}
+
+@media (max-width: 768px) {
+  .fixed-top-right {
+    top: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+  }
+}
+
 @page {
   size: 595px 842px;
   margin: 0cm;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Info: Dashboard page is white background (20240411 - Shirley) */
+/* @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
   }
   body {
     color: white;
-    background: black;
+    background: white;
+  }
+} */
+
+@layer components {
+  .scrollbar::-webkit-scrollbar {
+    width: 15px;
+    height: 15px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    border-radius: 100vh;
+    background: #f7f4ed;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: #e0cbcb;
+    border-radius: 100vh;
+    border: 3px solid #f6f7ed;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #c0a0b9;
   }
 }
