@@ -59,7 +59,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const menu = isMenuOpen ? (
-    <div className="scrollbar absolute top-48 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xl border border-solid border-gray-300 bg-white pb-2 shadow-xl">
+    <div className="absolute top-44 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xl border border-solid border-gray-300 bg-white pb-2 shadow-xl lg:max-h-[500px]">
       <div className="flex w-full flex-col pl-2 pt-2">
         <div className="z-10 flex items-start gap-0">
           <div className="flex w-full flex-col">
@@ -95,13 +95,13 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   const isDisplayedAddBookmarkModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative mx-auto flex flex-col items-center rounded-xl bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
-        <div className="flex gap-2.5 bg-white px-8 py-4">
+        <div className="flex gap-2.5 bg-white px-2 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
-              <div className="justify-center self-center text-xl font-bold leading-8 text-slate-700">
+              <div className="justify-center self-center text-xl font-bold leading-8 text-navyBlue2">
                 Add My Favorites
               </div>
-              <div className="text-xs leading-5 tracking-normal text-slate-500">
+              <div className="text-xs leading-5 tracking-normal text-lightGray5">
                 Select frequently used functions to be added to the favorites list.
               </div>
             </div>
@@ -129,19 +129,32 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
           <div className="flex flex-col justify-center">
             <div className="flex flex-col justify-center" ref={menuRef}>
               <div
-                className="flex gap-0 rounded-lg border border-solid border-slate-300 bg-white shadow-sm hover:cursor-pointer"
+                className={`${isMenuOpen ? 'border-lightGray' : 'border-lightGray'} flex gap-0 rounded-lg border border-solid bg-white shadow-sm hover:cursor-pointer`}
                 onClick={menuClickHandler}
               >
-                <div className="flex flex-1 flex-col justify-center text-base leading-6 tracking-normal text-slate-500">
+                <div className="flex flex-1 flex-col justify-center text-base leading-6 tracking-normal text-lightGray5">
                   <p className="items-start justify-start px-5 py-2.5 text-start">{dropdownMenu}</p>
                 </div>
                 <div className="my-auto flex flex-col justify-center px-3 py-2.5">
                   <div className="flex items-center justify-center">
-                    <img
-                      loading="lazy"
-                      src="https://cdn.builder.io/api/v1/image/assets/TEMP/572e02dcc6b9b487a917fb0aba7aae71712fa4990066c30acaa40cf61f01c018?apiKey=0e17b0b875f041659e186639705112b1&"
-                      className="aspect-square w-5"
-                    />
+                    <div
+                      className={`text-base transition-transform duration-500 lg:text-xl ${isMenuOpen ? '-rotate-180' : ''}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        fill="none"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill="#314362"
+                          fillRule="evenodd"
+                          d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
