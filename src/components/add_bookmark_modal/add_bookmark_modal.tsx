@@ -59,7 +59,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const menu = isMenuOpen ? (
-    <div className="absolute top-44 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xl border border-solid border-gray-300 bg-white pb-2 shadow-xl lg:max-h-[500px]">
+    <div className="absolute top-44 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xl border border-solid border-gray-300 bg-white pb-2 shadow-xl lg:max-h-[250px]">
       <div className="flex w-full flex-col pl-2 pt-2">
         <div className="z-10 flex items-start gap-0">
           <div className="flex w-full flex-col">

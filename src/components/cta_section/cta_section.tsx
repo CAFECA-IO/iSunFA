@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '../../interfaces/locale';
-import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { ISUNFA_ROUTE } from '../../constants/url';
@@ -47,7 +46,7 @@ const CTASection = () => {
     <div className="flex w-full justify-center lg:w-9/10">
       <div
         ref={animeRef1}
-        className={`overflow-x-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex w-full flex-col items-start justify-start space-y-10 px-0 pb-12 pt-2/5 text-start transition-all duration-1000 md:-ml-40 md:w-3/5 md:pt-1/5 lg:-ml-0 lg:h-screen lg:pt-1/6`}
+        className={`overflow-x-hidden overflow-y-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex w-full flex-col items-start justify-start space-y-10 px-0 pb-12 pt-2/5 text-start transition-all duration-1000 md:-ml-40 md:w-3/5 md:pt-1/5 lg:-ml-0 lg:h-screen lg:pt-1/6`}
       >
         <div className="ml-10">
           <div className="flex flex-col md:space-y-5">
@@ -69,11 +68,11 @@ const CTASection = () => {
         </div>
 
         <Link href={ISUNFA_ROUTE.LOGIN} className="z-5 flex w-full justify-center px-5 md:w-auto">
-          <Button className="flex w-full space-x-3 lg:w-fit" disabled={IS_BUTTON_DISABLED_TEMP}>
+          <Button className="flex w-full space-x-3 lg:w-fit">
             <p
               className={cn(
                 'text-base leading-6 tracking-normal',
-                IS_BUTTON_DISABLED_TEMP ? 'text-lightGray2' : 'text-secondaryBlue',
+                'text-secondaryBlue',
                 'group-hover:text-white'
               )}
             >
@@ -91,11 +90,7 @@ const CTASection = () => {
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
-                className={cn(
-                  `fill-current`,
-                  IS_BUTTON_DISABLED_TEMP ? `text-lightGray2` : `text-secondaryBlue`,
-                  `group-hover:text-white`
-                )}
+                className={cn(`fill-current`, `text-secondaryBlue`, `group-hover:text-white`)}
               />
             </svg>
           </Button>
