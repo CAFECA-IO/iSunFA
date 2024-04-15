@@ -29,8 +29,7 @@ module.exports = {
 
         lightBlue: '#31D3F5',
 
-        lightRed: '#FC8181',
-        lightRed2: '#E96C67',
+        lightRed: '#C84949',
 
         lightOrange: '#F7931A',
         darkOrange: '#FFA600',
@@ -145,6 +144,11 @@ module.exports = {
         h4: '36px',
         h5: '32px',
         h6: '32px',
+        '52px': '52px',
+        '44px': '44px',
+        '40px': '40px',
+        '36px': '36px',
+        '32px': '32px',
       },
       screens: {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */

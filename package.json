@@ -1,9 +1,9 @@
 {
   "name": "iSunFA",
-  "version": "0.1.2+2",
+  "version": "0.1.2+3",
   "private": false,
   "scripts": {
-    "dev": "next dev --port 3001",
+    "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.tx,.tsx .",
