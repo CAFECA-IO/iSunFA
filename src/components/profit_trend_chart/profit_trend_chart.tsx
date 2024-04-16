@@ -309,7 +309,8 @@ const ProfitTrendChart = () => {
             </div>
           </div>
         </div>
-        <div className="flex">
+        {/* TODO: RWD (20240416 - Shirley) */}
+        <div className="hidden md:flex">
           {/* <LineChart data={dummyWeekData} /> */}
           {/* <LineChart data={dummyMonthData} /> */}
           <LineChart data={data} />
