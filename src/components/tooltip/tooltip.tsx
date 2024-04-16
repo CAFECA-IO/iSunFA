@@ -64,7 +64,7 @@ const Tooltip = ({ children }: TooltipProps) => {
       {showTooltip ? (
         <div
           role="tooltip"
-          className={`absolute -left-[15rem] top-0 z-20 w-fit max-w-[200px] rounded-lg bg-white p-4 text-sm shadow-xl`}
+          className={`absolute -left-[13rem] -top-3 z-20 w-fit max-w-[200px] rounded-lg bg-white p-4 text-sm shadow-xl`}
         >
           {/* Info: triangle arrow svg (20240416 - Shirley) */}
           <div className="absolute -right-3 top-3">
@@ -127,9 +127,3 @@ const hintIcon = (
     </defs>
   </svg>
 );
-
-// <div className="relative" onMouseEnter={mouseEnterHandler} onMouseLeave={mouseLeaveHandler}>
-//   {/* {children} */}
-//   {hintIcon}
-//   {showTooltip && <div className="">{tooltipContent}</div>}
-// </div>
