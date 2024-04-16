@@ -18,9 +18,17 @@ const NavBar = () => {
     setComponentVisible: setIsUserMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: appMenuRef,
+    componentVisible: isAppMenuOpen,
+    setComponentVisible: setIsAppMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
   const avatarClickHandler = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
   };
+
+  const appMenuClickHandler = () => setIsAppMenuOpen(!isAppMenuOpen);
 
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
@@ -32,6 +40,41 @@ const NavBar = () => {
       console.error('logOutClickHandler error:', error);
     }
   };
+
+  const displayedAppMenu = (
+    <div
+      ref={appMenuRef}
+      className={`absolute right-0 top-20 grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-x-48px gap-y-32px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
+    >
+      {/* Info: (20240416 - Julian) Project button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/rocket.svg'} width={90} height={90} alt="rocket_icon" />
+        <p>Project</p>
+      </button>
+      {/* Info: (20240416 - Julian) Account button */}
+      <Link href={'/users/accounting'}>
+        <button className="flex flex-col items-center gap-8px">
+          <Image src={'/icons/calculator.svg'} width={90} height={90} alt="calculator_icon" />
+          <p>Account</p>
+        </button>
+      </Link>
+      {/* Info: (20240416 - Julian) Contract button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/document.svg'} width={90} height={90} alt="document_icon" />
+        <p>Contract</p>
+      </button>
+      {/* Info: (20240416 - Julian) Salary button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/briefcase.svg'} width={90} height={90} alt="briefcase_icon" />
+        <p>Salary</p>
+      </button>
+      {/* Info: (20240416 - Julian) Report button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/report.svg'} width={90} height={90} alt="report_icon" />
+        <p>Report</p>
+      </button>
+    </div>
+  );
 
   const displayedUserMenu = isUserMenuOpen ? (
     <div className="absolute right-10 top-20 z-50">
@@ -203,7 +246,7 @@ const NavBar = () => {
         </div>
       </div>
       {/* TODO: icons on mobile (20240408 - Shirley) */}
-      <div className="hidden lg:flex">
+      <div className="relative hidden lg:flex">
         {' '}
         <button>
           <img
@@ -217,12 +260,13 @@ const NavBar = () => {
             className="aspect-square w-14 shrink-0"
           />
         </button>
-        <button>
+        <button onClick={appMenuClickHandler}>
           <img
             src="https://cdn.builder.io/api/v1/image/assets/TEMP/5ff6657b0681d98b7c58359e8d3861a8b640576f5b4bd6873fa523bdb17b1110?apiKey=0e17b0b875f041659e186639705112b1&"
             className="aspect-square w-14 shrink-0"
           />
         </button>
+        {displayedAppMenu}
       </div>
 
       <div className="flex flex-col items-start justify-center">
