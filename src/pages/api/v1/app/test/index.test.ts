@@ -1,7 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
 
-let req: NextApiRequest;
+const req: jest.Mocked<NextApiRequest> = {
+  headers: {},
+  body: null,
+  query: { id: '1' },
+  json: jest.fn(),
+} as unknown as jest.Mocked<NextApiRequest>;
+
 const res: jest.Mocked<NextApiResponse> = {
   status: jest.fn().mockReturnThis(),
   json: jest.fn(),
