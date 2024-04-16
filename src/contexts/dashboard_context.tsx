@@ -1,12 +1,14 @@
 import useStateRef from 'react-usestateref';
 import React, { createContext } from 'react';
 import { BookmarkItem } from '../interfaces/modals';
+import { IDashboardOverview, generateDashboardOverview } from '../interfaces/dashboard_overview';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;
   toggleBookmark: (bookmarkName: string[]) => void;
   addBookmarks: (bookmarks: string[]) => void;
   removeBookmark: (bookmarkName: string) => void;
+  dashboardOverview: IDashboardOverview;
 }
 
 const initialDashboardContext: DashboardContextType = {
@@ -14,6 +16,7 @@ const initialDashboardContext: DashboardContextType = {
   toggleBookmark: () => {},
   addBookmarks: () => {},
   removeBookmark: () => {},
+  dashboardOverview: {} as IDashboardOverview,
 };
 
 export interface IDashboardProvider {
@@ -424,6 +427,11 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   const [bookmarkList, setBookmarkList, bookmarkListRef] =
     useStateRef<Record<string, BookmarkItem>>(BookmarkAvailableList);
 
+  // TODO: Implement the data fetching (20240415 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dashboardOverview, setDashboardOverview, DashboardOverviewRef] =
+    useStateRef<IDashboardOverview>(generateDashboardOverview());
+
   const toggleBookmark = (bookmarkNames: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
       const updatedBookmarkList = { ...prevBookmarkList };
@@ -477,6 +485,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     toggleBookmark,
     addBookmarks,
     removeBookmark,
+    dashboardOverview: DashboardOverviewRef.current,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

@@ -47,10 +47,6 @@ const DashboardPage = () => {
         </div>
 
         <DashboardPageBody />
-
-        {/* <div className="flex h-screen w-screen items-center justify-center bg-white text-xl text-black">
-          Dashboard
-        </div> */}
       </div>
     </>
   );

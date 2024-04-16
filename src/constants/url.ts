@@ -6,7 +6,9 @@ export const ISUNFA_API = {
 
 export const ISUNFA_ROUTE = {
   LANDING_PAGE: '/',
-  COMING_SOON: '/coming-soon',
+  ABOUT: '/#about',
+  FEATURES: '/#features',
+  REPORTS: '/reports',
   CONTACT_US: '/#contact-us',
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
