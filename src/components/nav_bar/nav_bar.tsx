@@ -3,7 +3,7 @@ import Link from 'next/link';
 import React from 'react';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
-import { useUser } from '../../contexts/user_context';
+import { useUserCtx } from '../../contexts/user_context';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '../../constants/url';
@@ -11,7 +11,7 @@ import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 import version from '../../lib/version';
 
 const NavBar = () => {
-  const { credential: credential, signedIn, signOut, username } = useUser();
+  const { credential: credential, signedIn, signOut, username } = useUserCtx();
 
   const {
     targetRef: userMenuRef,

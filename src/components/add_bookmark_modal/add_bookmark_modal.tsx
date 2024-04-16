@@ -2,9 +2,9 @@
 import useStateRef from 'react-usestateref';
 import React, { useEffect } from 'react';
 import { Button } from '../button/button';
-import { useDashboard } from '../../contexts/dashboard_context';
+import { useDashboardCtx } from '../../contexts/dashboard_context';
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import { useGlobal } from '../../contexts/global_context';
+import { useGlobalCtx } from '../../contexts/global_context';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;
@@ -12,8 +12,8 @@ interface IAddBookmarkModal {
 }
 
 const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { bookmarkList, addBookmarks } = useDashboard();
-  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobal();
+  const { bookmarkList, addBookmarks } = useDashboardCtx();
+  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
   const [selectedBookmark, setSelectedBookmark] = useStateRef<string[]>([]);
 

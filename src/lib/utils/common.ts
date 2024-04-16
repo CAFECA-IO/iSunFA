@@ -10,7 +10,8 @@ export function getDomains() {
   return ALLOWED_ORIGINS;
 }
 
-// truncate the string to the given length
+// Info: truncate the string to the given length (20240416 - Shirley)
 export function truncateString(str: string, length: number) {
-  return str.length > length ? str.slice(0, length) + '...' : str;
+  const result = str.length > length ? str.slice(0, length) + '...' : str;
+  return result;
 }
