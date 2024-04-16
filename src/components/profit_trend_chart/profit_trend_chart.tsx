@@ -183,7 +183,7 @@ const ProfitTrendChart = () => {
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(dataMap[selectedPeriod]);
 
-  const handlePeriodChange = (period: Period) => {
+  const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
     setData(dataMap[period]);
   };
@@ -262,9 +262,9 @@ const ProfitTrendChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="mx-2 flex justify-between">
+        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-5">
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
@@ -274,7 +274,7 @@ const ProfitTrendChart = () => {
                     : ''
                 )}
                 size={'medium'}
-                onClick={() => handlePeriodChange(Period.WEEK)}
+                onClick={() => periodChangeHandler(Period.WEEK)}
               >
                 Week
               </Button>
@@ -288,7 +288,7 @@ const ProfitTrendChart = () => {
                     : ''
                 )}
                 size={'medium'}
-                onClick={() => handlePeriodChange(Period.MONTH)}
+                onClick={() => periodChangeHandler(Period.MONTH)}
               >
                 Month
               </Button>
@@ -302,7 +302,7 @@ const ProfitTrendChart = () => {
                     : ''
                 )}
                 size={'medium'}
-                onClick={() => handlePeriodChange(Period.YEAR)}
+                onClick={() => periodChangeHandler(Period.YEAR)}
               >
                 Year
               </Button>
