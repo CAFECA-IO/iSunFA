@@ -70,8 +70,8 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                   onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
                   type="button"
                   className={`${
-                    selectedBookmark.includes(key) ? 'bg-tertiaryBlue2 text-white' : ''
-                  } mt-1 flex gap-3 rounded-md px-3 py-2 text-navyBlue2 hover:bg-tertiaryBlue2 hover:bg-opacity-70 hover:text-white`}
+                    selectedBookmark.includes(key) ? 'bg-primaryYellow/20' : 'hover:bg-lightGray/20'
+                  } mt-1 flex gap-3 rounded-md px-3 py-2 text-navyBlue2`}
                 >
                   <div className="my-auto flex flex-col justify-center">
                     {bookmarkList[key].icon}
@@ -128,11 +128,11 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
         <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
           <div className="flex flex-col justify-center">
             <div className="flex flex-col justify-center" ref={menuRef}>
-              <div
+              <button
                 className={`${isMenuOpen ? 'border-lightGray' : 'border-lightGray'} flex gap-0 rounded-lg border border-solid bg-white shadow-sm hover:cursor-pointer`}
                 onClick={menuClickHandler}
               >
-                <div className="flex flex-1 flex-col justify-center text-base leading-6 tracking-normal text-lightGray5">
+                <div className="flex flex-1 flex-col justify-center text-base leading-6 tracking-normal text-tertiaryBlue">
                   <p className="items-start justify-start px-5 py-2.5 text-start">{dropdownMenu}</p>
                 </div>
                 <div className="my-auto flex flex-col justify-center px-3 py-2.5">
@@ -157,8 +157,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                     </div>
                   </div>
                 </div>
-              </div>
-
+              </button>
               {menu}
             </div>
           </div>
