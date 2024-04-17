@@ -337,7 +337,19 @@
     "WED": "三",
     "THU": "四",
     "FRI": "五",
-    "SAT": "六"
+    "SAT": "六",
+    "JAN_ABR": "一月",
+    "FEB_ABR": "二月",
+    "MAR_ABR": "三月",
+    "APR_ABR": "四月",
+    "MAY_ABR": "五月",
+    "JUN_ABR": "六月",
+    "JUL_ABR": "七月",
+    "AUG_ABR": "八月",
+    "SEP_ABR": "九月",
+    "OCT_ABR": "十月",
+    "NOV_ABR": "十一月",
+    "DEC_ABR": "十二月"
   },
   "SORTING": {
     "SORT_BY": "排序方式",

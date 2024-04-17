@@ -1,34 +1,3 @@
-export const MONTH_LIST = [
-  'DATE_PICKER.JAN',
-  'DATE_PICKER.FEB',
-  'DATE_PICKER.MAR',
-  'DATE_PICKER.APR',
-  'DATE_PICKER.MAY',
-  'DATE_PICKER.JUN',
-  'DATE_PICKER.JUL',
-  'DATE_PICKER.AUG',
-  'DATE_PICKER.SEP',
-  'DATE_PICKER.OCT',
-  'DATE_PICKER.NOV',
-  'DATE_PICKER.DEC',
-];
-
-export const WEEK_LIST = [
-  'DATE_PICKER.SUN',
-  'DATE_PICKER.MON',
-  'DATE_PICKER.TUE',
-  'DATE_PICKER.WED',
-  'DATE_PICKER.THU',
-  'DATE_PICKER.FRI',
-  'DATE_PICKER.SAT',
-];
-
-export const sortOldAndNewOptions = ['SORTING.NEWEST', 'SORTING.OLDEST'];
-export const default30DayPeriod = {
-  startTimeStamp: Math.floor(Date.now() / 1000) - 86400 * 30,
-  endTimeStamp: Math.floor(Date.now() / 1000),
-};
-
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
@@ -164,4 +133,3 @@ export const ALLOWED_ORIGINS = [
 ];
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
-export const BOOKMARK_LIST = ['Contract', 'Employees', 'Accounting'];
