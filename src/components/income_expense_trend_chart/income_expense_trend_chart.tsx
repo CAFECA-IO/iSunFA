@@ -96,6 +96,8 @@ const LineChart = ({ data }: LineChartProps) => {
       show: true,
       // customLegendItems: ['income', 'expense'],
       position: 'bottom',
+      horizontalAlign: 'left',
+
       markers: {
         fillColors: ['#6DDBA8', '#FB7A7A'],
         width: 20, // 標記的寬度
