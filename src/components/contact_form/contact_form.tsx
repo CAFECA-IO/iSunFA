@@ -70,7 +70,7 @@ function ContactForm() {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Info: (20230731 - Shirley) call API
-    const res = await fetch('/api/email', {
+    const res = await fetch('/api/v1/email', {
       method: 'POST',
       body: JSON.stringify(emailData),
       headers: {

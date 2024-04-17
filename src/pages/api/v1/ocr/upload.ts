@@ -38,7 +38,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
     }
     default: {
       return res.status(405).json({
-        message: 'success',
+        message: 'error',
         errorReason: 'Method Not Allowed',
         data: [],
       });
