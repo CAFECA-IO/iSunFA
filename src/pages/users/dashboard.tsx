@@ -4,14 +4,14 @@ import React, { useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '../../components/nav_bar/nav_bar';
 import { ILocale } from '../../interfaces/locale';
-import { useUser } from '../../contexts/user_context';
+import { useUserCtx } from '../../contexts/user_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import DashboardPageBody from '../../components/dashboard_page_body/dashboard_page_body';
 
 const DashboardPage = () => {
   const router = useRouter();
 
-  const { signedIn } = useUser();
+  const { signedIn } = useUserCtx();
 
   useEffect(() => {
     if (!signedIn) {

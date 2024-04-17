@@ -23,9 +23,7 @@ module.exports = {
 
         lightWhite: '#FCFCFF',
 
-        lightGreen: '#3DD08C',
-        lightGreen2: '#21AD6C',
-        lightGreen3: '#53AE94',
+        lightGreen: '#2D7E58',
 
         lightBlue: '#31D3F5',
 
@@ -46,6 +44,8 @@ module.exports = {
 
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
+        primaryYellow3: '#FFD892',
+        primaryYellow4: '#FFA600',
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
@@ -56,6 +56,7 @@ module.exports = {
         lightGray3: '#C1C9D5',
         lightGray4: '#7F8A9D',
         lightGray5: '#58667F',
+        lightGray6: '#CDD1D9',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
@@ -168,11 +169,12 @@ module.exports = {
       },
 
       spacing: {
-        /* Info: (20230627 - Julian) 適用範圍
+        /* Info: (20240315 - Shirley) 適用範圍
          * width / height / padding / margin / top / bottom / right / left */
         '1px': '1px',
         '2px': '2px',
         '3px': '3px',
+        '4px': '4px',
         '5px': '5px',
         '8px': '8px',
         '10px': '10px',
@@ -336,6 +338,7 @@ module.exports = {
         '1900px': '1900px',
         '2000px': '2000px',
         '0.1rem': '0.1rem',
+        '0.2rem': '0.2rem',
         '1.4rem': '1.4rem',
         '1.6rem': '1.6rem',
         '1.8rem': '1.8rem',
@@ -464,7 +467,7 @@ module.exports = {
         '120vw': '120vw',
         '140vw': '140vw',
 
-        // Info: (20230801- Julian) A4 尺寸
+        // Info: (20240315- Shirley) A4 尺寸
         'a4-width': '595px',
         'a4-height': '842px',
       },

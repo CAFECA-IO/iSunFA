@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useContext, useEffect, useRef } from 'react';
 import { RegisterFormModalProps } from '../../interfaces/modals';
-import { UserContext, useUser } from '../../contexts/user_context';
+import { UserContext, useUserCtx } from '../../contexts/user_context';
 import { Button } from '../button/button';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 
@@ -11,7 +11,7 @@ interface IRegisterFormModal {
 }
 
 const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegisterFormModal) => {
-  const { signUp } = useUser();
+  const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const registerClickHandler = async () => {

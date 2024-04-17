@@ -420,6 +420,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
   },
 };
 
+const DUMMY_DASHBOARD_OVERVIEW = generateDashboardOverview();
+
 export const DashboardContext = createContext<DashboardContextType>(initialDashboardContext);
 
 export const DashboardProvider = ({ children }: IDashboardProvider) => {
@@ -430,7 +432,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   // TODO: Implement the data fetching (20240415 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dashboardOverview, setDashboardOverview, DashboardOverviewRef] =
-    useStateRef<IDashboardOverview>(generateDashboardOverview());
+    useStateRef<IDashboardOverview>(DUMMY_DASHBOARD_OVERVIEW);
 
   const toggleBookmark = (bookmarkNames: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
@@ -491,7 +493,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };
 
-export const useDashboard = () => {
+export const useDashboardCtx = () => {
   const context = React.useContext(DashboardContext);
   if (context === undefined) {
     throw new Error('useDashboard must be used within a DashboardProvider');
