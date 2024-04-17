@@ -52,16 +52,16 @@ describe('API Handler Tests', () => {
         type: 'Receiving',
         from_or_to: 'Isuncloud Limited',
         description: '技術開發軟件與服務',
-        document: [
+        lineItem: [
           {
-            documentIndex: '1229001001',
+            lineItemIndex: '1229001001',
             account: '銀行存款',
             description: '港幣120000 * 3.916',
             debit: true,
             amount: 469920,
           },
           {
-            documentIndex: '1229001002',
+            lineItemIndex: '1229001002',
             account: '營業收入',
             description: '港幣120000 * 3.916',
             debit: false,

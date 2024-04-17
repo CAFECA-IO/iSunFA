@@ -17,8 +17,8 @@ export interface AccountInvoiceData {
   fee?: string;
 }
 
-export interface AccountDocument {
-  documentIndex: string;
+export interface AccountLineItem {
+  lineItemIndex: string;
   account: string;
   description: string;
   debit: boolean;
@@ -31,7 +31,7 @@ export interface AccountVoucher {
   type: string;
   from_or_to: string;
   description: string;
-  document: AccountDocument[];
+  lineItem: AccountLineItem[];
 }
 
 // Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
@@ -53,10 +53,10 @@ export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
 
 // Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAccountDocument(data: any): data is AccountDocument {
+export function isAccountLineItem(data: any): data is AccountLineItem {
   return (
     data &&
-    typeof data.documentIndex === 'string' &&
+    typeof data.lineItemIndex === 'string' &&
     typeof data.account === 'string' &&
     typeof data.description === 'string' &&
     typeof data.debit === 'boolean' &&
@@ -74,7 +74,7 @@ export function isAccountVoucher(data: any): data is AccountVoucher {
     typeof data.type === 'string' &&
     typeof data.from_or_to === 'string' &&
     typeof data.description === 'string' &&
-    Array.isArray(data.document) &&
-    data.document.every(isAccountDocument)
+    Array.isArray(data.lineItem) &&
+    data.lineItem.every(isAccountLineItem)
   );
 }
