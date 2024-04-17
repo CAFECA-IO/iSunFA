@@ -7,7 +7,7 @@ import { MONTH_ABR_LIST, WEEK_LIST } from '../../constants/display';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '../../interfaces/locale';
 import { IDatePeriod } from '../../interfaces/date_period';
-import { timestampToString } from '../../lib/utils/common';
+import { cn, timestampToString } from '../../lib/utils/common';
 import { Button } from '../button/button';
 
 type Dates = {
@@ -47,9 +47,9 @@ const PopulateDates = ({
 }: IPopulateDatesParams) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  // Info: (2020417 - Shirley) 用於日期樣式
+  // Info: (2020417 - Shirley) 用於日期選取的樣式
   const beforeStyle =
-    'before:absolute before:-z-10 before:w-40px before:h-40px before:rounded-full before:bg-primaryYellow';
+    'before:absolute before:-z-10 before:w-[42px] before:h-[42px] before:rounded-full before:bg-primaryYellow';
 
   // Info: (20240417 - Shirley) 顯示星期標題
   const weekNameList = WEEK_LIST.map((week, index) => (
@@ -91,9 +91,9 @@ const PopulateDates = ({
           ? date.getTime() === selectTimeOne && date.getTime() === selectTimeTwoReset
             ? `rounded-full text-secondaryBlue bg-primaryYellow`
             : date.getTime() === selectTimeOne
-              ? `rounded-l-full text-secondaryBlue before:left-[1px] before:-top-2px ${beforeStyle}`
+              ? `rounded-l-full text-secondaryBlue before:left-[1px] before:-top-3px ${beforeStyle}`
               : date.getTime() === selectTimeTwoReset
-                ? `rounded-r-full text-secondaryBlue before:right-[1px] before:-top-2px ${beforeStyle}`
+                ? `rounded-r-full text-secondaryBlue before:right-[1px] before:-top-3px ${beforeStyle}`
                 : ''
           : ''
       : '';
@@ -303,7 +303,10 @@ const DatePicker = ({ period, setFilteredPeriod, isLinearBg, loading }: IDatePic
         <Button
           variant={'tertiaryOutline'}
           onClick={openCalenderHandler}
-          className={`flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-4 font-inter text-secondaryBlue hover:cursor-pointer`}
+          className={cn(
+            'flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-4 font-inter text-secondaryBlue hover:cursor-pointer',
+            componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
+          )}
         >
           {/* <p className="flex-1 whitespace-nowrap text-sm">{displayPeriod}</p> */}
           <svg
