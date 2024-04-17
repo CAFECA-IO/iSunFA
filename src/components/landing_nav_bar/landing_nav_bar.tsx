@@ -12,6 +12,7 @@ import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
 import { ISUNFA_ROUTE } from '../../constants/url';
+import version from '../../lib/version';
 
 const languages = [
   { label: 'EN', code: 'en' },
@@ -72,9 +73,16 @@ function LandingNavBar() {
     >
       <ul className="flex flex-1 items-center space-x-5 lg:space-x-10">
         <li>
-          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-50px w-140px shrink-0">
-            <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
-          </Link>
+          <div className="flex shrink-0 items-end justify-end space-x-2">
+            <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
+              <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
+            </Link>
+            <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
+              <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+                <div className="justify-center px-1 text-xs">V{version}</div>
+              </div>
+            </div>
+          </div>
         </li>
         <li>
           <Link
@@ -297,9 +305,16 @@ function LandingNavBar() {
     >
       {/* Info: logo (20240321 - Shirley) */}
       <div>
-        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-          <Image src="/logo/isunfa_logo.svg" width={150} height={30} alt="iSunFA_logo" />
-        </Link>
+        <div className="flex items-end justify-end space-x-2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
+            <Image src="/logo/isunfa_logo.svg" width={150} height={30} alt="iSunFA_logo" />
+          </Link>
+          <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
+            <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+              <div className="justify-center px-1 text-xs">V{version}</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div className="flex flex-1 items-center justify-end space-x-0">
         {' '}
@@ -356,7 +371,7 @@ function LandingNavBar() {
       </div>
 
       <ul
-        className={`absolute left-0 top-0 mt-70px flex h-fit w-full flex-col items-start overflow-hidden bg-navyBlue px-0 text-white ${
+        className={`absolute left-0 top-0 mt-60px flex h-fit w-full flex-col items-start overflow-hidden bg-navyBlue px-0 text-white ${
           menuVisible ? 'translate-y-0' : '-z-10 -translate-y-140%'
         } pb-5 drop-shadow-xlSide transition-all duration-700 ease-in-out`}
       >
@@ -537,7 +552,7 @@ function LandingNavBar() {
   );
 
   return (
-    <div className="fixed inset-x-0 top-0 z-40 mx-auto max-w-full font-inter">
+    <div className="fixed inset-x-0 top-0 z-40 mx-auto  max-w-full font-inter">
       {desktopNavBar}
       {mobileNavBar}
     </div>

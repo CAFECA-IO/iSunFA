@@ -3,14 +3,15 @@ import Link from 'next/link';
 import React from 'react';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
-import { useUser } from '../../contexts/user_context';
+import { useUserCtx } from '../../contexts/user_context';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
+import version from '../../lib/version';
 
 const NavBar = () => {
-  const { credential: credential, signedIn, signOut, username } = useUser();
+  const { credential: credential, signedIn, signOut, username } = useUserCtx();
 
   const {
     targetRef: userMenuRef,
@@ -18,9 +19,17 @@ const NavBar = () => {
     setComponentVisible: setIsUserMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: appMenuRef,
+    componentVisible: isAppMenuOpen,
+    setComponentVisible: setIsAppMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
   const avatarClickHandler = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
   };
+
+  const appMenuClickHandler = () => setIsAppMenuOpen(!isAppMenuOpen);
 
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
@@ -32,6 +41,41 @@ const NavBar = () => {
       console.error('logOutClickHandler error:', error);
     }
   };
+
+  const displayedAppMenu = (
+    <div
+      ref={appMenuRef}
+      className={`absolute right-0 top-20 grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-x-48px gap-y-32px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
+    >
+      {/* Info: (20240416 - Julian) Project button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/rocket.svg'} width={90} height={90} alt="rocket_icon" />
+        <p>Project</p>
+      </button>
+      {/* Info: (20240416 - Julian) Account button */}
+      <Link href={'/users/accounting'}>
+        <button className="flex flex-col items-center gap-8px">
+          <Image src={'/icons/calculator.svg'} width={90} height={90} alt="calculator_icon" />
+          <p>Account</p>
+        </button>
+      </Link>
+      {/* Info: (20240416 - Julian) Contract button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/document.svg'} width={90} height={90} alt="document_icon" />
+        <p>Contract</p>
+      </button>
+      {/* Info: (20240416 - Julian) Salary button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/briefcase.svg'} width={90} height={90} alt="briefcase_icon" />
+        <p>Salary</p>
+      </button>
+      {/* Info: (20240416 - Julian) Report button */}
+      <button className="flex flex-col items-center gap-8px">
+        <Image src={'/icons/report.svg'} width={90} height={90} alt="report_icon" />
+        <p>Report</p>
+      </button>
+    </div>
+  );
 
   const displayedUserMenu = isUserMenuOpen ? (
     <div className="absolute right-10 top-20 z-50">
@@ -146,9 +190,16 @@ const NavBar = () => {
   return (
     <div className="flex gap-5 bg-white px-20 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
       <div className="my-auto flex flex-1 items-center">
-        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-          <Image src="/logo/isunfa_logo_light.svg" width={150} height={30} alt="iSunFA_logo" />
-        </Link>
+        <div className="flex items-end justify-end space-x-2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
+            <Image src="/logo/isunfa_logo_light.svg" width={150} height={30} alt="iSunFA_logo" />
+          </Link>
+          <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
+            <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+              <div className="justify-center px-1 text-xs">V{version}</div>
+            </div>
+          </div>
+        </div>
 
         {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
         <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
@@ -203,7 +254,7 @@ const NavBar = () => {
         </div>
       </div>
       {/* TODO: icons on mobile (20240408 - Shirley) */}
-      <div className="hidden lg:flex">
+      <div className="relative hidden lg:flex">
         {' '}
         <button>
           <img
@@ -217,19 +268,20 @@ const NavBar = () => {
             className="aspect-square w-14 shrink-0"
           />
         </button>
-        <button>
+        <button onClick={appMenuClickHandler}>
           <img
             src="https://cdn.builder.io/api/v1/image/assets/TEMP/5ff6657b0681d98b7c58359e8d3861a8b640576f5b4bd6873fa523bdb17b1110?apiKey=0e17b0b875f041659e186639705112b1&"
             className="aspect-square w-14 shrink-0"
           />
         </button>
+        {displayedAppMenu}
       </div>
 
       <div className="flex flex-col items-start justify-center">
         <div className="h-14 shrink-0" />
       </div>
 
-      <div className="my-auto"> {displayedLogInBtn}</div>
+      <div className="my-auto">{displayedLogInBtn}</div>
     </div>
   );
 };
