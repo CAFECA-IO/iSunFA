@@ -491,7 +491,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };
 
-export const useDashboard = () => {
+export const useDashboardCtx = () => {
   const context = React.useContext(DashboardContext);
   if (context === undefined) {
     throw new Error('useDashboard must be used within a DashboardProvider');

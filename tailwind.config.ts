@@ -23,9 +23,7 @@ module.exports = {
 
         lightWhite: '#FCFCFF',
 
-        lightGreen: '#3DD08C',
-        lightGreen2: '#21AD6C',
-        lightGreen3: '#53AE94',
+        lightGreen: '#2D7E58',
 
         lightBlue: '#31D3F5',
 
@@ -46,6 +44,8 @@ module.exports = {
 
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
+        primaryYellow3: '#FFD892',
+        primaryYellow4: '#FFA600',
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
@@ -337,6 +337,7 @@ module.exports = {
         '1900px': '1900px',
         '2000px': '2000px',
         '0.1rem': '0.1rem',
+        '0.2rem': '0.2rem',
         '1.4rem': '1.4rem',
         '1.6rem': '1.6rem',
         '1.8rem': '1.8rem',
