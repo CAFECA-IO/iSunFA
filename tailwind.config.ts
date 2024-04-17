@@ -541,6 +541,7 @@ module.exports = {
       maxWidth: {
         '80px': '80px',
         '140px': '140px',
+        '248px': '248px',
         '250px': '250px',
       },
       minWidth: {
@@ -559,6 +560,7 @@ module.exports = {
       },
       rotate: {
         135: '135deg',
+        40: '40deg',
       },
       translate: { '100%': '100%', '120%': '120%', '140%': '140%' },
       borderWidth: {
