@@ -99,6 +99,8 @@ const LineChart = ({ data }: LineChartProps) => {
       horizontalAlign: 'left',
 
       customLegendItems: ['profit status'],
+      fontFamily: 'Barlow',
+      fontWeight: 500,
       markers: {
         fillColors: ['#FFA502'],
         width: 20, // 標記的寬度
