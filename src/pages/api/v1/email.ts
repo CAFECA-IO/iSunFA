@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import SendMail from '../../lib/utils/email';
+import SendMail from '../../../lib/utils/email';
 
 // TODO: temp solution (20240115 - Shirley)
 // eslint-disable-next-line @typescript-eslint/naming-convention

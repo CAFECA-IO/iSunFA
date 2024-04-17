@@ -1,170 +1,187 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 type ResponseData = {
-  date: string;
+  period: string;
   income: number;
   expenses: number;
 };
 
-// 0301 - 0331
+type ApiResponse = {
+  powerby: string;
+  success: boolean;
+  code: string;
+  message: string;
+  payload: ResponseData[] | null;
+};
+
 const responseDataArray: ResponseData[] = [
   {
-    date: '2024-03-01',
+    period: '2024-03-01',
     income: 70000,
     expenses: 50000,
   },
   {
-    date: '2024-03-02',
+    period: '2024-03-02',
     income: 200000,
     expenses: 130000,
   },
   {
-    date: '2024-03-03',
-    income: 350000,
+    period: '2024-03-03',
+    income: 30000,
+    expenses: 20000,
+  },
+  {
+    period: '2024-03-04',
+    income: 10000,
+    expenses: 5000,
+  },
+  {
+    period: '2024-03-05',
+    income: 5000,
+    expenses: 3000,
+  },
+  {
+    period: '2024-03-06',
+    income: 10000,
+    expenses: 8000,
+  },
+  {
+    period: '2024-03-07',
+    income: 20000,
     expenses: 15000,
   },
   {
-    date: '2024-03-04',
+    period: '2024-03-08',
+    income: 30000,
+    expenses: 20000,
+  },
+  {
+    period: '2024-03-09',
     income: 40000,
-    expenses: 25000,
+    expenses: 30000,
   },
   {
-    date: '2024-03-05',
-    income: 5000000,
-    expenses: 1000000,
+    period: '2024-03-10',
+    income: 50000,
+    expenses: 40000,
   },
   {
-    date: '2024-03-06',
-    income: 70000,
+    period: '2024-03-11',
+    income: 60000,
     expenses: 50000,
   },
   {
-    date: '2024-03-07',
-    income: 200000,
-    expenses: 130000,
-  },
-  {
-    date: '2024-03-08',
-    income: 350000,
-    expenses: 15000,
-  },
-  {
-    date: '2024-03-09',
-    income: 40000,
-    expenses: 25000,
-  },
-  {
-    date: '2024-03-10',
-    income: 5000000,
-    expenses: 1000000,
-  },
-  {
-    date: '2024-03-11',
+    period: '2024-03-12',
     income: 70000,
-    expenses: 50000,
+    expenses: 60000,
   },
   {
-    date: '2024-03-12',
-    income: 200000,
+    period: '2024-03-13',
+    income: 80000,
+    expenses: 70000,
+  },
+  {
+    period: '2024-03-14',
+    income: 90000,
+    expenses: 80000,
+  },
+  {
+    period: '2024-03-15',
+    income: 100000,
+    expenses: 90000,
+  },
+  {
+    period: '2024-03-16',
+    income: 110000,
+    expenses: 100000,
+  },
+  {
+    period: '2024-03-17',
+    income: 120000,
+    expenses: 110000,
+  },
+  {
+    period: '2024-03-18',
+    income: 130000,
+    expenses: 120000,
+  },
+  {
+    period: '2024-03-19',
+    income: 140000,
     expenses: 130000,
   },
   {
-    date: '2024-03-13',
-    income: 350000,
-    expenses: 15000,
+    period: '2024-03-20',
+    income: 150000,
+    expenses: 140000,
   },
   {
-    date: '2024-03-14',
-    income: 40000,
-    expenses: 25000,
+    period: '2024-03-21',
+    income: 160000,
+    expenses: 150000,
   },
   {
-    date: '2024-03-15',
-    income: 5000000,
-    expenses: 1000000,
+    period: '2024-03-22',
+    income: 170000,
+    expenses: 160000,
   },
   {
-    date: '2024-03-16',
-    income: 70000,
-    expenses: 50000,
+    period: '2024-03-23',
+    income: 180000,
+    expenses: 170000,
   },
   {
-    date: '2024-03-17',
+    period: '2024-03-24',
+    income: 190000,
+    expenses: 180000,
+  },
+  {
+    period: '2024-03-25',
     income: 200000,
-    expenses: 130000,
+    expenses: 190000,
   },
   {
-    date: '2024-03-18',
-    income: 350000,
-    expenses: 15000,
+    period: '2024-03-26',
+    income: 210000,
+    expenses: 200000,
   },
   {
-    date: '2024-03-19',
-    income: 40000,
-    expenses: 25000,
+    period: '2024-03-27',
+    income: 220000,
+    expenses: 210000,
   },
   {
-    date: '2024-03-20',
-    income: 5000000,
-    expenses: 1000000,
+    period: '2024-03-28',
+    income: 230000,
+    expenses: 220000,
   },
   {
-    date: '2024-03-21',
-    income: 70000,
-    expenses: 50000,
+    period: '2024-03-29',
+    income: 240000,
+    expenses: 230000,
   },
   {
-    date: '2024-03-22',
-    income: 200000,
-    expenses: 130000,
+    period: '2024-03-30',
+    income: 250000,
+    expenses: 240000,
   },
   {
-    date: '2024-03-23',
-    income: 350000,
-    expenses: 15000,
-  },
-  {
-    date: '2024-03-24',
-    income: 40000,
-    expenses: 25000,
-  },
-  {
-    date: '2024-03-25',
-    income: 5000000,
-    expenses: 1000000,
-  },
-  {
-    date: '2024-03-26',
-    income: 70000,
-    expenses: 50000,
-  },
-  {
-    date: '2024-03-27',
-    income: 200000,
-    expenses: 130000,
-  },
-  {
-    date: '2024-03-28',
-    income: 350000,
-    expenses: 15000,
-  },
-  {
-    date: '2024-03-29',
-    income: 40000,
-    expenses: 25000,
-  },
-  {
-    date: '2024-03-30',
-    income: 5000000,
-    expenses: 1000000,
-  },
-  {
-    date: '2024-03-31',
-    income: 5000000,
-    expenses: 1000000,
+    period: '2024-03-31',
+    income: 260000,
+    expenses: 250000,
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData[]>) {
-  res.status(200).json(responseDataArray);
+export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+  const { period = 'day' } = req.query;
+  if (period === 'day') {
+    const apiResponse: ApiResponse = {
+      powerby: 'iSunFa api 1.0.0',
+      success: true,
+      code: '200',
+      message: 'request successful',
+      payload: responseDataArray,
+    };
+    res.status(200).json(apiResponse);
+  }
 }

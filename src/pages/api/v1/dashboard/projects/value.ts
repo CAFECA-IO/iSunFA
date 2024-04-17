@@ -6,6 +6,14 @@ type ResponseData = {
   expenses: number;
 };
 
+type ApiResponse = {
+  powerby: string;
+  success: boolean;
+  code: string;
+  message: string;
+  payload: ResponseData[] | null;
+};
+
 const responseDataArray: ResponseData[] = [
   {
     name: 'Project 1',
@@ -34,6 +42,13 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData[]>) {
-  res.status(200).json(responseDataArray);
+export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+  const apiResponse: ApiResponse = {
+    powerby: 'iSunFa api 1.0.0',
+    success: true,
+    code: '200',
+    message: 'request successful',
+    payload: responseDataArray,
+  };
+  res.status(200).json(apiResponse);
 }
