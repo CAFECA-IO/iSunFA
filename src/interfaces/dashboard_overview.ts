@@ -1,14 +1,12 @@
 export interface IDashboardOverview {
-  assetsGrowthRate: number;
+  profitGrowthRate: number;
   projectROI: string;
   preLaunchProjects: number;
 }
 
-// generate dummy data for `DashboardOverview`
 export function generateDashboardOverview(): IDashboardOverview {
-  // generate assetsGrowthRate negative or positive
   const isGrowthPositive = Math.random() > 0.5;
-  const assetsGrowthRate = isGrowthPositive
+  const profitGrowthRate = isGrowthPositive
     ? Math.floor(Math.random() * 100)
     : -Math.floor(Math.random() * 100);
 
@@ -18,7 +16,7 @@ export function generateDashboardOverview(): IDashboardOverview {
 
   const preLaunchProjects = Math.floor(Math.random() * 100);
   return {
-    assetsGrowthRate,
+    profitGrowthRate,
     projectROI,
     preLaunchProjects,
   };

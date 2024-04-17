@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.2+4",
+  "version": "0.1.2+19",
   "private": false,
   "scripts": {
     "dev": "next dev --port 3000",
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@passwordless-id/webauthn": "^1.5.0",
+    "apexcharts": "^3.48.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cookie": "^0.6.0",
@@ -25,6 +26,7 @@
     "nodemailer": "^6.9.8",
     "prettier": "^3.1.1",
     "react": "^18",
+    "react-apexcharts": "^1.4.1",
     "react-dom": "^18",
     "react-i18next": "^14.0.0",
     "react-icons": "^5.0.1",
