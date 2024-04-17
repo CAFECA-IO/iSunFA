@@ -1,10 +1,12 @@
 /* eslint-disable */
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Tooltip from '../tooltip/tooltip';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
+import { useGlobalCtx } from '../../contexts/global_context';
+import { LayoutAssertion } from '../../interfaces/layout_assertion';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -21,6 +23,38 @@ interface LineChartProps {
 }
 
 const LineChart: React.FC<LineChartProps> = ({ data }) => {
+  const globalCtx = useGlobalCtx();
+  const [chartWidth, setChartWidth] = React.useState(580);
+  const [chartHeight, setChartHeight] = React.useState(250);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = globalCtx.width;
+      const windowHeight = window.innerHeight;
+
+      if (windowWidth <= 768) {
+        const presentWidth = windowWidth / 1.45;
+        const presentHeight = windowHeight / 3.5;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (window.innerWidth >= 1440) {
+        const presentWidth = 580;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else {
+        const presentWidth = windowWidth / 1.25;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      }
+    };
+    handleResize();
+  }, [globalCtx.width]);
+
   const options: ApexOptions = {
     chart: {
       id: 'profit-trend-chart',
@@ -126,7 +160,15 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
     },
   };
 
-  return <Chart options={options} series={data.series} type="line" width={580} height={250} />;
+  return (
+    <Chart
+      options={options}
+      series={data.series}
+      type="line"
+      width={chartWidth}
+      height={chartHeight}
+    />
+  );
 };
 
 enum Period {
@@ -264,7 +306,7 @@ const ProfitTrendChart = () => {
       <div className="mt-2">
         <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
-          <div className="flex space-x-5">
+          <div className="flex space-x-2 md:space-x-5">
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
@@ -310,7 +352,7 @@ const ProfitTrendChart = () => {
           </div>
         </div>
         {/* TODO: RWD (20240416 - Shirley) */}
-        <div className="hidden md:flex">
+        <div className="flex">
           {/* <LineChart data={dummyWeekData} /> */}
           {/* <LineChart data={dummyMonthData} /> */}
           <LineChart data={data} />

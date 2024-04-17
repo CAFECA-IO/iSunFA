@@ -6,3 +6,5 @@ export const INTERVAL_NUMBER_ANIMATION_DESKTOP = 10;
 export const DEFAULT_DISPLAYED_USER_NAME = 'User';
 
 export const NO_DATA_FOR_DEMO = false;
+
+export const LAYOUT_BREAKPOINT = 1440;
