@@ -1,24 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-type Status = 'success' | 'inProgress' | 'error';
-
-type OcrResultStatus = {
-  resultId: string;
-  status: string;
-};
+import { AccountProgressStatus, AccountResultStatus } from '@/interfaces/account';
 
 type ResponseData = {
-  message: Status;
+  message: AccountProgressStatus;
   errorReason?: string;
-  data: OcrResultStatus[];
+  data: AccountResultStatus[];
 };
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   // Todo Murky (20240416): Get Images and check if Image exist
   switch (req.method) {
     case 'POST': {
-      const status = 'success' as Status;
-      const data: OcrResultStatus[] = [
+      const status = 'success' as AccountProgressStatus;
+      const data: AccountResultStatus[] = [
         {
           resultId: '20240416-001-001',
           status: 'success',

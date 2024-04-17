@@ -44,4 +44,16 @@ describe('test API', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockReturn);
   });
+
+  it('should return 405 for invalid request method', async () => {
+    req.method = 'PUT';
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'error',
+      errorReason: 'Method Not Allowed',
+      data: [],
+    });
+  });
 });
