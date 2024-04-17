@@ -3,14 +3,15 @@ import Link from 'next/link';
 import React from 'react';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
-import { useUser } from '../../contexts/user_context';
+import { useUserCtx } from '../../contexts/user_context';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
+import version from '../../lib/version';
 
 const NavBar = () => {
-  const { credential: credential, signedIn, signOut, username } = useUser();
+  const { credential: credential, signedIn, signOut, username } = useUserCtx();
 
   const {
     targetRef: userMenuRef,
@@ -146,9 +147,16 @@ const NavBar = () => {
   return (
     <div className="flex gap-5 bg-white px-20 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
       <div className="my-auto flex flex-1 items-center">
-        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-          <Image src="/logo/isunfa_logo_light.svg" width={150} height={30} alt="iSunFA_logo" />
-        </Link>
+        <div className="flex items-end justify-end space-x-2">
+          <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
+            <Image src="/logo/isunfa_logo_light.svg" width={150} height={30} alt="iSunFA_logo" />
+          </Link>
+          <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
+            <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+              <div className="justify-center px-1 text-xs">V{version}</div>
+            </div>
+          </div>
+        </div>
 
         {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
         <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
@@ -229,7 +237,7 @@ const NavBar = () => {
         <div className="h-14 shrink-0" />
       </div>
 
-      <div className="my-auto"> {displayedLogInBtn}</div>
+      <div className="my-auto">{displayedLogInBtn}</div>
     </div>
   );
 };

@@ -1,12 +1,12 @@
 import React from 'react';
 import useStateRef from 'react-usestateref';
 import { Button } from '../button/button';
-import { useGlobal } from '../../contexts/global_context';
-import { useDashboard } from '../../contexts/dashboard_context';
+import { useGlobalCtx } from '../../contexts/global_context';
+import { useDashboardCtx } from '../../contexts/dashboard_context';
 
 const DashboardBookmark = () => {
-  const { addBookmarkModalVisibilityHandler } = useGlobal();
-  const { bookmarkList, removeBookmark } = useDashboard();
+  const { addBookmarkModalVisibilityHandler } = useGlobalCtx();
+  const { bookmarkList, removeBookmark } = useDashboardCtx();
   const [tempSelectedList, setTempSelectedList] = useStateRef<string[]>([]);
 
   const buttonSelectedHandler = (name: string) => {
