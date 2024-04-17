@@ -83,7 +83,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   );
 };
 
-export const useGlobal = () => {
+export const useGlobalCtx = () => {
   const context = useContext(GlobalContext);
   if (!context) {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
