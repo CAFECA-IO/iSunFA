@@ -50,3 +50,31 @@ export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
     (typeof data.fee === 'string' || !data.fee)
   );
 }
+
+// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountDocument(data: any): data is AccountDocument {
+  return (
+    data &&
+    typeof data.documentIndex === 'string' &&
+    typeof data.account === 'string' &&
+    typeof data.description === 'string' &&
+    typeof data.debit === 'boolean' &&
+    typeof data.amount === 'number'
+  );
+}
+
+// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountVoucher(data: any): data is AccountVoucher {
+  return (
+    data &&
+    typeof data.date === 'string' &&
+    typeof data.vouchIndex === 'string' &&
+    typeof data.type === 'string' &&
+    typeof data.from_or_to === 'string' &&
+    typeof data.description === 'string' &&
+    Array.isArray(data.document) &&
+    data.document.every(isAccountDocument)
+  );
+}
