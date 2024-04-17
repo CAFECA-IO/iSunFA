@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from './process_statue'; // Adjust the import path as necessary
+import handler from './process_statue'; // Ensure this path matches the actual file location
 
 let req: jest.Mocked<NextApiRequest>;
-let res: jest.Mocked<NextApiResponse>; // Use <any> to avoid type errors with custom response types
+let res: jest.Mocked<NextApiResponse>;
 
 beforeEach(() => {
   req = {
@@ -23,7 +23,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('OCR Result API Handler Tests', () => {
+describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.query.resultId = '123'; // Valid resultId as a string
     req.method = 'GET';
@@ -33,17 +33,7 @@ describe('OCR Result API Handler Tests', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       message: 'success',
-      data: {
-        date: '2024-12-29',
-        eventType: 'income',
-        incomeReason: '勞務收入',
-        client: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        price: '469920',
-        tax: 'free',
-        taxPercentange: 'null',
-        fee: '0',
-      },
+      status: 'success',
     });
   });
 
@@ -57,7 +47,7 @@ describe('OCR Result API Handler Tests', () => {
     expect(res.json).toHaveBeenCalledWith({
       message: 'error',
       errorReason: 'Invalid resultId',
-      data: {},
+      status: 'error',
     });
   });
 
@@ -71,7 +61,7 @@ describe('OCR Result API Handler Tests', () => {
     expect(res.json).toHaveBeenCalledWith({
       message: 'error',
       errorReason: 'Invalid resultId',
-      data: {},
+      status: 'error',
     });
   });
 
@@ -85,7 +75,7 @@ describe('OCR Result API Handler Tests', () => {
     expect(res.json).toHaveBeenCalledWith({
       message: 'error',
       errorReason: 'Method Not Allowed',
-      data: {},
+      status: 'error',
     });
   });
 });
