@@ -1,13 +1,13 @@
 import React from 'react';
-import { useDashboard } from '../../contexts/dashboard_context';
+import { useDashboardCtx } from '../../contexts/dashboard_context';
+import { cn } from '../../lib/utils/common';
 
 const DashboardOverview = () => {
-  const { dashboardOverview } = useDashboard();
-  const isGrowthPositive = dashboardOverview.assetsGrowthRate > 0;
+  const { dashboardOverview } = useDashboardCtx();
 
-  const displayedAssetsGrowthRate = `${dashboardOverview.assetsGrowthRate ?? `- -`} %`;
-  const displayedProjectROI = dashboardOverview.projectROI ?? `- -`;
-  const displayedPreLaunchProjects = dashboardOverview.preLaunchProjects ?? `- -`;
+  const displayedAssetsGrowthRate = `${dashboardOverview.profitGrowthRate ?? `-`} %`;
+  const displayedProjectROI = dashboardOverview.projectROI ?? `-`;
+  const displayedPreLaunchProjects = dashboardOverview.preLaunchProjects ?? `-`;
 
   return (
     <div>
@@ -15,10 +15,17 @@ const DashboardOverview = () => {
         <div className="flex items-center justify-between gap-4">
           {/* TODO: i18n (20240415 - Shirley) */}
           <div className="text-base font-semibold leading-6 tracking-normal">
-            Assets Growth Rate
+            Profit Growth Rate
           </div>
           <div
-            className={`my-auto text-xl font-bold leading-8 ${isGrowthPositive ? 'text-lightGreen' : 'text-lightRed'}`}
+            className={cn(
+              'my-auto text-xl font-bold leading-8',
+              dashboardOverview.profitGrowthRate > 0
+                ? 'text-lightGreen'
+                : dashboardOverview.profitGrowthRate < 0
+                  ? 'text-lightRed'
+                  : 'text-navyBlue2'
+            )}
           >
             {displayedAssetsGrowthRate}
           </div>

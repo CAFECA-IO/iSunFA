@@ -1,17 +1,17 @@
 /* eslint-disable */
 import React from 'react';
 import { Button } from '../button/button';
-import { useUser } from '../../contexts/user_context';
-import { useGlobal } from '../../contexts/global_context';
+import { useUserCtx } from '../../contexts/user_context';
+import { useGlobalCtx } from '../../contexts/global_context';
 
 const LoginPageBody = () => {
-  const { signUp, signIn } = useUser();
+  const { signUp, signIn } = useUserCtx();
   const {
     registerModalData,
     registerModalVisibilityHandler,
     registerModalDataHandler,
     passKeySupportModalVisibilityHandler,
-  } = useGlobal();
+  } = useGlobalCtx();
 
   const registerClickHandler = async () => {
     registerModalVisibilityHandler();
