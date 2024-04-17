@@ -1,11 +1,18 @@
 /* eslint-disable */
-import React, { useState, useContext, createContext } from 'react';
+import React, { useState, useContext, createContext, useMemo } from 'react';
 import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '../components/register_form_modal/register_form_modal';
 import AddBookmarkModal from '../components/add_bookmark_modal/add_bookmark_modal';
+import useWindowSize from '../lib/hooks/use_window_size';
+import { LAYOUT_BREAKPOINT } from '../constants/display';
+import { LayoutAssertion } from '../interfaces/layout_assertion';
 
 interface IGlobalContext {
+  width: number;
+  height: number;
+  layoutAssertion: LayoutAssertion;
+
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
 
@@ -25,6 +32,7 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
+  const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
@@ -32,6 +40,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
+
+  const { width, height } = windowSize;
+
+  const layoutAssertion = useMemo(() => {
+    return width < LAYOUT_BREAKPOINT ? LayoutAssertion.MOBILE : LayoutAssertion.DESKTOP;
+  }, [width]);
 
   const passKeySupportModalVisibilityHandler = () => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
@@ -51,6 +65,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
+    width,
+    height,
+    layoutAssertion,
     isPasskeySupportModalVisible,
     passKeySupportModalVisibilityHandler,
     isRegisterModalVisible,

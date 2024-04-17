@@ -89,7 +89,6 @@ const AccountingPage = () => {
           {/* ToDo: (20240416 - Julian) Overview */}
           <div className="flex h-screen w-full bg-gray-100">
             <div className="ml-80px mt-100px flex-1">{overview}</div>
-          </div>
         </div>
       </div>
     </>

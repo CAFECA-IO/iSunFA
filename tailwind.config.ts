@@ -169,11 +169,12 @@ module.exports = {
       },
 
       spacing: {
-        /* Info: (20230627 - Julian) 適用範圍
+        /* Info: (20240315 - Shirley) 適用範圍
          * width / height / padding / margin / top / bottom / right / left */
         '1px': '1px',
         '2px': '2px',
         '3px': '3px',
+        '4px': '4px',
         '5px': '5px',
         '8px': '8px',
         '10px': '10px',
@@ -466,7 +467,7 @@ module.exports = {
         '120vw': '120vw',
         '140vw': '140vw',
 
-        // Info: (20230801- Julian) A4 尺寸
+        // Info: (20240315- Shirley) A4 尺寸
         'a4-width': '595px',
         'a4-height': '842px',
       },
