@@ -22,7 +22,7 @@ interface LineChartProps {
   data: LineChartData;
 }
 
-const LineChart: React.FC<LineChartProps> = ({ data }) => {
+const LineChart = ({ data }: LineChartProps) => {
   const globalCtx = useGlobalCtx();
   const [chartWidth, setChartWidth] = React.useState(580);
   const [chartHeight, setChartHeight] = React.useState(250);
@@ -90,6 +90,15 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
           fontSize: '12px',
         },
         // formatter: value => `${value}%`,
+      },
+    },
+
+    legend: {
+      show: true,
+      position: 'bottom',
+      customLegendItems: ['profit status'],
+      markers: {
+        fillColors: ['#FFA502'],
       },
     },
 
@@ -292,6 +301,18 @@ const ProfitTrendChart = () => {
     <div className="flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 shadow-xl max-md:max-w-full">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
+          <div className="flex-1">Profit Status Trend Chart</div>
+
+          <div className="justify-end">
+            <Tooltip>
+              <p>
+                A message which appears when a cursor is positioned over an icon, image, hyperlink,
+                or other element in a graphical user interface.
+              </p>
+            </Tooltip>
+          </div>
+        </div>
+        {/* <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div>Profit Status Trend Chart</div>
 
           <Tooltip>
@@ -300,7 +321,7 @@ const ProfitTrendChart = () => {
               other element in a graphical user interface.
             </p>
           </Tooltip>
-        </div>
+        </div> */}
       </div>
 
       <div className="mt-2">
@@ -352,7 +373,7 @@ const ProfitTrendChart = () => {
           </div>
         </div>
         {/* TODO: RWD (20240416 - Shirley) */}
-        <div className="flex">
+        <div className="flex max-md:-ml-3">
           {/* <LineChart data={dummyWeekData} /> */}
           {/* <LineChart data={dummyMonthData} /> */}
           <LineChart data={data} />
