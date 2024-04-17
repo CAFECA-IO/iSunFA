@@ -52,7 +52,6 @@ const NavBar = () => {
   const appMenuMobileClickHandler = () => setIsAppMenuMobileOpen(!isAppMenuMobileOpen);
   const burgerMenuClickHandler = () => setIsBurgerMenuOpen(!isBurgerMenuOpen);
 
-
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
     try {
@@ -440,30 +439,6 @@ const NavBar = () => {
         <div className="hidden flex-col items-start justify-center lg:flex">
           <div className="h-14 shrink-0" />
         </div>
-      </div>
-      {/* TODO: icons on mobile (20240408 - Shirley) */}
-      <div className="relative hidden lg:flex">
-        {' '}
-        <button>
-          <img
-            src="https://cdn.builder.io/api/v1/image/assets/TEMP/2877bbab5cccb7768a604540dd0cd835d42ae35e297c9ff8683f42d4f47d452d?apiKey=0e17b0b875f041659e186639705112b1&"
-            className="aspect-[0.96] w-[54px] shrink-0"
-          />
-        </button>
-        <button>
-          <img
-            src="https://cdn.builder.io/api/v1/image/assets/TEMP/647bd813d087045224639d423f9d557bee48cba56c3c1cf8b1b3ad253b6b8444?apiKey=0e17b0b875f041659e186639705112b1&"
-            className="aspect-square w-14 shrink-0"
-          />
-        </button>
-        <button onClick={appMenuClickHandler}>
-          <img
-            src="https://cdn.builder.io/api/v1/image/assets/TEMP/5ff6657b0681d98b7c58359e8d3861a8b640576f5b4bd6873fa523bdb17b1110?apiKey=0e17b0b875f041659e186639705112b1&"
-            className="aspect-square w-14 shrink-0"
-          />
-        </button>
-        {displayedAppMenu}
-      </div>
 
         <div className="my-auto">{displayedLogInBtn}</div>
       </div>
