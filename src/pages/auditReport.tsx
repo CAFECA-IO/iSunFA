@@ -5,7 +5,128 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../interfaces/locale';
 import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
 
-const AuditReport = () => {
+// Define JSON data for table rows
+interface ITableData {
+  code: string;
+  regional: string;
+  company: string;
+  informationYear: string;
+  detailedInformation: string;
+  creditRating: string;
+  dateOfUpload: string;
+}
+
+const tableData: ITableData[] = [
+  {
+    code: '2330',
+    regional: 'TW',
+    company: 'TSMC',
+    informationYear: '2024 Q1',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'AAA',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '2234',
+    regional: 'TW',
+    company: 'iSunFA',
+    informationYear: '2024 Q2',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'AA',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '8991',
+    regional: 'HK',
+    company: 'BAIFA',
+    informationYear: '2024 Q3',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'A',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '8778',
+    regional: 'HK',
+    company: 'ASICEX',
+    informationYear: '2024 Q4',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'BBB',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '2233',
+    regional: 'TW',
+    company: 'CAFACA',
+    informationYear: 'Daily',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'BB',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '8866',
+    regional: 'HK',
+    company: 'iSunOne',
+    informationYear: '2024 Q1',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'B',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '0078',
+    regional: 'US',
+    company: 'Rover',
+    informationYear: '2024 Q2',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'AA',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '0012',
+    regional: 'US',
+    company: 'Apple',
+    informationYear: 'Daily',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'AAA',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '-',
+    regional: 'TW',
+    company: 'IFR',
+    informationYear: 'Daily',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'B',
+    dateOfUpload: '2024/04/08',
+  },
+  {
+    code: '-',
+    regional: 'TW',
+    company: 'BACEX',
+    informationYear: 'Daily',
+    detailedInformation: 'IFRSs Consolidated Financial Report',
+    creditRating: 'CCC',
+    dateOfUpload: '2024/04/08',
+  },
+];
+
+const auditReport = () => {
+  const displayTableRows = tableData.map((row: ITableData) => (
+    <tr key={row.code}>
+      <td>{row.code}</td>
+      <td>{row.regional}</td>
+      <td>{row.company}</td>
+      <td>{row.informationYear}</td>
+      <td>{row.detailedInformation}</td>
+      <td>{row.creditRating}</td>
+      <td>{row.dateOfUpload}</td>
+      <td>
+        <div>
+          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
+        </div>
+      </td>
+    </tr>
+  ));
+
   return (
     <>
       <Head>
@@ -17,77 +138,168 @@ const AuditReport = () => {
       </nav>
 
       <main className="w-screen overflow-hidden text-white">
-        <div className="min-h-screen w-screen bg-secondaryBlue font-barlow lg:h-1000px">
-          <div className="flex flex-col items-center pb-48 pl-20 pr-20 pt-48">
-            {/* Types */}
-            <div className="inline-flex h-44 w-96 flex-col items-center justify-start gap-14">
-              {/* Title */}
-              <div className=" inline-flex w-96 items-center justify-center">
-                <div className=" w-96 text-center text-5xl font-bold leading-10 text-white">
-                  Audit Report
-                </div>
-              </div>
-              {/* FiltersSection */}
-              <div className="inline-flex items-end justify-start gap-6 self-stretch">
-                <div className="inline-flex h-16 w-96 flex-col items-start justify-start gap-2">
-                  <div className="inline-flex items-start justify-start self-stretch">
-                    <div className="shrink grow basis-0  text-sm font-semibold leading-tight tracking-tight text-gray-50">
-                      Company Code or Abbreviation{' '}
-                    </div>
+        <div className="min-h-screen bg-secondaryBlue font-barlow">
+          <div className="px-80px py-120px">
+            {/* Title */}
+            <section className="gap-14 text-h1 font-bold leading-h1">Audit Report</section>
+            {/* Conditional Filters */}
+            <section id="conditional-filters" className="flex items-end gap-10">
+              {/* Search */}
+              <div className="">
+                <div className="text-sm font-semibold">Company Code or Abbreviation </div>
+                <div className="flex items-center justify-between bg-white">
+                  <div className="w-full">
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      className="bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+                    />
                   </div>
-                  <div className="inline-flex items-center justify-start self-stretch rounded-lg border border-slate-300 bg-white shadow">
-                    <div className="flex h-11 shrink grow basis-0 items-center justify-start">
-                      <div className="flex h-11 items-start justify-start gap-2.5 px-3 py-2.5">
-                        <div className="text-base font-medium leading-normal tracking-tight text-slate-500">
-                          Search
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-start gap-2 px-3 py-2.5">
-                      <div className="inline-flex flex-col items-center justify-center">
-                        <div className="relative h-5 w-5">
-                          <div className="absolute h-4 w-4">
-                            <Image
-                              alt="Union"
-                              src="/elements/search_icon.svg"
-                              width={20}
-                              height={20}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* DatePicker */}
-                <div className="relative h-11 w-96">
-                  <div className="absolute left-0 top-0 inline-flex h-11 w-96 flex-col items-start justify-start gap-2">
-                    <div className="inline-flex items-center justify-start self-stretch rounded-lg border border-slate-300 bg-white shadow">
-                      <div className="flex h-11 items-center justify-start">
-                        <div className="flex h-11 shrink grow basis-0 items-start justify-start gap-2.5 px-3 py-2.5">
-                          <div className="text-base font-medium leading-normal tracking-tight text-slate-500">
-                            Start Date - End Date
-                          </div>
-                        </div>
-                      </div>
-                      <div className=" flex h-10 shrink grow basis-0 items-center justify-end gap-2 px-3 py-2.5">
-                        <div className=" inline-flex flex-col items-center justify-center">
-                          <div className=" relative h-5 w-5">
-                            <div className="absolute left-2 top-1 h-5 w-4"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="px-3 py-2.5">
+                    <Image src="/elements/search_icon.svg" width={20} height={20} alt="search" />
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Table */}
-            <div>
-              <div>Audit report list</div>
-              <div>Pagination</div>
-            </div>
+              {/* Date Picker */}
+              <div className="flex items-center justify-between bg-white">
+                <div className="w-full">
+                  <input
+                    type="text"
+                    placeholder="Start Date - End Date"
+                    className="bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+                  />
+                </div>
+                <div className="px-3 py-2.5">
+                  <Image src="/elements/calendar.svg" width={20} height={20} alt="calendar" />
+                </div>
+              </div>
+            </section>
+            {/* Audit Report List */}
+            <section id="audit-report-list" className="flex flex-col gap-5">
+              {/* Filter Display List */}
+              <div>
+                <div className="text-lg font-semibold">Show Designated Regional Companies</div>
+                <form className="text-sm font-semibold text-primaryYellow">
+                  <label htmlFor="us" className="pr-20px">
+                    <input type="checkbox" id="us" name="country" value="US" /> US
+                  </label>
+                  <label htmlFor="hk" className="pr-20px">
+                    <input type="checkbox" id="hk" name="country" value="HK" /> HK
+                  </label>
+                  <label htmlFor="tw" className="pr-20px">
+                    <input type="checkbox" id="tw" name="country" value="TW" /> TW
+                  </label>
+                </form>
+              </div>
+              {/* Table */}
+              <div className="">
+                <table>
+                  <thead className="bg-primaryYellow text-black">
+                    <tr>
+                      <th className="px-8px py-12px">Code</th>
+                      <th className="px-8px py-12px">Regional</th>
+                      <th className="px-8px py-12px">Company</th>
+                      <th className="flex items-center px-8px py-12px">
+                        Information Year
+                        <div>
+                          <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
+                        </div>
+                      </th>
+                      <th className="px-8px py-12px">Detailed Information</th>
+                      <th className="flex items-center px-8px py-12px">
+                        Credit rating
+                        <div>
+                          <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
+                        </div>
+                      </th>
+                      <th className="px-8px py-12px">Date of Upload</th>
+                      <th className="px-8px py-12px">LINK</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white text-lg font-medium text-black">
+                    {/* Dynamically generate table rows */}
+                    {displayTableRows}
+                  </tbody>
+                  {/* <tbody className="bg-white text-lg font-medium text-black">
+                    <tr>
+                      <td>2330</td>
+                      <td>TW</td>
+                      <td>TSMC</td>
+                      <td>2024 Q1</td>
+                      <td>IFRSs Consolidated Financial Report</td>
+                      <td>AAA</td>
+                      <td>2024/04/08</td>
+                      <td>
+                        <div>
+                          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>2234</td>
+                      <td>TW</td>
+                      <td>iSunFA</td>
+                      <td>2024 Q2</td>
+                      <td>IFRSs Consolidated Financial Report</td>
+                      <td>AA</td>
+                      <td>2024/04/08</td>
+                      <td>
+                        <div>
+                          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody> */}
+                </table>
+              </div>
+              {/* Checkbox */}
+              <div>
+                <form>
+                  <label htmlFor="all">
+                    {`Don't show daily reports `}
+                    <input type="checkbox" id="all" name="all" value="all" />
+                  </label>
+                </form>
+              </div>
+              {/* Pagination */}
+              <div className="flex gap-1">
+                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                  <Image
+                    src="/elements/first_page_icon.svg"
+                    width={20}
+                    height={20}
+                    alt="first_page_icon"
+                  />
+                </div>
+                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                  <Image
+                    src="/elements/previous_page_icon.svg"
+                    width={20}
+                    height={20}
+                    alt="previous_page_icon"
+                  />
+                </div>
+                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                  1
+                </div>
+                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                  <Image
+                    src="/elements/next_page_icon.svg"
+                    width={20}
+                    height={20}
+                    alt="next_page_icon"
+                  />
+                </div>
+                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                  <Image
+                    src="/elements/last_page_icon.svg"
+                    width={20}
+                    height={20}
+                    alt="last_page_icon"
+                  />
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </main>
@@ -103,4 +315,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default AuditReport;
+export default auditReport;
