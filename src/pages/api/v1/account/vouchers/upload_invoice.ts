@@ -18,8 +18,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
   switch (req.method) {
     case 'POST': {
       // Info Murky (20240416): Check if invoices is array and is Invoice type
-      // stop remove my parantheses!
-      if (!Array.isArray(invoices) || invoices.some(invoice => !isAccountInvoiceData(invoice))) {
+      if (!Array.isArray(invoices) || invoices.some((invoice) => !isAccountInvoiceData(invoice))) {
         return res.status(400).json({
           message: 'error',
           errorReason: 'Invalid invoices',
