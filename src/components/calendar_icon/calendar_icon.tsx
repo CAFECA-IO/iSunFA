@@ -11,8 +11,10 @@ const CalendarIcon = ({ timestamp }: ICalendarIconProps) => {
   const displayMonth = monthFullName.substring(0, 3);
   // Info: (20240418 - Julian) 將日期轉換為數字以除去前面的 0，若為'-'則保留'-'
   const displayDay = day === '-' ? '-' : +day;
-  // Info: (20240418 - Julian) 若日期為兩位數，則將 x 座標設為30，否則設為26
-  const dayX = displayDay.toString().length === 2 ? 20 : 26;
+  // Info: (20240418 - Julian) 設定日期的 x 座標
+  const dayX =
+    // Info: (20240418 - Julian) 若日期為'-'或個位數，則 x 座標為 26
+    displayDay === '-' || displayDay < 10 ? 26 : displayDay >= 10 && displayDay <= 19 ? 22 : 20;
 
   return (
     <svg width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto">

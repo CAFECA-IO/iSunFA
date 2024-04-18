@@ -32,7 +32,7 @@ const AccountingPage = () => {
           {/* Info: (20240416 - Julian) Sidebar */}
           <AccountingSidebar setCurrentTab={setCurrentTab} />
           {/* ToDo: (20240416 - Julian) Overview */}
-          <div className="flex h-screen w-full bg-gray-100">
+          <div className="flex h-full w-full bg-gray-100">
             <div className="ml-80px mt-100px flex-1">{overview}</div>
           </div>
         </div>
