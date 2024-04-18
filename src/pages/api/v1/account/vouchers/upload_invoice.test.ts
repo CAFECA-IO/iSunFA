@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './upload_invoice';
 import { isAccountInvoiceData } from '../../../../../interfaces/account';
+import version from '../../../../../lib/version';
 // Mock the module and its function
 
 // Cast to jest.Mock to inform TypeScript about the jest mocking properties
@@ -37,13 +38,17 @@ describe('Invoice Upload API Handler Tests', () => {
     req.body.invoices = [{ id: 'inv123', amount: 1000 }];
     await handler(req, res);
 
+    const mockData = {
+      resultId: '1229001',
+      status: 'success',
+    };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'success',
-      data: {
-        resultId: '1229001',
-        status: 'success',
-      },
+      powerby: `ISunFa api ${version}`,
+      success: true,
+      code: '200',
+      message: 'Invoices Data uploaded successfully',
+      payload: [mockData],
     });
   });
 
@@ -54,8 +59,10 @@ describe('Invoice Upload API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid invoices',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid invoices',
     });
   });
 
@@ -66,8 +73,10 @@ describe('Invoice Upload API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '405',
+      message: 'Method Not Allowed in ocr get result api',
     });
   });
 });

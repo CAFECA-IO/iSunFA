@@ -1,9 +1,9 @@
+export type AccountProgressStatus = 'success' | 'inProgress' | 'error';
+
 export interface AccountResultStatus {
   resultId: string;
-  status: string;
+  status: AccountProgressStatus;
 }
-
-export type AccountProgressStatus = 'success' | 'inProgress' | 'error';
 
 export interface AccountInvoiceData {
   date?: string;
