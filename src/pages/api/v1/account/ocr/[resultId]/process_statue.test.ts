@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
 import handler from './process_statue'; // Ensure this path matches the actual file location
 
 let req: jest.Mocked<NextApiRequest>;
@@ -32,8 +33,11 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'success',
-      status: 'success',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '200',
+      message: 'OCR analyzing progress status of id:{resultId} return successfully',
+      payload: 'success',
     });
   });
 
@@ -45,9 +49,10 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid resultId',
-      status: 'error',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Reason why request has failed',
     });
   });
 
@@ -59,9 +64,10 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid resultId',
-      status: 'error',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Reason why request has failed',
     });
   });
 
@@ -73,9 +79,10 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
-      status: 'error',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Method Not Allowed in ocr process status api',
     });
   });
 });
