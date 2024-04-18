@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from './index'; // Update the import path to the actual location of your handler
+import handler from './index'; // Update this path to where your actual handler is located
+import version from '../../../../lib/version'; // Ensure this is the correct path to your version module
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -32,8 +33,10 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid page or limit, must be positive integer number',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid page or limit, must be positive integer number',
     });
   });
 
@@ -45,8 +48,11 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'success',
-      data: [
+      powerby: `ISunFa api ${version}`,
+      success: true,
+      code: '200',
+      message: 'List of line items return successfully',
+      payload: [
         {
           lineItemIndex: '1229001001',
           account: '銀行存款',
@@ -72,8 +78,10 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '405',
+      message: 'Method Not Allowed in line items api',
     });
   });
 });
