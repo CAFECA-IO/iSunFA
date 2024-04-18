@@ -372,12 +372,7 @@ const IncomeExpenseTrendChart = () => {
   };
 
   const displayedDataSection = (
-    // <div className="flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 shadow-xl max-md:max-w-full">
-    //   <div className="flex justify-start gap-2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-    //     <div>Income vs. Expense Trend Chart</div>
-    //   </div>
-    // </div>
-    <div className="flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 shadow-xl max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Income vs. Expense Trend Chart</div>
@@ -441,10 +436,7 @@ const IncomeExpenseTrendChart = () => {
             </div>
           </div>
         </div>
-        {/* TODO: RWD (20240416 - Shirley) */}
         <div className="flex max-md:-ml-3">
-          {/* <LineChart data={dummyWeekData} /> */}
-          {/* <LineChart data={dummyMonthData} /> */}
           <LineChart data={data} />
         </div>
       </div>
