@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountVoucher } from '@/interfaces/account';
+import { ResponseType } from '@/interfaces/api_response';
+import version from '@/lib/version';
 
-interface ResponseData {
-  message: string;
-  errorReason?: string;
-  data?: AccountVoucher;
-}
+interface ResponseData extends ResponseType<AccountVoucher> {}
 
 // Info Murky (20240416):  implement later
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,8 +16,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // Info Murky (20240416): Check if resultId is string
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
     return res.status(400).json({
-      message: 'error',
-      errorReason: 'Invalid resultId',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid resultId',
     });
   }
 
@@ -28,8 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const vouchIsReadyResult = await vouchIsReady(resultId);
       if (!vouchIsReadyResult) {
         return res.status(400).json({
-          message: 'error',
-          errorReason: 'Voucher is not ready yet',
+          powerby: `ISunFa api ${version}`,
+          success: false,
+          code: '400',
+          message: 'Voucher is not ready yet',
         });
       }
 
@@ -57,14 +59,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         ],
       };
       return res.status(200).json({
-        message: 'success',
-        data: mockVoucherData,
+        powerby: `ISunFa api ${version}`,
+        success: false,
+        code: '200',
+        message: `Voucher preview creating process of id:${resultId} return successfully`,
+        payload: mockVoucherData,
       });
     }
     default: {
       return res.status(405).json({
-        message: 'error',
-        errorReason: 'Method Not Allowed',
+        powerby: `ISunFa api ${version}`,
+        success: false,
+        code: '405',
+        message: 'Method Not Allowed in voucher preview api',
       });
     }
   }

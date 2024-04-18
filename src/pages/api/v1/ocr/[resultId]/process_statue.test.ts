@@ -54,7 +54,7 @@ describe('Result API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '400',
-      message: 'Reason why request has failed',
+      message: 'Invalid resultId',
     });
   });
 
@@ -69,7 +69,7 @@ describe('Result API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '400',
-      message: 'Reason why request has failed',
+      message: 'Invalid resultId',
     });
   });
 

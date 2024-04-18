@@ -1,5 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from './preview'; // Ensure this path matches the actual file location
+import handler from './generate'; // Update with the actual import path
+import { isAccountVoucher } from '../../../../interfaces/account';
+// Mocking the utility function isAccountVoucher from '@/interfaces/account'
+jest.mock('../../../../interfaces/account', () => ({
+  isAccountVoucher: jest.fn(),
+}));
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -7,7 +12,7 @@ let res: jest.Mocked<NextApiResponse>;
 beforeEach(() => {
   req = {
     headers: {},
-    body: null,
+    body: {},
     query: {},
     method: '',
     json: jest.fn(),
@@ -24,57 +29,40 @@ afterEach(() => {
 });
 
 describe('API Handler Tests', () => {
-  it('should return 400 if resultId is invalid', async () => {
-    req.query.resultId = ['123']; // Invalid resultId as an array
-    req.method = 'GET';
+  it('should return 400 for invalid voucher POST requests', async () => {
+    req.body.voucher = ['not', 'valid']; // Invalid voucher as an array
+    req.method = 'POST';
+    (isAccountVoucher as unknown as jest.Mock).mockReturnValue(false);
 
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: 'error',
-      errorReason: 'Invalid resultId',
+      errorReason: 'Invalid voucher',
     });
   });
 
-  it('should handle successful GET requests', async () => {
-    req.query.resultId = 'valid_id';
-    req.method = 'GET';
+  it('should handle successful POST requests', async () => {
+    req.body.voucher = { valid: true }; // Assume this is a valid voucher
+    req.method = 'POST';
+    (isAccountVoucher as unknown as jest.Mock).mockReturnValue(true);
 
     await handler(req, res);
 
+    expect(isAccountVoucher).toHaveBeenCalledWith({ valid: true });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       message: 'success',
       data: {
-        date: '2024-12-29',
-        vouchIndex: '1229001',
-        type: 'Receiving',
-        from_or_to: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        lineItem: [
-          {
-            lineItemIndex: '1229001001',
-            account: '銀行存款',
-            description: '港幣120000 * 3.916',
-            debit: true,
-            amount: 469920,
-          },
-          {
-            lineItemIndex: '1229001002',
-            account: '營業收入',
-            description: '港幣120000 * 3.916',
-            debit: false,
-            amount: 469920,
-          },
-        ],
+        resultId: '1229001',
+        status: 'success',
       },
     });
   });
 
   it('should return 405 for unsupported methods', async () => {
-    req.query.resultId = '123';
-    req.method = 'POST'; // Unsupported method
+    req.method = 'GET'; // Unsupported method
 
     await handler(req, res);
 

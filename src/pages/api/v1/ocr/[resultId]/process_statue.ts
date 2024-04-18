@@ -15,7 +15,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '400',
-      message: 'Reason why request has failed',
+      message: 'Invalid resultId',
     });
   }
 
