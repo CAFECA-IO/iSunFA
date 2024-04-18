@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AccountProgressStatus, AccountResultStatus, isAccountVoucher } from '@/interfaces/account';
+import { AccountResultStatus, isAccountVoucher } from '@/interfaces/account';
+import version from '@/lib/version';
+import { ResponseType } from '@/interfaces/api_response';
 
-type ResponseData = {
-  message: AccountProgressStatus;
-  errorReason?: string;
-  data?: AccountResultStatus;
-};
+interface ResponseData extends ResponseType<AccountResultStatus> {}
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   // Todo Murky (20240416): Get Images and check if Image exist
@@ -16,28 +14,34 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       // Info Murky (20240416): Check if voucher is valid
       if (Array.isArray(voucher) || !isAccountVoucher(voucher)) {
         return res.status(400).json({
-          message: 'error',
-          errorReason: 'Invalid voucher',
+          powerby: `ISunFa api ${version}`,
+          success: false,
+          code: '400',
+          message: 'Invalid voucher',
         });
       }
 
-      const status = 'success' as AccountProgressStatus;
       const data: AccountResultStatus = {
         resultId: '1229001',
         status: 'success',
       };
 
       const response: ResponseData = {
-        message: status,
-        data,
+        powerby: `ISunFa api ${version}`,
+        success: true,
+        code: '200',
+        message: 'Voucher is successfully generated',
+        payload: data,
       };
 
       return res.status(200).json(response);
     }
     default: {
       return res.status(405).json({
-        message: 'error',
-        errorReason: 'Method Not Allowed',
+        powerby: `ISunFa api ${version}`,
+        success: false,
+        code: '405',
+        message: 'Method Not Allowed in voucher preview api',
       });
     }
   }

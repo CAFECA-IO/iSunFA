@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './generate'; // Update with the actual import path
 import { isAccountVoucher } from '../../../../interfaces/account';
+import version from '../../../../lib/version';
 // Mocking the utility function isAccountVoucher from '@/interfaces/account'
 jest.mock('../../../../interfaces/account', () => ({
   isAccountVoucher: jest.fn(),
@@ -38,8 +39,10 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid voucher',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid voucher',
     });
   });
 
@@ -53,8 +56,11 @@ describe('API Handler Tests', () => {
     expect(isAccountVoucher).toHaveBeenCalledWith({ valid: true });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'success',
-      data: {
+      powerby: `ISunFa api ${version}`,
+      success: true,
+      code: '200',
+      message: 'Voucher is successfully generated',
+      payload: {
         resultId: '1229001',
         status: 'success',
       },
@@ -68,8 +74,10 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '405',
+      message: 'Method Not Allowed in voucher preview api',
     });
   });
 });
