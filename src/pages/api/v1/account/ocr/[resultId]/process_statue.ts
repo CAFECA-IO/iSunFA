@@ -25,7 +25,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
         powerby: `ISunFa api ${version}`,
         success: false,
         code: '200',
-        message: 'OCR analyzing progress status of id:{resultId} return successfully',
+        message: `OCR analyzing progress status of id:${resultId} return successfully`,
         payload: 'success',
       });
     }

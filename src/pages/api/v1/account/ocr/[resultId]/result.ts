@@ -1,21 +1,20 @@
 // Info Murky (20240416):  this is mock api need to migrate to microservice
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountInvoiceData } from '@/interfaces/account';
+import { ResponseType } from '@/interfaces/api_response';
+import version from '@/lib/version';
 
-interface ResponseData {
-  message: string;
-  errorReason?: string;
-  data: AccountInvoiceData[];
-}
+interface ResponseData extends ResponseType<AccountInvoiceData[]> {}
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   const { resultId } = req.query;
   // Info Murky (20240416): Check if resultId is string
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
     return res.status(400).json({
-      message: 'error',
-      errorReason: 'Invalid resultId',
-      data: [],
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid resultId',
     });
   }
 
@@ -33,15 +32,19 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
         fee: '0',
       };
       return res.status(200).json({
-        message: 'success',
-        data: [ocrResultData],
+        powerby: `ISunFa api ${version}`,
+        success: true,
+        code: '200',
+        message: `OCR analyzing result of id:${resultId} return successfully`,
+        payload: [ocrResultData],
       });
     }
     default: {
       return res.status(405).json({
-        message: 'error',
-        errorReason: 'Method Not Allowed',
-        data: [],
+        powerby: `ISunFa api ${version}`,
+        success: false,
+        code: '405',
+        message: 'Method Not Allowed in ocr get result api',
       });
     }
   }

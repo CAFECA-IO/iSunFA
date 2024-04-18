@@ -26,6 +26,8 @@ afterEach(() => {
 
 describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
+    const resultId = '123';
+    req.query.resultId = resultId; // Valid resultId as a string
     req.query.resultId = '123'; // Valid resultId as a string
     req.method = 'GET';
 
@@ -36,7 +38,7 @@ describe('Result API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '200',
-      message: 'OCR analyzing progress status of id:{resultId} return successfully',
+      message: `OCR analyzing progress status of id:${resultId} return successfully`,
       payload: 'success',
     });
   });
