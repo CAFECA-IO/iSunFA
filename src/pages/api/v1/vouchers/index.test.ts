@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
 import handler from './index'; // Update with the actual import path if necessary
 
 let req: jest.Mocked<NextApiRequest>;
@@ -24,7 +25,7 @@ afterEach(() => {
 });
 
 describe('API Handler Tests', () => {
-  it('should validate page and limit are positive integers', async () => {
+  it('should return 400 for invalid page and limit values', async () => {
     req.query = { page: '0', limit: '-1' }; // Invalid query parameters
     req.method = 'GET';
 
@@ -32,12 +33,14 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid page or limit, must be positive integer number',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid page or limit, must be positive integer number',
     });
   });
 
-  it('should handle successful GET requests', async () => {
+  it('should handle successful GET requests with valid page and limit', async () => {
     req.query = { page: '1', limit: '10' }; // Valid query parameters
     req.method = 'GET';
 
@@ -45,8 +48,35 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'success',
-      data: expect.any(Array), // The exact data check could be more specific if needed
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '200',
+      message: 'List of vouchers return successfully',
+      payload: [
+        {
+          date: '2024-12-29',
+          vouchIndex: '1229001',
+          type: 'Receiving',
+          from_or_to: 'Isuncloud Limited',
+          description: '技術開發軟件與服務',
+          lineItem: [
+            {
+              lineItemIndex: '1229001001',
+              account: '銀行存款',
+              description: '港幣120000 * 3.916',
+              debit: true,
+              amount: 469920,
+            },
+            {
+              lineItemIndex: '1229001002',
+              account: '營業收入',
+              description: '港幣120000 * 3.916',
+              debit: false,
+              amount: 469920,
+            },
+          ],
+        },
+      ],
     });
   });
 
@@ -57,8 +87,10 @@ describe('API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '405',
+      message: 'Method Not Allowed in vouchers api',
     });
   });
 });
