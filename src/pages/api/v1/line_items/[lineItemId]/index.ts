@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AccountLineItem, AccountProgressStatus } from '@/interfaces/account';
+import { AccountLineItem } from '@/interfaces/account';
+import version from '@/lib/version';
+import { ResponseType } from '@/interfaces/api_response';
 
-type ResponseData = {
-  message: AccountProgressStatus;
-  errorReason?: string;
-  data?: AccountLineItem;
-};
+interface ResponseData extends ResponseType<AccountLineItem> {}
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   const { lineItemId } = req.query;
@@ -13,8 +11,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
   // Info Murky (20240416): Check if lineItemId is string
   if (typeof lineItemId !== 'string' || !lineItemId || Array.isArray(lineItemId)) {
     return res.status(400).json({
-      message: 'error',
-      errorReason: 'Invalid lineItemId',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid lineItemId',
     });
   }
   // Todo Murky (20240416): Get Images and check if Image exist
@@ -28,14 +28,19 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
         amount: 469920,
       };
       return res.status(200).json({
-        message: 'success',
-        data: mockLineItemData,
+        powerby: `ISunFa api ${version}`,
+        success: true,
+        code: '200',
+        message: 'Line item return successfully',
+        payload: mockLineItemData,
       });
     }
     default: {
       return res.status(405).json({
-        message: 'error',
-        errorReason: 'Method Not Allowed',
+        powerby: `ISunFa api ${version}`,
+        success: false,
+        code: '405',
+        message: 'Method Not Allowed in line items api',
       });
     }
   }
