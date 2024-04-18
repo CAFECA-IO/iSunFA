@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AccountProgressStatus, AccountVoucher } from '@/interfaces/account';
+import { AccountLineItem, AccountProgressStatus } from '@/interfaces/account';
 
 type ResponseData = {
   message: AccountProgressStatus;
   errorReason?: string;
-  data?: AccountVoucher[];
+  data?: AccountLineItem[];
 };
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
@@ -21,32 +21,25 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
           errorReason: 'Invalid page or limit, must be positive integer number',
         });
       }
-      const mockVoucherData: AccountVoucher = {
-        date: '2024-12-29',
-        vouchIndex: '1229001',
-        type: 'Receiving',
-        from_or_to: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        lineItem: [
-          {
-            lineItemIndex: '1229001001',
-            account: '銀行存款',
-            description: '港幣120000 * 3.916',
-            debit: true,
-            amount: 469920,
-          },
-          {
-            lineItemIndex: '1229001002',
-            account: '營業收入',
-            description: '港幣120000 * 3.916',
-            debit: false,
-            amount: 469920,
-          },
-        ],
-      };
+      const mockLineItemData: AccountLineItem[] = [
+        {
+          lineItemIndex: '1229001001',
+          account: '銀行存款',
+          description: '港幣120000 * 3.916',
+          debit: true,
+          amount: 469920,
+        },
+        {
+          lineItemIndex: '1229001002',
+          account: '營業收入',
+          description: '港幣120000 * 3.916',
+          debit: false,
+          amount: 469920,
+        },
+      ];
       return res.status(200).json({
         message: 'success',
-        data: [mockVoucherData],
+        data: mockLineItemData,
       });
     }
     default: {
