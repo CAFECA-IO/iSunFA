@@ -119,11 +119,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
   };
 
-  return (
-    <div className="rounded bg-white p-5 shadow">
-      <Chart options={options} series={data.series} type="bar" height={200} />
-    </div>
-  );
+  return <Chart options={options} series={data.series} type="bar" height={200} />;
 };
 
 const ProjectProgressChart = () => {
