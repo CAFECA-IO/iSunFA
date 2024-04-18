@@ -12,4 +12,5 @@ export const ISUNFA_ROUTE = {
   CONTACT_US: '/#contact-us',
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
+  ACCOUNTING: '/users/accounting',
 };

@@ -1,10 +1,12 @@
 /* eslint-disable */
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Tooltip from '../tooltip/tooltip';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
+import { useGlobalCtx } from '../../contexts/global_context';
+import { LayoutAssertion } from '../../interfaces/layout_assertion';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -20,7 +22,39 @@ interface LineChartProps {
   data: LineChartData;
 }
 
-const LineChart: React.FC<LineChartProps> = ({ data }) => {
+const LineChart = ({ data }: LineChartProps) => {
+  const globalCtx = useGlobalCtx();
+  const [chartWidth, setChartWidth] = React.useState(580);
+  const [chartHeight, setChartHeight] = React.useState(250);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = globalCtx.width;
+      const windowHeight = window.innerHeight;
+
+      if (windowWidth <= 768) {
+        const presentWidth = windowWidth / 1.45;
+        const presentHeight = windowHeight / 3.5;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (window.innerWidth >= 1440) {
+        const presentWidth = 580;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else {
+        const presentWidth = windowWidth / 1.25;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      }
+    };
+    handleResize();
+  }, [globalCtx.width]);
+
   const options: ApexOptions = {
     chart: {
       id: 'profit-trend-chart',
@@ -56,6 +90,15 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
           fontSize: '12px',
         },
         // formatter: value => `${value}%`,
+      },
+    },
+
+    legend: {
+      show: true,
+      position: 'bottom',
+      customLegendItems: ['profit status'],
+      markers: {
+        fillColors: ['#FFA502'],
       },
     },
 
@@ -126,7 +169,15 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
     },
   };
 
-  return <Chart options={options} series={data.series} type="line" width={580} height={250} />;
+  return (
+    <Chart
+      options={options}
+      series={data.series}
+      type="line"
+      width={chartWidth}
+      height={chartHeight}
+    />
+  );
 };
 
 enum Period {
@@ -250,6 +301,18 @@ const ProfitTrendChart = () => {
     <div className="flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 shadow-xl max-md:max-w-full">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
+          <div className="flex-1">Profit Status Trend Chart</div>
+
+          <div className="justify-end">
+            <Tooltip>
+              <p>
+                A message which appears when a cursor is positioned over an icon, image, hyperlink,
+                or other element in a graphical user interface.
+              </p>
+            </Tooltip>
+          </div>
+        </div>
+        {/* <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div>Profit Status Trend Chart</div>
 
           <Tooltip>
@@ -258,13 +321,13 @@ const ProfitTrendChart = () => {
               other element in a graphical user interface.
             </p>
           </Tooltip>
-        </div>
+        </div> */}
       </div>
 
       <div className="mt-2">
         <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
-          <div className="flex space-x-5">
+          <div className="flex space-x-2 md:space-x-5">
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
@@ -310,7 +373,7 @@ const ProfitTrendChart = () => {
           </div>
         </div>
         {/* TODO: RWD (20240416 - Shirley) */}
-        <div className="hidden md:flex">
+        <div className="flex max-md:-ml-3">
           {/* <LineChart data={dummyWeekData} /> */}
           {/* <LineChart data={dummyMonthData} /> */}
           <LineChart data={data} />

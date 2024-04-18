@@ -45,8 +45,9 @@ const LoginPage = () => {
         <div className="">
           <NavBar />
         </div>
-
-        <LoginPageBody />
+        <div className="pt-16">
+          <LoginPageBody />
+        </div>
       </div>
     </>
   );
