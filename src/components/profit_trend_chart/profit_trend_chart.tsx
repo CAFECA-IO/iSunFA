@@ -287,7 +287,7 @@ const ProfitTrendChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-400px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Profit Status Trend Chart</div>
