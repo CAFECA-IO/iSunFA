@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AccountProgressStatus, AccountVoucher } from '@/interfaces/account';
+import { AccountVoucher } from '@/interfaces/account';
+import version from '@/lib/version';
+import { ResponseType } from '@/interfaces/api_response';
 
-type ResponseData = {
-  message: AccountProgressStatus;
-  errorReason?: string;
-  data?: AccountVoucher;
-};
+interface ResponseData extends ResponseType<AccountVoucher> {}
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   const { resultId } = req.query;
@@ -13,23 +11,15 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
   // Info Murky (20240416): Check if resultId is string
   if (typeof resultId !== 'string' || !resultId || Array.isArray(resultId)) {
     return res.status(400).json({
-      message: 'error',
-      errorReason: 'Invalid resultId',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid resultId',
     });
   }
   // Todo Murky (20240416): Get Images and check if Image exist
   switch (req.method) {
     case 'GET': {
-      let { page = 1, limit = 10 } = req.query;
-      page = Number(page);
-      limit = Number(limit);
-      // Info Murky (20240416): Check if page and limit are positive integers
-      if (Number.isNaN(page) || page < 1 || Number.isNaN(limit) || limit < 1) {
-        return res.status(400).json({
-          message: 'error',
-          errorReason: 'Invalid page or limit, must be positive integer number',
-        });
-      }
       const mockVoucherData: AccountVoucher = {
         date: '2024-12-29',
         vouchIndex: '1229001',
@@ -54,14 +44,19 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
         ],
       };
       return res.status(200).json({
-        message: 'success',
-        data: mockVoucherData,
+        powerby: `ISunFa api ${version}`,
+        success: true,
+        code: '200',
+        message: 'List of vouchers return successfully',
+        payload: mockVoucherData,
       });
     }
     default: {
       return res.status(405).json({
-        message: 'error',
-        errorReason: 'Method Not Allowed',
+        powerby: `ISunFa api ${version}`,
+        success: false,
+        code: '405',
+        message: 'Method Not Allowed in vouchers api',
       });
     }
   }

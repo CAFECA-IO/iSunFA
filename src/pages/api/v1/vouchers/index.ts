@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       };
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
-        success: false,
+        success: true,
         code: '200',
         message: 'List of vouchers return successfully',
         payload: [mockVoucherData],

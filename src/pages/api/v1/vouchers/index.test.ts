@@ -49,7 +49,7 @@ describe('API Handler Tests', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       powerby: `ISunFa api ${version}`,
-      success: false,
+      success: true,
       code: '200',
       message: 'List of vouchers return successfully',
       payload: [
