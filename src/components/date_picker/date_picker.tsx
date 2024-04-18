@@ -49,7 +49,7 @@ const PopulateDates = ({
 
   // Info: (2020417 - Shirley) 用於日期選取的樣式
   const beforeStyle =
-    'before:absolute before:-z-10 before:w-[42px] before:h-[42px] before:rounded-full before:bg-primaryYellow';
+    'before:absolute before:-z-10 before:w-[40px] before:md:w-[42px] before:h-[40px] before:md:h-[42px] before:rounded-full before:bg-primaryYellow';
 
   // Info: (20240417 - Shirley) 顯示星期標題
   const weekNameList = WEEK_LIST.map((week, index) => (
@@ -91,9 +91,9 @@ const PopulateDates = ({
           ? date.getTime() === selectTimeOne && date.getTime() === selectTimeTwoReset
             ? `rounded-full text-secondaryBlue bg-primaryYellow`
             : date.getTime() === selectTimeOne
-              ? `rounded-l-full text-secondaryBlue before:left-[1px] before:-top-3px ${beforeStyle}`
+              ? `rounded-l-full text-secondaryBlue before:md:left-[1px] before:left-0 before:-top-3px ${beforeStyle}`
               : date.getTime() === selectTimeTwoReset
-                ? `rounded-r-full text-secondaryBlue before:right-[1px] before:-top-3px ${beforeStyle}`
+                ? `rounded-r-full text-secondaryBlue before:md:right-[1px] before:right-0 before:-top-3px ${beforeStyle}`
                 : ''
           : ''
       : '';
@@ -138,7 +138,7 @@ const PopulateDates = ({
       <button
         key={index}
         disabled={el?.disable}
-        className={`relative z-10 h-35px whitespace-nowrap px-1 text-base ${isSelectedDateStyle} ${isSelectedPeriodStyle} transition-all duration-150 ease-in-out disabled:text-lilac`}
+        className={`relative z-10 h-35px whitespace-nowrap px-1 text-base md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle} transition-all duration-150 ease-in-out disabled:text-lilac`}
         onClick={dateClickHandler}
       >
         {el?.date ?? ' '}
