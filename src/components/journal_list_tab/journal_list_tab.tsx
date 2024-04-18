@@ -3,6 +3,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import { FiCalendar, FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
+import CalendarIcon from '../calendar_icon/calendar_icon';
 
 const JournalListTab = () => {
   const {
@@ -34,7 +35,7 @@ const JournalListTab = () => {
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={typeMenuRef} className="flex w-full flex-col items-start bg-white p-8px">
+        <ul ref={typeMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
           {['All', 'Payment', 'Receiving', 'Transfer'].map((type: string) => (
             <li
               key={type}
@@ -63,7 +64,7 @@ const JournalListTab = () => {
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={sortByMenuRef} className="flex w-full flex-col items-start bg-white p-8px">
+        <ul ref={sortByMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
           {['Newest', 'Oldest', 'Payment Process', 'Project Process'].map((sorting: string) => (
             <li
               key={sorting}
@@ -173,6 +174,25 @@ const JournalListTab = () => {
     </div>
   );
 
+  const displayedAmount = (
+    <div className="flex flex-col gap-8px py-4px">
+      <div className="flex items-center gap-4px">
+        <div className="flex gap-2px rounded-full bg-successGreen2 px-6px py-2px text-successGreen">
+          <p>Debit</p>
+        </div>
+        <p className="text-lightGray4">1141- Accounts receivable</p>
+        <p className="text-navyBlue2">1,785,000 TWD</p>
+      </div>
+      <div className="flex items-center gap-4px">
+        <div className="flex gap-2px rounded-full bg-errorRed2 px-6px py-2px text-errorRed">
+          <p>Credit</p>
+        </div>
+        <p className="text-lightGray4">1113- Cash in banks</p>
+        <p className="text-navyBlue2">1,785,000 TWD</p>
+      </div>
+    </div>
+  );
+
   const displayedJournalList = (
     <table className="my-20px w-full border border-lightGray6">
       {/* Info: (20240418 - Julian) Header */}
@@ -207,59 +227,11 @@ const JournalListTab = () => {
           {/* Info: (20240418 - Julian) 日期 */}
           <td className="border-x border-lightGray6">
             {/* Info: (20240418 - Julian) 將日期畫成日曆的 icon */}
-            <svg
-              width="64"
-              height="64"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="mx-auto"
-            >
-              {/* Info: (20240418 - Julian) 日曆外框 */}
-              <path
-                d="M58 22.7201V47.0801C58 51.9526 58 54.3888 57.0554 56.2498C56.2245 57.8868 54.8987 59.2178 53.2679 60.0519C51.414 61.0001 48.9871 61.0001 44.1333 61.0001H19.8667C15.0129 61.0001 12.586 61.0001 10.7321 60.0519C9.10134 59.2178 7.77551 57.8868 6.94461 56.2498C6 54.3888 6 51.9526 6 47.0801V22.7201M58 22.7201C58 17.8477 58 15.4114 57.0554 13.5504C56.2245 11.9134 54.8987 10.5825 53.2679 9.74837C51.414 8.80012 48.9871 8.80012 44.1333 8.80012H19.8667C15.0129 8.80012 12.586 8.80012 10.7321 9.74837C9.10134 10.5825 7.77551 11.9134 6.94461 13.5504C6 15.4114 6 17.8477 6 22.7201M58 22.7201H32H6M43.5556 3.00012V8.80012M20.4444 3.00012V8.80012"
-                stroke="#7F8A9D"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              {/* Info: (20240418 - Julian) 年份 */}
-              <text
-                x="17"
-                y="20"
-                fontWeight="600"
-                fontSize="12px"
-                fontFamily="Barlow"
-                fill="#7F8A9D"
-              >
-                2024
-              </text>
-              {/* Info: (20240418 - Julian) 月份 */}
-              <text
-                x="20"
-                y="38"
-                fontWeight="600"
-                fontSize="14px"
-                fontFamily="Barlow"
-                fill="#FFA502"
-              >
-                Feb
-              </text>
-              {/* Info: (20240418 - Julian) 日 */}
-              <text
-                x="26"
-                y="56.5"
-                fontWeight="700"
-                fontSize="20px"
-                fontFamily="Barlow"
-                fill="#304872"
-              >
-                4
-              </text>
-            </svg>
+            <CalendarIcon timestamp={1623045000} />
           </td>
           {/* Info: (20240418 - Julian) 類型 */}
           <td className="px-16px">
-            <div className="flex items-center gap-5px rounded-full p-6px text-errorRed">
+            <div className="flex w-fit items-center gap-5px rounded-full bg-errorRed2 px-10px py-6px font-medium text-errorRed">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -277,6 +249,23 @@ const JournalListTab = () => {
               <p>Payment</p>
             </div>
           </td>
+          {/* Info: (20240418 - Julian) 項目 */}
+          <td className="px-16px text-left font-medium text-navyBlue2">Buy an apple</td>
+          {/* Info: (20240418 - Julian) From / To */}
+          <td className="px-16px text-left font-medium text-navyBlue2">PX Mart</td>
+          {/* Info: (20240418 - Julian) 金額 */}
+          <td className="px-16px">{displayedAmount}</td>
+          {/* Info: (20240418 - Julian) 專案 */}
+          <td className="px-16px text-left">
+            <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-6px py-2px font-medium text-primaryYellow2">
+              <div className="mx-auto h-14px w-14px rounded-full bg-indigo text-xxs text-white">
+                BF
+              </div>
+              <p>BAIFA</p>
+            </div>
+          </td>
+          {/* Info: (20240418 - Julian) 單據編號 */}
+          <td className="px-16px text-left text-darkBlue">20240417-001</td>
         </tr>
       </tbody>
     </table>

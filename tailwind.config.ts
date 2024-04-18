@@ -63,6 +63,12 @@ module.exports = {
         darkBlue: '#1570EF',
 
         errorRed: '#963737',
+        errorRed2: '#FED7D7',
+
+        successGreen: '#1E543B',
+        successGreen2: '#D3F4E5',
+
+        indigo: '#8098F9',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',
