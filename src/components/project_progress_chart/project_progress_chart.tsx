@@ -1,8 +1,10 @@
 /* eslint-disable */
 import React, { useState } from 'react';
-// import DatePicker from '../date_picker/date_picker';
 import DatePicker from '../date_picker/date_picker';
 import { default30DayPeriod } from '../../constants/display';
+
+const DUMMY_START_DATE = '2024/04/09';
+const DUMMY_END_DATE = 'TODAY';
 
 const ProjectProgressChart = () => {
   const [period, setPeriod] = useState(default30DayPeriod);
@@ -13,6 +15,10 @@ const ProjectProgressChart = () => {
     new Date(period.endTimeStamp * 1000).getDate()
   );
 
+  const minDate = new Date(DUMMY_START_DATE);
+  // const maxDate = new Date('2024/04/16');
+  const maxDate = new Date();
+
   const displayedDataSection = (
     <div className="dashboardCardShadow flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
       <div>
@@ -22,7 +28,12 @@ const ProjectProgressChart = () => {
       </div>
 
       <div className="flex w-full items-start justify-start">
-        <DatePicker period={period} setFilteredPeriod={setPeriod} />
+        <DatePicker
+          minDate={minDate}
+          maxDate={maxDate}
+          period={period}
+          setFilteredPeriod={setPeriod}
+        />
       </div>
     </div>
   );

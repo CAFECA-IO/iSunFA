@@ -16,6 +16,8 @@ type Dates = {
   disable: boolean;
 };
 interface IPopulateDatesParams {
+  minDate: Date;
+  maxDate: Date;
   daysInMonth: Dates[];
   selectedYear: number;
   selectedMonth: number;
@@ -29,7 +31,8 @@ interface IPopulateDatesParams {
 interface IDatePickerProps {
   period: IDatePeriod;
   setFilteredPeriod: Dispatch<SetStateAction<IDatePeriod>>;
-  isLinearBg?: boolean;
+  minDate?: Date;
+  maxDate?: Date;
   loading?: boolean;
   datePickerHandler?: (start: number, end: number) => Promise<void>;
 }
@@ -154,16 +157,16 @@ const PopulateDates = ({
   );
 };
 
-const SECONDS_IN_A_DAY = 86400 - 1;
+const SECONDS_TO_TOMORROW = 86400 - 1;
 const MILLISECONDS_IN_A_SECOND = 1000;
 
-const DatePicker = ({ period, setFilteredPeriod, isLinearBg, loading }: IDatePickerProps) => {
+const DatePicker = ({ minDate, maxDate, period, setFilteredPeriod, loading }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
 
   const today = new Date();
-  const maxDate = today;
+  // const maxDate = today;
 
   const [dateOne, setDateOne] = useState<Date | null>(
     new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
@@ -185,7 +188,7 @@ const DatePicker = ({ period, setFilteredPeriod, isLinearBg, loading }: IDatePic
       const isSameDate = dateOneStamp === dateTwoStamp;
       setFilteredPeriod({
         startTimeStamp: dateOneStamp,
-        endTimeStamp: isSameDate ? dateTwoStamp + SECONDS_IN_A_DAY : dateTwoStamp,
+        endTimeStamp: isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp,
       });
     } else {
       setFilteredPeriod({
@@ -203,21 +206,34 @@ const DatePicker = ({ period, setFilteredPeriod, isLinearBg, loading }: IDatePic
   };
 
   // Info: (20240417 - Shirley) 取得該月份的所有天數
-  const daysInMonth = (year: number, month: number) => {
+  const daysInMonth = (year: number, month: number, minDate?: Date, maxDate?: Date) => {
     const day = firstDayOfMonth(year, month);
     const dateLength = new Date(year, month, 0).getDate();
+
+    const minTime = minDate ? minDate.getTime() : 0;
+    const maxTime = maxDate ? maxDate.getTime() : new Date().getTime();
+
     let dates: Dates[] = [];
+
     for (let i = 0; i < dateLength; i++) {
+      // const dateTime = new Date(`${year}/${month}/${i + 1}`).getTime();
+
+      // const maxTime = maxDate
+      //   ? new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate()).getTime()
+      //   : null;
+
+      // const date = {
+      //   date: i + 1,
+      //   time: dateTime,
+      //   disable: maxTime ? (dateTime > maxTime ? true : false) : false,
+      // };
+      // dates.push(date);
+
       const dateTime = new Date(`${year}/${month}/${i + 1}`).getTime();
-
-      const maxTime = maxDate
-        ? new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate()).getTime()
-        : null;
-
       const date = {
         date: i + 1,
         time: dateTime,
-        disable: maxTime ? (dateTime > maxTime ? true : false) : false,
+        disable: dateTime < minTime || dateTime > maxTime, // 禁用小於最小日期或大於最大日期的日期
       };
       dates.push(date);
     }
@@ -373,7 +389,9 @@ const DatePicker = ({ period, setFilteredPeriod, isLinearBg, loading }: IDatePic
             {/* <div className="flex items-center space-x-3 text-hoverWhite"></div> */}
           </div>
           <PopulateDates
-            daysInMonth={daysInMonth(selectedYear, selectedMonth)}
+            minDate={minDate ?? new Date()}
+            maxDate={maxDate ?? new Date()}
+            daysInMonth={daysInMonth(selectedYear, selectedMonth, minDate, maxDate)}
             selectedYear={selectedYear}
             selectedMonth={selectedMonth}
             selectTimeOne={dateOne?.getTime() ?? 0}

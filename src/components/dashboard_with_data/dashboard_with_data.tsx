@@ -22,6 +22,7 @@ const DashboardWithData = () => {
             <IncomeExpenseTrendChart />
           </div>
         </div>
+
         <div>
           <div className="">
             <ProjectProgressChart />
