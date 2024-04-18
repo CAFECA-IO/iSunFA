@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
 import handler from './upload';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -27,8 +28,11 @@ describe('test API', () => {
   it('should return', async () => {
     req.method = 'POST';
     const mockReturn = {
-      message: 'success',
-      data: [
+      powerby: `ISunFa api ${version}`,
+      success: true,
+      code: '200',
+      message: 'upload {numberOfImage} images sucessfully',
+      payload: [
         {
           resultId: '20240416-001-001',
           status: 'success',
@@ -51,9 +55,10 @@ describe('test API', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
-      data: [],
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '405',
+      message: 'Method Not Allowed in upload images api',
     });
   });
 });
