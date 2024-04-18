@@ -186,7 +186,7 @@ const ProjectProgressChart = () => {
       ];
       setSeries(newSeries);
     }
-  }, [period.endTimeStamp]);
+  }, [period.endTimeStamp, period.startTimeStamp]);
 
   const dummyData = {
     categories,
@@ -194,10 +194,10 @@ const ProjectProgressChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">Profit Status Trend Chart</div>
+          <div className="flex-1">Project Progress Chart</div>
 
           <div className="justify-end">
             <Tooltip>
@@ -223,7 +223,7 @@ const ProjectProgressChart = () => {
         </div>
       </div>
 
-      <div>
+      <div className="mt-2 md:mt-5">
         <ColumnChart data={dummyData} />
       </div>
     </div>
