@@ -70,6 +70,7 @@ const LineChart = ({ data }: LineChartProps) => {
       tooltip: {
         enabled: false,
       },
+
       labels: {
         style: {
           colors: '#919EB4',
@@ -109,7 +110,6 @@ const LineChart = ({ data }: LineChartProps) => {
       },
       showForSingleSeries: true,
     },
-
     markers: {
       size: 4,
       colors: ['#002462'],
@@ -131,30 +131,7 @@ const LineChart = ({ data }: LineChartProps) => {
           show: true,
         },
       },
-      padding: {
-        // left: 50,
-        // right: 50,
-      },
     },
-    // title: {
-    //   text: 'Profit Status',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '16px',
-    //     color: '#002462',
-    //     fontFamily: 'Barlow',
-    //     fontWeight: 600,
-    //   },
-    // },
-    // subtitle: {
-    //   text: 'Profit Status Trend',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '12px',
-    //     color: '#919EB4',
-    //     fontFamily: 'Barlow',
-    //   },
-    // },
 
     series: data.series,
 
@@ -173,6 +150,10 @@ const LineChart = ({ data }: LineChartProps) => {
       },
       marker: {
         show: false,
+      },
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
       },
     },
   };
@@ -320,16 +301,6 @@ const ProfitTrendChart = () => {
             </Tooltip>
           </div>
         </div>
-        {/* <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div>Profit Status Trend Chart</div>
-
-          <Tooltip>
-            <p>
-              A message which appears when a cursor is positioned over an icon, image, hyperlink, or
-              other element in a graphical user interface.
-            </p>
-          </Tooltip>
-        </div> */}
       </div>
 
       <div className="mt-2">

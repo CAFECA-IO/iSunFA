@@ -147,25 +147,6 @@ const LineChart = ({ data }: LineChartProps) => {
         // right: 50,
       },
     },
-    // title: {
-    //   text: 'income',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '16px',
-    //     color: '#002462',
-    //     fontFamily: 'Barlow',
-    //     fontWeight: 600,
-    //   },
-    // },
-    // subtitle: {
-    //   text: 'income Trend',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '12px',
-    //     color: '#919EB4',
-    //     fontFamily: 'Barlow',
-    //   },
-    // },
 
     series: data.series,
 
@@ -184,6 +165,10 @@ const LineChart = ({ data }: LineChartProps) => {
       },
       marker: {
         show: false,
+      },
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
       },
     },
   };
@@ -205,49 +190,6 @@ enum Period {
   YEAR = 'year',
 }
 
-// Dummy data definitions
-// const dataMap = {
-//   week: {
-//     categories: ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'],
-//     series: [
-//       {
-//         name: 'Income',
-//         data: [-10, -5, 40, 35, 0, 49, 60],
-//       },
-//     ],
-//   },
-//   month: {
-//     categories: [
-//       'May',
-//       'Jun',
-//       'Jul',
-//       'Aug',
-//       'Sep',
-//       'Oct',
-//       'Nov',
-//       'Dec',
-//       'Jan',
-//       'Feb',
-//       'Mar',
-//       'Apr',
-//     ],
-//     series: [
-//       {
-//         name: 'Income',
-//         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
-//       },
-//     ],
-//   },
-//   year: {
-//     categories: ['2020', '2021', '2022', '2023', '2024'],
-//     series: [
-//       {
-//         name: 'Income',
-//         data: [-10, -5, 40, 35, 20],
-//       },
-//     ],
-//   },
-// };
 // Dummy data definitions
 const dataMap = {
   week: {

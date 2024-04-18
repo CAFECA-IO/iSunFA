@@ -28,7 +28,13 @@ interface IPopulateDatesParams {
   setComponentVisible: Dispatch<SetStateAction<boolean>>;
 }
 
+export enum DatePickerType {
+  ICON = 'ICON',
+  TEXT = 'TEXT',
+}
+
 interface IDatePickerProps {
+  type: DatePickerType;
   period: IDatePeriod;
   setFilteredPeriod: Dispatch<SetStateAction<IDatePeriod>>;
   minDate?: Date;
@@ -160,13 +166,21 @@ const PopulateDates = ({
 const SECONDS_TO_TOMORROW = 86400 - 1;
 const MILLISECONDS_IN_A_SECOND = 1000;
 
-const DatePicker = ({ minDate, maxDate, period, setFilteredPeriod, loading }: IDatePickerProps) => {
+const DatePicker = ({
+  type,
+  minDate,
+  maxDate,
+  period,
+  setFilteredPeriod,
+  loading,
+}: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
 
   const today = new Date();
-  // const maxDate = today;
+  const minTime = minDate ? minDate.getTime() : 0;
+  const maxTime = maxDate ? maxDate.getTime() : new Date().getTime();
 
   const [dateOne, setDateOne] = useState<Date | null>(
     new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
@@ -209,9 +223,6 @@ const DatePicker = ({ minDate, maxDate, period, setFilteredPeriod, loading }: ID
   const daysInMonth = (year: number, month: number, minDate?: Date, maxDate?: Date) => {
     const day = firstDayOfMonth(year, month);
     const dateLength = new Date(year, month, 0).getDate();
-
-    const minTime = minDate ? minDate.getTime() : 0;
-    const maxTime = maxDate ? maxDate.getTime() : new Date().getTime();
 
     let dates: Dates[] = [];
 
@@ -311,43 +322,78 @@ const DatePicker = ({ minDate, maxDate, period, setFilteredPeriod, loading }: ID
   const displayedYear = `${selectedYear}`;
   const displayedMonth = `${t(MONTH_ABR_LIST[selectedMonth - 1])}`;
 
+  const displayedButtonContent =
+    type === DatePickerType.ICON ? (
+      <Button
+        variant={'tertiaryOutline'}
+        onClick={openCalenderHandler}
+        className={cn(
+          'flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
+        )}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="none"
+          viewBox="0 0 16 16"
+        >
+          <g clipPath="url(#clip0_653_75494)">
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
+              clipRule="evenodd"
+            ></path>
+          </g>
+          <defs>
+            <clipPath id="clip0_653_75494">
+              <path fill="#fff" d="M0 0H16V16H0z"></path>
+            </clipPath>
+          </defs>
+        </svg>{' '}
+      </Button>
+    ) : (
+      <Button
+        variant={'tertiaryOutline'}
+        onClick={openCalenderHandler}
+        className={cn(
+          'flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
+        )}
+      >
+        <p className="flex-1 whitespace-nowrap text-sm">{displayPeriod}</p>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="none"
+          viewBox="0 0 16 16"
+        >
+          <g clipPath="url(#clip0_653_75494)">
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
+              clipRule="evenodd"
+            ></path>
+          </g>
+          <defs>
+            <clipPath id="clip0_653_75494">
+              <path fill="#fff" d="M0 0H16V16H0z"></path>
+            </clipPath>
+          </defs>
+        </svg>
+      </Button>
+    );
+
   return (
     <div className="relative flex flex-col items-center lg:w-auto">
       {/* Info: (20240417 - Shirley) Select Period button */}
 
       <div ref={targetRef}>
-        <Button
-          variant={'tertiaryOutline'}
-          onClick={openCalenderHandler}
-          className={cn(
-            'flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-4 font-inter text-secondaryBlue hover:cursor-pointer',
-            componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
-          )}
-        >
-          {/* <p className="flex-1 whitespace-nowrap text-sm">{displayPeriod}</p> */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="none"
-            viewBox="0 0 16 16"
-          >
-            <g clipPath="url(#clip0_653_75494)">
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
-                clipRule="evenodd"
-              ></path>
-            </g>
-            <defs>
-              <clipPath id="clip0_653_75494">
-                <path fill="#fff" d="M0 0H16V16H0z"></path>
-              </clipPath>
-            </defs>
-          </svg>
-          {/* <Image src="/icons/calender.svg" width={24} height={24} alt="calender_icon" /> */}
-        </Button>
+        {displayedButtonContent}
 
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
@@ -366,6 +412,7 @@ const DatePicker = ({ minDate, maxDate, period, setFilteredPeriod, loading }: ID
           </button>
 
           <div className="flex w-full items-center justify-between">
+            {/* Info: Previous button (20240417 - Shirley) */}
             <button
               onClick={goToPrevMonth}
               className="rounded-md border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
@@ -379,18 +426,17 @@ const DatePicker = ({ minDate, maxDate, period, setFilteredPeriod, loading }: ID
               <p className="text-secondaryBlue">{displayedMonth}</p>
             </div>
 
+            {/* Info: Next button (20240417 - Shirley) */}
             <button
               onClick={goToNextMonth}
               className="rounded-md border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >
               <AiOutlineRight size={12} />
             </button>
-            {/* Info: (20240417 - Shirley) Previous and Next button */}
-            {/* <div className="flex items-center space-x-3 text-hoverWhite"></div> */}
           </div>
           <PopulateDates
-            minDate={minDate ?? new Date()}
-            maxDate={maxDate ?? new Date()}
+            minDate={minDate ?? new Date(minTime)}
+            maxDate={maxDate ?? new Date(maxTime)}
             daysInMonth={daysInMonth(selectedYear, selectedMonth, minDate, maxDate)}
             selectedYear={selectedYear}
             selectedMonth={selectedMonth}
