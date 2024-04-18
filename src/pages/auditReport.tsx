@@ -5,7 +5,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../interfaces/locale';
 import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
 
-// Define JSON data for table rows
+// Info: (20240418 - Liz) Define JSON data for table rows
 interface ITableData {
   code: string;
   regional: string;
@@ -110,17 +110,17 @@ const tableData: ITableData[] = [
 ];
 
 const auditReport = () => {
-  const displayTableRows = tableData.map((row: ITableData) => (
-    <tr key={row.code}>
-      <td>{row.code}</td>
-      <td>{row.regional}</td>
-      <td>{row.company}</td>
-      <td>{row.informationYear}</td>
-      <td>{row.detailedInformation}</td>
-      <td>{row.creditRating}</td>
-      <td>{row.dateOfUpload}</td>
-      <td>
-        <div>
+  const displayTableRows = tableData.map((row: ITableData, index) => (
+    <tr key={row.code} className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}>
+      <td className="px-2 py-10px">{row.code}</td>
+      <td className="px-2 py-10px">{row.regional}</td>
+      <td className="px-2 py-10px">{row.company}</td>
+      <td className="px-2 py-10px">{row.informationYear}</td>
+      <td className="px-2 py-10px">{row.detailedInformation}</td>
+      <td className="px-2 py-10px">{row.creditRating}</td>
+      <td className="px-2 py-10px">{row.dateOfUpload}</td>
+      <td className="px-2 py-10px">
+        <div className="flex items-center justify-center">
           <Image src="/elements/link.svg" width={20} height={20} alt="link" />
         </div>
       </td>
@@ -130,9 +130,10 @@ const auditReport = () => {
   return (
     <>
       <Head>
-        <title>Test</title>
+        <link rel="icon" href="/favicon/favicon.ico" />
+        <title>iSunFA - Audit Report</title>
       </Head>
-
+      {/* Navbar */}
       <nav className="">
         <LandingNavBar />
       </nav>
@@ -141,18 +142,20 @@ const auditReport = () => {
         <div className="min-h-screen bg-secondaryBlue font-barlow">
           <div className="px-80px py-120px">
             {/* Title */}
-            <section className="gap-14 text-h1 font-bold leading-h1">Audit Report</section>
+            <section className="mb-14 text-center text-h1 font-bold leading-h1">
+              Audit Report
+            </section>
             {/* Conditional Filters */}
-            <section id="conditional-filters" className="flex items-end gap-10">
+            <section id="conditional-filters" className="mb-10 flex items-end gap-6 px-4px">
               {/* Search */}
-              <div className="">
+              <div className="flex grow flex-col gap-2">
                 <div className="text-sm font-semibold">Company Code or Abbreviation </div>
-                <div className="flex items-center justify-between bg-white">
+                <div className="flex items-center justify-between rounded-lg bg-white">
                   <div className="w-full">
                     <input
                       type="text"
                       placeholder="Search"
-                      className="bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+                      className="rounded-lg bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
                     />
                   </div>
                   <div className="px-3 py-2.5">
@@ -161,12 +164,12 @@ const auditReport = () => {
                 </div>
               </div>
               {/* Date Picker */}
-              <div className="flex items-center justify-between bg-white">
+              <div className="flex items-center justify-between rounded-lg bg-white">
                 <div className="w-full">
                   <input
                     type="text"
                     placeholder="Start Date - End Date"
-                    className="bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+                    className="rounded-lg bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
                   />
                 </div>
                 <div className="px-3 py-2.5">
@@ -177,127 +180,105 @@ const auditReport = () => {
             {/* Audit Report List */}
             <section id="audit-report-list" className="flex flex-col gap-5">
               {/* Filter Display List */}
-              <div>
+              <div className="flex items-center gap-5 px-4px">
                 <div className="text-lg font-semibold">Show Designated Regional Companies</div>
-                <form className="text-sm font-semibold text-primaryYellow">
-                  <label htmlFor="us" className="pr-20px">
+                <form className="flex gap-5 text-sm font-semibold text-primaryYellow">
+                  <label htmlFor="us" className="flex gap-2">
                     <input type="checkbox" id="us" name="country" value="US" /> US
                   </label>
-                  <label htmlFor="hk" className="pr-20px">
+                  <label htmlFor="hk" className="flex gap-2">
                     <input type="checkbox" id="hk" name="country" value="HK" /> HK
                   </label>
-                  <label htmlFor="tw" className="pr-20px">
+                  <label htmlFor="tw" className="flex gap-2">
                     <input type="checkbox" id="tw" name="country" value="TW" /> TW
                   </label>
                 </form>
               </div>
               {/* Table */}
               <div className="">
-                <table>
-                  <thead className="bg-primaryYellow text-black">
-                    <tr>
-                      <th className="px-8px py-12px">Code</th>
-                      <th className="px-8px py-12px">Regional</th>
-                      <th className="px-8px py-12px">Company</th>
-                      <th className="flex items-center px-8px py-12px">
-                        Information Year
+                <table className="w-full border-separate border-spacing-x-1 text-center">
+                  <thead className="bg-primaryYellow text-h6 font-bold leading-8 text-black">
+                    <tr className="">
+                      <th className="px-2 py-12px">Code</th>
+                      <th className="px-2 py-12px">Regional</th>
+                      <th className="px-2 py-12px">Company</th>
+                      <th className="flex items-center justify-center gap-1 px-2 py-12px">
+                        <div>Information Year</div>
                         <div>
                           <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
                         </div>
                       </th>
-                      <th className="px-8px py-12px">Detailed Information</th>
-                      <th className="flex items-center px-8px py-12px">
-                        Credit rating
+                      <th className="px-2 py-12px">Detailed Information</th>
+                      <th className="flex items-center justify-center gap-1 px-2 py-12px">
+                        <div>Credit rating</div>
                         <div>
                           <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
                         </div>
                       </th>
-                      <th className="px-8px py-12px">Date of Upload</th>
-                      <th className="px-8px py-12px">LINK</th>
+                      <th className="px-2 py-12px">Date of Upload</th>
+                      <th className="px-2 py-12px">LINK</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white text-lg font-medium text-black">
+                  <tbody className="text-lg font-medium text-black">
                     {/* Dynamically generate table rows */}
                     {displayTableRows}
                   </tbody>
-                  {/* <tbody className="bg-white text-lg font-medium text-black">
-                    <tr>
-                      <td>2330</td>
-                      <td>TW</td>
-                      <td>TSMC</td>
-                      <td>2024 Q1</td>
-                      <td>IFRSs Consolidated Financial Report</td>
-                      <td>AAA</td>
-                      <td>2024/04/08</td>
-                      <td>
-                        <div>
-                          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2234</td>
-                      <td>TW</td>
-                      <td>iSunFA</td>
-                      <td>2024 Q2</td>
-                      <td>IFRSs Consolidated Financial Report</td>
-                      <td>AA</td>
-                      <td>2024/04/08</td>
-                      <td>
-                        <div>
-                          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody> */}
                 </table>
               </div>
-              {/* Checkbox */}
-              <div>
-                <form>
-                  <label htmlFor="all">
+              {/* Checkbox : no-daily-reports */}
+              <div className="self-end px-4px">
+                <form className="">
+                  <label htmlFor="no-daily-reports" className="flex gap-2 text-primaryYellow">
+                    <input
+                      type="checkbox"
+                      id="no-daily-reports"
+                      name="no-daily-reports"
+                      value="no-daily-reports"
+                    />
                     {`Don't show daily reports `}
-                    <input type="checkbox" id="all" name="all" value="all" />
                   </label>
                 </form>
               </div>
               {/* Pagination */}
-              <div className="flex gap-1">
-                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
-                  <Image
-                    src="/elements/first_page_icon.svg"
-                    width={20}
-                    height={20}
-                    alt="first_page_icon"
-                  />
+              <div className="flex flex-col items-center">
+                <div className="flex gap-10px">
+                  <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                    <Image
+                      src="/elements/first_page_icon.svg"
+                      width={20}
+                      height={20}
+                      alt="first_page_icon"
+                    />
+                  </div>
+                  <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                    <Image
+                      src="/elements/previous_page_icon.svg"
+                      width={20}
+                      height={20}
+                      alt="previous_page_icon"
+                    />
+                  </div>
+                  <div className="flex w-11 items-center justify-center rounded border border-primaryYellow p-3 text-primaryYellow">
+                    1
+                  </div>
+                  <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                    <Image
+                      src="/elements/next_page_icon.svg"
+                      width={20}
+                      height={20}
+                      alt="next_page_icon"
+                    />
+                  </div>
+                  <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+                    <Image
+                      src="/elements/last_page_icon.svg"
+                      width={20}
+                      height={20}
+                      alt="last_page_icon"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
-                  <Image
-                    src="/elements/previous_page_icon.svg"
-                    width={20}
-                    height={20}
-                    alt="previous_page_icon"
-                  />
-                </div>
-                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
-                  1
-                </div>
-                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
-                  <Image
-                    src="/elements/next_page_icon.svg"
-                    width={20}
-                    height={20}
-                    alt="next_page_icon"
-                  />
-                </div>
-                <div className="flex items-center justify-center rounded border border-lightWhite p-3">
-                  <Image
-                    src="/elements/last_page_icon.svg"
-                    width={20}
-                    height={20}
-                    alt="last_page_icon"
-                  />
-                </div>
+                <div>of 100</div>
               </div>
             </section>
           </div>
