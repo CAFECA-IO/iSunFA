@@ -98,7 +98,7 @@ const LineChart = ({ data }: LineChartProps) => {
       position: 'bottom',
       horizontalAlign: 'left',
 
-      customLegendItems: ['profit status'],
+      customLegendItems: ['Profit Status'],
       fontFamily: 'Barlow',
       fontWeight: 500,
       markers: {
@@ -200,7 +200,7 @@ const dataMap = {
     categories: ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 0, 49, 60],
       },
     ],
@@ -222,7 +222,7 @@ const dataMap = {
     ],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
       },
     ],
@@ -231,7 +231,7 @@ const dataMap = {
     categories: ['2020', '2021', '2022', '2023', '2024'],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 20],
       },
     ],
@@ -254,7 +254,7 @@ const ProfitTrendChart = () => {
     categories: WEEKDAYS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 0, 49, 60],
       },
     ],
@@ -280,7 +280,7 @@ const ProfitTrendChart = () => {
     categories: MONTHS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
       },
     ],
@@ -293,12 +293,12 @@ const ProfitTrendChart = () => {
     categories: YEARS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 20],
         type: 'line',
       },
       // {
-      //   name: 'profit status 2',
+      //   name: 'Profit Status 2',
       //   data: [10, 5, -10, 15, 5],
       //   type: 'line',
       // },
