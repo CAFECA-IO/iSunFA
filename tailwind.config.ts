@@ -516,6 +516,8 @@ module.exports = {
         custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
         custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
         custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
+        tooltip:
+          '0px 166px 46px 0px rgba(49, 67, 98, 0.00), 0px 106px 42px 0px rgba(49, 67, 98, 0.01), 0px 60px 36px 0px rgba(49, 67, 98, 0.05), 0px 27px 27px 0px rgba(49, 67, 98, 0.09), 0px 7px 15px 0px rgba(49, 67, 98, 0.10)',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
