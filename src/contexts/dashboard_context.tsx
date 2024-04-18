@@ -1,7 +1,7 @@
 import useStateRef from 'react-usestateref';
 import React, { createContext } from 'react';
 import { BookmarkItem } from '../interfaces/modals';
-import { IDashboardOverview, generateDashboardOverview } from '../interfaces/dashboard_overview';
+import { DUMMY_DASHBOARD_OVERVIEW, IDashboardOverview } from '../interfaces/dashboard_overview';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;
@@ -419,8 +419,6 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
     tempSelectedOnModal: false,
   },
 };
-
-const DUMMY_DASHBOARD_OVERVIEW = generateDashboardOverview();
 
 export const DashboardContext = createContext<DashboardContextType>(initialDashboardContext);
 

@@ -70,6 +70,7 @@ const LineChart = ({ data }: LineChartProps) => {
       tooltip: {
         enabled: false,
       },
+
       labels: {
         style: {
           colors: '#919EB4',
@@ -96,12 +97,19 @@ const LineChart = ({ data }: LineChartProps) => {
     legend: {
       show: true,
       position: 'bottom',
-      customLegendItems: ['profit status'],
+      horizontalAlign: 'left',
+
+      customLegendItems: ['Profit Status'],
+      fontFamily: 'Barlow',
+      fontWeight: 500,
       markers: {
         fillColors: ['#FFA502'],
+        width: 20, // 標記的寬度
+        height: 12, // 標記的高度
+        radius: 0, // 標記的半徑（如果是圓形）
       },
+      showForSingleSeries: true,
     },
-
     markers: {
       size: 4,
       colors: ['#002462'],
@@ -123,30 +131,7 @@ const LineChart = ({ data }: LineChartProps) => {
           show: true,
         },
       },
-      padding: {
-        // left: 50,
-        // right: 50,
-      },
     },
-    // title: {
-    //   text: 'Profit Status',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '16px',
-    //     color: '#002462',
-    //     fontFamily: 'Barlow',
-    //     fontWeight: 600,
-    //   },
-    // },
-    // subtitle: {
-    //   text: 'Profit Status Trend',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '12px',
-    //     color: '#919EB4',
-    //     fontFamily: 'Barlow',
-    //   },
-    // },
 
     series: data.series,
 
@@ -165,6 +150,10 @@ const LineChart = ({ data }: LineChartProps) => {
       },
       marker: {
         show: false,
+      },
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
       },
     },
   };
@@ -192,7 +181,7 @@ const dataMap = {
     categories: ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 0, 49, 60],
       },
     ],
@@ -214,7 +203,7 @@ const dataMap = {
     ],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
       },
     ],
@@ -223,7 +212,7 @@ const dataMap = {
     categories: ['2020', '2021', '2022', '2023', '2024'],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 20],
       },
     ],
@@ -246,7 +235,7 @@ const ProfitTrendChart = () => {
     categories: WEEKDAYS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 0, 49, 60],
       },
     ],
@@ -272,7 +261,7 @@ const ProfitTrendChart = () => {
     categories: MONTHS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
       },
     ],
@@ -285,12 +274,12 @@ const ProfitTrendChart = () => {
     categories: YEARS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 20],
         type: 'line',
       },
       // {
-      //   name: 'profit status 2',
+      //   name: 'Profit Status 2',
       //   data: [10, 5, -10, 15, 5],
       //   type: 'line',
       // },
@@ -298,7 +287,7 @@ const ProfitTrendChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 shadow-xl max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Profit Status Trend Chart</div>
@@ -312,16 +301,6 @@ const ProfitTrendChart = () => {
             </Tooltip>
           </div>
         </div>
-        {/* <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div>Profit Status Trend Chart</div>
-
-          <Tooltip>
-            <p>
-              A message which appears when a cursor is positioned over an icon, image, hyperlink, or
-              other element in a graphical user interface.
-            </p>
-          </Tooltip>
-        </div> */}
       </div>
 
       <div className="mt-2">
@@ -372,10 +351,7 @@ const ProfitTrendChart = () => {
             </div>
           </div>
         </div>
-        {/* TODO: RWD (20240416 - Shirley) */}
         <div className="flex max-md:-ml-3">
-          {/* <LineChart data={dummyWeekData} /> */}
-          {/* <LineChart data={dummyMonthData} /> */}
           <LineChart data={data} />
         </div>
       </div>

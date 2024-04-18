@@ -104,7 +104,7 @@ div::-webkit-scrollbar {
   list-style-type: disc;
 }
 
-.dashboardBookmarkShadow {
+.dashboardCardShadow {
   border-radius: var(--Radius-L, 20px);
   background: var(--Surface-Nuetural-Surface_Lv2, #fff);
   box-shadow:
