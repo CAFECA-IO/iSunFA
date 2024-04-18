@@ -61,6 +61,8 @@ module.exports = {
         navyBlue: '#002462',
         navyBlue2: '#27354E',
         darkBlue: '#1570EF',
+
+        errorRed: '#963737',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',
@@ -176,6 +178,7 @@ module.exports = {
         '3px': '3px',
         '4px': '4px',
         '5px': '5px',
+        '6px': '6px',
         '8px': '8px',
         '10px': '10px',
         '12px': '12px',
@@ -269,6 +272,7 @@ module.exports = {
         '271px': '271px',
         '278px': '278px',
         '280px': '280px',
+        '281px': '281px',
         '285px': '285px',
         '290px': '290px',
         '296px': '296px',
@@ -516,6 +520,9 @@ module.exports = {
         custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
         custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
         custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
+
+        dropmenu:
+          '0px 166px 46px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.10));',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
