@@ -83,7 +83,7 @@ describe('Result API Handler Tests', () => {
     expect(res.json).toHaveBeenCalledWith({
       powerby: `ISunFa api ${version}`,
       success: false,
-      code: '400',
+      code: '405',
       message: 'Method Not Allowed in ocr process status api',
     });
   });

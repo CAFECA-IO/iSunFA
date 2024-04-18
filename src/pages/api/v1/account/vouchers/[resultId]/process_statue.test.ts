@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
 import handler from './process_statue'; // Ensure this path matches the actual file location
 
 let req: jest.Mocked<NextApiRequest>;
@@ -25,15 +26,19 @@ afterEach(() => {
 
 describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
-    req.query.resultId = '123'; // Valid resultId as a string
+    const resultId = '123';
+    req.query.resultId = resultId; // Valid resultId as a string
     req.method = 'GET';
 
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'success',
-      status: 'success',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '200',
+      message: `Voucher preview creating process of id:${resultId} return successfully`,
+      payload: 'success',
     });
   });
 
@@ -45,9 +50,10 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid resultId',
-      status: 'error',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid resultId',
     });
   });
 
@@ -59,9 +65,10 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Invalid resultId',
-      status: 'error',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '400',
+      message: 'Invalid resultId',
     });
   });
 
@@ -73,9 +80,10 @@ describe('Result API Handler Tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'error',
-      errorReason: 'Method Not Allowed',
-      status: 'error',
+      powerby: `ISunFa api ${version}`,
+      success: false,
+      code: '405',
+      message: 'Method Not Allowed in get Voucher preview creating process api',
     });
   });
 });

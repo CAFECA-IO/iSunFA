@@ -33,7 +33,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       return res.status(405).json({
         powerby: `ISunFa api ${version}`,
         success: false,
-        code: '400',
+        code: '405',
         message: 'Method Not Allowed in ocr process status api',
       });
     }
