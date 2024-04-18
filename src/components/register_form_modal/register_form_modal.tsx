@@ -73,7 +73,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
                 <input
                   ref={inputRef}
                   type="text"
-                  className="w-full bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+                  className="w-full bg-white px-3 py-2.5 text-base text-navyBlue2 placeholder:text-lightGray4 focus:outline-none"
                   placeholder="Username"
                 />
               </div>

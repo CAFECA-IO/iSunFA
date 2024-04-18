@@ -529,6 +529,8 @@ module.exports = {
 
         dropmenu:
           '0px 166px 46px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.10));',
+        tooltip:
+          '0px 166px 46px 0px rgba(49, 67, 98, 0.00), 0px 106px 42px 0px rgba(49, 67, 98, 0.01), 0px 60px 36px 0px rgba(49, 67, 98, 0.05), 0px 27px 27px 0px rgba(49, 67, 98, 0.09), 0px 7px 15px 0px rgba(49, 67, 98, 0.10)',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',

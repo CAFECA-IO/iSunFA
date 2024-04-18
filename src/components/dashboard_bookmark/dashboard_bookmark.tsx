@@ -136,7 +136,7 @@ const DashboardBookmark = () => {
 
   return (
     <div>
-      <div className="dashboardBookmarkShadow mt-12 flex w-full gap-5 rounded-3xl bg-white px-6 py-6 max-lg:flex-wrap max-md:mt-10 max-md:max-w-full max-md:px-5">
+      <div className="dashboardCardShadow mt-12 flex w-full gap-5 rounded-3xl bg-white px-6 py-6 max-lg:flex-wrap max-md:mt-10 max-md:max-w-full max-md:px-5">
         <div className="flex flex-1 flex-wrap gap-5">{displayedBookmarkList}</div>
         {/* Info: remove or add button (20240411 - Shirley) */}
         {displayedRemoveOrAddButton}

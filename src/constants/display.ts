@@ -45,7 +45,9 @@ export const WEEK_LIST = [
   'DATE_PICKER.SAT',
 ];
 
-export const default30DayPeriod = {
+export const default30DayPeriodInSec = {
   startTimeStamp: 0,
   endTimeStamp: 0,
 };
+
+export const MILLISECONDS_IN_A_SECOND = 1000;
