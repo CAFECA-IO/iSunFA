@@ -1,12 +1,13 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import React from 'react';
+import React, { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../interfaces/locale';
 import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
 
-// Info: (20240418 - Liz) Define JSON data for table rows
+// Define table data interface
 interface ITableData {
+  [key: string]: string | number; // Add index signature
   code: string;
   regional: string;
   company: string;
@@ -16,7 +17,8 @@ interface ITableData {
   dateOfUpload: string;
 }
 
-const tableData: ITableData[] = [
+// Dummy Data
+const initialData: ITableData[] = [
   {
     code: '2330',
     regional: 'TW',
@@ -110,8 +112,16 @@ const tableData: ITableData[] = [
 ];
 
 const auditReport = () => {
-  const displayTableRows = tableData.map((row: ITableData, index) => (
-    <tr key={row.code} className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}>
+  // const [period, setPeriod] = useState(default30DayPeriod);
+  const [data, setData] = React.useState<ITableData[]>(initialData);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const displayTableRows = data.map((row: ITableData, index) => (
+    <tr
+      key={`${row.code}-${row.company}`}
+      className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}
+    >
       <td className="px-2 py-10px">{row.code}</td>
       <td className="px-2 py-10px">{row.regional}</td>
       <td className="px-2 py-10px">{row.company}</td>
@@ -126,6 +136,41 @@ const auditReport = () => {
       </td>
     </tr>
   ));
+
+  const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
+    const ratingOrder: { [key: string]: number } = {
+      AAA: 1,
+      AA: 2,
+      A: 3,
+      BBB: 4,
+      BB: 5,
+      B: 6,
+      CCC: 7,
+      CC: 8,
+      C: 9,
+      D: 10,
+      // 根據需要添加更多評級
+    };
+    const aRating = ratingOrder[a] || Number.MAX_SAFE_INTEGER;
+    const bRating = ratingOrder[b] || Number.MAX_SAFE_INTEGER;
+    return direction === 'asc' ? aRating - bRating : bRating - aRating;
+  };
+
+  const handleSort = (column: string) => {
+    const direction = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortBy(column);
+    setSortDirection(direction);
+    const sortedData = data.sort((a, b) => {
+      if (column === 'creditRating') {
+        return compareCreditRatings(a[column], b[column], direction);
+      } else {
+        return direction === 'asc'
+          ? (a[column] as string).localeCompare(b[column] as string)
+          : (b[column] as string).localeCompare(a[column] as string);
+      }
+    });
+    setData(sortedData);
+  };
 
   return (
     <>
@@ -204,14 +249,14 @@ const auditReport = () => {
                       <th className="px-2 py-12px">Company</th>
                       <th className="flex items-center justify-center gap-1 px-2 py-12px">
                         <div>Information Year</div>
-                        <div>
+                        <div onClick={() => handleSort('informationYear')}>
                           <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
                         </div>
                       </th>
                       <th className="px-2 py-12px">Detailed Information</th>
                       <th className="flex items-center justify-center gap-1 px-2 py-12px">
                         <div>Credit rating</div>
-                        <div>
+                        <div onClick={() => handleSort('creditRating')}>
                           <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
                         </div>
                       </th>
