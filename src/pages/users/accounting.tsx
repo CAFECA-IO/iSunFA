@@ -9,7 +9,7 @@ const AccountingPage = () => {
     'journal'
   );
 
-  const journalTab = <div className="flex w-full flex-col p-10">Main Page</div>;
+  const journalTab = <div className="flex min-h-screen w-full flex-col p-10">Main Page</div>;
 
   const overview = currentTab === 'journal' ? journalTab : <JournalListTab />;
 
