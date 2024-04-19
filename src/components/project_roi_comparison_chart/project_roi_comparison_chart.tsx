@@ -178,20 +178,13 @@ const ProjectRoiComparisonChart = () => {
     'ProjectI',
     'ProjectJ',
   ];
-  const seriesData = [
-    [45, 52, 38, 24, 33, 26, 50, 60, 70, 80], // Data for Series 1
-    [42, 58, 34, 49, 53, 41, 55, 65, 75, 85], // Data for Series 2
-  ];
 
   useEffect(() => {
-    // generate random data array
     if (period.endTimeStamp !== 0) {
       const newSeries = [
         Array.from({ length: categories.length }, () => Math.floor(Math.random() * 150) + 100),
         Array.from({ length: categories.length }, () => Math.floor(Math.random() * 150) + 100),
       ];
-
-      console.log('newSeries', newSeries);
 
       setSeries(newSeries);
     }
