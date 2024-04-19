@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '../tooltip/tooltip';
@@ -156,12 +156,9 @@ const ProjectRoiComparisonChart = () => {
   const maxDate = new Date();
 
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
-  const [series, setSeries] = useState<
-    {
-      name: string;
-      data: number[];
-    }[]
-  >([]);
+  const [series, setSeries] = useState<number[][]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [demoToggle, setDemoToggle] = useState(true);
 
   const displayedYear = maxDate.getFullYear();
@@ -171,20 +168,74 @@ const ProjectRoiComparisonChart = () => {
 
   const displayedDate = `${displayedYear} ${t(displayedMonth)}`;
 
-  const categories = ['iSunFA', 'BAIFA', 'iSunOne', 'TideBitEx', 'ProjectE', 'ProjectF'];
+  // const categories = ['iSunFA', 'BAIFA', 'iSunOne', 'TideBitEx', 'ProjectE', 'ProjectF'];
+  // const seriesData = [
+  //   [45, 52, 38, 24, 33, 26], // Data for Series 1
+  //   [42, 58, 34, 49, 53, 41], // Data for Series 2
+  // ];
+
+  // const dummyData = {
+  //   categories,
+  //   seriesData,
+  // };
+
+  const categories = [
+    'iSunFA',
+    'BAIFA',
+    'iSunOne',
+    'TideBitEx',
+    'ProjectE',
+    'ProjectF',
+    'ProjectG',
+    'ProjectH',
+    'ProjectI',
+    'ProjectJ',
+  ];
   const seriesData = [
-    [45, 52, 38, 24, 33, 26], // Data for Series 1
-    [42, 58, 34, 49, 53, 41], // Data for Series 2
+    [45, 52, 38, 24, 33, 26, 50, 60, 70, 80], // Data for Series 1
+    [42, 58, 34, 49, 53, 41, 55, 65, 75, 85], // Data for Series 2
   ];
 
+  useEffect(() => {
+    // generate random data array
+    if (period.endTimeStamp !== 0) {
+      const newSeries = [
+        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 100)),
+        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 100)),
+      ];
+
+      console.log('newSeries', newSeries);
+
+      setSeries(newSeries);
+    }
+  }, [period.endTimeStamp, period.startTimeStamp]);
+
+  const itemsPerPage = 6;
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCategories = categories.slice(startIndex, endIndex);
+  const paginatedSeriesData = series.map((series) => series.slice(startIndex, endIndex));
+
   const dummyData = {
-    categories,
-    seriesData,
+    categories: paginatedCategories,
+    seriesData: paginatedSeriesData,
   };
 
-  const goToNextPage = () => {};
+  const goToNextPage = () => {
+    console.log('goToNextPage', currentPage, totalPages);
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-  const goToPrevPage = () => {};
+  const goToPrevPage = () => {
+    console.log('goToPrevPage', currentPage, totalPages);
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const displayedDataSection = (
     <div className="dashboardCardShadow flex h-550px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
@@ -220,22 +271,28 @@ const ProjectRoiComparisonChart = () => {
           </div>
 
           {/* Info: prev and next button (20240419 - Shirley) */}
+          {/* Info: desktop version (20240419 - Shirley) */}
           <div className="hidden flex-1 justify-end space-x-2 lg:flex">
             <Button
+              disabled={currentPage === 1}
+              onClick={goToPrevPage}
               variant={'tertiaryOutline'}
-              className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+              className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
             >
               <AiOutlineLeft size={15} />
             </Button>
 
             <Button
+              disabled={currentPage === totalPages}
+              onClick={goToNextPage}
               variant={'tertiaryOutline'}
-              className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+              className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
             >
               <AiOutlineRight size={15} />
             </Button>
           </div>
 
+          {/* Info: mobile version (20240419 - Shirley) */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
             <div>
               <DatePicker
@@ -250,15 +307,19 @@ const ProjectRoiComparisonChart = () => {
             {/* Info: prev and next button (20240419 - Shirley) */}
             <div className="flex flex-1 justify-end space-x-2">
               <Button
+                disabled={currentPage === 1}
+                onClick={goToPrevPage}
                 variant={'tertiaryOutline'}
-                className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+                className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
               >
                 <AiOutlineLeft size={15} />
               </Button>
 
               <Button
+                disabled={currentPage === totalPages}
+                onClick={goToNextPage}
                 variant={'tertiaryOutline'}
-                className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+                className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
               >
                 <AiOutlineRight size={15} />
               </Button>
