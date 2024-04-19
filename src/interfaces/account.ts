@@ -22,7 +22,7 @@ export interface AccountLineItem {
   account: string;
   description: string;
   debit: boolean;
-  amount: 469920;
+  amount: number;
 }
 
 export interface AccountVoucher {
