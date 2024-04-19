@@ -48,7 +48,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       colors: ['transparent'], // Info: 讓每一個欄位裡面的 column 有空隙的方式 (20240419 - Shirley)
     },
 
-    colors: ['#6DDBA8', '#FB7A7A'],
+    colors: ['#4BD394B2', '#FB5C5CB2'],
     xaxis: {
       categories: data.categories,
       labels: {
@@ -80,7 +80,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       fontFamily: 'Barlow',
       fontWeight: 500,
       markers: {
-        fillColors: ['#6DDBA8', '#FB7A7A'],
+        fillColors: ['#4BD394B2', '#FB5C5CB2'],
         width: 20, // 標記的寬度
         height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
@@ -124,11 +124,11 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       marker: {
         show: false,
       },
-      // y: {
-      //   formatter: function (val: number) {
-      //     return val + ' units';
-      //   },
-      // },
+      y: {
+        formatter: function (val: number) {
+          return val + ' K';
+        },
+      },
     },
   };
 
@@ -159,25 +159,12 @@ const ProjectRoiComparisonChart = () => {
   const [series, setSeries] = useState<number[][]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [demoToggle, setDemoToggle] = useState(true);
-
   const displayedYear = maxDate.getFullYear();
   const displayedMonth = period.startTimeStamp
     ? MONTH_ABR_LIST[new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND).getMonth()]
     : MONTH_ABR_LIST[maxDate.getMonth()];
 
   const displayedDate = `${displayedYear} ${t(displayedMonth)}`;
-
-  // const categories = ['iSunFA', 'BAIFA', 'iSunOne', 'TideBitEx', 'ProjectE', 'ProjectF'];
-  // const seriesData = [
-  //   [45, 52, 38, 24, 33, 26], // Data for Series 1
-  //   [42, 58, 34, 49, 53, 41], // Data for Series 2
-  // ];
-
-  // const dummyData = {
-  //   categories,
-  //   seriesData,
-  // };
 
   const categories = [
     'iSunFA',
@@ -200,8 +187,8 @@ const ProjectRoiComparisonChart = () => {
     // generate random data array
     if (period.endTimeStamp !== 0) {
       const newSeries = [
-        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 100)),
-        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 100)),
+        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 150) + 100),
+        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 150) + 100),
       ];
 
       console.log('newSeries', newSeries);
@@ -216,7 +203,7 @@ const ProjectRoiComparisonChart = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedCategories = categories.slice(startIndex, endIndex);
-  const paginatedSeriesData = series.map((series) => series.slice(startIndex, endIndex));
+  const paginatedSeriesData = series.map((series: number[]) => series.slice(startIndex, endIndex));
 
   const dummyData = {
     categories: paginatedCategories,
@@ -224,14 +211,12 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const goToNextPage = () => {
-    console.log('goToNextPage', currentPage, totalPages);
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
 
   const goToPrevPage = () => {
-    console.log('goToPrevPage', currentPage, totalPages);
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }

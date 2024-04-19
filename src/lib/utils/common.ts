@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ALLOWED_ORIGINS } from '../../constants/config';
-import { MONTH_LIST } from '../../constants/display';
+import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '../../constants/display';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -116,11 +116,11 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
 
   // Info: 取得當前月份第一天的 00:00:00 (20240419 - Shirley)
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  const startTimeStamp = Math.floor(firstDayOfMonth.getTime() / 1000);
+  const startTimeStamp = Math.floor(firstDayOfMonth.getTime() / MILLISECONDS_IN_A_SECOND);
 
   // Info: 取得今天的 23:59:59 (20240419 - Shirley)
   const endOfToday = new Date(currentYear, currentMonth, today.getDate(), 23, 59, 59);
-  const endTimeStamp = Math.floor(endOfToday.getTime() / 1000);
+  const endTimeStamp = Math.floor(endOfToday.getTime() / MILLISECONDS_IN_A_SECOND);
 
   return {
     startTimeStamp,

@@ -152,7 +152,6 @@ const ProjectProgressChart = () => {
       data: number[];
     }[]
   >([]);
-  const [demoToggle, setDemoToggle] = useState(true);
 
   const displayedYear = maxDate.getFullYear();
   const displayedMonth = period.startTimeStamp
@@ -165,25 +164,7 @@ const ProjectProgressChart = () => {
 
   useEffect(() => {
     // Info: generate series when period change is done (20240418 - Shirley)
-    // if (period.endTimeStamp === 0) return;
-    if (demoToggle) {
-      const newSeries = [
-        {
-          name: 'Units',
-          data: [
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-          ],
-        },
-      ];
-      setSeries(newSeries);
-
-      setDemoToggle(false);
-    } else if (period.endTimeStamp !== 0) {
+    if (period.endTimeStamp !== 0) {
       const newSeries = [
         {
           name: 'Units',
