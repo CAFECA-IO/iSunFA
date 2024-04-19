@@ -43,7 +43,7 @@ const LoginPageBody = () => {
           </div>
           <div className="order-1 ml-5 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-2">
             <div className="flex grow flex-col justify-center pb-20 max-lg:max-w-full">
-              <div className="mt-16 flex flex-col items-center px-20 max-lg:mt-10 max-lg:max-w-full max-lg:px-5">
+              <div className="mt-16 flex flex-col items-center px-20 max-lg:mt-20 max-lg:max-w-full max-lg:px-5">
                 <div className="flex flex-col items-center justify-center self-stretch px-20 max-lg:max-w-full max-lg:px-5">
                   <div className="text-5xl font-bold leading-[51.84px] text-amber-400 max-lg:text-4xl">
                     Log In

@@ -11,7 +11,7 @@ const DashboardOverview = () => {
 
   return (
     <div>
-      <div className="flex w-full justify-between gap-5 rounded-2xl bg-white px-5 py-4 text-start text-navyBlue2 shadow-xl max-md:max-w-full max-md:flex-col max-md:flex-wrap">
+      <div className="dashboardCardShadow flex w-full justify-between gap-5 rounded-2xl bg-white px-5 py-4 text-start text-navyBlue2 max-md:max-w-full max-md:flex-col max-md:flex-wrap">
         <div className="flex items-center justify-between gap-4">
           {/* TODO: i18n (20240415 - Shirley) */}
           <div className="text-base font-semibold leading-6 tracking-normal">

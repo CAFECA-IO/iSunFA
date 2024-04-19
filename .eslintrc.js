@@ -135,6 +135,14 @@ module.exports = {
     react: {
       version: 'detect',
     },
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+      typescript: {
+        project: 'tsconfig.json',
+      },
+    },
   },
   // 讓 eslint 知道我們在使用 jest ，這樣在跑 test.js 時 eslint 就不會報 jest 關鍵字的錯誤了
   env: { browser: true, node: true, es6: true, jest: true },
