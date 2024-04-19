@@ -109,6 +109,8 @@ describe('Subscription API handler', () => {
 
   it('should return an error when method is not allowed', async () => {
     req.method = 'POST';
+    req.headers.userId = 'user123';
+    req.query.id = '1';
 
     await handler(req, res);
 

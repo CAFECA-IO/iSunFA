@@ -3,11 +3,19 @@ import version from '../../../../../lib/version';
 import { errorMessageToErrorCode } from '../../../../../lib/utils/errorCode';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { method } = req;
   const { id } = req.query;
   try {
+    if (!req.headers.userId) {
+      throw new Error('Resource not found');
+    }
+    if (!req.query.id) {
+      throw new Error('Invalid input parameter');
+    }
+    if (req.query.id !== '1') {
+      throw new Error('Resource not found');
+    }
     // Info: (20240419 - Jacky) A010002 - GET /admin/:id
-    if (method === 'GET') {
+    if (req.method === 'GET') {
       if (id === '1') {
         const admin = {
           id: '1',
@@ -29,7 +37,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         throw new Error('Resource not found');
       }
       // Info: (20240419 - Jacky) A010004 - PUT /admin/:id
-    } else if (method === 'PUT') {
+    } else if (req.method === 'PUT') {
       const { name, email, startDate, auditing, accounting, internalControl } = req.body;
       if (!name || !email || !startDate || !auditing || !accounting || !internalControl) {
         throw new Error('Invalid input parameter');
@@ -51,7 +59,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         payload: admin,
       });
       // Info: (20240419 - Jacky) A010005 - DELETE /admin/:id
-    } else if (method === 'DELETE') {
+    } else if (req.method === 'DELETE') {
       res.status(200).json({
         powerby: 'ISunFa api ' + version,
         success: true,

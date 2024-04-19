@@ -6,16 +6,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
 
   try {
+    if (!req.headers.userId) {
+      throw new Error('Resource not found');
+    }
+    if (!req.query.id) {
+      throw new Error('Invalid input parameter');
+    }
+    if (req.query.id !== '1') {
+      throw new Error('Resource not found');
+    }
+    // Info: (20240419 - Jacky) C010002 - GET /client/:id
     if (method === 'GET') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
-      if (!req.query.id) {
-        throw new Error('Invalid input parameter');
-      }
-      if (req.query.id !== '1') {
-        throw new Error('Resource not found');
-      }
       const client = {
         id: '1',
         name: 'cafeca',
@@ -29,16 +30,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         message: 'list all clients',
         payload: client,
       });
+      // Info: (20240419 - Jacky) C010004 - PUT /client/:id
     } else if (method === 'PUT') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
-      if (!req.query.id) {
-        throw new Error('Invalid input parameter');
-      }
-      if (req.query.id !== '1') {
-        throw new Error('Resource not found');
-      }
       const { name, code } = req.body;
       const client = {
         id: '1',
@@ -55,16 +48,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         message: 'create client',
         payload: client,
       });
+      // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
-      if (!req.query.id) {
-        throw new Error('Invalid input parameter');
-      }
-      if (req.query.id !== '1') {
-        throw new Error('Resource not found');
-      }
       const client = {
         id: '1',
         name: 'cafeca',

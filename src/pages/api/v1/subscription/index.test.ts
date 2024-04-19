@@ -114,6 +114,7 @@ describe('API Handler Tests', () => {
 
   it('should return error for invalid method', async () => {
     req.method = 'PUT';
+    req.headers.userId = '123';
 
     await handler(req, res);
 

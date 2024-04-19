@@ -22,6 +22,7 @@ beforeEach(() => {
 
 describe('test admin API', () => {
   it('should get admin by id', async () => {
+    req.headers.userId = '1';
     req.method = 'GET';
     req.query.id = '1';
     await handler(req, res);
@@ -45,6 +46,7 @@ describe('test admin API', () => {
   });
 
   it('should update admin by id', async () => {
+    req.headers.userId = '1';
     req.method = 'PUT';
     req.query.id = '1';
     req.body = {
@@ -76,6 +78,7 @@ describe('test admin API', () => {
   });
 
   it('should delete admin by id', async () => {
+    req.headers.userId = '1';
     req.method = 'DELETE';
     req.query.id = '1';
     await handler(req, res);
@@ -90,6 +93,7 @@ describe('test admin API', () => {
   });
 
   it('should return error for invalid input parameter during update', async () => {
+    req.headers.userId = '1';
     req.method = 'PUT';
     req.query.id = '1';
     req.body = {
@@ -114,6 +118,7 @@ describe('test admin API', () => {
   it('should return error for invalid method', async () => {
     req.method = 'POST';
     req.query.id = '1';
+    req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({

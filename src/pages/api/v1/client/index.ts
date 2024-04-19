@@ -5,11 +5,11 @@ import type { ResponseData } from '../../../../type/iresponsedata';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
+    if (!req.headers.userId) {
+      throw new Error('Resource not found');
+    }
     // Info: (20240419 - Jacky) C010001 - GET /client
     if (req.method === 'GET') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
       const clientList = [
         {
           id: '1',
@@ -31,10 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         message: 'list all clients',
         payload: clientList,
       });
+      // Info: (20240419 - Jacky) C010003 - POST /client
     } else if (req.method === 'POST') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
       const { name, code } = req.body;
       const newClient = {
         id: '3',

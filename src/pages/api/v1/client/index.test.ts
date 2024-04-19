@@ -2,27 +2,26 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import handler from './index';
 
+let req: NextApiRequest;
+let res: NextApiResponse;
+
+beforeEach(() => {
+  req = {
+    method: '',
+    headers: {},
+    body: {},
+  } as NextApiRequest;
+
+  res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  } as unknown as NextApiResponse;
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
 describe('API handler', () => {
-  let req: NextApiRequest;
-  let res: NextApiResponse;
-
-  beforeEach(() => {
-    req = {
-      method: '',
-      headers: {},
-      body: {},
-    } as NextApiRequest;
-
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    } as unknown as NextApiResponse;
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should return a list of clients when method is GET', async () => {
     req.method = 'GET';
     req.headers.userId = 'user123';
@@ -79,6 +78,7 @@ describe('API handler', () => {
 
   it('should return an error when method is not allowed', async () => {
     req.method = 'PUT';
+    req.headers.userId = 'user123';
 
     await handler(req, res);
 

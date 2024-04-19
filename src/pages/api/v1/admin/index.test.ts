@@ -55,6 +55,7 @@ describe('test post admin API', () => {
 
   it('should create admin', async () => {
     req.method = 'POST';
+    req.headers.userId = '1';
     req.body = { name: 'kkk', email: 'kkk@mermer.cc' };
     await handler(req, res);
     const admin = {
@@ -78,6 +79,7 @@ describe('test post admin API', () => {
 
   it('should return error for invalid input parameter', async () => {
     req.method = 'POST';
+    req.headers.userId = '1';
     req.body = { name: '', email: 'kkk@mermer.cc' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
@@ -92,6 +94,7 @@ describe('test post admin API', () => {
 
   it('should return error for invalid method', async () => {
     req.method = 'PUT';
+    req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
@@ -100,19 +103,6 @@ describe('test post admin API', () => {
       code: '405',
       payload: {},
       message: 'Method Not Allowed',
-    });
-  });
-
-  it('should return error for unauthorized user', async () => {
-    req.headers.userId = '2';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '404',
-      payload: {},
-      message: 'Resource not found',
     });
   });
 });

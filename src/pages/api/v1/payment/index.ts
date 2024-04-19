@@ -5,10 +5,11 @@ import type { ResponseData } from '../../../../type/iresponsedata';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
+    // Info: (20240419 - Jacky) P010001 - GET /payment
+    if (!req.headers.userId) {
+      throw new Error('Resource not found');
+    }
     if (req.method === 'GET') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
       const paymentList = [
         {
           id: '1',
@@ -36,10 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         message: 'list all payments',
         payload: paymentList,
       });
+      // Info: (20240419 - Jacky) P010003 - POST /payment
     } else if (req.method === 'POST') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error('Invalid input parameter');

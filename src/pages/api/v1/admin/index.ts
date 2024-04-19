@@ -5,6 +5,9 @@ import { errorMessageToErrorCode } from '../../../../lib/utils/errorCode';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
+    if (!req.headers.userId) {
+      throw new Error('Resource not found');
+    }
     // Info: (20240419 - Jacky) A010001 - GET /admin
     if (req.method === 'GET') {
       const adminList = [
@@ -27,23 +30,15 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
           internalControl: 'editor',
         },
       ];
-      if (req.headers.userId) {
-        const { userId } = req.headers;
-        if (userId === '1') {
-          res.status(200).json({
-            powerby: 'ISunFa api ' + version,
-            success: true,
-            code: '200',
-            message: 'list all admins',
-            payload: adminList,
-          });
-        } else {
-          throw new Error('Resource not found');
-        }
-      }
-    }
-    // Info: (20240419 - Jacky) A010003 - POST /admin
-    if (req.method === 'POST') {
+      res.status(200).json({
+        powerby: 'ISunFa api ' + version,
+        success: true,
+        code: '200',
+        message: 'list all admins',
+        payload: adminList,
+      });
+      // Info: (20240419 - Jacky) A010003 - POST /admin
+    } else if (req.method === 'POST') {
       const { name, email } = req.body;
       if (!name || !email) {
         throw new Error('Invalid input parameter');
@@ -64,8 +59,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
         message: 'Create admin successfully',
         payload: admin,
       });
-    }
-    if (req.method !== 'POST' && req.method !== 'GET') {
+    } else {
       throw new Error('Method Not Allowed');
     }
   } catch (_error) {

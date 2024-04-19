@@ -6,16 +6,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
 
   try {
+    if (!req.headers.userId) {
+      throw new Error('Resource not found');
+    }
+    if (!req.query.id) {
+      throw new Error('Invalid input parameter');
+    }
+    if (req.query.id !== '1') {
+      throw new Error('Resource not found');
+    }
+    // Info: (20240419 - Jacky) P010002 - GET /payment/:id
     if (method === 'GET') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
-      if (!req.query.id) {
-        throw new Error('Invalid input parameter');
-      }
-      if (req.query.id !== '1') {
-        throw new Error('Resource not found');
-      }
       const payment = {
         id: '1',
         type: 'VISA',
@@ -33,15 +34,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         payload: payment,
       });
     } else if (method === 'PUT') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
-      if (!req.query.id) {
-        throw new Error('Invalid input parameter');
-      }
-      if (req.query.id !== '1') {
-        throw new Error('Resource not found');
-      }
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error('Invalid input parameter');
@@ -64,16 +56,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         message: 'update payment by id',
         payload: payment,
       });
+      // Info: (20240419 - Jacky) P010004 - DELETE /payment/:id
     } else if (method === 'DELETE') {
-      if (!req.headers.userId) {
-        throw new Error('Resource not found');
-      }
-      if (!req.query.id) {
-        throw new Error('Invalid input parameter');
-      }
-      if (req.query.id !== '1') {
-        throw new Error('Resource not found');
-      }
       const payment = {
         id: '1',
         type: 'VISA',

@@ -5,6 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
+    // Info: (20240419 - Jacky) K012001 - POST /kyc/entity
     if (req.method === 'POST') {
       if (!req.headers.userId) {
         throw new Error('Resource not found');

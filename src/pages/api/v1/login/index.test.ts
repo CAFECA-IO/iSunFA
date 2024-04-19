@@ -67,7 +67,7 @@ describe('test post login API', () => {
       success: false,
       code: String(405),
       payload: {},
-      message: 'Error: Method Not Allowed', // Convert error to string
+      message: 'Method Not Allowed',
     });
   });
 });

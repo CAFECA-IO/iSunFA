@@ -87,6 +87,7 @@ describe('test payment API', () => {
 
   it('should return error for invalid method', async () => {
     req.method = 'PUT';
+    req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
