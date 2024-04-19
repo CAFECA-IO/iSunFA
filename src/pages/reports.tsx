@@ -5,9 +5,9 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../interfaces/locale';
 import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
 
-// Define table data interface
+// Info: (今天 - Liz) Define table data interface
 interface ITableData {
-  [key: string]: string | number; // Add index signature
+  [key: string]: string;
   code: string;
   regional: string;
   company: string;
@@ -17,7 +17,7 @@ interface ITableData {
   dateOfUpload: string;
 }
 
-// Dummy Data
+// Info: (今天 - Liz) Dummy Data
 const initialData: ITableData[] = [
   {
     code: '2330',
@@ -112,7 +112,6 @@ const initialData: ITableData[] = [
 ];
 
 const auditReport = () => {
-  // const [period, setPeriod] = useState(default30DayPeriod);
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -149,7 +148,6 @@ const auditReport = () => {
       CC: 8,
       C: 9,
       D: 10,
-      // 根據需要添加更多評級
     };
     const aRating = ratingOrder[a] || Number.MAX_SAFE_INTEGER;
     const bRating = ratingOrder[b] || Number.MAX_SAFE_INTEGER;
@@ -165,8 +163,8 @@ const auditReport = () => {
         return compareCreditRatings(a[column], b[column], direction);
       } else {
         return direction === 'asc'
-          ? (a[column] as string).localeCompare(b[column] as string)
-          : (b[column] as string).localeCompare(a[column] as string);
+          ? a[column].localeCompare(b[column])
+          : b[column].localeCompare(a[column]);
       }
     });
     setData(sortedData);
@@ -250,14 +248,36 @@ const auditReport = () => {
                       <th className="flex items-center justify-center gap-1 px-2 py-12px">
                         <div>Information Year</div>
                         <div onClick={() => handleSort('informationYear')}>
-                          <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill={sortBy === 'informationYear' ? '#53B1FD' : '#1D2433'}
+                          >
+                            <path
+                              d="M6.66667 14.167H3.33333C3.09722 14.167 2.89944 14.087 2.74 13.927C2.58 13.7675 2.5 13.5698 2.5 13.3337C2.5 13.0975 2.58 12.8998 2.74 12.7403C2.89944 12.5803 3.09722 12.5003 3.33333 12.5003H6.66667C6.90278 12.5003 7.10083 12.5803 7.26083 12.7403C7.42028 12.8998 7.5 13.0975 7.5 13.3337C7.5 13.5698 7.42028 13.7675 7.26083 13.927C7.10083 14.087 6.90278 14.167 6.66667 14.167ZM16.6667 5.83366H3.33333C3.09722 5.83366 2.89944 5.75394 2.74 5.59449C2.58 5.43449 2.5 5.23644 2.5 5.00033C2.5 4.76421 2.58 4.56616 2.74 4.40616C2.89944 4.24671 3.09722 4.16699 3.33333 4.16699H16.6667C16.9028 4.16699 17.1006 4.24671 17.26 4.40616C17.42 4.56616 17.5 4.76421 17.5 5.00033C17.5 5.23644 17.42 5.43449 17.26 5.59449C17.1006 5.75394 16.9028 5.83366 16.6667 5.83366ZM11.6667 10.0003H3.33333C3.09722 10.0003 2.89944 9.92033 2.74 9.76033C2.58 9.60088 2.5 9.4031 2.5 9.16699C2.5 8.93088 2.58 8.73283 2.74 8.57282C2.89944 8.41338 3.09722 8.33366 3.33333 8.33366H11.6667C11.9028 8.33366 12.1008 8.41338 12.2608 8.57282C12.4203 8.73283 12.5 8.93088 12.5 9.16699C12.5 9.4031 12.4203 9.60088 12.2608 9.76033C12.1008 9.92033 11.9028 10.0003 11.6667 10.0003Z"
+                              fillOpacity="0.8"
+                            />
+                          </svg>
                         </div>
                       </th>
                       <th className="px-2 py-12px">Detailed Information</th>
                       <th className="flex items-center justify-center gap-1 px-2 py-12px">
                         <div>Credit rating</div>
                         <div onClick={() => handleSort('creditRating')}>
-                          <Image src="/elements/sort.svg" width={20} height={20} alt="sort" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill={sortBy === 'creditRating' ? '#53B1FD' : '#1D2433'}
+                          >
+                            <path
+                              d="M6.66667 14.167H3.33333C3.09722 14.167 2.89944 14.087 2.74 13.927C2.58 13.7675 2.5 13.5698 2.5 13.3337C2.5 13.0975 2.58 12.8998 2.74 12.7403C2.89944 12.5803 3.09722 12.5003 3.33333 12.5003H6.66667C6.90278 12.5003 7.10083 12.5803 7.26083 12.7403C7.42028 12.8998 7.5 13.0975 7.5 13.3337C7.5 13.5698 7.42028 13.7675 7.26083 13.927C7.10083 14.087 6.90278 14.167 6.66667 14.167ZM16.6667 5.83366H3.33333C3.09722 5.83366 2.89944 5.75394 2.74 5.59449C2.58 5.43449 2.5 5.23644 2.5 5.00033C2.5 4.76421 2.58 4.56616 2.74 4.40616C2.89944 4.24671 3.09722 4.16699 3.33333 4.16699H16.6667C16.9028 4.16699 17.1006 4.24671 17.26 4.40616C17.42 4.56616 17.5 4.76421 17.5 5.00033C17.5 5.23644 17.42 5.43449 17.26 5.59449C17.1006 5.75394 16.9028 5.83366 16.6667 5.83366ZM11.6667 10.0003H3.33333C3.09722 10.0003 2.89944 9.92033 2.74 9.76033C2.58 9.60088 2.5 9.4031 2.5 9.16699C2.5 8.93088 2.58 8.73283 2.74 8.57282C2.89944 8.41338 3.09722 8.33366 3.33333 8.33366H11.6667C11.9028 8.33366 12.1008 8.41338 12.2608 8.57282C12.4203 8.73283 12.5 8.93088 12.5 9.16699C12.5 9.4031 12.4203 9.60088 12.2608 9.76033C12.1008 9.92033 11.9028 10.0003 11.6667 10.0003Z"
+                              fillOpacity="0.8"
+                            />
+                          </svg>
                         </div>
                       </th>
                       <th className="px-2 py-12px">Date of Upload</th>
