@@ -15,9 +15,6 @@ import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-const DUMMY_START_DATE = '2024/02/12';
-const DUMMY_END_DATE = 'TODAY';
-
 interface ColumnChartData {
   categories: string[];
   series: {
@@ -31,7 +28,7 @@ interface ColumnChartProps {
 }
 
 const ColumnChart = ({ data }: ColumnChartProps) => {
-  const options = {
+  const options: ApexOptions = {
     chart: {
       id: 'project-progress-chart',
       toolbar: {
@@ -97,10 +94,33 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         },
       },
     },
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'left',
+
+      customLegendItems: ['Projects'],
+      fontFamily: 'Barlow',
+      fontWeight: 500,
+      markers: {
+        fillColors: ['#002462B2'],
+        width: 20, // 標記的寬度
+        height: 12, // 標記的高度
+        radius: 0, // 標記的半徑（如果是圓形）
+      },
+      showForSingleSeries: true,
+    },
     fill: {
       opacity: 1,
     },
     tooltip: {
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
+      },
+      marker: {
+        show: false,
+      },
       // y: {
       //   formatter: function (val: number) {
       //     return val + ' units';
@@ -110,19 +130,13 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       // x: {
       //   show: false,
       // },
-      style: {
-        fontFamily: 'Barlow',
-        fontSize: '12px',
-      },
-      marker: {
-        show: false,
-      },
     },
   };
 
   return <Chart options={options} series={data.series} type="bar" height={200} />;
 };
 
+const DUMMY_START_DATE = '2024/02/12';
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectProgressChart = () => {
@@ -132,7 +146,6 @@ const ProjectProgressChart = () => {
   const maxDate = new Date();
 
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
-
   const [series, setSeries] = useState<
     {
       name: string;
@@ -215,13 +228,15 @@ const ProjectProgressChart = () => {
           <div className="my-auto text-xl font-bold leading-8 text-navyBlue2 md:mx-2">
             {displayedDate}
           </div>
-          <DatePicker
-            type={DatePickerType.ICON}
-            minDate={minDate}
-            maxDate={maxDate}
-            period={period}
-            setFilteredPeriod={setPeriod}
-          />
+          <div>
+            <DatePicker
+              type={DatePickerType.ICON}
+              minDate={minDate}
+              maxDate={maxDate}
+              period={period}
+              setFilteredPeriod={setPeriod}
+            />
+          </div>
         </div>
       </div>
 
