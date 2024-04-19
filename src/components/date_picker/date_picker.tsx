@@ -189,6 +189,8 @@ const DatePicker = ({
     new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND)
   );
 
+  const isDateSelected = dateOne && dateTwo;
+
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 0 (January) to 11 (December).
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
 
@@ -328,7 +330,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-lg border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
           componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
         )}
       >
@@ -359,11 +361,15 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'flex w-full items-center space-x-3 rounded-lg border border-secondaryBlue bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          'group flex w-full items-center space-x-3 rounded-lg border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
           componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
         )}
       >
-        <p className="flex-1 whitespace-nowrap text-sm">{displayPeriod}</p>
+        <p
+          className={`flex-1 whitespace-nowrap text-sm group-hover:text-primaryYellow ${componentVisible ? ' text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'}`}
+        >
+          {displayPeriod}
+        </p>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"

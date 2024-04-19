@@ -32,15 +32,23 @@ const JournalListTab = () => {
   const totalPages = 100;
   const isShowJournalList = true;
 
+  // Info: (20240418 - Julian) for css
+  const isTypeSelected = filteredJournalType !== 'All';
+  const isSortBySelected = filteredJournalSortBy !== 'Newest';
+
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
 
   const displayedTypeDropMenu = (
     <div
       onClick={toggleTypeMenu}
-      className={`relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow' : 'border-lightGray3'} items-center justify-between rounded-md border bg-white p-10px`}
+      className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
-      <p className="text-lightGray4">{filteredJournalType}</p>
+      <p
+        className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeSelected ? '' : 'text-lightGray3'}`}
+      >
+        {filteredJournalType}
+      </p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
@@ -67,9 +75,13 @@ const JournalListTab = () => {
   const displayedSortByDropMenu = (
     <div
       onClick={toggleSortByMenu}
-      className={`relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow' : 'border-lightGray3'} items-center justify-between rounded-md border bg-white p-10px`}
+      className={`group relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
-      <p className="text-lightGray4">{filteredJournalSortBy}</p>
+      <p
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? ' text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
+      >
+        {filteredJournalSortBy}
+      </p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
