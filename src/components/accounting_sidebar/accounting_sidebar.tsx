@@ -1,19 +1,14 @@
 import Image from 'next/image';
-import { useState, Dispatch, SetStateAction } from 'react';
+import Link from 'next/link';
+import { useState } from 'react';
 import { FiBookOpen } from 'react-icons/fi';
 import { IoIosList } from 'react-icons/io';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
-interface IAccountingSidebarProps {
-  setCurrentTab: Dispatch<SetStateAction<'journal' | 'journal_list' | 'subpoena_list'>>;
-}
-
-const AccountingSidebar = ({ setCurrentTab }: IAccountingSidebarProps) => {
+const AccountingSidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
-
-  const journalTabClickHandler = () => setCurrentTab('journal');
-  const journalListTabClickHandler = () => setCurrentTab('journal_list');
 
   return (
     <div
@@ -44,9 +39,8 @@ const AccountingSidebar = ({ setCurrentTab }: IAccountingSidebarProps) => {
 
       {/* Info: (20240416 - Julian) Menu */}
       <div className="flex w-full flex-col items-start py-16px">
-        <button
-          type="button"
-          onClick={journalTabClickHandler}
+        <Link
+          href={ISUNFA_ROUTE.ACCOUNTING}
           className="flex w-full items-center gap-8px p-8px text-secondaryBlue hover:text-primaryYellow"
         >
           <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />
@@ -55,10 +49,9 @@ const AccountingSidebar = ({ setCurrentTab }: IAccountingSidebarProps) => {
           >
             Journal
           </p>
-        </button>
-        <button
-          type="button"
-          onClick={journalListTabClickHandler}
+        </Link>
+        <Link
+          href={ISUNFA_ROUTE.JOURNAL_LIST}
           className="flex w-full items-center gap-8px p-8px text-secondaryBlue hover:text-primaryYellow"
         >
           <IoIosList size={20} className="transition-all duration-300 ease-in-out" />
@@ -67,7 +60,7 @@ const AccountingSidebar = ({ setCurrentTab }: IAccountingSidebarProps) => {
           >
             Journal list
           </p>
-        </button>
+        </Link>
       </div>
     </div>
   );

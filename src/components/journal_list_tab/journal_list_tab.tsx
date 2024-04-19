@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
-import { FiCalendar, FiSearch } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import JournalList from '../journal_list/journal_list';
+import Pagination from '../pagination/pagination';
+import DatePicker, { DatePickerType } from '../date_picker/date_picker';
+import { IDatePeriod } from '../../interfaces/date_period';
+import { default30DayPeriodInSec } from '../../constants/display';
 
 const JournalListTab = () => {
   const {
@@ -18,8 +22,13 @@ const JournalListTab = () => {
     setComponentVisible: setIsSortByMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
-  const [selectedJournalType, setSelectedJournalType] = useState<string>('All');
-  const [selectedJournalSortBy, setSelectedJournalSortBy] = useState<string>('Newest');
+  // Info: (20240419 - Julian) Filtered states
+  const [filteredJournalType, setFilteredJournalType] = useState<string>('All');
+  const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<string>('Newest');
+  const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const totalPages = 100; // ToDo: (20240418 - Julian) Get data from API
 
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
@@ -29,7 +38,7 @@ const JournalListTab = () => {
       onClick={toggleTypeMenu}
       className={`relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow' : 'border-lightGray3'} items-center justify-between rounded-md border bg-white p-10px`}
     >
-      <p className="text-lightGray4">{selectedJournalType}</p>
+      <p className="text-lightGray4">{filteredJournalType}</p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
@@ -40,7 +49,7 @@ const JournalListTab = () => {
             <li
               key={type}
               onClick={() => {
-                setSelectedJournalType(type);
+                setFilteredJournalType(type);
                 setIsTypeMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
@@ -58,7 +67,7 @@ const JournalListTab = () => {
       onClick={toggleSortByMenu}
       className={`relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow' : 'border-lightGray3'} items-center justify-between rounded-md border bg-white p-10px`}
     >
-      <p className="text-lightGray4">{selectedJournalSortBy}</p>
+      <p className="text-lightGray4">{filteredJournalSortBy}</p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
@@ -69,7 +78,7 @@ const JournalListTab = () => {
             <li
               key={sorting}
               onClick={() => {
-                setSelectedJournalSortBy(sorting);
+                setFilteredJournalSortBy(sorting);
                 setIsSortByMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
@@ -82,14 +91,13 @@ const JournalListTab = () => {
     </div>
   );
 
-  // ToDo: (20240418 - Julian) Date picker
+  // ToDo: (20240419 - Julian) 邊框顏色與設計稿不一致，需要調整
   const displayedDatePicker = (
-    <div
-      className={`relative flex h-44px w-281px cursor-pointer items-center justify-between rounded-md border border-lightGray3 bg-white p-10px`}
-    >
-      <p className="text-lightGray4">Start Date - End Date</p>
-      <FiCalendar size={20} />
-    </div>
+    <DatePicker
+      type={DatePickerType.TEXT}
+      period={filteredPeriod}
+      setFilteredPeriod={setFilteredPeriod}
+    />
   );
 
   const displayedSearchBar = (
@@ -219,6 +227,13 @@ const JournalListTab = () => {
       <JournalList />
 
       {/* ToDo: (20240418 - Julian) Pagination */}
+      <div className="mx-auto my-40px">
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+        />
+      </div>
     </div>
   );
 };
