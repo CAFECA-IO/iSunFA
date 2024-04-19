@@ -61,6 +61,14 @@ module.exports = {
         navyBlue: '#002462',
         navyBlue2: '#27354E',
         darkBlue: '#1570EF',
+
+        errorRed: '#963737',
+        errorRed2: '#FED7D7',
+
+        successGreen: '#1E543B',
+        successGreen2: '#D3F4E5',
+
+        indigo: '#8098F9',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',
@@ -169,12 +177,14 @@ module.exports = {
       },
 
       spacing: {
-        /* Info: (20230627 - Julian) 適用範圍
+        /* Info: (20240315 - Shirley) 適用範圍
          * width / height / padding / margin / top / bottom / right / left */
         '1px': '1px',
         '2px': '2px',
         '3px': '3px',
+        '4px': '4px',
         '5px': '5px',
+        '6px': '6px',
         '8px': '8px',
         '10px': '10px',
         '12px': '12px',
@@ -268,6 +278,7 @@ module.exports = {
         '271px': '271px',
         '278px': '278px',
         '280px': '280px',
+        '281px': '281px',
         '285px': '285px',
         '290px': '290px',
         '296px': '296px',
@@ -466,7 +477,7 @@ module.exports = {
         '120vw': '120vw',
         '140vw': '140vw',
 
-        // Info: (20230801- Julian) A4 尺寸
+        // Info: (20240315- Shirley) A4 尺寸
         'a4-width': '595px',
         'a4-height': '842px',
       },
@@ -515,6 +526,11 @@ module.exports = {
         custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
         custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
         custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
+
+        dropmenu:
+          '0px 166px 46px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.10));',
+        tooltip:
+          '0px 166px 46px 0px rgba(49, 67, 98, 0.00), 0px 106px 42px 0px rgba(49, 67, 98, 0.01), 0px 60px 36px 0px rgba(49, 67, 98, 0.05), 0px 27px 27px 0px rgba(49, 67, 98, 0.09), 0px 7px 15px 0px rgba(49, 67, 98, 0.10)',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -541,6 +557,7 @@ module.exports = {
       maxWidth: {
         '80px': '80px',
         '140px': '140px',
+        '248px': '248px',
         '250px': '250px',
       },
       minWidth: {
@@ -559,6 +576,7 @@ module.exports = {
       },
       rotate: {
         135: '135deg',
+        40: '40deg',
       },
       translate: { '100%': '100%', '120%': '120%', '140%': '140%' },
       borderWidth: {

@@ -1,10 +1,12 @@
 /* eslint-disable */
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Tooltip from '../tooltip/tooltip';
 import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
+import { useGlobalCtx } from '../../contexts/global_context';
+import { LayoutAssertion } from '../../interfaces/layout_assertion';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -20,7 +22,39 @@ interface LineChartProps {
   data: LineChartData;
 }
 
-const LineChart: React.FC<LineChartProps> = ({ data }) => {
+const LineChart = ({ data }: LineChartProps) => {
+  const globalCtx = useGlobalCtx();
+  const [chartWidth, setChartWidth] = React.useState(580);
+  const [chartHeight, setChartHeight] = React.useState(250);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = globalCtx.width;
+      const windowHeight = window.innerHeight;
+
+      if (windowWidth <= 768) {
+        const presentWidth = windowWidth / 1.45;
+        const presentHeight = windowHeight / 3.5;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (window.innerWidth >= 1440) {
+        const presentWidth = 580;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else {
+        const presentWidth = windowWidth / 1.25;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      }
+    };
+    handleResize();
+  }, [globalCtx.width]);
+
   const options: ApexOptions = {
     chart: {
       id: 'profit-trend-chart',
@@ -36,6 +70,7 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
       tooltip: {
         enabled: false,
       },
+
       labels: {
         style: {
           colors: '#919EB4',
@@ -59,6 +94,22 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
       },
     },
 
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'left',
+
+      customLegendItems: ['Profit Status'],
+      fontFamily: 'Barlow',
+      fontWeight: 500,
+      markers: {
+        fillColors: ['#FFA502'],
+        width: 20, // 標記的寬度
+        height: 12, // 標記的高度
+        radius: 0, // 標記的半徑（如果是圓形）
+      },
+      showForSingleSeries: true,
+    },
     markers: {
       size: 4,
       colors: ['#002462'],
@@ -80,30 +131,7 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
           show: true,
         },
       },
-      padding: {
-        // left: 50,
-        // right: 50,
-      },
     },
-    // title: {
-    //   text: 'Profit Status',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '16px',
-    //     color: '#002462',
-    //     fontFamily: 'Barlow',
-    //     fontWeight: 600,
-    //   },
-    // },
-    // subtitle: {
-    //   text: 'Profit Status Trend',
-    //   align: 'left',
-    //   style: {
-    //     fontSize: '12px',
-    //     color: '#919EB4',
-    //     fontFamily: 'Barlow',
-    //   },
-    // },
 
     series: data.series,
 
@@ -123,10 +151,22 @@ const LineChart: React.FC<LineChartProps> = ({ data }) => {
       marker: {
         show: false,
       },
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
+      },
     },
   };
 
-  return <Chart options={options} series={data.series} type="line" width={580} height={250} />;
+  return (
+    <Chart
+      options={options}
+      series={data.series}
+      type="line"
+      width={chartWidth}
+      height={chartHeight}
+    />
+  );
 };
 
 enum Period {
@@ -141,7 +181,7 @@ const dataMap = {
     categories: ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 0, 49, 60],
       },
     ],
@@ -163,7 +203,7 @@ const dataMap = {
     ],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
       },
     ],
@@ -172,7 +212,7 @@ const dataMap = {
     categories: ['2020', '2021', '2022', '2023', '2024'],
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 20],
       },
     ],
@@ -195,7 +235,7 @@ const ProfitTrendChart = () => {
     categories: WEEKDAYS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 0, 49, 60],
       },
     ],
@@ -221,7 +261,7 @@ const ProfitTrendChart = () => {
     categories: MONTHS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
       },
     ],
@@ -234,12 +274,12 @@ const ProfitTrendChart = () => {
     categories: YEARS,
     series: [
       {
-        name: 'profit status',
+        name: 'Profit Status',
         data: [-10, -5, 40, 35, 20],
         type: 'line',
       },
       // {
-      //   name: 'profit status 2',
+      //   name: 'Profit Status 2',
       //   data: [10, 5, -10, 15, 5],
       //   type: 'line',
       // },
@@ -247,24 +287,26 @@ const ProfitTrendChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 shadow-xl max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div>Profit Status Trend Chart</div>
+          <div className="flex-1">Profit Status Trend Chart</div>
 
-          <Tooltip>
-            <p>
-              A message which appears when a cursor is positioned over an icon, image, hyperlink, or
-              other element in a graphical user interface.
-            </p>
-          </Tooltip>
+          <div className="justify-end">
+            <Tooltip>
+              <p>
+                A message which appears when a cursor is positioned over an icon, image, hyperlink,
+                or other element in a graphical user interface.
+              </p>
+            </Tooltip>
+          </div>
         </div>
       </div>
 
       <div className="mt-2">
         <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
-          <div className="flex space-x-5">
+          <div className="flex space-x-2 md:space-x-5">
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
@@ -309,10 +351,7 @@ const ProfitTrendChart = () => {
             </div>
           </div>
         </div>
-        {/* TODO: RWD (20240416 - Shirley) */}
-        <div className="hidden md:flex">
-          {/* <LineChart data={dummyWeekData} /> */}
-          {/* <LineChart data={dummyMonthData} /> */}
+        <div className="flex max-md:-ml-3">
           <LineChart data={data} />
         </div>
       </div>
