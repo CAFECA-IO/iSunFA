@@ -11,6 +11,7 @@ import { ApexOptions } from 'apexcharts';
 import { TranslateFunction } from '../../interfaces/locale';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '../tooltip/tooltip';
+import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -122,13 +123,16 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
   return <Chart options={options} series={data.series} type="bar" height={200} />;
 };
 
+const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
+
 const ProjectProgressChart = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 
-  const [period, setPeriod] = useState(default30DayPeriodInSec);
+  const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
+
   const [series, setSeries] = useState<
     {
       name: string;

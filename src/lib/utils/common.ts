@@ -78,14 +78,14 @@ export const timestampToString = (timestamp: number | undefined) => {
 
   const monthNameShort = monthNamesInShort[monthIndex];
   const monthName = monthFullName[monthIndex];
-  const dateSrting = `${year}-${month.toString().padStart(2, '0')}-${day
+  const dateString = `${year}-${month.toString().padStart(2, '0')}-${day
     .toString()
     .padStart(2, '0')}`;
   const dayString = `${day.toString().padStart(2, '0')}`;
   const monthString = MONTH_LIST[monthIndex];
 
   return {
-    date: dateSrting, // e.g. 2021-01-01
+    date: dateString, // e.g. 2021-01-01
     dateOfLastYear: `${year - 1}-${month.toString().padStart(2, '0')}-${day
       .toString()
       .padStart(2, '0')}`, // e.g. 2020-01-01
@@ -102,5 +102,28 @@ export const timestampToString = (timestamp: number | undefined) => {
     dateFormatInUS: `${monthName} ${day}, ${year}`, // e.g. Jan. 01, 2021
     dateFormatForForm: `${monthNameShort} ${day}, ${year}`, // e.g. Jan. 01, 2021
     time: `${hour}:${minute}:${second}`, // e.g. 00:00:00
+  };
+};
+
+/** Info: 回傳這個月第一天跟今天的 timestamp in seconds (20240419 - Shirley)
+ *
+ * @returns {startTimeStamp: number, endTimeStamp: number} - The start and present time of the current month in seconds
+ */
+export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeStamp: number } => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+
+  // Info: 取得當前月份第一天的 00:00:00 (20240419 - Shirley)
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+  const startTimeStamp = Math.floor(firstDayOfMonth.getTime() / 1000);
+
+  // Info: 取得今天的 23:59:59 (20240419 - Shirley)
+  const endOfToday = new Date(currentYear, currentMonth, today.getDate(), 23, 59, 59);
+  const endTimeStamp = Math.floor(endOfToday.getTime() / 1000);
+
+  return {
+    startTimeStamp,
+    endTimeStamp,
   };
 };
