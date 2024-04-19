@@ -247,7 +247,10 @@ const auditReport = () => {
                       <th className="px-2 py-12px">Company</th>
                       <th className="flex items-center justify-center gap-1 px-2 py-12px">
                         <div>Information Year</div>
-                        <div onClick={() => handleSort('informationYear')}>
+                        <div
+                          onClick={() => handleSort('informationYear')}
+                          className="cursor-pointer"
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="20"
@@ -265,7 +268,7 @@ const auditReport = () => {
                       <th className="px-2 py-12px">Detailed Information</th>
                       <th className="flex items-center justify-center gap-1 px-2 py-12px">
                         <div>Credit rating</div>
-                        <div onClick={() => handleSort('creditRating')}>
+                        <div onClick={() => handleSort('creditRating')} className="cursor-pointer">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="20"
