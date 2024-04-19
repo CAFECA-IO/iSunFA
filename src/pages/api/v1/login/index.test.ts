@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
+import version from '../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -24,13 +25,14 @@ describe('test post login API', () => {
     req.body = { credentialId: 'smaJ6Wwf0q_meZiHrFolfg' };
     await handler(req, res);
     const user = {
+      id: '2',
       name: 'John second Doe',
       credentialId: 'smaJ6Wwf0q_meZiHrFolfg',
       userImage: 'https://www.example.com/image.jpg',
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api 1.0.0',
+      powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
       payload: user,
@@ -42,13 +44,14 @@ describe('test post login API', () => {
     req.body = { credentialId: 'sameId' };
     await handler(req, res);
     const user = {
+      id: '1',
       name: 'John Doe',
       credentialId: 'smaJ6Wwf0q_meZiHrFolfg',
       userImage: 'https://www.example.com/image.jpg',
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api 1.0.0',
+      powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
       payload: user,
@@ -60,11 +63,11 @@ describe('test post login API', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api 1.0.0',
+      powerby: 'ISunFa api ' + version,
       success: false,
       code: String(405),
       payload: {},
-      message: 'Error: Method Not Allowed', // Convert error to string
+      message: 'Method Not Allowed',
     });
   });
 });

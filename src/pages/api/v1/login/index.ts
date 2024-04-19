@@ -1,16 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
 import type { ResponseData } from '../../../../type/iresponsedata';
-
-function getStatusCode(error: Error): number {
-  if (error.message === 'Method Not Allowed') {
-    return 405;
-  } else {
-    return 500;
-  }
-}
+import version from '../../../../lib/version';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
+    // Info: (20240419 - Jacky) L010001 - POST /login
     if (req.method !== 'POST') {
       throw new Error('Method Not Allowed');
     }
@@ -19,12 +14,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
 
     if (credentialId === 'sameId') {
       const user = {
+        id: '1',
         name: 'John Doe',
         credentialId: 'smaJ6Wwf0q_meZiHrFolfg',
         userImage: 'https://www.example.com/image.jpg',
       };
       res.status(200).json({
-        powerby: 'ISunFa api 1.0.0',
+        powerby: 'ISunFa api ' + version,
         success: true,
         code: '200',
         payload: user,
@@ -35,12 +31,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
 
     // Perform the necessary operations here, such as creating a user
     const user = {
+      id: '2',
       name: 'John second Doe',
       credentialId: 'smaJ6Wwf0q_meZiHrFolfg',
       userImage: 'https://www.example.com/image.jpg',
     };
     res.status(200).json({
-      powerby: 'ISunFa api 1.0.0',
+      powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
       payload: user,
@@ -48,13 +45,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
     });
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = getStatusCode(error);
+    const statusCode = errorMessageToErrorCode(error.message);
     res.status(statusCode).json({
-      powerby: 'ISunFa api 1.0.0',
+      powerby: 'ISunFa api ' + version,
       success: false,
       code: String(statusCode),
       payload: {},
-      message: error.toString(), // Convert error to string
+      message: error.message, // Convert error to string
     });
   }
 }
