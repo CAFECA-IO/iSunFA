@@ -3,7 +3,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../../../interfaces/locale';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
-import JournalListTab from '../../../components/journal_list_tab/journal_list_tab';
+import JournalListTab from '../../../components/journal_list_body/journal_list_body';
 
 const JournalListPage = () => {
   return (

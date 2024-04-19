@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import CalendarIcon from '../calendar_icon/calendar_icon';
 
 interface IJournalItemProps {
@@ -105,7 +107,10 @@ const JournalItem = ({ key }: IJournalItemProps) => {
   );
 
   return (
-    <tr key={key} className="border-b border-lightGray6 text-center align-middle text-lightGray4">
+    <tr
+      key={key}
+      className="relative border-b border-lightGray6 text-center align-middle text-lightGray4"
+    >
       {/* Info: (20240418 - Julian) 選取方塊 */}
       <td>
         <div className="flex justify-center px-10px">
@@ -139,6 +144,12 @@ const JournalItem = ({ key }: IJournalItemProps) => {
       </td>
       {/* Info: (20240418 - Julian) 單據編號 */}
       <td className="px-16px text-right font-medium text-darkBlue">{voucherNumber}</td>
+
+      {/* Info: (20240418 - Julian) Link */}
+      <Link
+        href={`${ISUNFA_ROUTE.ACCOUNTING}/${voucherNumber}`}
+        className="absolute left-46px h-80px w-95%"
+      ></Link>
     </tr>
   );
 };

@@ -1,10 +1,14 @@
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '../../../interfaces/locale';
+import { GetServerSideProps } from 'next';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 
-const JournalDetailPage = () => {
+interface IJournalDetailPageProps {
+  journalId: string;
+}
+
+const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   return (
     <>
       <Head>
@@ -12,7 +16,7 @@ const JournalDetailPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240419 - Julian) i18n */}
-        <title>Accounting - iSunFA</title>
+        <title>Journal {journalId} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -25,7 +29,9 @@ const JournalDetailPage = () => {
           <AccountingSidebar />
           {/* ToDo: (20240419 - Julian) Overview */}
           <div className="flex h-full w-full bg-gray-100">
-            <div className="ml-80px mt-100px flex-1">Journal Detail Page</div>
+            <div className="ml-80px mt-100px min-h-screen flex-1">
+              Journal Detail Page {journalId}
+            </div>
           </div>
         </div>
       </div>
@@ -33,12 +39,19 @@ const JournalDetailPage = () => {
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common'])),
-  },
-});
+export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
+  if (!params || !params.journalId || typeof params.journalId !== 'string') {
+    return {
+      notFound: true,
+    };
+  }
 
-export const getStaticProps = getStaticPropsFunction;
+  return {
+    props: {
+      journalId: params.journalId,
+      ...(await serverSideTranslations(locale as string, ['common'])),
+    },
+  };
+};
 
 export default JournalDetailPage;

@@ -28,7 +28,9 @@ const JournalListTab = () => {
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const totalPages = 100; // ToDo: (20240418 - Julian) Get data from API
+  // ToDo: (20240418 - Julian) Replace with real data
+  const totalPages = 100;
+  const isShowJournalList = true;
 
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
@@ -182,6 +184,25 @@ const JournalListTab = () => {
     </div>
   );
 
+  const isDisplayedJournalList = isShowJournalList ? (
+    <>
+      <JournalList />
+      <div className="mx-auto my-40px">
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+        />
+      </div>
+    </>
+  ) : (
+    // Info: (20240419 - Julian) If no data
+    <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
+      <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
+      <p>Empty</p>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col p-10">
       {/* Info: (20240417 - Julian) Title */}
@@ -224,16 +245,7 @@ const JournalListTab = () => {
       {displayedToolbar}
 
       {/* Info: (20240418 - Julian) Journal list */}
-      <JournalList />
-
-      {/* ToDo: (20240418 - Julian) Pagination */}
-      <div className="mx-auto my-40px">
-        <Pagination
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalPages={totalPages}
-        />
-      </div>
+      {isDisplayedJournalList}
     </div>
   );
 };

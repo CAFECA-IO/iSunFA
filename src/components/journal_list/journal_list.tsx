@@ -1,7 +1,7 @@
 import JournalItem from '../journal_item/journal_item';
 
 const JournalList = () => {
-  // ToDo: (20240418 - Julian) replace with real data
+  // ToDo: (20240418 - Julian) replace with prop
   const displayedList = Array.from({ length: 10 }, (_, index) => <JournalItem key={`${index}`} />);
 
   return (
