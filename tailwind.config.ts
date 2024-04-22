@@ -46,6 +46,7 @@ module.exports = {
         primaryYellow2: '#996301',
         primaryYellow3: '#FFD892',
         primaryYellow4: '#FFA600',
+        primaryYellow5: '#CC8401',
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
