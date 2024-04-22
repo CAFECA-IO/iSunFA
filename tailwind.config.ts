@@ -16,6 +16,9 @@ module.exports = {
         1.18: '118 / 100',
       },
       colors: {
+        green: {
+          500: 'var(--color-green-500)',
+        },
         darkPurple: '#24274A',
         darkPurple2: '#2C315B',
         darkPurple3: '#1F2243',

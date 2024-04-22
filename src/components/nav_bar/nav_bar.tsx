@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
@@ -313,9 +313,26 @@ const NavBar = () => {
     </Link>
   );
 
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   return (
     <div className="fixed top-0 z-20 flex w-screen">
-      <div className="z-60 flex w-full gap-5 bg-white  px-10 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
+      <div className="z-60 flex w-full gap-5 bg-green-500 px-10 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
+        <Button size={'medium'} variant={'tertiary'} onClick={toggleDarkMode}>
+          {' '}
+          D/L
+        </Button>
         {/* Info: (20240417 - Julian) Burger menu */}
         <div className="my-auto block lg:hidden">
           <button

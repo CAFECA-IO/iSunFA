@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --color-green-500: #ae9fdb;
+
+    --radius: 0.5rem;
+
+    /* --red-700: #f03e3e; */
+
+    /* --blue-100: #4b85a5; */
+  }
+
+  .dark {
+    --color-green-500: #0d4209;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @layer base {
+  }
+}
+
 html,
 body {
   padding: 0;
