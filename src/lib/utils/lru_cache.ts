@@ -1,6 +1,7 @@
 // Info Murky (20240422) I need param inside class LRUNode can be override
 /* eslint-disable no-param-reassign */
 import { AccountProgressStatus } from '@/interfaces/account';
+import crypto from 'crypto';
 import LRUNode from './lru_cache_node';
 
 export default class LRUCache<T> {
@@ -8,17 +9,25 @@ export default class LRUCache<T> {
 
   private capacity: number;
 
+  private idLength: number;
+
   private most: LRUNode<T>;
 
   private least: LRUNode<T>;
 
-  constructor(capacity: number) {
+  constructor(capacity: number, idLength: number = 8) {
     this.capacity = capacity;
+    this.idLength = idLength;
     this.cache = new Map<string, LRUNode<T>>();
     this.most = new LRUNode<T>('', 'inProgress', null);
     this.least = new LRUNode<T>('', 'inProgress', null);
     this.least.next = this.most;
     this.most.prev = this.least;
+  }
+
+  private hashId(inputString: string): string {
+    const hash = crypto.createHash('sha256').update(inputString).digest('hex');
+    return hash.substring(0, this.idLength);
   }
 
   // Info Murky (20240422) This method I want to keep with object not static
@@ -40,14 +49,19 @@ export default class LRUCache<T> {
   }
 
   public get(key: string): T | null {
+    key = this.hashId(key);
+
     if (!this.cache.has(key)) return null;
+
     const node = this.remove(this.cache.get(key)!);
     this.insert(node, this.most);
     return node.value;
   }
 
   public put(key: string, status: AccountProgressStatus, value: T | null): void {
+    key = this.hashId(key);
     const newNode = new LRUNode<T>(key, status, value);
+
     if (this.cache.has(key)) {
       this.remove(this.cache.get(key)!);
     }
