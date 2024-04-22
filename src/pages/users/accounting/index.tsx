@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useState } from 'react';
-import { FaArrowRight } from 'react-icons/fa6';
+import { FaArrowRight, FaArrowLeft } from 'react-icons/fa6';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../../../interfaces/locale';
 import NavBar from '../../../components/nav_bar/nav_bar';
@@ -17,10 +17,24 @@ export enum AccountingStep {
 const AccountingPage = () => {
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
+  // ToDo: (20240422 - Julian) Back button -> 回到上一步
+  const backClickHandler = () => setCurrentStep(AccountingStep.STEP_ONE);
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
   const skipClickHandler = () => setCurrentStep(AccountingStep.STEP_TWO);
   // ToDo: (20240422 - Julian) Submit -> 提交 description of events
   // const submitClickHandler = () => { }
+
+  // Info: (20240422 - Julian) 第一步不會顯示 back button
+  const displayBackButton =
+    currentStep === AccountingStep.STEP_ONE ? null : (
+      <button
+        type="button"
+        onClick={backClickHandler}
+        className="rounded-lg border border-secondaryBlue p-12px"
+      >
+        <FaArrowLeft />
+      </button>
+    );
 
   // ToDo: (20240422 - Julian) Step two tab
   const displayStepTab =
@@ -69,9 +83,12 @@ const AccountingPage = () => {
             <div className="mt-100px flex-1 md:ml-80px">
               <div className="flex min-h-screen w-full flex-col px-16px py-24px md:p-40px">
                 {/* Info: (20240422 - Julian) Title */}
-                <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-                  Add New Journal
-                </h1>
+                <div className="g-45px flex items-center gap-24px">
+                  {displayBackButton}
+                  <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
+                    Add New Journal
+                  </h1>
+                </div>
 
                 {/* Info: (20240422 - Julian) Divider */}
                 <hr className="my-20px w-full border-lightGray6" />
