@@ -669,28 +669,6 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        // 'chat-bubbles': {
-        //   'stroke-bubble-outline': 'var(--chat-bubbles-stroke-bubble-outline)',
-        //   'stroke-bubble-selected': 'var(--chat-bubbles-stroke-bubble-selected)',
-        // },
-
-        // 'badge-stroke': {
-        //   error: 'var(--badge-stroke-error)',
-        //   primary: 'var(--badge-stroke-primary)',
-        //   secondary: 'var(--badge-stroke-secondary)',
-        //   success: 'var(--badge-stroke-success)',
-        //   warning: 'var(--badge-stroke-warning)',
-        // },
-
-        /* light mode colors */
-
-        // green: {
-        //   500: 'var(--color-green-500)',
-        // },
-
-        // 'green-200': 'var(--color-green-500)', // Info: it works
-        // 'stroke-neutral-tertiary': 'var(--color-green-500)',
-        // 'stroke-neutral-tertiary': 'var(--stroke-neutral-tertiary)', // Info: it works
         darkPurple: '#24274A',
         darkPurple2: '#2C315B',
         darkPurple3: '#1F2243',
