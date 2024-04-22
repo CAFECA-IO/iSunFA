@@ -133,3 +133,7 @@ export const ALLOWED_ORIGINS = [
 ];
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
+
+export const FORMIDABLE_CONFIG = {
+  uploadDir: '/tmp',
+};

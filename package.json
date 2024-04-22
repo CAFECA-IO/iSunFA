@@ -14,6 +14,7 @@
     "production": "next start -p 80"
   },
   "dependencies": {
+    "@google-cloud/vision": "^4.2.1",
     "@passwordless-id/webauthn": "^1.5.0",
     "apexcharts": "^3.48.0",
     "class-variance-authority": "^0.7.0",
