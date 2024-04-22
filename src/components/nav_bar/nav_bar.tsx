@@ -18,7 +18,7 @@ const NavBar = () => {
   const { credential: credential, signedIn, signOut, username } = useUserCtx();
 
   const burgerButtonStyle =
-    'h-2px rounded-full bg-secondaryBlue transition-all duration-150 ease-in-out';
+    'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
 
   const {
     targetRef: userMenuRef,
@@ -71,41 +71,41 @@ const NavBar = () => {
       <button
         onClick={appMenuMobileClickHandler}
         type="button"
-        className="p-16px text-secondaryBlue hover:text-primaryYellow"
+        className="p-16px text-button-text-secondary hover:text-primaryYellow"
       >
         <FaChevronLeft />
       </button>
       <Link
         href={''}
-        className="flex w-full items-center gap-16px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
         <p>Project</p>
       </Link>
       <Link
         href={ISUNFA_ROUTE.ACCOUNTING}
-        className="flex w-full items-center gap-16px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
         <p>Accoount</p>
       </Link>
       <Link
         href={''}
-        className="flex w-full items-center gap-16px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
         <p>Contract</p>
       </Link>
       <Link
         href={''}
-        className="flex w-full items-center gap-16px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
         <p>Salary</p>
       </Link>
       <Link
         href={''}
-        className="flex w-full items-center gap-16px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
         <p>Report</p>
@@ -121,7 +121,7 @@ const NavBar = () => {
       <button
         type="button"
         onClick={appMenuMobileClickHandler}
-        className="flex w-full items-center gap-8px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
@@ -131,21 +131,21 @@ const NavBar = () => {
       </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-8px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <FiLayout size={20} />
         <p>Dashboard</p>
       </Link>
       <Link
         href={ISUNFA_ROUTE.CONTACT_US}
-        className="flex w-full items-center gap-8px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <FiMail size={20} />
         <p>Contact us</p>
       </Link>
       <button
         type="button"
-        className="flex w-full items-center gap-8px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <div className="flex flex-1 items-center gap-8px">
           <FiBell size={20} />
@@ -155,7 +155,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        className="flex w-full items-center gap-8px px-24px py-10px text-secondaryBlue hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <div className="flex flex-1 items-center gap-8px">
           <PiGlobe size={20} />
@@ -210,7 +210,7 @@ const NavBar = () => {
           className="mx-auto aspect-square w-16 self-center"
         />
         <div className="mt-3 flex justify-center gap-0 px-16">
-          <div className="my-auto text-base font-semibold leading-6 tracking-normal text-secondaryBlue">
+          <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
             {signedIn ? (!!username ? username : DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           <button className="flex shrink-0 flex-col justify-center rounded-md p-2.5">
@@ -234,7 +234,7 @@ const NavBar = () => {
               className="aspect-square w-5"
             />
           </div>
-          <div className="text-base font-medium leading-6 tracking-normal text-secondaryBlue">
+          <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
             Subscription & Bills
           </div>
         </button>
@@ -245,7 +245,7 @@ const NavBar = () => {
               className="aspect-square w-5"
             />
           </div>
-          <div className="text-base font-medium leading-6 tracking-normal text-secondaryBlue">
+          <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
             Setting
           </div>
         </button>
@@ -286,8 +286,8 @@ const NavBar = () => {
     </div>
   ) : (
     <Link href={ISUNFA_ROUTE.LOGIN}>
-      <Button className="">
-        <p className={cn('text-base leading-6 tracking-normal text-primaryYellow2')}>
+      <Button className="bg-button-surface-strong-primary">
+        <p className={cn('text-base leading-6 tracking-normal text-button-text-primary-solid')}>
           Login
           {/* {t('login')} */}
           {/* Info: arrow-right svg (20240408 - Shirley) */}
@@ -302,7 +302,7 @@ const NavBar = () => {
         >
           <g>
             <path
-              className={cn(`fill-current`, `text-primaryYellow2`)}
+              className={cn(`fill-current`, `text-button-text-primary-solid`)}
               fillRule="evenodd"
               d="M8.21 1.501H13.542c.667 0 1.226 0 1.684.037.479.04.934.125 1.365.345l-.454.89.454-.89a3.5 3.5 0 011.53 1.53c.22.431.305.886.344 1.365.038.458.038 1.017.037 1.683v7.08c0 .666 0 1.226-.037 1.684-.04.478-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.431.22-.886.305-1.365.344-.458.037-1.018.037-1.683.037H8.21c-.65 0-1.165.001-1.613-.12a3.5 3.5 0 01-2.475-2.474c-.12-.448-.12-.963-.12-1.613v-.126a1 1 0 112 0c0 .84.009 1.063.052 1.221l-.961.258.96-.258a1.5 1.5 0 001.061 1.061c.159.043.382.051 1.222.051h5.166c.717 0 1.194 0 1.561-.03.355-.03.518-.081.62-.133a1.5 1.5 0 00.656-.656c.052-.103.104-.265.133-.62.03-.367.03-.844.03-1.56v-7c0-.717 0-1.195-.03-1.561-.03-.356-.08-.518-.133-.62l.891-.455-.891.454a1.5 1.5 0 00-.656-.655c-.102-.053-.265-.104-.62-.133-.367-.03-.844-.03-1.56-.03H8.335c-.84 0-1.063.008-1.222.05a1.5 1.5 0 00-1.06 1.06c-.043.16-.052.383-.052 1.222a1 1 0 11-2 0v-.126c0-.65 0-1.164.12-1.613A3.5 3.5 0 016.597 1.62c.448-.12.962-.12 1.613-.119zm1.085 4.46a1 1 0 011.415 0l3.333 3.333a1 1 0 010 1.414l-3.333 3.333a1 1 0 11-1.415-1.414l1.627-1.626h-8.42a1 1 0 110-2h8.42L9.295 7.375a1 1 0 010-1.414z"
               clipRule="evenodd"
@@ -328,7 +328,7 @@ const NavBar = () => {
 
   return (
     <div className="fixed top-0 z-20 flex w-screen">
-      <div className="z-60 flex w-full gap-5 bg-green-500 px-10 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
+      <div className="z-60 flex w-full gap-5 bg-surface-neutral-surface-lv1 px-10 py-3 drop-shadow-xl max-md:flex-wrap max-md:px-5">
         <Button size={'medium'} variant={'tertiary'} onClick={toggleDarkMode}>
           {' '}
           D/L
@@ -381,7 +381,7 @@ const NavBar = () => {
           <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
             <Link
               href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
-              className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-secondaryBlue hover:text-primaryYellow max-md:px-5 lg:ml-10"
+              className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -405,7 +405,7 @@ const NavBar = () => {
             </Link>
             <Link
               href={ISUNFA_ROUTE.CONTACT_US}
-              className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-secondaryBlue hover:text-primaryYellow max-md:px-5"
+              className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -430,25 +430,64 @@ const NavBar = () => {
           </div>
         </div>
         {/* TODO: icons on mobile (20240408 - Shirley) */}
-        <div className="relative hidden lg:flex">
+        <div className="relative hidden space-x-3 text-button-text-secondary lg:flex">
           {' '}
           <button>
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/2877bbab5cccb7768a604540dd0cd835d42ae35e297c9ff8683f42d4f47d452d?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="aspect-[0.96] w-[54px] shrink-0"
-            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              fill="none"
+              viewBox="0 0 32 32"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M4.038 13.001a12.36 12.36 0 00-.367 3c0 1.035.127 2.04.367 3h5.904a21.398 21.398 0 01-.271-3.02c.02-1.004.112-2 .27-2.98H4.039zm.688-2h5.64a21.401 21.401 0 013.366-7.124A12.353 12.353 0 004.726 11zM16.004 4.2a19.4 19.4 0 00-3.564 6.802h7.128A19.4 19.4 0 0016.004 4.2zm4.033 8.802h-8.066a19.405 19.405 0 00-.3 3c.022 1.012.123 2.015.3 3h8.066c.177-.985.278-1.988.3-3a19.405 19.405 0 00-.3-3zm2.029 6a21.393 21.393 0 00.271-3.02 21.393 21.393 0 00-.271-2.98h5.904c.24.96.367 1.965.367 3s-.127 2.04-.367 3h-5.904zm-2.498 2H12.44a19.4 19.4 0 003.564 6.802A19.4 19.4 0 0019.568 21zm-5.836 7.125A21.401 21.401 0 0110.365 21H4.726a12.353 12.353 0 009.006 7.125zm4.544 0A21.403 21.403 0 0021.643 21h5.639a12.353 12.353 0 01-9.006 7.125zM27.282 11h-5.64a21.403 21.403 0 00-3.366-7.124A12.353 12.353 0 0127.282 11zm-25.611 5c0-7.916 6.417-14.333 14.333-14.333S30.337 8.085 30.337 16 23.92 30.334 16.004 30.334 1.67 23.917 1.67 16.001z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
           </button>
           <button>
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/647bd813d087045224639d423f9d557bee48cba56c3c1cf8b1b3ad253b6b8444?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="aspect-square w-14 shrink-0"
-            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              fill="none"
+              viewBox="0 0 32 32"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.64 4.304a9 9 0 0115.364 6.364c0 3.943.992 6.579 2.05 8.279l.011.019c.48.77.854 1.372 1.105 1.808.126.218.235.42.315.593.039.087.08.188.112.294a1.3 1.3 0 01.055.476 1.644 1.644 0 01-.19.681c-.144.26-.343.422-.478.522-.265.197-.579.244-.701.262-.179.026-.387.04-.609.049-.44.017-1.054.017-1.83.017H7.163c-.776 0-1.389 0-1.83-.017a5.859 5.859 0 01-.608-.05c-.122-.017-.436-.064-.701-.261a1.646 1.646 0 01-.478-.522 1.645 1.645 0 01-.19-.681 1.3 1.3 0 01.055-.476c.031-.106.073-.207.112-.294.08-.174.189-.375.314-.593a72.46 72.46 0 011.105-1.808l.012-.02c1.058-1.7 2.05-4.336 2.05-8.278A9 9 0 019.64 4.304zm6.364-.636a7 7 0 00-7 7c0 4.298-1.087 7.303-2.351 9.335a86.37 86.37 0 00-1.017 1.656c.38.009.887.009 1.553.009h17.63c.665 0 1.173 0 1.552-.01a86.131 86.131 0 00-1.016-1.655c-1.264-2.032-2.351-5.037-2.351-9.335a7 7 0 00-7-7zm11.01 17.951a.118.118 0 01.023-.005l-.022.005zM4.97 21.614c.001 0 .01.001.023.005a.108.108 0 01-.023-.005zm6.756 5.725a1 1 0 011.412-.088 4.313 4.313 0 002.866 1.083c1.1 0 2.101-.408 2.866-1.083a1 1 0 111.323 1.5 6.313 6.313 0 01-4.19 1.583 6.313 6.313 0 01-4.189-1.583 1 1 0 01-.088-1.412z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
           </button>
           <button onClick={appMenuClickHandler}>
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/5ff6657b0681d98b7c58359e8d3861a8b640576f5b4bd6873fa523bdb17b1110?apiKey=0e17b0b875f041659e186639705112b1&"
-              className="aspect-square w-14 shrink-0"
-            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              fill="none"
+              viewBox="0 0 32 32"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M6.67 6.334a.333.333 0 100 .667.333.333 0 000-.667zm-2.333.334a2.333 2.333 0 114.667 0 2.333 2.333 0 01-4.667 0zm11.667-.334a.333.333 0 100 .667.333.333 0 000-.667zm-2.333.334a2.333 2.333 0 114.666 0 2.333 2.333 0 01-4.666 0zm11.666-.334a.333.333 0 100 .667.333.333 0 000-.667zm-2.333.334a2.333 2.333 0 114.667 0 2.333 2.333 0 01-4.667 0zm-16.333 9a.333.333 0 100 .666.333.333 0 000-.666zM4.337 16a2.333 2.333 0 114.667 0 2.333 2.333 0 01-4.667 0zm11.667-.333a.333.333 0 100 .666.333.333 0 000-.666zM13.67 16a2.333 2.333 0 114.666 0 2.333 2.333 0 01-4.666 0zm11.666-.333a.333.333 0 100 .666.333.333 0 000-.666zM23.004 16a2.333 2.333 0 114.666 0 2.333 2.333 0 01-4.666 0zm-16.333 9a.333.333 0 100 .667.333.333 0 000-.667zm-2.334.333a2.333 2.333 0 114.667 0 2.333 2.333 0 01-4.667 0zm11.667-.333a.333.333 0 100 .667.333.333 0 000-.667zm-2.333.333a2.333 2.333 0 114.666 0 2.333 2.333 0 01-4.666 0zm11.666-.333a.333.333 0 100 .667.333.333 0 000-.667zm-2.333.333a2.333 2.333 0 114.667 0 2.333 2.333 0 01-4.667 0z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
           </button>
           {displayedAppMenu}
         </div>
