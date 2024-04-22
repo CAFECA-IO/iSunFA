@@ -16,20 +16,6 @@ module.exports = {
         1.18: '118 / 100',
       },
       colors: {
-        // green: {
-        //   100: 'var(--green-100)',
-        //   200: 'var(--green-200)',
-        //   25: 'var(--green-25)',
-        //   300: 'var(--green-300)',
-        //   400: 'var(--green-400)',
-        //   50: 'var(--green-50)',
-        //   500: 'var(--green-500)',
-        //   '500-10': 'var(--green-500-10)',
-        //   '500-30': 'var(--green-500-30)',
-        //   '500-5': 'var(--green-500-5)',
-        //   '500-50': 'var(--green-500-50)',
-        // },
-
         green: {
           100: 'var(--green-100)',
           200: 'var(--green-200)',

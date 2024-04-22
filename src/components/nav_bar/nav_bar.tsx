@@ -430,7 +430,7 @@ const NavBar = () => {
           </div>
         </div>
         {/* TODO: icons on mobile (20240408 - Shirley) */}
-        <div className="relative hidden space-x-3 text-button-text-secondary lg:flex">
+        <div className="relative hidden space-x-5 text-button-text-secondary lg:flex">
           {' '}
           <button>
             <svg
