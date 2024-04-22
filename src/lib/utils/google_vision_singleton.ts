@@ -1,5 +1,6 @@
 // This file is for google vision api, for OCR service
 // Usage const googleVisionClient = GoogleVisionClientSingleton.getInstance();
+import { IBlockData } from '@/interfaces/google_vision';
 import vision, { ImageAnnotatorClient } from '@google-cloud/vision';
 
 class GoogleVisionClientSingleton {
@@ -20,6 +21,49 @@ class GoogleVisionClientSingleton {
     }
     return GoogleVisionClientSingleton.instance;
   }
-}
 
+  // Info Murky (20240422) This method return the array of description of the image, seperate by lines
+  public static async generateDescription(imagePath: string): Promise<string[]> {
+    const client = GoogleVisionClientSingleton.getInstance();
+    const [result] = await client.textDetection(imagePath);
+    const detections = result.textAnnotations || [];
+
+    if (!detections.length) {
+      return [];
+    }
+
+    return detections[0].description?.split('\n') || [];
+  }
+
+  public static async generateFullTextAnnotation(imagePath: string): Promise<IBlockData[]> {
+    const client = GoogleVisionClientSingleton.getInstance();
+    const [result] = await client.textDetection(imagePath);
+    const { fullTextAnnotation } = result;
+
+    const blockData: IBlockData[] = [];
+    if (fullTextAnnotation?.pages?.length) {
+      fullTextAnnotation?.pages?.forEach((page) => {
+        page?.blocks?.forEach((block) => {
+          const blockText = block.paragraphs
+            ?.map((paragraph) =>
+              paragraph.words
+                ?.map((word) => word.symbols?.map((symbol) => symbol.text).join(''))
+                .join('')
+            )
+            .join('\n');
+
+          // 获取区块的边界框
+          const blockVertices = block.boundingBox?.vertices?.map((vertex) => ({
+            x: vertex.x,
+            y: vertex.y,
+          }));
+
+          blockData.push({ blockText, blockVertices });
+        });
+      });
+    }
+
+    return blockData;
+  }
+}
 export default GoogleVisionClientSingleton;

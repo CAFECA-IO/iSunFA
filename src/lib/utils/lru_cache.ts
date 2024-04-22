@@ -58,7 +58,7 @@ export default class LRUCache<T> {
     return node.value;
   }
 
-  public put(key: string, status: AccountProgressStatus, value: T | null): void {
+  public put(key: string, status: AccountProgressStatus, value: T | null): string {
     key = this.hashId(key);
     const newNode = new LRUNode<T>(key, status, value);
 
@@ -72,5 +72,7 @@ export default class LRUCache<T> {
       this.remove(leastNode);
       this.cache.delete(leastNode.key);
     }
+
+    return key;
   }
 }
