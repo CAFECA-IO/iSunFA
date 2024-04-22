@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '../button/button';
 import { useUserCtx } from '../../contexts/user_context';
 import { useGlobalCtx } from '../../contexts/global_context';
+import Image from 'next/image';
 
 const LoginPageBody = () => {
   const { signUp, signIn } = useUserCtx();
@@ -32,7 +33,7 @@ const LoginPageBody = () => {
   };
   return (
     <div>
-      <div className="bg-gray-100">
+      <div className="bg-surface-neutral-main-background">
         <div className="flex gap-5 max-lg:flex-col max-lg:gap-0">
           <div className="order-2 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1">
             <div className="pointer-events-none -mt-[20px] flex grow flex-col justify-start max-lg:max-w-full md:-mt-[50px] lg:-mt-[65px]">
@@ -57,10 +58,36 @@ const LoginPageBody = () => {
                   <div className="mx-5 flex flex-col justify-center rounded-[999px] max-lg:mx-2.5">
                     <div className="flex aspect-square flex-col items-center justify-center rounded-[999px] bg-gray-300 px-16 max-lg:px-5">
                       <div className="flex items-center justify-center max-lg:mx-2">
-                        <img
-                          src="https://cdn.builder.io/api/v1/image/assets/TEMP/60fe1728445a73d0ea2384aff945f6a9b3ebfd57b0593bb94f4f534a3493f21c?apiKey=0e17b0b875f041659e186639705112b1&"
-                          className="aspect-square w-16"
-                        />
+                        {/* Info: anonymous avatar (20240422 - Shirley) */}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="201"
+                          height="200"
+                          fill="none"
+                          viewBox="0 0 201 200"
+                        >
+                          <path
+                            fill="#CDD1D9"
+                            d="M.5 100C.5 44.772 45.272 0 100.5 0s100 44.772 100 100-44.772 100-100 100S.5 155.228.5 100z"
+                          ></path>
+                          <g clipPath="url(#clip0_13_13411)">
+                            <path
+                              fill="#7F8A9D"
+                              fillRule="evenodd"
+                              d="M100.5 68.013c-11.942 0-21.623 9.68-21.623 21.622 0 8.151 4.51 15.249 11.17 18.934a31.953 31.953 0 00-19.976 20.439 2.286 2.286 0 002.177 2.984h56.503a2.284 2.284 0 002.176-2.984 31.956 31.956 0 00-19.975-20.439c6.661-3.685 11.171-10.782 11.171-18.934 0-11.942-9.681-21.622-21.623-21.622z"
+                              clipRule="evenodd"
+                            ></path>
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_13_13411">
+                              <path
+                                fill="#fff"
+                                d="M0 0H64V64H0z"
+                                transform="translate(68.5 68)"
+                              ></path>
+                            </clipPath>
+                          </defs>
+                        </svg>
                       </div>
                     </div>
                   </div>
@@ -69,27 +96,26 @@ const LoginPageBody = () => {
                     onClick={logInClickHandler}
                     className="mt-10 flex justify-center gap-2 rounded-md px-2 py-3.5 max-lg:px-5"
                   >
-                    <div className="text-lg font-medium leading-7 tracking-normal text-white">
+                    <div className="text-lg font-medium leading-7 tracking-normal">
                       Log in with Device
                     </div>
-                    <div className="my-auto flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="25"
-                        height="24"
-                        fill="none"
-                        viewBox="0 0 25 24"
-                      >
-                        <g>
-                          <path
-                            fill="#FCFDFF"
-                            fillRule="evenodd"
-                            d="M8.664 1.001h7.677c.528 0 .982 0 1.357.03.395.033.788.104 1.167.297a3 3 0 011.311 1.311c.193.379.264.772.296 1.167.031.375.03.83.03 1.357V18.84c0 .527.001.982-.03 1.356-.032.395-.103.789-.296 1.167a3 3 0 01-1.311 1.311c-.378.193-.772.264-1.167.297-.375.03-.83.03-1.357.03H8.665c-.527 0-.982 0-1.356-.03-.395-.033-.789-.104-1.167-.297a3 3 0 01-1.311-1.31c-.193-.38-.264-.773-.296-1.168a17.9 17.9 0 01-.031-1.356V5.163c0-.528 0-.982.03-1.357.033-.395.104-.788.297-1.167A3 3 0 016.14 1.33c.378-.194.772-.265 1.167-.297.374-.03.83-.03 1.356-.03zM7.471 3.025c-.272.022-.373.06-.422.085a1 1 0 00-.437.437c-.025.05-.063.15-.085.422-.023.283-.024.656-.024 1.232v13.6c0 .577 0 .949.024 1.232.022.272.06.373.085.422a1 1 0 00.437.437c.05.025.15.063.422.085.283.023.655.024 1.232.024h7.6c.576 0 .949 0 1.232-.024.272-.022.372-.06.422-.085a1 1 0 00.437-.437c.025-.05.063-.15.085-.422.023-.283.024-.655.024-1.232v-13.6c0-.576 0-.949-.024-1.232-.022-.272-.06-.372-.085-.422a1 1 0 00-.437-.437c-.05-.025-.15-.063-.422-.085-.283-.023-.655-.024-1.232-.024h-7.6c-.577 0-.949 0-1.232.024zm3.532 14.476a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
-                            clipRule="evenodd"
-                          ></path>
-                        </g>
-                      </svg>
-                    </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="25"
+                      height="24"
+                      fill="none"
+                      viewBox="0 0 25 24"
+                    >
+                      <g>
+                        <path
+                          className="fill-current"
+                          fill="none"
+                          fillRule="evenodd"
+                          d="M8.664 1.001h7.677c.528 0 .982 0 1.357.03.395.033.788.104 1.167.297a3 3 0 011.311 1.311c.193.379.264.772.296 1.167.031.375.03.83.03 1.357V18.84c0 .527.001.982-.03 1.356-.032.395-.103.789-.296 1.167a3 3 0 01-1.311 1.311c-.378.193-.772.264-1.167.297-.375.03-.83.03-1.357.03H8.665c-.527 0-.982 0-1.356-.03-.395-.033-.789-.104-1.167-.297a3 3 0 01-1.311-1.31c-.193-.38-.264-.773-.296-1.168a17.9 17.9 0 01-.031-1.356V5.163c0-.528 0-.982.03-1.357.033-.395.104-.788.297-1.167A3 3 0 016.14 1.33c.378-.194.772-.265 1.167-.297.374-.03.83-.03 1.356-.03zM7.471 3.025c-.272.022-.373.06-.422.085a1 1 0 00-.437.437c-.025.05-.063.15-.085.422-.023.283-.024.656-.024 1.232v13.6c0 .577 0 .949.024 1.232.022.272.06.373.085.422a1 1 0 00.437.437c.05.025.15.063.422.085.283.023.655.024 1.232.024h7.6c.576 0 .949 0 1.232-.024.272-.022.372-.06.422-.085a1 1 0 00.437-.437c.025-.05.063-.15.085-.422.023-.283.024-.655.024-1.232v-13.6c0-.576 0-.949-.024-1.232-.022-.272-.06-.372-.085-.422a1 1 0 00-.437-.437c-.05-.025-.15-.063-.422-.085-.283-.023-.655-.024-1.232-.024h-7.6c-.577 0-.949 0-1.232.024zm3.532 14.476a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
+                          clipRule="evenodd"
+                        ></path>
+                      </g>
+                    </svg>
                   </Button>
                   <button
                     onClick={registerClickHandler}
