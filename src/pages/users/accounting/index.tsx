@@ -1,14 +1,50 @@
 import Head from 'next/head';
+import { useState } from 'react';
 import { FaArrowRight } from 'react-icons/fa6';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../../../interfaces/locale';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import StepOneTab from '../../../components/step_one_tab/step_one_tab';
-import JournalStepper from '../../../components/journal_stepper/journal_stepper';
+import AccountingStepper from '../../../components/accounting_stepper/accounting_stepper';
 import { Button } from '../../../components/button/button';
 
+export enum AccountingStep {
+  STEP_ONE = 'STEP_ONE',
+  STEP_TWO = 'STEP_TWO',
+}
+
 const AccountingPage = () => {
+  const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
+
+  // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
+  const skipClickHandler = () => setCurrentStep(AccountingStep.STEP_TWO);
+  // ToDo: (20240422 - Julian) Submit -> 提交 description of events
+  // const submitClickHandler = () => { }
+
+  // ToDo: (20240422 - Julian) Step two tab
+  const displayStepTab =
+    currentStep === AccountingStep.STEP_ONE ? <StepOneTab /> : <div>Step two</div>;
+
+  const displayButtons =
+    currentStep === AccountingStep.STEP_ONE ? (
+      <div className="absolute right-0 hidden items-center gap-8px md:flex">
+        {/* Info: (20240422 - Julian) Skip button */}
+        <button
+          type="button"
+          onClick={skipClickHandler}
+          className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+        >
+          <p>Skip</p>
+          <FaArrowRight />
+        </button>
+        {/* Info: (20240422 - Julian) Next button */}
+        <Button disabled className="px-16px py-8px">
+          Next
+        </Button>
+      </div>
+    ) : null;
+
   return (
     <>
       <Head>
@@ -44,27 +80,14 @@ const AccountingPage = () => {
                 <div className="relative my-40px flex items-center">
                   {/* Info: (20240422 - Julian) Stepper */}
                   <div className="mx-auto">
-                    <JournalStepper />
+                    <AccountingStepper />
                   </div>
 
-                  <div className="absolute right-0 hidden items-center gap-8px md:flex">
-                    {/* Info: (20240422 - Julian) Skip button */}
-                    <button
-                      type="button"
-                      className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
-                    >
-                      <p>Skip</p>
-                      <FaArrowRight />
-                    </button>
-                    {/* Info: (20240422 - Julian) Next button */}
-                    <Button disabled className="px-16px py-8px">
-                      Next
-                    </Button>
-                  </div>
+                  {displayButtons}
                 </div>
 
                 {/* Info: (20240422 - Julian) Step tab */}
-                <StepOneTab />
+                {displayStepTab}
               </div>
             </div>
           </div>
