@@ -14,7 +14,7 @@ const AccountingSidebar = () => {
     <div
       onMouseEnter={sidebarEnterHandler}
       onMouseLeave={sidebarLeaveHandler}
-      className={`fixed z-10 flex h-screen flex-col items-center font-semibold ${isExpanded ? 'w-200px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
+      className={`fixed z-10 hidden h-screen flex-col items-center font-semibold md:flex ${isExpanded ? 'w-200px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Main icon */}
       <div className="flex flex-col items-center pt-20px">
