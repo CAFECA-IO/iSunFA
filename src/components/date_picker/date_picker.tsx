@@ -330,7 +330,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'flex w-full items-center space-x-3 rounded-lg border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-m border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
           componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
         )}
       >
@@ -361,7 +361,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center space-x-3 rounded-lg border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          'group flex w-full items-center space-x-3 rounded-m border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
           componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
         )}
       >
