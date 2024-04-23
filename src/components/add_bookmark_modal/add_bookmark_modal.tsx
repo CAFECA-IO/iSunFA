@@ -39,9 +39,9 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
-    setSelectedBookmark(prevSelected => {
+    setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
-        return prevSelected.filter(item => item !== name);
+        return prevSelected.filter((item) => item !== name);
       } else {
         return [...prevSelected, name];
       }
@@ -70,7 +70,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                   onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
                   type="button"
                   className={`${
-                    selectedBookmark.includes(key) ? 'bg-primaryYellow/20' : 'hover:bg-lightGray/20'
+                    selectedBookmark.includes(key) ? 'bg-primaryYellow/20' : 'hover:bg-lightGray/10'
                   } mt-1 flex gap-3 rounded-md px-3 py-2 text-navyBlue2`}
                 >
                   <div className="my-auto flex flex-col justify-center">
