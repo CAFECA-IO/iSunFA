@@ -94,7 +94,7 @@ const AccountingPage = () => {
           {/* Info: (20240416 - Julian) Main */}
           <div className="flex h-full w-full bg-gray-100">
             <div className="mt-100px flex-1 md:ml-80px">
-              <div className="flex min-h-screen w-full flex-col px-16px py-24px md:p-40px">
+              <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
                 {/* Info: (20240422 - Julian) Title */}
                 <div className="flex h-45px items-center gap-24px">
                   {displayBackButton}
