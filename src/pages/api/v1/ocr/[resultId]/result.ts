@@ -3,10 +3,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountInvoiceData } from '@/interfaces/account';
 import { ResponseType } from '@/interfaces/api_response';
 import version from '@/lib/version';
+import OCRService from '../ocr.service';
 
 interface ResponseData extends ResponseType<AccountInvoiceData[]> {}
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+  const ocrService = OCRService.getInstance();
   const { resultId } = req.query;
   // Info Murky (20240416): Check if resultId is string
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
@@ -20,23 +22,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
 
   switch (req.method) {
     case 'GET': {
-      const ocrResultData: AccountInvoiceData = {
-        date: '2024-12-29',
-        eventType: 'income',
-        incomeReason: '勞務收入',
-        client: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        price: '469920',
-        tax: 'free',
-        taxPercentange: 'null',
-        fee: '0',
-      };
+      const ocrResultData = ocrService.getOCRResult(resultId);
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
         success: true,
         code: '200',
         message: `OCR analyzing result of id:${resultId} return successfully`,
-        payload: [ocrResultData],
+        payload: ocrResultData ? [ocrResultData] : [],
       });
     }
     default: {

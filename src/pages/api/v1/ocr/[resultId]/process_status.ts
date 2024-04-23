@@ -3,10 +3,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountProgressStatus } from '@/interfaces/account';
 import { ResponseType } from '@/interfaces/api_response';
 import version from '@/lib/version';
+import OCRService from '../ocr.service';
 
 interface ResponseData extends ResponseType<AccountProgressStatus> {}
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+  const ocrService = OCRService.getInstance();
   const { resultId } = req.query;
 
   // Info Murky (20240416): Check if resultId is string
@@ -21,12 +23,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
 
   switch (req.method) {
     case 'GET': {
+      const result = ocrService.getOCRStatus(resultId);
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
         success: false,
         code: '200',
         message: `OCR analyzing progress status of id:${resultId} return successfully`,
-        payload: 'success',
+        payload: result,
       });
     }
     default: {

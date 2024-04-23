@@ -137,3 +137,7 @@ export const FIDO2_USER_HANDLE = 'iSunFA-User';
 export const FORMIDABLE_CONFIG = {
   uploadDir: '/tmp',
 };
+
+export const LLAMA_CONFIG = {
+  model: 'llama3',
+};

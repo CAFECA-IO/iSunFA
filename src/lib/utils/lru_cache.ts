@@ -25,9 +25,14 @@ export default class LRUCache<T> {
     this.most.prev = this.least;
   }
 
-  private hashId(inputString: string): string {
+  public hashId(inputString: string): string {
     const hash = crypto.createHash('sha256').update(inputString).digest('hex');
     return hash.substring(0, this.idLength);
+  }
+
+  private isHashId(key: string): boolean {
+    const regex = `^[0-9a-f]{${this.idLength}}$`;
+    return new RegExp(regex).test(key);
   }
 
   // Info Murky (20240422) This method I want to keep with object not static
@@ -48,18 +53,28 @@ export default class LRUCache<T> {
     target.prev = node;
   }
 
-  public get(key: string): T | null {
-    key = this.hashId(key);
+  public get(key: string): { status: AccountProgressStatus; value: T | null } {
+    // Info Murky (20240423) key need to be hashed already
 
-    if (!this.cache.has(key)) return null;
+    if (!this.cache.has(key)) {
+      return {
+        status: 'error',
+        value: null,
+      };
+    }
 
     const node = this.remove(this.cache.get(key)!);
     this.insert(node, this.most);
-    return node.value;
+    return {
+      status: node.status,
+      value: node.value,
+    };
   }
 
   public put(key: string, status: AccountProgressStatus, value: T | null): string {
-    key = this.hashId(key);
+    if (!this.isHashId(key)) {
+      key = this.hashId(key);
+    }
     const newNode = new LRUNode<T>(key, status, value);
 
     if (this.cache.has(key)) {

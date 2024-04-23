@@ -17,6 +17,18 @@ export interface AccountInvoiceData {
   fee?: string;
 }
 
+export const AccountInvoiceDataObjectVersion = {
+  date: '發票日期YYYY-MM-DD',
+  eventType: 'imcome | expense',
+  incomeReason: '收入 or 支出原因',
+  client: '供應商的名稱',
+  description: '品項簡介',
+  price: '品項價格',
+  tax: '是否含稅',
+  taxPercentange: '稅率',
+  fee: '手續費',
+};
+
 export interface AccountLineItem {
   lineItemIndex: string;
   account: string;
@@ -35,6 +47,23 @@ export interface AccountVoucher {
 }
 
 // Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
+//   return (
+//     data &&
+//     typeof data.date === 'string' &&
+//     typeof data.eventType === 'string' &&
+//     typeof data.incomeReason === 'string' &&
+//     typeof data.client === 'string' &&
+//     typeof data.description === 'string' &&
+//     typeof data.price === 'string' &&
+//     typeof data.tax === 'string' &&
+//     (typeof data.taxPercentange === 'string' || null) &&
+//     (typeof data.fee === 'string')
+//   );
+// }
+
+// Depreciated Murky (20240522) loose version of isAccountInvoiceData
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
   return (
