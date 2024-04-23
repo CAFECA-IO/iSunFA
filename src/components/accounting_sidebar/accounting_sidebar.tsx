@@ -53,7 +53,7 @@ const AccountingSidebar = () => {
           />
 
           <Link
-            href={ISUNFA_ROUTE.ACCOUNTING}
+            href={ISUNFA_ROUTE.JOURNAL_LIST}
             className="flex w-full items-center gap-8px p-8px text-secondaryBlue hover:text-primaryYellow"
           >
             <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />

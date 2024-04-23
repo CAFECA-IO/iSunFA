@@ -6,6 +6,7 @@ import { ILocale } from '../../../interfaces/locale';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import StepOneTab from '../../../components/step_one_tab/step_one_tab';
+import StepTwoTab from '../../../components/step_two_tab/step_two_tab';
 import AccountingStepper from '../../../components/accounting_stepper/accounting_stepper';
 import { Button } from '../../../components/button/button';
 import { AccountingStep } from '../../../interfaces/stepper_string';
@@ -34,7 +35,7 @@ const AccountingPage = () => {
   );
 
   // ToDo: (20240422 - Julian) Step two tab
-  const displayStepTab = isStepOne ? <StepOneTab /> : <div>Step two</div>;
+  const displayStepTab = isStepOne ? <StepOneTab /> : <StepTwoTab />;
 
   const displayButtons = isStepOne ? (
     <div className="absolute right-0 hidden items-center gap-8px md:flex">
