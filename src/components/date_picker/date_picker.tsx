@@ -146,6 +146,7 @@ const PopulateDates = ({
     return (
       <button
         key={index}
+        type="button"
         disabled={el?.disable}
         className={`relative z-10 h-35px whitespace-nowrap px-1 text-base md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle} transition-all duration-150 ease-in-out disabled:text-lilac`}
         onClick={dateClickHandler}
@@ -327,10 +328,11 @@ const DatePicker = ({
   const displayedButtonContent =
     type === DatePickerType.ICON ? (
       <Button
+        type="button"
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'flex w-full items-center space-x-3 rounded-m border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
           componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
         )}
       >
@@ -358,10 +360,11 @@ const DatePicker = ({
       </Button>
     ) : (
       <Button
+        type="button"
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center space-x-3 rounded-m border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          'group flex w-full items-center space-x-3 rounded border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
           componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
         )}
       >
@@ -411,6 +414,7 @@ const DatePicker = ({
         >
           {/* Info: (20240417 - Shirley) Today button */}
           <button
+            type="button"
             onClick={todayClickHandler}
             className="w-full rounded border border-secondaryBlue p-1 text-sm text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
           >
@@ -420,6 +424,7 @@ const DatePicker = ({
           <div className="flex w-full items-center justify-between">
             {/* Info: Previous button (20240417 - Shirley) */}
             <button
+              type="button"
               onClick={goToPrevMonth}
               className="rounded-md border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >
@@ -434,6 +439,7 @@ const DatePicker = ({
 
             {/* Info: Next button (20240417 - Shirley) */}
             <button
+              type="button"
               onClick={goToNextMonth}
               className="rounded-md border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >

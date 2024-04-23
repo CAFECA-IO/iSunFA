@@ -1279,6 +1279,11 @@ module.exports = {
         3: 'var(--shadow-lv-3)',
         4: 'var(--shadow-lv-4)',
         5: 'var(--shadow-lv-5)',
+
+        sidebarMobile:
+          '0px -2px 5px 0px #3143621A, 0px -6px 10px 0px #31436217, 0px -11px 13px 0px #3143620D, 0px -28px 15px 0px #31436203, 0px -50px 17px 0px #31436200',
+        navbar:
+          '0px 2px 5px 0px #3143621A, 0px 6px 10px 0px #31436217, 0px 11px 13px 0px #3143620D, 0px 28px 15px 0px #31436203, 0px 50px 17px 0px #31436200',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
