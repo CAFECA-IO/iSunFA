@@ -13,7 +13,8 @@ const buttonVariants = cva(
         // TODO: add more variants (20240319 - Shirley)
         // outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         // secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        tertiary: 'bg-tertiaryBlue text-white hover:bg-tertiaryBlue/80',
+        tertiary:
+          'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover',
         tertiaryOutline:
           'border border-tertiaryBlue text-tertiaryBlue hover:border-primaryYellow hover:text-primaryYellow group-hover:border-primaryYellow group-hover:text-primaryYellow',
         // outline:
