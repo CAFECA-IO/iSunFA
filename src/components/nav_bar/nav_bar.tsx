@@ -104,7 +104,7 @@ const NavBar = () => {
         <p>Salary</p>
       </Link>
       <Link
-        href={''}
+        href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
@@ -195,10 +195,12 @@ const NavBar = () => {
         <p>Salary</p>
       </button>
       {/* Info: (20240416 - Julian) Report button */}
-      <button className="flex flex-col items-center gap-8px">
-        <Image src={'/icons/report.svg'} width={90} height={90} alt="report_icon" />
-        <p>Report</p>
-      </button>
+      <Link href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}>
+        <button className="flex flex-col items-center gap-8px">
+          <Image src={'/icons/report.svg'} width={90} height={90} alt="report_icon" />
+          <p>Report</p>
+        </button>
+      </Link>
     </div>
   );
 
@@ -290,7 +292,6 @@ const NavBar = () => {
         <p className={cn('text-base leading-6 tracking-normal text-button-text-primary-solid')}>
           Login
           {/* {t('login')} */}
-          {/* Info: arrow-right svg (20240408 - Shirley) */}
         </p>
 
         <svg
@@ -412,8 +413,8 @@ const NavBar = () => {
             </Link>
           </div>
         </div>
-        {/* TODO: icons on mobile (20240408 - Shirley) */}
-        <div className="relative hidden space-x-5 text-button-text-secondary lg:flex">
+        {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
+        <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
           {' '}
           <button>
             <svg

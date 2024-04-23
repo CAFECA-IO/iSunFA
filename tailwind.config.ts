@@ -1214,16 +1214,16 @@ module.exports = {
         '5px': 'var(--stroke-width-lv-5)',
         '6px': 'var(--stroke-width-lv-6)',
       },
+      // FIXME: rounded-s 左上左下沒有圓弧 (20240423 - Shirley)
       borderRadius: {
         xxs: 'var(--radius-xxs)',
         xs: 'var(--radius-xs)',
         s: 'var(--radius-s)',
         m: 'var(--radius-m)',
-        lg: 'var(--radius-lg)',
+        lg: 'var(--radius-l)',
         xl: 'var(--radius-xl)',
         rounded: 'var(--radius-rounded)',
       },
-
       margin: {
         '8px': '8px',
         '10px': '10px',
