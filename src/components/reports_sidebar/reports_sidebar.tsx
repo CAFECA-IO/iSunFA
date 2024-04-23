@@ -11,7 +11,7 @@ const ReportsSidebar = () => {
     <div
       onMouseEnter={sidebarEnterHandler}
       onMouseLeave={sidebarLeaveHandler}
-      className={`fixed z-10 hidden h-screen flex-col items-center font-semibold md:flex ${isExpanded ? 'w-200px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
+      className={`fixed z-10 hidden h-screen flex-col items-center md:flex ${isExpanded ? 'w-200px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
     >
       {/* Info: Main icon (20240423 - Shirley) */}
       <div className="flex flex-col items-center pt-20px">
@@ -23,9 +23,9 @@ const ReportsSidebar = () => {
           className={`${isExpanded ? 'scale-150' : 'scale-100'} transition-all duration-300 ease-in-out`}
         />
         <p
-          className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-secondaryBlue transition-all duration-300 ease-in-out`}
+          className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-secondaryBlue transition-all duration-300 ease-in-out`}
         >
-          Reports
+          Report
         </p>
       </div>
 
