@@ -36,10 +36,12 @@ const StepTwoTab = () => {
   const toggleEventMenu = () => setIsEventMenuOpen(!isEventMenuOpen);
   const toggleReasonMenu = () => setIsReasonMenuOpen(!isReasonMenuOpen);
 
-  const descriptionChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const descriptionChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputDescription(e.target.value);
-  const vendorChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
+  };
+  const vendorChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVendor(e.target.value);
+  };
   const totalPriceChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (Number.isNaN(Number(e.target.value))) return;
     setInputTotalPrice(Number(e.target.value));
