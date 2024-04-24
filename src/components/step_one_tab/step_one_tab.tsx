@@ -55,7 +55,7 @@ const StepOneTab = () => {
           <div className="mt-20px flex items-center gap-10px">
             <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
             <p className="font-semibold text-navyBlue2">
-              User Your Phone as <span className="text-primaryYellow">Scanner</span>
+              Use Your Phone as <span className="text-primaryYellow">Scanner</span>
             </p>
           </div>
           <p className="text-center text-lightGray4">
