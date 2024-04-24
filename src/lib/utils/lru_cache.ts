@@ -55,6 +55,9 @@ export default class LRUCache<T> {
 
   public get(key: string): { status: AccountProgressStatus; value: T | null } {
     // Info Murky (20240423) key need to be hashed already
+    if (!this.isHashId(key)) {
+      key = this.hashId(key);
+    }
 
     if (!this.cache.has(key)) {
       return {

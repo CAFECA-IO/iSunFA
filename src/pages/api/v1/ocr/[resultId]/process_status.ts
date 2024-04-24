@@ -26,7 +26,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       const result = ocrService.getOCRStatus(resultId);
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
-        success: false,
+        success: true,
         code: '200',
         message: `OCR analyzing progress status of id:${resultId} return successfully`,
         payload: result,

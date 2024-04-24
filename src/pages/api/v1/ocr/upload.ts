@@ -55,6 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // Todo Murky (20240416): Get Images and check if Image exist
   switch (req.method) {
     case 'POST': {
+      // Info Murky (20240416): Need to use "formData" to post image, and the key is "image"
+
       // Info Murky (20240416): Get Images and check if Image exist
       // Images store in array in files.image is an array of Formidable File Object
       // each image in files.image have property filepath

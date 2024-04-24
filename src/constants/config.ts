@@ -140,4 +140,15 @@ export const FORMIDABLE_CONFIG = {
 
 export const LLAMA_CONFIG = {
   model: 'llama3',
+  retryLimit: 10,
+};
+
+export const OCR_SERVICE_CONFIG = {
+  cacheSize: 10,
+  idLength: 20,
+};
+
+export const VOUCHER_SERVICE_CONFIG = {
+  cacheSize: 10,
+  idLength: 20,
 };

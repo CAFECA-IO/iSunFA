@@ -105,11 +105,17 @@ export default class LlamaConnect<T> {
 
       const dataString = LlamaConnect.extractJSONFromText(response);
 
+      // eslint-disable-next-line no-console
+      console.log('dataString:', dataString);
+
       if (!dataString) {
         return { responseJSON: null, context: newContext };
       }
 
       const responseJSON = JSON.parse(dataString);
+      // eslint-disable-next-line no-console
+      console.log('responseJSON:', responseJSON);
+
       if (!this.typeGuard(responseJSON)) {
         return { responseJSON: null, context: newContext };
       }

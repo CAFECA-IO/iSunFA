@@ -19,22 +19,22 @@ describe('LRUCache', () => {
 
   it('should store items correctly with hashed keys', () => {
     cache.put('item1', 'inProgress', 'Data for item 1');
-    expect(cache.get('item1').value).not.toBe('Data for item 1');
+    expect(cache.get('item1').value).toBe('Data for item 1');
     expect(cache.get(hashKey('item1')).value).toBe('Data for item 1');
   });
 
   it('should update existing items with hashed keys', () => {
     cache.put('item1', 'inProgress', 'Data for item 1');
     cache.put('item1', 'success', 'Updated Data for item 1');
-    expect(cache.get('item1').value).not.toBe('Updated Data for item 1');
+    expect(cache.get('item1').value).toBe('Updated Data for item 1');
     expect(cache.get(hashKey('item1')).value).toBe('Updated Data for item 1');
   });
 
   it('should handle hash collisions correctly', () => {
     // Mock the crypto.createHash to always return the same hash output
     jest.spyOn(crypto, 'createHash').mockImplementation(
-      () =>
-        ({
+      // prettier-ignore
+      () => ({
           update: () => ({
             digest: () => '12345678', // This fake hash will simulate a collision
           }),

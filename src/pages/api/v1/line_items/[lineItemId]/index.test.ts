@@ -56,8 +56,8 @@ describe('API Handler Tests', () => {
         lineItemIndex: '1229001001',
         account: '銀行存款',
         description: '港幣120000 * 3.916',
-        debit: true,
-        amount: 469920,
+        debit: 'true',
+        amount: '469920',
       },
     });
   });

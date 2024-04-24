@@ -44,12 +44,11 @@ class GoogleVisionClientSingleton {
     if (fullTextAnnotation?.pages?.length) {
       fullTextAnnotation?.pages?.forEach((page) => {
         page?.blocks?.forEach((block) => {
+          // prettier-ignore
           const blockText = block.paragraphs
-            ?.map((paragraph) =>
-              paragraph.words
+            ?.map((paragraph) => paragraph.words
                 ?.map((word) => word.symbols?.map((symbol) => symbol.text).join(''))
-                .join('')
-            )
+                .join(''))
             .join('\n');
 
           // 获取区块的边界框

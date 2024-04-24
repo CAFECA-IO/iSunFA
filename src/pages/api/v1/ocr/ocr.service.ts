@@ -7,7 +7,7 @@ import {
 import LRUCache from '@/lib/utils/lru_cache';
 import GoogleVisionClientSingleton from '@/lib/utils/google_vision_singleton';
 import LlamaConnect from '@/lib/utils/llama';
-import { LLAMA_CONFIG } from '@/constants/config';
+import { LLAMA_CONFIG, OCR_SERVICE_CONFIG } from '@/constants/config';
 
 // Info Murky (20240416):  this is singleton class
 // use OCRService.getInstance() to get instance
@@ -24,7 +24,10 @@ export default class OCRService {
   private llamaConnect: LlamaConnect<AccountInvoiceData>;
 
   constructor() {
-    this.cache = new LRUCache<AccountInvoiceData>(10, 20);
+    this.cache = new LRUCache<AccountInvoiceData>(
+      OCR_SERVICE_CONFIG.cacheSize,
+      OCR_SERVICE_CONFIG.idLength
+    );
     this.prompts = `
     以下你需要使用Google Vision API 提取出來的文字，然後根據以下的格式來還原成發票的JSON檔案:\n
 
@@ -49,7 +52,7 @@ export default class OCRService {
       this.prompts,
       JSON.stringify(AccountInvoiceDataObjectVersion),
       isAccountInvoiceData,
-      10
+      LLAMA_CONFIG.retryLimit
     );
   }
 
@@ -71,29 +74,33 @@ export default class OCRService {
 
     let hashedKey = this.cache.hashId(key);
     if (this.cache.get(hashedKey).value) {
-      return `Already extracted, resultId: ${hashedKey}`;
+      return `Already uploaded, resultId: ${hashedKey}`;
     }
     hashedKey = this.cache.put(key, 'inProgress', null);
+
+    // Info Murky (20240423) this is async function, but we don't await
+    // it will be processed in background
     this.ocrToAccountInvoiceData(hashedKey, getneratedDescription);
     return hashedKey;
   }
 
-  public async tempTestOcr(getneratedDescription: string[]): Promise<string> {
-    const key = getneratedDescription[0];
+  // Deprecation Murky (20240423) debug
+  // public async tempTestOcr(getneratedDescription: string[]): Promise<string> {
+  //   const key = getneratedDescription[0];
 
-    let hashedKey = this.cache.hashId(key);
-    if (this.cache.get(hashedKey).value) {
-      return `Already extracted, resultId: ${hashedKey}`;
-    }
-    hashedKey = this.cache.put(key, 'inProgress', null);
-    this.ocrToAccountInvoiceData(hashedKey, getneratedDescription);
-    return hashedKey;
-  }
+  //   let hashedKey = this.cache.hashId(key);
+  //   if (this.cache.get(hashedKey).value) {
+  //     return `Already extracted, resultId: ${hashedKey}`;
+  //   }
+  //   hashedKey = this.cache.put(key, 'inProgress', null);
+  //   this.ocrToAccountInvoiceData(hashedKey, getneratedDescription);
+  //   return hashedKey;
+  // }
 
   public getOCRStatus(resultId: string): AccountProgressStatus {
     const result = this.cache.get(resultId);
     if (!result) {
-      return 'error';
+      return 'notFound';
     }
 
     return result.status;
@@ -116,10 +123,10 @@ export default class OCRService {
     // Todo: post to llama
     try {
       const descriptionString = description.join('\n');
-      const data = await this.llamaConnect.generateData(descriptionString);
+      const invoiceGenerated = await this.llamaConnect.generateData(descriptionString);
 
-      if (data) {
-        this.cache.put(hashedId, 'success', data);
+      if (invoiceGenerated) {
+        this.cache.put(hashedId, 'success', invoiceGenerated);
       } else {
         this.cache.put(hashedId, 'error', null);
       }
