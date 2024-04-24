@@ -1214,16 +1214,16 @@ module.exports = {
         '5px': 'var(--stroke-width-lv-5)',
         '6px': 'var(--stroke-width-lv-6)',
       },
+      // FIXME: rounded-s 左上左下沒有圓弧 (20240423 - Shirley)
       borderRadius: {
         xxs: 'var(--radius-xxs)',
         xs: 'var(--radius-xs)',
         s: 'var(--radius-s)',
         m: 'var(--radius-m)',
-        lg: 'var(--radius-lg)',
+        lg: 'var(--radius-l)',
         xl: 'var(--radius-xl)',
         rounded: 'var(--radius-rounded)',
       },
-
       margin: {
         '8px': '8px',
         '10px': '10px',
@@ -1279,6 +1279,11 @@ module.exports = {
         3: 'var(--shadow-lv-3)',
         4: 'var(--shadow-lv-4)',
         5: 'var(--shadow-lv-5)',
+
+        sidebarMobile:
+          '0px -2px 5px 0px #3143621A, 0px -6px 10px 0px #31436217, 0px -11px 13px 0px #3143620D, 0px -28px 15px 0px #31436203, 0px -50px 17px 0px #31436200',
+        navbar:
+          '0px 2px 5px 0px #3143621A, 0px 6px 10px 0px #31436217, 0px 11px 13px 0px #3143620D, 0px 28px 15px 0px #31436203, 0px 50px 17px 0px #31436200',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
