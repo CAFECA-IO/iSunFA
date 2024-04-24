@@ -38,7 +38,7 @@ const ReportPage = () => {
           <ReportsSidebar />
         </div>
 
-        <div className="h-screen bg-surface-neutral-main-background">
+        <div className="h-1000px bg-surface-neutral-main-background">
           <FinancialReportSection />
         </div>
       </div>

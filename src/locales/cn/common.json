@@ -317,6 +317,7 @@
   "DATE_PICKER": {
     "DATE": "日期",
     "SELECT_PERIOD": "选择日期范围",
+    "SELECT_DATE": "选择日期",
     "TODAY": "今天",
     "TO": "至",
     "JAN": "一月",

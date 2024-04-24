@@ -11,8 +11,7 @@ interface IPasskeySupportModal {
 const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasskeySupportModal) => {
   const isDisplayedPasskeySupportModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative mx-auto flex flex-col items-start rounded-xl bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
-        {/* <div className="flex max-w-[352px] flex-col rounded-2xl border border-gray-300 bg-white shadow-xl"> */}
+      <div className="rounded-m relative mx-auto flex flex-col items-start bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="absolute right-3 top-3">
           <button onClick={modalVisibilityHandler} className="flex items-center justify-center">
             <svg
@@ -144,7 +143,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
           <button
             type="button"
             onClick={modalVisibilityHandler}
-            className="w-[89px] rounded-md  border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow"
+            className="w-[89px] rounded-sm  border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow"
           >
             Got it!
           </button>

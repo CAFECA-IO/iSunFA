@@ -319,6 +319,7 @@
   "DATE_PICKER": {
     "DATE": "Date",
     "SELECT_PERIOD": "Start Date - End Date",
+    "SELECT_DATE": "Choose the Date",
     "TODAY": "Today",
     "TO": "to",
     "JAN": "Janaury",

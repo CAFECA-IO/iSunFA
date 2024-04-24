@@ -215,7 +215,7 @@ const NavBar = () => {
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
             {signedIn ? (!!username ? username : DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
-          <button className="flex shrink-0 flex-col justify-center rounded-md p-2.5">
+          <button className="flex shrink-0 flex-col justify-center rounded-xs p-2.5">
             <div className="flex items-center justify-center">
               <img
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/81424e1f4bb6c5d2f3b559ea40f9f188932a4c8bd82176e3de86e8257c95ec6e?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -229,7 +229,7 @@ const NavBar = () => {
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
-        <button className="mt-3 flex gap-2 rounded-md px-4 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-xs px-4 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/b2440bc7dff988603a015147398e81878220ce5264999f173e13e28a3f19ba26?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -240,7 +240,7 @@ const NavBar = () => {
             Subscription & Bills
           </div>
         </button>
-        <button className="mt-3 flex gap-2 rounded-md px-4 py-2.5">
+        <button className="mt-3 flex gap-2 rounded-xs px-4 py-2.5">
           <div className="my-auto flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/d483779fe7b5d1853e7ad9a6a31acef6c171fae39e7875d3e3e346af17601c37?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -259,7 +259,7 @@ const NavBar = () => {
         <button
           type="button"
           onClick={logOutClickHandler}
-          className="mt-3 flex w-full gap-2 rounded-md px-4 py-2.5 hover:opacity-70"
+          className="mt-3 flex w-full gap-2 rounded-xs px-4 py-2.5 hover:opacity-70"
         >
           <div className="my-auto flex items-center justify-center">
             <img
@@ -354,8 +354,8 @@ const NavBar = () => {
                 className="block lg:hidden"
               />
             </Link>
-            <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
-              <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+            <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
+              <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
                 <div className="justify-center px-1 text-xs">V{version}</div>
               </div>
             </div>
@@ -365,7 +365,7 @@ const NavBar = () => {
           <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
             <Link
               href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
-              className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
+              className="flex justify-center gap-2 rounded-xs px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -389,7 +389,7 @@ const NavBar = () => {
             </Link>
             <Link
               href={ISUNFA_ROUTE.CONTACT_US}
-              className="flex justify-center gap-2 rounded-md px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5"
+              className="flex justify-center gap-2 rounded-xs px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
