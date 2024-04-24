@@ -67,11 +67,12 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
               return (
                 <button
                   key={key}
+                  disabled={value.link === ''}
                   onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
                   type="button"
                   className={`${
                     selectedBookmark.includes(key) ? 'bg-primaryYellow/20' : 'hover:bg-lightGray/10'
-                  } mt-1 flex gap-3 rounded-sm px-3 py-2 text-navyBlue2`}
+                  } mt-1 flex gap-3 rounded-sm px-3 py-2 text-navyBlue2 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
                 >
                   <div className="my-auto flex flex-col justify-center">
                     {bookmarkList[key].icon}
