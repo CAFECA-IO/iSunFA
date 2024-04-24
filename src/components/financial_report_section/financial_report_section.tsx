@@ -1,13 +1,114 @@
+/* eslint-disable */
 import React, { useState } from 'react';
 import { Button } from '../button/button';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
+import useOuterClick from '../../lib/hooks/use_outer_click';
+import Image from 'next/image';
+
+const reportTypes = [
+  { id: 'balance_sheet', name: 'Balance Sheet' },
+  { id: 'income_statement', name: 'Income Statement' },
+  { id: 'cash_flow', name: 'Cash Flow Statement' },
+];
+
+const reportLanguages = [
+  { id: 'en', name: 'English', icon: '/icons/en.svg' },
+  { id: 'tw', name: '繁體中文', icon: '/icons/tw.svg' },
+  { id: 'cn', name: '简体中文', icon: '/icons/cn.svg' },
+];
 
 const FinancialReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);
 
+  const [selectedReportType, setSelectedReportType] = useState(reportTypes[0].id);
+  const [selectedReportLanguage, setSelectedReportLanguage] = useState(reportLanguages[0].id);
+
+  const {
+    targetRef: menuRef,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const menuClickHandler = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const menuOptionClickHandler = (id: string) => {
+    setSelectedReportType(id);
+    setIsMenuOpen(false);
+  };
+
+  const selectedReportName = reportTypes.find((type) => type.id === selectedReportType)?.name;
+
+  const {
+    targetRef: languageMenuRef,
+    componentVisible: isLanguageMenuOpen,
+    setComponentVisible: setIsLanguageMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const languageMenuClickHandler = () => {
+    setIsLanguageMenuOpen(!isLanguageMenuOpen);
+  };
+
+  const languageMenuOptionClickHandler = (id: string) => {
+    setSelectedReportLanguage(id);
+    setIsLanguageMenuOpen(false);
+  };
+
+  const selectedLanguage = reportLanguages.find((lang) => lang.id === selectedReportLanguage);
+
+  const languageMenu = isLanguageMenuOpen ? (
+    <div className="absolute top-[35rem] z-20 max-h-[200px] w-[560px] flex-col overflow-y-auto rounded-sm border border-solid border-slate-300 bg-white pb-2 shadow-dropmenu lg:max-h-[250px]">
+      <div className="flex w-full flex-col pl-2 pt-2">
+        <div className="z-10 flex items-start gap-0">
+          <div className="flex w-full flex-col">
+            {reportLanguages.map((lang) => (
+              <button
+                key={lang.id}
+                onClick={() => languageMenuOptionClickHandler(lang.id)}
+                type="button"
+                className={`
+                mt-1 flex space-x-3 rounded-sm px-3 py-3 text-navyBlue2 hover:bg-lightGray/10`}
+              >
+                <img src={lang.icon} alt={lang.name} className="mr-2 h-6 w-6" />
+                <p className="justify-center text-base font-medium leading-5 tracking-normal">
+                  {lang.name}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const menu = isMenuOpen ? (
+    <div className="absolute top-[25rem] z-20 max-h-[200px] w-[560px] flex-col overflow-y-auto rounded-sm border border-solid border-slate-300 bg-white pb-2 shadow-dropmenu lg:max-h-[250px]">
+      <div className="flex w-full flex-col pl-2 pt-2">
+        <div className="z-10 flex items-start gap-0">
+          <div className="flex w-full flex-col">
+            {reportTypes.map((type) => (
+              <button
+                key={type.id}
+                onClick={() => menuOptionClickHandler(type.id)}
+                type="button"
+                className={`
+                mt-1 flex rounded-sm px-3 py-3 text-navyBlue2 hover:bg-lightGray/10`}
+              >
+                <p className="justify-center text-base font-medium leading-5 tracking-normal">
+                  {type.name}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div className="flex w-full shrink-0 grow basis-0 flex-col bg-gray-100 px-0 pb-20 pt-20">
+    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           <div className="flex flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5">
@@ -22,100 +123,90 @@ const FinancialReportSection = () => {
       </div>
       <div className="mt-16 flex w-600px max-w-full flex-col self-center px-5 max-md:mt-10">
         <div className="flex flex-col justify-center max-md:max-w-full">
-          <div className="flex flex-col max-md:max-w-full">
+          <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
               Report Type
             </div>
-            <div className="mt-2 flex gap-0 rounded-xs border border-solid border-slate-300 bg-white shadow-sm max-md:max-w-full max-md:flex-wrap">
-              <div className="flex flex-1 flex-col justify-center text-base font-medium leading-6 tracking-normal text-slate-700 max-md:max-w-full">
-                <div className="items-start justify-center px-3 py-2.5 max-md:max-w-full max-md:pr-5">
-                  Balance Sheet
+            <div className="flex w-full" ref={menuRef}>
+              <button
+                className={`${
+                  isMenuOpen ? 'border-primaryYellow' : 'border-slate-300'
+                } flex w-full gap-0 rounded-sm border border-solid bg-white max-md:flex-wrap`}
+                onClick={menuClickHandler}
+              >
+                <div className="flex flex-1 flex-col justify-center text-base font-medium leading-6 tracking-normal text-slate-700 max-md:max-w-full">
+                  <div className="items-start px-3 py-2.5 text-start max-md:max-w-full max-md:pr-5">
+                    {selectedReportName}
+                  </div>
                 </div>
-              </div>
-              <div className="my-auto flex flex-col justify-center px-3 py-2.5">
-                <div className="flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    fill="none"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill="#314362"
-                      fillRule="evenodd"
-                      d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
+                <div className="my-auto flex flex-col justify-center px-3 py-2.5">
+                  <div className="flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill="#314362"
+                        fillRule="evenodd"
+                        d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </div>
                 </div>
-              </div>
+              </button>
+              {menu}
             </div>
           </div>
         </div>
         <div className="mt-20 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
-          <div className="flex flex-col max-md:max-w-full">
+          <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
               Report Language
             </div>
-            <div className="mt-2 flex items-center gap-0 rounded-xs border border-solid border-slate-300 bg-white shadow-sm max-md:max-w-full max-md:flex-wrap">
-              <div className="my-auto flex flex-col justify-center self-stretch px-3 py-2.5">
-                <div className="flex items-center justify-center rounded-full">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    viewBox="0 0 16 16"
-                  >
-                    <g clipPath="url(#clip0_904_61430)">
-                      <path fill="#BD3D44" d="M0 0h16v16H0"></path>
-                      <path
-                        fill="#000"
-                        d="M0 1.813h16H0zM0 4.28h16H0zM0 6.75h16H0zm0 2.469h16H0zm0 2.469h16H0zm0 2.468h16H0z"
-                      ></path>
-                      <path
-                        fill="#fff"
-                        d="M16 14.781H0v-1.25h16v1.25zm0-2.469H0v-1.25h16v1.25zm0-2.468H0v-1.25h16v1.25zm0-2.469H0v-1.25h16v1.25zm0-2.469H0v-1.25h16v1.25zm0-2.468H0v-1.25h16v1.25z"
-                      ></path>
-                      <path fill="#192F5D" d="M0 0h12.188v8.594H0V0z"></path>
-                      <path
-                        fill="#fff"
-                        d="M1.031.344L.92.688H.562L.85.896l-.11.34.291-.209.29.21-.109-.341.288-.21h-.356L1.03.344zM3.063.344L2.95.688h-.356l.287.209-.11.34.292-.209.29.21-.11-.341.288-.21h-.356L3.063.344zM5.094.344L4.98.688h-.356l.287.209-.109.34.29-.209.291.21-.109-.341.287-.21h-.356L5.094.344zM7.125.344l-.112.344h-.357l.288.209-.11.34.291-.209.29.21-.109-.341.288-.21h-.357L7.125.344zM9.156.344l-.112.344h-.357l.288.209-.11.34.291-.209.29.21-.108-.341.287-.21h-.356L9.156.344zM11.037.897l-.109.34.29-.209.291.21L11.4.897l.287-.21h-.356L11.22.344l-.113.344h-.356l.287.209zM2.063 1.219l-.113.343h-.356l.287.21-.11.34.292-.209.29.21-.11-.341.288-.21h-.356l-.112-.343zM4.094 1.219l-.113.343h-.356l.288.21-.11.34.29-.209.291.21-.109-.341.287-.21h-.356l-.112-.343zM6.125 1.219l-.112.343h-.357l.288.21-.11.34.291-.209.29.21-.109-.341.288-.21h-.357l-.112-.343zM8.156 1.219l-.112.343h-.357l.288.21-.11.34.291-.209.29.21-.108-.341.287-.21h-.356l-.113-.343zM10.188 1.219l-.113.343h-.356l.287.21-.11.34.291-.209.291.21-.11-.341.288-.21H10.3l-.113-.343zM1.031 2.063l-.112.343H.562l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.356l-.113-.344zM3.063 2.063l-.113.343h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356l-.112-.344zM5.094 2.063l-.113.343h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM7.125 2.063l-.112.343h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357l-.112-.344zM9.156 2.063l-.112.343h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356l-.113-.344zM11.219 2.063l-.113.343h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM2.063 2.938l-.113.343h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356l-.112-.344zM4.094 2.938l-.113.343h-.356l.288.21-.11.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM6.125 2.938l-.112.343h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357l-.112-.344zM8.156 2.938l-.112.343h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356l-.113-.344zM10.188 2.938l-.113.343h-.356l.287.21-.11.34.291-.21.291.21-.11-.34.288-.21H10.3l-.113-.344zM1.031 3.781l-.112.344H.562l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.356l-.113-.344zM3.063 3.781l-.113.344h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356l-.112-.344zM5.094 3.781l-.113.344h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM7.125 3.781l-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357l-.112-.344zM9.156 3.781l-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356l-.113-.344zM11.219 3.781l-.113.344h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM2.063 4.656L1.95 5h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356l-.112-.344zM4.094 4.656L3.98 5h-.356l.288.21-.11.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM6.125 4.656L6.013 5h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357l-.112-.344zM8.156 4.656L8.044 5h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356l-.113-.344zM10.188 4.656L10.075 5h-.356l.287.21-.11.34.291-.21.291.21-.11-.34.288-.21H10.3l-.113-.344zM1.031 5.531l-.112.344H.562l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.356l-.113-.344zM3.063 5.531l-.113.344h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356l-.112-.344zM5.094 5.531l-.113.344h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM7.125 5.531l-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357l-.112-.344zM9.156 5.531l-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356l-.113-.344zM11.219 5.531l-.113.344h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356l-.112-.344zM2.175 6.75l-.112-.344-.113.344h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356zM4.206 6.75l-.112-.344-.113.344h-.356l.288.21-.11.34.29-.21.291.21-.109-.34.287-.21h-.356zM6.237 6.75l-.112-.344-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357zM8.269 6.75l-.113-.344-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356zM10.3 6.75l-.113-.344-.112.344h-.356l.287.21-.11.34.291-.21.291.21-.11-.34.288-.21H10.3zM1.144 7.594L1.03 7.25l-.112.344H.562l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.356zM3.175 7.594l-.112-.344-.113.344h-.356l.287.21-.11.34.292-.21.29.21-.11-.34.288-.21h-.356zM5.206 7.594l-.112-.344-.113.344h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356zM7.237 7.594l-.112-.344-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.109-.34.288-.21h-.357zM9.269 7.594l-.113-.344-.112.344h-.357l.288.21-.11.34.291-.21.29.21-.108-.34.287-.21h-.356zM11.331 7.594l-.112-.344-.113.344h-.356l.287.21-.109.34.29-.21.291.21-.109-.34.287-.21h-.356z"
-                      ></path>
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_904_61430">
-                        <path fill="#fff" d="M0 0H16V16H0z"></path>
-                      </clipPath>
-                    </defs>
-                  </svg>
+            <div ref={languageMenuRef} className="flex w-full">
+              <button
+                className={`${
+                  isLanguageMenuOpen ? 'border-primaryYellow' : 'border-slate-300'
+                } flex w-full gap-0 rounded-sm border border-solid bg-white max-md:flex-wrap`}
+                onClick={languageMenuClickHandler}
+              >
+                <div className="my-auto flex flex-col justify-center self-stretch px-3 py-2.5">
+                  <Image
+                    width={20}
+                    height={20}
+                    src={selectedLanguage?.icon ?? '/icons/en.svg'}
+                    alt="language icon"
+                  />
                 </div>
-              </div>
-              <div className="flex flex-1 flex-col justify-center self-stretch whitespace-nowrap text-base font-medium leading-6 tracking-normal text-slate-700 max-md:max-w-full">
-                <div className="items-start justify-center px-3 py-2.5 max-md:max-w-full max-md:pr-5">
-                  English
+                <div className="flex flex-1 flex-col justify-start self-stretch whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-slate-700 max-md:max-w-full">
+                  <div className="items-start justify-start px-3 py-2.5 text-start max-md:max-w-full max-md:pr-5">
+                    {selectedLanguage?.name}
+                  </div>
                 </div>
-              </div>
-              <div className="my-auto flex flex-col justify-center self-stretch px-3 py-2.5">
-                <div className="flex items-center justify-center">
-                  {' '}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    fill="none"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill="#314362"
-                      fillRule="evenodd"
-                      d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
+                <div className="my-auto flex flex-col justify-end self-stretch px-3 py-2.5">
+                  <div className="flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill="#314362"
+                        fillRule="evenodd"
+                        d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </div>
                 </div>
-              </div>
+              </button>
+              {languageMenu}
             </div>
           </div>
         </div>
@@ -158,16 +249,16 @@ const FinancialReportSection = () => {
               <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-6 flex w-full flex-col justify-center">
+          <div className="mt-6 flex flex-col justify-center">
             <DatePicker
               type={DatePickerType.CHOOSE_DATE}
               period={period}
               setFilteredPeriod={setPeriod}
-              className="w-350px justify-start md:w-550px"
+              className="w-340px justify-start md:w-550px"
             />
           </div>
         </div>
-        <Button className="mt-20 flex items-center justify-center rounded-xs px-4 py-2 max-md:mt-10 max-md:max-w-full max-md:px-5">
+        <Button className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 max-md:mt-10 max-md:max-w-full max-md:px-5">
           <div className="flex gap-1">
             <div className="text-sm font-medium leading-5 tracking-normal text-yellow-700">
               Generate
