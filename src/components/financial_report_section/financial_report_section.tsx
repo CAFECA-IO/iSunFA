@@ -160,7 +160,7 @@ const FinancialReportSection = () => {
           </div>
           <div className="mt-6 flex w-full flex-col justify-center">
             <DatePicker
-              type={DatePickerType.TEXT}
+              type={DatePickerType.CHOOSE_DATE}
               period={period}
               setFilteredPeriod={setPeriod}
               className="w-350px justify-start md:w-550px"
