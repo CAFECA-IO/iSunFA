@@ -2,7 +2,16 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 // import { AccountResultStatus } from '@/interfaces/account';
 import { ResponseType } from '@/interfaces/api_response';
 import version from '@/lib/version';
+import { parseForm } from '@/lib/utils/parse_form_data';
+import formidable from 'formidable';
 import OCRService from './ocr.service';
+
+// Info Murky (20240424) 要使用formidable要先關掉bodyParsor
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 interface ResponseData extends ResponseType<string[]> {}
 
@@ -46,25 +55,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // Todo Murky (20240416): Get Images and check if Image exist
   switch (req.method) {
     case 'POST': {
-      const { description } = req.body;
-      if (!description || typeof description !== 'string') {
+      // Info Murky (20240416): Get Images and check if Image exist
+      // Images store in array in files.image is an array of Formidable File Object
+      // each image in files.image have property filepath
+
+      let files: formidable.Files<string> = {};
+      try {
+        files = (await parseForm(req)).files;
+      } catch (error) {
+        return res.status(500).json({
+          powerby: `ISunFa api ${version}`,
+          success: false,
+          code: '500',
+          message: 'Internal Server Error in upload invoice to ocr, file cannot be parsed',
+        });
+      }
+
+      if (!files || !files.image || !files.image.length) {
         return res.status(400).json({
           powerby: `ISunFa api ${version}`,
           success: false,
           code: '400',
-          message: 'Bad Request in upload images api',
+          message: 'Need to upload at least one invoice',
         });
       }
 
-      const generateDescription = description.split('\n');
+      // Info Murky (20240416): Extract text from image
+      // resultIds is an array of id that can use to extract data from /ocr/:resultId/result
+      let resultIds: string[] = [];
+      try {
+        resultIds = await Promise.all(
+          files.image.map(async (image) => {
+            const imagePath = image.filepath;
+            const generateDescription = await ocrService.extractTextFromImage(imagePath);
+            return generateDescription;
+          })
+        );
+      } catch (error) {
+        return res.status(500).json({
+          powerby: `ISunFa api ${version}`,
+          success: false,
+          code: '500',
+          message: 'Internal Server Error in upload invoice to ocr',
+        });
+      }
 
-      const resultId = await ocrService.tempTestOcr(generateDescription);
       const response: ResponseData = {
         powerby: `ISunFa api ${version}`,
         success: true,
         code: '200',
         message: 'upload {numberOfImage} images sucessfully',
-        payload: [resultId],
+        payload: resultIds,
       };
 
       return res.status(200).json(response);

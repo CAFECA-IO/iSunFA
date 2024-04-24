@@ -12,6 +12,7 @@ import { LLAMA_CONFIG } from '@/constants/config';
 // Info Murky (20240416):  this is singleton class
 // use OCRService.getInstance() to get instance
 // don't use new OCRService()
+// ** This only work after build **
 
 export default class OCRService {
   private static instance: OCRService | null = null;
@@ -67,6 +68,7 @@ export default class OCRService {
   public async extractTextFromImage(imagePath: string): Promise<string> {
     const getneratedDescription = await GoogleVisionClientSingleton.generateDescription(imagePath);
     const key = getneratedDescription[0];
+
     let hashedKey = this.cache.hashId(key);
     if (this.cache.get(hashedKey).value) {
       return `Already extracted, resultId: ${hashedKey}`;
