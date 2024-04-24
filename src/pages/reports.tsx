@@ -138,6 +138,32 @@ const auditReport = () => {
     </tr>
   ));
 
+  const displayCards = data.map((card: ITableData) => (
+    <div
+      className="flex gap-10px rounded-md border border-stroke-brand-secondary bg-slider-surface-controller py-6px pl-8px pr-14px"
+      key={`${card.code}-${card.company}`}
+    >
+      <div className="flex w-56px items-center justify-center rounded border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
+        {card.creditRating}
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-text-neutral-primary">
+          {card.company}
+          <span> </span>
+          <span className="text-xs font-semibold text-text-neutral-primary">
+            {card.regional}/{card.code}
+          </span>
+        </div>
+        <div className="text-xs font-light text-text-neutral-primary">
+          {card.detailedInformation}
+        </div>
+        <div className="text-xs font-semibold text-text-neutral-primary">
+          {card.informationYear}
+        </div>
+      </div>
+    </div>
+  ));
+
   const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
     const ratingOrder: { [key: string]: number } = {
       AAA: 1,
@@ -488,26 +514,9 @@ const auditReport = () => {
         </div>
       </div>
       {/* Audit Report List */}
-      <section className="rounded-md border bg-slider-surface-controller py-6px pl-8px pr-14px">
-        <div className="flex gap-10px">
-          <div className="rounded border border-stroke-brand-secondary px-10px py-14px text-lg font-semibold text-text-brand-secondary-lv2">
-            AAA
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-text-neutral-primary">
-              TSMC
-              <span> </span>
-              <span className="text-xs font-semibold text-text-neutral-primary">TW/2330</span>
-            </div>
-            <div className="text-xs font-light text-text-neutral-primary">
-              IFRSs Consolidated Financial Report
-            </div>
-            <div className="text-xs font-semibold text-text-neutral-primary">2024 Q1</div>
-          </div>
-        </div>
-      </section>
+      <section className="flex flex-col gap-8px pt-15px">{displayCards}</section>
       {/* Pagination */}
-      <section className="flex flex-col items-center pt-40px">
+      <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
           <div className="flex items-center justify-center rounded border border-lightWhite p-3">
             <svg
