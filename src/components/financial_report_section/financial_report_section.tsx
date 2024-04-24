@@ -159,7 +159,12 @@ const FinancialReportSection = () => {
             </div>
           </div>
           <div className="mt-6 flex w-full flex-col justify-center">
-            <DatePicker type={DatePickerType.TEXT} period={period} setFilteredPeriod={setPeriod} />
+            <DatePicker
+              type={DatePickerType.TEXT}
+              period={period}
+              setFilteredPeriod={setPeriod}
+              className="w-350px justify-start md:w-550px"
+            />
           </div>
         </div>
         <Button className="mt-20 flex items-center justify-center rounded-xs px-4 py-2 max-md:mt-10 max-md:max-w-full max-md:px-5">

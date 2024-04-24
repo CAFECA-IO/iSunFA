@@ -31,6 +31,8 @@ interface IPopulateDatesParams {
 export enum DatePickerType {
   ICON = 'ICON',
   TEXT = 'TEXT',
+  CHOOSE_DATE = 'CHOOSE_DATE',
+  CHOOSE_PERIOD = 'CHOOSE_PERIOD',
 }
 
 interface IDatePickerProps {
@@ -41,6 +43,7 @@ interface IDatePickerProps {
   maxDate?: Date;
   loading?: boolean;
   datePickerHandler?: (start: number, end: number) => Promise<void>;
+  className?: string;
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -174,6 +177,7 @@ const DatePicker = ({
   period,
   setFilteredPeriod,
   loading,
+  className,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -332,8 +336,9 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'flex w-full items-center space-x-3 rounded border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
-          componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          componentVisible ? 'border-primaryYellow text-primaryYellow' : '',
+          className
         )}
       >
         <svg
@@ -364,12 +369,15 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center space-x-3 rounded border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
-          componentVisible ? 'border-primaryYellow text-primaryYellow' : ''
+          'group flex w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-3 font-inter text-secondaryBlue hover:cursor-pointer',
+          componentVisible ? 'border-primaryYellow text-primaryYellow' : '',
+          className
         )}
       >
         <p
-          className={`flex-1 whitespace-nowrap text-sm group-hover:text-primaryYellow ${componentVisible ? ' text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'}`}
+          className={`flex-1 whitespace-nowrap text-start text-sm group-hover:text-primaryYellow ${
+            componentVisible ? 'text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'
+          }`}
         >
           {displayPeriod}
         </p>
@@ -406,11 +414,12 @@ const DatePicker = ({
 
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
-          className={`absolute top-16 z-20 grid w-[300px] items-center space-y-4 rounded-xl md:w-[350px] ${
+          className={cn(
+            'absolute top-16 z-20 grid w-[300px] items-center space-y-4 rounded-md bg-white p-5 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
             componentVisible && !loading
               ? 'visible translate-y-0 grid-rows-1 opacity-100'
               : 'invisible -translate-y-10 grid-rows-0 opacity-0'
-          } bg-white p-5 shadow-xl transition-all duration-300 ease-in-out`}
+          )}
         >
           {/* Info: (20240417 - Shirley) Today button */}
           <button
@@ -426,7 +435,7 @@ const DatePicker = ({
             <button
               type="button"
               onClick={goToPrevMonth}
-              className="rounded-md border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+              className="rounded border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >
               <AiOutlineLeft size={12} />
             </button>
@@ -441,7 +450,7 @@ const DatePicker = ({
             <button
               type="button"
               onClick={goToNextMonth}
-              className="rounded-md border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+              className="rounded border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >
               <AiOutlineRight size={12} />
             </button>

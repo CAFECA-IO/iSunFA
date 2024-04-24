@@ -1214,12 +1214,12 @@ module.exports = {
         '5px': 'var(--stroke-width-lv-5)',
         '6px': 'var(--stroke-width-lv-6)',
       },
-      // FIXME: rounded-s 左上左下沒有圓弧 (20240423 - Shirley)
+      // Info: 如果設定 `s`, `m`，會造成左上左下沒有圓弧角的問題，要設定 `sm`, `md` 才行 (20240424 - Shirley)
       borderRadius: {
         xxs: 'var(--radius-xxs)',
         xs: 'var(--radius-xs)',
-        s: 'var(--radius-s)',
-        m: 'var(--radius-m)',
+        sm: 'var(--radius-s)',
+        md: 'var(--radius-m)',
         lg: 'var(--radius-l)',
         xl: 'var(--radius-xl)',
         rounded: 'var(--radius-rounded)',
@@ -1284,6 +1284,9 @@ module.exports = {
           '0px -2px 5px 0px #3143621A, 0px -6px 10px 0px #31436217, 0px -11px 13px 0px #3143620D, 0px -28px 15px 0px #31436203, 0px -50px 17px 0px #31436200',
         navbar:
           '0px 2px 5px 0px #3143621A, 0px 6px 10px 0px #31436217, 0px 11px 13px 0px #3143620D, 0px 28px 15px 0px #31436203, 0px 50px 17px 0px #31436200',
+
+        revertBtn:
+          '0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',

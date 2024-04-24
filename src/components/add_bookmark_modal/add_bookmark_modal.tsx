@@ -59,7 +59,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const menu = isMenuOpen ? (
-    <div className="absolute top-44 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xl border border-solid border-gray-300 bg-white pb-2 shadow-xl lg:max-h-[250px]">
+    <div className="absolute top-44 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xs border border-solid border-gray-300 bg-white pb-2 shadow-xl lg:max-h-[250px]">
       <div className="flex w-full flex-col pl-2 pt-2">
         <div className="z-10 flex items-start gap-0">
           <div className="flex w-full flex-col">
@@ -71,7 +71,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                   type="button"
                   className={`${
                     selectedBookmark.includes(key) ? 'bg-primaryYellow/20' : 'hover:bg-lightGray/10'
-                  } mt-1 flex gap-3 rounded-md px-3 py-2 text-navyBlue2`}
+                  } mt-1 flex gap-3 rounded-sm px-3 py-2 text-navyBlue2`}
                 >
                   <div className="my-auto flex flex-col justify-center">
                     {bookmarkList[key].icon}
@@ -85,7 +85,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
           </div>
 
           <div className="mt-3 flex flex-col justify-center p-1">
-            <div className="h-36 shrink-0 rounded-[999px] bg-gray-300" />
+            <div className="h-36 shrink-0 rounded-rounded bg-gray-300" />
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
 
   const isDisplayedAddBookmarkModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative mx-auto flex flex-col items-center rounded-xl bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+      <div className="relative mx-auto flex flex-col items-center rounded-lg bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="flex gap-2.5 bg-white px-2 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
@@ -129,7 +129,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
           <div className="flex flex-col justify-center">
             <div className="flex flex-col justify-center" ref={menuRef}>
               <button
-                className={`${isMenuOpen ? 'border-lightGray' : 'border-lightGray'} flex gap-0 rounded-lg border border-solid bg-white shadow-sm hover:cursor-pointer`}
+                className={`${isMenuOpen ? 'border-lightGray' : 'border-lightGray'} flex gap-0 rounded-sm border border-solid bg-white shadow-sm hover:cursor-pointer`}
                 onClick={menuClickHandler}
               >
                 <div className="flex flex-1 flex-col justify-center text-base leading-6 tracking-normal text-tertiaryBlue">
@@ -166,7 +166,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
           <div className="flex gap-3">
             <button
               onClick={cancelBtnClickHandler}
-              className="rounded-md px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
+              className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
               Cancel
             </button>{' '}

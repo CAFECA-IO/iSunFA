@@ -77,8 +77,8 @@ function LandingNavBar() {
             <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
               <Image src="/logo/isunfa_logo.svg" width={140} height={40} alt="iSunFA_logo" />
             </Link>
-            <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
-              <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+            <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
+              <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
                 <div className="justify-center px-1 text-xs">V{version}</div>
               </div>
             </div>
@@ -289,8 +289,8 @@ function LandingNavBar() {
           <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
             <Image src="/logo/isunfa_logo.svg" width={150} height={30} alt="iSunFA_logo" />
           </Link>
-          <div className="my-auto flex flex-col justify-center self-stretch rounded-md bg-primaryYellow3 px-1 text-primaryYellow2">
-            <div className="flex flex-col justify-center rounded-sm px-0.1rem py-1">
+          <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
+            <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
               <div className="justify-center px-1 text-xs">V{version}</div>
             </div>
           </div>

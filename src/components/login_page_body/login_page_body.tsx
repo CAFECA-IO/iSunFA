@@ -94,7 +94,7 @@ const LoginPageBody = () => {
                   <Button
                     variant={'tertiary'}
                     onClick={logInClickHandler}
-                    className="mt-10 flex justify-center gap-2 rounded-md px-2 py-3.5 max-lg:px-5"
+                    className="mt-10 flex justify-center gap-2 rounded-sm px-2 py-3.5 max-lg:px-5"
                   >
                     <div className="text-lg font-medium leading-7 tracking-normal">
                       Log in with Device
@@ -122,13 +122,13 @@ const LoginPageBody = () => {
                     type="button"
                     className="mt-10 flex max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-darkBlue hover:opacity-70"
                   >
-                    <div className="justify-center rounded-md">Register my Device</div>
+                    <div className="justify-center rounded-sm">Register my Device</div>
                   </button>
                 </div>
                 <button
                   type="button"
                   onClick={showPassKeySupport}
-                  className="mt-32 flex justify-center gap-1 rounded-md px-4 py-2 hover:opacity-70 max-lg:mt-10"
+                  className="mt-32 flex justify-center gap-1 rounded-sm px-4 py-2 hover:opacity-70 max-lg:mt-10"
                 >
                   <div
                     onClick={showPassKeySupport}
