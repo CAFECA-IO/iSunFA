@@ -632,7 +632,7 @@ const NewJournalForm = () => {
                     value={inputInstallment}
                     onChange={installmentChangeHandler}
                     disabled={paymentPeriod !== PaymentPeriod.INSTALLMENT}
-                    className="flex-1 bg-transparent px-10px text-center outline-none"
+                    className="flex-1 bg-transparent px-10px outline-none"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                     <p>Times</p>
@@ -685,7 +685,7 @@ const NewJournalForm = () => {
                     value={inputPartialPaid}
                     onChange={partialPaidChangeHandler}
                     disabled={paymentState !== PaymentState.PARTIAL_PAID}
-                    className="flex-1 bg-transparent px-10px text-center outline-none md:w-1/2"
+                    className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                     <Image
