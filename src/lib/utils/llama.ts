@@ -11,14 +11,15 @@ export default class LlamaConnect<T> {
 
   retryLimit: number;
 
+  // Info Murky (20240423) typeGuard is a function that checks if the data is of type T
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   typeGuard: (data: any) => data is T;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(
     model: string,
     prompt: string,
     interfaceJSON: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     typeGuard: (data: any) => data is T,
     retryLimit = 3
   ) {
@@ -69,7 +70,12 @@ export default class LlamaConnect<T> {
     ${this.interfaceJSON}`;
   }
 
-  private async postToLlama(input: string, retry: boolean = false): Promise<T | null> {
+  private async postToLlama(
+    input: string,
+    context: number[],
+    retry: boolean = false
+  ): Promise<{ responseJSON: T | null; context: number[] }> {
+    // Info Murky (20240423) context是llama的短期記憶
     try {
       const result = await fetch(this.llamaURL, {
         method: 'POST',
@@ -79,45 +85,57 @@ export default class LlamaConnect<T> {
         body: JSON.stringify({
           model: this.model,
           prompt: !retry ? this.constructLLamaPrompt(input) : this.constructRetryPrompt(input),
+          context,
           stream: false,
         }),
       });
 
-      const { response } = await result.json();
+      const resultJSON = await result.json();
+
+      const { response } = resultJSON;
+      let newContext = resultJSON.context;
+
+      if (!newContext || !Array.isArray(newContext)) {
+        newContext = [];
+      }
 
       if (!response || typeof response !== 'string') {
-        return null;
+        return { responseJSON: null, context: newContext };
       }
 
       const dataString = LlamaConnect.extractJSONFromText(response);
 
       if (!dataString) {
-        return null;
+        return { responseJSON: null, context: newContext };
       }
 
       const responseJSON = JSON.parse(dataString);
       if (!this.typeGuard(responseJSON)) {
-        return null;
+        return { responseJSON: null, context: newContext };
       }
-      return responseJSON;
+      return { responseJSON, context: newContext || '' };
     } catch (e) {
-      return null;
+      return { responseJSON: null, context: [] };
     }
   }
 
-  private async generateDataRecursive(input: string, retry: number): Promise<T | null> {
+  private async generateDataRecursive(
+    input: string,
+    context: number[],
+    retry: number
+  ): Promise<T | null> {
     try {
-      let data: T | null;
+      let data: { responseJSON: T | null; context: number[] };
       if (retry === 0) {
-        data = await this.postToLlama(input, false);
+        data = await this.postToLlama(input, context, false);
       } else {
-        data = await this.postToLlama(input, true);
+        data = await this.postToLlama(input, context, true);
       }
 
-      if (retry < this.retryLimit && data === null) {
-        return await this.generateDataRecursive(input, retry + 1);
+      if (retry < this.retryLimit && data.responseJSON === null) {
+        return await this.generateDataRecursive(input, data.context, retry + 1);
       } else {
-        return data;
+        return data.responseJSON;
       }
     } catch (e) {
       return null;
@@ -126,7 +144,7 @@ export default class LlamaConnect<T> {
 
   public async generateData(input: string): Promise<T | null> {
     try {
-      return await this.generateDataRecursive(input, 0);
+      return await this.generateDataRecursive(input, [], 0);
     } catch (e) {
       return null;
     }

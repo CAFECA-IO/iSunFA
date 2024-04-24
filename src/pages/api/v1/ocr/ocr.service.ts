@@ -56,6 +56,7 @@ export default class OCRService {
     // The instance is created only if it does not exist
     if (OCRService.instance === null) {
       OCRService.instance = new OCRService();
+      // Deprecation Murky (20240423) debug
       // eslint-disable-next-line no-console
       console.log('OCRService instance created');
     }
@@ -117,6 +118,8 @@ export default class OCRService {
 
       if (data) {
         this.cache.put(hashedId, 'success', data);
+      } else {
+        this.cache.put(hashedId, 'error', null);
       }
     } catch (e) {
       this.cache.put(hashedId, 'error', null);
