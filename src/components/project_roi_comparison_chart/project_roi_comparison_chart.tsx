@@ -255,7 +255,7 @@ const ProjectRoiComparisonChart = () => {
               disabled={currentPage === 1}
               onClick={goToPrevPage}
               variant={'tertiaryOutline'}
-              className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+              className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
             >
               <AiOutlineLeft size={15} />
             </Button>
@@ -264,7 +264,7 @@ const ProjectRoiComparisonChart = () => {
               disabled={currentPage === totalPages}
               onClick={goToNextPage}
               variant={'tertiaryOutline'}
-              className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+              className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
             >
               <AiOutlineRight size={15} />
             </Button>
@@ -288,7 +288,7 @@ const ProjectRoiComparisonChart = () => {
                 disabled={currentPage === 1}
                 onClick={goToPrevPage}
                 variant={'tertiaryOutline'}
-                className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+                className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
               >
                 <AiOutlineLeft size={15} />
               </Button>
@@ -297,7 +297,7 @@ const ProjectRoiComparisonChart = () => {
                 disabled={currentPage === totalPages}
                 onClick={goToNextPage}
                 variant={'tertiaryOutline'}
-                className="rounded-md border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+                className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
               >
                 <AiOutlineRight size={15} />
               </Button>
