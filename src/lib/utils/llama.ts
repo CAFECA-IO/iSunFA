@@ -11,16 +11,16 @@ export default class LlamaConnect<T> {
 
   retryLimit: number;
 
-  // Info Murky (20240423) typeGuard is a function that checks if the data is of type T
+  // Info Murky (20240423) typeGuard is a function that convert raw data to T type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  typeGuard: (data: any) => data is T;
+  typeCleaner: (rawData: any) => T;
 
   constructor(
     model: string,
     prompt: string,
     interfaceJSON: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeGuard: (data: any) => data is T,
+    typeCleaner: (rawData: any) => T,
     retryLimit = 3
   ) {
     if (!process.env.LLAMA_URL) {
@@ -31,7 +31,7 @@ export default class LlamaConnect<T> {
     this.model = model;
     this.prompt = prompt;
     this.interfaceJSON = interfaceJSON;
-    this.typeGuard = typeGuard;
+    this.typeCleaner = typeCleaner;
     this.retryLimit = retryLimit;
   }
 
@@ -112,13 +112,18 @@ export default class LlamaConnect<T> {
         return { responseJSON: null, context: newContext };
       }
 
-      const responseJSON = JSON.parse(dataString);
+      let responseJSON: T;
+
+      try {
+        responseJSON = this.typeCleaner(JSON.parse(dataString));
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+        return { responseJSON: null, context: newContext };
+      }
       // eslint-disable-next-line no-console
       console.log('responseJSON:', responseJSON);
 
-      if (!this.typeGuard(responseJSON)) {
-        return { responseJSON: null, context: newContext };
-      }
       return { responseJSON, context: newContext || '' };
     } catch (e) {
       return { responseJSON: null, context: [] };
@@ -138,6 +143,8 @@ export default class LlamaConnect<T> {
         data = await this.postToLlama(input, context, true);
       }
 
+      // eslint-disable-next-line no-console
+      console.log('retryTimes:', retry, 'data:', data.responseJSON);
       if (retry < this.retryLimit && data.responseJSON === null) {
         return await this.generateDataRecursive(input, data.context, retry + 1);
       } else {

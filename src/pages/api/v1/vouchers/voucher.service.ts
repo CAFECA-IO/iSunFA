@@ -1,9 +1,13 @@
 import {
-  AccountInvoiceData,
+  AccountInvoiceWithPaymentMethod,
+  AccountLineItem,
   AccountProgressStatus,
   AccountVoucher,
+  AccountVoucherMetaData,
   AccountVoucherObjectVersion,
-  isAccountVoucher,
+  cleanAccountLineItems,
+  cleanVoucherData,
+  eventTypeToVoucherType,
 } from '@/interfaces/account';
 import LRUCache from '@/lib/utils/lru_cache';
 import { LLAMA_CONFIG, VOUCHER_SERVICE_CONFIG } from '@/constants/config';
@@ -17,7 +21,7 @@ export default class VoucherService {
 
   private cache: LRUCache<AccountVoucher>;
 
-  private llamaConnect: LlamaConnect<AccountVoucher>;
+  private llamaConnect: LlamaConnect<AccountLineItem[]>;
 
   private prompts: string;
 
@@ -29,6 +33,47 @@ export default class VoucherService {
     this.prompts = `
     以下你需要使用發票array汲取出來的文字 ，然後根據以下的格式來生成會計傳票要使用的JSON檔案:\n
 
+    請從提供的發票圖像中準確提取以下資訊，並按照規定的格式處理數據，以便生成標準的會計憑證（Account Voucher）：
+
+    1. **日期（date）**：
+      - 提取發票上的日期並轉換為時間戳（秒為單位）。
+
+    2. **憑證類型（voucherType，基於 eventType）**：
+      - 根據事件類型（收入、付款或轉賬），確定對應的憑證類型（接收、支出或轉賬）。
+
+    3. **供應商或銷售商（venderOrSupplyer）**：
+      - 提取發票上供應商或銷售商的名稱。
+
+    4. **描述（description）**：
+      - 提供發票上明確的服務或產品描述。
+
+    5. **總價格（totalPrice，對應 payment.price）**：
+      - 提取發票上的總金額，並移除任何逗號或貨幣符號，轉換為數字格式。
+
+    6. **稅率百分比（taxPercentage）**：
+      - 如果發票上提到稅率，提取稅率百分比。
+
+    7. **費用（fee）**：
+      - 如果發票上有額外費用，提取這些費用並轉換為數字格式。
+
+    8. **付款方式（paymentMethod）**：
+      - 確定付款方式，例如現金、信用卡、轉賬等。
+
+    9. **付款期限類型（paymentPeriod）**：
+      - 確定付款是一次性完成還是分期付款。
+
+    10. **分期期數（installmentPeriod）**：
+        - 如果是分期付款，提取分期的期數。
+
+    11. **付款狀態（paymentStatus）**：
+        - 確定付款是已付、未付還是部分付款。
+
+    12. **已付金額（alreadyPaidAmount）**：
+        - 如果部分付款，提取已經付款的金額。
+
+    請確保所有提取的信息精確無誤，並適當格式化以符合系統要求。輸出的數據應該符合 AccountVoucher 的結構，以便進一步處理和記賬。
+
+
     以下是一個例子:\n
     以下是一份發票的JSON檔案，多張發票會放置於array中:\n
     [{
@@ -39,7 +84,7 @@ export default class VoucherService {
       "description": "技術開發軟件與服務",
       "price": "469920",
       "tax": "free",
-      "taxPercentange": "null",
+      "taxPercentage": "null",
       "fee": "0",
     }];
 
@@ -71,11 +116,11 @@ export default class VoucherService {
       }
     \`\`\`
     `;
-    this.llamaConnect = new LlamaConnect<AccountVoucher>(
+    this.llamaConnect = new LlamaConnect<AccountLineItem[]>(
       LLAMA_CONFIG.model,
       this.prompts,
       JSON.stringify(AccountVoucherObjectVersion),
-      isAccountVoucher,
+      cleanAccountLineItems,
       LLAMA_CONFIG.retryLimit
     );
   }
@@ -92,7 +137,7 @@ export default class VoucherService {
     return VoucherService.instance;
   }
 
-  public generateVoucherFromInvoices(invoices: AccountInvoiceData[]): string {
+  public generateVoucherFromInvoices(invoices: AccountInvoiceWithPaymentMethod[]): string {
     const invoiceString = JSON.stringify(invoices);
     const hashedKey = this.cache.hashId(invoiceString);
     if (this.cache.get(hashedKey).value) {
@@ -129,11 +174,29 @@ export default class VoucherService {
 
   private async invoicesToAccountVoucherData(
     hashedId: string,
-    invoices: AccountInvoiceData[]
+    invoices: AccountInvoiceWithPaymentMethod[]
   ): Promise<void> {
     try {
       const invoiceString = JSON.stringify(invoices);
-      const voucherGenetaed = await this.llamaConnect.generateData(invoiceString);
+      const metadatas: AccountVoucherMetaData[] = invoices.map((invoice) => {
+        return {
+          date: invoice.date.start_date,
+          voucherType: eventTypeToVoucherType[invoice.eventType],
+          venderOrSupplyer: invoice.venderOrSupplyer,
+          description: invoice.description,
+          totalPrice: invoice.payment.price,
+          taxPercentage: invoice.payment.taxPercentage,
+          fee: invoice.payment.fee,
+          paymentMethod: invoice.payment.paymentMethod,
+          paymentPeriod: invoice.payment.paymentPeriod,
+          installmentPeriod: invoice.payment.installmentPeriod,
+          paymentStatus: invoice.payment.paymentStatus,
+          alreadyPaidAmount: invoice.payment.alreadyPaidAmount,
+        };
+      });
+      const lineItemsGenetaed = await this.llamaConnect.generateData(invoiceString);
+
+      const voucherGenetaed = cleanVoucherData({ lineItems: lineItemsGenetaed, metadatas });
 
       if (voucherGenetaed) {
         this.cache.put(hashedId, 'success', voucherGenetaed);

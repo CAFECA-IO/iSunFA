@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { isAccountInvoiceData } from '@/interfaces/account';
+import { isAccountInvoiceWithPaymentMethod } from '@/interfaces/account';
 import { ResponseType } from '@/interfaces/api_response';
 import version from '@/lib/version';
 import VoucherService from './voucher.service';
@@ -57,7 +57,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
   switch (req.method) {
     case 'POST': {
       // Info Murky (20240416): Check if invoices is array and is Invoice type
-      if (!Array.isArray(invoices) || invoices.some((invoice) => !isAccountInvoiceData(invoice))) {
+      if (!Array.isArray(invoices) || !invoices.every(isAccountInvoiceWithPaymentMethod)) {
         return res.status(400).json({
           powerby: `ISunFa api ${version}`,
           success: false,

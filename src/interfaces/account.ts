@@ -1,4 +1,36 @@
+import { cleanBoolean, cleanNumber, convertDateToTimestamp } from '@/lib/utils/common';
+
 export type AccountProgressStatus = 'success' | 'inProgress' | 'error' | 'notFound';
+
+export type EventType = 'income' | 'payment' | 'transfer';
+
+export function isEventType(data: string): data is EventType {
+  return data === 'income' || data === 'payment' || data === 'transfer';
+}
+
+export type VoucherType = 'receive' | 'expense' | 'transfer';
+
+export function isVoucherType(data: string): data is VoucherType {
+  return data === 'receive' || data === 'expense';
+}
+
+export const eventTypeToVoucherType = {
+  income: 'receive' as VoucherType,
+  payment: 'expense' as VoucherType,
+  transfer: 'transfer' as VoucherType,
+};
+
+export type PaymentStatusType = 'paid' | 'unpaid' | 'partial';
+
+export function isPaymentStatusType(data: string): data is PaymentStatusType {
+  return data === 'paid' || data === 'unpaid' || data === 'partial';
+}
+
+export type PaymentPeriodType = 'atOnce' | 'installment';
+
+export function isPaymentPeriodType(data: string): data is PaymentPeriodType {
+  return data === 'atOnce' || data === 'installment';
+}
 
 export interface AccountResultStatus {
   resultId: string;
@@ -6,95 +38,135 @@ export interface AccountResultStatus {
 }
 
 export interface AccountInvoiceData {
-  date?: string;
-  eventType?: string;
-  incomeReason?: string;
-  client?: string;
-  description?: string;
-  price?: string;
-  tax?: string;
-  taxPercentange?: string;
-  fee?: string;
+  date: {
+    start_date: number; // timestamp
+    end_date: number; // timestamp
+  };
+  eventType: EventType;
+  paymentReason: string;
+  description: string;
+  venderOrSupplyer: string;
+  payment: {
+    price: number;
+    hasTax: boolean;
+    taxPercentage: number;
+    hasFee: boolean;
+    fee: number;
+  };
+}
+
+// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
+  // 檢查date是否存在，且start_date和end_date是否為數字
+  const validDate =
+    data.date && typeof data.date.start_date === 'number' && typeof data.date.end_date === 'number';
+
+  // 檢查eventType是否符合EventType類型（假設EventType為一個字符串的聯合類型）
+  const validEventType = isEventType(data.eventType);
+
+  // 檢查其他字符串屬性
+  const validPaymentReason = typeof data.paymentReason === 'string';
+  const validDescription = typeof data.description === 'string';
+  const validVenderOrSupplyer = typeof data.venderOrSupplyer === 'string';
+
+  // 檢查payment對象
+  const validPayment =
+    data.payment &&
+    typeof data.payment.price === 'number' &&
+    typeof data.payment.hasTax === 'boolean' &&
+    typeof data.payment.taxPercentage === 'number' &&
+    typeof data.payment.hasFee === 'boolean' &&
+    typeof data.payment.fee === 'number';
+
+  return (
+    validDate &&
+    validEventType &&
+    validPaymentReason &&
+    validDescription &&
+    validVenderOrSupplyer &&
+    validPayment
+  );
+}
+
+export interface AccountInvoiceWithPaymentMethod extends AccountInvoiceData {
+  payment: AccountInvoiceData['payment'] & {
+    paymentMethod: string;
+    paymentPeriod: PaymentPeriodType;
+    installmentPeriod: number;
+    paymentStatus: PaymentStatusType;
+    alreadyPaidAmount: number;
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountInvoiceWithPaymentMethod(
+  data: any
+): data is AccountInvoiceWithPaymentMethod {
+  return (
+    typeof data.payment?.paymentMethod === 'string' &&
+    isPaymentPeriodType(data.payment?.paymentPeriod) &&
+    typeof data.payment?.installmentPeriod === 'number' &&
+    isPaymentStatusType(data.payment?.paymentStatus) &&
+    typeof data.payment?.alreadyPaidAmount === 'number' &&
+    isAccountInvoiceData(data)
+  );
+}
+
+// Main function to process and convert the invoice data
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function cleanInvoiceData(rawData: any): AccountInvoiceData {
+  const { date, eventType, paymentReason, description, venderOrSupplyer, payment } = rawData;
+
+  // Construct the new object with the cleaned and converted data
+  const cleanedData: AccountInvoiceData = {
+    date: {
+      start_date: convertDateToTimestamp(date.start_date),
+      end_date: convertDateToTimestamp(date.end_date),
+    },
+    eventType: isEventType(eventType) ? eventType : 'income',
+    paymentReason: paymentReason || '',
+    description: description || '',
+    venderOrSupplyer: venderOrSupplyer || '',
+    payment: {
+      price: cleanNumber(payment.price),
+      hasTax: cleanBoolean(payment?.hasTax),
+      taxPercentage: payment.taxPercentage ? parseFloat(payment.taxPercentage) : 5,
+      hasFee: cleanBoolean(payment?.hasFee),
+      fee: payment.fee ? cleanNumber(payment.fee) : 0,
+    },
+  };
+
+  if (!isAccountInvoiceData(cleanedData)) {
+    throw new Error('Invalid invoice data');
+  }
+  return cleanedData;
 }
 
 export const AccountInvoiceDataObjectVersion = {
-  date: '發票日期YYYY-MM-DD',
-  eventType: 'imcome | expense',
-  incomeReason: '收入 or 支出原因',
-  client: '供應商的名稱',
-  description: '品項簡介',
-  price: '品項價格',
-  tax: '是否含稅',
-  taxPercentange: '稅率',
-  fee: '手續費',
+  date: {
+    start_date: 'use YYYY-MM-DD format',
+    end_date: 'use YYYY-MM-DD format',
+  },
+  eventType: "'income' | 'payment' | 'transfer'",
+  paymentReason: 'string',
+  description: 'string',
+  venderOrSupplyer: 'string',
+  payment: {
+    price: 'number',
+    hasTax: 'boolean',
+    taxPercentage: 'number',
+    hasFee: 'boolean',
+    fee: 'number',
+  },
 };
 
 export interface AccountLineItem {
   lineItemIndex: string;
-  account: string;
-  description: string;
-  debit: string;
-  amount: string;
-}
-
-export interface AccountVoucher {
-  date: string;
-  vouchIndex: string;
-  type: string;
-  from_or_to: string;
-  description: string;
-  lineItem: AccountLineItem[];
-}
-
-export const AccountVoucherObjectVersion = {
-  date: '日期YYYY-MM-DD',
-  vouchIndex: '憑證編號，用今天日期+流水號3碼，例如20220416001',
-  type: '收入 or 支出',
-  from_or_to: '收入的來源公司 or 支出收入的來源公司',
-  description: '傳票是為什麼產生的',
-  lineItem: [
-    {
-      lineItemIndex: 'lineItem 是傳票中的其中一行，用今天日期+流水號3碼，例如20220416001',
-      account: '這個lineItem是屬於哪個會計科目',
-      description: 'lineItem是做了什麼，ex 買蘋果',
-      debit: 'true or false, true代表借方，false代表貸方，需要用雙括號包起來, 因為是string type',
-      amount: '金額，請把中間的分隔用逗號都去掉',
-    },
-  ],
-};
-
-// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
-//   return (
-//     data &&
-//     typeof data.date === 'string' &&
-//     typeof data.eventType === 'string' &&
-//     typeof data.incomeReason === 'string' &&
-//     typeof data.client === 'string' &&
-//     typeof data.description === 'string' &&
-//     typeof data.price === 'string' &&
-//     typeof data.tax === 'string' &&
-//     (typeof data.taxPercentange === 'string' || null) &&
-//     (typeof data.fee === 'string')
-//   );
-// }
-
-// Depreciated Murky (20240522) loose version of isAccountInvoiceData
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
-  return (
-    data &&
-    (typeof data.date === 'string' || !data.date) &&
-    (typeof data.eventType === 'string' || !data.eventType) &&
-    (typeof data.incomeReason === 'string' || !data.incomeReason) &&
-    (typeof data.client === 'string' || !data.client) &&
-    (typeof data.description === 'string' || !data.description) &&
-    (typeof data.price === 'string' || !data.price) &&
-    (typeof data.tax === 'string' || !data.tax) &&
-    (typeof data.taxPercentange === 'string' || !data.taxPercentange) &&
-    (typeof data.fee === 'string' || !data.fee)
-  );
+  accounting: string;
+  particular: string;
+  debit: boolean;
+  amount: number;
 }
 
 // Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
@@ -102,25 +174,194 @@ export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
 export function isAccountLineItem(data: any): data is AccountLineItem {
   return (
     data &&
-    (typeof data.lineItemIndex === 'string' || !data.lineItemIndex) &&
-    (typeof data.account === 'string' || !data.account) &&
-    (typeof data.description === 'string' || !data.description) &&
-    (typeof data.debit === 'string' || !data.debit) &&
-    (typeof data.amount === 'string' || !data.amount)
+    typeof data.lineItemIndex === 'string' &&
+    typeof data.account === 'string' &&
+    typeof data.description === 'string' &&
+    typeof data.debit === 'boolean' &&
+    typeof data.amount === 'number'
   );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function cleanAccountLineItem(rawData: any): AccountLineItem {
+  if (Array.isArray(rawData)) {
+    throw new Error('Invalid line item data');
+  }
+  const { accounting, particular, debit, amount } = rawData;
+
+  const today = new Date();
+  const cleanedData: AccountLineItem = {
+    // Info: Murky this id is for demo, need to refactor
+    lineItemIndex:
+      today.getFullYear().toString() +
+      today.getMonth.toString() +
+      today.getDate().toString() +
+      Math.floor(Math.random() * 1000).toString(),
+    accounting: accounting || '',
+    particular: particular || '',
+    debit: cleanBoolean(debit),
+    amount: cleanNumber(amount),
+  };
+
+  if (!isAccountLineItem(cleanedData)) {
+    throw new Error('Invalid line item data');
+  }
+  return cleanedData;
+}
+
+export interface AccountVoucher {
+  voucherIndex: string;
+  metadatas: AccountVoucherMetaData[];
+  lineItems: AccountLineItem[];
+}
+
+export function cleanAccountLineItems(rawData: unknown): AccountLineItem[] {
+  if (!Array.isArray(rawData)) {
+    throw new Error('Invalid line item data');
+  }
+  return rawData.map((lineItem) => cleanAccountLineItem(lineItem));
+}
+
+export interface AccountVoucherMetaData {
+  date: number;
+  voucherType: VoucherType;
+  venderOrSupplyer: string;
+  description: string;
+  totalPrice: number;
+  taxPercentage: number;
+  fee: number;
+  paymentMethod: string;
+  paymentPeriod: PaymentPeriodType;
+  installmentPeriod: number;
+  paymentStatus: PaymentStatusType;
+  alreadyPaidAmount: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountVoucherMetaData(data: any): data is AccountVoucherMetaData {
+  return (
+    data &&
+    typeof data.date === 'number' &&
+    isVoucherType(data.voucherType) &&
+    typeof data.venderOrSupplyer === 'string' &&
+    typeof data.description === 'string' &&
+    typeof data.totalPrice === 'number' &&
+    typeof data.taxPercentage === 'number' &&
+    typeof data.fee === 'number' &&
+    typeof data.paymentMethod === 'string' &&
+    isPaymentPeriodType(data.paymentPeriod) &&
+    typeof data.installmentPeriod === 'number' &&
+    isPaymentStatusType(data.paymentStatus) &&
+    typeof data.alreadyPaidAmount === 'number'
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function cleanedVoucherMetaData(rawData: any): AccountVoucherMetaData {
+  const {
+    date,
+    voucherType,
+    venderOrSupplyer,
+    description,
+    totalPrice,
+    taxPercentage,
+    fee,
+    paymentMethod,
+    paymentPeriod,
+    installmentPeriod,
+    paymentStatus,
+    alreadyPaidAmount,
+  } = rawData;
+
+  const cleanedData: AccountVoucherMetaData = {
+    date: convertDateToTimestamp(date),
+    voucherType: isVoucherType(voucherType) ? voucherType : 'receive',
+    venderOrSupplyer: venderOrSupplyer || '',
+    description: description || '',
+    totalPrice: cleanNumber(totalPrice),
+    taxPercentage: cleanNumber(taxPercentage),
+    fee: cleanNumber(fee),
+    paymentMethod: paymentMethod || '',
+    paymentPeriod: isPaymentPeriodType(paymentPeriod) ? paymentPeriod : 'atOnce',
+    installmentPeriod: cleanNumber(installmentPeriod),
+    paymentStatus: isPaymentStatusType(paymentStatus) ? paymentStatus : 'unpaid',
+    alreadyPaidAmount: cleanNumber(alreadyPaidAmount),
+  };
+
+  if (!isAccountVoucherMetaData(cleanedData)) {
+    throw new Error('Invalid voucher metadata data');
+  }
+  return cleanedData;
 }
 
 // Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAccountVoucher(data: any): data is AccountVoucher {
+  const { voucherIndex, lineItems, metadatas } = data;
   return (
-    data &&
-    (typeof data.date === 'string' || !data.date) &&
-    (typeof data.vouchIndex === 'string' || !data.vouchIndex) &&
-    (typeof data.type === 'string' || !data.type) &&
-    (typeof data.from_or_to === 'string' || !data.from_or_to) &&
-    (typeof data.description === 'string' || !data.description) &&
-    Array.isArray(data.lineItem) &&
-    data.lineItem.every(isAccountLineItem)
+    typeof voucherIndex === 'string' &&
+    Array.isArray(metadatas) &&
+    metadatas.every(isAccountVoucherMetaData) &&
+    Array.isArray(lineItems) &&
+    lineItems.every(isAccountLineItem)
   );
+}
+export const AccountVoucherObjectVersion = {
+  voucherIndex: 'string',
+  metadatas: [
+    {
+      date: 'number (timestamp)',
+      voucherType: "VoucherType ('receive' | 'expense' | 'transfer')",
+      venderOrSupplyer: 'string',
+      description: 'string',
+      totalPrice: 'number',
+      taxPercentage: 'number',
+      fee: 'number',
+      paymentMethod: 'string',
+      paymentPeriod: "PaymentPeriodType ('atOnce' | 'installment')",
+      installmentPeriod: 'number',
+      paymentStatus: "PaymentStatusType ('paid' | 'unpaid' | 'partial')",
+      alreadyPaidAmount: 'number',
+    },
+  ],
+  lineItems: [
+    {
+      lineItemIndex: 'string',
+      accounting: 'string',
+      particular: 'string',
+      debit: 'boolean',
+      amount: 'number',
+    },
+  ],
+};
+// info Murky (20240416): Convert the raw data to the AccountVoucher object
+//
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+export function cleanVoucherData(rawData: any): AccountVoucher {
+  const { lineItems, metadatas } = rawData;
+
+  if (!Array.isArray(lineItems)) {
+    throw new Error('Invalid line item data');
+  }
+
+  if (!Array.isArray(metadatas)) {
+    throw new Error('Invalid metadata data');
+  }
+
+  const today = new Date();
+  const voucherIndex =
+    today.getFullYear().toString() +
+    today.getMonth.toString() +
+    today.getDate().toString() +
+    Math.floor(Math.random() * 1000).toString();
+  const cleandLineItems = lineItems.map((lineItem) => cleanAccountLineItem(lineItem));
+
+  const cleanedVoucherMetaDatas: AccountVoucherMetaData[] = metadatas.map((voucherMetaData) =>
+    cleanedVoucherMetaData(voucherMetaData)
+  );
+  return {
+    voucherIndex,
+    metadatas: cleanedVoucherMetaDatas,
+    lineItems: cleandLineItems,
+  };
 }

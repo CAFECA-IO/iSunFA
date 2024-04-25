@@ -42,7 +42,7 @@ it('should pass', () => {
 //         description: '技術開發軟件與服務',
 //         price: '469920',
 //         tax: 'free',
-//         taxPercentange: 'null',
+//         taxPercentage: 'null',
 //         fee: '0',
 //       },
 //     ];
