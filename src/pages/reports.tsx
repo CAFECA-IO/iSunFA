@@ -189,9 +189,9 @@ const auditReport = () => {
 
   const displayCards = data.map((card: ITableData, index) => (
     <div
-      className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'bg-slider-surface-base'}`}
+      className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px transition active:bg-slider-surface-controller-hover ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'bg-slider-surface-base'}`}
       key={`${card.code}-${card.company}`}
-      onClick={() => handleLinkClick(card.link)}
+      onClick={() => setTimeout(() => handleLinkClick(card.link), 500)} // Delay the link click to allow the card animation to complete
     >
       <div className="flex w-56px items-center justify-center rounded-xs border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
         {card.creditRating}
