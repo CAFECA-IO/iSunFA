@@ -16,6 +16,7 @@ interface ITableData {
   detailedInformation: string;
   creditRating: string;
   dateOfUpload: string;
+  link: string;
 }
 
 // Info: (20240424 - Liz) Dummy Data
@@ -28,6 +29,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AAA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '2234',
@@ -37,6 +39,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '8991',
@@ -46,6 +49,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'A',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '8778',
@@ -55,6 +59,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'BBB',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '2233',
@@ -64,6 +69,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'BB',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '8866',
@@ -73,6 +79,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'B',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '0078',
@@ -82,6 +89,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '0012',
@@ -91,6 +99,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AAA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '-',
@@ -100,6 +109,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'B',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '-',
@@ -109,6 +119,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'CCC',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
 ];
 
@@ -117,52 +128,6 @@ const auditReport = () => {
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [checked, setChecked] = useState(false);
-
-  const displayTableRows = data.map((row: ITableData, index) => (
-    <tr
-      key={`${row.code}-${row.company}`}
-      className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}
-    >
-      <td className="px-2 py-10px">{row.code}</td>
-      <td className="px-2 py-10px">{row.regional}</td>
-      <td className="px-2 py-10px">{row.company}</td>
-      <td className="px-2 py-10px">{row.informationYear}</td>
-      <td className="px-2 py-10px">{row.detailedInformation}</td>
-      <td className="px-2 py-10px">{row.creditRating}</td>
-      <td className="px-2 py-10px">{row.dateOfUpload}</td>
-      <td className="px-2 py-10px">
-        <div className="flex items-center justify-center">
-          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
-        </div>
-      </td>
-    </tr>
-  ));
-
-  const displayCards = data.map((card: ITableData) => (
-    <div
-      className="flex gap-10px rounded-md border border-stroke-brand-secondary bg-slider-surface-controller py-6px pl-8px pr-14px"
-      key={`${card.code}-${card.company}`}
-    >
-      <div className="flex w-56px items-center justify-center rounded border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
-        {card.creditRating}
-      </div>
-      <div>
-        <div className="text-sm font-semibold text-text-neutral-primary">
-          {card.company}
-          <span> </span>
-          <span className="text-xs font-semibold text-text-neutral-primary">
-            {card.regional}/{card.code}
-          </span>
-        </div>
-        <div className="text-xs font-light text-text-neutral-primary">
-          {card.detailedInformation}
-        </div>
-        <div className="text-xs font-semibold text-text-neutral-primary">
-          {card.informationYear}
-        </div>
-      </div>
-    </div>
-  ));
 
   const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
     const ratingOrder: { [key: string]: number } = {
@@ -197,6 +162,57 @@ const auditReport = () => {
     });
     setData(sortedData);
   };
+
+  const handleLinkClick = (link: string) => {
+    window.open(link, '_blank');
+  };
+
+  const displayTableRows = data.map((row: ITableData, index) => (
+    <tr
+      key={`${row.code}-${row.company}`}
+      className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}
+    >
+      <td className="px-2 py-10px">{row.code}</td>
+      <td className="px-2 py-10px">{row.regional}</td>
+      <td className="px-2 py-10px">{row.company}</td>
+      <td className="px-2 py-10px">{row.informationYear}</td>
+      <td className="px-2 py-10px">{row.detailedInformation}</td>
+      <td className="px-2 py-10px">{row.creditRating}</td>
+      <td className="px-2 py-10px">{row.dateOfUpload}</td>
+      <td className="px-2 py-10px">
+        <div className="flex items-center justify-center" onClick={() => handleLinkClick(row.link)}>
+          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
+        </div>
+      </td>
+    </tr>
+  ));
+
+  const displayCards = data.map((card: ITableData) => (
+    <div
+      className="flex gap-10px rounded-md border border-stroke-brand-secondary bg-slider-surface-controller py-6px pl-8px pr-14px"
+      key={`${card.code}-${card.company}`}
+      onClick={() => handleLinkClick(card.link)}
+    >
+      <div className="flex w-56px items-center justify-center rounded border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
+        {card.creditRating}
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-text-neutral-primary">
+          {card.company}
+          <span> </span>
+          <span className="text-xs font-semibold text-text-neutral-primary">
+            {card.regional}/{card.code}
+          </span>
+        </div>
+        <div className="text-xs font-light text-text-neutral-primary">
+          {card.detailedInformation}
+        </div>
+        <div className="text-xs font-semibold text-text-neutral-primary">
+          {card.informationYear}
+        </div>
+      </div>
+    </div>
+  ));
 
   // Info: (20240424 - Liz) desktop ver
   const desktopVer = (
