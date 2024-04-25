@@ -26,6 +26,7 @@ interface IPopulateDatesParams {
   selectTimeTwo: number;
   selectDateTwo: (date: Dates | null) => void;
   setComponentVisible: Dispatch<SetStateAction<boolean>>;
+  type: DatePickerType;
 }
 
 export enum DatePickerType {
@@ -56,6 +57,7 @@ const PopulateDates = ({
   selectTimeTwo,
   selectDateTwo,
   setComponentVisible,
+  type,
 }: IPopulateDatesParams) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -115,6 +117,14 @@ const PopulateDates = ({
       if (el?.date && !el?.disable) {
         // Info: (20240417 - Shirley) elTemp 是點擊的日期
         const elTime = new Date(`${selectedYear}/${selectedMonth}/${el.date} 00:00:00`).getTime();
+        // If DatePickerType is CHOOSE_PERIOD, select the date and close the component
+        if (type === DatePickerType.CHOOSE_DATE) {
+          selectDateOne({ date: el.date, time: elTime, disable: el.disable });
+          selectDateTwo({ date: el.date, time: elTime, disable: el.disable });
+          setComponentVisible(false);
+          return;
+        }
+
         if (selectTimeOne !== 0 && selectTimeTwo !== 0) {
           // Info: (20240417 - Shirley) 如果有已選擇的日期區間，則先清除
           selectDateOne(null);
@@ -221,6 +231,12 @@ const DatePicker = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateOne, dateTwo]);
 
+  // Info: If type changed, reset the date (20240425 - Shirley)
+  useEffect(() => {
+    setDateOne(null);
+    setDateTwo(null);
+  }, [type]);
+
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {
     return new Date(`${year}/${month}/01`).getDay();
@@ -308,12 +324,14 @@ const DatePicker = ({
       : t('DATE_PICKER.SELECT_PERIOD');
 
   // Info: (20240417 - Shirley) 顯示時間區間
-  const displayPeriod =
+  const displayedPeriod =
     dateOne && dateTwo
       ? dateOne.getTime() !== 0 && dateTwo.getTime() !== 0
-        ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
-            'DATE_PICKER.TO'
-          )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
+        ? type === DatePickerType.CHOOSE_DATE
+          ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date}`
+          : `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
+              'DATE_PICKER.TO'
+            )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
         : defaultPeriodText
       : defaultPeriodText;
 
@@ -370,11 +388,11 @@ const DatePicker = ({
         )}
       >
         <p
-          className={`flex-1 whitespace-nowrap text-sm group-hover:text-primaryYellow ${
+          className={`flex-1 whitespace-nowrap text-start text-sm group-hover:text-primaryYellow ${
             componentVisible ? 'text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'
           }`}
         >
-          {displayPeriod}
+          {displayedPeriod}
         </p>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -414,7 +432,7 @@ const DatePicker = ({
             componentVisible ? 'text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'
           }`}
         >
-          {displayPeriod}
+          {displayedPeriod}
         </p>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -441,7 +459,7 @@ const DatePicker = ({
     ) : null;
 
   return (
-    <div className="relative flex flex-col items-center lg:w-auto">
+    <div className="relative flex flex-col max-md:max-w-full lg:w-auto">
       {/* Info: (20240417 - Shirley) Select Period button */}
 
       <div ref={targetRef}>
@@ -501,6 +519,7 @@ const DatePicker = ({
             selectTimeTwo={dateTwo?.getTime() ?? 0}
             selectDateTwo={selectDateTwo}
             setComponentVisible={setComponentVisible}
+            type={type}
           />
         </div>
       </div>
