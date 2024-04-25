@@ -1,6 +1,5 @@
 /* eslint-disable */
 import { client, utils } from '@passwordless-id/webauthn';
-
 import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { ICredential, IUserAuth } from '../interfaces/webauthn';
@@ -11,6 +10,7 @@ import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
 
+// TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
   username?: string;
 }
@@ -45,7 +45,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_DISPLAYED_USER_NAME;
-    console.log('signUp called');
+    // TODO: dev (20240425 - Shirley)
+    // console.log('signUp called');
 
     try {
       const newChallenge = await createChallenge(
@@ -98,7 +99,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       拿著 credential 跟 server 去拿 member 資料、付錢資料
   */
   const signIn = async () => {
-    console.log('signIn called');
+    // TODO: dev (20240425 - Shirley)
+    // console.log('signIn called');
     try {
       // const signInClickHandler = async () => {
       //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
@@ -137,8 +139,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
         debug: false,
       });
-
-      console.log('in signIn, authentication:', authentication);
+      // TODO: dev (20240425 - Shirley)
+      // console.log('in signIn, authentication:', authentication);
 
       /* TODO: get user from localStorage (20240409 - Shirley)
       if (!!user) {
@@ -211,8 +213,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
     const credentialFromCookie = checkFIDO2Cookie();
+    // TODO: dev (20240425 - Shirley)
     // eslint-disable-next-line no-console
-    console.log('in userContext, credential:', credentialFromCookie);
+    // console.log('in userContext, credential:', credentialFromCookie);
 
     /* TODO: verify the cookie content (20240408 - Shirley)
     // const expected = {
@@ -229,7 +232,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setCredential(credentialFromCookie[0]);
       setSignedIn(true);
 
-      console.log('in setPrivateData, credential:', credentialRef.current);
+      // TODO: dev (20240425 - Shirley)
+      // console.log('in setPrivateData, credential:', credentialRef.current);
     }
   };
 
@@ -259,8 +263,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     expiration.setHours(expiration.getHours() + 1);
 
     const credential = await readCookie();
-    console.log('credential:', credential);
-    // const credentialArray =
+    // console.log('credential:', credential);
 
     document.cookie = `FIDO2=${encodeURIComponent(JSON.stringify(credentialRef.current))}; expires=${expiration.toUTCString()}; path=/`;
   };
@@ -273,7 +276,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkCookieAndSignOut = async () => {
     const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
-    console.log('in userContext, useEffect checking cookie', cookie);
 
     if (!cookie) {
       clearState();

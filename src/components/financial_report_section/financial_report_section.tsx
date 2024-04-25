@@ -6,23 +6,39 @@ import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
 
-const reportTypes = [
-  { id: 'balance_sheet', name: 'Balance Sheet' },
-  { id: 'income_statement', name: 'Income Statement' },
-  { id: 'cash_flow', name: 'Cash Flow Statement' },
-];
+const reportTypes = {
+  balance_sheet: { id: 'balance_sheet', name: 'Balance Sheet' },
+  income_statement: { id: 'income_statement', name: 'Income Statement' },
+  cash_flow: { id: 'cash_flow', name: 'Cash Flow Statement' },
+};
 
-const reportLanguages = [
-  { id: 'en', name: 'English', icon: '/icons/en.svg' },
-  { id: 'tw', name: '繁體中文', icon: '/icons/tw.svg' },
-  { id: 'cn', name: '简体中文', icon: '/icons/cn.svg' },
-];
+const reportLanguages = {
+  en: { id: 'en', name: 'English', icon: '/icons/en.svg' },
+  tw: { id: 'tw', name: '繁體中文', icon: '/icons/tw.svg' },
+  cn: { id: 'cn', name: '简体中文', icon: '/icons/cn.svg' },
+};
+
+enum ReportTypes {
+  balance_sheet = 'balance_sheet',
+  income_statement = 'income_statement',
+  cash_flow = 'cash_flow',
+}
+
+enum ReportLanguages {
+  en = 'en',
+  tw = 'tw',
+  cn = 'cn',
+}
 
 const FinancialReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);
 
-  const [selectedReportType, setSelectedReportType] = useState(reportTypes[0].id);
-  const [selectedReportLanguage, setSelectedReportLanguage] = useState(reportLanguages[0].id);
+  const [selectedReportType, setSelectedReportType] = useState<ReportTypes>(
+    ReportTypes.balance_sheet
+  );
+  const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguages>(
+    ReportLanguages.en
+  );
 
   const {
     targetRef: menuRef,
@@ -34,12 +50,12 @@ const FinancialReportSection = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const menuOptionClickHandler = (id: string) => {
+  const menuOptionClickHandler = (id: ReportTypes) => {
     setSelectedReportType(id);
     setIsMenuOpen(false);
   };
 
-  const selectedReportName = reportTypes.find((type) => type.id === selectedReportType)?.name;
+  const selectedReportName = reportTypes[selectedReportType].name;
 
   const {
     targetRef: languageMenuRef,
@@ -51,19 +67,33 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(!isLanguageMenuOpen);
   };
 
-  const languageMenuOptionClickHandler = (id: string) => {
+  const languageMenuOptionClickHandler = (id: ReportLanguages) => {
     setSelectedReportLanguage(id);
     setIsLanguageMenuOpen(false);
   };
 
-  const selectedLanguage = reportLanguages.find((lang) => lang.id === selectedReportLanguage);
+  const selectedLanguage = reportLanguages[selectedReportLanguage];
 
   const languageMenu = isLanguageMenuOpen ? (
     <div className="absolute top-[35rem] z-20 max-h-[200px] w-[560px] flex-col overflow-y-auto rounded-sm border border-solid border-slate-300 bg-white pb-2 shadow-dropmenu lg:max-h-[250px]">
       <div className="flex w-full flex-col pl-2 pt-2">
         <div className="z-10 flex items-start gap-0">
           <div className="flex w-full flex-col">
-            {reportLanguages.map((lang) => (
+            {Object.entries(reportLanguages).map(([id, { name, icon }]) => (
+              <button
+                key={id}
+                onClick={() => languageMenuOptionClickHandler(id as ReportLanguages)}
+                type="button"
+                className={`
+                mt-1 flex space-x-3 rounded-sm px-3 py-3 text-navyBlue2 hover:bg-lightGray/10`}
+              >
+                <img src={icon} alt={name} className="mr-2 h-6 w-6" />
+                <p className="justify-center text-base font-medium leading-5 tracking-normal">
+                  {name}
+                </p>
+              </button>
+            ))}
+            {/* {reportLanguages.map((lang) => (
               <button
                 key={lang.id}
                 onClick={() => languageMenuOptionClickHandler(lang.id)}
@@ -76,7 +106,7 @@ const FinancialReportSection = () => {
                   {lang.name}
                 </p>
               </button>
-            ))}
+            ))} */}
           </div>
         </div>
       </div>
@@ -88,7 +118,20 @@ const FinancialReportSection = () => {
       <div className="flex w-full flex-col pl-2 pt-2">
         <div className="z-10 flex items-start gap-0">
           <div className="flex w-full flex-col">
-            {reportTypes.map((type) => (
+            {Object.entries(reportTypes).map(([id, { name }]) => (
+              <button
+                key={id}
+                onClick={() => menuOptionClickHandler(id as ReportTypes)}
+                type="button"
+                className={`
+                mt-1 flex rounded-sm px-3 py-3 text-navyBlue2 hover:bg-lightGray/10`}
+              >
+                <p className="justify-center text-base font-medium leading-5 tracking-normal">
+                  {name}
+                </p>
+              </button>
+            ))}
+            {/* {reportTypes.map((type) => (
               <button
                 key={type.id}
                 onClick={() => menuOptionClickHandler(type.id)}
@@ -100,7 +143,7 @@ const FinancialReportSection = () => {
                   {type.name}
                 </p>
               </button>
-            ))}
+            ))} */}
           </div>
         </div>
       </div>
@@ -251,7 +294,11 @@ const FinancialReportSection = () => {
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              type={DatePickerType.CHOOSE_DATE}
+              type={
+                selectedReportType === ReportTypes.balance_sheet
+                  ? DatePickerType.CHOOSE_DATE
+                  : DatePickerType.CHOOSE_PERIOD
+              }
               period={period}
               setFilteredPeriod={setPeriod}
               className="w-340px justify-start md:w-550px"
