@@ -22,7 +22,7 @@ function App({ Component, pageProps }: AppProps) {
   }, [router.pathname]);
 
   return (
-    <div className="selection:bg-text-brand-primary-lv3 selection:text-tertiaryBlue">
+    <div className="selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
       <UserProvider>
         <DashboardProvider>
           <GlobalProvider>

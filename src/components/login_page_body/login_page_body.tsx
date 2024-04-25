@@ -94,7 +94,7 @@ const LoginPageBody = () => {
                   <Button
                     variant={'tertiary'}
                     onClick={logInClickHandler}
-                    className="mt-10 flex justify-center gap-2 rounded-sm px-2 py-3.5 max-lg:px-5"
+                    className="mt-10 flex justify-center gap-2 px-2 py-3.5 max-lg:px-5"
                   >
                     <div className="text-lg font-medium leading-7 tracking-normal">
                       Log in with Device
