@@ -2,6 +2,7 @@ import useStateRef from 'react-usestateref';
 import React, { createContext } from 'react';
 import { BookmarkItem } from '../interfaces/modals';
 import { DUMMY_DASHBOARD_OVERVIEW, IDashboardOverview } from '../interfaces/dashboard_overview';
+import { ISUNFA_ROUTE } from '../constants/url';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;
@@ -63,7 +64,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: true,
+    link: '', // TODO: link (20240424 - Shirley)
+
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -108,6 +111,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: ISUNFA_ROUTE.ACCOUNTING,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -136,6 +140,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         ></path>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,
@@ -170,6 +176,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         </defs>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,
@@ -219,7 +227,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: true,
+    link: '', // TODO: link (20240424 - Shirley)
+
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -258,6 +268,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: ISUNFA_ROUTE.ACCOUNTING,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -296,6 +307,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         </defs>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,
@@ -340,6 +353,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: '', // TODO: link (20240424 - Shirley)
+
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -377,7 +392,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: false,
+    link: ISUNFA_ROUTE.ACCOUNTING,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -413,6 +429,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         </defs>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,

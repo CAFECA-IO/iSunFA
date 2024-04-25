@@ -85,7 +85,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
             {/* TODO: button component (20240409 - Shirley) */}
             <button
               onClick={modalVisibilityHandler}
-              className="rounded-md px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
+              className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
               Cancel
             </button>
