@@ -64,7 +64,7 @@ function LandingNavBar() {
   }, []);
 
   /* Info:(20230814 - Shirley) Change Navbar Background Style */
-  const bgStyle = scroll >= 100 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
+  const bgStyle = scroll >= 30 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
 
   /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
