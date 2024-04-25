@@ -17,7 +17,7 @@ const WarningModal = ({
 }: IWaringModalProps) => {
   const { title, content, warningMsg, modalSubmitBtn, submitBtnFunction } = warningModalData;
 
-  // Info: (20240428 - Julian) 執行 submitBtnFunction 後，關閉 modal
+  // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {
     submitBtnFunction();
     modalVisibilityHandler();
@@ -36,9 +36,9 @@ const WarningModal = ({
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
           <h1 className="text-xl font-bold text-primaryYellow6">{title}</h1>
           <Image src="/icons/warning.svg" width={48} height={48} alt="warning_icon" />
-          {/* Info: (20240428 - Julian) commonn message (gray color) */}
+          {/* Info: (20240425 - Julian) commonn message (gray color) */}
           <p className="text-lightGray5">{content}</p>
-          {/* Info: (20240428 - Julian) warning message (red color) */}
+          {/* Info: (20240425 - Julian) warning message (red color) */}
           <p className="text-lightRed">{warningMsg}</p>
         </div>
         <div className="flex items-center justify-center gap-24px">
