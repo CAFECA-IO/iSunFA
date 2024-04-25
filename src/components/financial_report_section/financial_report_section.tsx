@@ -39,11 +39,18 @@ const FinancialReportSection = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguages>(
     ReportLanguages.en
   );
+  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
 
   const {
     targetRef: menuRef,
     componentVisible: isMenuOpen,
     setComponentVisible: setIsMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: languageMenuRef,
+    componentVisible: isLanguageMenuOpen,
+    setComponentVisible: setIsLanguageMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const menuClickHandler = () => {
@@ -56,12 +63,7 @@ const FinancialReportSection = () => {
   };
 
   const selectedReportName = reportTypes[selectedReportType].name;
-
-  const {
-    targetRef: languageMenuRef,
-    componentVisible: isLanguageMenuOpen,
-    setComponentVisible: setIsLanguageMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+  const selectedLanguage = reportLanguages[selectedReportLanguage];
 
   const languageMenuClickHandler = () => {
     setIsLanguageMenuOpen(!isLanguageMenuOpen);
@@ -73,10 +75,14 @@ const FinancialReportSection = () => {
   };
 
   useEffect(() => {
-    setPeriod(default30DayPeriodInSec);
+    setDatePickerType((prev) => {
+      if (selectedReportType === ReportTypes.balance_sheet) {
+        return DatePickerType.CHOOSE_DATE;
+      } else {
+        return DatePickerType.CHOOSE_PERIOD;
+      }
+    });
   }, [selectedReportType]);
-
-  const selectedLanguage = reportLanguages[selectedReportLanguage];
 
   const displayedReportTypeMenu = (
     <div ref={menuRef} className="relative flex w-full">
@@ -134,7 +140,7 @@ const FinancialReportSection = () => {
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 ${
+        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 max-md:max-w-full${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
@@ -195,10 +201,42 @@ const FinancialReportSection = () => {
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-          <div className="flex flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5">
+          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">Financial Report</div>
           </div>
-          <div className="mt-4 flex flex-col justify-center px-0 py-2.5 max-md:max-w-full md:px-28">
+          <div className="flex w-600px max-w-full flex-1 md:hidden">
+            <div className="mx-4 flex space-x-2">
+              <div>
+                <Image
+                  src={'/icons/report.svg'}
+                  width={30}
+                  height={30}
+                  alt="report_icon"
+                  className="aspect-square shrink-0"
+                />
+              </div>
+
+              <div className="mt-1.5">Financial Report</div>
+            </div>
+          </div>
+
+          {/* <div className="flex flex-col justify-center max-md:max-w-full">
+            <div className="flex flex-col gap-3 max-md:max-w-full">
+              <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+                <div>
+                  <img
+                    loading="lazy"
+                    src="https://cdn.builder.io/api/v1/image/assets/TEMP/71f4b025eb7c23d6190160b22b5b6b11fe950aa5d08f1d6575e258ae90c00024?apiKey=0e17b0b875f041659e186639705112b1&"
+                    className="aspect-square w-[30px] shrink-0"
+                  />
+                </div>
+
+                <div className="mt-1.5">Financial Report</div>
+              </div>
+            </div>
+          </div> */}
+
+          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
             </div>
@@ -224,6 +262,12 @@ const FinancialReportSection = () => {
         </div>
         <div className="mt-20 flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
+            {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
+            {/* Info: 左橫線 (20240425 - Shirley) */}
+            <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
+              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
+            </div>
+
             <div className="flex gap-2">
               <div className="my-auto flex flex-col justify-center">
                 <div className="flex items-center justify-center">
@@ -257,20 +301,21 @@ const FinancialReportSection = () => {
                 Period
               </div>
             </div>
+
+            {/* Info: 右橫線 (20240425 - Shirley) */}
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
             </div>
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              type={
-                selectedReportType === ReportTypes.balance_sheet
-                  ? DatePickerType.CHOOSE_DATE
-                  : DatePickerType.CHOOSE_PERIOD
-              }
+              // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
+              // key={selectedReportType}
+              type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
-              className="w-340px justify-start md:w-550px"
+              className=""
+              // w-[350px] justify-start md:w-560px
             />
           </div>
         </div>

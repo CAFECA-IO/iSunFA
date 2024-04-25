@@ -231,6 +231,12 @@ const DatePicker = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateOne, dateTwo]);
 
+  // Info: If type changed, reset the date (20240425 - Shirley)
+  useEffect(() => {
+    setDateOne(null);
+    setDateTwo(null);
+  }, [type]);
+
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {
     return new Date(`${year}/${month}/01`).getDay();
@@ -453,7 +459,7 @@ const DatePicker = ({
     ) : null;
 
   return (
-    <div className="relative flex flex-col items-center lg:w-auto">
+    <div className="relative flex flex-col max-md:max-w-full lg:w-auto">
       {/* Info: (20240417 - Shirley) Select Period button */}
 
       <div ref={targetRef}>
