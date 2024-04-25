@@ -151,7 +151,7 @@ export default class OCRService {
         },
         "eventType": "payment",
         "paymentReason": "管理費用",
-        "description": "沒有國家的人(第2版), 憂鬱的貓太郎, 紅與黑(精裝版), 誠品小紙提袋, 國家的品格:個人自由與公共利益"
+        "description": "沒有國家的人(第2版), 憂鬱的貓太郎, 紅與黑(精裝版), 誠品小紙提袋, 國家的品格:個人自由與公共利益",
         "venderOrSupplyer": "eslite 誠品",
         "payment": {
             "price": 1500,

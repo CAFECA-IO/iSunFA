@@ -99,8 +99,8 @@ export interface AccountInvoiceWithPaymentMethod extends AccountInvoiceData {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAccountInvoiceWithPaymentMethod(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any
 ): data is AccountInvoiceWithPaymentMethod {
   return (
@@ -175,17 +175,23 @@ export function isAccountLineItem(data: any): data is AccountLineItem {
   return (
     data &&
     typeof data.lineItemIndex === 'string' &&
-    typeof data.account === 'string' &&
-    typeof data.description === 'string' &&
+    typeof data.accounting === 'string' &&
+    typeof data.particular === 'string' &&
     typeof data.debit === 'boolean' &&
     typeof data.amount === 'number'
   );
 }
 
+export function isAccountLineItems(data: unknown): data is AccountLineItem[] {
+  if (!Array.isArray(data)) {
+    return false;
+  }
+  return data.every(isAccountLineItem);
+}
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cleanAccountLineItem(rawData: any): AccountLineItem {
   if (Array.isArray(rawData)) {
-    throw new Error('Invalid line item data');
+    throw new Error('Invalid line item data, is array');
   }
   const { accounting, particular, debit, amount } = rawData;
 
@@ -204,11 +210,19 @@ export function cleanAccountLineItem(rawData: any): AccountLineItem {
   };
 
   if (!isAccountLineItem(cleanedData)) {
-    throw new Error('Invalid line item data');
+    throw new Error('Invalid line item data, not clean');
   }
   return cleanedData;
 }
-
+export const AccountLineItemObjectVersion = [
+  {
+    lineItemIndex: 'string',
+    accounting: 'string',
+    particular: 'string',
+    debit: 'boolean',
+    amount: 'number',
+  },
+];
 export interface AccountVoucher {
   voucherIndex: string;
   metadatas: AccountVoucherMetaData[];

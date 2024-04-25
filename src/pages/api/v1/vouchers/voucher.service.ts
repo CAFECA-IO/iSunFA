@@ -1,10 +1,10 @@
 import {
   AccountInvoiceWithPaymentMethod,
   AccountLineItem,
+  AccountLineItemObjectVersion,
   AccountProgressStatus,
   AccountVoucher,
   AccountVoucherMetaData,
-  AccountVoucherObjectVersion,
   cleanAccountLineItems,
   cleanVoucherData,
   eventTypeToVoucherType,
@@ -76,50 +76,53 @@ export default class VoucherService {
 
     以下是一個例子:\n
     以下是一份發票的JSON檔案，多張發票會放置於array中:\n
-    [{
-      "date": "2024-12-29",
-      "eventType": "income",
-      "incomeReason": "勞務收入",
-      "client": "Isuncloud Limited",
-      "description": "技術開發軟件與服務",
-      "price": "469920",
-      "tax": "free",
-      "taxPercentage": "null",
-      "fee": "0",
-    }];
-
-    用以上的invoice json應該要可以產出下面的會計傳票JSON檔案:\n
-    請記得借貸方要平衡，另外請記得最外圍是大括號，它是一份Voucher 的 json，不是Voucher array
-    \`\`\`
-    {
-        "date": "2024-12-29",
-        "vouchIndex": "1229001",
-        "type": "Receiving",
-        "from_or_to": "Isuncloud Limited",
-        "description": "技術開發軟件與服務",
-        "lineItem": [
-          {
-            "lineItemIndex": "1229001001",
-            "account": "銀行存款",
-            "description": "港幣120000 * 3.916",
-            "debit": "true",
-            "amount": "469920",
-          },
-          {
-            "lineItemIndex": "1229001002",
-            "account": "營業收入",
-            "description": "港幣120000 * 3.916",
-            "debit": "false",
-            "amount": "469920",
-          },
-        ],
+    [
+      {
+        "date": {
+            "start_date": 1713052800000,
+            "end_date": 1713052800000
+        },
+        "eventType": "payment",
+        "paymentReason": "管理費用",
+        "description": "沒有國家的人(第2版), 憂鬱的貓太郎, 紅與黑(精裝版), 誠品小紙提袋, 國家的品格:個人自由與公共利益",
+        "venderOrSupplyer": "eslite 誠品",
+        "payment": {
+            "price": 1500,
+            "hasTax": false,
+            "taxPercentage": 0,
+            "hasFee": true,
+            "fee": 0,
+            "paymentMethod": "transfer",
+            "paymentPeriod": "atOnce",
+            "installmentPeriod": 0,
+            "paymentStatus": "unpaid",
+            "alreadyPaidAmount": 0,
+        }
       }
-    \`\`\`
+    ];
+
+    返回的JSON，請借貸方平衡，並確保所有數據準確無誤，不然會計師會找你麻煩的！\n
+    [
+      {
+          "lineItemIndex": "0",
+          "accounting": "管理費用",
+          "particular": "沒有國家的人(第2版), 憂鬱的貓太郎, 紅與黑(精裝版), 誠品小紙提袋, 國家的品格:個人自由與公共利益",
+          "debit": true,
+          "amount": 1500
+      },
+      {
+          "lineItemIndex": "1",
+          "accounting": "銀行存款",
+          "particular": "管理費用(圖書)",
+          "debit": false,
+          "amount": 1500
+      }
+  ]
     `;
     this.llamaConnect = new LlamaConnect<AccountLineItem[]>(
       LLAMA_CONFIG.model,
       this.prompts,
-      JSON.stringify(AccountVoucherObjectVersion),
+      JSON.stringify(AccountLineItemObjectVersion),
       cleanAccountLineItems,
       LLAMA_CONFIG.retryLimit
     );

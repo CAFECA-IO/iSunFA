@@ -92,13 +92,15 @@ export default class LlamaConnect<T> {
 
       const resultJSON = await result.json();
 
-      const { response } = resultJSON;
       let newContext = resultJSON.context;
 
       if (!newContext || !Array.isArray(newContext)) {
         newContext = [];
       }
 
+      const { response } = resultJSON;
+      // eslint-disable-next-line no-console
+      console.log('response:', response);
       if (!response || typeof response !== 'string') {
         return { responseJSON: null, context: newContext };
       }
@@ -126,6 +128,8 @@ export default class LlamaConnect<T> {
 
       return { responseJSON, context: newContext || '' };
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
       return { responseJSON: null, context: [] };
     }
   }
