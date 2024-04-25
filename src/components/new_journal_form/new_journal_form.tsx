@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
+import { useGlobalCtx } from '../../contexts/global_context';
 import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec } from '../../constants/display';
 import { Button } from '../button/button';
@@ -33,6 +34,8 @@ enum PaymentState {
 }
 
 const NewJournalForm = () => {
+  const { warningModalVisibilityHandler, warningModalDataHandler } = useGlobalCtx();
+
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
   const [selectedPaymentReason, setSelectedPaymentReason] = useState<string>(
@@ -161,8 +164,8 @@ const NewJournalForm = () => {
   const partialPaidClickHandler = () => setPaymentState(PaymentState.PARTIAL_PAID);
   const unpaidClickHandler = () => setPaymentState(PaymentState.UNPAID);
 
-  // Info: (20240423 - Julian) 清空所有欄位
-  const clearClickHandler = () => {
+  // Info: (20240423 - Julian) 清空表單的所有欄位
+  const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
     setSelectedEventType(eventTypeSelection[0]);
     setSelectedPaymentReason(paymentReasonSelection[0]);
@@ -180,6 +183,20 @@ const NewJournalForm = () => {
     setInputPartialPaid(0);
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
+  };
+
+  // Info: (20240428 - Julian) 整理警告視窗的資料
+  const dataWarningModal = {
+    title: 'Clear form content',
+    content: 'Are you sure you want to clear form content?',
+    modalSubmitBtn: 'Clear All',
+    submitBtnFunction: () => clearFormHandler(),
+  };
+
+  // Info: (20240428 - Julian) 點擊 Clear All 按鈕時，彈出警告視窗
+  const clearAllClickHandler = () => {
+    warningModalDataHandler(dataWarningModal);
+    warningModalVisibilityHandler();
   };
 
   const radioButtonStyle =
@@ -332,13 +349,13 @@ const NewJournalForm = () => {
             <div
               id="eventTypeMenu"
               onClick={eventMenuOpenHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedEventType}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isEventMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isEventMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={eventMenuRef}
@@ -356,13 +373,13 @@ const NewJournalForm = () => {
             <div
               id="paymentReasonMenu"
               onClick={reasonMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedPaymentReason}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={reasonRef}
@@ -391,7 +408,7 @@ const NewJournalForm = () => {
               value={inputDescription}
               onChange={descriptionChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-md border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px outline-none"
             />
           </div>
 
@@ -405,7 +422,7 @@ const NewJournalForm = () => {
               value={inputVendor}
               onChange={vendorChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-md border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px outline-none"
             />
           </div>
         </div>
@@ -432,7 +449,7 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Total Price */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">Total Price</p>
-            <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-md border border-lightGray3 bg-white">
+            <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-xs border border-lightGray3 bg-white">
               <input
                 id="totalPriceInput"
                 type="number"
@@ -472,12 +489,12 @@ const NewJournalForm = () => {
               type="button"
               onClick={taxMenuHandler}
               disabled={!taxToggle}
-              className={`group relative flex h-46px cursor-pointer ${isTaxMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-md border bg-white p-10px transition-all duration-300 ease-in-out enabled:hover:border-primaryYellow enabled:hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6`}
+              className={`group relative flex h-46px cursor-pointer ${isTaxMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px transition-all duration-300 ease-in-out enabled:hover:border-primaryYellow enabled:hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6`}
             >
               <p>{taxRate}%</p>
               <FaChevronDown />
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
               >
                 <ul ref={taxRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
                   {displayTaxDropmenu}
@@ -498,7 +515,7 @@ const NewJournalForm = () => {
               />
             </div>
             <div
-              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-md border border-lightGray3 transition-all duration-300 ease-in-out`}
+              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-xs border border-lightGray3 transition-all duration-300 ease-in-out`}
             >
               <input
                 id="feeInput"
@@ -530,13 +547,13 @@ const NewJournalForm = () => {
             <div
               id="paymentMethodMenu"
               onClick={methodMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedMethod}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isMethodMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isMethodMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={methodRef}
@@ -554,13 +571,13 @@ const NewJournalForm = () => {
             <div
               id="ficMenu"
               onClick={bankAccountMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedFIC}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isBankAccountMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isBankAccountMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={bankAccountRef}
@@ -581,7 +598,7 @@ const NewJournalForm = () => {
               value={inputAccountNumber}
               onChange={accountNumberChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-md border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px outline-none"
             />
           </div>
         </div>
@@ -624,7 +641,7 @@ const NewJournalForm = () => {
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-md border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-xs border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="installmentInput"
@@ -677,7 +694,7 @@ const NewJournalForm = () => {
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-md border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-xs border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="partialPaidInput"
@@ -736,7 +753,7 @@ const NewJournalForm = () => {
         <div
           id="projectMenu"
           onClick={projectMenuHandler}
-          className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-md border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+          className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-xs border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
         >
           <div className="p-12px text-sm text-lightGray4">
             <p>Project</p>
@@ -746,7 +763,7 @@ const NewJournalForm = () => {
             <FaChevronDown />
             {/* Info: (20240424 - Julian) Dropmenu */}
             <div
-              className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+              className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
             >
               <ul ref={projectRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
                 {displayProjectDropmenu}
@@ -759,7 +776,7 @@ const NewJournalForm = () => {
         <div
           id="contractMenu"
           onClick={contractMenuHandler}
-          className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-md border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+          className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-xs border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
         >
           <div className="p-12px text-sm text-lightGray4">
             <p>Contract</p>
@@ -769,7 +786,7 @@ const NewJournalForm = () => {
             <FaChevronDown />
             {/* Info: (20240424 - Julian) Dropmenu */}
             <div
-              className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+              className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
             >
               <ul
                 ref={contractRef}
@@ -799,7 +816,7 @@ const NewJournalForm = () => {
       <div className="ml-auto flex items-center gap-24px">
         <button
           type="button"
-          onClick={clearClickHandler}
+          onClick={clearAllClickHandler}
           className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
         >
           Clear all
