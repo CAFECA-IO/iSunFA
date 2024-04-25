@@ -52,7 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     const expiration = new Date();
 
-    expiration.setHours(expiration.getHours() + 1);
+    // expiration.setHours(expiration.getHours() + 1);
+    // expire within 2 mins
+    expiration.setMinutes(expiration.getMinutes() + 2);
 
     res.setHeader(
       'Set-Cookie',

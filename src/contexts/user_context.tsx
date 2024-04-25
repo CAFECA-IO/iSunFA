@@ -9,6 +9,7 @@ import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '../constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../constants/display';
 import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
+import { useRouter } from 'next/router';
 
 interface SignUpProps {
   username?: string;
@@ -35,6 +36,8 @@ export const UserContext = createContext<UserContextType>({
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+
   const [signedIn, setSignedIn, signedInRef] = useStateRef(false);
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
@@ -197,10 +200,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ credential }),
       });
 
-      setUserAuth(null);
-      setUsername(null);
-      setCredential(null);
-      setSignedIn(false);
+      clearState();
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -233,6 +233,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const clearState = () => {
+    setUserAuth(null);
+    setUsername(null);
+    setCredential(null);
+    setSignedIn(false);
+  };
+
   const readCookie = async () => {
     const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
 
@@ -249,7 +256,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const writeCookie = async () => {
     const expiration = new Date();
-    expiration.setHours(expiration.getHours() + 1);
+    // expiration.setHours(expiration.getHours() + 1);
+    // expire within 2 mins
+    expiration.setMinutes(expiration.getMinutes() + 1);
 
     const credential = await readCookie();
     console.log('credential:', credential);
@@ -264,11 +273,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return result;
   };
 
+  const checkCookieAndSignOut = async () => {
+    const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
+    console.log('in userContext, useEffect checking cookie', cookie);
+
+    if (!cookie) {
+      clearState();
+    }
+  };
+
   useEffect(() => {
     (async () => {
       await init();
     })();
   }, []);
+
+  useEffect(() => {
+    checkCookieAndSignOut();
+  }, [router.pathname]);
 
   const value = useMemo(
     () => ({
