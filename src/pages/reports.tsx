@@ -172,14 +172,14 @@ const auditReport = () => {
       key={`${row.code}-${row.company}`}
       className={index % 2 === 0 ? 'bg-surface-neutral-surface-lv1' : 'bg-surface-neutral-mute'}
     >
-      <td className="px-2 py-10px">{row.code}</td>
-      <td className="px-2 py-10px">{row.regional}</td>
-      <td className="px-2 py-10px">{row.company}</td>
-      <td className="px-2 py-10px">{row.informationYear}</td>
-      <td className="px-2 py-10px">{row.detailedInformation}</td>
-      <td className="px-2 py-10px">{row.creditRating}</td>
-      <td className="px-2 py-10px">{row.dateOfUpload}</td>
-      <td className="px-2 py-10px">
+      <td className="px-8px py-10px">{row.code}</td>
+      <td className="px-8px py-10px">{row.regional}</td>
+      <td className="px-8px py-10px">{row.company}</td>
+      <td className="px-8px py-10px">{row.informationYear}</td>
+      <td className="px-8px py-10px">{row.detailedInformation}</td>
+      <td className="px-8px py-10px">{row.creditRating}</td>
+      <td className="px-8px py-10px">{row.dateOfUpload}</td>
+      <td className="px-8px py-10px">
         <div className="flex items-center justify-center" onClick={() => handleLinkClick(row.link)}>
           <Image src="/elements/link.svg" width={20} height={20} alt="link" />
         </div>
@@ -193,7 +193,7 @@ const auditReport = () => {
       key={`${card.code}-${card.company}`}
       onClick={() => handleLinkClick(card.link)}
     >
-      <div className="flex w-56px items-center justify-center rounded border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
+      <div className="flex w-56px items-center justify-center rounded-xs border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
         {card.creditRating}
       </div>
       <div>
@@ -224,13 +224,12 @@ const auditReport = () => {
         {/* Search */}
         <div className="flex grow flex-col gap-2">
           <div className="text-sm font-semibold">Company Code or Abbreviation </div>
-          <div className="flex items-center justify-between rounded-lg bg-white">
+          <div className="flex items-center justify-between rounded-sm bg-input-surface-input-background">
             <div className="grow">
               <input
                 type="text"
                 placeholder="Search"
-                className="w-full rounded-lg bg-white px-3 py-2.5 text-base font-medium text-rose-500
-                placeholder:text-input-text-input-placeholder focus:outline-none "
+                className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none "
               />
             </div>
             <div className="px-3 py-2.5">
@@ -239,15 +238,15 @@ const auditReport = () => {
           </div>
         </div>
         {/* Date Picker */}
-        <div className="flex items-center justify-between rounded-lg bg-white">
+        <div className="flex items-center justify-between rounded-sm bg-input-surface-input-background">
           <div className="w-full">
             <input
               type="text"
               placeholder="Start Date - End Date"
-              className="rounded-lg bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+              className="rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
             />
           </div>
-          <div className="px-3 py-2.5 text-icon-surface-single-color-primary hover:text-primaryYellow">
+          <div className="px-3 py-2.5 text-icon-surface-single-color-primary hover:text-text-brand-primary-lv2">
             {/* <Image src="/elements/calendar.svg" width={20} height={20} alt="calendar" /> */}
             <svg
               width="20"
@@ -271,7 +270,7 @@ const auditReport = () => {
         {/* Filter Display List */}
         <div className="flex items-center gap-5 px-4px">
           <div className="text-lg font-semibold">Show Designated Regional Companies</div>
-          <form className="flex gap-5 text-sm font-semibold text-primaryYellow">
+          <form className="flex gap-5 text-sm font-semibold text-text-brand-primary-lv2">
             <label htmlFor="us" className="flex gap-2">
               <input type="checkbox" id="us" name="country" value="US" /> US
             </label>
@@ -286,12 +285,12 @@ const auditReport = () => {
         {/* Table */}
         <div className="">
           <table className="w-full border-separate border-spacing-x-1 text-center">
-            <thead className="bg-primaryYellow text-h6 font-bold leading-8 text-black">
+            <thead className="bg-stroke-brand-primary-moderate text-h6 font-bold leading-8 text-black">
               <tr className="">
-                <th className="px-2 py-12px">Code</th>
-                <th className="px-2 py-12px">Regional</th>
-                <th className="px-2 py-12px">Company</th>
-                <th className="flex items-center justify-center gap-1 px-2 py-12px">
+                <th className="px-8px py-12px">Code</th>
+                <th className="px-8px py-12px">Regional</th>
+                <th className="px-8px py-12px">Company</th>
+                <th className="flex items-center justify-center gap-1 px-8px py-12px">
                   <div>Information Year</div>
                   <div onClick={() => handleSort('informationYear')} className="cursor-pointer">
                     <svg
@@ -308,8 +307,8 @@ const auditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-2 py-12px">Detailed Information</th>
-                <th className="flex items-center justify-center gap-1 px-2 py-12px">
+                <th className="px-8px py-12px">Detailed Information</th>
+                <th className="flex items-center justify-center gap-1 px-8px py-12px">
                   <div>Credit rating</div>
                   <div onClick={() => handleSort('creditRating')} className="cursor-pointer">
                     <svg
@@ -326,8 +325,8 @@ const auditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-2 py-12px">Date of Upload</th>
-                <th className="px-2 py-12px">LINK</th>
+                <th className="px-8px py-12px">Date of Upload</th>
+                <th className="px-8px py-12px">LINK</th>
               </tr>
             </thead>
             <tbody className="text-lg font-medium text-black">
@@ -339,7 +338,7 @@ const auditReport = () => {
         {/* Checkbox : no-daily-reports */}
         <div className="self-end px-4px">
           <form className="">
-            <label htmlFor="no-daily-reports" className="flex gap-2 text-primaryYellow">
+            <label htmlFor="no-daily-reports" className="flex gap-2 text-text-brand-primary-lv2">
               <input
                 type="checkbox"
                 id="no-daily-reports"
@@ -353,7 +352,7 @@ const auditReport = () => {
         {/* Pagination */}
         <div className="flex flex-col items-center">
           <div className="flex gap-10px">
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/first_page_icon.svg"
                 width={20}
@@ -361,7 +360,7 @@ const auditReport = () => {
                 alt="first_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/previous_page_icon.svg"
                 width={20}
@@ -369,10 +368,10 @@ const auditReport = () => {
                 alt="previous_page_icon"
               />
             </div>
-            <div className="flex w-11 items-center justify-center rounded border border-primaryYellow p-3 text-primaryYellow">
+            <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
               1
             </div>
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/next_page_icon.svg"
                 width={20}
@@ -380,7 +379,7 @@ const auditReport = () => {
                 alt="next_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/last_page_icon.svg"
                 width={20}
@@ -407,12 +406,12 @@ const auditReport = () => {
         {/* Search */}
         <div className="flex grow flex-col gap-2">
           <div className="text-sm font-semibold">Company Code or Abbreviation </div>
-          <div className="flex items-center justify-between rounded-md border border-input-stroke-input bg-input-surface-input-background focus-within:border-primaryYellow focus-within:bg-input-surface-input-selected focus:border">
-            <div className="grow rounded-md px-3">
+          <div className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
+            <div className="grow rounded-sm px-3">
               <input
                 type="text"
                 placeholder="Search"
-                className="w-full rounded-md bg-transparent py-2.5 text-xs font-medium  text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
+                className="w-full rounded-sm bg-transparent py-2.5 text-xs font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>
             <div className="px-3 py-2.5">
@@ -503,7 +502,6 @@ const auditReport = () => {
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="fill-current"
               />
             </svg>
           </div>
@@ -534,7 +532,7 @@ const auditReport = () => {
       {/* Pagination */}
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -556,7 +554,7 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -572,10 +570,10 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex w-11 items-center justify-center rounded border border-primaryYellow p-3 text-primaryYellow">
+          <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
             1
           </div>
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -591,7 +589,7 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -630,8 +628,8 @@ const auditReport = () => {
         <LandingNavBar />
       </nav>
 
-      <main className="w-screen overflow-hidden text-white">
-        <div className="min-h-screen bg-secondaryBlue font-barlow">
+      <main className="w-screen overflow-hidden text-navy-blue-25">
+        <div className="min-h-screen bg-navy-blue-600 font-barlow">
           {desktopVer}
           {mobileVer}
         </div>

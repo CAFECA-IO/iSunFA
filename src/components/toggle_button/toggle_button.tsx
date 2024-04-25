@@ -13,11 +13,11 @@ const ToggleButton = (props: ToggleButtonProps) => {
 
   const toggleButtonStyle = `relative w-42px h-24px`;
 
-  const knobStyle = `absolute top-0 right-0 bottom-0 left-0 h-20px w-20px flex items-center justify-center text-white shadow-md transition-all duration-100 ease-linear rounded-full z-2 bg-switch-surface-controller`;
+  const knobStyle = `absolute top-0 right-0 bottom-0 left-0 h-20px w-20px flex items-center justify-center text-white shadow-md transition-all duration-100 ease-linear rounded-rounded z-2 bg-switch-surface-controller`;
   const onStyleForKnob = `top-2px left-20px`;
   const offStyleForKnob = `top-2px left-2px`;
 
-  const layerStyle = `absolute top-0 right-0 bottom-0 left-0 z-1 shadow-md transition-all duration-100 ease-linear rounded-3xl`;
+  const layerStyle = `absolute top-0 right-0 bottom-0 left-0 z-1 shadow-md transition-all duration-100 ease-linear rounded-rounded`;
   const onStyleForLayer = `bg-switch-surface-active`;
   const offStyleForLayer = `bg-switch-surface-base`;
 
