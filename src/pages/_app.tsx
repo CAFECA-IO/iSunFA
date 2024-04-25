@@ -12,20 +12,17 @@ function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // get cookie `COOKIE_NAME.FIDO2` and check if it is empty without third party library
-    // if it is empty, redirect to login page
+    // Info: get cookie `COOKIE_NAME.FIDO2` and check if it is empty, if it is empty, redirect to login page (20240425 - Shirley)
     const cookie = document.cookie
       .split(';')
       .find((item: string) => item.includes(COOKIE_NAME.FIDO2));
-    // eslint-disable-next-line no-console
-    console.log('cookie in _app.tsx:', cookie);
     if (router.pathname.startsWith('/users/') && !cookie) {
       router.push('/users/login');
     }
-  }, [router.pathname]); // 注意依賴於 pathname
+  }, [router.pathname]);
 
   return (
-    <div className="selection:bg-primaryYellow selection:text-tertiaryBlue">
+    <div className="selection:bg-text-brand-primary-lv3 selection:text-tertiaryBlue">
       <UserProvider>
         <DashboardProvider>
           <GlobalProvider>

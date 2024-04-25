@@ -256,9 +256,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const writeCookie = async () => {
     const expiration = new Date();
-    // expiration.setHours(expiration.getHours() + 1);
-    // expire within 2 mins
-    expiration.setMinutes(expiration.getMinutes() + 1);
+    expiration.setHours(expiration.getHours() + 1);
 
     const credential = await readCookie();
     console.log('credential:', credential);
