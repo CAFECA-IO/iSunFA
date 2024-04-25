@@ -170,7 +170,7 @@ const auditReport = () => {
   const displayTableRows = data.map((row: ITableData, index) => (
     <tr
       key={`${row.code}-${row.company}`}
-      className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}
+      className={index % 2 === 0 ? 'bg-surface-neutral-surface-lv1' : 'bg-surface-neutral-mute'}
     >
       <td className="px-2 py-10px">{row.code}</td>
       <td className="px-2 py-10px">{row.regional}</td>
@@ -187,9 +187,9 @@ const auditReport = () => {
     </tr>
   ));
 
-  const displayCards = data.map((card: ITableData) => (
+  const displayCards = data.map((card: ITableData, index) => (
     <div
-      className="flex gap-10px rounded-md border border-stroke-brand-secondary bg-slider-surface-controller py-6px pl-8px pr-14px"
+      className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'bg-slider-surface-base'}`}
       key={`${card.code}-${card.company}`}
       onClick={() => handleLinkClick(card.link)}
     >
