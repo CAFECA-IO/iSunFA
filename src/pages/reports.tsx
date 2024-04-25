@@ -5,6 +5,9 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../interfaces/locale';
 import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
 import ToggleButton from '../components/toggle_button/toggle_button';
+import DatePicker, { DatePickerType } from '../components/date_picker/date_picker';
+import { default30DayPeriodInSec } from '../constants/display';
+import { IDatePeriod } from '../interfaces/date_period';
 
 // Info: (20240424 - Liz) Define table data interface
 interface ITableData {
@@ -129,6 +132,8 @@ const auditReport = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [checked, setChecked] = useState(false);
 
+  const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
+
   const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
     const ratingOrder: { [key: string]: number } = {
       AAA: 1,
@@ -218,12 +223,16 @@ const auditReport = () => {
   const desktopVer = (
     <div className="hidden flex-col px-80px py-120px lg:flex">
       {/* Title */}
-      <section className="mb-14 text-center text-h1 font-bold leading-h1">Audit Report</section>
+      <section className="mb-14 text-center text-h1 font-bold leading-h1 text-navy-blue-25">
+        Audit Report
+      </section>
       {/* Conditional Filters */}
       <section id="conditional-filters" className="mb-10 flex items-end gap-6 px-4px">
         {/* Search */}
         <div className="flex grow flex-col gap-2">
-          <div className="text-sm font-semibold">Company Code or Abbreviation </div>
+          <div className="text-sm font-semibold text-navy-blue-25">
+            Company Code or Abbreviation{' '}
+          </div>
           <div className="flex items-center justify-between rounded-sm bg-input-surface-input-background">
             <div className="grow">
               <input
@@ -238,7 +247,7 @@ const auditReport = () => {
           </div>
         </div>
         {/* Date Picker */}
-        <div className="flex items-center justify-between rounded-sm bg-input-surface-input-background">
+        {/* <div className="flex items-center justify-between rounded-sm bg-input-surface-input-background">
           <div className="w-full">
             <input
               type="text"
@@ -247,7 +256,6 @@ const auditReport = () => {
             />
           </div>
           <div className="px-3 py-2.5 text-icon-surface-single-color-primary hover:text-text-brand-primary-lv2">
-            {/* <Image src="/elements/calendar.svg" width={20} height={20} alt="calendar" /> */}
             <svg
               width="20"
               height="20"
@@ -263,13 +271,20 @@ const auditReport = () => {
               />
             </svg>
           </div>
-        </div>
+        </div> */}
+        <DatePicker
+          period={datePeriod}
+          setFilteredPeriod={setDatePeriod}
+          type={DatePickerType.TEXT}
+        />
       </section>
       {/* Audit Report List */}
       <section id="audit-report-list" className="flex flex-col gap-5">
         {/* Filter Display List */}
         <div className="flex items-center gap-5 px-4px">
-          <div className="text-lg font-semibold">Show Designated Regional Companies</div>
+          <div className="text-lg font-semibold text-navy-blue-25">
+            Show Designated Regional Companies
+          </div>
           <form className="flex gap-5 text-sm font-semibold text-text-brand-primary-lv2">
             <label htmlFor="us" className="flex gap-2">
               <input type="checkbox" id="us" name="country" value="US" /> US
@@ -398,14 +413,16 @@ const auditReport = () => {
   const mobileVer = (
     <div className="flex flex-col px-5 lg:hidden">
       {/* Title */}
-      <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9">
+      <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9 text-navy-blue-25">
         Audit Report
       </section>
       {/* Conditional Filters */}
       <section className="flex items-end gap-1">
         {/* Search */}
         <div className="flex grow flex-col gap-2">
-          <div className="text-sm font-semibold">Company Code or Abbreviation </div>
+          <div className="text-sm font-semibold text-navy-blue-25">
+            Company Code or Abbreviation{' '}
+          </div>
           <div className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
             <div className="grow rounded-sm px-3">
               <input
@@ -457,8 +474,8 @@ const auditReport = () => {
       {/* Region & Switch daily reports */}
       <section className="flex justify-between pt-5">
         <div className="flex items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
-          <div className="text-sm font-medium">Region</div>
-          <div>
+          <div className="text-sm font-medium text-navy-blue-25">Region</div>
+          <div className="text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -505,15 +522,15 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div>Card List</div>
+          <div className="whitespace-nowrap text-navy-blue-25">Card List</div>
         </div>
         {/* line */}
         <div className="grow bg-stroke-neutral-solid-light">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="184"
+            width="1"
             height="1"
-            viewBox="0 0 184 1"
+            viewBox="0 0 1 1"
             fill="none"
           >
             <line
@@ -532,7 +549,7 @@ const auditReport = () => {
       {/* Pagination */}
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -554,7 +571,7 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -573,7 +590,7 @@ const auditReport = () => {
           <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
             1
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -589,7 +606,7 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -628,7 +645,7 @@ const auditReport = () => {
         <LandingNavBar />
       </nav>
 
-      <main className="w-screen overflow-hidden text-navy-blue-25">
+      <main className="w-screen overflow-hidden">
         <div className="min-h-screen bg-navy-blue-600 font-barlow">
           {desktopVer}
           {mobileVer}
