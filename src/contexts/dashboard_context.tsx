@@ -392,7 +392,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.ACCOUNTING,
+    link: ISUNFA_ROUTE.JOURNAL_LIST,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
