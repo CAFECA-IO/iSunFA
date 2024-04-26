@@ -4,9 +4,11 @@ import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '../components/register_form_modal/register_form_modal';
 import AddBookmarkModal from '../components/add_bookmark_modal/add_bookmark_modal';
+import WarningModal from '../components/warning_modal/warning_modal';
 import useWindowSize from '../lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '../constants/display';
 import { LayoutAssertion } from '../interfaces/layout_assertion';
+import { IWaringModal, dummyWarningModalData } from '../interfaces/warning_modal';
 
 interface IGlobalContext {
   width: number;
@@ -23,6 +25,11 @@ interface IGlobalContext {
 
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
+
+  isWarningModalVisible: boolean;
+  warningModalVisibilityHandler: () => void;
+  warningModalData: IWaringModal;
+  warningModalDataHandler: (data: IWaringModal) => void;
 }
 
 export interface IGlobalProvider {
@@ -40,6 +47,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
+
+  const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
+  const [warningModalData, setWarningModalData] = useState<IWaringModal>(dummyWarningModalData);
 
   const { width, height } = windowSize;
 
@@ -63,6 +73,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAddBookmarkModalVisible(!isAddBookmarkModalVisible);
   };
 
+  const warningModalVisibilityHandler = () => {
+    setIsWarningModalVisible(!isWarningModalVisible);
+  };
+
+  const warningModalDataHandler = (data: IWaringModal) => {
+    setWarningModalData(data);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -76,6 +94,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     registerModalDataHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
+    isWarningModalVisible,
+    warningModalVisibilityHandler,
+    warningModalData,
+    warningModalDataHandler,
   };
 
   return (
@@ -93,6 +115,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddBookmarkModal
         isModalVisible={isAddBookmarkModalVisible}
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}
+      />
+
+      <WarningModal
+        isModalVisible={isWarningModalVisible}
+        modalVisibilityHandler={warningModalVisibilityHandler}
+        warningModalData={warningModalData}
       />
 
       {children}
