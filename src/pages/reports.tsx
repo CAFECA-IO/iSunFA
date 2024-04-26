@@ -5,6 +5,9 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../interfaces/locale';
 import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
 import ToggleButton from '../components/toggle_button/toggle_button';
+import DatePicker, { DatePickerType } from '../components/date_picker/date_picker';
+import { default30DayPeriodInSec } from '../constants/display';
+import { IDatePeriod } from '../interfaces/date_period';
 
 // Info: (20240424 - Liz) Define table data interface
 interface ITableData {
@@ -16,6 +19,7 @@ interface ITableData {
   detailedInformation: string;
   creditRating: string;
   dateOfUpload: string;
+  link: string;
 }
 
 // Info: (20240424 - Liz) Dummy Data
@@ -28,6 +32,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AAA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '2234',
@@ -37,6 +42,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '8991',
@@ -46,6 +52,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'A',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '8778',
@@ -55,6 +62,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'BBB',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '2233',
@@ -64,6 +72,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'BB',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '8866',
@@ -73,6 +82,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'B',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '0078',
@@ -82,6 +92,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '0012',
@@ -91,6 +102,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'AAA',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '-',
@@ -100,6 +112,7 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'B',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
   {
     code: '-',
@@ -109,60 +122,17 @@ const initialData: ITableData[] = [
     detailedInformation: 'IFRSs Consolidated Financial Report',
     creditRating: 'CCC',
     dateOfUpload: '2024/04/08',
+    link: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports',
   },
 ];
 
-const auditReport = () => {
+const AuditReport = () => {
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [checked, setChecked] = useState(false);
 
-  const displayTableRows = data.map((row: ITableData, index) => (
-    <tr
-      key={`${row.code}-${row.company}`}
-      className={index % 2 === 0 ? 'bg-white' : 'bg-lightGray6'}
-    >
-      <td className="px-2 py-10px">{row.code}</td>
-      <td className="px-2 py-10px">{row.regional}</td>
-      <td className="px-2 py-10px">{row.company}</td>
-      <td className="px-2 py-10px">{row.informationYear}</td>
-      <td className="px-2 py-10px">{row.detailedInformation}</td>
-      <td className="px-2 py-10px">{row.creditRating}</td>
-      <td className="px-2 py-10px">{row.dateOfUpload}</td>
-      <td className="px-2 py-10px">
-        <div className="flex items-center justify-center">
-          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
-        </div>
-      </td>
-    </tr>
-  ));
-
-  const displayCards = data.map((card: ITableData) => (
-    <div
-      className="flex gap-10px rounded-md border border-stroke-brand-secondary bg-slider-surface-controller py-6px pl-8px pr-14px"
-      key={`${card.code}-${card.company}`}
-    >
-      <div className="flex w-56px items-center justify-center rounded border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
-        {card.creditRating}
-      </div>
-      <div>
-        <div className="text-sm font-semibold text-text-neutral-primary">
-          {card.company}
-          <span> </span>
-          <span className="text-xs font-semibold text-text-neutral-primary">
-            {card.regional}/{card.code}
-          </span>
-        </div>
-        <div className="text-xs font-light text-text-neutral-primary">
-          {card.detailedInformation}
-        </div>
-        <div className="text-xs font-semibold text-text-neutral-primary">
-          {card.informationYear}
-        </div>
-      </div>
-    </div>
-  ));
+  const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
   const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
     const ratingOrder: { [key: string]: number } = {
@@ -198,55 +168,86 @@ const auditReport = () => {
     setData(sortedData);
   };
 
+  const handleLinkClick = (link: string) => {
+    window.open(link, '_blank');
+  };
+
+  const displayTableRows = data.map((row: ITableData, index) => (
+    <tr
+      key={`${row.code}-${row.company}`}
+      className={index % 2 === 0 ? 'bg-surface-neutral-surface-lv1' : 'bg-surface-neutral-mute'}
+    >
+      <td className="px-8px py-10px">{row.code}</td>
+      <td className="px-8px py-10px">{row.regional}</td>
+      <td className="px-8px py-10px">{row.company}</td>
+      <td className="px-8px py-10px">{row.informationYear}</td>
+      <td className="px-8px py-10px">{row.detailedInformation}</td>
+      <td className="px-8px py-10px">{row.creditRating}</td>
+      <td className="px-8px py-10px">{row.dateOfUpload}</td>
+      <td className="px-8px py-10px">
+        <div className="flex items-center justify-center" onClick={() => handleLinkClick(row.link)}>
+          <Image src="/elements/link.svg" width={20} height={20} alt="link" />
+        </div>
+      </td>
+    </tr>
+  ));
+
+  const displayCards = data.map((card: ITableData, index) => (
+    <div
+      className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px transition active:bg-slider-surface-controller-hover ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'bg-slider-surface-base'}`}
+      key={`${card.code}-${card.company}`}
+      onClick={() => handleLinkClick(card.link)}
+    >
+      <div className="flex w-56px items-center justify-center rounded-xs border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
+        {card.creditRating}
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-text-neutral-primary">
+          {card.company}
+          <span> </span>
+          <span className="text-xs font-semibold text-text-neutral-primary">
+            {card.regional}/{card.code}
+          </span>
+        </div>
+        <div className="text-xs font-light text-text-neutral-primary">
+          {card.detailedInformation}
+        </div>
+        <div className="text-xs font-semibold text-text-neutral-primary">
+          {card.informationYear}
+        </div>
+      </div>
+    </div>
+  ));
+
   // Info: (20240424 - Liz) desktop ver
   const desktopVer = (
     <div className="hidden flex-col px-80px py-120px lg:flex">
       {/* Title */}
-      <section className="mb-14 text-center text-h1 font-bold leading-h1">Audit Report</section>
+      <section className="mb-14 text-center text-h1 font-bold leading-h1 text-navy-blue-25">
+        Audit Report
+      </section>
       {/* Conditional Filters */}
-      <section id="conditional-filters" className="mb-10 flex items-end gap-6 px-4px">
-        {/* Search */}
-        <div className="flex grow flex-col gap-2">
-          <div className="text-sm font-semibold">Company Code or Abbreviation </div>
-          <div className="flex items-center justify-between rounded-lg bg-white">
-            <div className="grow">
-              <input
-                type="text"
-                placeholder="Search"
-                className="w-full rounded-lg bg-white px-3 py-2.5 text-base font-medium text-rose-500
-                placeholder:text-input-text-input-placeholder focus:outline-none "
-              />
-            </div>
-            <div className="px-3 py-2.5">
-              <Image src="/elements/search_icon.svg" width={20} height={20} alt="search" />
-            </div>
-          </div>
-        </div>
+      <section id="conditional-filters" className="mb-10 flex items-center gap-24px px-4px">
         {/* Date Picker */}
-        <div className="flex items-center justify-between rounded-lg bg-white">
-          <div className="w-full">
+        <div>
+          <DatePicker
+            type={DatePickerType.CHOOSE_PERIOD}
+            period={datePeriod}
+            setFilteredPeriod={setDatePeriod}
+            className="w-360px items-center text-left"
+          />
+        </div>
+        {/* Search */}
+        <div className="flex grow items-center justify-between rounded-sm border border-lightGray3 bg-input-surface-input-background">
+          <div className="grow">
             <input
               type="text"
-              placeholder="Start Date - End Date"
-              className="rounded-lg bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+              placeholder="Search"
+              className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none "
             />
           </div>
-          <div className="px-3 py-2.5 text-icon-surface-single-color-primary hover:text-primaryYellow">
-            {/* <Image src="/elements/calendar.svg" width={20} height={20} alt="calendar" /> */}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M6.66862 0.917969C7.08283 0.917969 7.41862 1.25376 7.41862 1.66797V2.58464H12.5853V1.66797C12.5853 1.25376 12.9211 0.917969 13.3353 0.917969C13.7495 0.917969 14.0853 1.25376 14.0853 1.66797V2.5855C14.5155 2.58766 14.8864 2.59515 15.205 2.62119C15.6683 2.65904 16.0867 2.73977 16.4774 2.93886C17.0889 3.25045 17.5861 3.74764 17.8977 4.35917C18.0968 4.74991 18.1776 5.16831 18.2154 5.63157C18.252 6.07914 18.252 6.62986 18.252 7.30325V7.33464V8.33464V14.3346V14.366C18.252 15.0394 18.252 15.5901 18.2154 16.0377C18.1776 16.501 18.0968 16.9194 17.8977 17.3101C17.5861 17.9216 17.0889 18.4188 16.4774 18.7304C16.0867 18.9295 15.6683 19.0102 15.205 19.0481C14.7575 19.0847 14.2068 19.0846 13.5334 19.0846H13.502H6.50195H6.47052C5.79715 19.0846 5.24644 19.0847 4.79888 19.0481C4.33562 19.0102 3.91723 18.9295 3.52648 18.7304C2.91496 18.4188 2.41777 17.9216 2.10618 17.3101C1.90709 16.9194 1.82635 16.501 1.7885 16.0377C1.75194 15.5901 1.75194 15.0394 1.75195 14.3661L1.75195 14.3346V8.33464V7.33464L1.75195 7.30322C1.75194 6.62984 1.75194 6.07913 1.7885 5.63157C1.82635 5.16831 1.90709 4.74991 2.10618 4.35917C2.41777 3.74764 2.91496 3.25045 3.52648 2.93886C3.91723 2.73977 4.33562 2.65904 4.79888 2.62119C5.11751 2.59515 5.4884 2.58766 5.91862 2.5855V1.66797C5.91862 1.25376 6.25441 0.917969 6.66862 0.917969ZM5.91862 4.08559C5.50621 4.08771 5.18665 4.0945 4.92103 4.11621C4.55053 4.14648 4.35151 4.20198 4.20747 4.27537C3.87819 4.44315 3.61047 4.71087 3.44269 5.04015C3.3693 5.18419 3.31379 5.38321 3.28352 5.75371C3.25254 6.13297 3.25195 6.62219 3.25195 7.33464V7.58464H16.752V7.33464C16.752 6.62219 16.7514 6.13297 16.7204 5.75371C16.6901 5.38321 16.6346 5.18419 16.5612 5.04015C16.3934 4.71087 16.1257 4.44315 15.7964 4.27537C15.6524 4.20198 15.4534 4.14648 15.0829 4.11621C14.8173 4.0945 14.4977 4.08771 14.0853 4.08559V5.0013C14.0853 5.41552 13.7495 5.7513 13.3353 5.7513C12.9211 5.7513 12.5853 5.41552 12.5853 5.0013V4.08464H7.41862V5.0013C7.41862 5.41552 7.08283 5.7513 6.66862 5.7513C6.25441 5.7513 5.91862 5.41552 5.91862 5.0013V4.08559ZM16.752 9.08464H3.25195V14.3346C3.25195 15.0471 3.25254 15.5363 3.28352 15.9156C3.31379 16.2861 3.3693 16.4851 3.44269 16.6291C3.61047 16.9584 3.87819 17.2261 4.20747 17.3939C4.35151 17.4673 4.55053 17.5228 4.92103 17.5531C5.30029 17.5841 5.78951 17.5846 6.50195 17.5846H13.502C14.2144 17.5846 14.7036 17.5841 15.0829 17.5531C15.4534 17.5228 15.6524 17.4673 15.7964 17.3939C16.1257 17.2261 16.3934 16.9584 16.5612 16.6291C16.6346 16.4851 16.6901 16.2861 16.7204 15.9156C16.7514 15.5363 16.752 15.0471 16.752 14.3346V9.08464Z"
-                className="fill-current"
-              />
-            </svg>
+          <div className="px-3 py-2.5">
+            <Image src="/elements/search_icon.svg" width={20} height={20} alt="search" />
           </div>
         </div>
       </section>
@@ -254,8 +255,10 @@ const auditReport = () => {
       <section id="audit-report-list" className="flex flex-col gap-5">
         {/* Filter Display List */}
         <div className="flex items-center gap-5 px-4px">
-          <div className="text-lg font-semibold">Show Designated Regional Companies</div>
-          <form className="flex gap-5 text-sm font-semibold text-primaryYellow">
+          <div className="text-lg font-semibold text-navy-blue-25">
+            Show Designated Regional Companies
+          </div>
+          <form className="flex gap-5 text-sm font-semibold text-text-brand-primary-lv2">
             <label htmlFor="us" className="flex gap-2">
               <input type="checkbox" id="us" name="country" value="US" /> US
             </label>
@@ -270,12 +273,12 @@ const auditReport = () => {
         {/* Table */}
         <div className="">
           <table className="w-full border-separate border-spacing-x-1 text-center">
-            <thead className="bg-primaryYellow text-h6 font-bold leading-8 text-black">
+            <thead className="bg-stroke-brand-primary-moderate text-h6 font-bold leading-8 text-text-brand-secondary-lv1">
               <tr className="">
-                <th className="px-2 py-12px">Code</th>
-                <th className="px-2 py-12px">Regional</th>
-                <th className="px-2 py-12px">Company</th>
-                <th className="flex items-center justify-center gap-1 px-2 py-12px">
+                <th className="px-8px py-12px">Code</th>
+                <th className="px-8px py-12px">Regional</th>
+                <th className="px-8px py-12px">Company</th>
+                <th className="flex items-center justify-center gap-1 px-8px py-12px">
                   <div>Information Year</div>
                   <div onClick={() => handleSort('informationYear')} className="cursor-pointer">
                     <svg
@@ -292,8 +295,8 @@ const auditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-2 py-12px">Detailed Information</th>
-                <th className="flex items-center justify-center gap-1 px-2 py-12px">
+                <th className="px-8px py-12px">Detailed Information</th>
+                <th className="flex items-center justify-center gap-1 px-8px py-12px">
                   <div>Credit rating</div>
                   <div onClick={() => handleSort('creditRating')} className="cursor-pointer">
                     <svg
@@ -310,11 +313,11 @@ const auditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-2 py-12px">Date of Upload</th>
-                <th className="px-2 py-12px">LINK</th>
+                <th className="px-8px py-12px">Date of Upload</th>
+                <th className="px-8px py-12px">LINK</th>
               </tr>
             </thead>
-            <tbody className="text-lg font-medium text-black">
+            <tbody className="text-lg font-medium text-text-brand-secondary-lv1">
               {/* Dynamically generate table rows */}
               {displayTableRows}
             </tbody>
@@ -323,7 +326,7 @@ const auditReport = () => {
         {/* Checkbox : no-daily-reports */}
         <div className="self-end px-4px">
           <form className="">
-            <label htmlFor="no-daily-reports" className="flex gap-2 text-primaryYellow">
+            <label htmlFor="no-daily-reports" className="flex gap-2 text-text-brand-primary-lv2">
               <input
                 type="checkbox"
                 id="no-daily-reports"
@@ -337,7 +340,7 @@ const auditReport = () => {
         {/* Pagination */}
         <div className="flex flex-col items-center">
           <div className="flex gap-10px">
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/first_page_icon.svg"
                 width={20}
@@ -345,7 +348,7 @@ const auditReport = () => {
                 alt="first_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/previous_page_icon.svg"
                 width={20}
@@ -353,10 +356,10 @@ const auditReport = () => {
                 alt="previous_page_icon"
               />
             </div>
-            <div className="flex w-11 items-center justify-center rounded border border-primaryYellow p-3 text-primaryYellow">
+            <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
               1
             </div>
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/next_page_icon.svg"
                 width={20}
@@ -364,7 +367,7 @@ const auditReport = () => {
                 alt="next_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
               <Image
                 src="/elements/last_page_icon.svg"
                 width={20}
@@ -383,20 +386,22 @@ const auditReport = () => {
   const mobileVer = (
     <div className="flex flex-col px-5 lg:hidden">
       {/* Title */}
-      <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9">
+      <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9 text-navy-blue-25">
         Audit Report
       </section>
       {/* Conditional Filters */}
       <section className="flex items-end gap-1">
         {/* Search */}
         <div className="flex grow flex-col gap-2">
-          <div className="text-sm font-semibold">Company Code or Abbreviation </div>
-          <div className="flex items-center justify-between rounded-md border border-input-stroke-input bg-input-surface-input-background focus-within:border-primaryYellow focus-within:bg-input-surface-input-selected focus:border">
-            <div className="grow rounded-md px-3">
+          <div className="text-sm font-semibold text-navy-blue-25">
+            Company Code or Abbreviation{' '}
+          </div>
+          <div className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
+            <div className="grow rounded-sm px-3">
               <input
                 type="text"
                 placeholder="Search"
-                className="w-full rounded-md bg-transparent py-2.5 text-xs font-medium  text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
+                className="w-full rounded-sm bg-transparent py-2.5 text-xs font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>
             <div className="px-3 py-2.5">
@@ -405,21 +410,14 @@ const auditReport = () => {
           </div>
         </div>
         {/* Date Picker */}
-        <div className="rounded-xs border border-stroke-neutral-solid-light p-2.5 text-neutral-white">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M5.33545 0.667725C5.70364 0.667725 6.00212 0.966201 6.00212 1.33439V2.00106H10.0021V1.33439C10.0021 0.966201 10.3006 0.667725 10.6688 0.667725C11.037 0.667725 11.3354 0.966201 11.3354 1.33439V2.00214C11.6524 2.00432 11.9295 2.01087 12.17 2.03052C12.5447 2.06114 12.8892 2.12685 13.2128 2.29171C13.7145 2.54737 14.1225 2.95532 14.3781 3.45708C14.543 3.78064 14.6087 4.12511 14.6393 4.49984C14.6688 4.86063 14.6688 5.30354 14.6688 5.84018V11.4953C14.6688 12.0319 14.6688 12.4748 14.6393 12.8356C14.6087 13.2103 14.543 13.5548 14.3781 13.8784C14.1225 14.3801 13.7145 14.7881 13.2128 15.0437C12.8892 15.2086 12.5447 15.2743 12.17 15.3049C11.8092 15.3344 11.3663 15.3344 10.8297 15.3344H5.17457C4.63793 15.3344 4.19503 15.3344 3.83423 15.3049C3.4595 15.2743 3.11503 15.2086 2.79148 15.0437C2.28971 14.7881 1.88176 14.3801 1.6261 13.8784C1.46124 13.5548 1.39553 13.2103 1.36491 12.8356C1.33543 12.4748 1.33544 12.0319 1.33545 11.4953V5.84019C1.33544 5.30354 1.33543 4.86064 1.36491 4.49984C1.39553 4.12511 1.46124 3.78064 1.6261 3.45708C1.88176 2.95532 2.28971 2.54737 2.79148 2.29171C3.11503 2.12685 3.4595 2.06114 3.83423 2.03052C4.07477 2.01087 4.35181 2.00432 4.66878 2.00214V1.33439C4.66878 0.966201 4.96726 0.667725 5.33545 0.667725ZM4.66878 3.33557C4.37176 3.33765 4.13854 3.34343 3.94281 3.35943C3.65053 3.38331 3.50106 3.42659 3.3968 3.47972C3.14591 3.60755 2.94194 3.81152 2.81411 4.0624C2.76098 4.16667 2.7177 4.31614 2.69382 4.60842C2.6693 4.90848 2.66878 5.29667 2.66878 5.86772V6.00106H13.3354V5.86772C13.3354 5.29667 13.3349 4.90848 13.3104 4.60842C13.2865 4.31614 13.2432 4.16667 13.1901 4.0624C13.0623 3.81152 12.8583 3.60755 12.6074 3.47972C12.5032 3.42659 12.3537 3.38331 12.0614 3.35943C11.8657 3.34343 11.6325 3.33765 11.3354 3.33557V4.00106C11.3354 4.36925 11.037 4.66772 10.6688 4.66772C10.3006 4.66772 10.0021 4.36925 10.0021 4.00106V3.33439H6.00212V4.00106C6.00212 4.36925 5.70364 4.66772 5.33545 4.66772C4.96726 4.66772 4.66878 4.36925 4.66878 4.00106V3.33557ZM13.3354 7.33439H2.66878V11.4677C2.66878 12.0388 2.6693 12.427 2.69382 12.727C2.7177 13.0193 2.76098 13.1688 2.81411 13.273C2.94194 13.5239 3.14591 13.7279 3.3968 13.8557C3.50106 13.9089 3.65053 13.9521 3.94281 13.976C4.24287 14.0005 4.63106 14.0011 5.20212 14.0011H10.8021C11.3732 14.0011 11.7614 14.0005 12.0614 13.976C12.3537 13.9521 12.5032 13.9089 12.6074 13.8557C12.8583 13.7279 13.0623 13.5239 13.1901 13.273C13.2432 13.1688 13.2865 13.0193 13.3104 12.727C13.3349 12.427 13.3354 12.0388 13.3354 11.4677V7.33439Z"
-              className="fill-current"
-            />
-          </svg>
+        <div>
+          <DatePicker
+            type={DatePickerType.ICON}
+            period={datePeriod}
+            setFilteredPeriod={setDatePeriod}
+            calenderClassName="right-0"
+            className="rounded-xs border border-stroke-neutral-solid-light bg-inherit p-2.5 text-neutral-white"
+          />
         </div>
         {/* Sort */}
         <div className="rounded-xs border border-stroke-neutral-solid-light p-2.5 text-neutral-white">
@@ -442,8 +440,8 @@ const auditReport = () => {
       {/* Region & Switch daily reports */}
       <section className="flex justify-between pt-5">
         <div className="flex items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
-          <div className="text-sm font-medium">Region</div>
-          <div>
+          <div className="text-sm font-medium text-navy-blue-25">Region</div>
+          <div className="text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -487,19 +485,18 @@ const auditReport = () => {
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="fill-current"
               />
             </svg>
           </div>
-          <div>Card List</div>
+          <div className="whitespace-nowrap text-navy-blue-25">Card List</div>
         </div>
         {/* line */}
         <div className="grow bg-stroke-neutral-solid-light">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="184"
+            width="1"
             height="1"
-            viewBox="0 0 184 1"
+            viewBox="0 0 1 1"
             fill="none"
           >
             <line
@@ -518,7 +515,7 @@ const auditReport = () => {
       {/* Pagination */}
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -540,7 +537,7 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -556,10 +553,10 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex w-11 items-center justify-center rounded border border-primaryYellow p-3 text-primaryYellow">
+          <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
             1
           </div>
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -575,7 +572,7 @@ const auditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded border border-lightWhite p-3">
+          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -614,8 +611,8 @@ const auditReport = () => {
         <LandingNavBar />
       </nav>
 
-      <main className="w-screen overflow-hidden text-white">
-        <div className="min-h-screen bg-secondaryBlue font-barlow">
+      <main className="w-screen overflow-hidden">
+        <div className="min-h-screen bg-navy-blue-600 font-barlow">
           {desktopVer}
           {mobileVer}
         </div>
@@ -632,4 +629,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default auditReport;
+export default AuditReport;
