@@ -700,6 +700,7 @@ module.exports = {
         primaryYellow3: '#FFD892',
         primaryYellow4: '#FFA600',
         primaryYellow5: '#CC8401',
+        primaryYellow6: '#997C15',
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
@@ -721,6 +722,8 @@ module.exports = {
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',
+
+        warningYellow: '#FFCF24',
 
         indigo: '#8098F9',
       },
