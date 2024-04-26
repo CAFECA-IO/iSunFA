@@ -716,6 +716,7 @@ module.exports = {
         navyBlue: '#002462',
         navyBlue2: '#27354E',
         darkBlue: '#1570EF',
+        darkBlue2: '#314362',
 
         errorRed: '#963737',
         errorRed2: '#FED7D7',
@@ -1323,6 +1324,9 @@ module.exports = {
       },
       minWidth: {
         '200px': '200px',
+      },
+      maxHeight: {
+        '230px': '230px',
       },
       minHeight: {
         fit: 'fit-content',

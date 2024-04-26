@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
+import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
 import { IDatePeriod } from '../../interfaces/date_period';
 import { IJournal } from '../../interfaces/journal';
 import { default30DayPeriodInSec } from '../../constants/display';
@@ -25,19 +25,10 @@ const ficSelection: string[] = [
 const projectSelection: string[] = ['None', 'Project A', 'Project B', 'Project C'];
 const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contract C'];
 
-enum PaymentPeriod {
-  AT_ONCE = 'At Once',
-  INSTALLMENT = 'Installment',
-}
-
-enum PaymentState {
-  PAID = 'Paid',
-  UNPAID = 'Unpaid',
-  PARTIAL_PAID = 'Partial Paid',
-}
-
 const NewJournalForm = () => {
+  // Info: (20240428 - Julian) get values from context
   const { warningModalVisibilityHandler, warningModalDataHandler } = useGlobalCtx();
+  const { addTempJournal } = useAccountingCtx();
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -61,17 +52,27 @@ const NewJournalForm = () => {
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriod>(PaymentPeriod.AT_ONCE);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
-  const [paymentState, setPaymentState] = useState<PaymentState>(PaymentState.PAID);
+  const [paymentState, setPaymentState] = useState<PaymentState>(PaymentState.UNPAID);
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
   const [selectedProject, setSelectedProject] = useState<string>(projectSelection[0]);
   const [selectedContract, setSelectedContract] = useState<string>(contractSelection[0]);
 
-  // ToDo: (20240425 - Julian) move to context
-  const [tempJournalData, setTempJournalData] = useState<IJournal[]>([]);
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (formHasChanged) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [formHasChanged]);
 
   // Info: (20240425 - Julian) 整理日記帳資料
   const newJournalData: IJournal = {
+    id: `${inputDescription}_${Date.now()}`, // Info: (20240426 - Julian) 暫時以 description + timestamp 當作 id
     basicInfo: {
       dateStartTimestamp: datePeriod.startTimeStamp,
       dateEndTimestamp: datePeriod.endTimeStamp,
@@ -213,7 +214,7 @@ const NewJournalForm = () => {
     setInputAccountNumber('');
     setPaymentPeriod(PaymentPeriod.AT_ONCE);
     setInputInstallment(0);
-    setPaymentState(PaymentState.PAID);
+    setPaymentState(PaymentState.UNPAID);
     setInputPartialPaid(0);
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
@@ -236,39 +237,13 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) 儲存日記帳資料
   const saveJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setTempJournalData([...tempJournalData, newJournalData]);
+    // ToDo: (20240426 - Julian) Date 未選取也能送出，需設定阻擋機制
+    addTempJournal(newJournalData);
   };
 
   // Info: (20240425 - Julian) radio button CSS style
   const radioButtonStyle =
     'relative h-16px w-16px appearance-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
-
-  const router = useRouter();
-
-  // Info (20240220 - Murky) Prevent Unsave leave
-  useEffect(() => {
-    const warningText = 'You have unsaved changes - are you sure you wish to leave this page?';
-
-    const handleWindowClose = (e: BeforeUnloadEvent) => {
-      if (!formHasChanged) return;
-      e.preventDefault();
-      // return (e.returnValue = warningText);
-    };
-    const handleBrowseAway = () => {
-      if (!formHasChanged) return;
-
-      if (window.confirm(warningText)) return;
-      router.events.emit('routeChangeError');
-      throw new Error('routeChange aborted.');
-    };
-
-    window.addEventListener('beforeunload', handleWindowClose);
-    router.events.on('routeChangeStart', handleBrowseAway);
-    return () => {
-      window.removeEventListener('beforeunload', handleWindowClose);
-      router.events.off('routeChangeStart', handleBrowseAway);
-    };
-  }, [formHasChanged]);
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = eventTypeSelection.map((type: string) => {
@@ -878,62 +853,36 @@ const NewJournalForm = () => {
     </>
   );
 
-  // ToDo: (20240425 - Julian) move to <StepTwoTab />
-  const displayTempList = (
-    <div className="mt-10 flex flex-col justify-center">
-      {tempJournalData.map((journal, index) => {
-        const deleteTempClickHandler = () => {
-          const newData = tempJournalData.filter((_, i) => i !== index);
-          setTempJournalData(newData);
-        };
-        return (
-          <div key={journal.basicInfo.description} className="flex">
-            <p>
-              {index + 1}:{journal.basicInfo.description}
-            </p>
-            <p className="ml-70px cursor-pointer text-gray-700" onClick={deleteTempClickHandler}>
-              Delete
-            </p>
-          </div>
-        );
-      })}
-    </div>
-  );
-
   return (
-    <>
-      <form
-        onSubmit={saveJournalHandler}
-        onChange={formChangedHandler}
-        className="flex flex-col gap-8px"
-      >
-        {/* Info: (20240423 - Julian) Basic Info */}
-        {displayedBasicInfo}
+    <form
+      onSubmit={saveJournalHandler}
+      onChange={formChangedHandler}
+      className="flex flex-col gap-8px"
+    >
+      {/* Info: (20240423 - Julian) Basic Info */}
+      {displayedBasicInfo}
 
-        {/* Info: (20240423 - Julian) Payment */}
-        {displayedPayment}
+      {/* Info: (20240423 - Julian) Payment */}
+      {displayedPayment}
 
-        {/* Info: (20240423 - Julian) Project */}
-        {displayedProject}
+      {/* Info: (20240423 - Julian) Project */}
+      {displayedProject}
 
-        {/* Info: (20240423 - Julian) Buttons */}
-        <div className="ml-auto flex items-center gap-24px">
-          <button
-            id="clearJournalFormBtn"
-            type="button"
-            onClick={clearAllClickHandler}
-            className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
-          >
-            Clear all
-          </button>
-          <Button id="saveJournalBtn" type="submit" className="px-16px py-8px">
-            Save
-          </Button>
-        </div>
-      </form>
-      {/* ToDo: (20240425 - Julian) Temp Journal List */}
-      {displayTempList}
-    </>
+      {/* Info: (20240423 - Julian) Buttons */}
+      <div className="ml-auto flex items-center gap-24px">
+        <button
+          id="clearJournalFormBtn"
+          type="button"
+          onClick={clearAllClickHandler}
+          className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+        >
+          Clear all
+        </button>
+        <Button id="saveJournalBtn" type="submit" className="px-16px py-8px">
+          Save
+        </Button>
+      </div>
+    </form>
   );
 };
 
