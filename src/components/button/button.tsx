@@ -16,7 +16,7 @@ const buttonVariants = cva(
         tertiary:
           'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover',
         tertiaryOutline:
-          'border border-tertiaryBlue text-tertiaryBlue hover:border-primaryYellow hover:text-primaryYellow group-hover:border-primaryYellow group-hover:text-primaryYellow',
+          'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
         // outline:
         //   'border border-navyBlue2 text-navyBlue2 hover:border-primaryYellow group-hover:border-primaryYellow group-hover:text-primaryYellow',
       },

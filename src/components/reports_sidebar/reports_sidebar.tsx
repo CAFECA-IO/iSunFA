@@ -72,8 +72,8 @@ const ReportsSidebar = () => {
 
           {/* Info: Menu (20240423 - Shirley) */}
           <div className="flex w-full flex-col items-start justify-center py-16px">
-            <button
-              type="button"
+            <Link
+              href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-active"
             >
               <svg
@@ -105,10 +105,10 @@ const ReportsSidebar = () => {
               >
                 Financial Report
               </p>
-            </button>
+            </Link>
 
-            <button
-              type="button"
+            <Link
+              href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default hover:text-tabs-text-active"
             >
               <svg
@@ -133,7 +133,7 @@ const ReportsSidebar = () => {
               >
                 Analysis Report
               </p>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

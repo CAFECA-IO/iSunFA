@@ -1,18 +1,20 @@
 import Head from 'next/head';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import React from 'react';
-import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
-import { ILocale } from '../interfaces/locale';
-import LandingPageBody from '../components/landing_page_body/landing_page_body';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import NavBar from '../../../../components/nav_bar/nav_bar';
+import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
+import FinancialReportSection from '../../../../components/financial_report_section/financial_report_section';
+import { ILocale } from '../../../../interfaces/locale';
 
-function LandingPage() {
+const ReportPage = () => {
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA</title>
+        {/* TODO: i18n (20240409 - Shirley) */}
+        <title>Financial Report - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -27,17 +29,22 @@ function LandingPage() {
         />
       </Head>
 
-      {/*  Info: (20230712 - Shirley) Navbar */}
-      <nav className="">
-        <LandingNavBar transparentInitially />
-      </nav>
+      <div className="font-barlow">
+        <div className="">
+          <NavBar />
+        </div>
 
-      <main className="w-screen overflow-hidden text-white">
-        <LandingPageBody />
-      </main>
+        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+          <ReportsSidebar />
+        </div>
+
+        <div className="h-800px bg-surface-neutral-main-background md:h-1100px">
+          <FinancialReportSection />
+        </div>
+      </div>
     </>
   );
-}
+};
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
@@ -47,4 +54,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default LandingPage;
+export default ReportPage;

@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { UserProvider } from '../contexts/user_context';
 import { GlobalProvider } from '../contexts/global_context';
 import { DashboardProvider } from '../contexts/dashboard_context';
+import { AccountingProvider } from '../contexts/accounting_context';
 import { COOKIE_NAME } from '../constants/config';
 
 function App({ Component, pageProps }: AppProps) {
@@ -25,9 +26,11 @@ function App({ Component, pageProps }: AppProps) {
     <div className="selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
       <UserProvider>
         <DashboardProvider>
-          <GlobalProvider>
-            <Component {...pageProps} />
-          </GlobalProvider>
+          <AccountingProvider>
+            <GlobalProvider>
+              <Component {...pageProps} />
+            </GlobalProvider>
+          </AccountingProvider>
         </DashboardProvider>
       </UserProvider>{' '}
     </div>
