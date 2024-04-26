@@ -7,8 +7,55 @@ import { useAccountingCtx } from '../../contexts/accounting_context';
 const RecordHoldingArea = () => {
   const { tempJournalList, duplicateTempJournal, removeTempJournal } = useAccountingCtx();
 
-  // Info: (20240426 - Julian) 暫存列表內容
-  const displayTempList = tempJournalList.map((journal, index) => {
+  const displayTempListMobile = tempJournalList.map((journal) => {
+    const duplicateTempClickHandler = () => duplicateTempJournal(journal.id);
+    const deleteTempClickHandler = () => removeTempJournal(journal.id);
+
+    return (
+      <div
+        key={journal.id}
+        className="flex flex-col items-start gap-y-16px rounded-xs border border-lightGray6 bg-white px-20px py-10px text-sm text-navyBlue2"
+      >
+        {/* Info: (20240426 - Julian) sort */}
+        <div className="font-medium">{journal.basicInfo.description}</div>
+        {/* Info: (20240426 - Julian) particulars */}
+        <div className="font-semibold">
+          {journal.payment.totalPrice}
+          <span className="ml-4px text-lightGray4">TWD</span>
+        </div>
+        {/* ToDo: (20240426 - Julian) accounting title */}
+        <div className="font-medium">Accounting Title</div>
+        {/* ToDo: (20240426 - Julian) event code */}
+        <div className="font-semibold text-primaryYellow">{journal.basicInfo.eventType}</div>
+        {/* Info: (20240426 - Julian) action */}
+        <div className="ml-auto flex items-center gap-16px">
+          {/* Info: (20240426 - Julian) copy button */}
+          <button
+            type="button"
+            className="text-darkBlue2 hover:text-primaryYellow"
+            onClick={duplicateTempClickHandler}
+          >
+            <PiCopySimple size={20} />
+          </button>
+          {/* ToDo: (20240426 - Julian) edit button */}
+          <button type="button" className="text-darkBlue2 hover:text-primaryYellow">
+            <FiEdit size={16} />
+          </button>
+          {/* Info: (20240426 - Julian) delete button */}
+          <button
+            type="button"
+            className="text-darkBlue2 hover:text-primaryYellow"
+            onClick={deleteTempClickHandler}
+          >
+            <RiDeleteBinLine size={20} />
+          </button>
+        </div>
+      </div>
+    );
+  });
+
+  // Info: (20240426 - Julian) 電腦版暫存列表
+  const displayTempListDesktop = tempJournalList.map((journal, index) => {
     const duplicateTempClickHandler = () => duplicateTempJournal(journal.id);
     const deleteTempClickHandler = () => removeTempJournal(journal.id);
 
@@ -76,7 +123,8 @@ const RecordHoldingArea = () => {
         <hr className="flex-1 border-lightGray3" />
       </div>
 
-      <div className="flex w-full flex-col gap-y-8px">
+      {/* Info: (20240426 - Julian) Desktop version */}
+      <div className="hidden w-full flex-col gap-y-8px md:flex">
         {/* Info: (20240426 - Julian) Header */}
         <div className="flex justify-between border border-lightGray6 bg-white px-10px py-8px text-center text-sm font-semibold text-lightGray4">
           <p className="w-1/15">Sort</p>
@@ -88,8 +136,13 @@ const RecordHoldingArea = () => {
         </div>
 
         {/* Info: (20240426 - Julian) Content */}
-        <div className="flex max-h-230px flex-col gap-y-8px overflow-y-auto">{displayTempList}</div>
+        <div className="flex max-h-230px flex-col gap-y-8px overflow-y-auto">
+          {displayTempListDesktop}
+        </div>
       </div>
+
+      {/* Info: (20240426 - Julian) Mobile version */}
+      <div className="flex w-full flex-col gap-y-8px md:hidden">{displayTempListMobile}</div>
     </>
   );
 };
