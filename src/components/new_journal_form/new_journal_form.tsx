@@ -72,7 +72,7 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 整理日記帳資料
   const newJournalData: IJournal = {
-    id: `${inputDescription} - ${Math.floor(new Date().getTime() / 1000)}`,
+    id: `${inputDescription}_${Date.now()}`, // Info: (20240426 - Julian) 暫時以 description + timestamp 當作 id
     basicInfo: {
       dateStartTimestamp: datePeriod.startTimeStamp,
       dateEndTimestamp: datePeriod.endTimeStamp,
@@ -237,6 +237,7 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) 儲存日記帳資料
   const saveJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // ToDo: (20240426 - Julian) Date 未選取也能送出，需設定阻擋機制
     addTempJournal(newJournalData);
   };
 

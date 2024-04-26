@@ -47,7 +47,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const duplicateTempJournal = useCallback(
     (id: string) => {
       const targetJournal = tempJournalList.find((item) => item.id === id);
-      const newId = `${targetJournal?.id}_copy`;
+      const newId = `${targetJournal?.basicInfo.description}_${Date.now()}_copy`;
 
       if (targetJournal) {
         const duplicatedJournal = { ...targetJournal, id: newId };
@@ -75,8 +75,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }),
     [tempJournalList, addTempJournal, duplicateTempJournal, removeTempJournal]
   );
-
-  return <AccountingContext.Provider value={value}>{children}</AccountingContext.Provider>;
 
   return <AccountingContext.Provider value={value}>{children}</AccountingContext.Provider>;
 };
