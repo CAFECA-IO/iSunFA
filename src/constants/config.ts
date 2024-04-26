@@ -1,3 +1,5 @@
+import { randomInt } from 'crypto';
+
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
@@ -138,9 +140,26 @@ export const FORMIDABLE_CONFIG = {
   uploadDir: '/tmp',
 };
 
+// Info Murky: Ref: https://github.com/ollama/ollama/blob/main/docs/api.md#parameters
 export const LLAMA_CONFIG = {
   model: 'llama3',
   retryLimit: 10,
+  // Info Murky :Ref https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+  options: {
+    mirostat: 1,
+    mirostat_eta: 0.2,
+    mirostat_tau: 7,
+    num_ctx: 128,
+    repeat_last_n: 64,
+    repeat_penalty: 2,
+    temperature: 0.9,
+    seed: randomInt(1024),
+    stop: '}\n```',
+    tfs_z: 1,
+    num_predict: 256,
+    top_k: 100,
+    top_p: 0.9,
+  },
 };
 
 export const OCR_SERVICE_CONFIG = {

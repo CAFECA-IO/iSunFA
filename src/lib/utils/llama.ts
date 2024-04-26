@@ -1,4 +1,7 @@
 // Info Murky (20240423) This class is for llama connection
+
+import { LLAMA_CONFIG } from '@/constants/config';
+
 // every instruction need do declare in prompt, this class won't auto generate string of interface
 export default class LlamaConnect<T> {
   llamaURL: string;
@@ -87,8 +90,14 @@ export default class LlamaConnect<T> {
           prompt: !retry ? this.constructLLamaPrompt(input) : this.constructRetryPrompt(input),
           context,
           stream: false,
+          format: 'json',
+          options: LLAMA_CONFIG.options,
         }),
       });
+
+      // Deprecation Murky (20240423) debug
+      // eslint-disable-next-line no-console
+      console.log('option of ollama: ', JSON.stringify(LLAMA_CONFIG.options));
 
       const resultJSON = await result.json();
 
