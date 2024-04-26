@@ -140,7 +140,7 @@ const FinancialReportSection = () => {
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 max-md:max-w-full${
+        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
@@ -219,22 +219,6 @@ const FinancialReportSection = () => {
               <div className="mt-1.5">Financial Report</div>
             </div>
           </div>
-
-          {/* <div className="flex flex-col justify-center max-md:max-w-full">
-            <div className="flex flex-col gap-3 max-md:max-w-full">
-              <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
-                <div>
-                  <img
-                    loading="lazy"
-                    src="https://cdn.builder.io/api/v1/image/assets/TEMP/71f4b025eb7c23d6190160b22b5b6b11fe950aa5d08f1d6575e258ae90c00024?apiKey=0e17b0b875f041659e186639705112b1&"
-                    className="aspect-square w-[30px] shrink-0"
-                  />
-                </div>
-
-                <div className="mt-1.5">Financial Report</div>
-              </div>
-            </div>
-          </div> */}
 
           <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
@@ -315,7 +299,6 @@ const FinancialReportSection = () => {
               period={period}
               setFilteredPeriod={setPeriod}
               className=""
-              // w-[350px] justify-start md:w-560px
             />
           </div>
         </div>
