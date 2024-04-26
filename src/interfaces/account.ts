@@ -1,37 +1,13 @@
 import { cleanBoolean, cleanNumber, convertDateToTimestamp } from '@/lib/utils/common';
 
+// Info Murky (20240416): type
 export type AccountProgressStatus = 'success' | 'inProgress' | 'error' | 'notFound';
-
 export type EventType = 'income' | 'payment' | 'transfer';
-
-export function isEventType(data: string): data is EventType {
-  return data === 'income' || data === 'payment' || data === 'transfer';
-}
-
 export type VoucherType = 'receive' | 'expense' | 'transfer';
-
-export function isVoucherType(data: string): data is VoucherType {
-  return data === 'receive' || data === 'expense';
-}
-
-export const eventTypeToVoucherType = {
-  income: 'receive' as VoucherType,
-  payment: 'expense' as VoucherType,
-  transfer: 'transfer' as VoucherType,
-};
-
 export type PaymentStatusType = 'paid' | 'unpaid' | 'partial';
-
-export function isPaymentStatusType(data: string): data is PaymentStatusType {
-  return data === 'paid' || data === 'unpaid' || data === 'partial';
-}
-
 export type PaymentPeriodType = 'atOnce' | 'installment';
 
-export function isPaymentPeriodType(data: string): data is PaymentPeriodType {
-  return data === 'atOnce' || data === 'installment';
-}
-
+// Info Murky (20240416): Interface
 export interface AccountResultStatus {
   resultId: string;
   status: AccountProgressStatus;
@@ -53,6 +29,116 @@ export interface AccountInvoiceData {
     hasFee: boolean;
     fee: number;
   };
+}
+
+export interface AccountInvoiceWithPaymentMethod extends AccountInvoiceData {
+  payment: AccountInvoiceData['payment'] & {
+    paymentMethod: string;
+    paymentPeriod: PaymentPeriodType;
+    installmentPeriod: number;
+    paymentStatus: PaymentStatusType;
+    alreadyPaidAmount: number;
+  };
+}
+
+export interface AccountLineItem {
+  lineItemIndex: string;
+  accounting: string;
+  particular: string;
+  debit: boolean;
+  amount: number;
+}
+
+export interface AccountVoucherMetaData {
+  date: number;
+  voucherType: VoucherType;
+  venderOrSupplyer: string;
+  description: string;
+  totalPrice: number;
+  taxPercentage: number;
+  fee: number;
+  paymentMethod: string;
+  paymentPeriod: PaymentPeriodType;
+  installmentPeriod: number;
+  paymentStatus: PaymentStatusType;
+  alreadyPaidAmount: number;
+}
+
+export interface AccountVoucher {
+  voucherIndex: string;
+  metadatas: AccountVoucherMetaData[];
+  lineItems: AccountLineItem[];
+}
+
+// Info Murky (20240416): Constants
+export const eventTypeToVoucherType = {
+  income: 'receive' as VoucherType,
+  payment: 'expense' as VoucherType,
+  transfer: 'transfer' as VoucherType,
+};
+
+export const AccountInvoiceDataObjectVersion = {
+  date: {
+    start_date: 'use YYYY-MM-DD format',
+    end_date: 'use YYYY-MM-DD format',
+  },
+  eventType: "'income' | 'payment' | 'transfer'",
+  paymentReason: 'string',
+  description: 'string',
+  venderOrSupplyer: 'string',
+  payment: {
+    price: 'number',
+    hasTax: 'boolean',
+    taxPercentage: 'number',
+    hasFee: 'boolean',
+    fee: 'number',
+  },
+};
+
+export const AccountVoucherObjectVersion = {
+  voucherIndex: 'string',
+  metadatas: [
+    {
+      date: 'number (timestamp)',
+      voucherType: "VoucherType ('receive' | 'expense' | 'transfer')",
+      venderOrSupplyer: 'string',
+      description: 'string',
+      totalPrice: 'number',
+      taxPercentage: 'number',
+      fee: 'number',
+      paymentMethod: 'string',
+      paymentPeriod: "PaymentPeriodType ('atOnce' | 'installment')",
+      installmentPeriod: 'number',
+      paymentStatus: "PaymentStatusType ('paid' | 'unpaid' | 'partial')",
+      alreadyPaidAmount: 'number',
+    },
+  ],
+  lineItems: [
+    {
+      lineItemIndex: 'string',
+      accounting: 'string',
+      particular: 'string',
+      debit: 'boolean',
+      amount: 'number',
+    },
+  ],
+};
+
+// Info Murky (20240416): Type Guard
+export function isEventType(data: string): data is EventType {
+  return data === 'income' || data === 'payment' || data === 'transfer';
+}
+
+export function isVoucherType(data: string): data is VoucherType {
+  return data === 'receive' || data === 'expense';
+}
+
+export function isPaymentStatusType(data: string): data is PaymentStatusType {
+  return data === 'paid' || data === 'unpaid' || data === 'partial';
+}
+
+export function isPaymentPeriodType(data: string): data is PaymentPeriodType {
+  return data === 'atOnce' || data === 'installment';
 }
 
 // Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
@@ -89,16 +175,6 @@ export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
   );
 }
 
-export interface AccountInvoiceWithPaymentMethod extends AccountInvoiceData {
-  payment: AccountInvoiceData['payment'] & {
-    paymentMethod: string;
-    paymentPeriod: PaymentPeriodType;
-    installmentPeriod: number;
-    paymentStatus: PaymentStatusType;
-    alreadyPaidAmount: number;
-  };
-}
-
 export function isAccountInvoiceWithPaymentMethod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any
@@ -112,7 +188,94 @@ export function isAccountInvoiceWithPaymentMethod(
     isAccountInvoiceData(data)
   );
 }
+// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountLineItem(data: any): data is AccountLineItem {
+  return (
+    data &&
+    typeof data.lineItemIndex === 'string' &&
+    typeof data.accounting === 'string' &&
+    typeof data.particular === 'string' &&
+    typeof data.debit === 'boolean' &&
+    typeof data.amount === 'number'
+  );
+}
 
+export function isAccountLineItems(data: unknown): data is AccountLineItem[] {
+  if (!Array.isArray(data)) {
+    return false;
+  }
+  return data.every(isAccountLineItem);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountVoucherMetaData(data: any): data is AccountVoucherMetaData {
+  return (
+    data &&
+    typeof data.date === 'number' &&
+    isVoucherType(data.voucherType) &&
+    typeof data.venderOrSupplyer === 'string' &&
+    typeof data.description === 'string' &&
+    typeof data.totalPrice === 'number' &&
+    typeof data.taxPercentage === 'number' &&
+    typeof data.fee === 'number' &&
+    typeof data.paymentMethod === 'string' &&
+    isPaymentPeriodType(data.paymentPeriod) &&
+    typeof data.installmentPeriod === 'number' &&
+    isPaymentStatusType(data.paymentStatus) &&
+    typeof data.alreadyPaidAmount === 'number'
+  );
+}
+
+// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountVoucher(data: any): data is AccountVoucher {
+  const { voucherIndex, lineItems, metadatas } = data;
+  return (
+    typeof voucherIndex === 'string' &&
+    Array.isArray(metadatas) &&
+    metadatas.every(isAccountVoucherMetaData) &&
+    Array.isArray(lineItems) &&
+    lineItems.every(isAccountLineItem)
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function cleanAccountLineItem(rawData: any): AccountLineItem {
+  if (Array.isArray(rawData)) {
+    throw new Error('Invalid line item data, is array');
+  }
+  const { accounting, particular, debit, amount } = rawData;
+
+  const today = new Date();
+  const cleanedData: AccountLineItem = {
+    // Info: Murky this id is for demo, need to refactor
+    lineItemIndex:
+      today.getFullYear().toString() +
+      ('00' + today.getMonth().toString()).slice(-2) +
+      ('00' + today.getDate().toString()).slice(-2) +
+      Math.floor(Math.random() * 1000).toString(),
+    accounting: accounting || '',
+    particular: particular || '',
+    debit: cleanBoolean(debit),
+    amount: cleanNumber(amount),
+  };
+
+  if (!isAccountLineItem(cleanedData)) {
+    throw new Error('Invalid line item data, not clean');
+  }
+  return cleanedData;
+}
+export const AccountLineItemObjectVersion = [
+  {
+    lineItemIndex: 'string',
+    accounting: 'string',
+    particular: 'string',
+    debit: 'boolean',
+    amount: 'number',
+  },
+];
+// Info Murky (20240416): Convert the raw data to the OOO Types object
 // Main function to process and convert the invoice data
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cleanInvoiceData(rawData: any): AccountInvoiceData {
@@ -155,133 +318,12 @@ export function cleanInvoiceData(rawData: any): AccountInvoiceData {
   return cleanedData;
 }
 
-export const AccountInvoiceDataObjectVersion = {
-  date: {
-    start_date: 'use YYYY-MM-DD format',
-    end_date: 'use YYYY-MM-DD format',
-  },
-  eventType: "'income' | 'payment' | 'transfer'",
-  paymentReason: 'string',
-  description: 'string',
-  venderOrSupplyer: 'string',
-  payment: {
-    price: 'number',
-    hasTax: 'boolean',
-    taxPercentage: 'number',
-    hasFee: 'boolean',
-    fee: 'number',
-  },
-};
-
-export interface AccountLineItem {
-  lineItemIndex: string;
-  accounting: string;
-  particular: string;
-  debit: boolean;
-  amount: number;
-}
-
-// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAccountLineItem(data: any): data is AccountLineItem {
-  return (
-    data &&
-    typeof data.lineItemIndex === 'string' &&
-    typeof data.accounting === 'string' &&
-    typeof data.particular === 'string' &&
-    typeof data.debit === 'boolean' &&
-    typeof data.amount === 'number'
-  );
-}
-
-export function isAccountLineItems(data: unknown): data is AccountLineItem[] {
-  if (!Array.isArray(data)) {
-    return false;
-  }
-  return data.every(isAccountLineItem);
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function cleanAccountLineItem(rawData: any): AccountLineItem {
-  if (Array.isArray(rawData)) {
-    throw new Error('Invalid line item data, is array');
-  }
-  const { accounting, particular, debit, amount } = rawData;
-
-  const today = new Date();
-  const cleanedData: AccountLineItem = {
-    // Info: Murky this id is for demo, need to refactor
-    lineItemIndex:
-      today.getFullYear().toString() +
-      ('00' + today.getMonth().toString()).slice(-2) +
-      ('00' + today.getDate().toString()).slice(-2) +
-      Math.floor(Math.random() * 1000).toString(),
-    accounting: accounting || '',
-    particular: particular || '',
-    debit: cleanBoolean(debit),
-    amount: cleanNumber(amount),
-  };
-
-  if (!isAccountLineItem(cleanedData)) {
-    throw new Error('Invalid line item data, not clean');
-  }
-  return cleanedData;
-}
-export const AccountLineItemObjectVersion = [
-  {
-    lineItemIndex: 'string',
-    accounting: 'string',
-    particular: 'string',
-    debit: 'boolean',
-    amount: 'number',
-  },
-];
-export interface AccountVoucher {
-  voucherIndex: string;
-  metadatas: AccountVoucherMetaData[];
-  lineItems: AccountLineItem[];
-}
-
 export function cleanAccountLineItems(rawData: unknown): AccountLineItem[] {
   if (!Array.isArray(rawData)) {
     throw new Error('Invalid line item data');
   }
   return rawData.map((lineItem) => cleanAccountLineItem(lineItem));
 }
-
-export interface AccountVoucherMetaData {
-  date: number;
-  voucherType: VoucherType;
-  venderOrSupplyer: string;
-  description: string;
-  totalPrice: number;
-  taxPercentage: number;
-  fee: number;
-  paymentMethod: string;
-  paymentPeriod: PaymentPeriodType;
-  installmentPeriod: number;
-  paymentStatus: PaymentStatusType;
-  alreadyPaidAmount: number;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAccountVoucherMetaData(data: any): data is AccountVoucherMetaData {
-  return (
-    data &&
-    typeof data.date === 'number' &&
-    isVoucherType(data.voucherType) &&
-    typeof data.venderOrSupplyer === 'string' &&
-    typeof data.description === 'string' &&
-    typeof data.totalPrice === 'number' &&
-    typeof data.taxPercentage === 'number' &&
-    typeof data.fee === 'number' &&
-    typeof data.paymentMethod === 'string' &&
-    isPaymentPeriodType(data.paymentPeriod) &&
-    typeof data.installmentPeriod === 'number' &&
-    isPaymentStatusType(data.paymentStatus) &&
-    typeof data.alreadyPaidAmount === 'number'
-  );
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cleanedVoucherMetaData(rawData: any): AccountVoucherMetaData {
   const {
@@ -320,46 +362,6 @@ export function cleanedVoucherMetaData(rawData: any): AccountVoucherMetaData {
   return cleanedData;
 }
 
-// Info Murky (20240416): Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAccountVoucher(data: any): data is AccountVoucher {
-  const { voucherIndex, lineItems, metadatas } = data;
-  return (
-    typeof voucherIndex === 'string' &&
-    Array.isArray(metadatas) &&
-    metadatas.every(isAccountVoucherMetaData) &&
-    Array.isArray(lineItems) &&
-    lineItems.every(isAccountLineItem)
-  );
-}
-export const AccountVoucherObjectVersion = {
-  voucherIndex: 'string',
-  metadatas: [
-    {
-      date: 'number (timestamp)',
-      voucherType: "VoucherType ('receive' | 'expense' | 'transfer')",
-      venderOrSupplyer: 'string',
-      description: 'string',
-      totalPrice: 'number',
-      taxPercentage: 'number',
-      fee: 'number',
-      paymentMethod: 'string',
-      paymentPeriod: "PaymentPeriodType ('atOnce' | 'installment')",
-      installmentPeriod: 'number',
-      paymentStatus: "PaymentStatusType ('paid' | 'unpaid' | 'partial')",
-      alreadyPaidAmount: 'number',
-    },
-  ],
-  lineItems: [
-    {
-      lineItemIndex: 'string',
-      accounting: 'string',
-      particular: 'string',
-      debit: 'boolean',
-      amount: 'number',
-    },
-  ],
-};
 // info Murky (20240416): Convert the raw data to the AccountVoucher object
 //
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
@@ -382,9 +384,8 @@ export function cleanVoucherData(rawData: any): AccountVoucher {
     Math.floor(Math.random() * 1000).toString();
   const cleandLineItems = lineItems.map((lineItem) => cleanAccountLineItem(lineItem));
 
-  const cleanedVoucherMetaDatas: AccountVoucherMetaData[] = metadatas.map((voucherMetaData) =>
-    cleanedVoucherMetaData(voucherMetaData)
-  );
+  // prettier-ignore
+  const cleanedVoucherMetaDatas: AccountVoucherMetaData[] = metadatas.map((voucherMetaData) => cleanedVoucherMetaData(voucherMetaData));
   return {
     voucherIndex,
     metadatas: cleanedVoucherMetaDatas,
