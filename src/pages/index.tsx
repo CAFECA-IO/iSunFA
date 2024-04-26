@@ -29,7 +29,7 @@ function LandingPage() {
 
       {/*  Info: (20230712 - Shirley) Navbar */}
       <nav className="">
-        <LandingNavBar />
+        <LandingNavBar transparentInitially />
       </nav>
 
       <main className="w-screen overflow-hidden text-white">
