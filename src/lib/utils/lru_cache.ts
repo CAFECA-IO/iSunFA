@@ -1,3 +1,5 @@
+// Info Murky (20240422) THis class is implemented key value cache like redis
+
 // Info Murky (20240422) I need param inside class LRUNode can be override
 /* eslint-disable no-param-reassign */
 import { AccountProgressStatus } from '@/interfaces/account';

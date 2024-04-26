@@ -72,19 +72,6 @@ export default class OCRService {
     return hashedKey;
   }
 
-  // Deprecation Murky (20240423) debug
-  // public async tempTestOcr(getneratedDescription: string[]): Promise<string> {
-  //   const key = getneratedDescription[0];
-
-  //   let hashedKey = this.cache.hashId(key);
-  //   if (this.cache.get(hashedKey).value) {
-  //     return `Already extracted, resultId: ${hashedKey}`;
-  //   }
-  //   hashedKey = this.cache.put(key, 'inProgress', null);
-  //   this.ocrToAccountInvoiceData(hashedKey, getneratedDescription);
-  //   return hashedKey;
-  // }
-
   public getOCRStatus(resultId: string): AccountProgressStatus {
     const result = this.cache.get(resultId);
     if (!result) {

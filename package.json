@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.2+65",
+  "version": "0.1.2+66",
   "private": false,
   "scripts": {
     "dev": "next dev --port 3000",

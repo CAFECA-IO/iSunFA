@@ -1,11 +1,10 @@
 it('should pass', () => {
-  expect(1).toBe(1);
+  expect(true).toBe(true);
 });
 // import { NextApiRequest, NextApiResponse } from 'next';
 // import handler from './upload_invoice';
 // import { isAccountInvoiceData } from '../../../../interfaces/account';
 // import version from '../../../../lib/version';
-// // Mock the module and its function
 
 // // Cast to jest.Mock to inform TypeScript about the jest mocking properties
 
@@ -17,6 +16,7 @@ it('should pass', () => {
 //   };
 // });
 // beforeEach(() => {
+//   process.env.LLAMA_URL = 'https://fake-url.com';
 //   req = {
 //     headers: {},
 //     body: {},

@@ -1,3 +1,5 @@
+// Info Murky (20240422) THis class is node for LRU cache
+
 import { AccountProgressStatus } from '@/interfaces/account';
 
 export default class LRUNode<T> {
