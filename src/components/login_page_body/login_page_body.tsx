@@ -54,9 +54,9 @@ const LoginPageBody = () => {
                     Scan the QR code with the device you registered with{' '}
                   </div>
                 </div>
-                <div className="mt-32 flex w-[242px] max-w-full flex-col max-lg:mt-10">
-                  <div className="mx-5 flex flex-col justify-center rounded-[999px] max-lg:mx-2.5">
-                    <div className="flex aspect-square flex-col items-center justify-center rounded-[999px] bg-gray-300 px-16 max-lg:px-5">
+                <div className="mt-32 flex max-w-full flex-col justify-center max-lg:mt-10">
+                  <div className="flex flex-col justify-center rounded-[999px] max-lg:mx-2.5">
+                    <div className="flex aspect-square flex-col items-center justify-center px-16 max-lg:px-5">
                       <div className="flex items-center justify-center max-lg:mx-2">
                         {/* Info: anonymous avatar (20240422 - Shirley) */}
                         <svg
@@ -94,7 +94,7 @@ const LoginPageBody = () => {
                   <Button
                     variant={'tertiary'}
                     onClick={logInClickHandler}
-                    className="mt-10 flex justify-center gap-2 rounded-sm px-2 py-3.5 max-lg:px-5"
+                    className="mt-10 flex justify-center gap-2 px-2 py-3.5 max-lg:px-5"
                   >
                     <div className="text-lg font-medium leading-7 tracking-normal">
                       Log in with Device

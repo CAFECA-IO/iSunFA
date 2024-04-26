@@ -11,7 +11,7 @@ interface IPasskeySupportModal {
 const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasskeySupportModal) => {
   const isDisplayedPasskeySupportModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="rounded-m relative mx-auto flex flex-col items-start bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+      <div className="relative mx-auto flex flex-col items-start rounded-md bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="absolute right-3 top-3">
           <button onClick={modalVisibilityHandler} className="flex items-center justify-center">
             <svg
@@ -113,6 +113,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
                 alt=""
               />
             </div>
+
             <div className="flex flex-1 flex-col justify-center text-xs text-slate-500">
               iOS 16 & iPadOS 16 or later
             </div>
@@ -140,13 +141,14 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
           </div>
         </div>
         <div className="flex w-full items-center justify-center px-5 pb-0 pt-6 text-sm font-medium">
-          <button
+          <Button
+            variant={'tertiaryOutline'}
             type="button"
             onClick={modalVisibilityHandler}
-            className="w-[89px] rounded-sm  border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow"
+            className="w-[89px] border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow"
           >
             Got it!
-          </button>
+          </Button>
         </div>
       </div>
     </div>
