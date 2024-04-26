@@ -104,7 +104,7 @@ export default class LlamaConnect<T> {
 
       // Deprecation Murky (20240423) debug
       // eslint-disable-next-line no-console
-      console.log('option of ollama: ', JSON.stringify(LLAMA_CONFIG.options));
+      // console.log('option of ollama: ', JSON.stringify(LLAMA_CONFIG.options));
 
       const resultJSON = await result.json();
 
@@ -119,16 +119,20 @@ export default class LlamaConnect<T> {
       }
 
       const { response } = resultJSON;
+
+      // Deprecation Murky (20240423) debug
       // eslint-disable-next-line no-console
-      console.log('response:', response);
+      // console.log('response:', response);
+
       if (!response || typeof response !== 'string') {
         return { responseJSON: null, context: newContext };
       }
 
       const dataString = LlamaConnect.extractJSONFromText(response);
 
+      // Deprecation Murky (20240423) debug
       // eslint-disable-next-line no-console
-      console.log('dataString:', dataString);
+      // console.log('dataString:', dataString);
 
       if (!dataString) {
         return { responseJSON: null, context: newContext };
@@ -165,8 +169,10 @@ export default class LlamaConnect<T> {
         data = await this.postToLlama(input, context, true);
       }
 
+      // Deprecation Murky (20240423) debug
       // eslint-disable-next-line no-console
-      console.log('retryTimes:', retry, 'data:', data.responseJSON);
+      // console.log('retryTimes:', retry, 'data:', data.responseJSON);
+
       if (retry < this.retryLimit && data.responseJSON === null) {
         return await this.generateDataRecursive(input, data.context, retry + 1);
       } else {

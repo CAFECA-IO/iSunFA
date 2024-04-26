@@ -1,3 +1,5 @@
+// Info Murky (20240416): this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition
+
 import { cleanBoolean, cleanNumber, convertDateToTimestamp } from '@/lib/utils/common';
 
 // Info Murky (20240416): type
@@ -275,6 +277,7 @@ export const AccountLineItemObjectVersion = [
     amount: 'number',
   },
 ];
+
 // Info Murky (20240416): Convert the raw data to the OOO Types object
 // Main function to process and convert the invoice data
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
