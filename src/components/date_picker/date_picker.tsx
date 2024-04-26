@@ -44,6 +44,7 @@ interface IDatePickerProps {
   loading?: boolean;
   datePickerHandler?: (start: number, end: number) => Promise<void>;
   className?: string;
+  calenderClassName?: string;
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -178,6 +179,7 @@ const DatePicker = ({
   setFilteredPeriod,
   loading,
   className,
+  calenderClassName,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -328,12 +330,15 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'flex w-full items-center space-x-3 rounded-sm border bg-white p-3 font-inter hover:cursor-pointer',
-          isDateSelected
-            ? 'border-secondaryBlue text-secondaryBlue'
-            : 'border-lightGray3 text-lightGray3',
-          componentVisible ? 'border-primaryYellow text-primaryYellow' : '',
-          className
+          // default style
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 font-inter text-lightGray3 hover:cursor-pointer',
+          // props control style
+          className,
+          // variables control style
+          {
+            'border-secondaryBlue text-secondaryBlue': isDateSelected,
+            'border-primaryYellow text-primaryYellow': componentVisible,
+          }
         )}
       >
         <svg
@@ -365,14 +370,19 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           'group flex w-full items-center rounded-sm border border-lightGray3 bg-white p-3 font-inter hover:cursor-pointer',
-          componentVisible ? 'border-primaryYellow text-primaryYellow' : '',
-          className
+          className,
+          {
+            'border-primaryYellow text-primaryYellow': componentVisible,
+          }
         )}
       >
         <p
-          className={`flex-1 whitespace-nowrap text-sm group-hover:text-primaryYellow ${
-            componentVisible ? 'text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'
-          }`}
+          className={cn(
+            'flex-1 whitespace-nowrap text-sm text-lightGray3 group-hover:text-primaryYellow',
+            {
+              'text-primaryYellow': componentVisible,
+            }
+          )}
         >
           {displayPeriod}
         </p>
@@ -405,14 +415,19 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           'group flex w-full items-center rounded-sm border border-lightGray3 bg-white p-3 font-inter hover:cursor-pointer',
-          componentVisible ? 'border-primaryYellow text-primaryYellow' : '',
-          className
+          className,
+          {
+            'border-primaryYellow text-primaryYellow': componentVisible,
+          }
         )}
       >
         <p
-          className={`flex-1 whitespace-nowrap text-start text-sm group-hover:text-primaryYellow ${
-            componentVisible ? 'text-primaryYellow' : isDateSelected ? '' : 'text-lightGray3'
-          }`}
+          className={cn(
+            'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
+            {
+              'text-primaryYellow': componentVisible,
+            }
+          )}
         >
           {displayPeriod}
         </p>
@@ -450,10 +465,11 @@ const DatePicker = ({
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
           className={cn(
-            'absolute top-16 z-20 grid w-[300px] items-center space-y-4 rounded-md bg-white p-5 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
-            componentVisible && !loading
-              ? 'visible translate-y-0 grid-rows-1 opacity-100'
-              : 'invisible -translate-y-10 grid-rows-0 opacity-0'
+            'invisible absolute top-16 z-20 grid w-[300px] -translate-y-10 grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
+            calenderClassName,
+            {
+              'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
+            }
           )}
         >
           {/* Info: (20240417 - Shirley) Today button */}
