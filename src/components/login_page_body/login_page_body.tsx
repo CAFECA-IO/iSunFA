@@ -54,7 +54,7 @@ const LoginPageBody = () => {
                     Scan the QR code with the device you registered with{' '}
                   </div>
                 </div>
-                <div className="mt-32 flex max-w-full flex-col justify-center max-lg:mt-10">
+                <div className="mt-10 flex max-w-full flex-col justify-center max-lg:mt-10">
                   <div className="flex flex-col justify-center rounded-[999px] max-lg:mx-2.5">
                     <div className="flex aspect-square flex-col items-center justify-center px-16 max-lg:px-5">
                       <div className="flex items-center justify-center max-lg:mx-2">
@@ -94,7 +94,7 @@ const LoginPageBody = () => {
                   <Button
                     variant={'tertiary'}
                     onClick={logInClickHandler}
-                    className="mt-10 flex justify-center gap-2 px-2 py-3.5 max-lg:px-5"
+                    className="mx-auto mt-0 flex max-w-[400px] justify-center gap-2 py-3.5"
                   >
                     <div className="text-lg font-medium leading-7 tracking-normal">
                       Log in with Device
@@ -128,7 +128,7 @@ const LoginPageBody = () => {
                 <button
                   type="button"
                   onClick={showPassKeySupport}
-                  className="mt-32 flex justify-center gap-1 rounded-sm px-4 py-2 hover:opacity-70 max-lg:mt-10"
+                  className="mt-10 flex justify-center gap-1 rounded-sm px-4 py-2 hover:opacity-70 max-lg:mt-10"
                 >
                   <div
                     onClick={showPassKeySupport}
