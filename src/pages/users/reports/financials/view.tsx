@@ -1,20 +1,25 @@
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import NavBar from '../../../components/nav_bar/nav_bar';
-import { ILocale } from '../../../interfaces/locale';
-import ReportsSidebar from '../../../components/reports_sidebar/reports_sidebar';
-import FinancialReportSection from '../../../components/financial_report_section/financial_report_section';
+import NavBar from '../../../../components/nav_bar/nav_bar';
+import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
+import { ILocale } from '../../../../interfaces/locale';
+import ViewReportSection from '../../../../components/view_report_section/view_report_section';
 
-const ReportPage = () => {
+const View = () => {
+  const dummyReportData = {
+    tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+    tokenId: '37002036',
+    reportLink: 'https://baifa.io/reports/tbd14265/balance',
+  };
   return (
-    <>
+    <div>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Reports - iSunFA</title>
+        <title>Financial Report - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -38,13 +43,19 @@ const ReportPage = () => {
           <ReportsSidebar />
         </div>
 
-        <div className="h-1000px bg-surface-neutral-main-background md:h-1000px">
-          <FinancialReportSection />
+        <div className="h-screen bg-surface-neutral-main-background">
+          <ViewReportSection
+            tokenContract={dummyReportData.tokenContract}
+            tokenId={dummyReportData.tokenId}
+            reportLink={dummyReportData.reportLink}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 };
+
+export default View;
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
@@ -53,5 +64,3 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 });
 
 export const getStaticProps = getStaticPropsFunction;
-
-export default ReportPage;

@@ -5,6 +5,8 @@ import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
 const reportTypes = {
   balance_sheet: { id: 'balance_sheet', name: 'Balance Sheet' },
@@ -227,7 +229,7 @@ const FinancialReportSection = () => {
           </div>
         </div>
       </div>
-      <div className="mt-16 flex w-600px max-w-full flex-col self-center px-5 max-md:mt-10">
+      <div className="mt-16 flex w-600px max-w-full flex-col self-center px-5 max-md:mt-3">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
@@ -302,30 +304,34 @@ const FinancialReportSection = () => {
             />
           </div>
         </div>
-        <Button className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 max-md:mt-10 max-md:max-w-full max-md:px-5">
-          <div className="flex gap-1">
-            <div className="text-sm font-medium leading-5 tracking-normal text-yellow-700">
-              Generate
+        <Button
+          disabled={!period.endTimeStamp || !selectedLanguage.id || !selectedReportType}
+          className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        >
+          <Link href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}>
+            <div className="flex gap-1">
+              <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+              <div className="my-auto flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="17"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 17 16"
+                >
+                  <g>
+                    <path
+                      className="fill-current"
+                      fill="none"
+                      fillRule="evenodd"
+                      d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    ></path>
+                  </g>
+                </svg>
+              </div>
             </div>
-            <div className="my-auto flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="17"
-                height="16"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <g>
-                  <path
-                    fill="#996301"
-                    fillRule="evenodd"
-                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
-              </svg>
-            </div>
-          </div>
+          </Link>
         </Button>
       </div>
     </div>
