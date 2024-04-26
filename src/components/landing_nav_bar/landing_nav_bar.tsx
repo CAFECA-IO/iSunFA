@@ -20,7 +20,11 @@ const languages = [
   { label: '简', code: 'cn' },
 ];
 
-function LandingNavBar() {
+interface LandingNavBarProps {
+  transparentInitially?: boolean;
+}
+
+function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const router = useRouter();
@@ -64,7 +68,8 @@ function LandingNavBar() {
   }, []);
 
   /* Info:(20230814 - Shirley) Change Navbar Background Style */
-  const bgStyle = scroll >= 30 ? 'bg-secondaryBlue shadow-xl' : 'bg-transparent';
+  const bgStyle =
+    transparentInitially && scroll <= 100 ? 'bg-transparent' : 'bg-secondaryBlue shadow-xl';
 
   /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
@@ -520,3 +525,7 @@ function LandingNavBar() {
 }
 
 export default LandingNavBar;
+
+LandingNavBar.defaultProps = {
+  transparentInitially: false,
+};

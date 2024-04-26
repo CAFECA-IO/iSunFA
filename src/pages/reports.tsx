@@ -126,7 +126,7 @@ const initialData: ITableData[] = [
   },
 ];
 
-const auditReport = () => {
+const AuditReport = () => {
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -196,7 +196,7 @@ const auditReport = () => {
     <div
       className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px transition active:bg-slider-surface-controller-hover ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'bg-slider-surface-base'}`}
       key={`${card.code}-${card.company}`}
-      onClick={() => setTimeout(() => handleLinkClick(card.link), 500)} // Delay the link click to allow the card animation to complete
+      onClick={() => handleLinkClick(card.link)}
     >
       <div className="flex w-56px items-center justify-center rounded-xs border border-stroke-brand-secondary text-lg font-semibold text-text-brand-secondary-lv2">
         {card.creditRating}
@@ -663,4 +663,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default auditReport;
+export default AuditReport;
