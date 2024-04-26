@@ -118,6 +118,18 @@ export function isAccountInvoiceWithPaymentMethod(
 export function cleanInvoiceData(rawData: any): AccountInvoiceData {
   const { date, eventType, paymentReason, description, venderOrSupplyer, payment } = rawData;
 
+  const price = cleanNumber(payment.price);
+  // 如果是稅後，需要算出稅率比
+  let taxPercentage = payment.taxPercentage ? parseFloat(payment.taxPercentage) : 5;
+
+  if (taxPercentage > 100) {
+    if (taxPercentage > price) {
+      taxPercentage = ((taxPercentage - price) / price) * 100;
+    } else {
+      taxPercentage = ((price - taxPercentage) / taxPercentage) * 100;
+    }
+  }
+
   // Construct the new object with the cleaned and converted data
   const cleanedData: AccountInvoiceData = {
     date: {
@@ -129,9 +141,9 @@ export function cleanInvoiceData(rawData: any): AccountInvoiceData {
     description: description || '',
     venderOrSupplyer: venderOrSupplyer || '',
     payment: {
-      price: cleanNumber(payment.price),
+      price,
       hasTax: cleanBoolean(payment?.hasTax),
-      taxPercentage: payment.taxPercentage ? parseFloat(payment.taxPercentage) : 5,
+      taxPercentage,
       hasFee: cleanBoolean(payment?.hasFee),
       fee: payment.fee ? cleanNumber(payment.fee) : 0,
     },
@@ -200,8 +212,8 @@ export function cleanAccountLineItem(rawData: any): AccountLineItem {
     // Info: Murky this id is for demo, need to refactor
     lineItemIndex:
       today.getFullYear().toString() +
-      today.getMonth.toString() +
-      today.getDate().toString() +
+      ('00' + today.getMonth().toString()).slice(-2) +
+      ('00' + today.getDate().toString()).slice(-2) +
       Math.floor(Math.random() * 1000).toString(),
     accounting: accounting || '',
     particular: particular || '',
@@ -365,8 +377,8 @@ export function cleanVoucherData(rawData: any): AccountVoucher {
   const today = new Date();
   const voucherIndex =
     today.getFullYear().toString() +
-    today.getMonth.toString() +
-    today.getDate().toString() +
+    ('00' + today.getMonth().toString()).slice(-2) +
+    ('00' + today.getDate().toString()).slice(-2) +
     Math.floor(Math.random() * 1000).toString();
   const cleandLineItems = lineItems.map((lineItem) => cleanAccountLineItem(lineItem));
 

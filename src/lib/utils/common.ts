@@ -137,11 +137,28 @@ export function convertDateToTimestamp(dateStr: string | number): number {
     return defaultDateTimestamp;
   }
 
-  if (!Number.isNaN(dateStr)) {
+  if (typeof dateStr === 'number') {
     return dateStr as number;
   }
 
-  const date = new Date(dateStr);
+  function rocYearToAD(rocYear: string, sperator: string): string {
+    let modifiedRocYear = rocYear;
+    if (rocYear.split(sperator)[0].length < 4) {
+      // Info 民國年
+      const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
+      modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
+    }
+    return modifiedRocYear;
+  }
+
+  let modifiedDateStr = dateStr;
+  if (dateStr.includes('/')) {
+    modifiedDateStr = rocYearToAD(dateStr, '/');
+  } else if (dateStr.includes('-')) {
+    modifiedDateStr = rocYearToAD(dateStr, '-');
+  }
+
+  const date = new Date(modifiedDateStr);
   const timestamp = date.getTime();
 
   // 檢查生成的日期是否有效

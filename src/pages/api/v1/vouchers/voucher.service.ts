@@ -48,7 +48,7 @@ export default class VoucherService {
       - 提供發票上明確的服務或產品描述。
 
     5. **總價格（totalPrice，對應 payment.price）**：
-      - 提取發票上的總金額，並移除任何逗號或貨幣符號，轉換為數字格式。
+      - 提取發票上的總金額，並移除任何逗號或貨幣符號，轉換為數字格式。，不要幫我自己*10
 
     6. **稅率百分比（taxPercentage）**：
       - 如果發票上提到稅率，提取稅率百分比。
@@ -101,7 +101,8 @@ export default class VoucherService {
       }
     ];
 
-    返回的JSON，請借貸方平衡，並確保所有數據準確無誤，不然會計師會找你麻煩的！\n
+    - 返回的JSON，請借貸方平衡， **debit為正數的amount 應該與 debit為false的amount 相同**\n
+    - 也就是說array中至少要有兩項，不知道的 account 就寫應付帳款
     [
       {
           "lineItemIndex": "0",
@@ -117,6 +118,107 @@ export default class VoucherService {
           "debit": false,
           "amount": 1500
       }
+  ]
+
+    以下是範例2: 如果輸入以下JSON:
+    [{
+      "invoices": [
+          {
+              "date": {
+                  "start_date": 1704067200000,
+                  "end_date": 1712620800000
+              },
+              "eventType": "income",
+              "paymentReason": "電信費",
+              "description": "光世代電路月租費： 593, HiNet企業專案服務費: 1607",
+              "venderOrSupplyer": "中華電信",
+              "payment": {
+                  "price": 2310,
+                  "hasTax": true,
+                  "taxPercentage": 2200,
+                  "hasFee": false,
+                  "fee": 0,
+                  "paymentMethod": "transfer",
+                  "paymentPeriod": "atOnce",
+                  "installmentPeriod": 0,
+                  "paymentStatus": "unpaid",
+                  "alreadyPaidAmount": 0
+              }
+          }
+      ]
+   }]
+   請回傳：
+   [
+    {
+      lineItemIndex: '20240426001',
+      accounting: '電信費',
+      particular: '光世代電路月租費： 593, HiNet企業專案服務費: 1607',
+      debit: true,
+      amount: 2210
+    },
+    {
+      lineItemIndex: '20240325002',
+      accounting: '進項稅額',
+      particular: 'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
+      debit: true,
+      amount: 110
+    },
+    {
+      lineItemIndex: '20240426003',
+      accounting: '銀行存款',
+      particular: '合庫銀行',
+      debit: false,
+      amount: 2310
+    },
+  ]
+  以下是範例3: 如果輸入以下JSON:
+ [
+        {
+            "date": {
+                "start_date": 1713139200000,
+                "end_date": 1713139200000
+            },
+            "eventType": "payment",
+            "paymentReason": "購買軟體",
+            "description": "WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300",
+            "venderOrSupplyer": "文中資訊股份有限公司",
+            "payment": {
+                "price": 109725,
+                "hasTax": true,
+                "taxPercentage": 5,
+                "hasFee": false,
+                "fee": 0,
+                "paymentMethod": "transfer",
+                "paymentPeriod": "atOnce",
+                "installmentPeriod": 0,
+                "paymentStatus": "unpaid",
+                "alreadyPaidAmount": 0
+            }
+        }
+    ]
+  範例三的回答如下：
+  [
+    {
+      lineItemIndex: '0',
+      accounting: '購買軟體',
+      particular: 'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
+      debit: true,
+      amount: 104500
+    },
+    {
+      lineItemIndex: '1',
+      accounting: '進項稅額',
+      particular: 'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
+      debit: true,
+      amount: 5225
+    },
+    {
+      lineItemIndex: '2',
+      accounting: '銀行存款',
+      particular: '合庫銀行',
+      debit: false,
+      amount: 109725
+    }
   ]
     `;
     this.llamaConnect = new LlamaConnect<AccountLineItem[]>(

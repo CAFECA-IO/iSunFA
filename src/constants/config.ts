@@ -1,5 +1,3 @@
-import { randomInt } from 'crypto';
-
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
@@ -145,20 +143,21 @@ export const LLAMA_CONFIG = {
   model: 'llama3',
   retryLimit: 10,
   // Info Murky :Ref https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+  // **注意**: 調整前請先備份參數
   options: {
-    mirostat: 1,
-    mirostat_eta: 0.2,
-    mirostat_tau: 7,
-    num_ctx: 128,
-    repeat_last_n: 64,
-    repeat_penalty: 2,
-    temperature: 0.9,
-    seed: randomInt(1024),
-    stop: '}\n```',
-    tfs_z: 1,
-    num_predict: 256,
-    top_k: 100,
-    top_p: 0.9,
+    mirostat: 2, // default: 0 啟用Mirostat採樣以控制複雜度。0表示禁用，1表示使用Mirostat，2表示使用Mirostat 2.0。
+    mirostat_eta: 0.2, // default: 0.1 影響演算法對生成文本反饋的響應速度。較低的學習率將導致調整速度較慢，而較高的學習率將使演算法響應更靈敏。
+    mirostat_tau: 10.0, // default: 5.0 控制輸出的一致性與多樣性之間的平衡。較低的值將導致文本更集中和一致。
+    num_ctx: 4096, // default: 2048 設置用於生成下一個token的上下文窗口大小。
+    repeat_last_n: 64, // default: 64 設置模型向後查看多遠以防止重複。0表示禁用，-1表示與num_ctx相同。
+    repeat_penalty: 1.1, // default: 1.1 設置對重複的懲罰強度。更高的值將更強烈地懲罰重複，較低的值則較為寬容。
+    temperature: 0.9, // default: 0.8 模型的溫度。提高溫度將使模型回答更有創造性。
+    seed: 845, // default: None 設置用於生成的隨機數種子。設置特定數字將使模型對相同提示生成相同的文本。
+    // stop: '}\n```', // default: no default 設置停止序列。當遇到這個模式時，LLM將停止生成文本並返回。可以通過指定多個單獨的停止參數來設置多個停止模式。
+    tfs_z: 1, // default: 1 尾部自由採樣用於減少輸出中不太可能的tokens的影響。更高的值將更多地減少影響，值為1.0則禁用此設置。
+    num_predict: 256, // default: 128 預測生成文本時的最大token數量。-1表示無限生成，-2表示填充上下文。
+    top_k: 80, // default: 40  降低生成無意義內容的概率。更高的值將提供更多樣的回答，而較低的值將更為保守。
+    top_p: 0.95, // default: 0.9 與top-k一起工作。更高的值將導致文本更多樣化，而較低的值將生成更集中和保守的文本。
   },
 };
 

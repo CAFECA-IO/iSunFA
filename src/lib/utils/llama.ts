@@ -48,6 +48,12 @@ export default class LlamaConnect<T> {
     if (match && match[1]) {
       // match[1] contains the first captured group which is the text between the backticks
       const jsonString = match[1].trim();
+
+      // remove "json" if it is the first word
+      if (jsonString.startsWith('json')) {
+        return jsonString.slice(4);
+      }
+
       return jsonString;
     }
     return null;
@@ -55,22 +61,24 @@ export default class LlamaConnect<T> {
 
   private constructLLamaPrompt(input: string): string {
     return `
-    - 你需要按照以下的說明與來生成JSON檔:\n
+    - 請閱讀以下說明:\n
     ${this.prompt} \n
-    - 以下是生成JSON檔時給你使用的資料:\n
+    - 看完以上說明後，請依照下列資料產生相對應的json文件:\n
     ${input}\n
     以下是你需要回傳的JSON格式，請不要回傳此格式JSON以外的資訊：\n
-    ${this.interfaceJSON}`;
+    ${this.interfaceJSON}
+    請開始你的回答，除了輸入植根範例一樣的狀況，不要生成和範例回答一樣的資訊`;
   }
 
   private constructRetryPrompt(input: string): string {
     return `
     - 你的回應不符合格式，請再試一次\n
     ${this.prompt} \n
-    - 以下是生成JSON檔時給你使用的資料:\n
+    - 看完以上說明後，請依照下列資料產生相對應的json文件:\n
     ${input}\n
-    以下是你需要回傳的JSON格式，請不要回傳此格式以外的資訊, 並把json包在 \`\`\`\`\`\`之間, value都要用"雙引號"包起來：\n
-    ${this.interfaceJSON}`;
+    以下是你需要回傳的JSON格式，請不要回傳此格式JSON以外的資訊：\n
+    ${this.interfaceJSON}
+    請開始你的回答，除了輸入植根範例一樣的狀況，不要生成和範例回答一樣的資訊`;
   }
 
   private async postToLlama(
@@ -90,7 +98,6 @@ export default class LlamaConnect<T> {
           prompt: !retry ? this.constructLLamaPrompt(input) : this.constructRetryPrompt(input),
           context,
           stream: false,
-          format: 'json',
           options: LLAMA_CONFIG.options,
         }),
       });
@@ -100,6 +107,10 @@ export default class LlamaConnect<T> {
       console.log('option of ollama: ', JSON.stringify(LLAMA_CONFIG.options));
 
       const resultJSON = await result.json();
+
+      // Deprecation Murky (20240423) debug
+      // eslint-disable-next-line no-console
+      // console.log('resultJSON:', resultJSON);
 
       let newContext = resultJSON.context;
 
@@ -132,8 +143,6 @@ export default class LlamaConnect<T> {
         console.error(e);
         return { responseJSON: null, context: newContext };
       }
-      // eslint-disable-next-line no-console
-      console.log('responseJSON:', responseJSON);
 
       return { responseJSON, context: newContext || '' };
     } catch (e) {
