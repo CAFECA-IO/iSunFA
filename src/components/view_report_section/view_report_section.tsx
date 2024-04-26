@@ -171,12 +171,8 @@ const ViewReportSection = ({ tokenContract, tokenId, reportLink }: IViewReportSe
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      {/* <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap">
-        <div></div>
-        <div> </div>
-      </div> */}
       <div className="mt-12 flex w-full px-40 pb-2">
-        {/* Sidebar */}
+        {/* Info: Sidebar (20240426 - Shirley) */}
         <div className="h-200px w-1/6 overflow-y-auto bg-white pl-0 lg:h-700px">
           {/* <h2 className="mb-4 text-lg font-semibold">Sidebar</h2> */}
           <ul className="mt-5 flex w-full flex-col items-center justify-center">
