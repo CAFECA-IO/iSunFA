@@ -6,6 +6,7 @@ export interface BookmarkItem {
   name: string;
   icon: JSX.Element;
   added: boolean;
+  link: string;
   tempSelectedOnSection?: boolean;
   tempSelectedOnModal?: boolean;
 }

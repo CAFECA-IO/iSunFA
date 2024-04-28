@@ -10,7 +10,8 @@
     "FEATURES": "特色",
     "ABOUT": "關於",
     "TRY_NOW": "立即嘗試",
-    "SIGN_OUT": "登出"
+    "SIGN_OUT": "登出",
+    "REPORTS": "報告"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -316,6 +317,7 @@
   "DATE_PICKER": {
     "DATE": "日期",
     "SELECT_PERIOD": "選擇日期範圍",
+    "SELECT_DATE": "選擇日期",
     "TODAY": "今天",
     "TO": "至",
     "JAN": "一月",
@@ -336,7 +338,19 @@
     "WED": "三",
     "THU": "四",
     "FRI": "五",
-    "SAT": "六"
+    "SAT": "六",
+    "JAN_ABR": "一月",
+    "FEB_ABR": "二月",
+    "MAR_ABR": "三月",
+    "APR_ABR": "四月",
+    "MAY_ABR": "五月",
+    "JUN_ABR": "六月",
+    "JUL_ABR": "七月",
+    "AUG_ABR": "八月",
+    "SEP_ABR": "九月",
+    "OCT_ABR": "十月",
+    "NOV_ABR": "十一月",
+    "DEC_ABR": "十二月"
   },
   "SORTING": {
     "SORT_BY": "排序方式",

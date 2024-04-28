@@ -1,12 +1,15 @@
 import useStateRef from 'react-usestateref';
 import React, { createContext } from 'react';
 import { BookmarkItem } from '../interfaces/modals';
+import { DUMMY_DASHBOARD_OVERVIEW, IDashboardOverview } from '../interfaces/dashboard_overview';
+import { ISUNFA_ROUTE } from '../constants/url';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;
   toggleBookmark: (bookmarkName: string[]) => void;
   addBookmarks: (bookmarks: string[]) => void;
   removeBookmark: (bookmarkName: string) => void;
+  dashboardOverview: IDashboardOverview;
 }
 
 const initialDashboardContext: DashboardContextType = {
@@ -14,6 +17,7 @@ const initialDashboardContext: DashboardContextType = {
   toggleBookmark: () => {},
   addBookmarks: () => {},
   removeBookmark: () => {},
+  dashboardOverview: {} as IDashboardOverview,
 };
 
 export interface IDashboardProvider {
@@ -60,7 +64,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: true,
+    link: '', // TODO: link (20240424 - Shirley)
+
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -105,6 +111,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: ISUNFA_ROUTE.ACCOUNTING,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -133,6 +140,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         ></path>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,
@@ -167,6 +176,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         </defs>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,
@@ -216,7 +227,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: true,
+    link: '', // TODO: link (20240424 - Shirley)
+
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -255,6 +268,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: ISUNFA_ROUTE.ACCOUNTING,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -293,6 +307,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
         </defs>
       </svg>
     ),
+
+    link: '', // TODO: link (20240424 - Shirley)
 
     added: false,
     tempSelectedOnSection: false,
@@ -337,6 +353,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: '', // TODO: link (20240424 - Shirley)
+
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -374,7 +392,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    added: false,
+    link: ISUNFA_ROUTE.JOURNAL_LIST,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -411,6 +430,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
+    link: '', // TODO: link (20240424 - Shirley)
+
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -423,6 +444,11 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [bookmarkList, setBookmarkList, bookmarkListRef] =
     useStateRef<Record<string, BookmarkItem>>(BookmarkAvailableList);
+
+  // TODO: Implement the data fetching (20240415 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dashboardOverview, setDashboardOverview, DashboardOverviewRef] =
+    useStateRef<IDashboardOverview>(DUMMY_DASHBOARD_OVERVIEW);
 
   const toggleBookmark = (bookmarkNames: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
@@ -477,12 +503,13 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     toggleBookmark,
     addBookmarks,
     removeBookmark,
+    dashboardOverview: DashboardOverviewRef.current,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };
 
-export const useDashboard = () => {
+export const useDashboardCtx = () => {
   const context = React.useContext(DashboardContext);
   if (context === undefined) {
     throw new Error('useDashboard must be used within a DashboardProvider');

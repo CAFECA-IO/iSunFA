@@ -5,12 +5,12 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '../../components/nav_bar/nav_bar';
 import LoginPageBody from '../../components/login_page_body/login_page_body';
 import { ILocale } from '../../interfaces/locale';
-import { useUser } from '../../contexts/user_context';
+import { useUserCtx } from '../../contexts/user_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { signedIn } = useUser();
+  const { signedIn } = useUserCtx();
 
   useEffect(() => {
     if (signedIn) {
@@ -45,8 +45,9 @@ const LoginPage = () => {
         <div className="">
           <NavBar />
         </div>
-
-        <LoginPageBody />
+        <div className="pt-16">
+          <LoginPageBody />
+        </div>
       </div>
     </>
   );

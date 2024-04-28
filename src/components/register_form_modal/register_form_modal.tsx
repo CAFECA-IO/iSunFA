@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useContext, useEffect, useRef } from 'react';
 import { RegisterFormModalProps } from '../../interfaces/modals';
-import { UserContext, useUser } from '../../contexts/user_context';
+import { UserContext, useUserCtx } from '../../contexts/user_context';
 import { Button } from '../button/button';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 
@@ -11,7 +11,7 @@ interface IRegisterFormModal {
 }
 
 const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegisterFormModal) => {
-  const { signUp } = useUser();
+  const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const registerClickHandler = async () => {
@@ -60,7 +60,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
         </div>
         <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
           <div className="flex flex-col justify-center">
-            <div className="flex gap-0 rounded-lg border border-solid border-lightGray3 bg-white shadow-sm">
+            <div className="flex gap-0 rounded-sm border border-lightGray3 bg-white shadow-sm">
               <div className="flex items-center justify-center px-3 py-2.5">
                 <img
                   loading="lazy"
@@ -73,7 +73,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
                 <input
                   ref={inputRef}
                   type="text"
-                  className="w-full bg-white px-3 py-2.5 text-base font-medium text-lightGray4 focus:outline-none"
+                  className="mx-2 w-full bg-white px-1 py-2.5 text-base text-navyBlue2 placeholder:text-lightGray4 focus:outline-none"
                   placeholder="Username"
                 />
               </div>
@@ -85,7 +85,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
             {/* TODO: button component (20240409 - Shirley) */}
             <button
               onClick={modalVisibilityHandler}
-              className="rounded-md px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
+              className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
               Cancel
             </button>

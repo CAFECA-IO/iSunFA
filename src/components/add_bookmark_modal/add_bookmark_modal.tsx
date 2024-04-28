@@ -2,9 +2,9 @@
 import useStateRef from 'react-usestateref';
 import React, { useEffect } from 'react';
 import { Button } from '../button/button';
-import { useDashboard } from '../../contexts/dashboard_context';
+import { useDashboardCtx } from '../../contexts/dashboard_context';
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import { useGlobal } from '../../contexts/global_context';
+import { useGlobalCtx } from '../../contexts/global_context';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;
@@ -12,8 +12,8 @@ interface IAddBookmarkModal {
 }
 
 const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { bookmarkList, addBookmarks } = useDashboard();
-  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobal();
+  const { bookmarkList, addBookmarks } = useDashboardCtx();
+  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
   const [selectedBookmark, setSelectedBookmark] = useStateRef<string[]>([]);
 
@@ -39,9 +39,9 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
-    setSelectedBookmark(prevSelected => {
+    setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
-        return prevSelected.filter(item => item !== name);
+        return prevSelected.filter((item) => item !== name);
       } else {
         return [...prevSelected, name];
       }
@@ -58,50 +58,90 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
     setIsMenuOpen(false);
   };
 
-  const menu = isMenuOpen ? (
-    <div className="scrollbar absolute top-48 max-h-[200px] w-[330px] flex-col overflow-y-auto rounded-xl border border-solid border-gray-300 bg-white pb-2 shadow-xl">
-      <div className="flex w-full flex-col pl-2 pt-2">
-        <div className="z-10 flex items-start gap-0">
-          <div className="flex w-full flex-col">
-            {Object.entries(bookmarkList).map(([key, value]) => {
-              return (
-                <button
-                  key={key}
-                  onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
-                  type="button"
-                  className={`${
-                    selectedBookmark.includes(key) ? 'bg-tertiaryBlue2 text-white' : ''
-                  } mt-1 flex gap-3 rounded-md px-3 py-2 text-navyBlue2 hover:bg-tertiaryBlue2 hover:bg-opacity-70 hover:text-white`}
-                >
-                  <div className="my-auto flex flex-col justify-center">
-                    {bookmarkList[key].icon}
-                  </div>
-                  <p className="justify-center text-sm font-medium leading-5 tracking-normal">
-                    {bookmarkList[key].name}
-                  </p>
-                </button>
-              );
-            })}
+  const displayedBookmarkMenu = (
+    <div ref={menuRef} className="relative flex w-full flex-col justify-center">
+      <button
+        className={`flex items-center justify-between gap-0 rounded-sm border bg-white px-5 py-2.5 shadow-sm ${
+          isMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
+        onClick={menuClickHandler}
+      >
+        <div className="flex-1 text-start text-base font-normal leading-6 tracking-normal text-tertiaryBlue">
+          {dropdownMenu}
+        </div>
+        <div className="flex items-center justify-center text-base lg:text-xl">
+          <div
+            className={`text-base transition-transform duration-300 lg:text-xl ${isMenuOpen ? '' : ''}`} // Info: be consistent with other dropdown menu, so remove `-rotate-180` (20240425 - Shirley)
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
           </div>
+        </div>
+      </button>
+      {/* Info: Bookmark Menu (20240425 - Shirley) */}
+      <div
+        className={`absolute left-0 top-[3.5rem] z-20 grid max-h-[250px] w-full grid-cols-1 overflow-hidden overflow-y-auto rounded-sm border bg-white pb-2 transition-all duration-300 ease-in-out lg:max-h-[250px] ${
+          isMenuOpen ? 'grid-rows-1 border-gray-300 shadow-xl' : 'grid-rows-0 border-transparent'
+        } transition-all duration-300 ease-in-out`}
+      >
+        <div className="flex w-full flex-col pl-2 pt-2">
+          <div className="z-10 flex items-start gap-0">
+            <div className="flex w-full flex-col">
+              {Object.entries(bookmarkList).map(([key, value]) => {
+                return (
+                  <button
+                    key={key}
+                    disabled={value.link === ''}
+                    onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
+                    type="button"
+                    className={`mt-1 flex gap-3 rounded-sm px-3 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white ${
+                      selectedBookmark.includes(key)
+                        ? 'bg-primaryYellow/20'
+                        : 'hover:text-text-brand-primary-lv2'
+                    }`}
+                  >
+                    <div className="my-auto flex flex-col justify-center">
+                      {bookmarkList[key].icon}
+                    </div>
+                    <p className="justify-center text-sm font-medium leading-5 tracking-normal">
+                      {bookmarkList[key].name}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="mt-3 flex flex-col justify-center p-1">
-            <div className="h-36 shrink-0 rounded-[999px] bg-gray-300" />
+            <div className="mt-3 flex flex-col justify-center p-1">
+              <div className="h-36 shrink-0 rounded-rounded bg-gray-300" />
+            </div>
           </div>
         </div>
       </div>
     </div>
-  ) : null;
+  );
 
   const isDisplayedAddBookmarkModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative mx-auto flex flex-col items-center rounded-xl bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
-        <div className="flex gap-2.5 bg-white px-8 py-4">
+      <div className="relative mx-auto flex flex-col items-center rounded-lg bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+        <div className="flex gap-2.5 bg-white px-2 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
-              <div className="justify-center self-center text-xl font-bold leading-8 text-slate-700">
+              <div className="justify-center self-center text-xl font-bold leading-8 text-navyBlue2">
                 Add My Favorites
               </div>
-              <div className="text-xs leading-5 tracking-normal text-slate-500">
+              <div className="text-xs leading-5 tracking-normal text-lightGray5">
                 Select frequently used functions to be added to the favorites list.
               </div>
             </div>
@@ -126,35 +166,13 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
           </div>{' '}
         </div>
         <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
-          <div className="flex flex-col justify-center">
-            <div className="flex flex-col justify-center" ref={menuRef}>
-              <div
-                className="flex gap-0 rounded-lg border border-solid border-slate-300 bg-white shadow-sm hover:cursor-pointer"
-                onClick={menuClickHandler}
-              >
-                <div className="flex flex-1 flex-col justify-center text-base leading-6 tracking-normal text-slate-500">
-                  <p className="items-start justify-start px-5 py-2.5 text-start">{dropdownMenu}</p>
-                </div>
-                <div className="my-auto flex flex-col justify-center px-3 py-2.5">
-                  <div className="flex items-center justify-center">
-                    <img
-                      loading="lazy"
-                      src="https://cdn.builder.io/api/v1/image/assets/TEMP/572e02dcc6b9b487a917fb0aba7aae71712fa4990066c30acaa40cf61f01c018?apiKey=0e17b0b875f041659e186639705112b1&"
-                      className="aspect-square w-5"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {menu}
-            </div>
-          </div>
+          <div className="flex flex-col justify-center">{displayedBookmarkMenu}</div>
         </div>
         <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal">
           <div className="flex gap-3">
             <button
               onClick={cancelBtnClickHandler}
-              className="rounded-md px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
+              className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
               Cancel
             </button>{' '}

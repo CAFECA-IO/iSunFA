@@ -10,7 +10,8 @@
     "FEATURES": "Features",
     "ABOUT": "About",
     "TRY_NOW": "Try Now",
-    "SIGN_OUT": "Sign Out"
+    "SIGN_OUT": "Sign Out",
+    "REPORTS": "Reports"
   },
   "USER": {
     "MY_ADDRESS": "My Address page",
@@ -317,7 +318,8 @@
   },
   "DATE_PICKER": {
     "DATE": "Date",
-    "SELECT_PERIOD": "Select Period",
+    "SELECT_PERIOD": "Start Date - End Date",
+    "SELECT_DATE": "Choose the Date",
     "TODAY": "Today",
     "TO": "to",
     "JAN": "Janaury",
@@ -338,7 +340,19 @@
     "WED": "W",
     "THU": "T",
     "FRI": "F",
-    "SAT": "S"
+    "SAT": "S",
+    "JAN_ABR": "Jan",
+    "FEB_ABR": "Feb",
+    "MAR_ABR": "Mar",
+    "APR_ABR": "Apr",
+    "MAY_ABR": "May",
+    "JUN_ABR": "Jun",
+    "JUL_ABR": "Jul",
+    "AUG_ABR": "Aug",
+    "SEP_ABR": "Sep",
+    "OCT_ABR": "Oct",
+    "NOV_ABR": "Nov",
+    "DEC_ABR": "Dec"
   },
   "SORTING": {
     "SORT_BY": "Sort By",

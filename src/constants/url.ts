@@ -6,8 +6,15 @@ export const ISUNFA_API = {
 
 export const ISUNFA_ROUTE = {
   LANDING_PAGE: '/',
-  COMING_SOON: '/coming-soon',
+  ABOUT: '/#about',
+  FEATURES: '/#features',
+  REPORTS: '/reports',
   CONTACT_US: '/#contact-us',
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
+  ACCOUNTING: '/users/accounting',
+  JOURNAL_LIST: '/users/accounting/journal-list',
+  USERS_FINANCIAL_REPORTS: '/users/reports/financials',
+  USERS_ANALYSIS_REPORTS: '/users/reports/analyses',
+  USERS_FINANCIAL_REPORTS_VIEW: '/users/reports/financials/view',
 };
