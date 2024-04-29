@@ -46,6 +46,7 @@ interface IDatePickerProps {
   datePickerHandler?: (start: number, end: number) => Promise<void>;
   className?: string;
   calenderClassName?: string;
+  buttonStyleAfterDateSelected?: string;
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -190,6 +191,7 @@ const DatePicker = ({
   loading,
   className,
   calenderClassName,
+  buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -354,7 +356,7 @@ const DatePicker = ({
           className,
           // variables control style
           {
-            'border-secondaryBlue text-secondaryBlue': isDateSelected,
+            [buttonStyleAfterDateSelected]: isDateSelected,
             'border-primaryYellow text-primaryYellow': componentVisible,
           }
         )}

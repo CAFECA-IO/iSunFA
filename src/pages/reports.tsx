@@ -417,6 +417,7 @@ const AuditReport = () => {
             setFilteredPeriod={setDatePeriod}
             calenderClassName="right-0"
             className="rounded-xs border border-stroke-neutral-solid-light bg-inherit p-2.5 text-neutral-white"
+            buttonStyleAfterDateSelected="border-stroke-neutral-solid-light text-primaryYellow"
           />
         </div>
         {/* Sort */}
