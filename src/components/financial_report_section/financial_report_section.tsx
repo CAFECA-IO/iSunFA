@@ -2,35 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../button/button';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { default30DayPeriodInSec } from '../../constants/display';
+import {
+  ReportLanguages,
+  ReportTypes,
+  default30DayPeriodInSec,
+  reportLanguages,
+  reportTypes,
+} from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '../../constants/url';
-
-const reportTypes = {
-  balance_sheet: { id: 'balance_sheet', name: 'Balance Sheet' },
-  income_statement: { id: 'income_statement', name: 'Income Statement' },
-  cash_flow: { id: 'cash_flow', name: 'Cash Flow Statement' },
-};
-
-const reportLanguages = {
-  en: { id: 'en', name: 'English', icon: '/icons/en.svg' },
-  tw: { id: 'tw', name: '繁體中文', icon: '/icons/tw.svg' },
-  cn: { id: 'cn', name: '简体中文', icon: '/icons/cn.svg' },
-};
-
-enum ReportTypes {
-  balance_sheet = 'balance_sheet',
-  income_statement = 'income_statement',
-  cash_flow = 'cash_flow',
-}
-
-enum ReportLanguages {
-  en = 'en',
-  tw = 'tw',
-  cn = 'cn',
-}
 
 const FinancialReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);
@@ -75,6 +57,8 @@ const FinancialReportSection = () => {
     setSelectedReportLanguage(id);
     setIsLanguageMenuOpen(false);
   };
+
+  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   useEffect(() => {
     setDatePickerType((prev) => {
@@ -295,8 +279,7 @@ const FinancialReportSection = () => {
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-              // key={selectedReportType}
+              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
               type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
@@ -308,7 +291,7 @@ const FinancialReportSection = () => {
           disabled={!period.endTimeStamp || !selectedLanguage.id || !selectedReportType}
           className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
         >
-          <Link href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}>
+          <Link href={targetedReportViewLink}>
             <div className="flex gap-1">
               <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
               <div className="my-auto flex items-center justify-center">

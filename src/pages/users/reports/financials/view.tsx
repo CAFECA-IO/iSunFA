@@ -1,17 +1,35 @@
+import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
 import NavBar from '../../../../components/nav_bar/nav_bar';
 import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import { ILocale } from '../../../../interfaces/locale';
 import ViewReportSection from '../../../../components/view_report_section/view_report_section';
+import { ReportLanguages, ReportTypes, reportTypes } from '../../../../constants/display';
 
-const View = () => {
+interface IServerSideProps {
+  reportType: ReportTypes;
+  reportLanguage: ReportLanguages;
+  startTimestamp: string;
+  endTimestamp: string;
+}
+
+// TODO: dummy data to be replaced (20240429 - Shirley)
+enum ReportLink {
+  'balance_sheet' = 'https://baifa.io/reports/tbd14265/balance',
+  'comprehensive_income_statement' = 'https://baifa.io/reports/tbd14265/comprehensive-income',
+  'cash_flow_statement' = 'https://baifa.io/reports/tbd14265/cash-flow',
+}
+
+// TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: IServerSideProps) => {
   const dummyReportData = {
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
-    reportLink: 'https://baifa.io/reports/tbd14265/balance',
+    reportLink: ReportLink[reportType],
   };
+
   return (
     <div>
       <Head>
@@ -19,7 +37,7 @@ const View = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Financial Report - iSunFA</title>
+        <title>{reportTypes[reportType].name} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -45,6 +63,7 @@ const View = () => {
 
         <div className="h-screen bg-surface-neutral-main-background">
           <ViewReportSection
+            reportTypesName={reportTypes[reportType] as { id: string; name: string }}
             tokenContract={dummyReportData.tokenContract}
             tokenId={dummyReportData.tokenId}
             reportLink={dummyReportData.reportLink}
@@ -57,10 +76,24 @@ const View = () => {
 
 export default View;
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common'])),
-  },
-});
+export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
+  // Info: variable from URL query (20240429 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { report_type, report_language, start_timestamp, end_timestamp } = query;
 
-export const getStaticProps = getStaticPropsFunction;
+  if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
+    return {
+      notFound: true,
+    };
+  }
+
+  return {
+    props: {
+      reportType: report_type as string,
+      reportLanguage: report_language as string,
+      startTimestamp: start_timestamp as string,
+      endTimestamp: end_timestamp as string,
+      ...(await serverSideTranslations(locale as string, ['common'])),
+    },
+  };
+};
