@@ -712,6 +712,7 @@ module.exports = {
         lightGray4: '#7F8A9D',
         lightGray5: '#58667F',
         lightGray6: '#CDD1D9',
+        lightGray7: '#F4F5F7',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
@@ -1327,6 +1328,7 @@ module.exports = {
       },
       maxHeight: {
         '230px': '230px',
+        '450px': '450px',
       },
       minHeight: {
         fit: 'fit-content',
@@ -1381,6 +1383,9 @@ module.exports = {
         slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
         slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
         slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
+      },
+      content: {
+        checked: '"✔"',
       },
     },
   },

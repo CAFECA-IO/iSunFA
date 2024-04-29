@@ -55,7 +55,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
   const [warningModalData, setWarningModalData] = useState<IWaringModal>(dummyWarningModalData);
 
-  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(true);
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 

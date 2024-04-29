@@ -6,7 +6,7 @@ import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
 import { PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
 import { IDatePeriod } from '../../interfaces/date_period';
-import { default30DayPeriodInSec } from '../../constants/display';
+import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
 import Toggle from '../toggle/toggle';
 
@@ -43,7 +43,7 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
-  const [taxRate, setTaxRate] = useState<number>(0);
+  const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
   const [inputFee, setInputFee] = useState<number>(0);
   const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
@@ -247,14 +247,12 @@ const NewJournalForm = () => {
     inputDescription === '' ||
     inputVendor === '' ||
     inputAccountNumber === '' ||
+    // Info: (20240429 - Julian) 檢查手續費是否有填寫
+    (!!feeToggle && inputFee === 0) ||
     // Info: (20240429 - Julian) 檢查總價是否有填寫
     (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
     // Info: (20240429 - Julian) 檢查部分支付是否有填寫
     (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
-
-  // Info: (20240425 - Julian) radio button CSS style
-  const radioButtonStyle =
-    'relative h-16px w-16px appearance-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = eventTypeSelection.map((type: string) => {
@@ -878,6 +876,7 @@ const NewJournalForm = () => {
 
       {/* Info: (20240423 - Julian) Project */}
       {displayedProject}
+      {/* ToDo: (20240429 - Julian) Progress Bar */}
 
       {/* Info: (20240423 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-24px">
