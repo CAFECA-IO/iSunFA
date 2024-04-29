@@ -31,12 +31,12 @@ const WarningModal = ({
           onClick={modalVisibilityHandler}
           className="absolute right-12px top-12px text-lightGray5"
         >
-          <RxCross2 size={24} />
+          <RxCross2 size={20} />
         </button>
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
           <h1 className="text-xl font-bold text-primaryYellow6">{title}</h1>
           <Image src="/icons/warning.svg" width={48} height={48} alt="warning_icon" />
-          {/* Info: (20240425 - Julian) commonn message (gray color) */}
+          {/* Info: (20240425 - Julian) common message (gray color) */}
           <p className="text-lightGray5">{content}</p>
           {/* Info: (20240425 - Julian) warning message (red color) */}
           <p className="text-lightRed">{warningMsg}</p>
