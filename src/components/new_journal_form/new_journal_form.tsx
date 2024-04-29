@@ -4,9 +4,8 @@ import { FaChevronDown } from 'react-icons/fa';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
-import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
+import { PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
 import { IDatePeriod } from '../../interfaces/date_period';
-import { IJournal } from '../../interfaces/journal';
 import { default30DayPeriodInSec } from '../../constants/display';
 import { Button } from '../button/button';
 import Toggle from '../toggle/toggle';
@@ -27,8 +26,8 @@ const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contra
 
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
-  const { warningModalVisibilityHandler, warningModalDataHandler } = useGlobalCtx();
-  const { addTempJournal } = useAccountingCtx();
+  const { warningModalVisibilityHandler, warningModalDataHandler, confirmModalVisibilityHandler } =
+    useGlobalCtx();
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -70,8 +69,8 @@ const NewJournalForm = () => {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [formHasChanged]);
 
-  // Info: (20240425 - Julian) 整理日記帳資料
-  const newJournalData: IJournal = {
+  // Info: (20240425 - Julian) 整理日記帳資料(暫時不使用)
+  /*   const newJournalData: IJournal = {
     id: `${inputDescription}_${Date.now()}`, // Info: (20240426 - Julian) 暫時以 description + timestamp 當作 id
     basicInfo: {
       dateStartTimestamp: datePeriod.startTimeStamp,
@@ -97,7 +96,7 @@ const NewJournalForm = () => {
       project: selectedProject,
       contract: selectedContract,
     },
-  };
+  }; */
 
   const {
     targetRef: eventMenuRef,
@@ -234,12 +233,24 @@ const NewJournalForm = () => {
     warningModalVisibilityHandler();
   };
 
-  // Info: (20240425 - Julian) 儲存日記帳資料
-  const saveJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  // Info: (20240429 - Julian) 上傳日記帳資料
+  const uploadJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // ToDo: (20240426 - Julian) Date 未選取也能送出，需設定阻擋機制
-    addTempJournal(newJournalData);
+    confirmModalVisibilityHandler();
   };
+
+  // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
+  const isUploadDisabled =
+    // Info: (20240429 - Julian) 檢查日期是否有填寫
+    datePeriod.startTimeStamp === 0 ||
+    datePeriod.endTimeStamp === 0 ||
+    inputDescription === '' ||
+    inputVendor === '' ||
+    inputAccountNumber === '' ||
+    // Info: (20240429 - Julian) 檢查總價是否有填寫
+    (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
+    // Info: (20240429 - Julian) 檢查部分支付是否有填寫
+    (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) radio button CSS style
   const radioButtonStyle =
@@ -855,7 +866,7 @@ const NewJournalForm = () => {
 
   return (
     <form
-      onSubmit={saveJournalHandler}
+      onSubmit={uploadJournalHandler}
       onChange={formChangedHandler}
       className="flex flex-col gap-8px"
     >
@@ -878,8 +889,23 @@ const NewJournalForm = () => {
         >
           Clear all
         </button>
-        <Button id="saveJournalBtn" type="submit" className="px-16px py-8px">
-          Save
+        <Button id="uploadBtn" type="submit" className="px-16px py-8px" disabled={isUploadDisabled}>
+          <p>Upload</p>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
+              fill="#996301"
+            />
+          </svg>
         </Button>
       </div>
     </form>
