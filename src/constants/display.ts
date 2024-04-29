@@ -78,3 +78,11 @@ export enum ReportLanguages {
   tw = 'tw',
   cn = 'cn',
 }
+
+// Info: (20240429 - Julian) checkbox CSS style
+export const checkboxStyle =
+  'relative h-16px w-16px appearance-none outline-none border rounded-xs border-navyBlue2 bg-white after:absolute after:ml-px after:-mt-3px after:hidden checked:after:block checked:bg-navyBlue2 after:text-white after:content-checked after:text-sm';
+
+// Info: (20240425 - Julian) radio button CSS style
+export const radioButtonStyle =
+  'relative h-16px w-16px appearance-none outline-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
