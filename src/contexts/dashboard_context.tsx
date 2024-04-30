@@ -268,8 +268,8 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.ACCOUNTING,
-    added: true,
+    link: '',
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
