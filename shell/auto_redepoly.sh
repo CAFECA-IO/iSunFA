@@ -16,7 +16,8 @@ if [ "$LOCAL" != "$REMOTE" ]; then
   echo "Running build..."
   npm run build
   echo "Restarting application..."
-  npm restart 0
+  pm2 delete iSunFA
+  pm2 start npm --name iSunFA -- run production
 else
   echo "No new commits."
 fi
