@@ -262,14 +262,17 @@ const AuditReport = () => {
             Show Designated Regional Companies
           </div>
           <form className="flex gap-5 text-sm font-semibold text-text-brand-primary-lv2">
-            <label htmlFor="us" className="flex gap-2">
-              <input type="checkbox" id="us" name="country" value="US" /> US
+            <label htmlFor="us" className="flex cursor-pointer gap-2">
+              <input type="checkbox" id="us" name="country" value="US" className="cursor-pointer" />{' '}
+              US
             </label>
-            <label htmlFor="hk" className="flex gap-2">
-              <input type="checkbox" id="hk" name="country" value="HK" /> HK
+            <label htmlFor="hk" className="flex cursor-pointer gap-2">
+              <input type="checkbox" id="hk" name="country" value="HK" className="cursor-pointer" />{' '}
+              HK
             </label>
-            <label htmlFor="tw" className="flex gap-2">
-              <input type="checkbox" id="tw" name="country" value="TW" /> TW
+            <label htmlFor="tw" className="flex cursor-pointer gap-2">
+              <input type="checkbox" id="tw" name="country" value="TW" className="cursor-pointer" />{' '}
+              TW
             </label>
           </form>
         </div>
@@ -329,12 +332,16 @@ const AuditReport = () => {
         {/* Checkbox : no-daily-reports */}
         <div className="self-end px-4px">
           <form className="">
-            <label htmlFor="no-daily-reports" className="flex gap-2 text-text-brand-primary-lv2">
+            <label
+              htmlFor="no-daily-reports"
+              className="flex cursor-pointer gap-2 text-text-brand-primary-lv2"
+            >
               <input
                 type="checkbox"
                 id="no-daily-reports"
                 name="no-daily-reports"
                 value="no-daily-reports"
+                className="cursor-pointer"
               />
               {`Don't show daily reports `}
             </label>
@@ -407,7 +414,7 @@ const AuditReport = () => {
                 className="w-full rounded-sm bg-transparent py-2.5 text-xs font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>
-            <div className="px-3 py-2.5">
+            <div className="cursor-pointer px-3 py-2.5">
               <Image src="/elements/search_icon.svg" width={20} height={20} alt="search" />
             </div>
           </div>
@@ -424,7 +431,7 @@ const AuditReport = () => {
           />
         </div>
         {/* Sort */}
-        <div className="rounded-xs border border-stroke-neutral-solid-light p-2.5 text-neutral-white">
+        <div className="cursor-pointer rounded-xs border border-stroke-neutral-solid-light p-2.5 text-neutral-white">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -443,7 +450,7 @@ const AuditReport = () => {
       </section>
       {/* Region & Switch daily reports */}
       <section className="flex justify-between pt-5">
-        <div className="flex items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
+        <div className="flex cursor-pointer items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
           <div className="text-sm font-medium text-navy-blue-25">Region</div>
           <div className="text-navy-blue-25">
             <svg
