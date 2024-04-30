@@ -185,7 +185,10 @@ const AuditReport = () => {
       <td className="px-8px py-10px">{row.creditRating}</td>
       <td className="px-8px py-10px">{row.dateOfUpload}</td>
       <td className="px-8px py-10px">
-        <div className="flex items-center justify-center" onClick={() => handleLinkClick(row.link)}>
+        <div
+          className="flex cursor-pointer items-center justify-center"
+          onClick={() => handleLinkClick(row.link)}
+        >
           <Image src="/elements/link.svg" width={20} height={20} alt="link" />
         </div>
       </td>
@@ -194,7 +197,7 @@ const AuditReport = () => {
 
   const displayCards = data.map((card: ITableData, index) => (
     <div
-      className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px transition active:bg-slider-surface-controller-hover ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'bg-slider-surface-base'}`}
+      className={`flex gap-10px rounded-sm border border-stroke-brand-secondary py-6px pl-8px pr-14px transition active:bg-slider-surface-controller-hover ${index % 2 === 0 ? 'bg-slider-surface-controller' : 'cursor-pointer bg-slider-surface-base'}`}
       key={`${card.code}-${card.company}`}
       onClick={() => handleLinkClick(card.link)}
     >
@@ -246,7 +249,7 @@ const AuditReport = () => {
               className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none "
             />
           </div>
-          <div className="px-3 py-2.5">
+          <div className="cursor-pointer px-3 py-2.5">
             <Image src="/elements/search_icon.svg" width={20} height={20} alt="search" />
           </div>
         </div>
