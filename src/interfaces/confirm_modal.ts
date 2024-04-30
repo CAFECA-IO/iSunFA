@@ -1,4 +1,5 @@
 export interface IConfirmModal {
+  dateTimestamp: number;
   type: string;
   reason: string;
   vendor: string;
@@ -14,6 +15,7 @@ export interface IConfirmModal {
 }
 
 export const dummyConfirmModalData: IConfirmModal = {
+  dateTimestamp: 0,
   type: '',
   reason: '',
   vendor: '',

@@ -77,6 +77,7 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
   const newJournalData: IConfirmModal = {
+    dateTimestamp: datePeriod.startTimeStamp, // ToDo: (20240430 - Julian) Should select one single date
     type: selectedEventType,
     reason: selectedPaymentReason,
     vendor: inputVendor,
@@ -86,10 +87,10 @@ const NewJournalForm = () => {
     fee: feeToggle ? inputFee : 0,
     paymentMethod: selectedMethod,
     paymentPeriod:
-      paymentPeriod === PaymentPeriod.AT_ONCE ? 'At Once' : `Installment: ${inputInstallment}`,
+      paymentPeriod === PaymentPeriod.AT_ONCE ? 'Pay at once' : `Pay in ${inputInstallment} times`,
     paymentStatus:
       paymentState === PaymentState.PARTIAL_PAID
-        ? `${paymentState}: ${inputPartialPaid}`
+        ? `Partially paid: ${inputPartialPaid} TWD`
         : paymentState,
     project: selectedProject,
     contract: selectedContract,
@@ -233,8 +234,8 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    confirmModalVisibilityHandler();
     confirmModalDataHandler(newJournalData);
+    confirmModalVisibilityHandler();
   };
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
