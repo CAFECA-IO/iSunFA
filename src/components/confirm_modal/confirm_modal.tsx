@@ -8,28 +8,49 @@ import { RiDeleteBinLine } from 'react-icons/ri';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { Button } from '../button/button';
 import { checkboxStyle } from '../../constants/display';
+import { IConfirmModal } from '../../interfaces/confirm_modal';
 
 const accountingList = ['1441- Machinery', '1113- Cash in banks'];
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  confirmModalData: IConfirmModal;
 }
 
-const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalProps) => {
+const ConfirmModal = ({
+  isModalVisible,
+  modalVisibilityHandler,
+  confirmModalData,
+}: IConfirmModalProps) => {
   const {
     targetRef: accountingRef,
     componentVisible: isAccountingMenuOpen,
     setComponentVisible: setAccountingMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
+  const {
+    type,
+    reason,
+    vendor,
+    description,
+    totalPrice,
+    tax,
+    fee,
+    paymentMethod,
+    paymentPeriod,
+    paymentStatus,
+    project,
+    contract,
+  } = confirmModalData;
+
   const accountingMenuHandler = () => setAccountingMenuOpen(!isAccountingMenuOpen);
 
-  const displayType = <p className="text-lightRed">Expense</p>;
+  const displayType = <p className="text-lightRed">{type}</p>;
 
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
-      <p>Equipment</p>
+      <p>{reason}</p>
       <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
         <LuTag size={14} />
         Printer
@@ -37,48 +58,48 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
     </div>
   );
 
-  const displayVendor = <p className="font-semibold text-navyBlue2">華碩雲端股份有限公司</p>;
+  const displayVendor = <p className="font-semibold text-navyBlue2">{vendor}</p>;
 
-  const displayDescription = <p className="font-semibold text-navyBlue2">Buy a new printer</p>;
+  const displayDescription = <p className="font-semibold text-navyBlue2">{description}</p>;
 
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">30,000</span> TWD
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span> TWD
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">5%</span> Tax /{' '}
-        <span className="font-semibold text-navyBlue2">0</span> TWD fee)
+        (<span className="font-semibold text-navyBlue2">{tax}%</span> Tax /{' '}
+        <span className="font-semibold text-navyBlue2">{fee}</span> TWD fee)
       </p>
     </div>
   );
 
-  const displayMethod = (
-    <p className="text-right font-semibold text-navyBlue2">Transfer- 004 2888810000824888</p>
-  );
+  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">Pay at once</p>;
+  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">Paid</p>;
+  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
 
+  // Info: (20240430 - Julian) Get first letter of each word
+  const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   const displayProject = (
     <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
       <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
-        BF
+        {projectCode}
       </div>
-      <p>BAIFA</p>
+      <p>{project}</p>
     </div>
   );
 
-  const displayContract = <p className="font-semibold text-darkBlue">Contract Name</p>;
+  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
 
-  const displayAccountingDropmenu = accountingList.map((reason: string) => {
+  const displayAccountingDropmenu = accountingList.map((title: string) => {
     return (
       <li
-        key={reason}
+        key={title}
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
-        {reason}
+        {title}
       </li>
     );
   });

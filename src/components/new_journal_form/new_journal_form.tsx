@@ -9,6 +9,7 @@ import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
 import Toggle from '../toggle/toggle';
+import { IConfirmModal } from '../../interfaces/confirm_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
@@ -26,13 +27,18 @@ const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contra
 
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
-  const { warningModalVisibilityHandler, warningModalDataHandler, confirmModalVisibilityHandler } =
-    useGlobalCtx();
+  const {
+    warningModalVisibilityHandler,
+    warningModalDataHandler,
+    confirmModalVisibilityHandler,
+    confirmModalDataHandler,
+  } = useGlobalCtx();
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
+  // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
   const [selectedPaymentReason, setSelectedPaymentReason] = useState<string>(
@@ -69,34 +75,25 @@ const NewJournalForm = () => {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [formHasChanged]);
 
-  // Info: (20240425 - Julian) 整理日記帳資料(暫時不使用)
-  /*   const newJournalData: IJournal = {
-    id: `${inputDescription}_${Date.now()}`, // Info: (20240426 - Julian) 暫時以 description + timestamp 當作 id
-    basicInfo: {
-      dateStartTimestamp: datePeriod.startTimeStamp,
-      dateEndTimestamp: datePeriod.endTimeStamp,
-      eventType: selectedEventType,
-      paymentReason: selectedPaymentReason,
-      description: inputDescription,
-      vendor: inputVendor,
-    },
-    payment: {
-      totalPrice: inputTotalPrice,
-      tax: taxToggle ? taxRate : undefined,
-      fee: feeToggle ? inputFee : undefined,
-      paymentMethod: selectedMethod,
-      bankAccount: `${selectedFIC} - ${inputAccountNumber}`,
-      paymentPeriod: paymentPeriod === PaymentPeriod.AT_ONCE ? 1 : inputInstallment,
-      paymentState:
-        paymentState === PaymentState.PARTIAL_PAID
-          ? `${paymentState}: ${inputPartialPaid}`
-          : paymentState,
-    },
-    project: {
-      project: selectedProject,
-      contract: selectedContract,
-    },
-  }; */
+  // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
+  const newJournalData: IConfirmModal = {
+    type: selectedEventType,
+    reason: selectedPaymentReason,
+    vendor: inputVendor,
+    description: inputDescription,
+    totalPrice: inputTotalPrice,
+    tax: taxToggle ? taxRate : 0,
+    fee: feeToggle ? inputFee : 0,
+    paymentMethod: selectedMethod,
+    paymentPeriod:
+      paymentPeriod === PaymentPeriod.AT_ONCE ? 'At Once' : `Installment: ${inputInstallment}`,
+    paymentStatus:
+      paymentState === PaymentState.PARTIAL_PAID
+        ? `${paymentState}: ${inputPartialPaid}`
+        : paymentState,
+    project: selectedProject,
+    contract: selectedContract,
+  };
 
   const {
     targetRef: eventMenuRef,
@@ -237,6 +234,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     confirmModalVisibilityHandler();
+    confirmModalDataHandler(newJournalData);
   };
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
