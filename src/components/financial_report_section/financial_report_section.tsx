@@ -7,39 +7,17 @@ import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '../../constants/url';
-
-const reportTypes = {
-  balance_sheet: { id: 'balance_sheet', name: 'Balance Sheet' },
-  income_statement: { id: 'income_statement', name: 'Income Statement' },
-  cash_flow: { id: 'cash_flow', name: 'Cash Flow Statement' },
-};
-
-const reportLanguages = {
-  en: { id: 'en', name: 'English', icon: '/icons/en.svg' },
-  tw: { id: 'tw', name: '繁體中文', icon: '/icons/tw.svg' },
-  cn: { id: 'cn', name: '简体中文', icon: '/icons/cn.svg' },
-};
-
-enum ReportTypes {
-  balance_sheet = 'balance_sheet',
-  income_statement = 'income_statement',
-  cash_flow = 'cash_flow',
-}
-
-enum ReportLanguages {
-  en = 'en',
-  tw = 'tw',
-  cn = 'cn',
-}
+import { ReportTypesKey, ReportTypesMap } from '../../interfaces/report_type';
+import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 
 const FinancialReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);
 
-  const [selectedReportType, setSelectedReportType] = useState<ReportTypes>(
-    ReportTypes.balance_sheet
+  const [selectedReportType, setSelectedReportType] = useState<ReportTypesKey>(
+    ReportTypesKey.balance_sheet
   );
-  const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguages>(
-    ReportLanguages.en
+  const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
+    ReportLanguagesKey.en
   );
   const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
 
@@ -59,26 +37,28 @@ const FinancialReportSection = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const menuOptionClickHandler = (id: ReportTypes) => {
+  const menuOptionClickHandler = (id: ReportTypesKey) => {
     setSelectedReportType(id);
     setIsMenuOpen(false);
   };
 
-  const selectedReportName = reportTypes[selectedReportType].name;
-  const selectedLanguage = reportLanguages[selectedReportLanguage];
+  const selectedReportName = ReportTypesMap[selectedReportType].name;
+  const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
 
   const languageMenuClickHandler = () => {
     setIsLanguageMenuOpen(!isLanguageMenuOpen);
   };
 
-  const languageMenuOptionClickHandler = (id: ReportLanguages) => {
+  const languageMenuOptionClickHandler = (id: ReportLanguagesKey) => {
     setSelectedReportLanguage(id);
     setIsLanguageMenuOpen(false);
   };
 
+  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+
   useEffect(() => {
     setDatePickerType((prev) => {
-      if (selectedReportType === ReportTypes.balance_sheet) {
+      if (selectedReportType === ReportTypesKey.balance_sheet) {
         return DatePickerType.CHOOSE_DATE;
       } else {
         return DatePickerType.CHOOSE_PERIOD;
@@ -125,10 +105,10 @@ const FinancialReportSection = () => {
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
-          {Object.entries(reportTypes).map(([id, { name }]) => (
+          {Object.entries(ReportTypesMap).map(([id, { name }]) => (
             <li
               key={id}
-              onClick={() => menuOptionClickHandler(id as ReportTypes)}
+              onClick={() => menuOptionClickHandler(id as ReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {name}
@@ -184,10 +164,10 @@ const FinancialReportSection = () => {
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
-          {Object.entries(reportLanguages).map(([id, { name, icon }]) => (
+          {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
             <li
               key={id}
-              onClick={() => languageMenuOptionClickHandler(id as ReportLanguages)}
+              onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
               className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
             >
               <img src={icon} alt={name} className="h-6 w-6" />
@@ -295,8 +275,7 @@ const FinancialReportSection = () => {
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-              // key={selectedReportType}
+              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
               type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
@@ -308,7 +287,7 @@ const FinancialReportSection = () => {
           disabled={!period.endTimeStamp || !selectedLanguage.id || !selectedReportType}
           className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
         >
-          <Link href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}>
+          <Link href={targetedReportViewLink}>
             <div className="flex gap-1">
               <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
               <div className="my-auto flex items-center justify-center">
