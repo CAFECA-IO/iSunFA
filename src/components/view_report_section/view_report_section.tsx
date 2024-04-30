@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '../button/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ReportLanguages, ReportTypes } from '../../constants/display';
+import { ReportTypesKey } from '../../interfaces/report_type';
 
 interface IViewReportSectionProps {
   // reportTypesName: string;
@@ -367,13 +367,13 @@ const ViewReportSection = ({
 
   useEffect(() => {
     switch (reportTypesName.id) {
-      case ReportTypes.balance_sheet:
+      case ReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
         break;
-      case ReportTypes.comprehensive_income_statement:
+      case ReportTypesKey.comprehensive_income_statement:
         setReportThumbnails(comprehensiveIncomeReportThumbnails);
         break;
-      case ReportTypes.cash_flow_statement:
+      case ReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
         break;
       default:

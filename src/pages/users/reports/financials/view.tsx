@@ -5,11 +5,12 @@ import React from 'react';
 import NavBar from '../../../../components/nav_bar/nav_bar';
 import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
 import ViewReportSection from '../../../../components/view_report_section/view_report_section';
-import { ReportLanguages, ReportTypes, reportTypes } from '../../../../constants/display';
+import { ReportTypesKey, ReportTypesMap } from '../../../../interfaces/report_type';
+import { ReportLanguagesKey } from '../../../../interfaces/report_language';
 
 interface IServerSideProps {
-  reportType: ReportTypes;
-  reportLanguage: ReportLanguages;
+  reportType: ReportTypesKey;
+  reportLanguage: ReportLanguagesKey;
   startTimestamp: string;
   endTimestamp: string;
 }
@@ -37,7 +38,7 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{reportTypes[reportType].name} - iSunFA</title>
+        <title>{ReportTypesMap[reportType].name} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -63,7 +64,7 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
 
         <div className="h-screen bg-surface-neutral-main-background">
           <ViewReportSection
-            reportTypesName={reportTypes[reportType] as { id: string; name: string }}
+            reportTypesName={ReportTypesMap[reportType] as { id: string; name: string }}
             tokenContract={dummyReportData.tokenContract}
             tokenId={dummyReportData.tokenId}
             reportLink={dummyReportData.reportLink}

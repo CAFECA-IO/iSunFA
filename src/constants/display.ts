@@ -51,30 +51,3 @@ export const default30DayPeriodInSec = {
 };
 
 export const MILLISECONDS_IN_A_SECOND = 1000;
-
-export const reportTypes = {
-  balance_sheet: { id: 'balance_sheet', name: 'Balance Sheet' },
-  comprehensive_income_statement: {
-    id: 'comprehensive_income_statement',
-    name: 'Comprehensive Income Statement',
-  },
-  cash_flow_statement: { id: 'cash_flow_statement', name: 'Cash Flow Statement' },
-};
-
-export const reportLanguages = {
-  en: { id: 'en', name: 'English', icon: '/icons/en.svg' },
-  tw: { id: 'tw', name: '繁體中文', icon: '/icons/tw.svg' },
-  cn: { id: 'cn', name: '简体中文', icon: '/icons/cn.svg' },
-};
-
-export enum ReportTypes {
-  balance_sheet = 'balance_sheet',
-  comprehensive_income_statement = 'comprehensive_income_statement',
-  cash_flow_statement = 'cash_flow_statement',
-}
-
-export enum ReportLanguages {
-  en = 'en',
-  tw = 'tw',
-  cn = 'cn',
-}
