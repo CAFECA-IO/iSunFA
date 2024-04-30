@@ -35,7 +35,9 @@ const ConfirmModal = ({
     contract,
   } = confirmModalData;
 
-  const { accountingVoucher, addVoucherRowHandler } = useAccountingCtx();
+  const { accountingVoucher, addVoucherRowHandler, totalCredit, totalDebit } = useAccountingCtx();
+
+  const disableConfirmButton = totalCredit !== totalDebit;
 
   const displayType = <p className="text-lightRed">{type}</p>;
 
@@ -210,7 +212,9 @@ const ConfirmModal = ({
           >
             <FiPlus size={20} />
           </button>
-
+          <p>
+            Debit:{totalDebit}, Credit:{totalCredit}
+          </p>
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
@@ -232,7 +236,13 @@ const ConfirmModal = ({
           >
             Cancel
           </button>
-          <Button type="button" variant="tertiary">
+          {/* ToDo: (20240429 - Julian) API */}
+          <Button
+            type="button"
+            variant="tertiary"
+            disabled={disableConfirmButton}
+            className="disabled:bg-lightGray6"
+          >
             Confirm
           </Button>
         </div>

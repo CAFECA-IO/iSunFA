@@ -52,6 +52,9 @@ interface IAccountingContext {
   deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
   changeVoucherAmountHandler: (index: number, value: number | null, type: VoucherType) => void;
+
+  totalDebit: number;
+  totalCredit: number;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -65,6 +68,9 @@ const initialAccountingContext: IAccountingContext = {
   deleteVoucherRowHandler: () => {},
   changeVoucherStringHandler: () => {},
   changeVoucherAmountHandler: () => {},
+
+  totalDebit: 0,
+  totalCredit: 0,
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -73,6 +79,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
     defaultAccountingVoucher,
   ]);
+  const totalDebit = 0;
+  const totalCredit = 0;
 
   // Info: (20240430 - Julian) 新增日記帳列
   const addVoucherRowHandler = useCallback(() => {
@@ -132,6 +140,14 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [accountingVoucher]
   );
 
+  // ToDo: (20240430 - Julian) 計算總借方/貸方 施工中
+  // useMemo(() => {
+  //   const debit = accountingVoucher.reduce((acc, voucher) => acc + (voucher.debit || 0), 0);
+  //   const credit = accountingVoucher.reduce((acc, voucher) => acc + (voucher.credit || 0), 0);
+  //   setTotalDebit(debit);
+  //   setTotalCredit(credit);
+  // }, [accountingVoucher]);
+
   // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
 
@@ -173,6 +189,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
+      totalDebit,
+      totalCredit,
     }),
     [accountingVoucher]
   );
