@@ -9,7 +9,7 @@ const AccountingStepper = ({ step }: IAccountingStepperProps) => {
   const isStepTwo = step === AccountingStep.STEP_TWO;
 
   // Info: (20240423 - Julian) Step 1 icon
-  const stepOneSrc = isStepTwo ? '/icons/input_done.svg' : '/icons/input_active.svg';
+  const stepOneSrc = isStepTwo ? '/icons/upload_done.svg' : '/icons/upload_active.svg';
   const stepOneStyle = isStepTwo ? 'text-navyBlue2' : 'text-primaryYellow5';
 
   // Info: (20240423 - Julian) Connecting Line 1
@@ -23,13 +23,13 @@ const AccountingStepper = ({ step }: IAccountingStepperProps) => {
     <div className="relative flex items-center gap-40px md:gap-120px">
       {/* Info: (20240422 - Julian) Step 1 */}
       <div className={`z-10 flex flex-col items-center gap-2px text-sm ${stepOneStyle}`}>
-        <Image src={stepOneSrc} width={30} height={30} alt="step_1_input_type" />
-        <p>Input Type</p>
+        <Image src={stepOneSrc} width={30} height={30} alt="step_1_upload" />
+        <p>Upload</p>
       </div>
 
       {/* Info: (20240422 - Julian) Connecting Line */}
       <div
-        className={`absolute left-40px top-12px h-4px w-90px md:w-180px ${connectingLineStyle}`}
+        className={`absolute left-30px top-12px h-4px w-90px md:w-180px ${connectingLineStyle}`}
       ></div>
 
       {/* Info: (20240422 - Julian) Step 2 */}

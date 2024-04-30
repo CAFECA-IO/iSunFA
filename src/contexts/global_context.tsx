@@ -9,6 +9,7 @@ import useWindowSize from '../lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '../constants/display';
 import { LayoutAssertion } from '../interfaces/layout_assertion';
 import { IWaringModal, dummyWarningModalData } from '../interfaces/warning_modal';
+import ConfirmModal from '../components/confirm_modal/confirm_modal';
 
 interface IGlobalContext {
   width: number;
@@ -30,6 +31,9 @@ interface IGlobalContext {
   warningModalVisibilityHandler: () => void;
   warningModalData: IWaringModal;
   warningModalDataHandler: (data: IWaringModal) => void;
+
+  isConfirmModalVisible: boolean;
+  confirmModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -50,6 +54,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
   const [warningModalData, setWarningModalData] = useState<IWaringModal>(dummyWarningModalData);
+
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -81,6 +87,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setWarningModalData(data);
   };
 
+  const confirmModalVisibilityHandler = () => {
+    setIsConfirmModalVisible(!isConfirmModalVisible);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -98,6 +108,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     warningModalVisibilityHandler,
     warningModalData,
     warningModalDataHandler,
+    isConfirmModalVisible,
+    confirmModalVisibilityHandler,
   };
 
   return (
@@ -121,6 +133,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isWarningModalVisible}
         modalVisibilityHandler={warningModalVisibilityHandler}
         warningModalData={warningModalData}
+      />
+
+      <ConfirmModal
+        isModalVisible={isConfirmModalVisible}
+        modalVisibilityHandler={confirmModalVisibilityHandler}
       />
 
       {children}
