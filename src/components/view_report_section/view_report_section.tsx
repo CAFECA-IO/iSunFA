@@ -1,15 +1,348 @@
 /* eslint-disable */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '../button/button';
 import Link from 'next/link';
+import Image from 'next/image';
+import { ReportTypesKey } from '../../interfaces/report_type';
 
 interface IViewReportSectionProps {
+  // reportTypesName: string;
+  reportTypesName: { id: string; name: string };
+
   tokenContract: string;
   tokenId: string;
   reportLink: string;
 }
 
-const ViewReportSection = ({ tokenContract, tokenId, reportLink }: IViewReportSectionProps) => {
+const balanceReportThumbnails = [
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_01.png',
+    alt: 'Report Thumbnail 01',
+    active: true,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_02.png',
+    alt: 'Report Thumbnail 02',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_03.png',
+    alt: 'Report Thumbnail 03',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_04.png',
+    alt: 'Report Thumbnail 04',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_05.png',
+    alt: 'Report Thumbnail 05',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_06.png',
+    alt: 'Report Thumbnail 06',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_07.png',
+    alt: 'Report Thumbnail 07',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_08.png',
+    alt: 'Report Thumbnail 08',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_09.png',
+    alt: 'Report Thumbnail 09',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_10.png',
+    alt: 'Report Thumbnail 10',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_11.png',
+    alt: 'Report Thumbnail 11',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_12.png',
+    alt: 'Report Thumbnail 12',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_13.png',
+    alt: 'Report Thumbnail 13',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_14.png',
+    alt: 'Report Thumbnail 14',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_15.png',
+    alt: 'Report Thumbnail 15',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/balance_sheet/report_thumbnail_16.png',
+    alt: 'Report Thumbnail 16',
+    active: false,
+  },
+];
+
+const comprehensiveIncomeReportThumbnails = [
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_01.png',
+    alt: 'Report Thumbnail 01',
+    active: true,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_02.png',
+    alt: 'Report Thumbnail 02',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_03.png',
+    alt: 'Report Thumbnail 03',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_04.png',
+    alt: 'Report Thumbnail 04',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_05.png',
+    alt: 'Report Thumbnail 05',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_06.png',
+    alt: 'Report Thumbnail 06',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_07.png',
+    alt: 'Report Thumbnail 07',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_08.png',
+    alt: 'Report Thumbnail 08',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_09.png',
+    alt: 'Report Thumbnail 09',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_10.png',
+    alt: 'Report Thumbnail 10',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_11.png',
+    alt: 'Report Thumbnail 11',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_12.png',
+    alt: 'Report Thumbnail 12',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_13.png',
+    alt: 'Report Thumbnail 13',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_14.png',
+    alt: 'Report Thumbnail 14',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_15.png',
+    alt: 'Report Thumbnail 15',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
+    alt: 'Report Thumbnail 16',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
+    alt: 'Report Thumbnail 16',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_17.png',
+    alt: 'Report Thumbnail 17',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_18.png',
+    alt: 'Report Thumbnail 18',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_19.png',
+    alt: 'Report Thumbnail 19',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_20.png',
+    alt: 'Report Thumbnail 20',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_21.png',
+    alt: 'Report Thumbnail 21',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_22.png',
+    alt: 'Report Thumbnail 22',
+    active: false,
+  },
+];
+
+const cashFlowReportThumbnails = [
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_01.png',
+    alt: 'Report Thumbnail 01',
+    active: true,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_02.png',
+    alt: 'Report Thumbnail 02',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_03.png',
+    alt: 'Report Thumbnail 03',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_04.png',
+    alt: 'Report Thumbnail 04',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_05.png',
+    alt: 'Report Thumbnail 05',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_06.png',
+    alt: 'Report Thumbnail 06',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_07.png',
+    alt: 'Report Thumbnail 07',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_08.png',
+    alt: 'Report Thumbnail 08',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_09.png',
+    alt: 'Report Thumbnail 09',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_10.png',
+    alt: 'Report Thumbnail 10',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_11.png',
+    alt: 'Report Thumbnail 11',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_12.png',
+    alt: 'Report Thumbnail 12',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_13.png',
+    alt: 'Report Thumbnail 13',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_14.png',
+    alt: 'Report Thumbnail 14',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_15.png',
+    alt: 'Report Thumbnail 15',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_16.png',
+    alt: 'Report Thumbnail 16',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_17.png',
+    alt: 'Report Thumbnail 17',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_18.png',
+    alt: 'Report Thumbnail 18',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_19.png',
+    alt: 'Report Thumbnail 19',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_20.png',
+    alt: 'Report Thumbnail 20',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_21.png',
+    alt: 'Report Thumbnail 21',
+    active: false,
+  },
+  {
+    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_22.png',
+    alt: 'Report Thumbnail 22',
+    active: false,
+  },
+];
+
+const ViewReportSection = ({
+  reportTypesName,
+  tokenContract,
+  tokenId,
+  reportLink,
+}: IViewReportSectionProps) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [reportThumbnails, setReportThumbnails] = useState<
+    { src: string; alt: string; active: boolean }[]
+  >([]);
+
+  const thumbnailClickHandler = (index: number) => {
+    setActiveIndex(index);
+  };
+
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
     window.alert(`Token contract ${tokenContract} copied to clipboard!`);
@@ -31,6 +364,22 @@ const ViewReportSection = ({ tokenContract, tokenId, reportLink }: IViewReportSe
   const backClickHandler = () => {
     window.history.back();
   };
+
+  useEffect(() => {
+    switch (reportTypesName.id) {
+      case ReportTypesKey.balance_sheet:
+        setReportThumbnails(balanceReportThumbnails);
+        break;
+      case ReportTypesKey.comprehensive_income_statement:
+        setReportThumbnails(comprehensiveIncomeReportThumbnails);
+        break;
+      case ReportTypesKey.cash_flow_statement:
+        setReportThumbnails(cashFlowReportThumbnails);
+        break;
+      default:
+        setReportThumbnails([]);
+    }
+  }, [reportTypesName]);
 
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
@@ -60,7 +409,7 @@ const ViewReportSection = ({ tokenContract, tokenId, reportLink }: IViewReportSe
           </div>
         </Button>
         <div className="flex-1 justify-center self-stretch text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full">
-          Balance Sheet
+          {reportTypesName.name}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
@@ -173,36 +522,45 @@ const ViewReportSection = ({ tokenContract, tokenId, reportLink }: IViewReportSe
       {/* Info: financial report content (20240426 - Shirley) */}
       <div className="mt-12 flex w-full px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="h-200px w-1/6 overflow-y-auto bg-white pl-0 lg:h-700px">
-          {/* <h2 className="mb-4 text-lg font-semibold">Sidebar</h2> */}
-          <ul className="mt-5 flex w-full flex-col items-center justify-center">
-            <li className="mb-2">
-              <a href="#page1" target="report-iframe" className="text-blue-500 hover:text-blue-700">
-                01
-              </a>
-            </li>
-            <li className="mb-2">
-              <a href="#page2" target="report-iframe" className="text-blue-500 hover:text-blue-700">
-                02
-              </a>
-            </li>
-            <li className="mb-2">
-              <a href="#page3" target="report-iframe" className="text-blue-500 hover:text-blue-700">
-                03
-              </a>
-            </li>
-            <li className="mb-2">
-              <a href="#page4" target="report-iframe" className="text-blue-500 hover:text-blue-700">
-                04
-              </a>
-            </li>
+        <div className="h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:h-700px">
+          <ul className="mt-5 flex w-full flex-col items-center justify-center space-y-5">
+            {reportThumbnails.map((thumbnail, index) => (
+              <button onClick={() => thumbnailClickHandler(index)} key={index}>
+                <div
+                  className={`flex flex-col rounded-2xl px-5 py-4 ${
+                    index === activeIndex
+                      ? 'bg-surface-brand-primary-soft'
+                      : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+                  }`}
+                >
+                  <div className="flex items-center justify-center border border-solid border-blue-950">
+                    <Image
+                      width={150}
+                      height={106}
+                      loading="lazy"
+                      src={thumbnail.src}
+                      alt={thumbnail.alt}
+                    />
+                  </div>
+                  <div
+                    className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
+                      thumbnail.active
+                        ? 'text-text-neutral-solid-dark'
+                        : 'text-text-text-neutral-primary'
+                    }`}
+                  >
+                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                  </div>
+                </div>
+              </button>
+            ))}
           </ul>
         </div>
 
         <iframe
           src={reportLink}
           name="report-iframe"
-          className="iframe-no-scrollbar h-200px flex-1 lg:h-700px"
+          className="iframe-no-scrollbar h-300px flex-1 lg:h-700px"
         />
       </div>
     </div>
