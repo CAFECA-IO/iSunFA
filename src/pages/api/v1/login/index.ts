@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
-import type { ResponseData } from '../../../../../../type/iresponsedata';
-import version from '../../../../../../lib/version';
+import type { ResponseData } from '../../../../type/iresponsedata';
+import version from '../../../../lib/version';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
