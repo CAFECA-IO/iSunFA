@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '../../../../../lib/version';
-import { errorMessageToErrorCode } from '../../../../../lib/utils/errorCode';
+import version from '../../../../../../../lib/version';
+import { errorMessageToErrorCode } from '../../../../../../../lib/utils/errorCode';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
