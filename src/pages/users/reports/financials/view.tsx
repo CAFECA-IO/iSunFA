@@ -16,12 +16,6 @@ interface IServerSideProps {
 }
 
 // TODO: dummy data to be replaced (20240429 - Shirley)
-// enum ReportLink {
-//   'balance_sheet' = 'https://baifa.io/reports/tbd14265/balance',
-//   'comprehensive_income_statement' = 'https://baifa.io/reports/tbd14265/comprehensive-income',
-//   'cash_flow_statement' = 'https://baifa.io/reports/tbd14265/cash-flow',
-// }
-
 // Function to determine the base URL based on the environment
 const getBaseUrl = (): string => {
   return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://baifa.io';

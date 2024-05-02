@@ -8,13 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ReportTypesKey } from '../../interfaces/report_type';
 
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//   'pdfjs-dist/build/pdf.worker.min.js',
-//   import.meta.url
-// ).toString();
-
 interface IViewReportSectionProps {
-  // reportTypesName: string;
   reportTypesName: { id: string; name: string };
 
   tokenContract: string;
@@ -346,7 +340,7 @@ const ViewReportSection = ({
   const [reportThumbnails, setReportThumbnails] = useState<
     { src: string; alt: string; active: boolean }[]
   >([]);
-  const [pdfFile, setPdfFile] = useState<null | string>(null); // State to store the PDF file
+  const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
 
@@ -356,7 +350,7 @@ const ViewReportSection = ({
 
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
-    setPageNumber(index + 1); // Set the page number based on the thumbnail index
+    setPageNumber(index + 1);
   };
 
   const copyTokenContract = () => {
@@ -382,9 +376,6 @@ const ViewReportSection = ({
   };
 
   const downloadClickHandler = () => {
-    // download PDF
-    // eslint-disable-next-line no-console
-    console.log(pdfFile);
     if (pdfFile) {
       window.open(pdfFile, '_blank');
     }
@@ -408,11 +399,9 @@ const ViewReportSection = ({
 
   const fetchPDF = async () => {
     try {
+      // TODO: use API service (20240502 - Shirley)
       const response = await fetch(`http://localhost:3000/api/v1/app/report?url=${reportLink}`, {
         method: 'GET',
-        // headers: {
-        //   'Content-Type': 'application/pdf',
-        // },
       });
 
       console.log(response);
@@ -435,6 +424,7 @@ const ViewReportSection = ({
     ).toString();
   }, []);
 
+  // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
       {/* Info: financial title, print button and share button (20240426 - Shirley) */}
@@ -575,14 +565,6 @@ const ViewReportSection = ({
       </div>
 
       {/* TODO: show the page number to develop (20240502 - Shirley) */}
-      {/* <div className="flex w-full justify-end px-40">
-        {pdfFile && (
-          <p className="">
-            {' '}
-            Page {pageNumber} of {numPages}
-          </p>
-        )}
-      </div> */}
       <div className="flex w-full justify-end px-40">
         {pdfFile && (
           <div className="flex items-center">
@@ -666,11 +648,7 @@ const ViewReportSection = ({
             ))}
           </ul>
         </div>
-        {/* <iframe
-          src={reportLink}
-          name="report-iframe"
-          className="iframe-no-scrollbar h-300px flex-1 lg:h-700px"
-        /> */}
+
         {pdfFile ? (
           <div className="h-700px flex-1 bg-white">
             <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>

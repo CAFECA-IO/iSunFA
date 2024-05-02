@@ -1,4 +1,3 @@
-// import { pdfjs } from 'react-pdf';
 import '../styles/globals.css';
 import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
@@ -9,14 +8,6 @@ import { GlobalProvider } from '../contexts/global_context';
 import { DashboardProvider } from '../contexts/dashboard_context';
 import { AccountingProvider } from '../contexts/accounting_context';
 import { COOKIE_NAME } from '../constants/config';
-
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//   'pdfjs-dist/build/pdf.worker.min.js',
-//   import.meta.url
-// ).toString();
-
-// // eslint-disable-next-line no-console
-// console.log('pdfjs in _app:', pdfjs);
 
 function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
