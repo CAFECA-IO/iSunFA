@@ -1,5 +1,4 @@
 /* eslint-disable */
-import Image from 'next/image';
 import { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
@@ -182,6 +181,9 @@ const PopulateDates = ({
 const SECONDS_TO_TOMORROW = 86400 - 1;
 const MILLISECONDS_IN_A_SECOND = 1000;
 
+const DEFAULT_MIN_DATE = 0;
+const DEFAULT_MAX_DATE = new Date().getTime();
+
 const DatePicker = ({
   type,
   minDate,
@@ -198,8 +200,8 @@ const DatePicker = ({
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
 
   const today = new Date();
-  const minTime = minDate ? minDate.getTime() : 0;
-  const maxTime = maxDate ? maxDate.getTime() : new Date().getTime();
+  const minTime = minDate ? minDate.getTime() : DEFAULT_MIN_DATE;
+  const maxTime = maxDate ? maxDate.getTime() : DEFAULT_MAX_DATE;
 
   const [dateOne, setDateOne] = useState<Date | null>(
     new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
@@ -476,7 +478,7 @@ const DatePicker = ({
     ) : null;
 
   return (
-    <div className="relative flex flex-col max-md:max-w-full lg:w-auto">
+    <div className="relative flex w-full flex-col max-md:max-w-full lg:w-auto">
       {/* Info: (20240417 - Shirley) Select Period button */}
 
       <div ref={targetRef}>
