@@ -29,6 +29,13 @@ const nextConfig = {
     I_SUN_FA_PHONE_NUMBER: process.env.I_SUN_FA_PHONE_NUMBER,
     GITHUB_LINK: process.env.REACT_APP_GITHUB_LINK,
   },
+  webpack: (config) => {
+    // Info: do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf) (20240502 - Shirley)
+    // eslint-disable-next-line no-param-reassign
+    config.resolve.alias.canvas = false;
+
+    return config;
+  },
 };
 
 module.exports = nextConfig;

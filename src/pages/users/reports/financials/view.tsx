@@ -16,11 +16,17 @@ interface IServerSideProps {
 }
 
 // TODO: dummy data to be replaced (20240429 - Shirley)
-enum ReportLink {
-  'balance_sheet' = 'https://baifa.io/reports/tbd14265/balance',
-  'comprehensive_income_statement' = 'https://baifa.io/reports/tbd14265/comprehensive-income',
-  'cash_flow_statement' = 'https://baifa.io/reports/tbd14265/cash-flow',
-}
+// Function to determine the base URL based on the environment
+const getBaseUrl = (): string => {
+  return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://baifa.io';
+};
+
+// TODO: dummy data to be replaced (20240429 - Shirley)
+const ReportLink = {
+  balance_sheet: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/balance`,
+  comprehensive_income_statement: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/comprehensive-income`,
+  cash_flow_statement: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/cash-flow`,
+} as const;
 
 // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
