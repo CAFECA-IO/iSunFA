@@ -1,5 +1,4 @@
 /* eslint-disable */
-import Image from 'next/image';
 import { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
@@ -476,7 +475,7 @@ const DatePicker = ({
     ) : null;
 
   return (
-    <div className="relative flex flex-col max-md:max-w-full lg:w-auto">
+    <div className="relative flex w-full flex-col max-md:max-w-full lg:w-auto">
       {/* Info: (20240417 - Shirley) Select Period button */}
 
       <div ref={targetRef}>

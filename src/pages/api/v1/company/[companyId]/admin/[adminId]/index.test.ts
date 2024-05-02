@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
-import version from '../../../../../lib/version';
+import version from '../../../../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;

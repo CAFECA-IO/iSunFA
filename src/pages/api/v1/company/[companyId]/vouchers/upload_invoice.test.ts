@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './upload_invoice';
-import { isAccountInvoiceData } from '../../../../interfaces/account';
-import version from '../../../../lib/version';
+import { isAccountInvoiceData } from '../../../../../../interfaces/account';
+import version from '../../../../../../lib/version';
 // Mock the module and its function
 
 // Cast to jest.Mock to inform TypeScript about the jest mocking properties

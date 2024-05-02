@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import handler from './index'; // Update with the actual import path if necessary
-import { isAccountVoucher } from '../../../../interfaces/account';
+import { isAccountVoucher } from '../../../../../../interfaces/account';
 // Mocking the utility function isAccountVoucher from '@/interfaces/account'
 jest.mock('../../../../interfaces/account', () => ({
   isAccountVoucher: jest.fn(),
