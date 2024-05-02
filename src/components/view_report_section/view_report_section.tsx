@@ -1,9 +1,17 @@
 /* eslint-disable */
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { pdfjs, Document, Page } from 'react-pdf';
 import React, { useEffect, useState } from 'react';
 import { Button } from '../button/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ReportTypesKey } from '../../interfaces/report_type';
+
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   'pdfjs-dist/build/pdf.worker.min.js',
+//   import.meta.url
+// ).toString();
 
 interface IViewReportSectionProps {
   // reportTypesName: string;
@@ -338,9 +346,17 @@ const ViewReportSection = ({
   const [reportThumbnails, setReportThumbnails] = useState<
     { src: string; alt: string; active: boolean }[]
   >([]);
+  const [pdfFile, setPdfFile] = useState<null | string>(null); // State to store the PDF file
+  const [numPages, setNumPages] = useState<number>(1);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
+    setNumPages(numPages);
+  }
 
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
+    setPageNumber(index + 1); // Set the page number based on the thumbnail index
   };
 
   const copyTokenContract = () => {
@@ -365,6 +381,15 @@ const ViewReportSection = ({
     window.history.back();
   };
 
+  const downloadClickHandler = () => {
+    // download PDF
+    // eslint-disable-next-line no-console
+    console.log(pdfFile);
+    if (pdfFile) {
+      window.open(pdfFile, '_blank');
+    }
+  };
+
   useEffect(() => {
     switch (reportTypesName.id) {
       case ReportTypesKey.balance_sheet:
@@ -380,6 +405,35 @@ const ViewReportSection = ({
         setReportThumbnails([]);
     }
   }, [reportTypesName]);
+
+  const fetchPDF = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/app/report?url=${reportLink}`, {
+        method: 'GET',
+        // headers: {
+        //   'Content-Type': 'application/pdf',
+        // },
+      });
+
+      console.log(response);
+
+      const blob = await response.blob();
+      setPdfFile(URL.createObjectURL(blob));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPDF();
+  }, [reportLink]);
+
+  useEffect(() => {
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.js',
+      import.meta.url
+    ).toString();
+  }, []);
 
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
@@ -414,6 +468,7 @@ const ViewReportSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
+              onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -519,6 +574,61 @@ const ViewReportSection = ({
         <div className=""></div>
       </div>
 
+      {/* TODO: show the page number to develop (20240502 - Shirley) */}
+      {/* <div className="flex w-full justify-end px-40">
+        {pdfFile && (
+          <p className="">
+            {' '}
+            Page {pageNumber} of {numPages}
+          </p>
+        )}
+      </div> */}
+      <div className="flex w-full justify-end px-40">
+        {pdfFile && (
+          <div className="flex items-center">
+            <button
+              onClick={() => thumbnailClickHandler(pageNumber - 2)}
+              disabled={pageNumber <= 1}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                className="bi bi-chevron-left"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
+                />
+              </svg>
+            </button>
+            <p className="mx-2">
+              Page {pageNumber} of {numPages}
+            </p>
+            <button
+              onClick={() => thumbnailClickHandler(pageNumber)}
+              disabled={pageNumber >= numPages}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                className="bi bi-chevron-right"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Info: financial report content (20240426 - Shirley) */}
       <div className="mt-12 flex w-full px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
@@ -556,12 +666,27 @@ const ViewReportSection = ({
             ))}
           </ul>
         </div>
-
-        <iframe
+        {/* <iframe
           src={reportLink}
           name="report-iframe"
           className="iframe-no-scrollbar h-300px flex-1 lg:h-700px"
-        />
+        /> */}
+        {pdfFile ? (
+          <div className="h-700px flex-1 bg-white">
+            <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+              <Page
+                scale={1}
+                pageNumber={pageNumber}
+                width={500}
+                className={`flex w-full justify-center bg-blue-300`}
+              />
+            </Document>
+          </div>
+        ) : (
+          <div className="flex h-700px w-full flex-1 items-center justify-center bg-white">
+            <p className="text-stroke-brand-secondary">Loading...</p>
+          </div>
+        )}
       </div>
     </div>
   );

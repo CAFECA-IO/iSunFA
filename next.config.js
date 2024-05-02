@@ -29,6 +29,12 @@ const nextConfig = {
     I_SUN_FA_PHONE_NUMBER: process.env.I_SUN_FA_PHONE_NUMBER,
     GITHUB_LINK: process.env.REACT_APP_GITHUB_LINK,
   },
+  webpack: (config) => {
+    // eslint-disable-next-line no-param-reassign
+    config.resolve.alias.canvas = false;
+
+    return config;
+  },
 };
 
 module.exports = nextConfig;
