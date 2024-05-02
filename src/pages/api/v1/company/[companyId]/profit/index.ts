@@ -1,20 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { IProfit } from '@/interfaces/profit';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  period: string;
-  income: number;
-  expenses: number;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ResponseData[] | null;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: IProfit[] = [
   {
     period: '2024-03-01',
     income: 70000,
@@ -172,10 +160,10 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IProfit>>) {
   const { period = 'day' } = req.query;
   if (period === 'day') {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<IProfit> = {
       powerby: 'iSunFa api 1.0.0',
       success: true,
       code: '200',

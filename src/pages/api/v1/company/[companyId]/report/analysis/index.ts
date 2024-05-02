@@ -1,30 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { IAnalysisReport, IAnalysisReportRequest } from '@/interfaces/report';
+import { IResponseData } from '@/interfaces/response_data';
 
-type AnalysisReportRequest = {
-  type: string;
-  language: string;
-  start_date: Date;
-  end_date: Date;
-};
+const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
 
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: string | null;
-};
-
-const mockAnalysisReportUrl = 'http://www.google.com.br';
-
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAnalysisReport>>
+) {
   const {
     type,
     language,
     start_date: startDate,
     end_date: endDate,
-  }: AnalysisReportRequest = req.body;
+  }: IAnalysisReportRequest = req.body;
   if (req.method !== 'POST' || !type || !language || !startDate || !endDate) {
     res.status(400).json({
       powerby: 'iSunFA v' + version,

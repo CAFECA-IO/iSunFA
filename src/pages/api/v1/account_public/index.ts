@@ -1,20 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { IAccountPublic } from '@/interfaces/account_public';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  code: number;
-  account: string;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ResponseData[] | null;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: IAccountPublic[] = [
   {
     code: 1103,
     account: '銀行存款',
@@ -37,17 +26,20 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-const responseDataArray2: ResponseData[] = [
+const responseDataArray2: IAccountPublic[] = [
   {
     code: 1103,
     account: '銀行存款',
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAccountPublic>>
+) {
   const { code, account } = req.query;
   if (code || account) {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<IAccountPublic> = {
       powerby: 'iSunFA v' + version,
       success: true,
       code: '200',
@@ -56,7 +48,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
     };
     res.status(200).json(apiResponse);
   } else {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<IAccountPublic> = {
       powerby: 'iSunFA v' + version,
       success: true,
       code: '200',

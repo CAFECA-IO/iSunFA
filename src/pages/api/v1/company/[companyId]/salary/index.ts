@@ -1,26 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { ISalary } from '@/interfaces/salary';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  department: string;
-  names_ids: { name: string; id: number }[];
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload?: ResponseData[] | null;
-};
-
-type SalaryRequest = {
-  description: string;
-  start_date: Date;
-  end_date: Date;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: ISalary[] = [
   {
     department: 'Tech Dev',
     names_ids: [
@@ -47,9 +30,9 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<ISalary>>) {
   if (req.method === 'GET') {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<ISalary> = {
       powerby: 'iSunFA v' + version,
       success: true,
       code: '200',
@@ -57,33 +40,5 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
       payload: responseDataArray,
     };
     res.status(200).json(apiResponse);
-  }
-  if (req.method === 'POST') {
-    const { id } = req.query;
-    if (!id) {
-      res.status(400).json({
-        powerby: 'iSunFA v' + version,
-        success: false,
-        code: '400',
-        message: 'create salary bookkeeping failed',
-      });
-      return;
-    }
-    const { description, start_date: startDate, end_date: endDate }: SalaryRequest = req.body;
-    if (!description || !startDate || !endDate) {
-      res.status(400).json({
-        powerby: 'iSunFA v' + version,
-        success: false,
-        code: '400',
-        message: 'create salary bookkeeping failed',
-      });
-      return;
-    }
-    res.status(200).json({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'create salary bookkeeping successful',
-    });
   }
 }
