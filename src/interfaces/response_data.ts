@@ -1,7 +1,7 @@
-export type ResponseData = {
+export interface IResponseData<T> {
   powerby: string;
   success: boolean;
   code: string;
   message: string;
-  payload: object;
-};
+  payload: T | object;
+}

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
-import version from '../../../../../../lib/version';
+import version from '../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -20,21 +20,27 @@ beforeEach(() => {
   } as unknown as jest.Mocked<NextApiResponse>;
 });
 
-describe('test subscription API', () => {
-  it('should list all subscriptions', async () => {
-    req.headers.userId = '1';
+describe('test user API', () => {
+  it('should list all users', async () => {
     await handler(req, res);
-    const subscriptions = [
+    const users = [
       {
         id: '1',
-        companyId: 'company-id',
-        companyName: 'mermer',
-        plan: 'pro',
-        paymentId: '1',
-        price: 'USD 10',
-        autoRenew: true,
-        expireDate: 2184719248,
-        status: 'paid',
+        name: 'John',
+        fullName: 'John Doe',
+        email: 'john@mermer.cc',
+        phone: '12345678',
+        kycStatus: 'verified',
+        credentialId: '1',
+        publicKey: 'public-key',
+        algorithm: 'ES256',
+      },
+      {
+        id: '2',
+        name: 'Jane',
+        credentialId: '2',
+        publicKey: 'public-key',
+        algorithm: 'ES256',
       },
     ];
     expect(res.status).toHaveBeenCalledWith(200);
@@ -42,52 +48,42 @@ describe('test subscription API', () => {
       powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
-      message: 'list all subscriptions',
-      payload: subscriptions,
+      payload: users,
+      message: 'List Users sucessfully',
     });
   });
 
-  it('should create a new subscription', async () => {
-    req.headers.userId = '1';
+  it('should create a new user', async () => {
     req.method = 'POST';
-    req.body = {
-      plan: 'pro',
-      paymentId: '2',
-      autoRenew: true,
-    };
+    req.body = { name: 'Jane' };
     await handler(req, res);
-    const newSubscription = {
-      id: '3',
-      companyId: 'company-id',
-      companyName: 'mermer',
-      plan: 'pro',
-      paymentId: '2',
-      price: 'USD 10',
-      autoRenew: true,
-      expireDate: 1746187324,
-      status: 'paid',
+    const newUser = {
+      id: '2',
+      name: 'Jane',
+      credentialId: '2',
+      publicKey: 'public-key',
+      algorithm: 'ES256',
     };
-    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
-      message: 'create subscription',
-      payload: newSubscription,
+      payload: newUser,
+      message: 'Create User sucessfully',
     });
   });
 
   it('should handle unsupported HTTP methods', async () => {
-    req.headers.userId = '1';
     req.method = 'PUT';
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
       success: false,
-      code: '405',
-      payload: {},
+      code: '500',
       message: 'Method Not Allowed',
+      payload: {},
     });
   });
 });

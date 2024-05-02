@@ -1,16 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
-import type { ResponseData } from '../../../../../../type/iresponsedata';
+import { IPayment } from '@/interfaces/payment';
+import { IResponseData } from '../../../../../../interfaces/response_data';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IPayment>>
+) {
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
     if (!req.headers.userId) {
       throw new Error('Resource not found');
     }
     if (req.method === 'GET') {
-      const paymentList = [
+      const paymentList: IPayment[] = [
         {
           id: '1',
           type: 'VISA',
@@ -43,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error('Invalid input parameter');
       }
-      const newPayment = {
+      const newPayment: IPayment = {
         id: '3',
         type,
         no,

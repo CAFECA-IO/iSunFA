@@ -1,8 +1,13 @@
+import { IClient } from '@/interfaces/client';
+import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient>>
+) {
   const { method } = req;
 
   try {
@@ -17,9 +22,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
     // Info: (20240419 - Jacky) C010002 - GET /client/:id
     if (method === 'GET') {
-      const client = {
+      const client: IClient = {
         id: '1',
-        name: 'cafeca',
+        companyId: 'cafeca',
+        companyName: 'Example Company',
         code: '1234',
         favorite: false,
       };
@@ -33,13 +39,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       // Info: (20240419 - Jacky) C010004 - PUT /client/:id
     } else if (method === 'PUT') {
       const { name, code } = req.body;
-      const client = {
+      const client: IClient = {
         id: '1',
-        name: 'cafeca',
+        companyId: 'cafeca',
+        companyName: 'Example Company',
         code: '1234',
         favorite: false,
       };
-      client.name = name;
+      client.companyName = name;
       client.code = code;
       res.status(200).json({
         powerby: 'ISunFa api ' + version,
@@ -50,9 +57,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
       // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
-      const client = {
+      const client: IClient = {
         id: '1',
-        name: 'cafeca',
+        companyId: 'cafeca',
+        companyName: 'Example Company',
         code: '1234',
         favorite: false,
       };

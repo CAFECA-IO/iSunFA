@@ -1,32 +1,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import type { ResponseData } from '../../../../../../type/iresponsedata';
+import { IAdmin } from '@/interfaces/admin';
+import { IResponseData } from '../../../../../../interfaces/response_data';
 import version from '../../../../../../lib/version';
 import { errorMessageToErrorCode } from '../../../../../../lib/utils/errorCode';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   try {
     if (!req.headers.userId) {
       throw new Error('Resource not found');
     }
     // Info: (20240419 - Jacky) A010001 - GET /admin
     if (req.method === 'GET') {
-      const adminList = [
+      const adminList: IAdmin[] = [
         {
-          id: 1,
-          companyId: 1,
-          UserId: 1,
+          id: '1',
+          companyId: '1',
+          companyName: 'mermer',
+          userId: '1',
+          userName: 'bob',
           email: 'bob@mermer.cc',
-          startDate: '2021-01-01',
+          startDate: 21321321,
           auditing: 'viewer',
           accounting: 'editor',
           internalControl: 'editor',
         },
         {
-          id: 2,
-          companyId: 1,
-          UserId: 2,
+          id: '2',
+          companyId: '1',
+          companyName: 'mermer',
+          userId: '2',
+          userName: 'alice',
           email: 'alice@mermer.cc',
-          startDate: '2021-01-01',
+          startDate: 134214124,
           auditing: 'viewer',
           accounting: 'editor',
           internalControl: 'editor',
@@ -45,11 +50,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       if (!name || !email) {
         throw new Error('Invalid input parameter');
       }
-      const admin = {
+      const admin: IAdmin = {
         id: '3',
-        name,
+        companyId: '1',
+        companyName: 'mermer',
+        userId: '3',
+        userName: name,
         email,
-        startDate: '2021-01-01',
+        startDate: 124124124,
         auditing: 'editor',
         accounting: 'editor',
         internalControl: 'editor',

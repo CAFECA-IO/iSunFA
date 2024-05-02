@@ -12,14 +12,16 @@ datasource db {
 model admin {
     id         Int      @id @default(autoincrement())
     companyId         Int      @map("company_id") 
-    userId     Int      @map("user_id")
+    email      String
     startDate  DateTime
     auditing   String
     accounting String
     internalControl String
 
+    users       user[]
+    userToAdmins userToAdmin[]
+
     company           company  @relation(fields: [companyId], references: [id])
-    user              user     @relation(fields: [userId], references: [id])
 
 }
 
@@ -35,7 +37,7 @@ model company {
     clients   client[]
     departments department[]
     employees employee[]
-    companyKYC companyKYC[]
+    companyKYCs companyKYC[]
     subscriptions subscription[]
     users     user[]
     userToCompanies userToCompany[]
@@ -118,17 +120,31 @@ model employeeToProject {
 model user {
     id         Int      @id @default(autoincrement())
     name       String
-    realName   String
+    fullName   String
     email      String
     phone      String
     kycStatus  String
-    companyId  Int
+    credentialId String
+    publicKey String
+    algorithm String
+    
+    admins       admin[]
+    companys     company[]
+    userKYCs    userKYC[]
+    userToAdmins userToAdmin[]
+    userToCompanys userToCompany[]
 
-    admin       admin[]
-    userKYC    userKYC[]
-    userToCompany userToCompany[]
+}
 
-    company    company  @relation(fields: [companyId], references: [id])
+model userToAdmin {
+    id         Int      @id @default(autoincrement())
+    userId     Int
+    adminId    Int
+
+    user       user  @relation(fields: [userId], references: [id])
+    admin      admin @relation(fields: [adminId], references: [id])
+
+    @@map("user_to_admin")
 }
 
 model userToCompany {
@@ -271,5 +287,5 @@ model project{
     status      String
 
     contracts   contract[]
-    emploteeToProjects employeeToProject[]
+    employeeToProjects employeeToProject[]
 }

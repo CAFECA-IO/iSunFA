@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
 import handler from './index';
-import version from '../../../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -9,8 +9,8 @@ beforeEach(() => {
   req = {
     headers: {},
     body: null,
-    query: { id: '1' },
-    method: 'GET',
+    query: {},
+    method: '',
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -20,8 +20,13 @@ beforeEach(() => {
   } as unknown as jest.Mocked<NextApiResponse>;
 });
 
-describe('test post admin API', () => {
-  it('should list admin', async () => {
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+describe('Admin API Handler Tests', () => {
+  it('should handle GET requests successfully', async () => {
+    req.method = 'GET';
     req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -32,21 +37,25 @@ describe('test post admin API', () => {
       message: 'list all admins',
       payload: [
         {
-          id: 1,
-          companyId: 1,
-          UserId: 1,
+          id: '1',
+          companyId: '1',
+          companyName: 'mermer',
+          userId: '1',
+          userName: 'bob',
           email: 'bob@mermer.cc',
-          startDate: '2021-01-01',
+          startDate: 21321321,
           auditing: 'viewer',
           accounting: 'editor',
           internalControl: 'editor',
         },
         {
-          id: 2,
-          companyId: 1,
-          UserId: 2,
+          id: '2',
+          companyId: '1',
+          companyName: 'mermer',
+          userId: '2',
+          userName: 'alice',
           email: 'alice@mermer.cc',
-          startDate: '2021-01-01',
+          startDate: 134214124,
           auditing: 'viewer',
           accounting: 'editor',
           internalControl: 'editor',
@@ -55,46 +64,50 @@ describe('test post admin API', () => {
     });
   });
 
-  it('should create admin', async () => {
+  it('should handle POST requests successfully', async () => {
     req.method = 'POST';
     req.headers.userId = '1';
-    req.body = { name: 'kkk', email: 'kkk@mermer.cc' };
-    await handler(req, res);
-    const admin = {
-      id: '3',
-      name: 'kkk',
-      email: 'kkk@mermer.cc',
-      startDate: '2021-01-01',
-      auditing: 'editor',
-      accounting: 'editor',
-      internalControl: 'editor',
+    req.body = {
+      name: 'New Admin',
+      email: 'newadmin@mermer.cc',
     };
+    await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
       message: 'Create admin successfully',
-      payload: admin,
+      payload: {
+        id: '3',
+        companyId: '1',
+        companyName: 'mermer',
+        userId: '3',
+        userName: 'New Admin',
+        email: 'newadmin@mermer.cc',
+        startDate: 124124124,
+        auditing: 'editor',
+        accounting: 'editor',
+        internalControl: 'editor',
+      },
     });
   });
 
-  it('should return error for invalid input parameter', async () => {
-    req.method = 'POST';
-    req.headers.userId = '1';
-    req.body = { name: '', email: 'kkk@mermer.cc' };
+  it('should handle requests without userId header', async () => {
+    req.method = 'GET';
+    delete req.headers.userId;
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
       success: false,
-      code: '422',
+      code: '404',
       payload: {},
-      message: 'Invalid input parameter',
+      message: 'Resource not found',
     });
   });
 
-  it('should return error for invalid method', async () => {
+  it('should handle requests with unsupported methods', async () => {
     req.method = 'PUT';
     req.headers.userId = '1';
     await handler(req, res);

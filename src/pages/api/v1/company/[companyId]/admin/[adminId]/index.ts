@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { IAdmin } from '@/interfaces/admin';
+import { IResponseData } from '@/interfaces/response_data';
 import version from '../../../../../../../lib/version';
 import { errorMessageToErrorCode } from '../../../../../../../lib/utils/errorCode';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   const { id } = req.query;
   try {
     if (!req.headers.userId) {
@@ -17,11 +19,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // Info: (20240419 - Jacky) A010002 - GET /admin/:id
     if (req.method === 'GET') {
       if (id === '1') {
-        const admin = {
+        const admin: IAdmin = {
           id: '1',
-          name: 'bob',
+          companyId: '1',
+          companyName: 'mermer',
+          userId: '1',
+          userName: 'bob',
           email: 'bob@mermer.cc',
-          startDate: '2021-01-01',
+          startDate: 21321321,
           auditing: 'viewer',
           accounting: 'editor',
           internalControl: 'editor',
@@ -42,9 +47,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       if (!name || !email || !startDate || !auditing || !accounting || !internalControl) {
         throw new Error('Invalid input parameter');
       }
-      const admin = {
-        id,
-        name,
+      const admin: IAdmin = {
+        id: id as string,
+        companyId: '1',
+        companyName: 'mermer',
+        userId: '1',
+        userName: name,
         email,
         startDate,
         auditing,
