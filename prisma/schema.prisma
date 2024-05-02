@@ -12,15 +12,15 @@ datasource db {
 model admin {
     id         Int      @id @default(autoincrement())
     companyId         Int      @map("company_id") 
-    name       String
-    email      String
+    userId     Int      @map("user_id")
     startDate  DateTime
     auditing   String
     accounting String
     internalControl String
-    company           company  @relation(fields: [companyId], references: [id])
 
-    // company    Company  @relation(fields: [companyId], references: [id])
+    company           company  @relation(fields: [companyId], references: [id])
+    user              user     @relation(fields: [userId], references: [id])
+
 }
 
 model company {
@@ -37,7 +37,8 @@ model company {
     employees employee[]
     companyKYC companyKYC[]
     subscriptions subscription[]
-    
+    users     user[]
+    userToCompanies userToCompany[]
 }
 
 model auditReport {
@@ -46,7 +47,7 @@ model auditReport {
     informationYear   String
     detailedInformation String
     creditRating      String
-    dateOfUpload      String
+    dateOfUpload      DateTime
     link              String
 
     company           company  @relation(fields: [companyId], references: [id])
@@ -68,8 +69,8 @@ model contract {
         signatory    String
         status       String
         payment      String
-        startDate    String
-        endDate      String
+        startDate    DateTime
+        endDate      DateTime
         progress     String
 
         project      project  @relation(fields: [projectId], references: [id])
@@ -94,8 +95,8 @@ model employee {
     bonus         String
     salaryPayMode String
     payFrequency  String
-    startDate     String
-    endDate       String
+    startDate     DateTime
+    endDate       DateTime
 
     employeeToProjects employeeToProject[]
 
@@ -121,8 +122,24 @@ model user {
     email      String
     phone      String
     kycStatus  String
+    companyId  Int
 
+    admin       admin[]
     userKYC    userKYC[]
+    userToCompany userToCompany[]
+
+    company    company  @relation(fields: [companyId], references: [id])
+}
+
+model userToCompany {
+    id         Int      @id @default(autoincrement())
+    userId     Int
+    companyId  Int
+
+    user       user    @relation(fields: [userId], references: [id])
+    company    company @relation(fields: [companyId], references: [id])
+
+    @@map("user_to_company")
 }
 
 model userKYC {
@@ -190,7 +207,7 @@ model property {
     id          Int   @id @default(autoincrement())
     name          String
     description   String
-    purchaseDate  String
+    purchaseDate  DateTime
     purchasePrice String
     depreciationMethod String
     estimatedUsefulLife String
@@ -210,7 +227,7 @@ model subscription {
     paymentId   String
     price       String
     autoRenew   Boolean
-    expireDate  String
+    expireDate  DateTime
     status      String
 
     company     company  @relation(fields: [companyId], references: [id])
@@ -235,7 +252,7 @@ model account {
 
 model asset {
     id          Int      @id @default(autoincrement())
-    date              String   
+    date              DateTime   
     type              String
     assetName         String
     purchasePrice     String
@@ -249,8 +266,8 @@ model project{
     id          Int      @id @default(autoincrement())
     name        String
     description String
-    startDate   String
-    endDate     String
+    startDate   DateTime
+    endDate     DateTime
     status      String
 
     contracts   contract[]
