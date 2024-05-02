@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from './index'; // Update this path to where your actual handler is located
-import version from '../../../../../lib/version'; // Ensure this is the correct path to your version module
+import handler from './index'; // Update the import path to where your actual handler is located
+import version from '../../../../../../../lib/version'; // Make sure this path is correct to import 'version'
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -25,8 +25,8 @@ afterEach(() => {
 });
 
 describe('API Handler Tests', () => {
-  it('should return 400 for invalid resultId', async () => {
-    req.query = { resultId: '' }; // Invalid resultId
+  it('should return 400 for invalid lineItemId', async () => {
+    req.query = { lineItemId: '' }; // Invalid lineItemId
     req.method = 'GET';
 
     await handler(req, res);
@@ -36,12 +36,12 @@ describe('API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '400',
-      message: 'Invalid resultId',
+      message: 'Invalid lineItemId',
     });
   });
 
-  it('should handle successful GET requests with valid resultId', async () => {
-    req.query = { resultId: '1229001' }; // Valid resultId
+  it('should handle successful GET requests with valid lineItemId', async () => {
+    req.query = { lineItemId: '1229001001' }; // Valid lineItemId
     req.method = 'GET';
 
     await handler(req, res);
@@ -51,35 +51,19 @@ describe('API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: true,
       code: '200',
-      message: 'List of vouchers return successfully',
+      message: 'Line item return successfully',
       payload: {
-        date: '2024-12-29',
-        vouchIndex: '1229001',
-        type: 'Receiving',
-        from_or_to: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        lineItem: [
-          {
-            lineItemIndex: '1229001001',
-            account: '銀行存款',
-            description: '港幣120000 * 3.916',
-            debit: true,
-            amount: 469920,
-          },
-          {
-            lineItemIndex: '1229001002',
-            account: '營業收入',
-            description: '港幣120000 * 3.916',
-            debit: false,
-            amount: 469920,
-          },
-        ],
+        lineItemIndex: '1229001001',
+        account: '銀行存款',
+        description: '港幣120000 * 3.916',
+        debit: true,
+        amount: 469920,
       },
     });
   });
 
   it('should return 405 for unsupported methods', async () => {
-    req.query = { resultId: '1229001' }; // Valid resultId
+    req.query = { lineItemId: '1229001001' };
     req.method = 'POST'; // Unsupported method
 
     await handler(req, res);
@@ -89,7 +73,7 @@ describe('API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '405',
-      message: 'Method Not Allowed in vouchers api',
+      message: 'Method Not Allowed in line items api',
     });
   });
 });

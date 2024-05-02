@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
-import version from '../../../../lib/version';
+import version from '../../../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -32,8 +32,9 @@ describe('test post admin API', () => {
       message: 'list all admins',
       payload: [
         {
-          id: '1',
-          name: 'bob',
+          id: 1,
+          companyId: 1,
+          UserId: 1,
           email: 'bob@mermer.cc',
           startDate: '2021-01-01',
           auditing: 'viewer',
@@ -41,8 +42,9 @@ describe('test post admin API', () => {
           internalControl: 'editor',
         },
         {
-          id: '2',
-          name: 'alice',
+          id: 2,
+          companyId: 1,
+          UserId: 2,
           email: 'alice@mermer.cc',
           startDate: '2021-01-01',
           auditing: 'viewer',

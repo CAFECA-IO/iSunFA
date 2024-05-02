@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import type { ResponseData } from '../../../../type/iresponsedata';
-import version from '../../../../lib/version';
-import { errorMessageToErrorCode } from '../../../../lib/utils/errorCode';
+import type { ResponseData } from '../../../../../../type/iresponsedata';
+import version from '../../../../../../lib/version';
+import { errorMessageToErrorCode } from '../../../../../../lib/utils/errorCode';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
@@ -12,8 +12,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
     if (req.method === 'GET') {
       const adminList = [
         {
-          id: '1',
-          name: 'bob',
+          id: 1,
+          companyId: 1,
+          UserId: 1,
           email: 'bob@mermer.cc',
           startDate: '2021-01-01',
           auditing: 'viewer',
@@ -21,8 +22,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
           internalControl: 'editor',
         },
         {
-          id: '2',
-          name: 'alice',
+          id: 2,
+          companyId: 1,
+          UserId: 2,
           email: 'alice@mermer.cc',
           startDate: '2021-01-01',
           auditing: 'viewer',
