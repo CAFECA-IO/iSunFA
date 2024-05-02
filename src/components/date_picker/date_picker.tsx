@@ -181,9 +181,6 @@ const PopulateDates = ({
 const SECONDS_TO_TOMORROW = 86400 - 1;
 const MILLISECONDS_IN_A_SECOND = 1000;
 
-const DEFAULT_MIN_DATE = 0;
-const DEFAULT_MAX_DATE = new Date().getTime();
-
 const DatePicker = ({
   type,
   minDate,
@@ -200,8 +197,8 @@ const DatePicker = ({
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
 
   const today = new Date();
-  const minTime = minDate ? minDate.getTime() : DEFAULT_MIN_DATE;
-  const maxTime = maxDate ? maxDate.getTime() : DEFAULT_MAX_DATE;
+  const minTime = minDate ? minDate.getTime() : 0;
+  const maxTime = maxDate ? maxDate.getTime() : new Date().getTime();
 
   const [dateOne, setDateOne] = useState<Date | null>(
     new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
