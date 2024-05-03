@@ -8,7 +8,7 @@ import {
 import { IAnalysisReportRequest, IFinancialReportRequest } from '@/interfaces/report';
 import APIName from '../enums/api_name';
 
-type APIConfig = {
+export type APIConfig = {
   [key in APIName]: {
     path: (...arg: string[]) => string;
     method: string;
