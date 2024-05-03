@@ -39,6 +39,7 @@ const NewJournalForm = () => {
     warningModalDataHandler,
     confirmModalVisibilityHandler,
     confirmModalDataHandler,
+    addPropertyModalVisibilityHandler,
   } = useGlobalCtx();
 
   // Info: (20240425 - Julian) check if form has changed
@@ -166,13 +167,13 @@ const NewJournalForm = () => {
   const totalPriceChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = Number(e.target.value);
     if (!Number.isNaN(input)) {
-      setInputTotalPrice(Number(e.target.value));
+      setInputTotalPrice(input);
     }
   };
   const feeChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = Number(e.target.value);
     if (!Number.isNaN(input)) {
-      setInputFee(Number(e.target.value));
+      setInputFee(input);
     }
   };
   const accountNumberChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,13 +182,13 @@ const NewJournalForm = () => {
   const installmentChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = Number(e.target.value);
     if (!Number.isNaN(input)) {
-      setInputInstallment(Number(e.target.value));
+      setInputInstallment(input);
     }
   };
   const partialPaidChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = Number(e.target.value);
     if (!Number.isNaN(input)) {
-      setInputPartialPaid(Number(e.target.value));
+      setInputPartialPaid(input);
     }
   };
 
@@ -196,14 +197,14 @@ const NewJournalForm = () => {
     if (!Number.isNaN(input)) {
       // Info: (20240425 - Julian) 限制輸入範圍 0 ~ 100
       if (input <= 100 && input >= 0) {
-        setProgressRate(Number(e.target.value));
+        setProgressRate(input);
       }
     }
   };
   const estimatedCostChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = Number(e.target.value);
     if (!Number.isNaN(input)) {
-      setInputEstimatedCost(Number(e.target.value));
+      setInputEstimatedCost(input);
     }
   };
 
@@ -469,7 +470,11 @@ const NewJournalForm = () => {
               </div>
             </div>
             {/* ToDo: (20240423 - Julian) Add new property */}
-            <button type="button" className="ml-auto text-secondaryBlue hover:text-primaryYellow">
+            <button
+              type="button"
+              onClick={addPropertyModalVisibilityHandler}
+              className="ml-auto text-secondaryBlue hover:text-primaryYellow"
+            >
               + Add new property
             </button>
           </div>
