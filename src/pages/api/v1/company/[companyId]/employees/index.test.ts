@@ -65,6 +65,7 @@ describe('CreateAnEmployee API Handler Tests', () => {
       success: true,
       code: '200',
       message: 'create employee successful',
+      payload: null,
     });
   });
   it('should return 400 if lack of some body element', async () => {
@@ -84,6 +85,7 @@ describe('CreateAnEmployee API Handler Tests', () => {
       success: false,
       code: '400',
       message: 'create employee failed',
+      payload: null,
     });
   });
 });

@@ -1,47 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { EasyEmployee, IEmployee } from '@/interfaces/employees';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  id: number;
-  name: string;
-  salary: number;
-  department: string;
-};
-
-type ResponseDataEmployee = {
-  id: number;
-  name: string;
-  salary: number;
-  department: string;
-  email: string;
-  start_date: Date;
-  bonus: number;
-  salary_payment_mode: string;
-  pay_frequency: string;
-  projects: string[];
-  insurance_payments: number;
-  additional_of_total: number;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload?: ResponseData[] | ResponseDataEmployee[] | null;
-};
-
-type Employee = {
-  name: string;
-  salary: number;
-  department: string;
-  start_date: Date;
-  bonus: number;
-  salary_payment_mode: string;
-  pay_frequency: string;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: EasyEmployee[] = [
   {
     id: 1,
     name: 'John Doe',
@@ -62,9 +24,12 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<EasyEmployee>>
+) {
   if (req.method === 'GET') {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<EasyEmployee> = {
       powerby: 'iSunFA v' + version,
       success: true,
       code: '200',
@@ -82,7 +47,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
       bonus,
       salary_payment_mode: salaryPaymentMode,
       pay_frequency: payFrequency,
-    }: Employee = req.body;
+    }: IEmployee = req.body;
     if (
       !name ||
       !salary ||
@@ -97,6 +62,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
         success: false,
         code: '400',
         message: 'create employee failed',
+        payload: null,
       });
       return;
     }
@@ -105,6 +71,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
       success: true,
       code: '200',
       message: 'create employee successful',
+      payload: null,
     });
   }
 }

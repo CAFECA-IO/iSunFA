@@ -65,6 +65,7 @@ describe('DeleteAnEmployee API Handler Tests', () => {
       success: true,
       code: '200',
       message: 'delete employee successful',
+      payload: null,
     });
   });
   it('should return 400 if id is not provided', async () => {
@@ -76,6 +77,7 @@ describe('DeleteAnEmployee API Handler Tests', () => {
       success: false,
       code: '400',
       message: 'delete employee failed',
+      payload: null,
     });
   });
 });
@@ -100,6 +102,7 @@ describe('UpdateAnEmployee API Handler Tests', () => {
       success: true,
       code: '200',
       message: 'update employee information successful',
+      payload: null,
     });
   });
   it('should return 400 if id is not provided', async () => {
@@ -120,6 +123,7 @@ describe('UpdateAnEmployee API Handler Tests', () => {
       success: false,
       code: '400',
       message: 'update employee information failed',
+      payload: null,
     });
   });
   it('should return 400 if lack of some body element', async () => {
@@ -140,6 +144,7 @@ describe('UpdateAnEmployee API Handler Tests', () => {
       success: false,
       code: '400',
       message: 'update employee information failed',
+      payload: null,
     });
   });
 });

@@ -1,17 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { EmployeeDepartments } from '@/interfaces/employees';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = string;
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ResponseData[] | null;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: EmployeeDepartments = [
   'Marketing',
   'Accounting',
   'Human Resource',
@@ -20,9 +12,12 @@ const responseDataArray: ResponseData[] = [
   'Develop',
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<EmployeeDepartments>>
+) {
   if (req.method === 'GET') {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<EmployeeDepartments> = {
       powerby: 'iSunFA v' + version,
       success: true,
       code: '200',
@@ -31,7 +26,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
     };
     res.status(200).json(apiResponse);
   } else {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<EmployeeDepartments> = {
       powerby: 'iSunFA v' + version,
       success: false,
       code: '400',
