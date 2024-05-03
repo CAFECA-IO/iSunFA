@@ -25,7 +25,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       const mockVoucherMetaData: IVoucherMetaData = {
         date: 1713139200000,
         voucherType: 'expense',
-        venderOrSupplyer: '文中資訊股份有限公司',
+        companyId: '1',
+        companyName: '文中資訊股份有限公司',
         description:
           'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
         totalPrice: 109725,
