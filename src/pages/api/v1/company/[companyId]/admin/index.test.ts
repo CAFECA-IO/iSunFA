@@ -9,7 +9,7 @@ beforeEach(() => {
   req = {
     headers: {},
     body: null,
-    query: { id: '1' },
+    query: {},
     method: 'GET',
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
@@ -20,54 +20,67 @@ beforeEach(() => {
   } as unknown as jest.Mocked<NextApiResponse>;
 });
 
-describe('test post admin API', () => {
-  it('should list admin', async () => {
-    req.headers.userId = '1';
+describe('test admin API handler', () => {
+  it('should list all admins', async () => {
+    req.method = 'GET';
     await handler(req, res);
+    const adminList = [
+      {
+        id: '1',
+        name: 'bob',
+        credentialId: '1',
+        publicKey: '1',
+        algorithm: 'ES256',
+        companyId: '1',
+        companyName: 'mermer',
+        email: 'bob@mermer.cc',
+        startDate: 21321321,
+        endDate: 123123123,
+        permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
+      },
+      {
+        id: '2',
+        name: 'alice',
+        companyId: '1',
+        companyName: 'mermer',
+        credentialId: '2',
+        publicKey: '2',
+        algorithm: 'ES256',
+        email: 'alice@mermer.cc',
+        startDate: 134214124,
+        endDate: 123123123,
+        permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
+      },
+    ];
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
       success: true,
       code: '200',
       message: 'list all admins',
-      payload: [
-        {
-          id: 1,
-          companyId: 1,
-          UserId: 1,
-          email: 'bob@mermer.cc',
-          startDate: '2021-01-01',
-          auditing: 'viewer',
-          accounting: 'editor',
-          internalControl: 'editor',
-        },
-        {
-          id: 2,
-          companyId: 1,
-          UserId: 2,
-          email: 'alice@mermer.cc',
-          startDate: '2021-01-01',
-          auditing: 'viewer',
-          accounting: 'editor',
-          internalControl: 'editor',
-        },
-      ],
+      payload: adminList,
     });
   });
 
-  it('should create admin', async () => {
+  it('should create admin successfully', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
-    req.body = { name: 'kkk', email: 'kkk@mermer.cc' };
+    req.body = {
+      name: 'John Doe',
+      email: 'john@example.com',
+    };
     await handler(req, res);
     const admin = {
       id: '3',
-      name: 'kkk',
-      email: 'kkk@mermer.cc',
-      startDate: '2021-01-01',
-      auditing: 'editor',
-      accounting: 'editor',
-      internalControl: 'editor',
+      companyId: '1',
+      companyName: 'mermer',
+      name: 'John Doe',
+      credentialId: '3',
+      publicKey: '3',
+      algorithm: 'ES256',
+      email: 'john@example.com',
+      startDate: 124124124,
+      endDate: 123123123,
+      permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -79,10 +92,11 @@ describe('test post admin API', () => {
     });
   });
 
-  it('should return error for invalid input parameter', async () => {
+  it('should return error for missing input parameters', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
-    req.body = { name: '', email: 'kkk@mermer.cc' };
+    req.body = {
+      name: 'John Doe',
+    };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith({
@@ -94,9 +108,8 @@ describe('test post admin API', () => {
     });
   });
 
-  it('should return error for invalid method', async () => {
+  it('should return error for method not allowed', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({

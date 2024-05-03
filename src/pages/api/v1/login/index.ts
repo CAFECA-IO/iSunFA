@@ -1,9 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
-import type { ResponseData } from '../../../../type/iresponsedata';
+import { IUser } from '@/interfaces/user';
+import { IResponseData } from '../../../../interfaces/response_data';
 import version from '../../../../lib/version';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IUser>>) {
   try {
     // Info: (20240419 - Jacky) L010001 - POST /login
     if (req.method !== 'POST') {

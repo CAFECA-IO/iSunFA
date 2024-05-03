@@ -1,8 +1,13 @@
+import { IResponseData } from '@/interfaces/response_data';
+import { ISubscription } from '@/interfaces/subscription';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISubscription>>
+) {
   const { method } = req;
 
   try {
@@ -16,14 +21,15 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       throw new Error('Resource not found');
     }
     if (method === 'GET') {
-      const subscription = {
+      const subscription: ISubscription = {
         id: '1',
-        entity: 'mermer',
+        companyId: 'company-id',
+        companyName: 'mermer',
         plan: 'pro',
         paymentId: '1',
         price: 'USD 10',
         autoRenew: true,
-        expireDate: '2024-01-01',
+        expireDate: 1274812,
         status: 'paid',
       };
       res.status(200).json({
@@ -36,17 +42,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
     } else if (method === 'PUT') {
       const { plan, paymentId, autoRenew } = req.body;
-      if (!plan || !paymentId || !autoRenew) {
+      if (!plan || !paymentId || autoRenew == null) {
         throw new Error('Invalid input parameter');
       }
-      const subscription = {
+      const subscription: ISubscription = {
         id: '1',
-        entity: 'mermer',
-        plan: 'pro',
-        paymentId: '1',
+        companyId: 'company-id',
+        companyName: 'mermer',
+        plan,
+        paymentId,
         price: 'USD 10',
-        autoRenew: true,
-        expireDate: '2024-01-01',
+        autoRenew,
+        expireDate: 1237468124,
         status: 'paid',
       };
       subscription.plan = plan;
@@ -60,14 +67,15 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
       // Info: (20240419 - Jacky) S010004 - DELETE /subscription/:id
     } else if (method === 'DELETE') {
-      const subscription = {
+      const subscription: ISubscription = {
         id: '1',
-        entity: 'mermer',
+        companyId: 'company-id',
+        companyName: 'mermer',
         plan: 'pro',
         paymentId: '1',
         price: 'USD 10',
         autoRenew: true,
-        expireDate: '2024-01-01',
+        expireDate: 1237468124,
         status: 'paid',
       };
       res.status(200).json({
