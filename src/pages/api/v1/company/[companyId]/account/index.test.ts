@@ -1,0 +1,121 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
+import handler from './index';
+
+let req: jest.Mocked<NextApiRequest>;
+let res: jest.Mocked<NextApiResponse>;
+
+beforeEach(() => {
+  req = {
+    headers: {},
+    query: {},
+    method: '',
+    json: jest.fn(),
+    body: {},
+  } as unknown as jest.Mocked<NextApiRequest>;
+
+  res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  } as unknown as jest.Mocked<NextApiResponse>;
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+describe('getOwnAccounts API Handler Tests', () => {
+  it('should return all response data when type and liquidity query params are provided correctly', async () => {
+    req.method = 'GET';
+    req.query = { type: 'asset', liquidity: 'current' };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'iSunFA v' + version,
+      success: true,
+      code: '200',
+      message: 'request successful',
+      payload: expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(Number),
+          code: expect.any(Number),
+          account: expect.any(String),
+          amount: expect.any(Number),
+        }),
+      ]),
+    });
+  });
+  it('should return a 400 error when type and liquidity query params are not provided', async () => {
+    req.method = 'GET';
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'iSunFA v' + version,
+      success: false,
+      code: '400',
+      message: 'bad request',
+      payload: null,
+    });
+  });
+  it('should return a 400 error when type and liquidity query params are not provided correctly', async () => {
+    req.method = 'GET';
+    req.query = { type: 'money', liquidity: 'high' };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'iSunFA v' + version,
+      success: false,
+      code: '400',
+      message: 'bad request',
+      payload: null,
+    });
+  });
+});
+
+describe('createNewAccountingAccount API Handler Tests', () => {
+  it('should create new accounting account when all body params are provided', async () => {
+    req.method = 'POST';
+    req.body = {
+      type: 'asset',
+      liquidity: 'current',
+      account: 'cash',
+      code: '1103-1',
+      name: 'Taiwan Bank',
+    };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'iSunFA v' + version,
+      success: true,
+      code: '200',
+      message: 'create successful',
+      payload: expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(Number),
+          type: expect.any(String),
+          liquidity: expect.any(String),
+          account: expect.any(String),
+          code: expect.any(String),
+          name: expect.any(String),
+        }),
+      ]),
+    });
+  });
+  it('should return a 400 error when required body params are missing', async () => {
+    req.method = 'POST';
+    req.body = {
+      type: 'asset',
+      liquidity: 'non-current',
+      code: '1103',
+    };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'iSunFA v' + version,
+      success: false,
+      code: '400',
+      message: 'create failed',
+      payload: null,
+    });
+  });
+});

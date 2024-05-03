@@ -1,25 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { IAuditReports } from '@/interfaces/audit_reports';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  code: string;
-  regional: string;
-  company: string;
-  informationYear: string;
-  detailedInformation: string;
-  creditRating: string;
-  dateOfUpload: string;
-  link: string;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ResponseData[] | null;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: IAuditReports[] = [
   {
     code: '2330',
     regional: 'TW',
@@ -42,7 +25,7 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-const responseDataArray2: ResponseData[] = [
+const responseDataArray2: IAuditReports[] = [
   {
     code: '2330',
     regional: 'TW',
@@ -65,10 +48,13 @@ const responseDataArray2: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
-  const { region, page = 1, limit = 10, begin, end, search } = req.query;
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAuditReports>>
+) {
+  const { region, page, limit, begin, end, search } = req.query;
   if (region || page || limit || begin || end || search) {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<IAuditReports> = {
       powerby: 'iSunFa api 1.0.0',
       success: true,
       code: '200',
@@ -77,7 +63,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
     };
     res.status(200).json(apiResponse);
   } else {
-    const apiResponse: ApiResponse = {
+    const apiResponse: IResponseData<IAuditReports> = {
       powerby: 'iSunFa api 1.0.0',
       success: true,
       code: '200',

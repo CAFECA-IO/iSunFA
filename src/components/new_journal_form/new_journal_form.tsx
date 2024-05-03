@@ -9,6 +9,8 @@ import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
 import Toggle from '../toggle/toggle';
+import { IConfirmModal } from '../../interfaces/confirm_modal';
+import ProgressBar from '../progress_bar/progress_bar';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
@@ -24,15 +26,26 @@ const ficSelection: string[] = [
 const projectSelection: string[] = ['None', 'Project A', 'Project B', 'Project C'];
 const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contract C'];
 
+const enum EventType {
+  PAYMENT = 'Payment',
+  RECEIVING = 'Receiving',
+  TRANSFER = 'Transfer',
+}
+
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
-  const { warningModalVisibilityHandler, warningModalDataHandler, confirmModalVisibilityHandler } =
-    useGlobalCtx();
+  const {
+    warningModalVisibilityHandler,
+    warningModalDataHandler,
+    confirmModalVisibilityHandler,
+    confirmModalDataHandler,
+  } = useGlobalCtx();
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
+  // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
   const [selectedPaymentReason, setSelectedPaymentReason] = useState<string>(
@@ -56,6 +69,8 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Project states
   const [selectedProject, setSelectedProject] = useState<string>(projectSelection[0]);
   const [selectedContract, setSelectedContract] = useState<string>(contractSelection[0]);
+  const [progressRate, setProgressRate] = useState<number>(0);
+  const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -69,34 +84,26 @@ const NewJournalForm = () => {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [formHasChanged]);
 
-  // Info: (20240425 - Julian) 整理日記帳資料(暫時不使用)
-  /*   const newJournalData: IJournal = {
-    id: `${inputDescription}_${Date.now()}`, // Info: (20240426 - Julian) 暫時以 description + timestamp 當作 id
-    basicInfo: {
-      dateStartTimestamp: datePeriod.startTimeStamp,
-      dateEndTimestamp: datePeriod.endTimeStamp,
-      eventType: selectedEventType,
-      paymentReason: selectedPaymentReason,
-      description: inputDescription,
-      vendor: inputVendor,
-    },
-    payment: {
-      totalPrice: inputTotalPrice,
-      tax: taxToggle ? taxRate : undefined,
-      fee: feeToggle ? inputFee : undefined,
-      paymentMethod: selectedMethod,
-      bankAccount: `${selectedFIC} - ${inputAccountNumber}`,
-      paymentPeriod: paymentPeriod === PaymentPeriod.AT_ONCE ? 1 : inputInstallment,
-      paymentState:
-        paymentState === PaymentState.PARTIAL_PAID
-          ? `${paymentState}: ${inputPartialPaid}`
-          : paymentState,
-    },
-    project: {
-      project: selectedProject,
-      contract: selectedContract,
-    },
-  }; */
+  // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
+  const newJournalData: IConfirmModal = {
+    dateTimestamp: datePeriod.startTimeStamp, // ToDo: (20240430 - Julian) Should select one single date
+    type: selectedEventType,
+    reason: selectedPaymentReason,
+    vendor: inputVendor,
+    description: inputDescription,
+    totalPrice: inputTotalPrice,
+    tax: taxToggle ? taxRate : 0,
+    fee: feeToggle ? inputFee : 0,
+    paymentMethod: selectedMethod,
+    paymentPeriod:
+      paymentPeriod === PaymentPeriod.AT_ONCE ? 'Pay at once' : `Pay in ${inputInstallment} times`,
+    paymentStatus:
+      paymentState === PaymentState.PARTIAL_PAID
+        ? `Partially paid: ${inputPartialPaid} TWD`
+        : paymentState,
+    project: selectedProject,
+    contract: selectedContract,
+  };
 
   const {
     targetRef: eventMenuRef,
@@ -184,6 +191,22 @@ const NewJournalForm = () => {
     }
   };
 
+  const progressRateChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = Number(e.target.value);
+    if (!Number.isNaN(input)) {
+      // Info: (20240425 - Julian) 限制輸入範圍 0 ~ 100
+      if (input <= 100 && input >= 0) {
+        setProgressRate(Number(e.target.value));
+      }
+    }
+  };
+  const estimatedCostChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = Number(e.target.value);
+    if (!Number.isNaN(input)) {
+      setInputEstimatedCost(Number(e.target.value));
+    }
+  };
+
   // Info: (20240423 - Julian) 處理 toggle 開關
   const taxToggleHandler = () => setTaxToggle(!taxToggle);
   const feeToggleHandler = () => setFeeToggle(!feeToggle);
@@ -217,6 +240,8 @@ const NewJournalForm = () => {
     setInputPartialPaid(0);
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
+    setProgressRate(0);
+    setInputEstimatedCost(0);
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -236,6 +261,7 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    confirmModalDataHandler(newJournalData);
     confirmModalVisibilityHandler();
   };
 
@@ -387,12 +413,12 @@ const NewJournalForm = () => {
         {/* Info: (20240423 - Julian) First Column */}
         <div className="flex w-full flex-col items-start justify-between gap-y-24px md:flex-row">
           {/* Info: (20240423 - Julian) Date */}
-          <div className="flex flex-col items-start gap-8px md:w-240px">
+          <div className="flex w-full flex-col items-start gap-8px md:w-240px">
             <p className="text-sm font-semibold text-navyBlue2">Date</p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
-              type={DatePickerType.TEXT}
+              type={DatePickerType.CHOOSE_DATE}
             />
           </div>
 
@@ -402,13 +428,13 @@ const NewJournalForm = () => {
             <div
               id="eventTypeMenu"
               onClick={eventMenuOpenHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedEventType}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isEventMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isEventMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={eventMenuRef}
@@ -426,13 +452,13 @@ const NewJournalForm = () => {
             <div
               id="paymentReasonMenu"
               onClick={reasonMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedPaymentReason}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={reasonRef}
@@ -462,7 +488,7 @@ const NewJournalForm = () => {
               value={inputDescription}
               onChange={descriptionChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
             />
           </div>
 
@@ -477,7 +503,7 @@ const NewJournalForm = () => {
               value={inputVendor}
               onChange={vendorChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
             />
           </div>
         </div>
@@ -504,7 +530,7 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Total Price */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">Total Price</p>
-            <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-xs border border-lightGray3 bg-white">
+            <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
               <input
                 id="inputTotalPrice"
                 name="inputTotalPrice"
@@ -546,12 +572,12 @@ const NewJournalForm = () => {
               type="button"
               onClick={taxMenuHandler}
               disabled={!taxToggle}
-              className={`group relative flex h-46px cursor-pointer ${isTaxMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px transition-all duration-300 ease-in-out enabled:hover:border-primaryYellow enabled:hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6`}
+              className={`group relative flex h-46px cursor-pointer ${isTaxMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px transition-all duration-300 ease-in-out enabled:hover:border-primaryYellow enabled:hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6`}
             >
               <p>{taxRate}%</p>
               <FaChevronDown />
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul ref={taxRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
                   {displayTaxDropmenu}
@@ -572,7 +598,7 @@ const NewJournalForm = () => {
               />
             </div>
             <div
-              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-xs border border-lightGray3 transition-all duration-300 ease-in-out`}
+              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
             >
               <input
                 id="feeInput"
@@ -605,13 +631,13 @@ const NewJournalForm = () => {
             <div
               id="paymentMethodMenu"
               onClick={methodMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedMethod}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isMethodMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isMethodMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={methodRef}
@@ -629,13 +655,13 @@ const NewJournalForm = () => {
             <div
               id="ficMenu"
               onClick={bankAccountMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedFIC}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isBankAccountMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isBankAccountMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={bankAccountRef}
@@ -657,7 +683,7 @@ const NewJournalForm = () => {
               value={inputAccountNumber}
               onChange={accountNumberChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
             />
           </div>
         </div>
@@ -700,7 +726,7 @@ const NewJournalForm = () => {
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-xs border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputInstallmentTimes"
@@ -754,7 +780,7 @@ const NewJournalForm = () => {
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-xs border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputPartialPaidAmount"
@@ -796,6 +822,43 @@ const NewJournalForm = () => {
     </>
   );
 
+  const displayedProjectSecondLine =
+    selectedEventType === EventType.RECEIVING ? (
+      <div className="flex flex-col items-start gap-40px md:flex-row">
+        {/* Info: (20240502 - Julian) Progress */}
+        <ProgressBar
+          progressRate={progressRate}
+          progressRateChangeHandler={progressRateChangeHandler}
+        />
+        {/* Info: (20240502 - Julian) Estimated Cost */}
+        <div className="flex w-full flex-col items-start gap-8px">
+          <p className="text-sm font-semibold text-navyBlue2">Estimated Cost</p>
+          <div
+            className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
+          >
+            <input
+              id="inputEstimatedCost"
+              type="number"
+              name="inputEstimatedCost"
+              value={inputEstimatedCost}
+              onChange={estimatedCostChangeHandler}
+              className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+            />
+            <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+              <Image
+                src="/currencies/twd.svg"
+                width={16}
+                height={16}
+                alt="twd_icon"
+                className="rounded-full"
+              />
+              <p>TWD</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : null;
+
   const displayedProject = (
     <>
       {/* Info: (20240424 - Julian) Title */}
@@ -809,55 +872,63 @@ const NewJournalForm = () => {
       </div>
 
       {/* Info: (20240424 - Julian) Form */}
-      <div className="my-20px flex flex-col gap-40px md:flex-row">
-        {/* Info: (20240424 - Julian) Project */}
-        <div
-          id="projectMenu"
-          onClick={projectMenuHandler}
-          className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-xs border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
-        >
-          <div className="p-12px text-sm text-lightGray4">
-            <p>Project</p>
-          </div>
-          <div className="flex w-full items-center p-10px">
-            <p className="flex-1">{selectedProject}</p>
-            <FaChevronDown />
-            {/* Info: (20240424 - Julian) Dropmenu */}
-            <div
-              className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
-            >
-              <ul ref={projectRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-                {displayProjectDropmenu}
-              </ul>
+      <div className="my-20px flex flex-col gap-40px">
+        {/* Info: (20240502 - Julian) First Column */}
+        <div className="flex w-full flex-col items-center gap-40px md:flex-row">
+          {/* Info: (20240424 - Julian) Project */}
+          <div
+            id="projectMenu"
+            onClick={projectMenuHandler}
+            className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+          >
+            <div className="p-12px text-sm text-lightGray4">
+              <p>Project</p>
             </div>
-          </div>
-        </div>
-
-        {/* Info: (20240424 - Julian) Contract */}
-        <div
-          id="contractMenu"
-          onClick={contractMenuHandler}
-          className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-xs border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
-        >
-          <div className="p-12px text-sm text-lightGray4">
-            <p>Contract</p>
-          </div>
-          <div className="flex w-full items-center p-10px">
-            <p className="flex-1">{selectedContract}</p>
-            <FaChevronDown />
-            {/* Info: (20240424 - Julian) Dropmenu */}
-            <div
-              className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
-            >
-              <ul
-                ref={contractRef}
-                className="z-10 flex w-full flex-col items-start bg-white p-8px"
+            <div className="flex w-full items-center p-10px">
+              <p className="flex-1">{selectedProject}</p>
+              <FaChevronDown />
+              {/* Info: (20240424 - Julian) Dropmenu */}
+              <div
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
-                {displayContractDropmenu}
-              </ul>
+                <ul
+                  ref={projectRef}
+                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                >
+                  {displayProjectDropmenu}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Info: (20240424 - Julian) Contract */}
+          <div
+            id="contractMenu"
+            onClick={contractMenuHandler}
+            className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+          >
+            <div className="p-12px text-sm text-lightGray4">
+              <p>Contract</p>
+            </div>
+            <div className="flex w-full items-center p-10px">
+              <p className="flex-1">{selectedContract}</p>
+              <FaChevronDown />
+              {/* Info: (20240424 - Julian) Dropmenu */}
+              <div
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+              >
+                <ul
+                  ref={contractRef}
+                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                >
+                  {displayContractDropmenu}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
+        {/* Info: (20240502 - Julian) Second Column */}
+        {displayedProjectSecondLine}
       </div>
     </>
   );

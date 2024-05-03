@@ -1,24 +1,18 @@
+import { IVoucher } from './voucher';
+
 export interface IJournal {
-  id: string;
-  basicInfo: {
-    dateStartTimestamp: number;
-    dateEndTimestamp: number;
-    eventType: string;
-    paymentReason: string;
-    description: string;
-    vendor: string;
-  };
-  payment: {
-    totalPrice: number;
-    tax?: number;
-    fee?: number;
-    paymentMethod: string;
-    bankAccount: string;
-    paymentPeriod: number;
-    paymentState: string;
-  };
-  project: {
-    project: string;
-    contract: string;
-  };
+  eventType: string;
+  date: string;
+  reason: string;
+  companyId: string;
+  company: string;
+  description: string;
+  totalPrice: number;
+  paymentMethod: string;
+  paymentPeriod: string;
+  paymentStatus: string;
+  projectId: string;
+  project: string;
+  contract: string;
+  voucher: IVoucher;
 }

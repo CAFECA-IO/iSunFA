@@ -10,6 +10,7 @@ import { LAYOUT_BREAKPOINT } from '../constants/display';
 import { LayoutAssertion } from '../interfaces/layout_assertion';
 import { IWaringModal, dummyWarningModalData } from '../interfaces/warning_modal';
 import ConfirmModal from '../components/confirm_modal/confirm_modal';
+import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
 
 interface IGlobalContext {
   width: number;
@@ -34,6 +35,7 @@ interface IGlobalContext {
 
   isConfirmModalVisible: boolean;
   confirmModalVisibilityHandler: () => void;
+  confirmModalDataHandler: (data: IConfirmModal) => void;
 }
 
 export interface IGlobalProvider {
@@ -56,6 +58,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [warningModalData, setWarningModalData] = useState<IWaringModal>(dummyWarningModalData);
 
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const { width, height } = windowSize;
 
@@ -91,6 +94,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsConfirmModalVisible(!isConfirmModalVisible);
   };
 
+  const confirmModalDataHandler = (data: IConfirmModal) => {
+    setConfirmModalData(data);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -110,6 +117,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     warningModalDataHandler,
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
+    confirmModalDataHandler,
   };
 
   return (
@@ -138,6 +146,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ConfirmModal
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
+        confirmModalData={confirmModalData}
       />
 
       {children}

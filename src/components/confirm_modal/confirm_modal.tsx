@@ -2,34 +2,48 @@
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import { LuTag } from 'react-icons/lu';
-import { FaChevronDown } from 'react-icons/fa';
 import { FiPlus } from 'react-icons/fi';
-import { RiDeleteBinLine } from 'react-icons/ri';
-import useOuterClick from '../../lib/hooks/use_outer_click';
 import { Button } from '../button/button';
 import { checkboxStyle } from '../../constants/display';
-
-const accountingList = ['1441- Machinery', '1113- Cash in banks'];
+import { IConfirmModal } from '../../interfaces/confirm_modal';
+import AccountingVoucherRow from '../accounting_voucher_row/accounting_voucher_row';
+import { useAccountingCtx } from '../../contexts/accounting_context';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  confirmModalData: IConfirmModal;
 }
 
-const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalProps) => {
+const ConfirmModal = ({
+  isModalVisible,
+  modalVisibilityHandler,
+  confirmModalData,
+}: IConfirmModalProps) => {
   const {
-    targetRef: accountingRef,
-    componentVisible: isAccountingMenuOpen,
-    setComponentVisible: setAccountingMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+    type,
+    reason,
+    vendor,
+    description,
+    totalPrice,
+    tax,
+    fee,
+    paymentMethod,
+    paymentPeriod,
+    paymentStatus,
+    project,
+    contract,
+  } = confirmModalData;
 
-  const accountingMenuHandler = () => setAccountingMenuOpen(!isAccountingMenuOpen);
+  const { accountingVoucher, addVoucherRowHandler, totalCredit, totalDebit } = useAccountingCtx();
 
-  const displayType = <p className="text-lightRed">Expense</p>;
+  const disableConfirmButton = totalCredit !== totalDebit;
+
+  const displayType = <p className="text-lightRed">{type}</p>;
 
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
-      <p>Equipment</p>
+      <p>{reason}</p>
       <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
         <LuTag size={14} />
         Printer
@@ -37,51 +51,47 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
     </div>
   );
 
-  const displayVendor = <p className="font-semibold text-navyBlue2">華碩雲端股份有限公司</p>;
+  const displayVendor = <p className="font-semibold text-navyBlue2">{vendor}</p>;
 
-  const displayDescription = <p className="font-semibold text-navyBlue2">Buy a new printer</p>;
+  const displayDescription = <p className="font-semibold text-navyBlue2">{description}</p>;
 
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">30,000</span> TWD
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span> TWD
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">5%</span> Tax /{' '}
-        <span className="font-semibold text-navyBlue2">0</span> TWD fee)
+        (<span className="font-semibold text-navyBlue2">{tax}%</span> Tax /{' '}
+        <span className="font-semibold text-navyBlue2">{fee}</span> TWD fee)
       </p>
     </div>
   );
 
-  const displayMethod = (
-    <p className="text-right font-semibold text-navyBlue2">Transfer- 004 2888810000824888</p>
-  );
+  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">Pay at once</p>;
+  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">Paid</p>;
+  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
 
-  const displayProject = (
-    <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-      <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
-        BF
+  // Info: (20240430 - Julian) Get first letter of each word
+  const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
+  const displayProject =
+    project !== 'None' ? (
+      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+          {projectCode}
+        </div>
+        <p>{project}</p>
       </div>
-      <p>BAIFA</p>
-    </div>
-  );
-
-  const displayContract = <p className="font-semibold text-darkBlue">Contract Name</p>;
-
-  const displayAccountingDropmenu = accountingList.map((reason: string) => {
-    return (
-      <li
-        key={reason}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-      >
-        {reason}
-      </li>
+    ) : (
+      <p className="font-semibold text-navyBlue2">None</p>
     );
-  });
+
+  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+
+  const accountingVoucherRow = accountingVoucher.map((voucher) => (
+    <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
+  ));
 
   // ToDo: (20240429 - Julian) mobile version
   const displayAccountingVoucher = (
@@ -108,68 +118,7 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
             </tr>
           </thead>
           {/* Info: (20240429 - Julian) Body */}
-          <tbody>
-            <tr>
-              {/* Info: (20240429 - Julian) Accounting */}
-              <td className="w-1/4">
-                <div
-                  id="accountingMenu"
-                  onClick={accountingMenuHandler}
-                  className={`group relative flex h-46px w-9/10 cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
-                >
-                  <p>{accountingList[0]}</p>
-                  <FaChevronDown />
-                  {/* Info: (20240423 - Julian) Dropmenu */}
-                  <div
-                    className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isAccountingMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
-                  >
-                    <ul
-                      ref={accountingRef}
-                      className="z-10 flex w-full flex-col items-start bg-white p-8px"
-                    >
-                      {displayAccountingDropmenu}
-                    </ul>
-                  </div>
-                </div>
-              </td>
-              {/* Info: (20240429 - Julian) Particulars */}
-              <td className="w-1/4">
-                <input
-                  id="particularsInput"
-                  name="particularsInput"
-                  type="text"
-                  required
-                  className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
-                />
-              </td>
-              {/* Info: (20240429 - Julian) Debit */}
-              <td className="w-1/4">
-                <input
-                  id="debitInput"
-                  name="debitInput"
-                  type="number"
-                  required
-                  className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
-                />
-              </td>
-              {/* Info: (20240429 - Julian) Credit */}
-              <td className="w-1/4">
-                <input
-                  id="creditInput"
-                  name="creditInput"
-                  type="number"
-                  required
-                  className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
-                />
-              </td>
-              {/* Info: (20240429 - Julian) Delete Button */}
-              <td className="w-50px">
-                <button type="button" className="p-12px">
-                  <RiDeleteBinLine size={24} />
-                </button>
-              </td>
-            </tr>
-          </tbody>
+          <tbody>{accountingVoucherRow}</tbody>
         </table>
       </div>
     </div>
@@ -197,7 +146,7 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
           <RxCross2 size={20} />
         </button>
 
-        <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px md:bg-white">
+        <div className="my-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px md:bg-white">
           {/* Info: (20240429 - Julian) content */}
           <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
             {/* Info: (20240429 - Julian) Type */}
@@ -255,17 +204,20 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
           {/* Info: (20240429 - Julian) Accounting Voucher */}
           {displayAccountingVoucher}
 
-          {/* ToDo: (20240429 - Julian) Add Button */}
+          {/* Info: (20240430 - Julian) Add Button */}
           <button
             type="button"
+            onClick={addVoucherRowHandler}
             className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
           >
             <FiPlus size={20} />
           </button>
-
+          <p>
+            Debit:{totalDebit}, Credit:{totalCredit}
+          </p>
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
-            <p className="text-lightRed">
+            <p className="font-semibold text-navyBlue2">
               Attention: Saving this voucher means it's permanent on the blockchain. Mistakes can't
               be fixed. You'll need new vouchers to make corrections.
             </p>
@@ -284,7 +236,13 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
           >
             Cancel
           </button>
-          <Button type="button" variant="tertiary">
+          {/* ToDo: (20240429 - Julian) API */}
+          <Button
+            type="button"
+            variant="tertiary"
+            disabled={disableConfirmButton}
+            className="disabled:bg-lightGray6"
+          >
             Confirm
           </Button>
         </div>
