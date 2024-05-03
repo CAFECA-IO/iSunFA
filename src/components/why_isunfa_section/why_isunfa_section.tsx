@@ -67,8 +67,8 @@ const WhyISunFASection = () => {
   }, []);
 
   return (
-    <div className="flex w-full flex-col justify-center px-16 max-md:max-w-full max-md:px-5 md:py-20">
-      <div className="mx-5 mb-20 mt-32 max-md:my-10 max-md:mr-2.5 max-md:max-w-full">
+    <div className="flex w-full flex-col justify-center px-16 max-md:max-w-full max-md:px-5 md:pt-20">
+      <div className="mx-5 mb-0 mt-32 max-md:mr-2.5 max-md:mt-10 max-md:max-w-full">
         <div className="flex gap-5 max-lg:flex-col max-md:gap-0">
           <div className="mt-24 flex flex-col max-lg:ml-0 lg:w-1/2">
             <div className="flex grow flex-col justify-center max-md:mt-10 max-md:max-w-full lg:w-full">
@@ -238,8 +238,8 @@ const WhyISunFASection = () => {
             </div>
           </div>
 
-          {/* Info: mac img for 1440 px and above (20240321- Shirlrey) */}
-          <div className={`hidden flex-col max-lg:ml-0 lg:flex`}>
+          {/* Info: mac img for 1440 px and above (20240321- Shirley) */}
+          <div className={`hidden flex-col max-lg:ml-0 xl:flex`}>
             <Image
               alt="partial mac"
               width={800}
@@ -249,23 +249,23 @@ const WhyISunFASection = () => {
             />
           </div>
 
-          {/* Info: mac img for width below 1440 px but above 744 px (20240321- Shirlrey) */}
-          <div className="hidden md:flex md:h-750px lg:hidden">
+          {/* Info: mac img for width below 1440 px but above 744 px (20240321- Shirley) */}
+          <div className="hidden md:flex xl:hidden">
             <Image
               alt="partial mac"
-              width={700}
-              height={700}
+              width={600}
+              height={600}
               src="/elements/partial_mac_md.png"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>
 
-          {/* Info: mac img for width below 744 px (20240321- Shirlrey) */}
-          <div className="flex h-350px md:hidden">
+          {/* Info: mac img for width below 744 px (20240321- Shirley) */}
+          <div className="flex h-420px md:hidden">
             <Image
               alt="partial mac"
-              width={300}
-              height={300}
+              width={350}
+              height={350}
               src="/elements/partial_mac_md.png"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />

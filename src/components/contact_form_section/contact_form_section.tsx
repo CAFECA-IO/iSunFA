@@ -24,7 +24,7 @@ const ContactFormSection = () => {
   }, []);
 
   return (
-    <div id="contact-us" className="mb-20 h-1000px md:-mt-20 lg:-mt-4">
+    <div id="contact-us" className="mb-20 h-1000px md:mt-40 lg:-mt-24 xl:-mt-4">
       <div className="relative h-500px w-full">
         {' '}
         <Image

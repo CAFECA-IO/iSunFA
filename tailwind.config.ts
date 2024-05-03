@@ -11,7 +11,9 @@ module.exports = {
         '4/3': '4 / 3',
         '16/9': '16 / 9',
         '21/9': '21 / 9',
+        0.95: '95 / 100',
         0.87: '87 / 100',
+        0.75: '75 / 100',
         0.56: '56 / 100',
         1.18: '118 / 100',
       },
@@ -822,16 +824,17 @@ module.exports = {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
 
         sm: '320px', // mobile
-        md: '744px', // tablet
-        lg: '1440px', // desktop
+        md: '768px', // tablet
+        lg: '1024px', // desktop
+        xl: '1440px',
       },
       container: {
         center: true,
         padding: '1rem',
         screens: {
           sm: '320px',
-          md: '744px',
-          lg: '1440px',
+          md: '768px',
+          lg: '1024px',
         },
       },
 
@@ -1005,6 +1008,8 @@ module.exports = {
         '254px': '254px',
         '255px': '255px',
         '256px': '256px',
+        '260px': '260px',
+        '270px': '270px',
         '271px': '271px',
         '278px': '278px',
         '280px': '280px',
@@ -1322,6 +1327,8 @@ module.exports = {
         '140px': '140px',
         '248px': '248px',
         '250px': '250px',
+        '260px': '260px',
+        '280px': '280px',
       },
       minWidth: {
         '200px': '200px',

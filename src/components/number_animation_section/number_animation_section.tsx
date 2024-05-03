@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import NumberAnimation, { MobileNumberAnimation } from '../number_animation/number_animation';
@@ -33,13 +34,11 @@ const NumberAnimationSection = () => {
   const numberBlockList = numberBlockContent.map(
     ({ image, alt, description, targetNumber, unit }, index) => (
       <div
-        // Info: (20240112 - Shirley) it's ok to use index as key in this case
-        // eslint-disable-next-line react/no-array-index-key
         key={index}
-        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-tertiaryBlue px-10 py-10 drop-shadow-101"
+        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-tertiaryBlue px-0 py-10 drop-shadow-101 lg:w-300px"
       >
         {/* Info:(20230815 - Shirley) Image */}
-        <div className="absolute -top-10 h-100px w-100px " style={{}}>
+        <div className="absolute -top-10 h-100px w-100px">
           <Image
             className="drop-shadow-xlReverse"
             src={image}
@@ -59,12 +58,9 @@ const NumberAnimationSection = () => {
             />
           </div>
         </div>
-        {/* Info:(20240315 - Shirley) Number animation */}
-        {/* <div className="h-80px" /> */}
 
         {/* Info:(20240315 - Shirley) Number animation */}
         <div className="flex w-full items-baseline justify-center space-x-2 font-bold">
-          {' '}
           <div className="hidden lg:flex">
             <NumberAnimation targetNumber={targetNumber} />
           </div>
@@ -76,14 +72,14 @@ const NumberAnimationSection = () => {
 
         {/* Info:(20240315 - Shirley) Description */}
         <div className="pt-0">
-          {' '}
-          <p className="w-240px text-start text-base">{t(description)}</p>
+          <p className="w-300px px-5 text-start text-base lg:w-full">{t(description)}</p>
         </div>
       </div>
     )
   );
+
   return (
-    <div className="mt-48 flex flex-col items-center space-y-28 scroll-smooth px-4 md:mt-52 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-40 lg:py-20">
+    <div className="mt-48 flex flex-col items-center space-y-28 scroll-smooth px-4 md:mt-52 lg:w-full lg:flex-row lg:justify-evenly lg:space-x-14 lg:space-y-0 lg:overflow-x-auto lg:px-10 lg:py-20">
       {numberBlockList}
     </div>
   );

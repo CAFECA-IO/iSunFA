@@ -46,7 +46,7 @@ const CTASection = () => {
     <div className="flex w-full justify-center lg:w-9/10">
       <div
         ref={animeRef1}
-        className={`overflow-x-hidden overflow-y-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex w-full flex-col items-start justify-start space-y-10 px-0 pb-12 pt-2/5 text-start transition-all duration-1000 md:-ml-40 md:w-3/5 md:pt-1/5 lg:-ml-0 lg:h-screen lg:pt-1/6`}
+        className={`overflow-x-hidden ${isAnimeRef1Visible ? `translate-x-0` : `-translate-x-140%`} z-5 flex w-full flex-col items-start justify-start space-y-10 px-0 pb-12 pt-2/5 text-start transition-all duration-1000 md:-ml-40 md:w-3/5 md:pt-1/5 lg:-ml-0 lg:pt-1/6`}
       >
         <div className="ml-10">
           <div className="flex flex-col md:space-y-5">
@@ -97,7 +97,7 @@ const CTASection = () => {
         </Link>
       </div>
       {/* Info: iSunFA 大字 (20240318 - Shirley) */}
-      <div className={`mt-1/10 hidden h-screen items-start lg:flex`}>
+      <div className={`mt-1/8 hidden items-start lg:flex`}>
         {/* TODO: 用 <Image> 優化 (20240320 - Shirley) */}
         {/* eslint-disable @next/next/no-img-element */}
         <img

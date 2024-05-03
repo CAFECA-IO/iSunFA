@@ -97,7 +97,7 @@ function LandingPageBody() {
         </div>
 
         {/* Info: ----- why iSunFA section (20240318 - Shirley) ----- */}
-        <div className="lg:h-1000px">
+        <div className="md:h-1200px lg:h-1000px">
           <WhyISunFASection />
         </div>
 
