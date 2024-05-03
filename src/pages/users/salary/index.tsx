@@ -1,6 +1,5 @@
 // /* eslint-disable */
 import Head from 'next/head';
-// Deprecated: (今天丟棄 - Liz) // import Image from 'next/image';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../../../interfaces/locale';
 import NavBar from '../../../components/nav_bar/nav_bar';
@@ -22,41 +21,235 @@ const AccountingPage = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+        <div className="">
           <SalarySidebar />
         </div>
 
         {/* ----- Desktop ----- */}
-        <div className="hidden h-800px bg-surface-neutral-main-background md:flex md:h-1100px">
-          <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
-            <div className="flex gap-0 max-md:flex-wrap">
-              <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-                <div className="flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5">
-                  <div className="w-full justify-center px-10 md:px-28">Salary</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ----- Mobile ----- */}
-        <div className="flex h-100vh flex-col bg-surface-neutral-main-background px-16px pb-24px pt-100px md:hidden md:h-1100px">
-          {/* Page Title */}
-          <section className="flex flex-col justify-between gap-28px pt-20px">
-            {/* title & buttons */}
-            <div className="flex items-center gap-24px">
-              {/* title */}
-              <div className="text-base font-semibold text-text-neutral-secondary">
+        <main className="hidden h-100vh bg-surface-neutral-main-background md:flex md:h-1100px">
+          <div className="mt-100px flex-1 px-80px md:ml-80px">
+            {/* Page Title */}
+            <section className="flex flex-col gap-16px pb-20px pt-60px">
+              <div className="text-h2 font-semibold leading-h2 text-text-neutral-secondary">
                 Employees List
               </div>
-              {/* buttons */}
-              <div className="flex gap-10px">
-                <div className="flex rounded-xs bg-button-surface-strong-secondary p-10px text-button-text-invert">
+              {/* line */}
+              <div className="my-10px grow bg-divider-stroke-lv-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1"
+                  height="1"
+                  viewBox="0 0 1 1"
+                  fill="none"
+                >
+                  <line
+                    x1="0.5"
+                    y1="0.995605"
+                    x2="152.5"
+                    y2="0.995605"
+                    stroke="fill-current"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+            </section>
+            {/* Buttons */}
+            <section className="flex justify-end gap-16px">
+              <div className="flex cursor-pointer items-center gap-8px rounded-xs border border-button-stroke-secondary px-24px py-10px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover">
+                <div className="text-inherit">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M8.33567 3.25098C6.67881 3.25098 5.33567 4.59412 5.33567 6.25098C5.33567 7.90783 6.67881 9.25098 8.33567 9.25098C9.99252 9.25098 11.3357 7.90783 11.3357 6.25098C11.3357 4.59412 9.99252 3.25098 8.33567 3.25098ZM3.83567 6.25098C3.83567 3.7657 5.85038 1.75098 8.33567 1.75098C10.8209 1.75098 12.8357 3.7657 12.8357 6.25098C12.8357 8.73626 10.8209 10.751 8.33567 10.751C5.85038 10.751 3.83567 8.73626 3.83567 6.25098ZM15.8357 11.751C16.2499 11.751 16.5857 12.0868 16.5857 12.501V14.251H18.3357C18.7499 14.251 19.0857 14.5868 19.0857 15.001C19.0857 15.4152 18.7499 15.751 18.3357 15.751H16.5857V17.501C16.5857 17.9152 16.2499 18.251 15.8357 18.251C15.4215 18.251 15.0857 17.9152 15.0857 17.501V15.751H13.3357C12.9215 15.751 12.5857 15.4152 12.5857 15.001C12.5857 14.5868 12.9215 14.251 13.3357 14.251H15.0857V12.501C15.0857 12.0868 15.4215 11.751 15.8357 11.751ZM6.1172 12.1676C6.1616 12.1676 6.20664 12.1676 6.25234 12.1676H10.0023C10.4165 12.1676 10.7523 12.5034 10.7523 12.9176C10.7523 13.3319 10.4165 13.6676 10.0023 13.6676H6.25234C5.0348 13.6676 4.59229 13.6758 4.25243 13.7789C3.42679 14.0293 2.78069 14.6754 2.53024 15.5011C2.42714 15.8409 2.419 16.2834 2.419 17.501C2.419 17.9152 2.08321 18.251 1.669 18.251C1.25479 18.251 0.918999 17.9152 0.918999 17.501C0.918999 17.4553 0.918985 17.4102 0.918972 17.3658C0.918654 16.3334 0.918444 15.6471 1.09483 15.0656C1.49071 13.7606 2.51196 12.7394 3.817 12.3435C4.39846 12.1671 5.08471 12.1673 6.1172 12.1676Z"
+                      className="fill-current"
+                    />
+                  </svg>
+                </div>
+                <p className="text-base font-medium text-inherit">Add New Employee</p>
+              </div>
+              <div className="flex cursor-pointer items-center gap-8px rounded-xs border border-button-stroke-secondary px-24px py-10px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover">
+                <div className="text-inherit">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M9.30676 0.917969L9.33626 0.91797H10.6696L10.6991 0.917969C11.1407 0.917957 11.5166 0.917946 11.8253 0.943168C12.1496 0.969664 12.4651 1.02769 12.7667 1.18137C13.2215 1.41306 13.5912 1.78277 13.8229 2.23749C13.9765 2.5391 14.0346 2.8546 14.0611 3.1789C14.0853 3.47497 14.0862 3.83294 14.0863 4.2513H15.8363H17.5029C17.9171 4.2513 18.2529 4.58709 18.2529 5.0013C18.2529 5.41552 17.9171 5.7513 17.5029 5.7513H16.5863V14.3346V14.3661C16.5863 15.0394 16.5863 15.5901 16.5497 16.0377C16.5119 16.501 16.4311 16.9194 16.232 17.3101C15.9204 17.9216 15.4233 18.4188 14.8117 18.7304C14.421 18.9295 14.0026 19.0102 13.5393 19.0481C13.0918 19.0847 12.5411 19.0846 11.8677 19.0846H11.8363H8.1696H8.13816C7.46479 19.0846 6.91409 19.0847 6.46653 19.0481C6.00327 19.0102 5.58487 18.9295 5.19413 18.7304C4.5826 18.4188 4.08541 17.9216 3.77383 17.3101C3.57473 16.9194 3.494 16.501 3.45615 16.0377C3.41958 15.5901 3.41959 15.0394 3.4196 14.3661L3.4196 14.3346V5.7513H2.50293C2.08872 5.7513 1.75293 5.41552 1.75293 5.0013C1.75293 4.58709 2.08872 4.2513 2.50293 4.2513H4.1696H5.9196C5.91962 3.83294 5.9206 3.47497 5.94479 3.1789C5.97129 2.8546 6.02932 2.5391 6.183 2.23749C6.41469 1.78277 6.78439 1.41306 7.23912 1.18137C7.54073 1.02769 7.85622 0.969664 8.18053 0.943168C8.48922 0.917946 8.8652 0.917957 9.30676 0.917969ZM6.6696 5.7513H4.9196V14.3346C4.9196 15.0471 4.92018 15.5363 4.95117 15.9156C4.98144 16.2861 5.03694 16.4851 5.11033 16.6291C5.27811 16.9584 5.54583 17.2261 5.87511 17.3939L5.53462 18.0622L5.87511 17.3939C6.01915 17.4673 6.21818 17.5228 6.58868 17.5531C6.96793 17.5841 7.45716 17.5846 8.1696 17.5846H11.8363C12.5487 17.5846 13.0379 17.5841 13.4172 17.5531C13.7877 17.5228 13.9867 17.4673 14.1307 17.3939C14.46 17.2261 14.7277 16.9584 14.8955 16.6291C14.9689 16.4851 15.0244 16.2861 15.0547 15.9156C15.0857 15.5363 15.0863 15.0471 15.0863 14.3346V5.7513H13.3363H6.6696ZM12.5863 4.2513H7.41961C7.41973 3.81862 7.42134 3.52712 7.43981 3.30105C7.45873 3.06951 7.49153 2.97339 7.51951 2.91848C7.60739 2.746 7.74762 2.60576 7.9201 2.51788C7.97501 2.4899 8.07113 2.4571 8.30267 2.43819C8.54297 2.41855 8.85718 2.41797 9.33626 2.41797H10.6696C11.1487 2.41797 11.4629 2.41855 11.7032 2.43819C11.9347 2.4571 12.0308 2.4899 12.0858 2.51788C12.2582 2.60576 12.3985 2.746 12.4864 2.91848C12.5143 2.97339 12.5471 3.06951 12.566 3.30105C12.5845 3.52712 12.5861 3.81862 12.5863 4.2513ZM8.33626 8.83464C8.75048 8.83464 9.08626 9.17042 9.08626 9.58464V13.7513C9.08626 14.1655 8.75048 14.5013 8.33626 14.5013C7.92205 14.5013 7.58626 14.1655 7.58626 13.7513V9.58464C7.58626 9.17042 7.92205 8.83464 8.33626 8.83464ZM11.6696 8.83464C12.0838 8.83464 12.4196 9.17042 12.4196 9.58464V13.7513C12.4196 14.1655 12.0838 14.5013 11.6696 14.5013C11.2554 14.5013 10.9196 14.1655 10.9196 13.7513V9.58464C10.9196 9.17042 11.2554 8.83464 11.6696 8.83464Z"
+                      className="fill-current"
+                    />
+                  </svg>
+                </div>
+                <p className="text-base font-medium text-inherit">One-Click Removal</p>
+              </div>
+            </section>
+            {/* Divider */}
+            <section className="flex items-center gap-lv-4 pt-20px">
+              <div className="flex gap-lv-2">
+                <div>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
                     height="17"
                     viewBox="0 0 16 17"
+                    fill="none"
+                  >
+                    <path
+                      d="M8.00002 10.198C6.30776 10.198 4.65923 10.7354 3.29207 11.7327C1.92492 12.73 0.909783 14.1357 0.393022 15.7471C0.337283 15.921 0.367933 16.1109 0.475505 16.2583C0.583077 16.4059 0.754624 16.4931 0.937156 16.4931H15.0628C15.2454 16.4931 15.4169 16.4059 15.5246 16.2583C15.6321 16.1109 15.6627 15.921 15.607 15.7471C15.0903 14.1357 14.0751 12.73 12.708 11.7327C11.3408 10.7354 9.69227 10.198 8.00002 10.198Z"
+                      fill="#FFA502"
+                    />
+                    <path
+                      d="M8.00044 0.498291C5.01494 0.498291 2.59473 2.91851 2.59473 5.90401C2.59473 8.8895 5.01494 11.3097 8.00044 11.3097C10.9859 11.3097 13.4061 8.8895 13.4061 5.90401C13.4061 2.91851 10.9859 0.498291 8.00044 0.498291Z"
+                      fill="#002462"
+                    />
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M2.85459 4.27261C3.55793 2.10346 5.59489 0.533936 7.99993 0.533936C10.6353 0.533936 12.8292 2.41834 13.3101 4.91298C13.3422 5.07973 13.2986 5.25215 13.1909 5.38347C13.0831 5.51479 12.9227 5.59141 12.7529 5.59254L12.7166 5.59267C11.359 5.59267 10.1204 5.0805 9.18444 4.24003C8.24848 5.08052 7.00987 5.5927 5.65219 5.5927C4.73788 5.5927 3.87617 5.36018 3.12469 4.9506C2.88328 4.81901 2.76979 4.53415 2.85459 4.27261ZM6.09742 6.89087C6.4491 6.71214 6.87908 6.85235 7.05781 7.20403C7.16185 7.40871 7.49313 7.61912 8.00035 7.61912C8.50757 7.61912 8.83886 7.40871 8.94289 7.20403C9.12162 6.85235 9.5516 6.71214 9.90328 6.89087C10.255 7.06959 10.3952 7.49958 10.2164 7.85125C9.77445 8.72092 8.79944 9.0477 8.00035 9.0477C7.20126 9.0477 6.22625 8.72092 5.78427 7.85125C5.60555 7.49957 5.74574 7.06959 6.09742 6.89087Z"
+                      fill="#FFA502"
+                    />
+                  </svg>
+                </div>
+                <div className="text-sm font-medium text-divider-text-lv-1">Employees List</div>
+              </div>
+              {/* line */}
+              <div className="grow bg-divider-stroke-lv-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1"
+                  height="1"
+                  viewBox="0 0 1 1"
+                  fill="none"
+                >
+                  <line
+                    x1="0.5"
+                    y1="0.995605"
+                    x2="152.5"
+                    y2="0.995605"
+                    stroke="fill-current"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+            </section>
+            {/* search bar */}
+            <section className="mt-40px flex grow items-center justify-between gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
+              <div className="grow">
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
+                />
+              </div>
+              <div className="cursor-pointer">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="21"
+                  viewBox="0 0 20 21"
+                  fill="none"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M9.16911 3.74683C5.90142 3.74683 3.25244 6.39581 3.25244 9.66349C3.25244 12.9312 5.90142 15.5802 9.16911 15.5802C10.7655 15.5802 12.2142 14.9479 13.2786 13.9202C13.2993 13.8928 13.3221 13.8665 13.3471 13.8415C13.3721 13.8165 13.3984 13.7937 13.4258 13.773C14.4535 12.7086 15.0858 11.2599 15.0858 9.66349C15.0858 6.39581 12.4368 3.74683 9.16911 3.74683ZM14.9171 14.3508C15.9602 13.0732 16.5858 11.4414 16.5858 9.66349C16.5858 5.56738 13.2652 2.24683 9.16911 2.24683C5.073 2.24683 1.75244 5.56738 1.75244 9.66349C1.75244 13.7596 5.073 17.0802 9.16911 17.0802C10.947 17.0802 12.5789 16.4546 13.8564 15.4115L16.9721 18.5272C17.265 18.82 17.7399 18.82 18.0328 18.5272C18.3257 18.2343 18.3257 17.7594 18.0328 17.4665L14.9171 14.3508Z"
+                    className="fill-current"
+                  />
+                </svg>
+              </div>
+            </section>
+            {/* Empty */}
+            <section className="mt-180px flex flex-col items-center">
+              <div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="49"
+                  height="27"
+                  viewBox="0 0 49 27"
+                  fill="none"
+                >
+                  <path
+                    d="M13 17.4956L10 14.4956"
+                    stroke="#002462"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M3.0001 8.49571L3 8.49561"
+                    stroke="#002462"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M39 17.4956L46 10.4956"
+                    stroke="#002462"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M26 17.4956L26 2.49561"
+                    stroke="#002462"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="48"
+                  height="48"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                >
+                  <path
+                    d="M44.5716 14.6387H3.42871V37.7815C3.42871 40.6218 5.73124 42.9244 8.57157 42.9244H39.4287C42.2689 42.9244 44.5716 40.6218 44.5716 37.7815V14.6387Z"
+                    fill="#002462"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M5.14286 0.0671387C2.30254 0.0671387 0 2.36966 0 5.21V10.3529C0 13.1932 2.30254 15.4957 5.14286 15.4957H42.8571C45.6974 15.4957 48 13.1932 48 10.3529V5.21C48 2.36966 45.6974 0.0671387 42.8571 0.0671387H5.14286ZM18.8571 23.6386C17.6737 23.6386 16.7143 24.5979 16.7143 25.7814C16.7143 26.9649 17.6737 27.9243 18.8571 27.9243H29.1429C30.3263 27.9243 31.2857 26.9649 31.2857 25.7814C31.2857 24.5979 30.3263 23.6386 29.1429 23.6386H18.8571Z"
+                    fill="#FFA502"
+                  />
+                </svg>
+              </div>
+              <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+                Empty
+              </div>
+            </section>
+          </div>
+        </main>
+
+        {/* ----- Mobile ----- */}
+        <main className="flex h-100vh flex-col gap-lv-7 bg-surface-neutral-main-background px-16px pb-24px pt-120px md:hidden md:h-1100px">
+          {/* Page Title */}
+          <section className="flex flex-col justify-between gap-8px pt-20px">
+            {/* title & buttons */}
+            <div className="flex items-center justify-between gap-24px">
+              {/* title */}
+              <div className="text-base font-semibold text-text-neutral-secondary">
+                Employees List
+              </div>
+              {/* buttons */}
+              <div className="flex gap-12px">
+                <div className="flex cursor-pointer rounded-xs bg-button-surface-strong-secondary p-10px text-button-text-invert active:bg-button-surface-strong-secondary-hover">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
                     fill="none"
                   >
                     <path
@@ -67,12 +260,12 @@ const AccountingPage = () => {
                     />
                   </svg>
                 </div>
-                <div className="flex rounded-xs bg-button-surface-strong-secondary p-10px text-button-text-invert">
+                <div className="flex cursor-pointer rounded-xs bg-button-surface-strong-secondary p-10px text-button-text-invert active:bg-button-surface-strong-secondary-hover">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
-                    height="17"
-                    viewBox="0 0 16 17"
+                    height="16"
+                    viewBox="0 0 16 16"
                     fill="none"
                   >
                     <path
@@ -86,7 +279,7 @@ const AccountingPage = () => {
               </div>
             </div>
             {/* line */}
-            <div className="grow bg-divider-stroke-lv-4">
+            <div className="my-10px grow bg-divider-stroke-lv-4">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="1"
@@ -107,11 +300,17 @@ const AccountingPage = () => {
           </section>
 
           {/* filters - search & filter */}
-          <section className="flex py-40px">
+          <section className="flex items-center justify-between gap-24px">
             {/* search bar */}
-            <div className="flex">
-              <div>Search</div>
-              <div>
+            <div className="flex grow items-center justify-between gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
+              <div className="grow">
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
+                />
+              </div>
+              <div className="cursor-pointer">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -129,12 +328,12 @@ const AccountingPage = () => {
               </div>
             </div>
             {/* filter button */}
-            <div>
+            <div className="cursor-pointer rounded-xs border border-button-stroke-secondary p-10px text-button-text-secondary active:border-button-stroke-primary-hover active:text-button-text-primary-hover">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
-                height="17"
-                viewBox="0 0 16 17"
+                height="16"
+                viewBox="0 0 16 16"
                 fill="none"
               >
                 <path
@@ -148,8 +347,8 @@ const AccountingPage = () => {
           </section>
 
           {/* Divider */}
-          <section className="flex items-center">
-            <div className="flex">
+          <section className="flex items-center gap-lv-4">
+            <div className="flex gap-lv-2">
               <div>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -174,7 +373,7 @@ const AccountingPage = () => {
                   />
                 </svg>
               </div>
-              <div>Employees List</div>
+              <div className="text-sm font-medium text-divider-text-lv-1">Employees List</div>
             </div>
             {/* line */}
             <div className="grow bg-divider-stroke-lv-3">
@@ -198,13 +397,47 @@ const AccountingPage = () => {
           </section>
 
           {/* Empty */}
-          <section>
+          <section className="flex flex-col items-center">
+            <div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="49"
+                height="27"
+                viewBox="0 0 49 27"
+                fill="none"
+              >
+                <path
+                  d="M13 17.4956L10 14.4956"
+                  stroke="#002462"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M3.0001 8.49571L3 8.49561"
+                  stroke="#002462"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M39 17.4956L46 10.4956"
+                  stroke="#002462"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M26 17.4956L26 2.49561"
+                  stroke="#002462"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
             <div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="48"
-                height="43"
-                viewBox="0 0 48 43"
+                height="48"
+                viewBox="0 0 48 48"
                 fill="none"
               >
                 <path
@@ -219,9 +452,9 @@ const AccountingPage = () => {
                 />
               </svg>
             </div>
-            <div>Empty</div>
+            <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
           </section>
-        </div>
+        </main>
       </div>
     </>
   );

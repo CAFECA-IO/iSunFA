@@ -87,7 +87,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
-        <p>Accoount</p>
+        <p>Account</p>
       </Link>
       <Link
         href={''}
@@ -97,7 +97,7 @@ const NavBar = () => {
         <p>Contract</p>
       </Link>
       <Link
-        href={''}
+        href={ISUNFA_ROUTE.SALARY}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
