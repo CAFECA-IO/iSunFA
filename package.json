@@ -72,5 +72,8 @@
     "hooks": {
       "pre-commit": "npm run test && lint-staged"
     }
+  },
+  "engines": {
+    "node": ">=18.17.1"
   }
 }
