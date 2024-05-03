@@ -1,11 +1,12 @@
-import { EventType, PaymentPeriodType, PaymentStatusType } from './account';
+import { PaymentPeriodType, PaymentStatusType } from './account';
 
-export interface IInvoiceData {
+export interface IInvoice {
+  id: string;
   date: {
     start_date: number; // timestamp
     end_date: number; // timestamp
   };
-  eventType: EventType;
+  eventType: string; // 'income' | 'payment' | 'transfer';
   paymentReason: string;
   description: string;
   venderOrSupplyer: string;
@@ -18,8 +19,8 @@ export interface IInvoiceData {
   };
 }
 
-export interface IInvoiceWithPaymentMethod extends IInvoiceData {
-  payment: IInvoiceData['payment'] & {
+export interface IInvoiceWithPaymentMethod extends IInvoice {
+  payment: IInvoice['payment'] & {
     paymentMethod: string;
     paymentPeriod: PaymentPeriodType;
     installmentPeriod: number;
