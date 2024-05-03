@@ -1,25 +1,31 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
-import type { ResponseData } from '../../../../../../type/iresponsedata';
+import { IClient } from '@/interfaces/client';
+import { IResponseData } from '../../../../../../interfaces/response_data';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient>>
+) {
   try {
     if (!req.headers.userId) {
       throw new Error('Resource not found');
     }
     // Info: (20240419 - Jacky) C010001 - GET /client
     if (req.method === 'GET') {
-      const clientList = [
+      const clientList: IClient[] = [
         {
           id: '1',
-          name: 'cafeca',
+          companyId: '123',
+          companyName: 'Company A',
           code: '1234',
           favorite: false,
         },
         {
           id: '2',
-          name: 'isunfa',
+          companyId: '456',
+          companyName: 'Company B',
           code: '3333',
           favorite: false,
         },

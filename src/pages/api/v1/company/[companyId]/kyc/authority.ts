@@ -1,9 +1,9 @@
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
 import version from '@/lib/version';
-import { ResponseData } from '@/type/iresponsedata';
+import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<string>>) {
   try {
     // Info: (20240419 - Jacky) K011001 - POST /kyc/authority
     if (req.method === 'POST') {

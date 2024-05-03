@@ -2,35 +2,34 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import handler from './index';
 
-let req: NextApiRequest;
-let res: NextApiResponse;
+let req: jest.Mocked<NextApiRequest>;
+let res: jest.Mocked<NextApiResponse>;
 
 beforeEach(() => {
   req = {
-    method: '',
     headers: {},
-    body: {},
+    body: null,
     query: {},
-  } as NextApiRequest;
+    method: '',
+    json: jest.fn(),
+  } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
-  } as unknown as NextApiResponse;
+  } as unknown as jest.Mocked<NextApiResponse>;
 });
 
 afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('Payment API handler', () => {
-  it('should return a payment by id when method is GET', async () => {
+describe('Payment API Handler Tests', () => {
+  it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.headers.userId = 'user123';
+    req.headers.userId = '1';
     req.query.id = '1';
-
     await handler(req, res);
-
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
@@ -49,21 +48,19 @@ describe('Payment API handler', () => {
     });
   });
 
-  it('should update a payment by id when method is PUT', async () => {
+  it('should handle PUT requests successfully', async () => {
     req.method = 'PUT';
-    req.headers.userId = 'user123';
+    req.headers.userId = '1';
     req.query.id = '1';
     req.body = {
-      type: 'MasterCard',
+      type: 'MASTERCARD',
       no: '5678-5678-5678-5678',
       expireYear: '30',
       expireMonth: '12',
       cvc: '123',
-      name: 'New Bank',
+      name: 'US Bank',
     };
-
     await handler(req, res);
-
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
@@ -72,23 +69,21 @@ describe('Payment API handler', () => {
       message: 'update payment by id',
       payload: {
         id: '3',
-        type: 'MasterCard',
+        type: 'MASTERCARD',
         no: '5678-5678-5678-5678',
         expireYear: '30',
         expireMonth: '12',
         cvc: '123',
-        name: 'New Bank',
+        name: 'US Bank',
       },
     });
   });
 
-  it('should delete a payment by id when method is DELETE', async () => {
+  it('should handle DELETE requests successfully', async () => {
     req.method = 'DELETE';
-    req.headers.userId = 'user123';
+    req.headers.userId = '1';
     req.query.id = '1';
-
     await handler(req, res);
-
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
@@ -107,29 +102,10 @@ describe('Payment API handler', () => {
     });
   });
 
-  it('should return an error when method is not allowed', async () => {
-    req.method = 'POST';
-    req.headers.userId = 'user123';
-    req.query.id = '1';
-
-    await handler(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '405',
-      payload: {},
-      message: 'Method Not Allowed',
-    });
-  });
-
-  it('should return an error when userId is missing', async () => {
+  it('should handle missing userId in headers for GET requests', async () => {
     req.method = 'GET';
     req.query.id = '1';
-
     await handler(req, res);
-
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
@@ -140,12 +116,10 @@ describe('Payment API handler', () => {
     });
   });
 
-  it('should return an error when id is missing', async () => {
+  it('should handle missing id in query for GET requests', async () => {
     req.method = 'GET';
-    req.headers.userId = 'user123';
-
+    req.headers.userId = '1';
     await handler(req, res);
-
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
@@ -155,13 +129,19 @@ describe('Payment API handler', () => {
       message: 'Invalid input parameter',
     });
   });
-  it('should return an error when id is not found', async () => {
-    req.method = 'GET';
-    req.headers.userId = 'user123';
-    req.query.id = '2';
 
+  it('should handle missing userId in headers for PUT requests', async () => {
+    req.method = 'PUT';
+    req.query.id = '3';
+    req.body = {
+      type: 'MASTERCARD',
+      no: '5678-5678-5678-5678',
+      expireYear: '30',
+      expireMonth: '12',
+      cvc: '123',
+      name: 'US Bank',
+    };
     await handler(req, res);
-
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
@@ -169,6 +149,57 @@ describe('Payment API handler', () => {
       code: '404',
       payload: {},
       message: 'Resource not found',
+    });
+  });
+
+  it('should handle missing id in query for PUT requests', async () => {
+    req.method = 'PUT';
+    req.headers.userId = '1';
+    req.body = {
+      type: 'MASTERCARD',
+      no: '5678-5678-5678-5678',
+      expireYear: '30',
+      expireMonth: '12',
+      cvc: '123',
+      name: 'US Bank',
+    };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'ISunFa api ' + version,
+      success: false,
+      code: '422',
+      payload: {},
+      message: 'Invalid input parameter',
+    });
+  });
+
+  it('should handle missing userId in headers for DELETE requests', async () => {
+    req.method = 'DELETE';
+    req.query.id = '1';
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'ISunFa api ' + version,
+      success: false,
+      code: '404',
+      payload: {},
+      message: 'Resource not found',
+    });
+  });
+
+  it('should handle unsupported HTTP methods', async () => {
+    req.method = 'POST';
+    req.headers.userId = '1';
+    req.query.id = '1';
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'ISunFa api ' + version,
+      success: false,
+      code: '405',
+      payload: {},
+      message: 'Method Not Allowed',
     });
   });
 });

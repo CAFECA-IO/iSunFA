@@ -1,8 +1,13 @@
+import { IPayment } from '@/interfaces/payment';
+import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IPayment>>
+) {
   const { method } = req;
 
   try {
@@ -17,7 +22,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
     // Info: (20240419 - Jacky) P010002 - GET /payment/:id
     if (method === 'GET') {
-      const payment = {
+      const payment: IPayment = {
         id: '1',
         type: 'VISA',
         no: '1234-1234-1234-1234',
@@ -38,7 +43,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error('Invalid input parameter');
       }
-      const payment = {
+      const payment: IPayment = {
         id: '3',
         type,
         no: '1234-1234-1234-1234',
@@ -58,7 +63,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
       // Info: (20240419 - Jacky) P010004 - DELETE /payment/:id
     } else if (method === 'DELETE') {
-      const payment = {
+      const payment: IPayment = {
         id: '1',
         type: 'VISA',
         no: '1234-1234-1234-5678',
