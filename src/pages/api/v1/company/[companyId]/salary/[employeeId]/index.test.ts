@@ -37,7 +37,7 @@ describe('CreateAnSalaryBookkeeping API Handler Tests', () => {
   });
   it('should create an employee salary bookkeeping', async () => {
     req.method = 'POST';
-    req.query = { id: '3' };
+    req.query = { employeeId: '3' };
     req.body = {
       start_date: '2023-03-01',
       end_date: '2023-03-31',

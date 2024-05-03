@@ -1,31 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import {
+  AccountingAccountOrEmpty,
+  DetailAccountingAccountOrEmpty,
+} from '@/interfaces/accounting_account';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  id: number;
-  code: number;
-  account: string;
-  amount: number;
-};
-
-type AccountingAccount = {
-  id: number;
-  type: string;
-  liquidity: string;
-  account: string;
-  code: string;
-  name: string;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ResponseData[] | AccountingAccount[] | null;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: AccountingAccountOrEmpty[] = [
   {
     id: 1,
     code: 1100,
@@ -46,7 +27,10 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<AccountingAccountOrEmpty | DetailAccountingAccountOrEmpty>>
+) {
   if (req.method === 'GET') {
     const { type, liquidity } = req.query;
     if (type && liquidity) {
@@ -54,7 +38,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
         (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
         (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
       ) {
-        const apiResponse: ApiResponse = {
+        const apiResponse: IResponseData<AccountingAccountOrEmpty> = {
           powerby: 'iSunFA v' + version,
           success: false,
           code: '400',
@@ -64,7 +48,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
         res.status(400).json(apiResponse);
         return;
       }
-      const apiResponse: ApiResponse = {
+      const apiResponse: IResponseData<AccountingAccountOrEmpty> = {
         powerby: 'iSunFA v' + version,
         success: true,
         code: '200',
@@ -73,7 +57,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
       };
       res.status(200).json(apiResponse);
     } else {
-      const apiResponse: ApiResponse = {
+      const apiResponse: IResponseData<AccountingAccountOrEmpty> = {
         powerby: 'iSunFA v' + version,
         success: false,
         code: '400',
@@ -90,7 +74,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
         (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
         (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
       ) {
-        const apiResponse: ApiResponse = {
+        const apiResponse: IResponseData<DetailAccountingAccountOrEmpty> = {
           powerby: 'iSunFA v' + version,
           success: false,
           code: '400',

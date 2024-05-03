@@ -87,6 +87,7 @@ describe('deleteOwnAccountById API Handler Tests', () => {
       success: true,
       code: '200',
       message: 'delete successful',
+      payload: null,
     });
   });
 
@@ -99,6 +100,7 @@ describe('deleteOwnAccountById API Handler Tests', () => {
       success: false,
       code: '400',
       message: 'delete failed',
+      payload: null,
     });
   });
 });

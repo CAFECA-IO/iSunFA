@@ -1,24 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { DetailAccountingAccountOrEmpty } from '@/interfaces/accounting_account';
+import { IResponseData } from '@/interfaces/response_data';
 
-type AccountingAccount = {
-  id: number;
-  type: string;
-  liquidity: string;
-  account: string;
-  code: string;
-  name: string;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload?: AccountingAccount[] | null;
-};
-
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<DetailAccountingAccountOrEmpty>>
+) {
   if (req.method === 'PUT') {
     const { id } = req.query;
     const { type, liquidity, account, code, name } = req.body;
@@ -57,6 +45,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
         success: true,
         code: '200',
         message: 'delete successful',
+        payload: null,
       });
       return;
     }
@@ -65,6 +54,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<ApiRes
       success: false,
       code: '400',
       message: 'delete failed',
+      payload: null,
     });
   }
 }
