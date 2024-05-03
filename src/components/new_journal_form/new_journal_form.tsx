@@ -87,7 +87,7 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
   const newJournalData: IConfirmModal = {
-    dateTimestamp: datePeriod.startTimeStamp, // ToDo: (20240430 - Julian) Should select one single date
+    dateTimestamp: datePeriod.startTimeStamp,
     type: selectedEventType,
     reason: selectedPaymentReason,
     vendor: inputVendor,
