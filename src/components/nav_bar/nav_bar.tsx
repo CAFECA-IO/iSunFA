@@ -87,7 +87,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
-        <p>Accoount</p>
+        <p>Account</p>
       </Link>
       <Link
         href={''}
@@ -97,7 +97,7 @@ const NavBar = () => {
         <p>Contract</p>
       </Link>
       <Link
-        href={''}
+        href={ISUNFA_ROUTE.SALARY}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
@@ -190,10 +190,12 @@ const NavBar = () => {
         <p>Contract</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
-      <button className="flex flex-col items-center gap-8px">
-        <Image src={'/icons/briefcase.svg'} width={90} height={90} alt="briefcase_icon" />
-        <p>Salary</p>
-      </button>
+      <Link href={ISUNFA_ROUTE.SALARY}>
+        <button className="flex flex-col items-center gap-8px">
+          <Image src={'/icons/briefcase.svg'} width={90} height={90} alt="briefcase_icon" />
+          <p>Salary</p>
+        </button>
+      </Link>
       {/* Info: (20240416 - Julian) Report button */}
       <Link href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}>
         <button className="flex flex-col items-center gap-8px">
