@@ -73,16 +73,16 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
+  // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (formHasChanged) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+    // const onBeforeUnload = (e: BeforeUnloadEvent) => {
+    //   if (formHasChanged) {
+    //     e.preventDefault();
+    //     e.returnValue = '';
+    //   }
+    // };
+    // window.addEventListener('beforeunload', onBeforeUnload);
+    // return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [formHasChanged]);
 
   // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料

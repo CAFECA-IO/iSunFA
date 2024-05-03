@@ -316,7 +316,7 @@ const NavBar = () => {
 
   return (
     <div className="fixed top-0 z-20 flex w-screen">
-      <div className="z-60 flex h-80px w-full items-center gap-5 bg-surface-neutral-surface-lv1 px-80px py-8px shadow-navbar  max-md:flex-wrap max-md:px-5 lg:h-56px">
+      <div className="z-60 flex h-80px w-full items-center gap-5 bg-surface-neutral-surface-lv1 px-80px py-8px shadow-navbar  max-md:flex-wrap max-md:px-5 lg:h-60px">
         {/* Info: (20240417 - Julian) Burger menu */}
         <div className="block lg:hidden">
           <button
