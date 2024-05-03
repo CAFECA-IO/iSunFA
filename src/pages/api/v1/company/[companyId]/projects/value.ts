@@ -1,20 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { IValue } from '@/interfaces/project';
+import { IResponseData } from '@/interfaces/response_data';
 
-type ResponseData = {
-  name: string;
-  income: number;
-  expenses: number;
-};
-
-type ApiResponse = {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ResponseData[] | null;
-};
-
-const responseDataArray: ResponseData[] = [
+const responseDataArray: IValue[] = [
   {
     name: 'Project 1',
     income: 70000,
@@ -42,8 +30,8 @@ const responseDataArray: ResponseData[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
-  const apiResponse: ApiResponse = {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IValue>>) {
+  const apiResponse: IResponseData<IValue> = {
     powerby: 'iSunFa api 1.0.0',
     success: true,
     code: '200',
