@@ -97,7 +97,7 @@ const CTASection = () => {
         </Link>
       </div>
       {/* Info: iSunFA 大字 (20240318 - Shirley) */}
-      <div className={`mt-1/10 hidden h-screen items-start lg:flex`}>
+      <div className={`mt-1/8 hidden h-screen items-start lg:flex`}>
         {/* TODO: 用 <Image> 優化 (20240320 - Shirley) */}
         {/* eslint-disable @next/next/no-img-element */}
         <img
