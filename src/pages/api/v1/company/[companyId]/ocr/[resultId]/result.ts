@@ -21,15 +21,21 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
   switch (req.method) {
     case 'GET': {
       const ocrResultData: AccountInvoiceData = {
-        date: '2024-12-29',
+        date: {
+          start_date: 124214,
+          end_date: 124214,
+        },
         eventType: 'income',
-        incomeReason: '勞務收入',
-        client: 'Isuncloud Limited',
+        paymentReason: '勞務收入',
+        venderOrSupplyer: 'Isuncloud Limited',
         description: '技術開發軟件與服務',
-        price: '469920',
-        tax: 'free',
-        taxPercentange: 'null',
-        fee: '0',
+        payment: {
+          price: 469920,
+          hasTax: true,
+          taxPercentage: 25,
+          hasFee: false,
+          fee: 0,
+        },
       };
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
