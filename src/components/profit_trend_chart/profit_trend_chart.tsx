@@ -31,7 +31,6 @@ const LineChart = ({ data }: LineChartProps) => {
     const handleResize = () => {
       const windowWidth = globalCtx.width;
       const windowHeight = window.innerHeight;
-      console.log('windowWidth', windowWidth, 'windowHeight', windowHeight);
       const DESKTOP_WIDTH = 1024;
       const TABLET_WIDTH = 768;
 
