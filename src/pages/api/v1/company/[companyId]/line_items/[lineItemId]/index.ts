@@ -22,8 +22,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
     case 'GET': {
       const mockLineItemData: AccountLineItem = {
         lineItemIndex: '1229001001',
-        account: '銀行存款',
-        description: '港幣120000 * 3.916',
+        accounting: '銀行存款',
+        particular: '港幣120000 * 3.916',
         debit: true,
         amount: 469920,
       };
