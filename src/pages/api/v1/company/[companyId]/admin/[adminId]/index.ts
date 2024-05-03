@@ -21,15 +21,16 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
       if (id === '1') {
         const admin: IAdmin = {
           id: '1',
+          name: 'bob',
+          credentialId: '1',
+          publicKey: '1',
+          algorithm: 'ES256',
           companyId: '1',
           companyName: 'mermer',
-          userId: '1',
-          userName: 'bob',
           email: 'bob@mermer.cc',
           startDate: 21321321,
-          auditing: 'viewer',
-          accounting: 'editor',
-          internalControl: 'editor',
+          endDate: 123123123,
+          permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
         };
         res.status(200).json({
           powerby: 'ISunFa api ' + version,
@@ -43,21 +44,22 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
       }
       // Info: (20240419 - Jacky) A010004 - PUT /admin/:id
     } else if (req.method === 'PUT') {
-      const { name, email, startDate, auditing, accounting, internalControl } = req.body;
-      if (!name || !email || !startDate || !auditing || !accounting || !internalControl) {
+      const { name, email, startDate, permissions } = req.body;
+      if (!name || !email || !startDate || !permissions) {
         throw new Error('Invalid input parameter');
       }
       const admin: IAdmin = {
         id: id as string,
+        name,
+        credentialId: '1',
+        publicKey: '1',
+        algorithm: 'ES256',
         companyId: '1',
         companyName: 'mermer',
-        userId: '1',
-        userName: name,
         email,
         startDate,
-        auditing,
-        accounting,
-        internalControl,
+        endDate: 123123123,
+        permissions,
       };
       res.status(200).json({
         powerby: 'ISunFa api ' + version,

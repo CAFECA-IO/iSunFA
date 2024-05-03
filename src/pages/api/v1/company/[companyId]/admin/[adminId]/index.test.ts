@@ -27,15 +27,16 @@ describe('test admin API', () => {
     await handler(req, res);
     const admin = {
       id: '1',
+      name: 'bob',
+      credentialId: '1',
+      publicKey: '1',
+      algorithm: 'ES256',
       companyId: '1',
       companyName: 'mermer',
-      userId: '1',
-      userName: 'bob',
       email: 'bob@mermer.cc',
       startDate: 21321321,
-      auditing: 'viewer',
-      accounting: 'editor',
-      internalControl: 'editor',
+      endDate: 123123123,
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -55,22 +56,21 @@ describe('test admin API', () => {
       name: 'John Doe',
       email: 'john@example.com',
       startDate: 1234567890,
-      auditing: 'viewer',
-      accounting: 'editor',
-      internalControl: 'editor',
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     await handler(req, res);
     const admin = {
       id: '1',
+      name: 'John Doe',
+      credentialId: '1',
+      publicKey: '1',
+      algorithm: 'ES256',
       companyId: '1',
       companyName: 'mermer',
-      userId: '1',
-      userName: 'John Doe',
       email: 'john@example.com',
       startDate: 1234567890,
-      auditing: 'viewer',
-      accounting: 'editor',
-      internalControl: 'editor',
+      endDate: 123123123,
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({

@@ -6,35 +6,33 @@ import { errorMessageToErrorCode } from '../../../../../../lib/utils/errorCode';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   try {
-    if (!req.headers.userId) {
-      throw new Error('Resource not found');
-    }
-    // Info: (20240419 - Jacky) A010001 - GET /admin
     if (req.method === 'GET') {
       const adminList: IAdmin[] = [
         {
           id: '1',
+          name: 'bob',
+          credentialId: '1',
+          publicKey: '1',
+          algorithm: 'ES256',
           companyId: '1',
           companyName: 'mermer',
-          userId: '1',
-          userName: 'bob',
           email: 'bob@mermer.cc',
           startDate: 21321321,
-          auditing: 'viewer',
-          accounting: 'editor',
-          internalControl: 'editor',
+          endDate: 123123123,
+          permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
         },
         {
           id: '2',
+          name: 'alice',
           companyId: '1',
           companyName: 'mermer',
-          userId: '2',
-          userName: 'alice',
+          credentialId: '2',
+          publicKey: '2',
+          algorithm: 'ES256',
           email: 'alice@mermer.cc',
           startDate: 134214124,
-          auditing: 'viewer',
-          accounting: 'editor',
-          internalControl: 'editor',
+          endDate: 123123123,
+          permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
         },
       ];
       res.status(200).json({
@@ -54,13 +52,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         id: '3',
         companyId: '1',
         companyName: 'mermer',
-        userId: '3',
-        userName: name,
+        name,
+        credentialId: '3',
+        publicKey: '3',
+        algorithm: 'ES256',
         email,
         startDate: 124124124,
-        auditing: 'editor',
-        accounting: 'editor',
-        internalControl: 'editor',
+        endDate: 123123123,
+        permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
       };
       res.status(200).json({
         powerby: 'ISunFa api ' + version,
