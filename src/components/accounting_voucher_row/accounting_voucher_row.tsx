@@ -109,6 +109,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           value={debit ?? ''}
           onChange={changeDebitHandler}
           disabled={voucherRowType === VoucherType.CREDIT} // Info: (20240430 - Julian) 如果是借方，則不能輸入 credit
+          onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
           className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
         />
       </td>
@@ -121,6 +122,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           value={credit ?? ''}
           disabled={voucherRowType === VoucherType.DEBIT} // Info: (20240430 - Julian) 如果是貸方，則不能輸入 debit
           onChange={changeCreditHandler}
+          onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
           className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
         />
       </td>

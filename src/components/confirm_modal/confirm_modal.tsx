@@ -1,5 +1,6 @@
 /* eslint-disable */
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
 import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
@@ -8,6 +9,7 @@ import { checkboxStyle } from '../../constants/display';
 import { IConfirmModal } from '../../interfaces/confirm_modal';
 import AccountingVoucherRow from '../accounting_voucher_row/accounting_voucher_row';
 import { useAccountingCtx } from '../../contexts/accounting_context';
+import { ISUNFA_ROUTE } from '../../constants/url';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -20,6 +22,8 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmModalData,
 }: IConfirmModalProps) => {
+  const router = useRouter();
+
   const {
     type,
     reason,
@@ -35,7 +39,18 @@ const ConfirmModal = ({
     contract,
   } = confirmModalData;
 
-  const { accountingVoucher, addVoucherRowHandler, totalCredit, totalDebit } = useAccountingCtx();
+  const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
+    useAccountingCtx();
+
+  // ToDo: (20240503 - Julian) Get real journalId from API
+  const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
+
+  // ToDo: (20240503 - Julian) 串接 API
+  const confirmHandler = () => {
+    modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
+    clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
+    router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journalId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+  };
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
@@ -212,9 +227,6 @@ const ConfirmModal = ({
           >
             <FiPlus size={20} />
           </button>
-          <p>
-            Debit:{totalDebit}, Credit:{totalCredit}
-          </p>
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
@@ -241,6 +253,7 @@ const ConfirmModal = ({
             type="button"
             variant="tertiary"
             disabled={disableConfirmButton}
+            onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >
             Confirm

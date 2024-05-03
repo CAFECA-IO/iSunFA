@@ -11,6 +11,7 @@ import { LayoutAssertion } from '../interfaces/layout_assertion';
 import { IWaringModal, dummyWarningModalData } from '../interfaces/warning_modal';
 import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
+import AddPropertyModal from '../components/add_property_modal/add_property_modal';
 
 interface IGlobalContext {
   width: number;
@@ -36,6 +37,9 @@ interface IGlobalContext {
   isConfirmModalVisible: boolean;
   confirmModalVisibilityHandler: () => void;
   confirmModalDataHandler: (data: IConfirmModal) => void;
+
+  isAddPropertyModalVisible: boolean;
+  addPropertyModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -59,6 +63,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
+
+  const [isAddPropertyModalVisible, setIsAddPropertyModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -98,6 +104,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setConfirmModalData(data);
   };
 
+  const addPropertyModalVisibilityHandler = () => {
+    setIsAddPropertyModalVisible(!isAddPropertyModalVisible);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -118,6 +128,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
     confirmModalDataHandler,
+    isAddPropertyModalVisible,
+    addPropertyModalVisibilityHandler,
   };
 
   return (
@@ -147,6 +159,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
         confirmModalData={confirmModalData}
+      />
+
+      <AddPropertyModal
+        isModalVisible={isAddPropertyModalVisible}
+        modalVisibilityHandler={addPropertyModalVisibilityHandler}
       />
 
       {children}
