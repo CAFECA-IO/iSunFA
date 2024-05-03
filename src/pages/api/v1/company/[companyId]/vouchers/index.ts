@@ -2,10 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountResultStatus, AccountVoucher, isAccountVoucher } from '@/interfaces/account';
 import version from '@/lib/version';
 import { ResponseType } from '@/interfaces/api_response';
+import { IVoucher, IVoucherMetaData } from '@/interfaces/voucher';
 
 interface ResponseData extends ResponseType<AccountVoucher[] | AccountResultStatus> {}
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   // Todo Murky (20240416): Get Images and check if Image exist
   switch (req.method) {
     case 'GET': {
@@ -21,13 +22,28 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
           message: 'Invalid page or limit, must be positive integer number',
         });
       }
-      const mockVoucherData: AccountVoucher = {
-        date: '2024-12-29',
-        vouchIndex: '1229001',
-        type: 'Receiving',
-        from_or_to: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        lineItem: [
+      const mockVoucherMetaData: IVoucherMetaData = {
+        date: 1713139200000,
+        voucherType: 'expense',
+        companyId: '1',
+        companyName: '文中資訊股份有限公司',
+        description:
+          'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
+        totalPrice: 109725,
+        taxPercentage: 5,
+        fee: 0,
+        paymentMethod: 'transfer',
+        paymentPeriod: 'atOnce',
+        installmentPeriod: 0,
+        paymentStatus: 'unpaid',
+        alreadyPaidAmount: 0,
+      };
+
+      // const mock
+      const mockVoucherData: IVoucher = {
+        voucherIndex: '1229001',
+        metadatas: [mockVoucherMetaData],
+        lineItems: [
           {
             lineItemIndex: '1229001001',
             account: '銀行存款',
@@ -49,7 +65,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
         success: true,
         code: '200',
         message: 'List of vouchers return successfully',
-        payload: [mockVoucherData],
+        payload: mockVoucherData,
       });
     }
     case 'POST': {

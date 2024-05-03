@@ -55,15 +55,15 @@ describe('API Handler Tests', () => {
       payload: [
         {
           lineItemIndex: '1229001001',
-          account: '銀行存款',
-          description: '港幣120000 * 3.916',
+          accounting: '銀行存款',
+          particular: '港幣120000 * 3.916',
           debit: true,
           amount: 469920,
         },
         {
           lineItemIndex: '1229001002',
-          account: '營業收入',
-          description: '港幣120000 * 3.916',
+          accounting: '營業收入',
+          particular: '港幣120000 * 3.916',
           debit: false,
           amount: 469920,
         },

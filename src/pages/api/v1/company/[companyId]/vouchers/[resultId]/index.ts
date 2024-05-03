@@ -21,23 +21,36 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
   switch (req.method) {
     case 'GET': {
       const mockVoucherData: AccountVoucher = {
-        date: '2024-12-29',
-        vouchIndex: '1229001',
-        type: 'Receiving',
-        from_or_to: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        lineItem: [
+        voucherIndex: '1229001',
+        metadatas: [
+          {
+            date: 1713139200000,
+            voucherType: 'expense',
+            venderOrSupplyer: '文中資訊股份有限公司',
+            description:
+              'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
+            totalPrice: 109725,
+            taxPercentage: 5,
+            fee: 0,
+            paymentMethod: 'transfer',
+            paymentPeriod: 'atOnce',
+            installmentPeriod: 0,
+            paymentStatus: 'unpaid',
+            alreadyPaidAmount: 0,
+          },
+        ],
+        lineItems: [
           {
             lineItemIndex: '1229001001',
-            account: '銀行存款',
-            description: '港幣120000 * 3.916',
+            accounting: '銀行存款',
+            particular: '港幣120000 * 3.916',
             debit: true,
             amount: 469920,
           },
           {
             lineItemIndex: '1229001002',
-            account: '營業收入',
-            description: '港幣120000 * 3.916',
+            accounting: '營業收入',
+            particular: '港幣120000 * 3.916',
             debit: false,
             amount: 469920,
           },

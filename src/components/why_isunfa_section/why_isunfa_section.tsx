@@ -245,19 +245,28 @@ const WhyISunFASection = () => {
               width={800}
               height={472}
               src="/elements/partial_mac.png"
-              loading="lazy"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>
 
-          {/* Info: mac img for width below 1440 px (20240321- Shirlrey) */}
-          <div className="flex h-350px md:h-750px lg:hidden">
+          {/* Info: mac img for width below 1440 px but above 744 px (20240321- Shirlrey) */}
+          <div className="hidden md:flex md:h-750px lg:hidden">
             <Image
               alt="partial mac"
-              width={800}
-              height={800}
+              width={700}
+              height={700}
               src="/elements/partial_mac_md.png"
-              loading="lazy"
+              className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
+            />
+          </div>
+
+          {/* Info: mac img for width below 744 px (20240321- Shirlrey) */}
+          <div className="flex h-350px md:hidden">
+            <Image
+              alt="partial mac"
+              width={300}
+              height={300}
+              src="/elements/partial_mac_md.png"
               className={`absolute right-0 grow self-stretch overflow-x-hidden duration-1000 max-md:mt-10 max-md:max-w-full`}
             />
           </div>

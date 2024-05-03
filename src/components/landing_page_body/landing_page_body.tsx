@@ -97,7 +97,9 @@ function LandingPageBody() {
         </div>
 
         {/* Info: ----- why iSunFA section (20240318 - Shirley) ----- */}
-        <WhyISunFASection />
+        <div className="lg:h-1000px">
+          <WhyISunFASection />
+        </div>
 
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         {/* Info: 光線 svg 只在桌面版顯示 (20240326 - Shirley) */}
