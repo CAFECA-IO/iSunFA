@@ -1,5 +1,7 @@
 export interface IJournal {
   id: string;
+  tokenContract: string;
+  tokenId: string;
   basicInfo: {
     dateStartTimestamp: number;
     dateEndTimestamp: number;
