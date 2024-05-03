@@ -23,17 +23,20 @@ beforeEach(() => {
 describe('test admin API', () => {
   it('should get admin by id', async () => {
     req.headers.userId = '1';
-    req.method = 'GET';
-    req.query.id = '1';
+    req.query = { id: '1' };
     await handler(req, res);
     const admin = {
       id: '1',
       name: 'bob',
+      credentialId: '1',
+      publicKey: '1',
+      algorithm: 'ES256',
+      companyId: '1',
+      companyName: 'mermer',
       email: 'bob@mermer.cc',
-      startDate: '2021-01-01',
-      auditing: 'viewer',
-      accounting: 'editor',
-      internalControl: 'editor',
+      startDate: 21321321,
+      endDate: 123123123,
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -45,27 +48,29 @@ describe('test admin API', () => {
     });
   });
 
-  it('should update admin by id', async () => {
-    req.headers.userId = '1';
+  it('should update admin successfully', async () => {
     req.method = 'PUT';
-    req.query.id = '1';
+    req.headers.userId = '1';
+    req.query = { id: '1' };
     req.body = {
-      name: 'updated name',
-      email: 'updated email',
-      startDate: '2021-01-01',
-      auditing: 'viewer',
-      accounting: 'editor',
-      internalControl: 'editor',
+      name: 'John Doe',
+      email: 'john@example.com',
+      startDate: 1234567890,
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     await handler(req, res);
     const admin = {
       id: '1',
-      name: 'updated name',
-      email: 'updated email',
-      startDate: '2021-01-01',
-      auditing: 'viewer',
-      accounting: 'editor',
-      internalControl: 'editor',
+      name: 'John Doe',
+      credentialId: '1',
+      publicKey: '1',
+      algorithm: 'ES256',
+      companyId: '1',
+      companyName: 'mermer',
+      email: 'john@example.com',
+      startDate: 1234567890,
+      endDate: 123123123,
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -77,10 +82,10 @@ describe('test admin API', () => {
     });
   });
 
-  it('should delete admin by id', async () => {
-    req.headers.userId = '1';
+  it('should delete admin successfully', async () => {
     req.method = 'DELETE';
-    req.query.id = '1';
+    req.headers.userId = '1';
+    req.query = { id: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -92,17 +97,16 @@ describe('test admin API', () => {
     });
   });
 
-  it('should return error for invalid input parameter during update', async () => {
-    req.headers.userId = '1';
+  it('should return error for invalid input parameter', async () => {
     req.method = 'PUT';
-    req.query.id = '1';
+    req.headers.userId = '1';
+    req.query = { id: '1' };
     req.body = {
-      name: '',
-      email: 'updated email',
-      startDate: '2021-01-01',
+      name: 'John Doe',
+      email: 'john@example.com',
+      startDate: 1234567890,
       auditing: 'viewer',
       accounting: 'editor',
-      internalControl: 'editor',
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
@@ -115,24 +119,9 @@ describe('test admin API', () => {
     });
   });
 
-  it('should return error for invalid method', async () => {
-    req.method = 'POST';
-    req.query.id = '1';
-    req.headers.userId = '1';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '405',
-      payload: {},
-      message: 'Method Not Allowed',
-    });
-  });
-
   it('should return error for resource not found', async () => {
-    req.method = 'GET';
-    req.query.id = '2';
+    req.headers.userId = '1';
+    req.query = { id: '2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
@@ -141,6 +130,21 @@ describe('test admin API', () => {
       code: '404',
       payload: {},
       message: 'Resource not found',
+    });
+  });
+
+  it('should return error for method not allowed', async () => {
+    req.headers.userId = '1';
+    req.method = 'POST';
+    req.query = { id: '1' };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'ISunFa api ' + version,
+      success: false,
+      code: '405',
+      payload: {},
+      message: 'Method Not Allowed',
     });
   });
 });

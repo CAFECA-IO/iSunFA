@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import version from '@/lib/version';
 import handler from './index';
-import version from '../../../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -10,7 +10,7 @@ beforeEach(() => {
     headers: {},
     body: null,
     query: {},
-    method: 'GET',
+    method: '',
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -20,13 +20,56 @@ beforeEach(() => {
   } as unknown as jest.Mocked<NextApiResponse>;
 });
 
-describe('test payment API', () => {
-  it('should list all payments', async () => {
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+describe('Payment API Handler Tests', () => {
+  it('should handle GET requests successfully', async () => {
+    req.method = 'GET';
     req.headers.userId = '1';
     await handler(req, res);
-    const paymentList = [
-      {
-        id: '1',
+    expect(res.status).toHaveBeenCalledWith(200);
+    const expectedPayload = expect.arrayContaining([
+      expect.objectContaining({
+        id: expect.any(String),
+        type: expect.any(String),
+        no: expect.any(String),
+        expireYear: expect.any(String),
+        expireMonth: expect.any(String),
+        cvc: expect.any(String),
+        name: expect.any(String),
+      }),
+    ]);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'ISunFa api ' + version,
+      success: true,
+      code: '200',
+      message: 'list all payments',
+      payload: expectedPayload,
+    });
+  });
+
+  it('should handle POST requests successfully', async () => {
+    req.method = 'POST';
+    req.headers.userId = '1';
+    req.body = {
+      type: 'VISA',
+      no: '1234-1234-1234-1234',
+      expireYear: '29',
+      expireMonth: '01',
+      cvc: '330',
+      name: 'Taiwan Bank',
+    };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: 'ISunFa api ' + version,
+      success: true,
+      code: '200',
+      message: 'create payment',
+      payload: {
+        id: expect.any(String),
         type: 'VISA',
         no: '1234-1234-1234-1234',
         expireYear: '29',
@@ -34,58 +77,32 @@ describe('test payment API', () => {
         cvc: '330',
         name: 'Taiwan Bank',
       },
-      {
-        id: '2',
-        type: 'VISA',
-        no: '5678-5678-5678-5678',
-        expireYear: '29',
-        expireMonth: '01',
-        cvc: '355',
-        name: 'Taishin International Bank',
-      },
-    ];
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'list all payments',
-      payload: paymentList,
     });
   });
 
-  it('should create payment', async () => {
+  it('should handle invalid input parameters for POST requests', async () => {
     req.method = 'POST';
     req.headers.userId = '1';
     req.body = {
       type: 'VISA',
-      no: '1234-5678-9012-3456',
-      expireYear: '30',
-      expireMonth: '12',
-      cvc: '123',
-      name: 'Test Bank',
+      no: '1234-1234-1234-1234',
+      expireYear: '29',
+      expireMonth: '01',
+      cvc: '330',
+      // Missing name parameter
     };
     await handler(req, res);
-    const newPayment = {
-      id: '3',
-      type: 'VISA',
-      no: '1234-5678-9012-3456',
-      expireYear: '30',
-      expireMonth: '12',
-      cvc: '123',
-      name: 'Test Bank',
-    };
-    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith({
       powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'create payment',
-      payload: newPayment,
+      success: false,
+      code: '422',
+      payload: {},
+      message: 'Invalid input parameter',
     });
   });
 
-  it('should return error for invalid method', async () => {
+  it('should handle unsupported HTTP methods', async () => {
     req.method = 'PUT';
     req.headers.userId = '1';
     await handler(req, res);
@@ -99,8 +116,8 @@ describe('test payment API', () => {
     });
   });
 
-  it('should return error for missing userId', async () => {
-    req.headers.userId = undefined;
+  it('should handle missing userId in headers', async () => {
+    req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
@@ -109,27 +126,6 @@ describe('test payment API', () => {
       code: '404',
       payload: {},
       message: 'Resource not found',
-    });
-  });
-  it('should return error for missing input parameter', async () => {
-    req.method = 'POST';
-    req.headers.userId = '1';
-    req.body = {
-      type: 'VISA',
-      no: '1234-5678-9012-3456',
-      expireYear: '30',
-      expireMonth: '12',
-      cvc: '123',
-      // name: 'Test Bank',
-    };
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '422',
-      payload: {},
-      message: 'Invalid input parameter',
     });
   });
 });

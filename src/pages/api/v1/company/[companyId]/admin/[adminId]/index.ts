@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { IAdmin } from '@/interfaces/admin';
+import { IResponseData } from '@/interfaces/response_data';
 import version from '../../../../../../../lib/version';
 import { errorMessageToErrorCode } from '../../../../../../../lib/utils/errorCode';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   const { id } = req.query;
   try {
     if (!req.headers.userId) {
@@ -17,14 +19,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // Info: (20240419 - Jacky) A010002 - GET /admin/:id
     if (req.method === 'GET') {
       if (id === '1') {
-        const admin = {
+        const admin: IAdmin = {
           id: '1',
           name: 'bob',
+          credentialId: '1',
+          publicKey: '1',
+          algorithm: 'ES256',
+          companyId: '1',
+          companyName: 'mermer',
           email: 'bob@mermer.cc',
-          startDate: '2021-01-01',
-          auditing: 'viewer',
-          accounting: 'editor',
-          internalControl: 'editor',
+          startDate: 21321321,
+          endDate: 123123123,
+          permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
         };
         res.status(200).json({
           powerby: 'ISunFa api ' + version,
@@ -38,18 +44,22 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       }
       // Info: (20240419 - Jacky) A010004 - PUT /admin/:id
     } else if (req.method === 'PUT') {
-      const { name, email, startDate, auditing, accounting, internalControl } = req.body;
-      if (!name || !email || !startDate || !auditing || !accounting || !internalControl) {
+      const { name, email, startDate, permissions } = req.body;
+      if (!name || !email || !startDate || !permissions) {
         throw new Error('Invalid input parameter');
       }
-      const admin = {
-        id,
+      const admin: IAdmin = {
+        id: id as string,
         name,
+        credentialId: '1',
+        publicKey: '1',
+        algorithm: 'ES256',
+        companyId: '1',
+        companyName: 'mermer',
         email,
         startDate,
-        auditing,
-        accounting,
-        internalControl,
+        endDate: 123123123,
+        permissions,
       };
       res.status(200).json({
         powerby: 'ISunFa api ' + version,

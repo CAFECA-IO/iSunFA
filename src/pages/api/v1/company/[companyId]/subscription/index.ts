@@ -1,24 +1,29 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
-import type { ResponseData } from '../../../../../../type/iresponsedata';
+import { ISubscription } from '@/interfaces/subscription';
+import { IResponseData } from '../../../../../../interfaces/response_data';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISubscription>>
+) {
   try {
     if (!req.headers.userId) {
       throw new Error('Resource not found');
     }
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {
-      const subscriptionList = [
+      const subscriptionList: ISubscription[] = [
         {
           id: '1',
-          entity: 'mermer',
+          companyId: 'company-id',
+          companyName: 'mermer',
           plan: 'pro',
           paymentId: '1',
           price: 'USD 10',
           autoRenew: true,
-          expireDate: '2024-01-01',
+          expireDate: 2184719248,
           status: 'paid',
         },
       ];
@@ -35,14 +40,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (!plan || !paymentId || !autoRenew) {
         throw new Error('Invalid input parameter');
       }
-      const newSubscription = {
+      const newSubscription: ISubscription = {
         id: '3',
-        entity: 'mermer',
+        companyId: 'company-id',
+        companyName: 'mermer',
         plan,
         paymentId,
         price: 'USD 10',
         autoRenew,
-        expireDate: '2024-01-01',
+        expireDate: 1746187324,
         status: 'paid',
       };
       res.status(200).json({
