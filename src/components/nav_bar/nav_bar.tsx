@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
@@ -116,7 +116,7 @@ const NavBar = () => {
   const displayedBurgerMenu = (
     <div
       ref={burgerMenuRef}
-      className={`absolute left-0 top-90px z-50 flex gap-16px lg:hidden ${isBurgerMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-16px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-75px z-50 flex gap-16px lg:hidden ${isBurgerMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-16px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
     >
       <button
         type="button"
@@ -170,7 +170,7 @@ const NavBar = () => {
   const displayedAppMenu = (
     <div
       ref={appMenuRef}
-      className={`absolute right-0 top-14 grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
+      className={`absolute right-0 top-45px grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Project button */}
       <button className="flex flex-col items-center gap-8px px-20px ">
@@ -205,7 +205,7 @@ const NavBar = () => {
   );
 
   const displayedUserMenu = isUserMenuOpen ? (
-    <div className="absolute right-10 top-20 z-50">
+    <div className="absolute right-10 top-60px z-50">
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
         <img
           srcSet="https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=100 100w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=200 200w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=400 400w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=800 800w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=1200 1200w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=1600 1600w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&width=2000 2000w, https://cdn.builder.io/api/v1/image/assets/TEMP/a7d6ae28b20ae9f8039f351ff2014cd414f4bdb3f62c8e6e14e9d5a5c7a391cf?apiKey=0e17b0b875f041659e186639705112b1&"
@@ -288,8 +288,8 @@ const NavBar = () => {
     </div>
   ) : (
     <Link href={ISUNFA_ROUTE.LOGIN}>
-      <Button className="bg-button-surface-strong-primary">
-        <p className={cn('text-base leading-6 tracking-normal text-button-text-primary-solid')}>
+      <Button className="h-40px bg-button-surface-strong-primary">
+        <p className={cn('text-sm leading-6 tracking-normal text-button-text-primary-solid')}>
           Login
           {/* {t('login')} */}
         </p>
@@ -316,7 +316,7 @@ const NavBar = () => {
 
   return (
     <div className="fixed top-0 z-20 flex w-screen">
-      <div className="z-60 flex h-80px w-full items-center gap-5 bg-surface-neutral-surface-lv1 px-80px py-8px shadow-navbar max-md:flex-wrap max-md:px-5 md:h-56px">
+      <div className="z-60 flex h-80px w-full items-center gap-5 bg-surface-neutral-surface-lv1 px-80px py-8px shadow-navbar  max-md:flex-wrap max-md:px-5 lg:h-56px">
         {/* Info: (20240417 - Julian) Burger menu */}
         <div className="block lg:hidden">
           <button
