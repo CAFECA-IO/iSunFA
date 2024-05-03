@@ -31,22 +31,30 @@ const LineChart = ({ data }: LineChartProps) => {
     const handleResize = () => {
       const windowWidth = globalCtx.width;
       const windowHeight = window.innerHeight;
+      const DESKTOP_WIDTH = 1024;
+      const TABLET_WIDTH = 768;
 
-      if (windowWidth <= 768) {
-        const presentWidth = windowWidth / 1.45;
-        const presentHeight = windowHeight / 3.9;
+      if (windowWidth <= TABLET_WIDTH) {
+        const presentWidth = 370;
+        const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (window.innerWidth >= 1440) {
+      } else if (windowWidth > DESKTOP_WIDTH) {
+        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 10;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
         const presentWidth = 580;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else {
-        const presentWidth = windowWidth / 1.25;
-        const presentHeight = 250;
+        const presentWidth = windowWidth / 12;
+        const presentHeight = windowHeight / 3.5;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
@@ -161,7 +169,7 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`,
       },
       y: {
-        formatter: value => `${value}%`,
+        formatter: (value) => `${value}%`,
       },
       marker: {
         show: false,
@@ -314,7 +322,10 @@ const IncomeExpenseTrendChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+    <div
+      id="displayedDataSection"
+      className="dashboardCardShadow flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
+    >
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Income vs. Expense Trend Chart</div>

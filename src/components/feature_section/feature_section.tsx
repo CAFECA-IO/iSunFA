@@ -115,7 +115,6 @@ const FeatureSection = () => {
                 alt="feature intro - ipad"
                 fill
                 style={{ objectFit: 'contain' }}
-                loading="lazy"
               />
             </div>
           </div>
@@ -125,7 +124,7 @@ const FeatureSection = () => {
       <div
         ref={animeRef33}
         // Info: 從下面移到中間 (20240319 - Shirley)
-        className={`overflow-x-hidden ${isAnimeRef33Visible ? `lg:translate-y-0` : `lg:translate-y-140%`} -mt-10 grid w-full grid-cols-1 justify-center gap-20 duration-1000 md:-mt-40 md:mb-40 lg:mx-0 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-10`}
+        className={`overflow-x-hidden ${isAnimeRef33Visible ? `lg:translate-y-0` : `lg:translate-y-140%`} -mt-10 grid w-full grid-cols-1 justify-center gap-20 duration-1000 md:-mt-40 md:mb-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-0 lg:px-10`}
       >
         {heroList}
       </div>
