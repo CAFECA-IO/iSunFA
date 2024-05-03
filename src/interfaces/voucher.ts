@@ -1,10 +1,11 @@
 import { PaymentPeriodType, PaymentStatusType, VoucherType } from './account';
-import { LineItem } from './line_item';
+import { ILineItem } from './line_item';
 
 export interface IVoucherMetaData {
   date: number;
   voucherType: VoucherType;
-  venderOrSupplyer: string;
+  companyId: string;
+  companyName: string;
   description: string;
   totalPrice: number;
   taxPercentage: number;
@@ -19,5 +20,5 @@ export interface IVoucherMetaData {
 export interface IVoucher {
   voucherIndex: string;
   metadatas: IVoucherMetaData[];
-  lineItems: LineItem[];
+  lineItems: ILineItem[];
 }

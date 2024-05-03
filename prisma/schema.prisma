@@ -30,7 +30,6 @@ model company {
     code      String
     regional  String
     company   String
-    department String
 
     admins    admin[]
     auditReports auditReport[]
@@ -41,6 +40,19 @@ model company {
     subscriptions subscription[]
     users     user[]
     userToCompanies userToCompany[]
+    companyToDepartments companyToDepartment[]
+}
+
+model companyToDepartment {
+    id         Int      @id @default(autoincrement())
+    companyId  Int
+    departmentId Int
+
+    company    company    @relation(fields: [companyId], references: [id])
+    department department @relation(fields: [departmentId], references: [id])
+
+    @@map("company_to_department")
+
 }
 
 model auditReport {
@@ -85,6 +97,7 @@ model department {
         company      company  @relation(fields: [companyId], references: [id])
 
         employees    employee[]
+        companyToDepartment companyToDepartment[]
 }
 
 model employee {

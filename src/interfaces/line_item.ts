@@ -1,4 +1,4 @@
-export interface LineItem {
+export interface ILineItem {
   lineItemIndex: string;
   account: string;
   description: string;
