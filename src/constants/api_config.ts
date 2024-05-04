@@ -1,3 +1,4 @@
+/* eslint-disable implicit-arrow-linebreak */
 import {
   AccountInvoiceData,
   AccountLineItem,

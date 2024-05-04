@@ -1,7 +1,12 @@
 import { APIData } from '@/constants/api_config';
+import { Action } from '@/enums/action';
 import { Response } from '@/interfaces/response';
-import { useCallback, useEffect, useRef } from 'react';
-import useStateRef from 'react-usestateref';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+interface ResponseData<Data> {
+  data?: Data;
+  error?: Error | undefined;
+}
 
 const useAPIWorker = <Data>(
   apiConfig: APIData,
@@ -9,61 +14,77 @@ const useAPIWorker = <Data>(
   body: Record<string, string | number | Record<string, string | number>> | null,
   cancel?: boolean
 ): Response<Data> => {
-  const [data, setData, dataRef] = useStateRef<Data | undefined>(undefined);
-  const [isLoading, setIsLoading, isLoadingRef] = useStateRef<boolean>(true);
-  const [error, setError, errorRef] = useStateRef<Error | null>(null);
-  const [message, setMessage, messageRef] = useStateRef<string | undefined>(undefined);
+  const [data, setData] = useState<Data | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [message, setMessage] = useState<string | undefined>(undefined);
   const requestIdRef = useRef<string | undefined>(undefined);
+  const controllerRef = useRef<AbortController | null>(null);
+
+  const handleResponse = (responseData: ResponseData<Data>, requestId: string) => {
+    const { data: newData, error: workerError } = responseData;
+
+    if (requestId !== requestIdRef.current) return;
+    if (workerError) {
+      setError(workerError instanceof Error ? workerError : new Error(workerError));
+      setMessage(workerError instanceof Error ? workerError.message : 'An error occurred');
+    } else {
+      setData(newData);
+      setError(null);
+      setMessage('Request was successful');
+    }
+    setIsLoading(false);
+  };
 
   const fetchData = useCallback(() => {
     const worker = new Worker(new URL('../../public/worker.ts', import.meta.url), {
       type: 'module',
     });
-    requestIdRef.current = apiConfig.name;
+    const requestId = apiConfig.name;
+    requestIdRef.current = requestId;
 
     setIsLoading(true);
 
     worker.postMessage({
-      requestId: requestIdRef.current,
+      requestId,
       apiConfig,
       path,
       body,
-      action: cancel ? 'cancel' : undefined,
+      action: cancel ? Action.CANCEL : undefined,
     });
 
     const handleMessage = (event: MessageEvent) => {
-      const { data: newData, error: workerError, requestId } = event.data;
+      handleResponse(event.data, requestId);
+    };
 
-      if (requestId !== requestIdRef.current) return;
-      if (workerError) {
-        setError(new Error(workerError));
-        setError(workerError instanceof Error ? workerError : new Error('An error occurred'));
-        setMessage(errorRef.current?.message || 'An error occurred');
-      } else {
-        setData(newData);
-        setError(null);
-        setMessage('Request was cancelled');
-      }
+    worker.addEventListener(Action.MESSAGE, handleMessage);
+    worker.onerror = (e: ErrorEvent) => {
+      setError(e instanceof Error ? e : new Error('An error occurred'));
+      setMessage(e instanceof Error ? e.message : 'An error occurred');
       setIsLoading(false);
     };
 
-    worker.addEventListener('message', handleMessage);
-    worker.onerror = (e: ErrorEvent) => {
-      setError(e instanceof Error ? e : new Error('An error occurred'));
-      setMessage(errorRef.current?.message || 'An error occurred');
-      setIsLoading(false);
+    // Info: Cleanup function (20240504 - tzuhan)
+    return () => {
+      worker.removeEventListener(Action.MESSAGE, handleMessage);
+      worker.terminate();
     };
   }, []);
 
   useEffect(() => {
+    if (controllerRef.current && cancel) {
+      controllerRef.current.abort();
+    }
+    controllerRef.current = new AbortController();
+
     return fetchData();
   }, [fetchData]);
 
   return {
-    isLoading: isLoadingRef.current || isLoading,
-    data: dataRef.current || data,
-    message: messageRef.current || message,
-    error: errorRef.current || error,
+    isLoading,
+    data,
+    message,
+    error,
   };
 };
 

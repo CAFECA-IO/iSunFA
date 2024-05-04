@@ -1,4 +1,5 @@
 import { APIData } from '@/constants/api_config';
+import { Action } from '@/enums/action';
 import { HttpMethod } from '@/enums/http_method';
 
 interface FetchRequestData {
@@ -6,7 +7,7 @@ interface FetchRequestData {
   apiConfig: APIData;
   path: string;
   body: Record<string, string | number | Record<string, string | number>> | null;
-  action?: 'cancel';
+  action?: Action.CANCEL;
 }
 
 async function fetchData(
@@ -28,35 +29,22 @@ async function fetchData(
     };
   }
 
-  return fetch(path, fetchOptions).then((response) => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  });
+  const response = await fetch(path, fetchOptions);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
 }
 
 let activeRequest: string | null = null;
 let controller: AbortController | null = null;
 
-// eslint-disable-next-line no-restricted-globals
-self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
-  const { requestId, apiConfig, path, body, action } = event.data;
-
-  if (action === 'cancel') {
-    if (activeRequest === requestId) {
-      if (controller) {
-        controller.abort();
-        controller = null;
-        setTimeout(() => {
-          // eslint-disable-next-line no-restricted-globals
-          self.close();
-        }, 1000);
-      }
-    }
-    return;
-  }
-
+const handleRequest = async (
+  requestId: string,
+  apiConfig: APIData,
+  path: string,
+  body: Record<string, string | number | Record<string, string | number>> | null
+) => {
   if (controller) {
     controller.abort();
   }
@@ -75,6 +63,25 @@ self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
     }
     postMessage({ error: error instanceof Error ? error.message : 'Unknown error', requestId });
   }
+};
+
+// eslint-disable-next-line no-restricted-globals
+self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
+  const { requestId, apiConfig, path, body, action } = event.data;
+
+  if (action === Action.CANCEL) {
+    if (activeRequest === requestId && controller) {
+      controller.abort();
+      controller = null;
+      setTimeout(() => {
+        // eslint-disable-next-line no-restricted-globals
+        self.close();
+      }, 1000);
+    }
+    return;
+  }
+
+  await handleRequest(requestId, apiConfig, path, body);
 };
 
 export {};
