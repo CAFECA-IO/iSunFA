@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import APIName from '@/enums/api_name';
 import { HttpMethod } from '@/enums/http_method';
 import { Response } from '@/interfaces/response';
-import API_CONFIG from '@/constants/api_config';
+import { APIData } from '@/constants/api_config';
 
 async function fetchData<Data>(
   path: string,
@@ -34,9 +33,8 @@ async function fetchData<Data>(
 }
 
 const useAPI = <Data>(
-  apiName: APIName,
-  params?: Record<string, string | number> | null,
-  query?: Record<string, string | number> | null,
+  apiConfig: APIData,
+  path: string,
   body?: Record<string, string | number | Record<string, string | number>> | null,
   cancel?: boolean
 ): Response<Data> => {
@@ -45,29 +43,11 @@ const useAPI = <Data>(
   const [error, setError] = useState<Error | null>(null);
   const [message, setMessage] = useState<string | undefined>(undefined);
 
-  const apiConfig = API_CONFIG[apiName];
-  if (!apiConfig) {
-    throw new Error(`API configuration not found for ${apiName}`);
-  }
-  const { pathConstructor, method, checkParams, checkBody } = apiConfig;
-
-  if (params && checkParams) {
-    checkParams(params);
-  }
-  if (body && checkBody) {
-    checkBody(body);
-  }
-  const queryString = query
-    ? Object.keys(query)
-        .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(query[key]))}`)
-        .join('&')
-    : '';
-  const path = `${pathConstructor(params)}${queryString}`;
-
   const handleError = (e: Error) => {
     setError(e);
     setMessage(e.message || 'An error occurred');
   };
+  const { method } = apiConfig;
 
   useEffect(() => {
     let cleanupFunction = () => {};
@@ -99,7 +79,7 @@ const useAPI = <Data>(
         });
     }
     return cleanupFunction;
-  }, [apiName, params, query, body, cancel]);
+  }, [apiConfig, path, body, cancel]);
 
   return {
     isLoading,

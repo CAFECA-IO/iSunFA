@@ -16,11 +16,24 @@ function useAPIResponse<Data>(
     throw new Error(`API configuration not found for ${apiName}`);
   }
 
-  const { pathConstructor, useWorker } = apiConfig;
+  const { pathConstructor, checkParams, checkBody, useWorker } = apiConfig;
+
+  if (params && checkParams) {
+    checkParams(params);
+  }
+  if (body && checkBody) {
+    checkBody(body);
+  }
+  const queryString = query
+    ? Object.keys(query)
+        .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(query[key]))}`)
+        .join('&')
+    : '';
+  const path = `${pathConstructor(params)}${queryString}`;
 
   const { isLoading, data, message, error } = useWorker
-    ? useAPIWorker<Data>(apiConfig, pathConstructor(params), body || {}, cancel)
-    : useAPI<Data>(apiName, params, query, body, cancel);
+    ? useAPIWorker<Data>(apiConfig, path, body || {}, cancel)
+    : useAPI<Data>(apiConfig, path, body || {}, cancel);
 
   return {
     isLoading,
