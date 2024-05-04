@@ -1,3 +1,4 @@
+import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucher } from '@/interfaces/voucher';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
@@ -13,50 +14,21 @@ export default async function handler(
       if (!req.query.voucherId) {
         throw new Error('Invalid input parameter');
       }
-      const voucher: IVoucher = {
-        voucherIndex: '1',
-        metadatas: [
-          {
-            date: 1713139200000,
-            voucherType: 'expense',
-            companyId: '1',
-            companyName: '文中資訊股份有限公司',
-            description:
-              'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-            totalPrice: 109725,
-            taxPercentage: 5,
-            fee: 0,
-            paymentMethod: 'transfer',
-            paymentPeriod: 'atOnce',
-            installmentPeriod: 0,
-            paymentStatus: 'unpaid',
-            alreadyPaidAmount: 0,
-          },
-        ],
-        lineItems: [
-          {
-            lineItemIndex: '2',
-            account: '124124',
-            description: 'WSTP會計師工作輔助幫手',
-            debit: false,
-            amount: 5,
-          },
-          {
-            lineItemIndex: '3',
-            account: '124124',
-            description: '文中網路版主機授權費用',
-            debit: false,
-            amount: 8400,
-          },
-          {
-            lineItemIndex: '4',
-            account: '124124',
-            description: '文中工作站授權費用',
-            debit: false,
-            amount: 6300,
-          },
-        ],
-      };
+
+      const result = await fetch(`${AICH_URI}/api/v1/vouchers/${req.query.voucherId}/result`);
+
+      if (!result.ok) {
+        res.status(500).json({
+          powerby: 'ISunFa api ' + version,
+          success: false,
+          code: '500',
+          message: 'Internal Server Error in voucher api, error in fetching voucher from AICH',
+          payload: {},
+        });
+      }
+
+      const voucher: IVoucher = (await result.json()).payload;
+
       res.status(200).json({
         powerby: 'ISunFa api ' + version,
         success: true,
