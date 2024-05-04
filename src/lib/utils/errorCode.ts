@@ -6,6 +6,7 @@ export function errorMessageToErrorCode(errorMessage: string): number {
     'Method Not Allowed': 405,
     'Invalid input parameter': 422,
     'Internal server error': 500,
+    'fetch failed': 500,
     // Add more error mappings as needed
   };
 
