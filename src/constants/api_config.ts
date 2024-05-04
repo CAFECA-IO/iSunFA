@@ -15,9 +15,7 @@ export type APIData = {
   method: HttpMethod;
   pathConstructor: (params: Record<string, string | number> | null | undefined) => string;
   checkParams?: (params: Record<string, string | number> | null | undefined) => void;
-  checkBody?: (
-    body: Record<string, string | number | Record<string, string | number>> | null | undefined
-  ) => void;
+  checkBody?: (body: Record<string, unknown> | null | undefined) => void;
   useWorker: boolean;
 };
 
@@ -62,18 +60,18 @@ const API_CONFIG: APIConfig = {
   //   },
   //   useWorker: false,
   // },
-  [APIName.GET_USER_BY_ID]: {
-    name: APIName.GET_USER_BY_ID,
-    pathConstructor: () => '', // TODO: Add pathConstructor (20240503 - tzuhan)
-    method: HttpMethod.GET,
-    checkParams: (params) => {
-      if (!params?.id) {
-        throw new Error('params is missing id');
-      }
-    },
-    checkBody: undefined,
-    useWorker: false,
-  },
+  // [APIName.GET_USER_BY_ID]: {
+  //   name: APIName.GET_USER_BY_ID,
+  //   pathConstructor: () => '', // TODO: Add pathConstructor (20240503 - tzuhan)
+  //   method: HttpMethod.GET,
+  //   checkParams: (params) => {
+  //     if (!params?.id) {
+  //       throw new Error('params is missing id');
+  //     }
+  //   },
+  //   checkBody: undefined,
+  //   useWorker: false,
+  // },
   [APIName.LIST_ALL_PROJECTS]: {
     name: APIName.LIST_ALL_PROJECTS,
     pathConstructor: (params) => `/company/${params?.companyId}/projects`,
@@ -372,23 +370,23 @@ const API_CONFIG: APIConfig = {
     checkBody: undefined,
     useWorker: true,
   },
-  [APIName.CREATE_INCOME_EXPENSE_JOURNAL]: {
-    name: APIName.CREATE_INCOME_EXPENSE_JOURNAL,
-    pathConstructor: (params) => `/company/${params?.companyId}/journals/add`,
-    method: HttpMethod.POST,
-    checkParams: (params) => {
-      if (!params?.companyId) {
-        throw new Error('params is missing companyId');
-      }
-    },
-    checkBody: (body) => {
-      // TODO: missing interface or interface AccountInvoiceData is differ form doc (20240503 - tzuhan)
-      const instance = {} as AccountInvoiceData;
-      const keysArray = Object.keys(instance) as Array<keyof AccountInvoiceData>;
-      checkBody(keysArray, body);
-    },
-    useWorker: false,
-  },
+  // [APIName.CREATE_INCOME_EXPENSE_JOURNAL]: {
+  //   name: APIName.CREATE_INCOME_EXPENSE_JOURNAL,
+  //   pathConstructor: (params) => `/company/${params?.companyId}/journals/add`,
+  //   method: HttpMethod.POST,
+  //   checkParams: (params) => {
+  //     if (!params?.companyId) {
+  //       throw new Error('params is missing companyId');
+  //     }
+  //   },
+  //   checkBody: (body) => {
+  //     // TODO: missing interface or interface AccountInvoiceData is differ form doc (20240503 - tzuhan)
+  //     const instance = {} as AccountInvoiceData;
+  //     const keysArray = Object.keys(instance) as Array<keyof AccountInvoiceData>;
+  //     checkBody(keysArray, body);
+  //   },
+  //   useWorker: false,
+  // },
 };
 
 export default API_CONFIG;

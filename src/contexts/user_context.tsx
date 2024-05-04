@@ -9,6 +9,8 @@ import { DEFAULT_DISPLAYED_USER_NAME } from '../constants/display';
 import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
+import useAPIResponse from '@/lib/hooks/use_api_response';
+import APIName from '@/enums/api_name';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -62,6 +64,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         debug: false,
         discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
+
+      const {
+        data: testData,
+        isLoading,
+        error,
+        message,
+      } = useAPIResponse<IUserAuth>(APIName.SIGN_UP, null, null, { registration }, false);
+      console.log(
+        'testData:',
+        testData,
+        'testData.credential:',
+        testData?.credential,
+        'isLoading:',
+        isLoading,
+        'error:',
+        error,
+        'message:',
+        message
+      );
 
       const rs = await fetch(ISUNFA_API.SIGN_UP, {
         method: 'POST',

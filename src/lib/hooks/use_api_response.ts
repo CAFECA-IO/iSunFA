@@ -8,7 +8,7 @@ function useAPIResponse<Data>(
   apiName: APIName,
   params?: Record<string, string | number> | null,
   query?: Record<string, string | number> | null,
-  body?: Record<string, string | number | Record<string, string | number>> | null,
+  body?: Record<string, unknown> | null,
   cancel?: boolean
 ): Response<Data> {
   const apiConfig = API_CONFIG[apiName];

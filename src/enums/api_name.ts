@@ -1,7 +1,7 @@
 enum APIName {
   SIGN_UP = 'signUp',
   // SIGN_IN = 'signIn',
-  GET_USER_BY_ID = 'getUserById',
+  // GET_USER_BY_ID = 'getUserById',
   LIST_ALL_PROJECTS = 'listAllProjects',
   GET_PROJECTS_STATUS = 'getProjectsStatus',
   GET_PROJECTS_VALUE = 'getProjectsValue',
@@ -23,7 +23,7 @@ enum APIName {
   UPLOAD_JOURNAL_DOCUMENT_IMAGE = 'uploadJournalDocumentImage',
   GET_JOURNAL_PROCESSING_STATUS = 'getJournalProcessingStatus',
   GET_PROCESSED_JOURNAL_DATA = 'getProcessedJournalData',
-  CREATE_INCOME_EXPENSE_JOURNAL = 'createIncomeExpenseJournal',
+  // CREATE_INCOME_EXPENSE_JOURNAL = 'createIncomeExpenseJournal',
 }
 
 export default APIName;

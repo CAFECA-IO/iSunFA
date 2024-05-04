@@ -6,7 +6,7 @@ import { APIData } from '@/constants/api_config';
 async function fetchData<Data>(
   path: string,
   method: HttpMethod,
-  body?: Record<string, string | number | Record<string, string | number>>,
+  body?: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<Data> {
   const fetchOptions: RequestInit = {
@@ -35,7 +35,7 @@ async function fetchData<Data>(
 const useAPI = <Data>(
   apiConfig: APIData,
   path: string,
-  body?: Record<string, string | number | Record<string, string | number>> | null,
+  body?: Record<string, unknown> | null,
   cancel?: boolean
 ): Response<Data> => {
   const [data, setData] = useState<Data | undefined>(undefined);

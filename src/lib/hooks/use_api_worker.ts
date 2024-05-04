@@ -11,7 +11,7 @@ interface ResponseData<Data> {
 const useAPIWorker = <Data>(
   apiConfig: APIData,
   path: string,
-  body: Record<string, string | number | Record<string, string | number>> | null,
+  body: Record<string, unknown> | null,
   cancel?: boolean
 ): Response<Data> => {
   const [data, setData] = useState<Data | undefined>(undefined);
