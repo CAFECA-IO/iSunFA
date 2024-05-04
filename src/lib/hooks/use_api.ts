@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { HttpMethod } from '@/enums/http_method';
+
+import { IAPIConfig, IHttpMethod } from '@/interfaces/api_connection';
 import { Response } from '@/interfaces/response';
-import { APIData } from '@/constants/api_config';
+
+import { HttpMethod } from '@/constants/api_connection';
 
 async function fetchData<Data>(
   path: string,
-  method: HttpMethod,
+  method: IHttpMethod,
   body?: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<Data> {
@@ -33,7 +35,7 @@ async function fetchData<Data>(
 }
 
 const useAPI = <Data>(
-  apiConfig: APIData,
+  apiConfig: IAPIConfig,
   path: string,
   body: { [key: string]: unknown } | null,
   cancel?: boolean

@@ -1,7 +1,7 @@
 import { IAdmin } from './admin';
 import { IAuditReports } from './audit_reports';
 import { IClient } from './client';
-import { ICompanyKYC } from './companyKYC';
+import { ICompanyKYC } from './company_kyc';
 import { IDepartment } from './department';
 import { IEmployee } from './employees';
 import { ISubscription } from './subscription';

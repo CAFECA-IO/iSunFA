@@ -1,5 +1,5 @@
-import { APIData } from '@/constants/api_config';
-import { Action } from '@/enums/action';
+import { IAPIConfig } from '@/interfaces/api_connection';
+import { Action } from '@/constants/action';
 import { Response } from '@/interfaces/response';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -9,7 +9,7 @@ interface ResponseData<Data> {
 }
 
 const useAPIWorker = <Data>(
-  apiConfig: APIData,
+  apiConfig: IAPIConfig,
   path: string,
   body: { [key: string]: unknown } | null,
   cancel?: boolean

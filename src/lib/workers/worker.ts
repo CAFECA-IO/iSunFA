@@ -1,17 +1,18 @@
-import { APIData } from '@/constants/api_config';
-import { Action } from '@/enums/action';
-import { HttpMethod } from '@/enums/http_method';
+import { IAPIConfig } from '@/interfaces/api_connection';
+
+import { HttpMethod } from '@/constants/api_connection';
+import { Action } from '@/constants/action';
 
 interface FetchRequestData {
   requestId: string;
-  apiConfig: APIData;
+  apiConfig: IAPIConfig;
   path: string;
   body: Record<string, string | number | Record<string, string | number>> | null;
   action?: Action.CANCEL;
 }
 
 async function fetchData(
-  apiConfig: APIData,
+  apiConfig: IAPIConfig,
   path: string,
   body: Record<string, string | number | Record<string, string | number>> | null,
   signal: AbortSignal
@@ -41,7 +42,7 @@ let controller: AbortController | null = null;
 
 const handleRequest = async (
   requestId: string,
-  apiConfig: APIData,
+  apiConfig: IAPIConfig,
   path: string,
   body: Record<string, string | number | Record<string, string | number>> | null
 ) => {

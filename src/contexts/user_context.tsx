@@ -10,7 +10,7 @@ import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
 import useAPIResponse from '@/lib/hooks/use_api_response';
-import APIName from '@/enums/api_name';
+import { APIName } from '@/constants/api_connection';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {

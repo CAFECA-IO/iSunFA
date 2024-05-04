@@ -1,7 +1,7 @@
 export const ISUNFA_API = {
-  SIGN_UP: '/api/auth/sign-up',
-  SIGN_IN: '/api/auth/sign-in',
-  SIGN_OUT: '/api/auth/sign-out',
+  SIGN_UP: '/api/auth/v1/sign-up',
+  SIGN_IN: '/api/auth/v1/sign-in',
+  SIGN_OUT: '/api/auth/v1/sign-out',
 };
 
 export const ISUNFA_ROUTE = {
