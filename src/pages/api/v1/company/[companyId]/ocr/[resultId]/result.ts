@@ -3,10 +3,11 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountInvoiceData } from '@/interfaces/account';
 import { ResponseType } from '@/interfaces/api_response';
 import version from '@/lib/version';
+import { AICH_URI } from '@/constants/config';
 
 interface ResponseData extends ResponseType<AccountInvoiceData[]> {}
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   const { resultId } = req.query;
   // Info Murky (20240416): Check if resultId is string
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
@@ -20,23 +21,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
 
   switch (req.method) {
     case 'GET': {
-      const ocrResultData: AccountInvoiceData = {
-        date: {
-          start_date: 124214,
-          end_date: 124214,
-        },
-        eventType: 'income',
-        paymentReason: '勞務收入',
-        venderOrSupplyer: 'Isuncloud Limited',
-        description: '技術開發軟件與服務',
-        payment: {
-          price: 469920,
-          hasTax: true,
-          taxPercentage: 25,
-          hasFee: false,
-          fee: 0,
-        },
-      };
+      const result = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
+
+      if (!result.ok) {
+        return res.status(500).json({
+          powerby: `ISunFa api ${version}`,
+          success: false,
+          code: '500',
+          message:
+            'Internal Server Error in ocr get result api, error in fetching OCR result from AICH',
+        });
+      }
+
+      const ocrResultData: AccountInvoiceData = (await result.json()).payload;
+
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
         success: true,
