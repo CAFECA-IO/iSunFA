@@ -71,6 +71,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         error,
         message,
       } = useAPIResponse<IUserAuth>(APIName.SIGN_UP, null, null, { registration }, false);
+      // Deprecated: test useAPI (20240507 - tzuhan)
       console.log(
         'testData:',
         testData,
