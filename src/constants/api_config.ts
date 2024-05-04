@@ -6,19 +6,28 @@ import {
   isAccountInvoiceData,
 } from '@/interfaces/account';
 import { IAnalysisReportRequest, IFinancialReportRequest } from '@/interfaces/report';
-import APIName from '../enums/api_name';
+import { HttpMethod } from '@/enums/http_method';
+import APIName from '@/enums/api_name';
 
-export type APIConfig = {
-  [key in APIName]: {
-    path: (...arg: string[]) => string;
-    method: string;
-    checkParams?: (params: Record<string, unknown>) => void;
-    checkBody?: (body: Record<string, unknown>) => void;
-    useWorker: boolean;
-  };
+export type APIData = {
+  name: APIName;
+  method: HttpMethod;
+  pathConstructor: (params: Record<string, string | number> | null | undefined) => string;
+  checkParams?: (params: Record<string, string | number> | null | undefined) => void;
+  checkBody?: (
+    body: Record<string, string | number | Record<string, string | number>> | null | undefined
+  ) => void;
+  useWorker: boolean;
 };
 
-const checkBody = (keys: string[], body: Record<string, unknown>) => {
+export type APIConfig = {
+  [key in APIName]: APIData;
+};
+
+const checkBody = (keys: string[], body: Record<string, unknown> | null | undefined) => {
+  if (!body) {
+    throw new Error('body is missing');
+  }
   keys.forEach((key) => {
     if (!(key in body)) {
       throw new Error(`Body is missing key: ${key}`);
@@ -28,29 +37,36 @@ const checkBody = (keys: string[], body: Record<string, unknown>) => {
 
 const API_CONFIG: APIConfig = {
   [APIName.SIGN_UP]: {
+    name: APIName.SIGN_UP,
     // TODO: intergrate with exist signUp (20240503 - tzuhan)
-    path: () => '',
-    method: 'POST',
-    checkParams: undefined,
-    checkBody: undefined,
-    useWorker: false,
-  },
-  [APIName.LOG_IN]: {
-    path: () => '/login', // TODO: intergrate with exist signIn (20240503 - tzuhan)
-    method: 'POST',
+    pathConstructor: () => '/api/auth/sign-up',
+    method: HttpMethod.POST,
     checkParams: undefined,
     checkBody: (body) => {
-      if (!body.name || !body.credentialId) {
-        throw new Error('body is missing name or credentialId');
+      if (!body?.registration) {
+        throw new Error('body is missing registration');
       }
     },
     useWorker: false,
   },
+  // [APIName.SIGN_IN]: {
+  //   name: APIName.SIGN_IN,
+  //   pathConstructor: () => '/api/auth/sign-in', // TODO: intergrate with exist signIn (20240503 - tzuhan)
+  //   method: HttpMethod.POST,
+  //   checkParams: undefined,
+  //   checkBody: (body) => {
+  //     if (!body?.name || !body?.credentialId) {
+  //       throw new Error('body is missing name or credentialId');
+  //     }
+  //   },
+  //   useWorker: false,
+  // },
   [APIName.GET_USER_BY_ID]: {
-    path: () => '', // TODO: Add path (20240503 - tzuhan)
-    method: 'GET',
+    name: APIName.GET_USER_BY_ID,
+    pathConstructor: () => '', // TODO: Add pathConstructor (20240503 - tzuhan)
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.id) {
+      if (!params?.id) {
         throw new Error('params is missing id');
       }
     },
@@ -58,10 +74,11 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.LIST_ALL_PROJECTS]: {
-    path: (companyId: string) => `/company/${companyId}/projects`,
-    method: 'GET',
+    name: APIName.LIST_ALL_PROJECTS,
+    pathConstructor: (params) => `/company/${params?.companyId}/projects`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -69,10 +86,11 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.GET_PROJECTS_STATUS]: {
-    path: (companyId: string) => `/company/${companyId}/projects/status`,
-    method: 'GET',
+    name: APIName.GET_PROJECTS_STATUS,
+    pathConstructor: (params) => `/company/${params?.companyId}/projects/status`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -80,10 +98,11 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.GET_PROJECTS_VALUE]: {
-    path: (companyId: string) => `/company/${companyId}/projects/value`,
-    method: 'GET',
+    name: APIName.GET_PROJECTS_VALUE,
+    pathConstructor: (params) => `/company/${params?.companyId}/projects/value`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -91,10 +110,11 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.GET_PERIOD_PROFIT]: {
-    path: (companyId: string) => `/company/${companyId}/profit`,
-    method: 'GET',
+    name: APIName.GET_PERIOD_PROFIT,
+    pathConstructor: (params) => `/company/${params?.companyId}/profit`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -102,11 +122,12 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.GET_PROJECT_VOUCHERS]: {
-    path: (companyId: string, projectId: string) =>
-      `/company/${companyId}/projects/${projectId}/vouchers`,
-    method: 'GET',
+    name: APIName.GET_PROJECT_VOUCHERS,
+    pathConstructor: (params) =>
+      `/company/${params?.companyId}/projects/${params?.projectId}/vouchers`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.projectId) {
+      if (!params?.companyId || !params?.projectId) {
         throw new Error('params is missing companyId or projectId');
       }
     },
@@ -114,10 +135,11 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.GET_INVOCIE]: {
-    path: (companyId: string, id: string) => `/company/${companyId}/invoice/${id}`,
-    method: 'GET',
+    name: APIName.GET_INVOCIE,
+    pathConstructor: (params) => `/company/${params?.companyId}/invoice/${params?.id}`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.id) {
+      if (!params?.companyId || !params?.id) {
         throw new Error('params is missing companyId or id');
       }
     },
@@ -125,17 +147,19 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.GET_AUDIT_REPORTS]: {
-    path: () => '/audit_reports',
-    method: 'GET',
+    name: APIName.GET_AUDIT_REPORTS,
+    pathConstructor: () => '/audit_reports',
+    method: HttpMethod.GET,
     checkParams: undefined,
     checkBody: undefined,
     useWorker: true,
   },
   [APIName.GENERATE_FINANCIAL_REPORT]: {
-    path: (companyId: string) => `/company/${companyId}/report/financial`,
-    method: 'POST',
+    name: APIName.GENERATE_FINANCIAL_REPORT,
+    pathConstructor: (params) => `/company/${params?.companyId}/report/financial`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -147,10 +171,11 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.GENERATE_ANALYSIS_REPORT]: {
-    path: (companyId: string) => `/company/${companyId}/report/analysis`,
-    method: 'POST',
+    name: APIName.GENERATE_ANALYSIS_REPORT,
+    pathConstructor: (params) => `/company/${params?.companyId}/report/analysis`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -162,16 +187,17 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.OCR_UPLOAD_INVOICE_PICTURE]: {
-    path: (companyId: string) => `/company/${companyId}/ocr/upload`,
-    method: 'POST',
+    name: APIName.OCR_UPLOAD_INVOICE_PICTURE,
+    pathConstructor: (params) => `/company/${params?.companyId}/ocr/upload`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
     checkBody: (body) => {
-      const { formData } = body;
-      const { invoices } = formData as { invoices: File[] };
+      const { formData } = body as unknown as { formData: { invoices: File[] } };
+      const { invoices } = formData;
       if (!invoices || !Array.isArray(invoices)) {
         throw new Error('Invalid invoices');
       }
@@ -179,11 +205,12 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS]: {
-    path: (companyId: string, resultId: string) =>
-      `/company/${companyId}/ocr/${resultId}/process_statue`,
-    method: 'GET',
+    name: APIName.OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS,
+    pathConstructor: (params) =>
+      `/company/${params?.companyId}/ocr/${params?.resultId}/process_statue`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.resultId) {
+      if (!params?.companyId || !params?.resultId) {
         throw new Error('params is missing companyId or resultId');
       }
     },
@@ -191,10 +218,11 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.OCR_GET_ANALYZED_RESULT]: {
-    path: (companyId: string, resultId: string) => `/company/${companyId}/ocr/${resultId}/result`,
-    method: 'GET',
+    name: APIName.OCR_GET_ANALYZED_RESULT,
+    pathConstructor: (params) => `/company/${params?.companyId}/ocr/${params?.resultId}/result`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.resultId) {
+      if (!params?.companyId || !params?.resultId) {
         throw new Error('params is missing companyId or resultId');
       }
     },
@@ -202,10 +230,11 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.LIST_ALL_VOUCHERS]: {
-    path: (companyId: string) => `/company/${companyId}/vouchers`,
-    method: 'GET',
+    name: APIName.LIST_ALL_VOUCHERS,
+    pathConstructor: (params) => `/company/${params?.companyId}/vouchers`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -213,10 +242,11 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.VOUCHER_GET_BY_ID]: {
-    path: (companyId: string, voucherId: string) => `/company/${companyId}/vouchers/${voucherId}`,
-    method: 'GET',
+    name: APIName.VOUCHER_GET_BY_ID,
+    pathConstructor: (params) => `/company/${params?.companyId}/vouchers/${params?.voucherId}`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.voucherId) {
+      if (!params?.companyId || !params?.voucherId) {
         throw new Error('params is missing companyId or voucherId');
       }
     },
@@ -224,15 +254,16 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.VOUCHER_UPLOAD_INVOICES]: {
-    path: (companyId: string) => `/company/${companyId}/voucher/upload_invoice`,
-    method: 'POST',
+    name: APIName.VOUCHER_UPLOAD_INVOICES,
+    pathConstructor: (params) => `/company/${params?.companyId}/voucher/upload_invoice`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
     checkBody: (body) => {
-      const { invoices } = body;
+      const { invoices } = body as unknown as { invoices: AccountInvoiceData[] };
       if (
         !invoices ||
         !Array.isArray(invoices) ||
@@ -244,11 +275,12 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID]: {
-    path: (companyId: string, resultId: string) =>
-      `/company/${companyId}/voucher/${resultId}/process_statue`,
-    method: 'GET',
+    name: APIName.VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID,
+    pathConstructor: (params) =>
+      `/company/${params?.companyId}/voucher/${params?.resultId}/process_statue`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.resultId) {
+      if (!params?.companyId || !params?.resultId) {
         throw new Error('params is missing companyId or resultId');
       }
     },
@@ -256,11 +288,12 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID]: {
-    path: (companyId: string, resultId: string) =>
-      `/company/${companyId}/voucher/${resultId}/preview`,
-    method: 'GET',
+    name: APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
+    pathConstructor: (params) =>
+      `/company/${params?.companyId}/voucher/${params?.resultId}/preview`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.resultId) {
+      if (!params?.companyId || !params?.resultId) {
         throw new Error('params is missing companyId or resultId');
       }
     },
@@ -268,10 +301,11 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.VOUCHER_GENERATE]: {
-    path: (companyId: string) => `/company/${companyId}/voucher`,
-    method: 'POST',
+    name: APIName.VOUCHER_GENERATE,
+    pathConstructor: (params) => `/company/${params?.companyId}/voucher`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
@@ -279,7 +313,7 @@ const API_CONFIG: APIConfig = {
       const instance = {} as AccountVoucher;
       const keysArray = Object.keys(instance) as Array<keyof AccountVoucher>;
       checkBody(keysArray, body);
-      const { voucher } = body;
+      const { voucher } = body as unknown as { voucher: AccountVoucher };
       const { metadatas, lineItems } = voucher as AccountVoucher;
       metadatas.forEach((metadata) => {
         const metaKeysArray = Object.keys(metadata) as Array<keyof AccountVoucherMetaData>;
@@ -295,15 +329,16 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.UPLOAD_JOURNAL_DOCUMENT_IMAGE]: {
-    path: (companyId: string) => `/company/${companyId}/journals/document/upload`,
-    method: 'POST',
+    name: APIName.UPLOAD_JOURNAL_DOCUMENT_IMAGE,
+    pathConstructor: (params) => `/company/${params?.companyId}/journals/document/upload`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },
     checkBody: (body) => {
-      const { document } = body as { document: File };
+      const { document } = body as unknown as { document: File };
       if (!document) {
         throw new Error('body is missing document');
       }
@@ -311,11 +346,12 @@ const API_CONFIG: APIConfig = {
     useWorker: false,
   },
   [APIName.GET_JOURNAL_PROCESSING_STATUS]: {
-    path: (companyId: string, resultId: string) =>
-      `/company/${companyId}/journals/document/process_status/${resultId}`,
-    method: 'GET',
+    name: APIName.GET_JOURNAL_PROCESSING_STATUS,
+    pathConstructor: (params) =>
+      `/company/${params?.companyId}/journals/document/process_status/${params?.resultId}`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.resultId) {
+      if (!params?.companyId || !params?.resultId) {
         throw new Error('params is missing companyId or resultId');
       }
     },
@@ -323,11 +359,12 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.GET_PROCESSED_JOURNAL_DATA]: {
-    path: (companyId: string, resultId: string) =>
-      `/company/${companyId}/journals/document/result/${resultId}`,
-    method: 'GET',
+    name: APIName.GET_PROCESSED_JOURNAL_DATA,
+    pathConstructor: (params) =>
+      `/company/${params?.companyId}/journals/document/result/${params?.resultId}`,
+    method: HttpMethod.GET,
     checkParams: (params) => {
-      if (!params.companyId || !params.resultId) {
+      if (!params?.companyId || !params?.resultId) {
         throw new Error('params is missing companyId or resultId');
       }
     },
@@ -335,10 +372,11 @@ const API_CONFIG: APIConfig = {
     useWorker: true,
   },
   [APIName.CREATE_INCOME_EXPENSE_JOURNAL]: {
-    path: (companyId: string) => `/company/${companyId}/journals/add`,
-    method: 'POST',
+    name: APIName.CREATE_INCOME_EXPENSE_JOURNAL,
+    pathConstructor: (params) => `/company/${params?.companyId}/journals/add`,
+    method: HttpMethod.POST,
     checkParams: (params) => {
-      if (!params.companyId) {
+      if (!params?.companyId) {
         throw new Error('params is missing companyId');
       }
     },

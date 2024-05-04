@@ -1,36 +1,70 @@
-import { useEffect, useState } from 'react';
+import { APIData } from '@/constants/api_config';
+import { Response } from '@/interfaces/response';
+import { useCallback, useEffect, useRef } from 'react';
+import useStateRef from 'react-usestateref';
 
-type FetcherResponse<Data> = {
-  data: Data | null;
-  isLoading: boolean;
-  error: Error | null;
-};
+const useAPIWorker = <Data>(
+  apiConfig: APIData,
+  path: string,
+  body: Record<string, string | number | Record<string, string | number>> | null,
+  cancel?: boolean
+): Response<Data> => {
+  const [data, setData, dataRef] = useStateRef<Data | undefined>(undefined);
+  const [isLoading, setIsLoading, isLoadingRef] = useStateRef<boolean>(true);
+  const [error, setError, errorRef] = useStateRef<Error | null>(null);
+  const [message, setMessage, messageRef] = useStateRef<string | undefined>(undefined);
+  const requestIdRef = useRef<string | undefined>(undefined);
 
-const useAPIWorker = <Data>(path: string, options: RequestInit): FetcherResponse<Data> => {
-  const [data, setData] = useState<Data | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const fetchData = useCallback(() => {
+    const worker = new Worker(new URL('../../public/worker.ts', import.meta.url), {
+      type: 'module',
+    });
+    requestIdRef.current = apiConfig.name;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(path, options);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const responseData: Data = await response.json();
-        setData(responseData);
-      } catch (e) {
-        setError(e as Error);
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+
+    worker.postMessage({
+      requestId: requestIdRef.current,
+      apiConfig,
+      path,
+      body,
+      action: cancel ? 'cancel' : undefined,
+    });
+
+    const handleMessage = (event: MessageEvent) => {
+      const { data: newData, error: workerError, requestId } = event.data;
+
+      if (requestId !== requestIdRef.current) return;
+      if (workerError) {
+        setError(new Error(workerError));
+        setError(workerError instanceof Error ? workerError : new Error('An error occurred'));
+        setMessage(errorRef.current?.message || 'An error occurred');
+      } else {
+        setData(newData);
+        setError(null);
+        setMessage('Request was cancelled');
       }
+      setIsLoading(false);
     };
 
-    fetchData();
-  }, [path, options]);
+    worker.addEventListener('message', handleMessage);
+    worker.onerror = (e: ErrorEvent) => {
+      setError(e instanceof Error ? e : new Error('An error occurred'));
+      setMessage(errorRef.current?.message || 'An error occurred');
+      setIsLoading(false);
+    };
+  }, []);
 
-  return { data, isLoading, error };
+  useEffect(() => {
+    return fetchData();
+  }, [fetchData]);
+
+  return {
+    isLoading: isLoadingRef.current || isLoading,
+    data: dataRef.current || data,
+    message: messageRef.current || message,
+    error: errorRef.current || error,
+  };
 };
 
 export default useAPIWorker;

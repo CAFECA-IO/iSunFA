@@ -1,6 +1,6 @@
 enum APIName {
   SIGN_UP = 'signUp',
-  LOG_IN = 'logIn',
+  // SIGN_IN = 'signIn',
   GET_USER_BY_ID = 'getUserById',
   LIST_ALL_PROJECTS = 'listAllProjects',
   GET_PROJECTS_STATUS = 'getProjectsStatus',
