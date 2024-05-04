@@ -37,7 +37,7 @@ const useAPIWorker = <Data>(
   };
 
   const fetchData = useCallback(() => {
-    const worker = new Worker(new URL('../../public/worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
       type: 'module',
     });
     const requestId = apiConfig.name;
