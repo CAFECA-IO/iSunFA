@@ -570,51 +570,6 @@ const ViewReportSection = ({
       </div>
 
       {/* TODO: show the page number to develop (20240502 - Shirley) */}
-      <div className="flex w-full justify-end px-40">
-        {pdfFile && (
-          <div className="flex items-center">
-            <button
-              onClick={() => thumbnailClickHandler(pageNumber - 2)}
-              disabled={pageNumber <= 1}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-left"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
-                />
-              </svg>
-            </button>
-            <p className="mx-2">
-              Page {pageNumber} of {numPages}
-            </p>
-            <button
-              onClick={() => thumbnailClickHandler(pageNumber)}
-              disabled={pageNumber >= numPages}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-right"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
       <div className="mt-12 flex w-full px-40 pb-2">
