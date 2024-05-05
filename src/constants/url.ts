@@ -19,3 +19,7 @@ export const ISUNFA_ROUTE = {
   USERS_ANALYSIS_REPORTS: '/users/reports/analyses',
   USERS_FINANCIAL_REPORTS_VIEW: '/users/reports/financials/view',
 };
+
+export const ENTERNAL_API = {
+  CFV_PDF: 'https://cfv.cafeca.io/api/pdf',
+};
