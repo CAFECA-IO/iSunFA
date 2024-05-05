@@ -18,14 +18,23 @@ interface IServerSideProps {
 // TODO: dummy data to be replaced (20240429 - Shirley)
 // Function to determine the base URL based on the environment
 const getBaseUrl = (): string => {
-  return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://baifa.io';
+  return 'https://baifa.io';
+  // return process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://baifa.io';
 };
 
 // TODO: dummy data to be replaced (20240429 - Shirley)
 const ReportLink = {
-  balance_sheet: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/balance`,
-  comprehensive_income_statement: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/comprehensive-income`,
-  cash_flow_statement: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/cash-flow`,
+  // balance_sheet: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/balance`,
+  // comprehensive_income_statement: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/comprehensive-income`,
+  // cash_flow_statement: `${getBaseUrl()}/reports/TBD-pNWGgUYqS/cash-flow`,
+
+  // balance_sheet: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports`,
+  // comprehensive_income_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports`,
+  // cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports`,
+
+  balance_sheet: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
+  comprehensive_income_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`,
+  cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
 } as const;
 
 // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)

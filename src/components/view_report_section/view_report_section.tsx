@@ -399,15 +399,31 @@ const ViewReportSection = ({
 
   const fetchPDF = async () => {
     try {
+      const uri = encodeURIComponent(reportLink);
+
+      // const nativeAPI = `/api/v1/pdf?uri=${uri}`;
+
+      const getBaseUrl = (): string => {
+        return process.env.NODE_ENV === 'development'
+          ? `https://cfv.cafeca.io/api/pdf/${uri}`
+          : // ? `http://localhost:3000/api/pdf/${uri}`
+            // ? `http://localhost:3000/api/v1/app/report?url=${reportLink}`
+            `https://cfv.cafeca.io/api/pdf/${uri}`;
+        // : `https://baifa.io/api/pdf/${uri}`;
+      };
+
+      const baseUrl = getBaseUrl();
+
       // TODO: use API service (20240502 - Shirley)
-      const response = await fetch(`http://localhost:3000/api/v1/app/report?url=${reportLink}`, {
+      const response = await fetch(baseUrl, {
         method: 'GET',
       });
 
-      console.log(response);
-
       const blob = await response.blob();
-      setPdfFile(URL.createObjectURL(blob));
+      const pdfUrl = URL.createObjectURL(blob);
+
+      setPdfFile(pdfUrl);
+      // setPdfFile(`/api/v1/pdf?uri=${uri}`);
     } catch (error) {
       console.error(error);
     }
@@ -656,7 +672,7 @@ const ViewReportSection = ({
                 scale={1}
                 pageNumber={pageNumber}
                 width={500}
-                className={`flex w-full justify-center bg-blue-300`}
+                className={`flex w-full justify-center`}
               />
             </Document>
           </div>
