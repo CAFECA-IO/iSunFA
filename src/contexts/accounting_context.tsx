@@ -47,6 +47,9 @@ interface IAccountingContext {
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
 
+  ocrResultId: string;
+  setOcrResultIdHandler: (id: string) => void;
+
   accountingVoucher: IAccountingVoucher[];
   addVoucherRowHandler: () => void;
   deleteVoucherRowHandler: (id: number) => void;
@@ -64,6 +67,9 @@ const initialAccountingContext: IAccountingContext = {
   // duplicateTempJournal: () => {},
   // removeTempJournal: () => {},
 
+  ocrResultId: '',
+  setOcrResultIdHandler: () => {},
+
   accountingVoucher: [defaultAccountingVoucher],
   addVoucherRowHandler: () => {},
   deleteVoucherRowHandler: () => {},
@@ -78,6 +84,8 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
+  const [ocrResultId, setOcrResultId] = useState<string>('');
+
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
     defaultAccountingVoucher,
   ]);
@@ -159,6 +167,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalCredit(credit);
   }, [accountingVoucher]);
 
+  // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
+  const setOcrResultIdHandler = useCallback((id: string) => setOcrResultId(id), [ocrResultId]);
+
   // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
 
@@ -203,6 +214,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearVoucherHandler,
       totalDebit,
       totalCredit,
+
+      ocrResultId,
+      setOcrResultIdHandler,
     }),
     [
       accountingVoucher,
@@ -213,6 +227,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearVoucherHandler,
       totalDebit,
       totalCredit,
+      ocrResultId,
     ]
   );
 
