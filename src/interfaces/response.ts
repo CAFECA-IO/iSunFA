@@ -1,6 +1,7 @@
 export interface Response<Data> {
-  isLoading: boolean;
+  success: boolean | undefined;
+  trigger: () => void;
+  isLoading: boolean | undefined;
   data: Data | undefined;
-  message: string | undefined;
   error: Error | null;
 }

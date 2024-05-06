@@ -1,92 +1,106 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable no-console */
+import { useEffect, useState, useCallback } from 'react';
 
-import { IAPIConfig, IHttpMethod } from '@/interfaces/api_connection';
+import { IAPIInput, IHttpMethod } from '@/interfaces/api_connection';
 import { Response } from '@/interfaces/response';
 
-import { HttpMethod } from '@/constants/api_connection';
+import { APIConfig, APIName, HttpMethod } from '@/constants/api_connection';
+import { IResponseData } from '@/interfaces/response_data';
+import { checkInput, getAPIPath } from '../utils/common';
+
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+};
 
 async function fetchData<Data>(
   path: string,
   method: IHttpMethod,
-  body?: Record<string, unknown>,
+  options: IAPIInput,
   signal?: AbortSignal
-): Promise<Data> {
+): Promise<IResponseData<Data>> {
+  console.log(`useAPI fetchData is called, path`, path, `options`, options, `signal`, signal);
   const fetchOptions: RequestInit = {
     method,
     signal,
   };
 
-  if (method !== HttpMethod.GET && body) {
-    fetchOptions.body = JSON.stringify(body);
+  if (method !== HttpMethod.GET && options.body) {
+    fetchOptions.body = JSON.stringify(options.body);
     fetchOptions.headers = {
-      'Content-Type': 'application/json',
+      ...DEFAULT_HEADERS,
+      ...(options.header ?? {}),
     };
   }
 
-  try {
-    const response = await fetch(path, fetchOptions);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`${error}`);
+  console.log(`fetchData fetchOptions`, fetchOptions);
+  const response = await fetch(path, fetchOptions);
+  console.log(`fetchData response`, response);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+  const result = (await response.json()) as IResponseData<Data>;
+  console.log(`fetchData result`, result);
+  return result;
 }
 
 const useAPI = <Data>(
-  apiConfig: IAPIConfig,
-  path: string,
-  body: { [key: string]: unknown } | null,
-  cancel?: boolean
+  apiName: APIName,
+  options: IAPIInput,
+  cancel?: boolean,
+  triggerImmediately: boolean = true
 ): Response<Data> => {
+  const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
-  const [message, setMessage] = useState<string | undefined>(undefined);
 
-  const handleError = (e: Error) => {
+  const apiConfig = APIConfig[apiName];
+  checkInput(apiConfig, options);
+
+  const path = getAPIPath(apiConfig, options);
+
+  const handleError = useCallback((e: Error) => {
     setError(e);
-    setMessage(e.message || 'An error occurred');
-  };
-  const { method } = apiConfig;
+  }, []);
+
+  const fetchDataCallback = useCallback(
+    async (signal?: AbortSignal) => {
+      setIsLoading(true);
+      try {
+        const response = await fetchData<Data>(path, apiConfig.method, options, signal);
+        if (!response.success) {
+          throw new Error(response.message ?? 'Unknown error');
+        }
+        setData(response.payload as Data);
+        setSuccess(true);
+      } catch (e) {
+        handleError(e as Error);
+        setSuccess(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [apiConfig.method, options, path, handleError]
+  );
 
   useEffect(() => {
-    let cleanupFunction = () => {};
-    if (cancel) {
-      const controller = new AbortController();
-      setIsLoading(true);
+    const controller = new AbortController();
 
-      fetchData<Data>(path, method, body || {}, controller.signal)
-        .then((responseData) => {
-          setData(responseData);
-          setMessage('Request was cancelled');
-        })
-        .catch(handleError)
-        .finally(() => {
-          setIsLoading(false);
-        });
-
-      cleanupFunction = () => controller.abort();
-    } else {
-      setIsLoading(true);
-      fetchData<Data>(path, method, body || {})
-        .then((responseData) => {
-          setData(responseData);
-          setMessage('Request was successful');
-        })
-        .catch(handleError)
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (triggerImmediately) {
+      fetchDataCallback(cancel ? controller.signal : undefined);
     }
-    return cleanupFunction;
-  }, [apiConfig, path, body, cancel]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [path, cancel, triggerImmediately]);
 
   return {
+    trigger: fetchDataCallback,
+    success,
     isLoading,
     data,
-    message,
     error,
   };
 };

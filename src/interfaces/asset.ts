@@ -1,12 +1,16 @@
-export type Asset = {
+export interface Asset {
   id: string;
   name: string;
+  projectId: string;
+  projectName: string;
+  type: string;
   description: string;
-  purchaseStartDate: string;
-  purchaseEndDate: string;
+  startDate: string;
+  endDate: string;
   purchasePrice: string;
   purchaseAmount: string;
   totalPrice: string;
-  depreciationMethod: string;
+  residualValue: string;
   estimatedUsefulLife: number;
-};
+  depreciationMethod: string;
+}
