@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import { NextApiRequest } from 'next';
 import { IncomingForm, Files, Fields, Options } from 'formidable';
 import path from 'path';
-import { FORMIDABLE_CONFIG } from '../../constants/config';
+import { FORMIDABLE_CONFIG } from '@/constants/config';
 
 // Info (20240316 - Murky) - This function is used to parse form image from post form
 // Helper function to wrap formidable's parse method in a promise

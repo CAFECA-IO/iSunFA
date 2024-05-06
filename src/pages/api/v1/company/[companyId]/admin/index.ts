@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
-import { IResponseData } from '../../../../../../interfaces/response_data';
-import version from '../../../../../../lib/version';
-import { errorMessageToErrorCode } from '../../../../../../lib/utils/error_code';
+import version from '@/lib/version';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
+import { IResponseData } from '@/interfaces/response_data';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   try {

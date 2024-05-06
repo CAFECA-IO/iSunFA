@@ -151,7 +151,7 @@ export function isPaymentPeriodType(data: string): data is PaymentPeriodType {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
   // 檢查date是否存在，且start_date和end_date是否為數字
-  const validDate = data && typeof data === 'number';
+  const validDate = data.date && typeof data.date === 'number';
 
   const validInvoiceId = typeof data.invoiceId === 'string';
 

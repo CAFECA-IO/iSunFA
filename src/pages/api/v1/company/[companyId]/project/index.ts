@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { IProject } from '@/interfaces/project';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { IResponseData } from '../../../../../../interfaces/response_data';
+import { IResponseData } from '@/interfaces/response_data';
 
 export default async function handler(
   req: NextApiRequest,

@@ -7,11 +7,8 @@ import {
 } from './account';
 
 export interface IInvoice {
-  id: string;
-  date: {
-    start_date: number; // timestamp
-    end_date: number; // timestamp
-  };
+  nvoiceId: string;
+  date: number; // timestamp
   eventType: string; // 'income' | 'payment' | 'transfer';
   paymentReason: string;
   description: string;
@@ -26,6 +23,8 @@ export interface IInvoice {
 }
 
 export interface IInvoiceWithPaymentMethod extends IInvoice {
+  projectId: string;
+  contractId: string;
   payment: IInvoice['payment'] & {
     paymentMethod: string;
     paymentPeriod: PaymentPeriodType;
@@ -38,9 +37,9 @@ export interface IInvoiceWithPaymentMethod extends IInvoice {
 //  Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isIInvoice(data: any): data is IInvoice {
+  const validInvoiceId = typeof data.invoiceId === 'string';
   // 檢查date是否存在，且start_date和end_date是否為數字
-  const validDate =
-    data.date && typeof data.date.start_date === 'number' && typeof data.date.end_date === 'number';
+  const validDate = data.date && typeof data.date === 'number';
 
   // 檢查eventType是否符合EventType類型（假設EventType為一個字符串的聯合類型）
   const validEventType = isEventType(data.eventType);
@@ -61,6 +60,7 @@ export function isIInvoice(data: any): data is IInvoice {
 
   return (
     validDate &&
+    validInvoiceId &&
     validEventType &&
     validPaymentReason &&
     validDescription &&
@@ -74,6 +74,8 @@ export function isIInvoiceWithPaymentMethod(
   data: any
 ): data is IInvoiceWithPaymentMethod {
   return (
+    typeof data.projectId === 'string' &&
+    typeof data.contractId === 'string' &&
     typeof data.payment?.paymentMethod === 'string' &&
     isPaymentPeriodType(data.payment?.paymentPeriod) &&
     typeof data.payment?.installmentPeriod === 'number' &&
