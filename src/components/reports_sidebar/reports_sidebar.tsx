@@ -13,7 +13,7 @@ const ReportsSidebar = () => {
       <div
         onMouseEnter={sidebarEnterHandler}
         onMouseLeave={sidebarLeaveHandler}
-        className={`fixed z-10 hidden h-screen flex-col items-center md:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
+        className={`fixed z-10 hidden h-screen flex-col items-center lg:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
       >
         {/* Info: Main icon (20240423 - Shirley) */}
         <div className="flex flex-col items-center pt-20px">
@@ -138,7 +138,7 @@ const ReportsSidebar = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
+      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
         <Link
           href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"

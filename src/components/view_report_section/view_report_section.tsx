@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ReportTypesKey } from '../../interfaces/report_type';
 import { ENTERNAL_API } from '../../constants/url';
+import { useGlobalCtx } from '../../contexts/global_context';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: string; name: string };
@@ -337,6 +338,10 @@ const ViewReportSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
+  const globalCtx = useGlobalCtx();
+  const [chartWidth, setChartWidth] = React.useState(580);
+  const [chartHeight, setChartHeight] = React.useState(250);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
     { src: string; alt: string; active: boolean }[]
@@ -352,6 +357,16 @@ const ViewReportSection = ({
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
     setPageNumber(index + 1);
+  };
+
+  const prevClickHandler = () => {
+    setActiveIndex((prev) => prev - 1);
+    setPageNumber((prev) => prev - 1);
+  };
+
+  const nextClickHandler = () => {
+    setActiveIndex((prev) => prev + 1);
+    setPageNumber((prev) => prev + 1);
   };
 
   const copyTokenContract = () => {
@@ -382,22 +397,6 @@ const ViewReportSection = ({
     }
   };
 
-  useEffect(() => {
-    switch (reportTypesName.id) {
-      case ReportTypesKey.balance_sheet:
-        setReportThumbnails(balanceReportThumbnails);
-        break;
-      case ReportTypesKey.comprehensive_income_statement:
-        setReportThumbnails(comprehensiveIncomeReportThumbnails);
-        break;
-      case ReportTypesKey.cash_flow_statement:
-        setReportThumbnails(cashFlowReportThumbnails);
-        break;
-      default:
-        setReportThumbnails([]);
-    }
-  }, [reportTypesName]);
-
   const fetchPDF = async () => {
     try {
       const uri = encodeURIComponent(reportLink);
@@ -419,6 +418,22 @@ const ViewReportSection = ({
   };
 
   useEffect(() => {
+    switch (reportTypesName.id) {
+      case ReportTypesKey.balance_sheet:
+        setReportThumbnails(balanceReportThumbnails);
+        break;
+      case ReportTypesKey.comprehensive_income_statement:
+        setReportThumbnails(comprehensiveIncomeReportThumbnails);
+        break;
+      case ReportTypesKey.cash_flow_statement:
+        setReportThumbnails(cashFlowReportThumbnails);
+        break;
+      default:
+        setReportThumbnails([]);
+    }
+  }, [reportTypesName]);
+
+  useEffect(() => {
     fetchPDF();
   }, [reportLink]);
 
@@ -428,6 +443,48 @@ const ViewReportSection = ({
       import.meta.url
     ).toString();
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = globalCtx.width;
+      const windowHeight = window.innerHeight;
+      const DESKTOP_WIDTH = 1024;
+      const TABLET_WIDTH = 768;
+      const MOBILE_WIDTH = 500;
+
+      if (windowWidth <= MOBILE_WIDTH) {
+        const presentWidth = 250;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= TABLET_WIDTH) {
+        const presentWidth = 370;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
+        const presentWidth = 580;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else {
+        const presentWidth = windowWidth / 12;
+        const presentHeight = windowHeight / 3.5;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      }
+    };
+
+    handleResize();
+  }, [globalCtx.width]);
+
+  console.log('chartWidth', chartWidth, 'chartHeight', chartHeight);
+
+  console.log('thumbnail', reportThumbnails);
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
@@ -457,7 +514,7 @@ const ViewReportSection = ({
             </svg>
           </div>
         </Button>
-        <div className="flex-1 justify-center self-stretch text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full">
+        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
           {reportTypesName.name}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
@@ -511,7 +568,7 @@ const ViewReportSection = ({
 
       {/* Info: token contract and token id info (20240426 - Shirley) */}
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
-        <div className="flex w-full justify-start space-x-20">
+        <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">Token Contract </div>
             <div className="flex items-center space-x-3">
@@ -566,15 +623,81 @@ const ViewReportSection = ({
             </div>
           </div>
         </div>
+
+        <div className="mt-0 flex flex-col lg:hidden">
+          <div className="flex flex-col pr-2">
+            <div className="flex gap-0">
+              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+                Token Contract
+              </div>
+              <div className="flex flex-col justify-center rounded-md p-2.5">
+                <div className="flex flex-col items-start justify-center">
+                  <button onClick={copyTokenContractClickHandler} type="button">
+                    {' '}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 16 16"
+                    >
+                      <path
+                        fill="#001840"
+                        fillRule="evenodd"
+                        d="M11.426 2.785c-.407-.033-.931-.034-1.69-.034H5.002a.75.75 0 010-1.5h4.765c.72 0 1.306 0 1.781.039.491.04.93.125 1.339.333.643.328 1.165.85 1.493 1.494.208.408.293.847.333 1.338.04.475.04 1.061.04 1.78v4.766a.75.75 0 01-1.5 0V6.268c0-.76-.001-1.284-.035-1.69-.032-.399-.092-.619-.175-.78a1.917 1.917 0 00-.837-.838c-.162-.083-.382-.143-.78-.175zm-7.319.8h5.457c.349 0 .655 0 .908.02.27.022.543.07.81.206.391.2.71.519.91.91.135.267.184.541.206.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908-.022.27-.07.543-.206.81-.2.391-.519.71-.91.91-.267.135-.54.184-.81.206-.253.021-.559.021-.908.021H4.107c-.349 0-.655 0-.908-.02a2.118 2.118 0 01-.81-.207c-.391-.2-.71-.518-.91-.91a2.119 2.119 0 01-.206-.81c-.02-.253-.02-.559-.02-.908V6.439c0-.349 0-.655.02-.908.022-.269.07-.543.206-.81.2-.391.519-.71.91-.91.267-.135.541-.184.81-.206.253-.02.56-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25-.015.185-.016.429-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.056.11.145.2.255.255.019.01.074.034.25.048.185.015.429.016.815.016h5.4c.385 0 .63 0 .814-.016.176-.014.231-.038.25-.048a.584.584 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386 0-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.019-.01-.074-.034-.25-.048a11.274 11.274 0 00-.814-.016h-5.4c-.386 0-.63 0-.815.016z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
+              <div className="justify-center rounded-md">
+                0x00000000219ab540356cBB839Cbe05303d7705Fa
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col">
+            <div className="flex gap-0">
+              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+                Token ID
+              </div>
+              <div className="flex flex-col justify-center rounded-md p-2.5">
+                <div className="flex flex-col items-start justify-center">
+                  <button onClick={copyTokenIdClickHandler} type="button">
+                    {' '}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 16 16"
+                    >
+                      <path
+                        fill="#001840"
+                        fillRule="evenodd"
+                        d="M11.426 2.785c-.407-.033-.931-.034-1.69-.034H5.002a.75.75 0 010-1.5h4.765c.72 0 1.306 0 1.781.039.491.04.93.125 1.339.333.643.328 1.165.85 1.493 1.494.208.408.293.847.333 1.338.04.475.04 1.061.04 1.78v4.766a.75.75 0 01-1.5 0V6.268c0-.76-.001-1.284-.035-1.69-.032-.399-.092-.619-.175-.78a1.917 1.917 0 00-.837-.838c-.162-.083-.382-.143-.78-.175zm-7.319.8h5.457c.349 0 .655 0 .908.02.27.022.543.07.81.206.391.2.71.519.91.91.135.267.184.541.206.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908-.022.27-.07.543-.206.81-.2.391-.519.71-.91.91-.267.135-.54.184-.81.206-.253.021-.559.021-.908.021H4.107c-.349 0-.655 0-.908-.02a2.118 2.118 0 01-.81-.207c-.391-.2-.71-.518-.91-.91a2.119 2.119 0 01-.206-.81c-.02-.253-.02-.559-.02-.908V6.439c0-.349 0-.655.02-.908.022-.269.07-.543.206-.81.2-.391.519-.71.91-.91.267-.135.541-.184.81-.206.253-.02.56-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25-.015.185-.016.429-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.056.11.145.2.255.255.019.01.074.034.25.048.185.015.429.016.815.016h5.4c.385 0 .63 0 .814-.016.176-.014.231-.038.25-.048a.584.584 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386 0-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.019-.01-.074-.034-.25-.048a11.274 11.274 0 00-.814-.016h-5.4c-.386 0-.63 0-.815.016z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
+              <div className="justify-center rounded-md">37002036</div>
+            </div>
+          </div>
+        </div>
+
         <div className=""></div>
       </div>
-
-      {/* TODO: show the page number to develop (20240502 - Shirley) */}
 
       {/* Info: financial report content (20240426 - Shirley) */}
       <div className="mt-12 flex w-full px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:h-850px">
+        <div className="hidden h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:flex lg:h-850px">
           <ul className="mt-5 flex w-full flex-col items-center justify-center space-y-5">
             {reportThumbnails.map((thumbnail, index) => (
               <button onClick={() => thumbnailClickHandler(index)} key={index}>
@@ -610,16 +733,103 @@ const ViewReportSection = ({
         </div>
 
         {pdfFile ? (
-          <div className="flex h-850px w-full flex-1 justify-center bg-white">
-            <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-              <Page
-                scale={1}
-                pageNumber={pageNumber}
-                // Deprecated: 20240519 - Shirley
-                // width={500}
-                // className={`translate-x-1/5`}
-              />
-            </Document>
+          <div className="flex flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
+            {/* <button
+              onClick={prevClickHandler}
+              disabled={pageNumber <= 1}
+              className="flex lg:hidden"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                className="bi bi-chevron-left"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
+                />
+              </svg>
+            </button> */}
+            <button
+              onClick={prevClickHandler}
+              disabled={pageNumber <= 1}
+              className="absolute bottom-40 left-0 z-10 m-4 md:bottom-56 lg:hidden"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="currentColor"
+                className="bi bi-chevron-left"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
+                />
+              </svg>
+            </button>
+
+            <div className="hidden md:flex">
+              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+                <Page scale={1} pageNumber={pageNumber} className={`max-lg:-translate-x-1/12`} />
+              </Document>
+            </div>
+            <div className="flex h-screen md:hidden">
+              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+                <Page
+                  scale={1}
+                  pageNumber={pageNumber}
+                  // Deprecated: 20240519 - Shirley
+                  width={chartWidth}
+                  height={chartHeight}
+                  className={`-translate-x-2/5`}
+                  // className={`absolute left-0 top-0 max-h-full max-w-full`}
+                />
+              </Document>
+            </div>
+
+            <button
+              onClick={nextClickHandler}
+              disabled={pageNumber >= numPages}
+              className="absolute bottom-40 right-0 z-10 m-4 md:bottom-56 lg:hidden"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="currentColor"
+                className="bi bi-chevron-right"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
+                />
+              </svg>
+            </button>
+            {/* <button
+              onClick={nextClickHandler}
+              disabled={pageNumber >= numPages}
+              className="flex lg:hidden"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                className="bi bi-chevron-right"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
+                />
+              </svg>
+            </button> */}
           </div>
         ) : (
           <div className="flex h-850px w-full flex-1 justify-center bg-white">
