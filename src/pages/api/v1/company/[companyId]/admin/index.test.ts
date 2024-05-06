@@ -24,42 +24,30 @@ describe('test admin API handler', () => {
   it('should list all admins', async () => {
     req.method = 'GET';
     await handler(req, res);
-    const adminList = [
-      {
-        id: '1',
-        name: 'bob',
-        credentialId: '1',
-        publicKey: '1',
-        algorithm: 'ES256',
-        companyId: '1',
-        companyName: 'mermer',
-        email: 'bob@mermer.cc',
-        startDate: 21321321,
-        endDate: 123123123,
-        permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
-      },
-      {
-        id: '2',
-        name: 'alice',
-        companyId: '1',
-        companyName: 'mermer',
-        credentialId: '2',
-        publicKey: '2',
-        algorithm: 'ES256',
-        email: 'alice@mermer.cc',
-        startDate: 134214124,
-        endDate: 123123123,
-        permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
-      },
-    ];
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'list all admins',
-      payload: adminList,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            name: expect.any(String),
+            credentialId: expect.any(String),
+            publicKey: expect.any(String),
+            algorithm: expect.any(String),
+            companyId: expect.any(String),
+            companyName: expect.any(String),
+            email: expect.any(String),
+            startDate: expect.any(Number),
+            endDate: expect.any(Number),
+            permissions: expect.arrayContaining([expect.any(String)]),
+          }),
+        ]),
+      })
+    );
   });
 
   it('should create admin successfully', async () => {

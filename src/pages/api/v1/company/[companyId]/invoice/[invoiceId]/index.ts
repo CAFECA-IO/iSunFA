@@ -1,48 +1,31 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IInvoice } from '@/interfaces/invoice';
-import { IResponseData } from '@/interfaces/response_data';
+// import { IInvoice } from '@/interfaces/invoice';
+// import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import version from '@/lib/version';
+import fs from 'fs';
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice>>
-) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { invoiceId } = req.query;
     if (!invoiceId) {
       throw new Error('INVALID_INPUT_PARAMETER');
     }
     // Find the invoice with the given id
-    const invoice = {
-      id: '1',
-      date: {
-        start_date: 21321321,
-        end_date: 123123123,
-      },
-      eventType: 'expense',
-      paymentReason: 'purchase',
-      description: 'description',
-      venderOrSupplyer: 'vender',
-      payment: {
-        price: 100,
-        hasTax: true,
-        taxPercentage: 10,
-        hasFee: true,
-        fee: 10,
-      },
-    };
-    if (!invoice) {
-      throw new Error('RESOURCE_NOT_FOUND');
+    // Find the invoice with the given id
+    const invoiceFileNameRegex = new RegExp(`.*${invoiceId}.*`);
+    const invoiceFilePath = fs
+      .readdirSync('tmp')
+      .find((fileName) => invoiceFileNameRegex.test(fileName));
+    if (!invoiceFilePath) {
+      throw new Error('Invoice file not found');
     }
-
-    res.status(200).json({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'get invoice by id successful',
-      payload: invoice,
-    });
+    const invoiceImage = fs.readFileSync(`tmp/${invoiceFilePath}`);
+    if (!invoiceImage) {
+      throw new Error('Resource not found');
+    }
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.status(200).send(invoiceImage);
   } catch (_error) {
     const error = _error as Error;
     const statusCode = errorMessageToErrorCode(error.message);
