@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
 import { IResponseData } from '@/interfaces/response_data';
 import version from '../../../../../../../lib/version';
-import { errorMessageToErrorCode } from '../../../../../../../lib/utils/errorCode';
+import { errorMessageToErrorCode } from '../../../../../../../lib/utils/error_code';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   const { id } = req.query;

@@ -3,7 +3,7 @@ import { AccountProgressStatus } from '@/interfaces/account';
 import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { responseStatusCode } from '@/lib/utils/status_code';
 
 export default async function handler(

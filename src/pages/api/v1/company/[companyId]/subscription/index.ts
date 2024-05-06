@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { ISubscription } from '@/interfaces/subscription';
 import { IResponseData } from '../../../../../../interfaces/response_data';
 

@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountInvoiceData } from '@/interfaces/account';
 import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { responseStatusCode } from '@/lib/utils/status_code';
 

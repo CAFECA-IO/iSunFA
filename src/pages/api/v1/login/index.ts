@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IUser } from '@/interfaces/user';
 import { IResponseData } from '../../../../interfaces/response_data';
 import version from '../../../../lib/version';

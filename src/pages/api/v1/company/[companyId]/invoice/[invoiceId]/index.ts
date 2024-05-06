@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IInvoice } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import version from '@/lib/version';
 
 export default function handler(

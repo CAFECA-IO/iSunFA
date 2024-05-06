@@ -5,7 +5,7 @@ import formidable from 'formidable';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { promises as fs } from 'fs';
 import { AICH_URI } from '@/constants/config';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { responseStatusCode } from '@/lib/utils/status_code';
 
