@@ -7,6 +7,7 @@ import { Button } from '../button/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ReportTypesKey } from '../../interfaces/report_type';
+import { ENTERNAL_API } from '../../constants/url';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: string; name: string };
@@ -399,15 +400,19 @@ const ViewReportSection = ({
 
   const fetchPDF = async () => {
     try {
+      const uri = encodeURIComponent(reportLink);
+
+      const apiUrl = `${ENTERNAL_API.CFV_PDF}/${uri}`;
+
       // TODO: use API service (20240502 - Shirley)
-      const response = await fetch(`http://localhost:3000/api/v1/app/report?url=${reportLink}`, {
+      const response = await fetch(apiUrl, {
         method: 'GET',
       });
 
-      console.log(response);
-
       const blob = await response.blob();
-      setPdfFile(URL.createObjectURL(blob));
+      const pdfUrl = URL.createObjectURL(blob);
+
+      setPdfFile(pdfUrl);
     } catch (error) {
       console.error(error);
     }
@@ -565,56 +570,11 @@ const ViewReportSection = ({
       </div>
 
       {/* TODO: show the page number to develop (20240502 - Shirley) */}
-      <div className="flex w-full justify-end px-40">
-        {pdfFile && (
-          <div className="flex items-center">
-            <button
-              onClick={() => thumbnailClickHandler(pageNumber - 2)}
-              disabled={pageNumber <= 1}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-left"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
-                />
-              </svg>
-            </button>
-            <p className="mx-2">
-              Page {pageNumber} of {numPages}
-            </p>
-            <button
-              onClick={() => thumbnailClickHandler(pageNumber)}
-              disabled={pageNumber >= numPages}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-right"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
       <div className="mt-12 flex w-full px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:h-700px">
+        <div className="h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:h-850px">
           <ul className="mt-5 flex w-full flex-col items-center justify-center space-y-5">
             {reportThumbnails.map((thumbnail, index) => (
               <button onClick={() => thumbnailClickHandler(index)} key={index}>
@@ -650,18 +610,19 @@ const ViewReportSection = ({
         </div>
 
         {pdfFile ? (
-          <div className="h-700px flex-1 bg-white">
+          <div className="flex h-850px w-full flex-1 justify-center bg-white">
             <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
               <Page
                 scale={1}
                 pageNumber={pageNumber}
-                width={500}
-                className={`flex w-full justify-center bg-blue-300`}
+                // Deprecated: 20240519 - Shirley
+                // width={500}
+                // className={`translate-x-1/5`}
               />
             </Document>
           </div>
         ) : (
-          <div className="flex h-700px w-full flex-1 items-center justify-center bg-white">
+          <div className="flex h-850px w-full flex-1 justify-center bg-white">
             <p className="text-stroke-brand-secondary">Loading...</p>
           </div>
         )}
