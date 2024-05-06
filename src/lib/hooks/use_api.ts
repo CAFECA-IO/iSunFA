@@ -52,10 +52,10 @@ const useAPI = <Data>(apiName: APIName, options: IAPIInput, cancel?: boolean): R
   const path = getAPIPath(apiConfig, options);
   console.log('useAPI path', path);
 
-  const handleError = (e: Error) => {
+  const handleError = useCallback((e: Error) => {
     setError(e);
     setMessage(e.message || 'An error occurred');
-  };
+  }, []);
 
   const fetchDataCallback = useCallback(async () => {
     setIsLoading(true);
@@ -68,7 +68,7 @@ const useAPI = <Data>(apiName: APIName, options: IAPIInput, cancel?: boolean): R
     } finally {
       setIsLoading(false);
     }
-  }, [apiConfig.method, options, path]);
+  }, [apiConfig.method, options, path, handleError]);
 
   console.log(
     'useAPI is called, apiConfig',
@@ -82,10 +82,16 @@ const useAPI = <Data>(apiName: APIName, options: IAPIInput, cancel?: boolean): R
   );
 
   useEffect(() => {
+    const controller = new AbortController();
+
     if (!cancel) {
       fetchDataCallback();
     }
-  }, [fetchDataCallback, cancel]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchDataCallback, cancel, path]);
 
   return {
     isLoading,

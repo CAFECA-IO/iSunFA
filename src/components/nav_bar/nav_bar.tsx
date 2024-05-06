@@ -16,6 +16,7 @@ import version from '../../lib/version';
 import APIResponse from '@/lib/utils/api_response';
 import { IUserAuth } from '@/interfaces/webauthn';
 import { APIName } from '@/constants/api_connection';
+import useAPI from '@/lib/hooks/use_api';
 
 const NavBar = () => {
   const { credential: credential, signedIn, username } = useUserCtx();
@@ -59,7 +60,7 @@ const NavBar = () => {
     setIsUserMenuOpen(false);
 
     console.log(`onClick logOutClickHandler`);
-    const response = APIResponse<IUserAuth>(
+    const response = useAPI<IUserAuth>(
       APIName.SIGN_OUT,
       {
         body: { credential },
