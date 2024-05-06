@@ -11,7 +11,7 @@ export default function handler(
   try {
     const { invoiceId } = req.query;
     if (!invoiceId) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
     // Find the invoice with the given id
     const invoice = {
@@ -33,7 +33,7 @@ export default function handler(
       },
     };
     if (!invoice) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
 
     res.status(200).json({

@@ -87,7 +87,7 @@ it('shoild pass', () => {
 //       powerby: `ISunFa api ${version}`,
 //       success: false,
 //       code: '405',
-//       message: 'Method Not Allowed in ocr process status api',
+//       message: 'METHOD_NOT_ALLOWED in ocr process status api',
 //     });
 //   });
 // });

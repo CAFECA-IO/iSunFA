@@ -4,7 +4,7 @@ import { isIInvoiceWithPaymentMethod } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucher } from '@/interfaces/voucher';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { responseStatusCode } from '@/lib/utils/status_code';
+import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -73,7 +73,7 @@ export default async function handler(
       const { invoices } = req.body;
       // Info Murky (20240416): Check if invoices is array and is Invoice type
       if (!Array.isArray(invoices) || !invoices.every(isIInvoiceWithPaymentMethod)) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
 
       const result = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
@@ -85,20 +85,20 @@ export default async function handler(
       });
 
       if (!result.ok) {
-        throw new Error('Gateway Timeout');
+        throw new Error('GATEWAY_TIMEOUT');
       }
 
       const resultStatus: AccountResultStatus = (await result.json()).payload;
 
-      res.status(responseStatusCode.success).json({
+      res.status(RESPONSE_STATUS_CODE.success).json({
         powerby: 'ISunFa api ' + version,
         success: true,
-        code: String(responseStatusCode.success),
+        code: String(RESPONSE_STATUS_CODE.success),
         message: 'create voucher',
         payload: resultStatus,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

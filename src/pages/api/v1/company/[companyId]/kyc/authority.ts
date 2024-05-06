@@ -8,7 +8,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
     // Info: (20240419 - Jacky) K011001 - POST /kyc/authority
     if (req.method === 'POST') {
       if (!req.headers.userId) {
-        throw new Error('Resource not found');
+        throw new Error('RESOURCE_NOT_FOUND');
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { formData } = req.body;
@@ -22,7 +22,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         payload: { status },
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

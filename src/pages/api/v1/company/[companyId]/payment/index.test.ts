@@ -80,7 +80,7 @@ describe('Payment API Handler Tests', () => {
     });
   });
 
-  it('should handle invalid input parameters for POST requests', async () => {
+  it('should handle INVALID_INPUT_PARAMETERs for POST requests', async () => {
     req.method = 'POST';
     req.headers.userId = '1';
     req.body = {
@@ -98,7 +98,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '422',
       payload: {},
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
     });
   });
 
@@ -112,7 +112,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '405',
       payload: {},
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
     });
   });
 
@@ -125,7 +125,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '404',
       payload: {},
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
     });
   });
 });

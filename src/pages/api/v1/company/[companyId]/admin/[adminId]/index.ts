@@ -8,13 +8,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
   const { id } = req.query;
   try {
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     if (!req.query.id) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
     if (req.query.id !== '1') {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     // Info: (20240419 - Jacky) A010002 - GET /admin/:id
     if (req.method === 'GET') {
@@ -40,13 +40,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
           payload: admin,
         });
       } else {
-        throw new Error('Resource not found');
+        throw new Error('RESOURCE_NOT_FOUND');
       }
       // Info: (20240419 - Jacky) A010004 - PUT /admin/:id
     } else if (req.method === 'PUT') {
       const { name, email, startDate, permissions } = req.body;
       if (!name || !email || !startDate || !permissions) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const admin: IAdmin = {
         id: id as string,
@@ -78,7 +78,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         payload: {},
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

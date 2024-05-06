@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
     } else if (req.method === 'POST') {
       const { name, email } = req.body;
       if (!name || !email) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const admin: IAdmin = {
         id: '3',
@@ -69,7 +69,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         payload: admin,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

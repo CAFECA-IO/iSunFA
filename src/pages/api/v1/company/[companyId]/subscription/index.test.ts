@@ -87,7 +87,7 @@ describe('test subscription API', () => {
       success: false,
       code: '405',
       payload: {},
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
     });
   });
 });

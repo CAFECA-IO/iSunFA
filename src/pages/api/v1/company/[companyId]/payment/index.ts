@@ -11,7 +11,7 @@ export default async function handler(
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     if (req.method === 'GET') {
       const paymentList: IPayment[] = [
@@ -45,7 +45,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const newPayment: IPayment = {
         id: '3',
@@ -64,7 +64,7 @@ export default async function handler(
         payload: newPayment,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

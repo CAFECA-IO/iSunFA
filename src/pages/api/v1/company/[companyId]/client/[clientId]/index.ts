@@ -12,13 +12,13 @@ export default async function handler(
 
   try {
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     if (!req.query.id) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
     if (req.query.id !== '1') {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     // Info: (20240419 - Jacky) C010002 - GET /client/:id
     if (method === 'GET') {
@@ -72,7 +72,7 @@ export default async function handler(
         payload: client,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

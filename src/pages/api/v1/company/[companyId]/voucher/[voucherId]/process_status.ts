@@ -4,7 +4,7 @@ import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { responseStatusCode } from '@/lib/utils/status_code';
+import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +15,7 @@ export default async function handler(
 
     // Info Murky (20240416): Check if resultId is string
     if (typeof voucherId !== 'string' || !voucherId || Array.isArray(voucherId)) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
 
     switch (req.method) {
@@ -23,22 +23,22 @@ export default async function handler(
         const result = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/process_status`);
 
         if (!result.ok) {
-          throw new Error('Gateway Timeout');
+          throw new Error('GATEWAY_TIMEOUT');
         }
 
         const resultJson: AccountProgressStatus = (await result.json()).payload;
 
-        res.status(responseStatusCode.success).json({
+        res.status(RESPONSE_STATUS_CODE.success).json({
           powerby: `ISunFa api ${version}`,
           success: false,
-          code: String(responseStatusCode.success),
+          code: String(RESPONSE_STATUS_CODE.success),
           message: `Voucher preview creating process of id:${voucherId} return successfully`,
           payload: resultJson,
         });
         break;
       }
       default: {
-        throw new Error('Method Not Allowed');
+        throw new Error('METHOD_NOT_ALLOWED');
       }
     }
   } catch (_error) {

@@ -130,7 +130,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { voucher } = req.body;
       if (!voucher) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       // post voucher
       const journal: IJournal = {
@@ -195,7 +195,7 @@ export default async function handler(
         payload: journal,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

@@ -102,11 +102,11 @@ describe('Client API Handler Tests', () => {
       success: false,
       code: '404',
       payload: {},
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
     });
   });
 
-  it('should handle requests with invalid input parameter', async () => {
+  it('should handle requests with INVALID_INPUT_PARAMETER', async () => {
     req.method = 'GET';
     req.headers.userId = '1';
     req.query.id = '';
@@ -117,7 +117,7 @@ describe('Client API Handler Tests', () => {
       success: false,
       code: '422',
       payload: {},
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
     });
   });
 
@@ -132,7 +132,7 @@ describe('Client API Handler Tests', () => {
       success: false,
       code: '405',
       payload: {},
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
     });
   });
 });

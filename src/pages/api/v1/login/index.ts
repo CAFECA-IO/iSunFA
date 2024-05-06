@@ -8,7 +8,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
   try {
     // Info: (20240419 - Jacky) L010001 - POST /login
     if (req.method !== 'POST') {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
 
     const { credentialId } = req.body;

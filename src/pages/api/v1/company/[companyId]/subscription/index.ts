@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   try {
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {
@@ -38,7 +38,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { plan, paymentId, autoRenew } = req.body;
       if (!plan || !paymentId || !autoRenew) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const newSubscription: ISubscription = {
         id: '3',
@@ -59,7 +59,7 @@ export default async function handler(
         payload: newSubscription,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

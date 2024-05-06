@@ -86,7 +86,7 @@ export default function handler(
         payload: newInvoice,
       });
     } else {
-      throw new Error('Method not allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

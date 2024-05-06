@@ -99,7 +99,7 @@ it('shoild pass', () => {
 //       powerby: `ISunFa api ${version}`,
 //       success: false,
 //       code: '405',
-//       message: 'Method Not Allowed in ocr get result api',
+//       message: 'METHOD_NOT_ALLOWED in ocr get result api',
 //     });
 //   });
 // });

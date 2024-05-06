@@ -61,7 +61,7 @@ it('shoild pass', () => {
 //       powerby: `ISunFa api ${version}`,
 //       success: false,
 //       code: '405',
-//       message: 'Method Not Allowed in upload images api',
+//       message: 'METHOD_NOT_ALLOWED in upload images api',
 //     });
 //   });
 // });

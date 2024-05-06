@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     if (req.method === 'GET') {
       // Handle GET request to retrieve all companies
@@ -14,7 +14,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       // Handle POST request to create a new company
       // Your code here...
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

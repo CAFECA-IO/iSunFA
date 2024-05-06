@@ -53,7 +53,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
       });
     } else {
       // Handle unsupported HTTP methods
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     // Handle errors

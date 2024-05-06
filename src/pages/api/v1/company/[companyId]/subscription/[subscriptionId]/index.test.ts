@@ -104,7 +104,7 @@ describe('test subscription API by id', () => {
     });
   });
 
-  it('should handle invalid input parameter', async () => {
+  it('should handle INVALID_INPUT_PARAMETER', async () => {
     req.method = 'GET';
     req.headers.userId = 'user-id';
     req.query.id = '';
@@ -114,12 +114,12 @@ describe('test subscription API by id', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '422',
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
       payload: {},
     });
   });
 
-  it('should handle resource not found', async () => {
+  it('should handle RESOURCE_NOT_FOUND', async () => {
     req.method = 'GET';
     req.headers.userId = 'user-id';
     req.query.id = '2';
@@ -129,7 +129,7 @@ describe('test subscription API by id', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '404',
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
       payload: {},
     });
   });
@@ -144,7 +144,7 @@ describe('test subscription API by id', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '405',
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
       payload: {},
     });
   });

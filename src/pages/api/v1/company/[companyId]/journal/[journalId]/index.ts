@@ -11,7 +11,7 @@ export default async function handler(
   try {
     if (req.method === 'GET') {
       if (!req.query.voucherId) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const journal: IJournal = {
         eventType: 'expense',
@@ -75,7 +75,7 @@ export default async function handler(
         payload: journal,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;
