@@ -85,7 +85,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       if (!photo) return;
       formData.append('file', photo.toDataURL('image/jpeg'));
 
-      const response = await fetch(`/api/v1/company/1/ocr/upload`, {
+      // ToDo: (20240506 - Julian) API 文件調整中
+      const response = await fetch(`/api/v1/company/1/invoice`, {
         method: 'POST',
         body: formData,
       });
