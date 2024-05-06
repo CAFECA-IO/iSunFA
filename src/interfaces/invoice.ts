@@ -7,7 +7,7 @@ import {
 } from './account';
 
 export interface IInvoice {
-  nvoiceId: string;
+  invoiceId: string;
   date: number; // timestamp
   eventType: string; // 'income' | 'payment' | 'transfer';
   paymentReason: string;
