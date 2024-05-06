@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { IAPIConfig, IAPIInput } from '@/interfaces/api_connection';
 import { ALLOWED_ORIGINS } from '../../constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '../../constants/display';
 
@@ -204,4 +205,33 @@ export function cleanBoolean(booleanStr: unknown): boolean {
   }
 
   return false;
+}
+
+export function checkInput(apiConfig: IAPIConfig, input: IAPIInput) {
+  // TODO: check if params match the input schema (20240504 - Luphia)
+  if (!input) {
+    throw new Error('Input is required');
+  }
+
+  return true;
+}
+
+export function getAPIPath(apiConfig: IAPIConfig, input: IAPIInput) {
+  // replace :param with input.params[param]
+  const originalPath = apiConfig.path;
+  const path = originalPath.replace(/:([^/]+)/g, (match: string, key: string): string => {
+    const value = input.params?.[key] as string;
+
+    return value;
+  });
+  const queryString = input.query
+    ? Object.keys(input.query)
+        .map(
+          (key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(input.query?.[key]))}`
+        )
+        .join('&')
+    : '';
+  const result = queryString ? `${path}?${queryString}` : path;
+
+  return result;
 }

@@ -12,6 +12,7 @@ import { IWaringModal, dummyWarningModalData } from '../interfaces/warning_modal
 import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
 import AddPropertyModal from '../components/add_property_modal/add_property_modal';
+import CameraScanner from '@/components/camera_scanner/camera_scanner';
 
 interface IGlobalContext {
   width: number;
@@ -40,6 +41,9 @@ interface IGlobalContext {
 
   isAddPropertyModalVisible: boolean;
   addPropertyModalVisibilityHandler: () => void;
+
+  isCameraScannerVisible: boolean;
+  cameraScannerVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -65,6 +69,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddPropertyModalVisible, setIsAddPropertyModalVisible] = useState(false);
+
+  const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -108,6 +114,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAddPropertyModalVisible(!isAddPropertyModalVisible);
   };
 
+  const cameraScannerVisibilityHandler = () => {
+    setIsCameraScannerVisible(!isCameraScannerVisible);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -130,6 +140,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     confirmModalDataHandler,
     isAddPropertyModalVisible,
     addPropertyModalVisibilityHandler,
+    isCameraScannerVisible,
+    cameraScannerVisibilityHandler,
   };
 
   return (
@@ -164,6 +176,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddPropertyModal
         isModalVisible={isAddPropertyModalVisible}
         modalVisibilityHandler={addPropertyModalVisibilityHandler}
+      />
+
+      <CameraScanner
+        isModalVisible={isCameraScannerVisible}
+        modalVisibilityHandler={cameraScannerVisibilityHandler}
       />
 
       {children}
