@@ -8,9 +8,8 @@ import useAPI from '../hooks/use_api';
 function APIResponse<Data>(apiName: APIName, options: IAPIInput, cancel?: boolean): Response<Data> {
   const apiConfig = APIConfig[apiName];
 
-  return apiConfig?.useWorker
-    ? useAPIWorker<Data>(apiName, options, cancel)
-    : useAPI<Data>(apiName, options, cancel);
+  if (apiConfig) return useAPIWorker<Data>(apiName, options, cancel);
+  else return useAPI<Data>(apiName, options, cancel);
 }
 
 export default APIResponse;
