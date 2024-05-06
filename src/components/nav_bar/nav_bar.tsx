@@ -190,9 +190,9 @@ const NavBar = () => {
         <p>Contract</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
-      <Link href={ISUNFA_ROUTE.SALARY}>
+      <Link href={ISUNFA_ROUTE.SALARY} className="mx-auto">
         <button className="flex flex-col items-center gap-8px">
-          <Image src={'/icons/briefcase.svg'} width={90} height={90} alt="briefcase_icon" />
+          <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
           <p>Salary</p>
         </button>
       </Link>
