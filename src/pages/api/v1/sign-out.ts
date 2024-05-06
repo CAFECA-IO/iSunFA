@@ -7,5 +7,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Info: Clear the FIDO2 cookie (20240408 - Shirley)
   res.setHeader('Set-Cookie', target);
 
-  res.status(200).json({ message: 'Successfully signed out' });
+  res.status(200).json({ success: true, message: 'Successfully signed out' });
 }
