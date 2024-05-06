@@ -39,13 +39,25 @@ async function fetchData<Data>(
   return response.json();
 }
 
-const useAPI = <Data>(apiName: APIName, options: IAPIInput, cancel?: boolean): Response<Data> => {
+const useAPI = <Data>(
+  apiName: APIName | null,
+  options: IAPIInput,
+  cancel?: boolean
+): Response<Data> => {
   const [data, setData] = useState<Data | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [message, setMessage] = useState<string | undefined>(undefined);
 
-  const apiConfig = APIConfig[apiName];
+  if (!apiName) {
+    return {
+      isLoading: false,
+      data: undefined,
+      message: undefined,
+      error: null,
+    };
+  }
+  const apiConfig = APIConfig[apiName] ?? {};
   console.log('useAPI is called, apiConfig', apiConfig, `options`, options, `cancel`, cancel);
   checkInput(apiConfig, options);
 

@@ -21,6 +21,17 @@ import useAPI from '@/lib/hooks/use_api';
 const NavBar = () => {
   const { credential: credential, signedIn, username } = useUserCtx();
 
+  const [shouldFetch, setShouldFetch] = React.useState<boolean>(false);
+  const response = useAPI<IUserAuth>(
+    shouldFetch ? APIName.SIGN_OUT : null,
+
+    // `${shouldFetch} ? ${APIName.SIGN_OUT} : null`,
+    {
+      body: { credential },
+    },
+    false
+  );
+
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
 
@@ -60,13 +71,7 @@ const NavBar = () => {
     setIsUserMenuOpen(false);
 
     console.log(`onClick logOutClickHandler`);
-    const response = useAPI<IUserAuth>(
-      APIName.SIGN_OUT,
-      {
-        body: { credential },
-      },
-      false
-    );
+
     console.log(`response: `, response);
   };
 
