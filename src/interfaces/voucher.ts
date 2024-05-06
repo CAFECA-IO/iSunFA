@@ -59,10 +59,12 @@ export function isIVoucher(arg: IVoucher): arg is IVoucher {
   if (arg.voucherIndex === undefined || arg.invoiceIndex === undefined) {
     return false;
   }
-  if (!arg.metadatas.every(isIVoucherMetaData)) {
+  const isIVoucherMetaDataReturn = arg.metadatas.every(isIVoucherMetaData);
+  if (isIVoucherMetaDataReturn) {
     return false;
   }
-  if (!arg.lineItems.every(isILineItem)) {
+  const isILineItemReturn = arg.lineItems.every(isILineItem);
+  if (!isILineItemReturn) {
     return false;
   }
   return true;
