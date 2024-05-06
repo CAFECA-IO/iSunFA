@@ -4,35 +4,25 @@ import { FiRotateCw, FiCrop } from 'react-icons/fi';
 import { PiCameraLight } from 'react-icons/pi';
 import { GrLinkNext } from 'react-icons/gr';
 import { TbArrowBackUp } from 'react-icons/tb';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { Button } from '../button/button';
 
+// Info: (20240506 - Julian) const
 const width = 320;
 const height = 356;
-
 interface ICameraScannerProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
 }
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
-  // const [visibleScanner, setVisibleScanner] = useState(false);
+  const { setOcrResultIdHandler } = useAccountingCtx();
+
+  // Info: (20240506 - Julian) 檢查是否已經拍照
   const [isTakePhoto, setIsTakePhoto] = useState(false);
 
   const cameraRef = useRef<HTMLVideoElement>(null);
   const photoRef = useRef<HTMLCanvasElement>(null);
-
-  // Info: (20240506 - Julian) 關閉面板並停止攝影機
-  const handleCloseCamera = () => {
-    const video = cameraRef.current;
-    if (video && video.srcObject && video.srcObject instanceof MediaStream) {
-      video.srcObject.getTracks().forEach((track) => {
-        track.stop();
-      });
-
-      video.srcObject = null;
-    }
-    modalVisibilityHandler();
-  };
 
   // Info: (20240506 - Julian) 將拍照的畫面顯示在 canvas 上
   const handleTakePhoto = () => {
@@ -48,6 +38,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   const goBackHandler = () => setIsTakePhoto(false);
 
+  // Info: (20240506 - Julian) 取得攝影機畫面
   const getCameraVideo = () => {
     navigator.mediaDevices
       .getUserMedia({
@@ -72,6 +63,47 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       });
   };
 
+  // Info: (20240506 - Julian) 關閉面板並停止攝影機
+  const handleCloseCamera = () => {
+    const video = cameraRef.current;
+    if (video && video.srcObject && video.srcObject instanceof MediaStream) {
+      video.srcObject.getTracks().forEach((track) => {
+        track.stop();
+      });
+      video.srcObject = null;
+    }
+    modalVisibilityHandler();
+  };
+
+  // Info: (20240506 - Julian) 上傳照片
+  const uploadImage = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      // Info: (20240506 - Julian) 將拍照後的畫面上傳至 OCR API
+      const formData = new FormData();
+      const photo = photoRef.current;
+      if (!photo) return;
+      formData.append('file', photo.toDataURL('image/jpeg'));
+
+      const response = await fetch(`/api/v1/company/1/ocr/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
+        const { resultId } = data.payload[0];
+        setOcrResultIdHandler(resultId);
+      }
+
+      // Info: (20240506 - Julian) 關閉面板
+      handleCloseCamera();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error: ', error);
+    }
+  };
+
   useEffect(() => {
     setIsTakePhoto(false);
     getCameraVideo();
@@ -90,7 +122,6 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         width={width}
         height={height}
         className={isTakePhoto ? 'block' : 'hidden'}
-        style={{ transform: 'rotateY(180deg)' }}
       ></canvas>
 
       {/* Info: (20240506 - Julian) 顯示攝影機畫面 */}
@@ -152,7 +183,12 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       >
         <TbArrowBackUp size={20} />
       </button>
-      <Button className="flex items-center gap-x-4px px-16px py-8px">
+      {/* Info: (20240506 - Julian) upload button */}
+      <Button
+        id="upload-image-button"
+        type="submit"
+        className="flex items-center gap-x-4px px-16px py-8px"
+      >
         Upload
         <svg
           width="16"
@@ -179,7 +215,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       </Button>
     </div>
   ) : (
-    // ToDo: (20240506 - Julian)
+    // ToDo: (20240506 - Julian) function not implemented
     <div className="invisible flex h-42px w-full items-center justify-between px-20px">
       {/* Info: (20240506 - Julian) album */}
       <button
@@ -217,7 +253,10 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   const isDisplayScanner = isModalVisible ? (
     <div className="fixed inset-0 left-0 top-0 z-70 flex h-full w-full items-center justify-center bg-black/50">
-      <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-white py-16px text-navyBlue2">
+      <form
+        onSubmit={uploadImage}
+        className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-white py-16px text-navyBlue2"
+      >
         {/* Info: (20240506 - Julian) title */}
         <div className="flex flex-col items-center">
           <h1 className="text-xl font-bold">{titleStr}</h1>
@@ -238,7 +277,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           {displayMainBtn}
           {displayFunctionBtn}
         </div>
-      </div>
+      </form>
     </div>
   ) : null;
 
