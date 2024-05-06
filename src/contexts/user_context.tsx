@@ -9,8 +9,8 @@ import { DEFAULT_DISPLAYED_USER_NAME } from '../constants/display';
 import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
-import useAPIResponse from '@/lib/utils/api_response';
 import { APIName } from '@/constants/api_connection';
+import useAPI from '@/lib/hooks/use_api';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -21,7 +21,7 @@ interface UserContextType {
   credential: ICredential | null;
   signUp: ({ username }: SignUpProps) => Promise<void>;
   signIn: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => void;
   userAuth: IUserAuth | null;
   username: string | null;
   signedIn: boolean;
@@ -31,7 +31,7 @@ export const UserContext = createContext<UserContextType>({
   credential: {} as ICredential,
   signUp: async () => {},
   signIn: async () => {},
-  signOut: async () => {},
+  signOut: () => {},
   userAuth: {} as IUserAuth,
   username: '',
   signedIn: false,
@@ -44,6 +44,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
+  const {
+    trigger: signOut,
+    error: signOutError,
+    success: signOutSuccess,
+  } = useAPI<void>(
+    APIName.SIGN_OUT,
+    {
+      body: { credential },
+    },
+    false,
+    false
+  );
+  console.log('signOutSuccess:', signOutSuccess);
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_DISPLAYED_USER_NAME;
@@ -194,24 +207,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signOut = async () => {
-    try {
-      await fetch(ISUNFA_API.SIGN_OUT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ credential }),
-      });
-
-      clearState();
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signOut error:', error);
-    }
-  };
-
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
     const credentialFromCookie = checkFIDO2Cookie();
@@ -293,6 +288,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     checkCookieAndSignOut();
   }, [router.pathname]);
+
+  useEffect(() => {
+    if (signOutSuccess) {
+      clearState();
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('signOutError:', signOutError);
+    }
+  }, [signOutSuccess]);
 
   const value = useMemo(
     () => ({

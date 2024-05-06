@@ -13,13 +13,9 @@ import useOuterClick from '../../lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 import version from '../../lib/version';
-import APIResponse from '@/lib/utils/api_response';
-import { IUserAuth } from '@/interfaces/webauthn';
-import { APIName } from '@/constants/api_connection';
-import useAPI from '@/lib/hooks/use_api';
 
 const NavBar = () => {
-  const { credential: credential, signedIn, username } = useUserCtx();
+  const { credential: credential, signedIn, signOut, username } = useUserCtx();
 
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
@@ -58,16 +54,7 @@ const NavBar = () => {
 
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
-
-    console.log(`onClick logOutClickHandler`);
-    const response = useAPI<IUserAuth>(
-      APIName.SIGN_OUT,
-      {
-        body: { credential },
-      },
-      false
-    );
-    console.log(`response: `, response);
+    signOut();
   };
 
   const displayedAppMenuMobile = (

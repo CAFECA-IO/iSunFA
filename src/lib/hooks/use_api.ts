@@ -5,6 +5,7 @@ import { IAPIInput, IHttpMethod } from '@/interfaces/api_connection';
 import { Response } from '@/interfaces/response';
 
 import { APIConfig, APIName, HttpMethod } from '@/constants/api_connection';
+import { IResponseData } from '@/interfaces/response_data';
 import { checkInput, getAPIPath } from '../utils/common';
 
 const DEFAULT_HEADERS = {
@@ -16,7 +17,8 @@ async function fetchData<Data>(
   method: IHttpMethod,
   options: IAPIInput,
   signal?: AbortSignal
-): Promise<Data> {
+): Promise<IResponseData<Data>> {
+  console.log(`useAPI fetchData is called, path`, path, `options`, options, `signal`, signal);
   const fetchOptions: RequestInit = {
     method,
     signal,
@@ -30,73 +32,75 @@ async function fetchData<Data>(
     };
   }
 
+  console.log(`fetchData fetchOptions`, fetchOptions);
   const response = await fetch(path, fetchOptions);
+  console.log(`fetchData response`, response);
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-
-  return response.json();
+  const result = (await response.json()) as IResponseData<Data>;
+  console.log(`fetchData result`, result);
+  return result;
 }
 
-const useAPI = <Data>(apiName: APIName, options: IAPIInput, cancel?: boolean): Response<Data> => {
+const useAPI = <Data>(
+  apiName: APIName,
+  options: IAPIInput,
+  cancel?: boolean,
+  triggerImmediately: boolean = true
+): Response<Data> => {
+  const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
-  const [message, setMessage] = useState<string | undefined>(undefined);
 
   const apiConfig = APIConfig[apiName];
-  console.log('useAPI is called, apiConfig', apiConfig, `options`, options, `cancel`, cancel);
   checkInput(apiConfig, options);
 
   const path = getAPIPath(apiConfig, options);
-  console.log('useAPI path', path);
 
   const handleError = useCallback((e: Error) => {
     setError(e);
-    setMessage(e.message || 'An error occurred');
   }, []);
 
-  const fetchDataCallback = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetchData<Data>(path, apiConfig.method, options);
-      setData(response);
-      setMessage('Request was successful');
-    } catch (e) {
-      handleError(e as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiConfig.method, options, path, handleError]);
-
-  console.log(
-    'useAPI is called, apiConfig',
-    apiConfig,
-    `path`,
-    path,
-    `options`,
-    options,
-    `cancel`,
-    cancel
+  const fetchDataCallback = useCallback(
+    async (signal?: AbortSignal) => {
+      setIsLoading(true);
+      try {
+        const response = await fetchData<Data>(path, apiConfig.method, options, signal);
+        if (!response.success) {
+          throw new Error(response.message ?? 'Unknown error');
+        }
+        setData(response.payload as Data);
+        setSuccess(true);
+      } catch (e) {
+        handleError(e as Error);
+        setSuccess(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [apiConfig.method, options, path, handleError]
   );
 
   useEffect(() => {
     const controller = new AbortController();
 
-    if (!cancel) {
-      fetchDataCallback();
+    if (triggerImmediately) {
+      fetchDataCallback(cancel ? controller.signal : undefined);
     }
 
     return () => {
       controller.abort();
     };
-  }, [fetchDataCallback, cancel, path]);
+  }, [path, cancel, triggerImmediately]);
 
   return {
+    trigger: fetchDataCallback,
+    success,
     isLoading,
     data,
-    message,
     error,
   };
 };

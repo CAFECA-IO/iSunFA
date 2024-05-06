@@ -2,6 +2,7 @@ export type IAPIName =
   | 'SIGN_UP'
   | 'SIGN_IN'
   | 'SIGN_OUT'
+  | 'LIST_AUDIT_REPORTS'
   | 'LIST_ALL_PROJECTS'
   | 'GET_PROJECTS_STATUS'
   | 'GET_PROJECTS_VALUE'
