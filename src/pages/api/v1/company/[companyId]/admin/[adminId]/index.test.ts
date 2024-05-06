@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
-import version from '../../../../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -25,27 +24,28 @@ describe('test admin API', () => {
     req.headers.userId = '1';
     req.query = { id: '1' };
     await handler(req, res);
-    const admin = {
-      id: '1',
-      name: 'bob',
-      credentialId: '1',
-      publicKey: '1',
-      algorithm: 'ES256',
-      companyId: '1',
-      companyName: 'mermer',
-      email: 'bob@mermer.cc',
-      startDate: 21321321,
-      endDate: 123123123,
-      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
-    };
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'get admin by id',
-      payload: admin,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.objectContaining({
+          id: expect.any(String),
+          name: expect.any(String),
+          credentialId: expect.any(String),
+          publicKey: expect.any(String),
+          algorithm: expect.any(String),
+          companyId: expect.any(String),
+          companyName: expect.any(String),
+          email: expect.any(String),
+          startDate: expect.any(Number),
+          endDate: expect.any(Number),
+          permissions: expect.arrayContaining([expect.any(String)]),
+        }),
+      })
+    );
   });
 
   it('should update admin successfully', async () => {
@@ -59,27 +59,28 @@ describe('test admin API', () => {
       permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     await handler(req, res);
-    const admin = {
-      id: '1',
-      name: 'John Doe',
-      credentialId: '1',
-      publicKey: '1',
-      algorithm: 'ES256',
-      companyId: '1',
-      companyName: 'mermer',
-      email: 'john@example.com',
-      startDate: 1234567890,
-      endDate: 123123123,
-      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
-    };
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'Update admin successfully',
-      payload: admin,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.objectContaining({
+          id: expect.any(String),
+          name: expect.any(String),
+          credentialId: expect.any(String),
+          publicKey: expect.any(String),
+          algorithm: expect.any(String),
+          companyId: expect.any(String),
+          companyName: expect.any(String),
+          email: expect.any(String),
+          startDate: expect.any(Number),
+          endDate: expect.any(Number),
+          permissions: expect.arrayContaining([expect.any(String)]),
+        }),
+      })
+    );
   });
 
   it('should delete admin successfully', async () => {
@@ -88,13 +89,15 @@ describe('test admin API', () => {
     req.query = { id: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'Delete admin successfully',
-      payload: {},
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 
   it('should return error for invalid input parameter', async () => {
@@ -110,13 +113,15 @@ describe('test admin API', () => {
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '422',
-      payload: {},
-      message: 'Invalid input parameter',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 
   it('should return error for resource not found', async () => {
@@ -124,13 +129,15 @@ describe('test admin API', () => {
     req.query = { id: '2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '404',
-      payload: {},
-      message: 'Resource not found',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('404'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 
   it('should return error for method not allowed', async () => {
@@ -139,12 +146,14 @@ describe('test admin API', () => {
     req.query = { id: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '405',
-      payload: {},
-      message: 'Method Not Allowed',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('405'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 });

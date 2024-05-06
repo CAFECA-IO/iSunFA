@@ -39,10 +39,11 @@ export default async function handler(
       });
       // Info: (20240419 - Jacky) C010003 - POST /client
     } else if (req.method === 'POST') {
-      const { name, code } = req.body;
-      const newClient = {
+      const { companyId, code } = req.body;
+      const newClient: IClient = {
         id: '3',
-        name,
+        companyId,
+        companyName: 'Company C',
         code,
         favorite: false,
       };
