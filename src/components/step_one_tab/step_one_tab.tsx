@@ -1,8 +1,10 @@
 import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
-import CameraScanner from '../camera_scanner/camera_scanner';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 const StepOneTab = () => {
+  const { cameraScannerVisibilityHandler } = useGlobalCtx();
+
   return (
     <div className="flex flex-col gap-8px">
       {/* Info: (20240422 - Julian) label */}
@@ -51,7 +53,22 @@ const StepOneTab = () => {
         <h3 className="text-xl font-bold text-lightGray4">OR</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
-        <CameraScanner />
+        <button
+          type="button"
+          onClick={cameraScannerVisibilityHandler}
+          className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px"
+        >
+          <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
+          <div className="mt-20px flex items-center gap-10px">
+            <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
+            <p className="font-semibold text-navyBlue2">
+              Use Your Phone as <span className="text-primaryYellow">Scanner</span>
+            </p>
+          </div>
+          <p className="text-center text-lightGray4">
+            Please scan the QRcode to start scanning with your phone
+          </p>
+        </button>
       </div>
     </div>
   );
