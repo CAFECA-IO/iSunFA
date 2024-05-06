@@ -138,7 +138,7 @@ const ReportsSidebar = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
+      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
         <Link
           href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"

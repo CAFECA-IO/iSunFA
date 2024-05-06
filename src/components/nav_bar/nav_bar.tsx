@@ -207,7 +207,7 @@ const NavBar = () => {
   );
 
   const displayedUserMenu = isUserMenuOpen ? (
-    <div className="absolute right-16 top-80px z-50">
+    <div className="absolute right-16 top-70px z-50">
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
         <Image
           alt="avatar"
@@ -326,7 +326,7 @@ const NavBar = () => {
       <button onClick={avatarClickHandler}>
         {/* Info: avatar svg (20240408 - Shirley) */}
 
-        <Image alt="avatar" src="/elements/avatar.png" width={56} height={56} />
+        <Image alt="avatar" src="/elements/avatar.png" width={40} height={40} className="my-auto" />
       </button>
       {displayedUserMenu}
     </div>
