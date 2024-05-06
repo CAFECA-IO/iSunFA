@@ -756,7 +756,7 @@ const ViewReportSection = ({
             <button
               onClick={prevClickHandler}
               disabled={pageNumber <= 1}
-              className="absolute left-0 z-10 m-4 lg:hidden"
+              className="absolute bottom-0 left-0 z-10 m-4 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -795,7 +795,7 @@ const ViewReportSection = ({
             <button
               onClick={nextClickHandler}
               disabled={pageNumber >= numPages}
-              className="absolute right-0 z-10 m-4 lg:hidden"
+              className="absolute bottom-0 right-0 z-10 m-4 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
