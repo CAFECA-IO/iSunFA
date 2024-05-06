@@ -1,63 +1,59 @@
 // schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgres"
-  url = "postgresql://jacky.fang@localhost:5432/mydb" // uses connection pooling
+    provider = "postgres"
+    url = env("DATABASE_URL")
+}
+
+model account {
+    id          Int   @id @default(autoincrement())
+    type        String
+    liquidity   String
+    account     String
+    code        String
+    name        String
 }
 
 model admin {
-    id         Int      @id @default(autoincrement())
-    companyId         Int      @map("company_id") 
-    email      String
-    startDate  DateTime
-    auditing   String
-    accounting String
-    internalControl String
+    id               Int      @id @default(autoincrement())
+    companyId        Int      @map("company_id")
+    email            String
+    startDate        DateTime
+    auditing         String
+    accounting       String
+    internalControl  String
 
-    users       user[]
-    userToAdmins userToAdmin[]
+    users            user[]
+    userToAdmins     userToAdmin[]
 
-    company           company  @relation(fields: [companyId], references: [id])
-
+    company          company  @relation(fields: [companyId], references: [id])
 }
 
-model company {
-    id        Int      @id @default(autoincrement())
-    code      String
-    regional  String
-    company   String
+model asset {
+    id                Int      @id @default(autoincrement())
+    name              String
+    projectId         Int
+    type              String
+    description       String
+    startedDate       String
+    endDate           String
+    purchasePrice     String
+    purchaseAmount    String
+    totalPrice        String
+    residualValue     String
+    estimateUsefulLife String
+    depreciationMethod String
 
-    admins    admin[]
-    auditReports auditReport[]
-    clients   client[]
-    departments department[]
-    employees employee[]
-    companyKYCs companyKYC[]
-    subscriptions subscription[]
-    users     user[]
-    userToCompanies userToCompany[]
-    companyToDepartments companyToDepartment[]
-}
-
-model companyToDepartment {
-    id         Int      @id @default(autoincrement())
-    companyId  Int
-    departmentId Int
-
-    company    company    @relation(fields: [companyId], references: [id])
-    department department @relation(fields: [departmentId], references: [id])
-
-    @@map("company_to_department")
-
+    project           project @relation(fields: [projectId], references: [id])
 }
 
 model auditReport {
     id                Int      @id @default(autoincrement())
-    companyId         Int      @map("company_id") 
+    companyId         Int      @map("company_id")
     informationYear   String
     detailedInformation String
     creditRating      String
@@ -65,88 +61,240 @@ model auditReport {
     link              String
 
     company           company  @relation(fields: [companyId], references: [id])
+}
 
-    }
+model cashflow {
+    id          Int   @id @default(autoincrement())
+    period      String
+    income      Int
+    expenses    Int
+}
 
 model client {
-        id                Int      @id @default(autoincrement())
-        companyId Int      @map("company_id") 
-        favorite  Boolean
+    id                Int      @id @default(autoincrement())
+    companyId         Int      @map("company_id")
+    favorite          Boolean
 
-        company   company  @relation(fields: [companyId], references: [id])
+    company           company  @relation(fields: [companyId], references: [id])
+}
+
+model company {
+    id                Int      @id @default(autoincrement())
+    code              String
+    regional          String
+    company           String
+
+    admins            admin[]
+    auditReports      auditReport[]
+    clients           client[]
+    departments       department[]
+    employees         employee[]
+    imvoices          invoice[]
+    companyKYCs       companyKYC[]
+    subscriptions     subscription[]
+    users             user[]
+    userToCompanies   userToCompany[]
+    companyToDepartments companyToDepartment[]
+}
+
+model companyKYC {
+    id                      Int   @id @default(autoincrement())
+    companyId               Int
+    address                 String
+    representativeName      String
+    country                 String
+    legalForm               String
+    registrationNumber      String
+    registrationDate        String
+    registrationIndustry    String
+    contactPerson           String
+    contactPhone            String
+    contactEmail            String
+    website                 String
+    registrationCertificateId String
+    registrationCertificate String
+    taxCertificateId        String
+    taxCertificate          String
+    representativeIdType    String
+    representativeIdCardId  String
+    representativeIdcard    String
+
+    company                 company  @relation(fields: [companyId], references: [id])
+}
+
+model companyToDepartment {
+    id           Int      @id @default(autoincrement())
+    companyId    Int
+    departmentId Int
+
+    company      company    @relation(fields: [companyId], references: [id])
+    department   department @relation(fields: [departmentId], references: [id])
+
+    @@map("company_to_department")
 }
 
 model contract {
-        id                Int      @id @default(autoincrement())
-        contractName String
-        projectId    Int      @map("project_id")
-        signatory    String
-        status       String
-        payment      String
-        startDate    DateTime
-        endDate      DateTime
-        progress     String
+    id          Int      @id @default(autoincrement())
+    contractName String
+    projectId    Int      @map("project_id")
+    signatory    String
+    status       String
+    payment      String
+    startDate    DateTime
+    endDate      DateTime
+    progress     String
 
-        project      project  @relation(fields: [projectId], references: [id])
+    project      project  @relation(fields: [projectId], references: [id])
 }
 
 model department {
-        id                Int      @id @default(autoincrement())
-        name         String
-        companyId    Int
-        company      company  @relation(fields: [companyId], references: [id])
+    id         Int      @id @default(autoincrement())
+    name       String
+    companyId  Int
+    company    company  @relation(fields: [companyId], references: [id])
 
-        employees    employee[]
-        companyToDepartment companyToDepartment[]
+    employees  employee[]
+    companyToDepartment companyToDepartment[]
 }
 
 model employee {
-    id            Int      @id @default(autoincrement())
-    name          String
-    departmentId  Int      @map("department_id")
-    companyId     Int      @map("company_id")
-    salary        Int
-    insurancePayment String
-    bonus         String
-    salaryPayMode String
-    payFrequency  String
-    startDate     DateTime
-    endDate       DateTime
+    id                Int      @id @default(autoincrement())
+    name              String
+    departmentId      Int      @map("department_id")
+    companyId         Int      @map("company_id")
+    salary            Int
+    insurancePayment  String
+    bonus             String
+    salaryPayMode     String
+    payFrequency      String
+    startDate         DateTime
+    endDate           DateTime
 
     employeeToProjects employeeToProject[]
 
-    department    department @relation(fields: [departmentId], references: [id])
-    company       company    @relation(fields: [companyId], references: [id])
+    department        department @relation(fields: [departmentId], references: [id])
+    company           company    @relation(fields: [companyId], references: [id])
 }
 
 model employeeToProject {
-    id         Int      @id @default(autoincrement())
-    employeeId Int
-    projectId  Int
+    id          Int      @id @default(autoincrement())
+    employeeId  Int
+    projectId   Int
 
-    employee   employee @relation(fields: [employeeId], references: [id])
-    project    project  @relation(fields: [projectId], references: [id])
+    employee    employee @relation(fields: [employeeId], references: [id])
+    project     project  @relation(fields: [projectId], references: [id])
 
     @@map("employee_to_project")
 }
 
-model user {
-    id         Int      @id @default(autoincrement())
-    name       String
-    fullName   String
-    email      String
-    phone      String
-    kycStatus  String
-    credentialId String
-    publicKey String
-    algorithm String
-    
-    admins       admin[]
-    companys     company[]
-    userKYCs    userKYC[]
-    userToAdmins userToAdmin[]
-    userToCompanys userToCompany[]
+model invoice {
+    id          Int      @id @default(autoincrement())
+    companyId   Int      @map("company_id")
+    invoiceNo   String
+    invoiceDate DateTime
+    dueDate     DateTime
+    status      String
+    totalAmount String
 
+    company     company  @relation(fields: [companyId], references: [id])
+}
+
+model lineItem {
+    id          Int   @id @default(autoincrement())
+    account     String
+    description String
+    debit       Boolean
+    amount      Int
+
+    @@map("line_item")
+}
+
+model payment {
+    id          Int   @id @default(autoincrement())
+    type        String
+    no          String
+    expireYear  String
+    expireMonth String
+    cvc         String
+    name        String
+}
+
+model project {
+    id          Int      @id @default(autoincrement())
+    name        String
+    description String
+    startDate   DateTime
+    endDate     DateTime
+    status      String
+
+    assets            asset[]
+    contracts   contract[]
+    employeeToProjects employeeToProject[]
+}
+
+model property {
+    id                  Int   @id @default(autoincrement())
+    name                String
+    description         String
+    purchaseDate        DateTime
+    purchasePrice       String
+    depreciationMethod  String
+    estimatedUsefulLife String
+}
+
+model subscription {
+    id          Int   @id @default(autoincrement())
+    companyId   Int      @map("company_id")
+    plan        String
+    paymentId   String
+    price       String
+    autoRenew   Boolean
+    expireDate  DateTime
+    status      String
+
+    company     company  @relation(fields: [companyId], references: [id])
+}
+
+model user {
+    id              Int      @id @default(autoincrement())
+    name            String
+    fullName        String
+    email           String
+    phone           String
+    kycStatus       String
+    credentialId    String
+    publicKey       String
+    algorithm       String
+
+    admins          admin[]
+    companys        company[]
+    userKYCs        userKYC[]
+    userToAdmins    userToAdmin[]
+    userToCompanys  userToCompany[]
+}
+
+model userKYC {
+    id                      Int   @id @default(autoincrement())
+    userId                  Int
+    country                 String
+    idType                  String
+    idNumber                String
+    idImageId               String
+    idImage                 String
+    occupation              String
+    certificateFrontImageId String
+    certificateFrontImage   String
+    certificateBackImageId  String
+    certificateBackImage    String
+    selfieImageId           String
+    selfieImage             String
+    facialIdentifyFileId    String
+    facialIdentifyFile      String
+    status                  String
+
+    user                    user  @relation(fields: [userId], references: [id])
+
+    @@map("user_kyc")
 }
 
 model userToAdmin {
@@ -169,136 +317,4 @@ model userToCompany {
     company    company @relation(fields: [companyId], references: [id])
 
     @@map("user_to_company")
-}
-
-model userKYC {
-    id          Int   @id @default(autoincrement())
-    userId                Int
-    country               String
-    idType                String
-    idNumber              String
-    idImageId             String
-    idImage               String
-    occupation            String
-    certificateFrontImageId String
-    certificateFrontImage String
-    certificateBackImageId String
-    certificateBackImage  String
-    selfieImageId         String
-    selfieImage           String
-    facialIdentifyFileId  String
-    facialIdentifyFile    String
-    status                String
-
-    user       user  @relation(fields: [userId], references: [id])
-
-    @@map("user_kyc")
-}
-
-model companyKYC {
-    id          Int   @id @default(autoincrement())
-    companyId                Int
-    address                  String
-    representativeName       String
-    country                  String
-    legalForm                String
-    registrationNumber       String
-    registrationDate         String
-    registrationIndustry     String
-    contactPerson            String
-    contactPhone             String
-    contactEmail             String
-    website                  String
-    registrationCertificateId String
-    registrationCertificate  String
-    taxCertificateId         String
-    taxCertificate           String
-    representativeIdType     String
-    representativeIdCardId   String
-    representativeIdcard     String
-
-    company    company  @relation(fields: [companyId], references: [id])
-
-    @@map("company_kyc")
-}
-
-model payment {
-    id          Int   @id @default(autoincrement())
-    type        String
-    no          String
-    expireYear  String
-    expireMonth String
-    cvc         String
-    name        String
-}
-
-model property {
-    id          Int   @id @default(autoincrement())
-    name          String
-    description   String
-    purchaseDate  DateTime
-    purchasePrice String
-    depreciationMethod String
-    estimatedUsefulLife String
-}
-
-model cashflow {
-    id          Int   @id @default(autoincrement())
-    period   String  
-    income   Int
-    expenses Int
-}
-
-model subscription {
-    id          Int   @id @default(autoincrement())
-    companyId   Int      @map("company_id")
-    plan        String
-    paymentId   String
-    price       String
-    autoRenew   Boolean
-    expireDate  DateTime
-    status      String
-
-    company     company  @relation(fields: [companyId], references: [id])
-}
-
-model record {
-    id          Int   @id @default(autoincrement())
-    account     String
-    description String
-    debit       Boolean
-    amount      Int
-}
-
-model account {
-    id          Int   @id @default(autoincrement())
-    type       String
-    liquidity  String
-    account    String
-    code       String
-    name       String
-}
-
-model asset {
-    id          Int      @id @default(autoincrement())
-    date              DateTime   
-    type              String
-    assetName         String
-    purchasePrice     String
-    residual          String
-    project           String
-    startedDate       String
-    estimateUsefulLife String
-}
-
-model project{
-    id          Int      @id @default(autoincrement())
-    name        String
-    description String
-    startDate   DateTime
-    endDate     DateTime
-    status      String
-
-    contracts   contract[]
-    employeeToProjects employeeToProject[]
 }

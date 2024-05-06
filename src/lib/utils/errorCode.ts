@@ -15,5 +15,5 @@ export function errorMessageToErrorCode(errorMessage: string): number {
   }
 
   // Return a default error code if no mapping is found
-  return -1;
+  return 500;
 }

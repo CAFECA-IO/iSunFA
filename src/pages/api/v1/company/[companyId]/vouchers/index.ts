@@ -37,28 +37,41 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         installmentPeriod: 0,
         paymentStatus: 'unpaid',
         alreadyPaidAmount: 0,
+        reason: 'haha',
+        projectId: '0',
+        project: 'baifa',
+        contractId: '3',
+        contract: 'asus',
       };
 
       // const mock
       const mockVoucherData: IVoucher = {
-        voucherIndex: '1229001',
+        voucherIndex: '1',
         metadatas: [mockVoucherMetaData],
         lineItems: [
           {
-            lineItemIndex: '1229001001',
-            account: '銀行存款',
-            description: '港幣120000 * 3.916',
-            debit: true,
-            amount: 469920,
+            lineItemIndex: '2',
+            account: '124124',
+            description: 'WSTP會計師工作輔助幫手',
+            debit: false,
+            amount: 5,
           },
           {
-            lineItemIndex: '1229001002',
-            account: '營業收入',
-            description: '港幣120000 * 3.916',
+            lineItemIndex: '3',
+            account: '124124',
+            description: '文中網路版主機授權費用',
             debit: false,
-            amount: 469920,
+            amount: 8400,
+          },
+          {
+            lineItemIndex: '4',
+            account: '124124',
+            description: '文中工作站授權費用',
+            debit: false,
+            amount: 6300,
           },
         ],
+        invoiceIndex: '',
       };
       return res.status(200).json({
         powerby: `ISunFa api ${version}`,
