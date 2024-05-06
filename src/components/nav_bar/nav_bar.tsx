@@ -54,13 +54,7 @@ const NavBar = () => {
 
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
-    try {
-      await signOut();
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('logOutClickHandler error:', error);
-    }
+    signOut();
   };
 
   const displayedAppMenuMobile = (
