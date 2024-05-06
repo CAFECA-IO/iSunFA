@@ -27,6 +27,7 @@ export default async function handler(
           contract: 'Contract123',
           voucher: {
             voucherIndex: '20240402299',
+            invoiceIndex: '20240402299',
             metadatas: [
               {
                 date: 1713139200000,
@@ -81,6 +82,7 @@ export default async function handler(
           contract: 'Contract123',
           voucher: {
             voucherIndex: '20240402299',
+            invoiceIndex: '20240402299',
             metadatas: [
               {
                 date: 1713139200000,
@@ -149,6 +151,7 @@ export default async function handler(
         contract: 'Contract123',
         voucher: {
           voucherIndex: '20240402299',
+          invoiceIndex: '20240402299',
           metadatas: [
             {
               date: 1713139200000,
