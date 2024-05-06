@@ -27,7 +27,7 @@ export type IAPIName =
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
-  header?: { [key: string]: unknown };
+  header?: { [key: string]: string };
   body?: { [key: string]: unknown };
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };

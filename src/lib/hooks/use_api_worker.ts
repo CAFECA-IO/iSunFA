@@ -1,7 +1,10 @@
-import { IAPIConfig } from '@/interfaces/api_connection';
+/* eslint-disable no-console */
+import { IAPIInput } from '@/interfaces/api_connection';
 import { Action } from '@/constants/action';
 import { Response } from '@/interfaces/response';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { APIConfig, APIName } from '@/constants/api_connection';
+import { checkInput, getAPIPath } from '../utils/common';
 
 interface ResponseData<Data> {
   data?: Data;
@@ -9,9 +12,8 @@ interface ResponseData<Data> {
 }
 
 const useAPIWorker = <Data>(
-  apiConfig: IAPIConfig,
-  path: string,
-  body: { [key: string]: unknown } | null,
+  apiName: APIName,
+  options: IAPIInput,
   cancel?: boolean
 ): Response<Data> => {
   const [data, setData] = useState<Data | undefined>(undefined);
@@ -20,6 +22,13 @@ const useAPIWorker = <Data>(
   const [message, setMessage] = useState<string | undefined>(undefined);
   const requestIdRef = useRef<string | undefined>(undefined);
   const controllerRef = useRef<AbortController | null>(null);
+
+  const apiConfig = APIConfig[apiName];
+  console.log('useAPIWorker is called, apiConfig', apiConfig, `options`, options, `cancel`, cancel);
+  checkInput(apiConfig, options);
+
+  const path = getAPIPath(apiConfig, options);
+  console.log('useAPI path', path);
 
   const handleResponse = (responseData: ResponseData<Data>, requestId: string) => {
     const { data: newData, error: workerError } = responseData;
@@ -49,7 +58,7 @@ const useAPIWorker = <Data>(
       requestId,
       apiConfig,
       path,
-      body,
+      body: options.body,
       action: cancel ? Action.CANCEL : undefined,
     });
 
@@ -77,8 +86,9 @@ const useAPIWorker = <Data>(
     }
     controllerRef.current = new AbortController();
 
-    return fetchData();
-  }, [fetchData]);
+    const cleanup = fetchData();
+    return cleanup;
+  }, [fetchData, cancel]);
 
   return {
     isLoading,
