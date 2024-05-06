@@ -15,6 +15,11 @@ export interface IVoucherMetaData {
   installmentPeriod: number;
   paymentStatus: PaymentStatusType;
   alreadyPaidAmount: number;
+  reason: string;
+  projectId: string;
+  project: string;
+  contractId: string;
+  contract: string;
 }
 
 export interface IVoucher {
