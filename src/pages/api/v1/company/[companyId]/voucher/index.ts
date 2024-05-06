@@ -4,6 +4,7 @@ import { isIInvoiceWithPaymentMethod } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucher } from '@/interfaces/voucher';
 import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { responseStatusCode } from '@/lib/utils/status_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -72,13 +73,7 @@ export default async function handler(
       const { invoices } = req.body;
       // Info Murky (20240416): Check if invoices is array and is Invoice type
       if (!Array.isArray(invoices) || !invoices.every(isIInvoiceWithPaymentMethod)) {
-        res.status(400).json({
-          powerby: `ISunFa api ${version}`,
-          success: false,
-          code: '400',
-          message: 'Invalid invoices',
-          payload: {},
-        });
+        throw new Error('Invalid input parameter');
       }
 
       const result = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
@@ -90,33 +85,20 @@ export default async function handler(
       });
 
       if (!result.ok) {
-        res.status(result.status).json({
-          powerby: `ISunFa api ${version}`,
-          success: false,
-          code: String(result.status),
-          message:
-            'Failed to post invoice in vouchers, error happened in Sending data to AICH server',
-          payload: {},
-        });
+        throw new Error('Gateway Timeout');
       }
 
       const resultStatus: AccountResultStatus = (await result.json()).payload;
 
-      res.status(200).json({
+      res.status(responseStatusCode.success).json({
         powerby: 'ISunFa api ' + version,
         success: true,
-        code: '200',
+        code: String(responseStatusCode.success),
         message: 'create voucher',
         payload: resultStatus,
       });
     } else {
-      res.status(405).json({
-        powerby: 'ISunFa api ' + version,
-        success: false,
-        code: '405',
-        message: 'Method Not Allowed',
-        payload: {},
-      });
+      throw new Error('Method Not Allowed');
     }
   } catch (_error) {
     const error = _error as Error;
