@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 // import { IInvoice } from '@/interfaces/invoice';
 // import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import version from '@/lib/version';
 import fs from 'fs';
 
@@ -9,7 +9,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { invoiceId } = req.query;
     if (!invoiceId) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
     // Find the invoice with the given id
     // Find the invoice with the given id

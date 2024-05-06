@@ -1,7 +1,7 @@
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucher } from '@/interfaces/voucher';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -119,7 +119,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { voucher } = req.body;
       if (!voucher) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       if (!isIVoucher(voucher)) {
         throw new Error('Invalid input parameter not voucher');
@@ -140,7 +140,7 @@ export default async function handler(
         payload: journal,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

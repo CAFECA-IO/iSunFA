@@ -81,7 +81,7 @@ describe('API Handler Tests', () => {
       powerby: `ISunFa api ${version}`,
       success: false,
       code: '405',
-      message: 'Method Not Allowed in line items api',
+      message: 'METHOD_NOT_ALLOWED in line items api',
     });
   });
 });

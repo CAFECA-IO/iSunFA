@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
 import { IProject } from '@/interfaces/project';
-import { IResponseData } from '../../../../../../interfaces/response_data';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
+import { IResponseData } from '@/interfaces/response_data';
 
 export default async function handler(
   req: NextApiRequest,

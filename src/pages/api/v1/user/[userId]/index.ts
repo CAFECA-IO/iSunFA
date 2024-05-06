@@ -8,13 +8,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
   const { userId } = req.query;
   try {
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     if (!userId) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
     if (userId !== '1') {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     if (method === 'GET') {
       // Handle GET request to retrieve user by userId
@@ -77,7 +77,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         message: 'Delete User sucessfully',
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     // Handle errors

@@ -1,14 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IUser } from '@/interfaces/user';
-import { IResponseData } from '../../../../interfaces/response_data';
-import version from '../../../../lib/version';
+import { IResponseData } from '@/interfaces/response_data';
+import version from '@/lib/version';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IUser>>) {
   try {
     // Info: (20240419 - Jacky) L010001 - POST /login
     if (req.method !== 'POST') {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
 
     const { credentialId } = req.body;

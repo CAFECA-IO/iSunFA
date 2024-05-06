@@ -112,7 +112,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '404',
       payload: {},
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
     });
   });
 
@@ -126,7 +126,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '422',
       payload: {},
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
     });
   });
 
@@ -148,7 +148,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '404',
       payload: {},
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
     });
   });
 
@@ -170,7 +170,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '422',
       payload: {},
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
     });
   });
 
@@ -184,7 +184,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '404',
       payload: {},
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
     });
   });
 
@@ -199,7 +199,7 @@ describe('Payment API Handler Tests', () => {
       success: false,
       code: '405',
       payload: {},
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
     });
   });
 });

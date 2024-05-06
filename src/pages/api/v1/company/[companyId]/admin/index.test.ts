@@ -92,11 +92,11 @@ describe('test admin API handler', () => {
       success: false,
       code: '422',
       payload: {},
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
     });
   });
 
-  it('should return error for method not allowed', async () => {
+  it('should return error for METHOD_NOT_ALLOWED', async () => {
     req.method = 'PUT';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
@@ -105,7 +105,7 @@ describe('test admin API handler', () => {
       success: false,
       code: '405',
       payload: {},
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
     });
   });
 });

@@ -108,7 +108,7 @@ describe('test user API by userId', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '500',
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
       payload: {},
     });
   });
@@ -121,7 +121,7 @@ describe('test user API by userId', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '500',
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
       payload: {},
     });
   });
@@ -134,7 +134,7 @@ describe('test user API by userId', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '500',
-      message: 'Invalid input parameter',
+      message: 'INVALID_INPUT_PARAMETER',
       payload: {},
     });
   });
@@ -148,7 +148,7 @@ describe('test user API by userId', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '500',
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
       payload: {},
     });
   });

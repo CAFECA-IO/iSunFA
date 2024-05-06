@@ -82,7 +82,7 @@ describe('test user API', () => {
       powerby: 'ISunFa api ' + version,
       success: false,
       code: '500',
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
       payload: {},
     });
   });

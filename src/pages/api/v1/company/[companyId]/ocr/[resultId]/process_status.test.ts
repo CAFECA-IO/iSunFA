@@ -3,10 +3,10 @@ it('shoild pass', () => {
 });
 // import { NextApiRequest, NextApiResponse } from 'next';
 // import version from '@/lib/version';
-// import handler from './result'; // Adjust the import path as necessary
+// import handler from './process_status'; // Ensure this path matches the actual file location
 
 // let req: jest.Mocked<NextApiRequest>;
-// let res: jest.Mocked<NextApiResponse>; // Use <any> to avoid type errors with custom response types
+// let res: jest.Mocked<NextApiResponse>;
 
 // beforeEach(() => {
 //   req = {
@@ -27,35 +27,23 @@ it('shoild pass', () => {
 //   jest.clearAllMocks();
 // });
 
-// describe('OCR Result API Handler Tests', () => {
+// describe('Result API Handler Tests', () => {
 //   it('should handle GET requests successfully', async () => {
 //     const resultId = '123';
 //     req.query.resultId = resultId; // Valid resultId as a string
+//     req.query.resultId = '123'; // Valid resultId as a string
 //     req.method = 'GET';
 
-//     // const mockOcrReturnArray = [
-//     //   {
-//     //     date: '2024-12-29',
-//     //     eventType: 'income',
-//     //     incomeReason: '勞務收入',
-//     //     client: 'Isuncloud Limited',
-//     //     description: '技術開發軟件與服務',
-//     //     price: '469920',
-//     //     tax: 'free',
-//     //     taxPercentange: 'null',
-//     //     fee: '0',
-//     //   },
-//     // ];
 //     await handler(req, res);
 
 //     expect(res.status).toHaveBeenCalledWith(200);
-//     // expect(res.json).toHaveBeenCalledWith({
-//     //   powerby: `ISunFa api ${version}`,
-//     //   success: true,
-//     //   code: '200',
-//     //   message: `OCR analyzing result of id:${resultId} return successfully`,
-//     //   payload: mockOcrReturnArray,
-//     // });
+//     expect(res.json).toHaveBeenCalledWith({
+//       powerby: `ISunFa api ${version}`,
+//       success: false,
+//       code: '200',
+//       message: `OCR analyzing progress status of id:${resultId} return successfully`,
+//       payload: 'success',
+//     });
 //   });
 
 //   it('should return error for non-string resultId', async () => {
@@ -99,7 +87,7 @@ it('shoild pass', () => {
 //       powerby: `ISunFa api ${version}`,
 //       success: false,
 //       code: '405',
-//       message: 'METHOD_NOT_ALLOWED in ocr get result api',
+//       message: 'METHOD_NOT_ALLOWED in ocr process status api',
 //     });
 //   });
 // });

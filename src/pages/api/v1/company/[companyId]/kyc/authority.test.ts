@@ -45,7 +45,7 @@ describe('authority API', () => {
       success: false,
       code: '404',
       payload: {},
-      message: 'Resource not found',
+      message: 'RESOURCE_NOT_FOUND',
     });
   });
 
@@ -58,7 +58,7 @@ describe('authority API', () => {
       success: false,
       code: '405',
       payload: {},
-      message: 'Method Not Allowed',
+      message: 'METHOD_NOT_ALLOWED',
     });
   });
 });
