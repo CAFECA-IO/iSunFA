@@ -80,7 +80,7 @@ const useAPI = <Data>(
     } finally {
       setIsLoading(false);
     }
-  }, [apiConfig.method, options, path, handleError]);
+  }, [apiConfig.method, options, path]);
 
   console.log(
     'useAPI is called, apiConfig',

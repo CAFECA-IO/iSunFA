@@ -69,9 +69,8 @@ const NavBar = () => {
 
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
-
+    setShouldFetch(true);
     console.log(`onClick logOutClickHandler`);
-
     console.log(`response: `, response);
   };
 
