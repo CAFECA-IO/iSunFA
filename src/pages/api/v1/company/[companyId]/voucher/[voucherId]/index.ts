@@ -15,6 +15,7 @@ export default async function handler(
       }
       const voucher: IVoucher = {
         voucherIndex: '1',
+        invoiceIndex: '1',
         metadatas: [
           {
             date: 1713139200000,
@@ -31,6 +32,11 @@ export default async function handler(
             installmentPeriod: 0,
             paymentStatus: 'unpaid',
             alreadyPaidAmount: 0,
+            reason: 'haha',
+            projectId: '0',
+            project: 'baifa',
+            contractId: '3',
+            contract: 'asus',
           },
         ],
         lineItems: [

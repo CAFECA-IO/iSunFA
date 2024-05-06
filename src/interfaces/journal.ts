@@ -1,8 +1,7 @@
 import { IVoucher } from './voucher';
 
-export interface IJournal {
+export interface IJournal extends IVoucher {
   id: string;
   tokenContract: string;
   tokenId: string;
-  voucher: IVoucher;
 }

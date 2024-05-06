@@ -29,6 +29,11 @@ export default async function handler(
               installmentPeriod: 0,
               paymentStatus: 'unpaid',
               alreadyPaidAmount: 0,
+              reason: 'haha',
+              projectId: '0',
+              project: 'baifa',
+              contractId: '3',
+              contract: 'asus',
             },
           ],
           lineItems: [
@@ -54,6 +59,7 @@ export default async function handler(
               amount: 6300,
             },
           ],
+          invoiceIndex: '',
         },
       ];
       res.status(200).json({
@@ -70,6 +76,7 @@ export default async function handler(
       }
       const voucher: IVoucher = {
         voucherIndex: '1',
+        invoiceIndex: '1',
         metadatas,
         lineItems,
       };
