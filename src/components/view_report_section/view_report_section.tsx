@@ -569,12 +569,10 @@ const ViewReportSection = ({
         <div className=""></div>
       </div>
 
-      {/* TODO: show the page number to develop (20240502 - Shirley) */}
-
       {/* Info: financial report content (20240426 - Shirley) */}
       <div className="mt-12 flex w-full px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:h-850px">
+        <div className="hidden h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:flex lg:h-850px">
           <ul className="mt-5 flex w-full flex-col items-center justify-center space-y-5">
             {reportThumbnails.map((thumbnail, index) => (
               <button onClick={() => thumbnailClickHandler(index)} key={index}>

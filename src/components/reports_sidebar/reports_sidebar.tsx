@@ -13,7 +13,7 @@ const ReportsSidebar = () => {
       <div
         onMouseEnter={sidebarEnterHandler}
         onMouseLeave={sidebarLeaveHandler}
-        className={`fixed z-10 hidden h-screen flex-col items-center md:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
+        className={`fixed z-10 hidden h-screen flex-col items-center lg:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
       >
         {/* Info: Main icon (20240423 - Shirley) */}
         <div className="flex flex-col items-center pt-20px">
