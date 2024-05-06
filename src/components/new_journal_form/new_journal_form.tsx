@@ -4,7 +4,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
-import { PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
+import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
 import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
@@ -15,7 +15,7 @@ import ProgressBar from '../progress_bar/progress_bar';
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
 const paymentReasonSelection: string[] = [];
-const taxRateSelection: number[] = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Transfer', 'Credit Card', 'Cash'];
 const ficSelection: string[] = [
   '004 Bank of Taiwan',
@@ -41,6 +41,8 @@ const NewJournalForm = () => {
     confirmModalDataHandler,
     addPropertyModalVisibilityHandler,
   } = useGlobalCtx();
+
+  const { ocrResultId, setOcrResultIdHandler } = useAccountingCtx();
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -84,6 +86,37 @@ const NewJournalForm = () => {
     // window.addEventListener('beforeunload', onBeforeUnload);
     // return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [formHasChanged]);
+
+  // Info: (20240506 - Julian) 用 ocrResultId call API ，取得日記帳資料
+  const getOrcAnalyzedResult = async () => {
+    const response = await fetch(`/api/v1/company/1/ocr/${ocrResultId}/result`, {
+      method: 'GET',
+    });
+    const data = await response.json();
+    const result = data.payload[0];
+
+    // Info: (20240506 - Julian) 設定表單的預設值
+    setDatePeriod({
+      startTimeStamp: result.date.start_date,
+      endTimeStamp: result.date.end_date,
+    });
+    setSelectedEventType(result.eventType);
+    setSelectedPaymentReason(result.paymentReason);
+    setInputDescription(result.description);
+    setInputVendor(result.venderOrSupplyer);
+    setInputTotalPrice(result.payment.price);
+    setTaxToggle(result.payment.hasTax);
+    setTaxRate(result.payment.taxPercentage);
+    setFeeToggle(result.payment.hasFee);
+    setInputFee(result.payment.fee);
+  };
+
+  useEffect(() => {
+    if (ocrResultId) {
+      getOrcAnalyzedResult();
+      setOcrResultIdHandler('');
+    }
+  }, [ocrResultId]);
 
   // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
   const newJournalData: IConfirmModal = {

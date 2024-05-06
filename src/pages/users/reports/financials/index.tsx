@@ -29,7 +29,7 @@ const ReportPage = () => {
         />
       </Head>
 
-      <div className="font-barlow">
+      <div className="-mt-4 font-barlow">
         <div className="">
           <NavBar />
         </div>
@@ -38,7 +38,7 @@ const ReportPage = () => {
           <ReportsSidebar />
         </div>
 
-        <div className="h-800px bg-surface-neutral-main-background md:h-1100px">
+        <div className="h-800px overflow-x-hidden bg-surface-neutral-main-background md:h-1100px">
           <FinancialReportSection />
         </div>
       </div>

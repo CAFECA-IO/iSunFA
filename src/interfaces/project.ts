@@ -1,7 +1,7 @@
 export interface IProject {
   id: string;
   name: string;
-  Value: IProjectValue;
+  value: IProjectValue;
   completionPercent: number;
   milestones: IMilestone[];
   salesData: ISalesData[];
@@ -10,8 +10,9 @@ export interface IProject {
 }
 
 interface IMilestone {
-  startDate: string;
-  endDate: string;
+  id: string;
+  startDate: number; // timestamp
+  endDate: number;
   status: string;
 }
 
