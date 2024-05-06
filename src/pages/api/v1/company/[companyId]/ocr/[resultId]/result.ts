@@ -1,55 +1,55 @@
 // Info Murky (20240416):  this is mock api need to migrate to microservice
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountInvoiceData } from '@/interfaces/account';
-import { ResponseType } from '@/interfaces/api_response';
 import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
+import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { IResponseData } from '@/interfaces/response_data';
+import { responseStatusCode } from '@/lib/utils/status_code';
 
-interface ResponseData extends ResponseType<AccountInvoiceData[]> {}
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<AccountInvoiceData[]>>
+) {
+  try {
+    const { resultId } = req.query;
+    // Info Murky (20240416): Check if resultId is string
+    if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
+      throw new Error('Invalid input parameter');
+    }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
-  const { resultId } = req.query;
-  // Info Murky (20240416): Check if resultId is string
-  if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
-    return res.status(400).json({
+    switch (req.method) {
+      case 'GET': {
+        const result = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
+
+        if (!result.ok) {
+          throw new Error('Gateway Timeout');
+        }
+
+        const ocrResultData: AccountInvoiceData = (await result.json()).payload;
+
+        res.status(responseStatusCode.success).json({
+          powerby: `ISunFa api ${version}`,
+          success: true,
+          code: String(responseStatusCode.success),
+          message: `OCR analyzing result of id:${resultId} return successfully`,
+          payload: [ocrResultData],
+        });
+        break;
+      }
+      default: {
+        throw new Error('Method Not Allowed');
+      }
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    const statusCode = errorMessageToErrorCode(error.message);
+    res.status(statusCode).json({
       powerby: `ISunFa api ${version}`,
       success: false,
-      code: '400',
-      message: 'Invalid resultId',
+      code: String(statusCode),
+      payload: {},
+      message: error.message,
     });
-  }
-
-  switch (req.method) {
-    case 'GET': {
-      const result = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
-
-      if (!result.ok) {
-        return res.status(500).json({
-          powerby: `ISunFa api ${version}`,
-          success: false,
-          code: '500',
-          message:
-            'Internal Server Error in ocr get result api, error in fetching OCR result from AICH',
-        });
-      }
-
-      const ocrResultData: AccountInvoiceData = (await result.json()).payload;
-
-      return res.status(200).json({
-        powerby: `ISunFa api ${version}`,
-        success: true,
-        code: '200',
-        message: `OCR analyzing result of id:${resultId} return successfully`,
-        payload: [ocrResultData],
-      });
-    }
-    default: {
-      return res.status(405).json({
-        powerby: `ISunFa api ${version}`,
-        success: false,
-        code: '405',
-        message: 'Method Not Allowed in ocr get result api',
-      });
-    }
   }
 }

@@ -138,4 +138,4 @@ export const FORMIDABLE_CONFIG = {
   uploadDir: 'tmp',
 };
 
-export const AICH_URI = process.env.AICH_URI || 'http://localhost:3001';
+export const AICH_URI = process.env.AICH_URI as string;

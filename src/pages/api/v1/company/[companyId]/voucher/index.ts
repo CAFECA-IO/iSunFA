@@ -100,7 +100,7 @@ export default async function handler(
         });
       }
 
-      const resultStatus: AccountResultStatus = await result.json();
+      const resultStatus: AccountResultStatus = (await result.json()).payload;
 
       res.status(200).json({
         powerby: 'ISunFa api ' + version,

@@ -7,6 +7,8 @@ export function errorMessageToErrorCode(errorMessage: string): number {
     'Invalid input parameter': 422,
     'Internal server error': 500,
     'fetch failed': 500,
+    'Bad Gateway': 502,
+    'Gateway Timeout': 504,
     // Add more error mappings as needed
   };
 
