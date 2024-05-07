@@ -237,6 +237,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       <video
         ref={cameraRef}
         id="user-camera"
+        width={width}
+        height={height}
         className={`relative ${isCameraMode ? 'block' : 'hidden'}`}
         playsInline
         muted
