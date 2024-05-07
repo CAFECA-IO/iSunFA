@@ -36,7 +36,7 @@ function ContactForm() {
   const emailChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputEmail(event.target.value);
   };
-  const [comment, setComment] = useState({ comment: '' });
+  const content = { comment: '' };
 
   const {
     trigger: email,
@@ -46,7 +46,7 @@ function ContactForm() {
     APIName.EMAIL,
     {
       header: { 'Content-Type': 'application/json; charset=UTF-8' },
-      body: { comment },
+      body: content,
     },
     false,
     false
@@ -78,15 +78,13 @@ function ContactForm() {
   const sendEmail = async () => {
     const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
 
-    const emailData = {
-      comment: `<h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p>`,
-    };
+    // const emailData = {
+    (content.comment = `<h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p>`),
+      // };
 
-    // Info: (20230731 - Shirley) 3 秒顯示動畫
-    // eslint-disable-next-line no-promise-executor-return
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    setComment(emailData);
+      // Info: (20230731 - Shirley) 3 秒顯示動畫
+      // eslint-disable-next-line no-promise-executor-return
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Info: (20230731 - Shirley) call API
     // const res = await fetch('/api/v1/email', {
