@@ -2,10 +2,14 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { IAnalysisReport, isIAnalysisReportRequest } from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
+import { isIFinancialStatements } from '@/interfaces/financial_report';
+import { AICH_URI } from '@/constants/config';
+import { AccountResultStatus } from '@/interfaces/account';
+import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAnalysisReport>>
 ) {
@@ -84,9 +88,31 @@ export default function handler(
       case 'POST': {
         const { body } = req;
 
-        if (!isIAnalysisReportRequest(body)) {
+        if (!isIFinancialStatements(body)) {
           throw new Error('INVALID_INPUT_PARAMETER');
         }
+
+        const result = await fetch(`${AICH_URI}/api/v1/audit_report`, {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!result.ok) {
+          throw new Error('GATEWAY_TIMEOUT');
+        }
+
+        const resultJson: AccountResultStatus = (await result.json()).payload;
+
+        res.status(RESPONSE_STATUS_CODE.success).json({
+          powerby: 'iSunFA v' + version,
+          success: true,
+          code: String(RESPONSE_STATUS_CODE.success),
+          message: 'request successful',
+          payload: resultJson,
+        });
         break;
       }
       default: {

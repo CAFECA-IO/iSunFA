@@ -17,7 +17,7 @@ export interface IFinancialStatements {
   cashFlow: ICashFlow;
 }
 
-export interface IFinancialReportReport {
+export interface IFinancialReportJSON {
   balanceSheet: {
     balanceSheet: IBalanceSheet;
     balanceSheetRatios: { [key: string]: number };
@@ -41,12 +41,28 @@ export interface IFinancialReportReport {
 
 // Info Murky (20240505): type guards
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isFinancialStatements(obj: any): obj is IFinancialStatements {
+export function isIFinancialStatements(obj: any): obj is IFinancialStatements {
   return (
     typeof obj === 'object' &&
     obj !== null &&
     isIBalanceSheet(obj.balanceSheet) &&
     isIComprehensiveIncome(obj.comprehensiveIncome) &&
     isICashFlow(obj.cashFlow)
+  );
+}
+
+export function isIFinancialReportJSON(obj: unknown): obj is IFinancialReportJSON {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+  const o = obj as IFinancialReportJSON;
+  return (
+    isIBalanceSheet(o.balanceSheet) &&
+    isIComprehensiveIncome(o.comprehensiveIncome) &&
+    isICashFlow(o.cashFlow) &&
+    typeof o.lifeCycle === 'string' &&
+    typeof o.creditRating === 'string' &&
+    typeof o.financialStatementsAnalysis === 'string' &&
+    typeof o.summary === 'string'
   );
 }
