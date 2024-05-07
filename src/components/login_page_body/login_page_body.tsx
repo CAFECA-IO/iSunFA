@@ -28,7 +28,8 @@ const LoginPageBody = () => {
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
-      console.error('signIn error:', error);
+      console.error('signIn error in loginClickHandler:', error);
+      registerClickHandler();
     }
   };
   return (
