@@ -10,6 +10,7 @@ import { IConfirmModal } from '../../interfaces/confirm_modal';
 import AccountingVoucherRow from '../accounting_voucher_row/accounting_voucher_row';
 import { useAccountingCtx } from '../../contexts/accounting_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
+import { timestampToString } from '@/lib/utils/common';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -26,6 +27,7 @@ const ConfirmModal = ({
 
   const {
     type,
+    dateTimestamp,
     reason,
     vendor,
     description,
@@ -55,6 +57,8 @@ const ConfirmModal = ({
   const disableConfirmButton = totalCredit !== totalDebit;
 
   const displayType = <p className="text-lightRed">{type}</p>;
+
+  const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
@@ -168,6 +172,11 @@ const ConfirmModal = ({
             <div className="flex items-center justify-between">
               <p>Type</p>
               {displayType}
+            </div>
+            {/* Info: (20240507 - Julian) Date */}
+            <div className="flex items-center justify-between">
+              <p>Date</p>
+              {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
             <div className="flex items-center justify-between">

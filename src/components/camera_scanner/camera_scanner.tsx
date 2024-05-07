@@ -163,7 +163,9 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       //   const data = await response.json();
       //   // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
       //   const { resultId } = data.payload[0];
-      //   setOcrResultIdHandler(resultId);
+      //   const { invoiceId } = data.payload;
+      //   setResultId(invoiceId);
+      //   setOcrResultIdHandler(invoiceId);
       // }
 
       // Info: (20240506 - Julian) 關閉攝影機
@@ -194,7 +196,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       // eslint-disable-next-line no-console
       console.error('Error: ', uploadError);
     }
-  }, [uploadSuccess, resultIds]);
+  }, [uploadSuccess, resultIds, isModalVisible]);
 
   useEffect(() => {
     // Info: (20240507 - Julian) 如果從相簿選擇照片，則將照片顯示在 canvas 上，並轉為預覽模式

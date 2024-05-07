@@ -9,12 +9,14 @@ import { GetServerSideProps } from 'next';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '../../../constants/url';
+import { timestampToString } from '../../../lib/utils/common';
 
 interface IJournalDetailPageProps {
   journalId: string;
 }
 
 interface IVoucherItem {
+  id: string;
   accounting: string;
   particulars: string;
   debit: number;
@@ -33,6 +35,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const tokenContract: string = '0x00000000219ab540356cBB839Cbe05303d7705Fa';
   const tokenId: string = '37002036';
   const type: string = 'Payment';
+  const dateTimestamp: number = 1649241600;
   const reason: string = '';
   const vendor: string = '華碩雲端股份有限公司';
   const description: string = 'ASUS Cloud';
@@ -47,12 +50,14 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const voucherList: IVoucherItem[] = [
     {
+      id: '1',
       accounting: '1141- Accounts receivable',
       particulars: 'Buy a pineapple',
       debit: 1785000,
       credit: 0,
     },
     {
+      id: '2',
       accounting: '1113- Cash in banks',
       particulars: 'Buy a pineapple',
       debit: 0,
@@ -126,6 +131,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const displayType = <p className="text-lightRed">{type}</p>;
 
+  const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
+
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
       <p>{reason}</p>
@@ -185,7 +192,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
               ? voucher.debit
               : voucher.credit;
       return (
-        <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+        <div key={voucher.id} className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
           <p className="w-9/10 whitespace-nowrap">{str}</p>
         </div>
       );
@@ -338,6 +345,11 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                       <div className="flex items-center justify-between">
                         <p>Type</p>
                         {displayType}
+                      </div>
+                      {/* Info: (20240507 - Julian) Date */}
+                      <div className="flex items-center justify-between">
+                        <p>Date</p>
+                        {displayDate}
                       </div>
                       {/* Info: (20240503 - Julian) Reason */}
                       <div className="flex items-center justify-between">
