@@ -1,23 +1,20 @@
-import { IAPIConfig } from '@/interfaces/api_connection';
-
 import { HttpMethod } from '@/constants/api_connection';
 import { Action } from '@/constants/action';
 
 interface FetchRequestData {
   requestId: string;
-  apiConfig: IAPIConfig;
+  method: HttpMethod;
   path: string;
   body: Record<string, string | number | Record<string, string | number>> | null;
   action?: Action.CANCEL;
 }
 
 async function fetchData(
-  apiConfig: IAPIConfig,
+  method: HttpMethod,
   path: string,
   body: Record<string, string | number | Record<string, string | number>> | null,
   signal: AbortSignal
 ): Promise<unknown> {
-  const { method } = apiConfig;
   const fetchOptions: RequestInit = {
     method,
     signal,
@@ -42,7 +39,7 @@ let controller: AbortController | null = null;
 
 const handleRequest = async (
   requestId: string,
-  apiConfig: IAPIConfig,
+  method: HttpMethod,
   path: string,
   body: Record<string, string | number | Record<string, string | number>> | null
 ) => {
@@ -53,7 +50,7 @@ const handleRequest = async (
   activeRequest = requestId;
 
   try {
-    const data = await fetchData(apiConfig, path, body, controller.signal);
+    const data = await fetchData(method, path, body, controller.signal);
     if (activeRequest !== requestId) {
       return;
     }
@@ -68,7 +65,7 @@ const handleRequest = async (
 
 // eslint-disable-next-line no-restricted-globals
 self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
-  const { requestId, apiConfig, path, body, action } = event.data;
+  const { requestId, method, path, body, action } = event.data;
 
   if (action === Action.CANCEL) {
     if (activeRequest === requestId && controller) {
@@ -82,7 +79,7 @@ self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
     return;
   }
 
-  await handleRequest(requestId, apiConfig, path, body);
+  await handleRequest(requestId, method, path, body);
 };
 
 export {};

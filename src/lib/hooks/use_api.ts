@@ -1,12 +1,7 @@
-/* eslint-disable no-console */
 import { useEffect, useState, useCallback } from 'react';
-
-import { IAPIInput, IHttpMethod } from '@/interfaces/api_connection';
-import { Response } from '@/interfaces/response';
-
-import { APIConfig, APIName, HttpMethod } from '@/constants/api_connection';
+import { IAPIInput, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
-import { checkInput, getAPIPath } from '../utils/common';
+import { HttpMethod } from '@/constants/api_connection';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -18,7 +13,6 @@ async function fetchData<Data>(
   options: IAPIInput,
   signal?: AbortSignal
 ): Promise<IResponseData<Data>> {
-  console.log(`useAPI fetchData is called, path`, path, `options`, options, `signal`, signal);
   const fetchOptions: RequestInit = {
     method,
     signal,
@@ -32,33 +26,25 @@ async function fetchData<Data>(
     };
   }
 
-  console.log(`fetchData fetchOptions`, fetchOptions);
   const response = await fetch(path, fetchOptions);
-  console.log(`fetchData response`, response);
-
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const result = (await response.json()) as IResponseData<Data>;
-  console.log(`fetchData result`, result);
   return result;
 }
 
 const useAPI = <Data>(
-  apiName: APIName,
+  method: IHttpMethod,
+  path: string,
   options: IAPIInput,
   cancel?: boolean,
   triggerImmediately: boolean = true
-): Response<Data> => {
+): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
-
-  const apiConfig = APIConfig[apiName];
-  checkInput(apiConfig, options);
-
-  const path = getAPIPath(apiConfig, options);
 
   const handleError = useCallback((e: Error) => {
     setError(e);
@@ -68,7 +54,7 @@ const useAPI = <Data>(
     async (signal?: AbortSignal) => {
       setIsLoading(true);
       try {
-        const response = await fetchData<Data>(path, apiConfig.method, options, signal);
+        const response = await fetchData<Data>(path, method, options, signal);
         if (!response.success) {
           throw new Error(response.message ?? 'Unknown error');
         }
@@ -81,7 +67,7 @@ const useAPI = <Data>(
         setIsLoading(false);
       }
     },
-    [apiConfig.method, options, path, handleError]
+    [method, options, path, handleError]
   );
 
   useEffect(() => {

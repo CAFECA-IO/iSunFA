@@ -392,6 +392,7 @@ const DatePicker = ({
           className,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
+            'text-secondaryBlue': isDateSelected,
           }
         )}
       >
@@ -400,6 +401,7 @@ const DatePicker = ({
             'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
             {
               'text-primaryYellow': componentVisible,
+              [buttonStyleAfterDateSelected]: isDateSelected,
             }
           )}
         >
@@ -437,6 +439,7 @@ const DatePicker = ({
           className,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
+            'text-secondaryBlue': isDateSelected,
           }
         )}
       >
@@ -445,6 +448,7 @@ const DatePicker = ({
             'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
             {
               'text-primaryYellow': componentVisible,
+              [buttonStyleAfterDateSelected]: isDateSelected,
             }
           )}
         >
