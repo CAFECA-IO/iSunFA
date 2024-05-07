@@ -134,9 +134,8 @@ export function isIOtherSupplementaryItems(obj: any): obj is IOtherSupplementary
     typeof obj === 'object' &&
     obj !== null &&
     ['relatedToNonCash', 'relatedToCash'].every(
-      (subKey) =>
-        typeof obj.details[subKey] === 'object' &&
-        // prettier-ignore
+      // prettier-ignore
+      (subKey) => typeof obj.details[subKey] === 'object' &&
         Object.keys(obj.details[subKey]).every((key) => isIWeightedCost(obj.details[subKey][key]))
     )
   );
