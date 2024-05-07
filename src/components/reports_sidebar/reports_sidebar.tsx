@@ -110,10 +110,8 @@ const ReportsSidebar = () => {
               </p>
             </Link>
 
-            <Link
-              href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
-              className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default hover:text-tabs-text-active"
-            >
+            {/* TODO: temp disabled (20240507 - Shirley) */}
+            <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default opacity-50">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -136,7 +134,7 @@ const ReportsSidebar = () => {
               >
                 Analysis Report
               </p>
-            </Link>
+            </div>
           </div>
         </div>
       </div>
