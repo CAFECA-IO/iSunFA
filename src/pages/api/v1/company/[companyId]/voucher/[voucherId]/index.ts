@@ -12,18 +12,24 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      if (!req.query.voucherId) {
+      const { voucherId } = req.query;
+
+      // Info Murky (20240416): Check if resultId is string
+      if (typeof voucherId !== 'string' || !voucherId || Array.isArray(voucherId)) {
         throw new Error('INVALID_INPUT_PARAMETER');
       }
 
-      const result = await fetch(`${AICH_URI}/api/v1/vouchers/${req.query.voucherId}/result`);
+      const result = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/result`);
 
       if (!result.ok) {
         throw new Error('GATEWAY_TIMEOUT');
       }
 
-      const { voucherIndex, metadatas, lineItems } = (await result.json()).payload;
-
+      const rawVoucher = (await result.json()).payload;
+      if (!rawVoucher) {
+        throw new Error('RESOURCE_NOT_FOUND');
+      }
+      const { voucherIndex, metadatas, lineItems } = rawVoucher;
       const { venderOrSupplyer, paymentReason, invoiceId, ...rawMetadata } = metadatas[0];
       const trueMetadatas: IVoucherMetaData = {
         ...rawMetadata,
