@@ -6,6 +6,8 @@ import { GrLinkNext } from 'react-icons/gr';
 import { TbArrowBackUp } from 'react-icons/tb';
 // import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 import { Button } from '../button/button';
 // import { MessageType } from '../../interfaces/message_modal';
 
@@ -26,6 +28,20 @@ enum ScannerStep {
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { setOcrResultIdHandler } = useAccountingCtx();
+  const formData = new FormData();
+  const {
+    trigger: uploadInvoice,
+    data: resultIds,
+    error: uploadError,
+    success: uploadSuccess,
+  } = APIHandler<string[]>(
+    APIName.UPLOAD_INVOCIE,
+    {
+      body: { formData },
+    },
+    false,
+    false
+  );
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -121,7 +137,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   const handleUploadImage = async () => {
     try {
       // Info: (20240506 - Julian) 將拍照後的畫面上傳至 OCR API
-      const formData = new FormData();
+      // const formData = new FormData();
       const photo = photoRef.current;
       if (!photo) return;
       formData.append('file', photo.toDataURL('image/jpeg'));
@@ -138,6 +154,17 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         // setResultId(invoiceId);
         setOcrResultIdHandler(invoiceId);
       }
+      // const response = await fetch(`/api/v1/company/1/invoice`, {
+      //   method: 'POST',
+      //   body: formData,
+      // });
+      uploadInvoice();
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
+      //   const { resultId } = data.payload[0];
+      //   setOcrResultIdHandler(resultId);
+      // }
 
       // Info: (20240506 - Julian) 關閉攝影機
       handleCloseCamera();
@@ -160,7 +187,14 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       setCurrentStep(ScannerStep.Camera);
       getCameraVideo();
     }
-  }, [isModalVisible]);
+    if (uploadSuccess && resultIds && resultIds.length > 0) {
+      const resultId = resultIds[0];
+      setOcrResultIdHandler(resultId);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('Error: ', uploadError);
+    }
+  }, [uploadSuccess, resultIds]);
 
   useEffect(() => {
     // Info: (20240507 - Julian) 如果從相簿選擇照片，則將照片顯示在 canvas 上，並轉為預覽模式

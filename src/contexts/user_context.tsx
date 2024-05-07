@@ -10,7 +10,7 @@ import { ISUNFA_API } from '../constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
 import { APIName } from '@/constants/api_connection';
-import useAPI from '@/lib/hooks/use_api';
+import APIHandler from '@/lib/utils/api_handler';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -48,7 +48,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     trigger: signOut,
     error: signOutError,
     success: signOutSuccess,
-  } = useAPI<void>(
+  } = APIHandler<void>(
     APIName.SIGN_OUT,
     {
       body: { credential },
@@ -56,7 +56,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false,
     false
   );
-  console.log('signOutSuccess:', signOutSuccess);
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_DISPLAYED_USER_NAME;

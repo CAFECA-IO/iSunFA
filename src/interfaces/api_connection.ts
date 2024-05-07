@@ -2,6 +2,7 @@ export type IAPIName =
   | 'SIGN_UP'
   | 'SIGN_IN'
   | 'SIGN_OUT'
+  | 'EMAIL'
   | 'LIST_AUDIT_REPORTS'
   | 'LIST_ALL_PROJECTS'
   | 'GET_PROJECTS_STATUS'
@@ -9,6 +10,7 @@ export type IAPIName =
   | 'GET_PERIOD_PROFIT'
   | 'GET_PROJECT_VOUCHERS'
   | 'GET_INVOCIE'
+  | 'UPLOAD_INVOCIE'
   | 'GET_AUDIT_REPORTS'
   | 'GENERATE_FINANCIAL_REPORT'
   | 'GENERATE_ANALYSIS_REPORT'
@@ -43,4 +45,12 @@ export type IAPIConfig = {
   input: IAPIInput;
   output: IAPIOutput;
   useWorker: boolean;
+};
+
+export type IAPIResponse<Data> = {
+  success: boolean | undefined;
+  trigger: () => void;
+  isLoading: boolean | undefined;
+  data: Data | undefined;
+  error: Error | null;
 };
