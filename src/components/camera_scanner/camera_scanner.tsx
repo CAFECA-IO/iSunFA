@@ -46,7 +46,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           width,
           height,
           deviceId: 'default',
-          facingMode: 'user',
+          facingMode: 'environment', // Info: (20240507 - Julian) 使用後置鏡頭
         },
         audio: false,
       })
@@ -106,8 +106,10 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   };
 
   useEffect(() => {
-    setIsTakePhoto(false);
-    getCameraVideo();
+    if (isModalVisible) {
+      setIsTakePhoto(false);
+      getCameraVideo();
+    }
   }, [isModalVisible]);
 
   const titleStr = isTakePhoto ? 'Photo Editor' : 'Camera Scanner';
