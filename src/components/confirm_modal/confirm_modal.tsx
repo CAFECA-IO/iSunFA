@@ -152,7 +152,7 @@ const ConfirmModal = ({
         <hr className="flex-1 border-lightGray3" />
       </div>
       {/* Info: (20240429 - Julian) List */}
-      <div className="rounded-sm bg-lightGray7 p-20px">
+      <div className="overflow-x-auto rounded-sm bg-lightGray7 p-20px">
         <table className="w-full text-left text-navyBlue2">
           {/* Info: (20240429 - Julian) Header */}
           <thead>
@@ -172,7 +172,7 @@ const ConfirmModal = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative flex max-h-450px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
+      <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
         {/* Info: (20240429 - Julian) title */}
         <div className="flex items-center gap-6px px-20px font-bold text-navyBlue2">
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
@@ -192,7 +192,7 @@ const ConfirmModal = ({
           <RxCross2 size={20} />
         </button>
 
-        <div className="my-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px md:bg-white">
+        <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px pb-20px md:bg-white">
           {/* Info: (20240429 - Julian) content */}
           <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
             {/* Info: (20240429 - Julian) Type */}

@@ -144,17 +144,6 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       formData.append('file', photo.toDataURL('image/jpeg'));
 
       // ToDo: (20240506 - Julian) API 文件調整中
-      const response = await fetch(`/api/v1/company/1/invoice`, {
-        method: 'POST',
-        body: formData,
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
-        const { invoiceId } = data.payload;
-        // setResultId(invoiceId);
-        setOcrResultIdHandler(invoiceId);
-      }
       // const response = await fetch(`/api/v1/company/1/invoice`, {
       //   method: 'POST',
       //   body: formData,

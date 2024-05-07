@@ -1342,7 +1342,7 @@ module.exports = {
       },
       maxHeight: {
         '230px': '230px',
-        '450px': '450px',
+        '500px': '500px',
       },
       minHeight: {
         fit: 'fit-content',
