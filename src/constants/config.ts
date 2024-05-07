@@ -130,6 +130,7 @@ export const ALLOWED_ORIGINS = [
   'http://localhost:3003',
   'https://www.isunfa.com',
   'https://isunfa.com',
+  'http://192.168.1.106:3000',
 ];
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
