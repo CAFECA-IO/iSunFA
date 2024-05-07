@@ -92,7 +92,7 @@ export default async function handler(
           throw new Error('INVALID_INPUT_PARAMETER');
         }
 
-        const result = await fetch(`${AICH_URI}/api/v1/audit_report`, {
+        const result = await fetch(`${AICH_URI}/api/v1/audit_reports`, {
           method: 'POST',
           body: JSON.stringify(body),
           headers: {
