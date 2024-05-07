@@ -2,8 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ISUNFA_ROUTE } from '../../constants/url';
+import { useGlobalCtx } from '../../contexts/global_context';
 
 const ReportsSidebar = () => {
+  const { embedCodeModalVisibilityHandler } = useGlobalCtx();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -32,9 +35,9 @@ const ReportsSidebar = () => {
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
-          <Link
-            href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
-            className={`flex w-full items-center gap-8px ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
+          <div
+            onClick={embedCodeModalVisibilityHandler}
+            className={`flex w-full items-center gap-8px hover:cursor-pointer ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -63,7 +66,7 @@ const ReportsSidebar = () => {
             >
               Get Embed Code
             </p>
-          </Link>
+          </div>
 
           {/* Info: Divider (20240423 - Shirley) */}
           <div
@@ -138,9 +141,10 @@ const ReportsSidebar = () => {
         </div>
       </div>
 
+      {/* Info: mobile version (20240507 - Shirley) */}
       <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
-        <Link
-          href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
+        <div
+          onClick={embedCodeModalVisibilityHandler}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
         >
           <svg
@@ -165,7 +169,7 @@ const ReportsSidebar = () => {
               </clipPath>
             </defs>
           </svg>
-        </Link>
+        </div>
         <Link
           href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
           className="mx-auto p-16px text-primaryYellow"
