@@ -10,6 +10,13 @@ import { AICH_URI } from '@/constants/config';
 import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
+// Info Murky (20240424) 要使用formidable要先關掉bodyParsor
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IInvoice | IAccountResultStatus[]>>

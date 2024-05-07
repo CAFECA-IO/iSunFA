@@ -2,17 +2,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
+import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
-import { IInvoice } from '@/interfaces/invoice';
+import { ProgressStatus } from '@/interfaces/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice[]>>
+  res: NextApiResponse<IResponseData<ProgressStatus>>
 ) {
   try {
     const { invoiceId } = req.query;
+
     // Info Murky (20240416): Check if invoiceId is string
     if (Array.isArray(invoiceId) || !invoiceId || typeof invoiceId !== 'string') {
       throw new Error('INVALID_INPUT_PARAMETER');
@@ -20,20 +21,20 @@ export default async function handler(
 
     switch (req.method) {
       case 'GET': {
-        const result = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/result`);
+        const result = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/process_status`);
 
         if (!result.ok) {
           throw new Error('GATEWAY_TIMEOUT');
         }
 
-        const ocrResultData: IInvoice = (await result.json()).payload;
+        const resultJson: ProgressStatus = (await result.json()).payload;
 
         res.status(RESPONSE_STATUS_CODE.success).json({
           powerby: `ISunFa api ${version}`,
-          success: true,
+          success: false,
           code: String(RESPONSE_STATUS_CODE.success),
-          message: `OCR analyzing result of id:${invoiceId} return successfully`,
-          payload: [ocrResultData],
+          message: `OCR analyzing progress status of id:${invoiceId} return successfully`,
+          payload: resultJson,
         });
         break;
       }
