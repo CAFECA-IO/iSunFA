@@ -1,6 +1,9 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IInvoice } from '@/interfaces/invoice';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
@@ -9,7 +12,6 @@ import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
 import Toggle from '../toggle/toggle';
-// import { IConfirmModal } from '../../interfaces/confirm_modal';
 import ProgressBar from '../progress_bar/progress_bar';
 import { MessageType } from '../../interfaces/message_modal';
 
@@ -39,11 +41,18 @@ const NewJournalForm = () => {
     messageModalVisibilityHandler,
     messageModalDataHandler,
     confirmModalVisibilityHandler,
-    // confirmModalDataHandler,
     addPropertyModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { ocrResultId, setOcrResultIdHandler } = useAccountingCtx();
+  const { ocrResultId } = useAccountingCtx();
+
+  const {
+    isLoading: invoiceLoading,
+    data: invoiceData,
+    success: invoiceSuccess,
+  } = APIHandler<IInvoice>(APIName.GET_INVOCIE, {
+    params: { invoiceId: ocrResultId },
+  });
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -76,6 +85,22 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
+  useEffect(() => {
+    if (invoiceData && invoiceSuccess && !invoiceLoading && ocrResultId !== '') {
+      // Info: (20240506 - Julian) 設定表單的預設值
+      setDatePeriod({ startTimeStamp: invoiceData.date, endTimeStamp: invoiceData.date });
+      setSelectedEventType(invoiceData.eventType);
+      setSelectedPaymentReason(invoiceData.paymentReason);
+      setInputDescription(invoiceData.description);
+      setInputVendor(invoiceData.venderOrSupplyer);
+      setInputTotalPrice(invoiceData.payment.price);
+      setTaxToggle(invoiceData.payment.hasTax);
+      setTaxRate(invoiceData.payment.taxPercentage);
+      setFeeToggle(invoiceData.payment.hasFee);
+      setInputFee(invoiceData.payment.fee);
+    }
+  }, [invoiceLoading, invoiceData, invoiceSuccess, ocrResultId]);
+
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
     // const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -87,58 +112,6 @@ const NewJournalForm = () => {
     // window.addEventListener('beforeunload', onBeforeUnload);
     // return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [formHasChanged]);
-
-  // Info: (20240506 - Julian) 用 ocrResultId call API ，取得日記帳資料
-  const getOrcAnalyzedResult = async () => {
-    const response = await fetch(`/api/v1/company/1/ocr/${ocrResultId}/result`, {
-      method: 'GET',
-    });
-    const data = await response.json();
-    const result = data.payload[0];
-
-    // Info: (20240506 - Julian) 設定表單的預設值
-    setDatePeriod({
-      startTimeStamp: result.date.start_date,
-      endTimeStamp: result.date.end_date,
-    });
-    setSelectedEventType(result.eventType);
-    setSelectedPaymentReason(result.paymentReason);
-    setInputDescription(result.description);
-    setInputVendor(result.venderOrSupplyer);
-    setInputTotalPrice(result.payment.price);
-    setTaxToggle(result.payment.hasTax);
-    setTaxRate(result.payment.taxPercentage);
-    setFeeToggle(result.payment.hasFee);
-    setInputFee(result.payment.fee);
-  };
-
-  useEffect(() => {
-    if (ocrResultId) {
-      getOrcAnalyzedResult();
-      setOcrResultIdHandler('');
-    }
-  }, [ocrResultId]);
-
-  // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
-  /*   const newJournalData: IConfirmModal = {
-    dateTimestamp: datePeriod.startTimeStamp,
-    type: selectedEventType,
-    reason: selectedPaymentReason,
-    vendor: inputVendor,
-    description: inputDescription,
-    totalPrice: inputTotalPrice,
-    tax: taxToggle ? taxRate : 0,
-    fee: feeToggle ? inputFee : 0,
-    paymentMethod: selectedMethod,
-    paymentPeriod:
-      paymentPeriod === PaymentPeriod.AT_ONCE ? 'Pay at once' : `Pay in ${inputInstallment} times`,
-    paymentStatus:
-      paymentState === PaymentState.PARTIAL_PAID
-        ? `Partially paid: ${inputPartialPaid} TWD`
-        : paymentState,
-    project: selectedProject,
-    contract: selectedContract,
-  }; */
 
   const {
     targetRef: eventMenuRef,
@@ -615,6 +588,7 @@ const NewJournalForm = () => {
                 id="taxToggle"
                 initialToggleState={taxToggle}
                 getToggledState={taxToggleHandler}
+                toggleStateFromParent={taxToggle}
               />
             </div>
 
@@ -648,6 +622,7 @@ const NewJournalForm = () => {
                 id="feeToggle"
                 initialToggleState={feeToggle}
                 getToggledState={feeToggleHandler}
+                toggleStateFromParent={feeToggle}
               />
             </div>
             <div

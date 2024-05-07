@@ -56,7 +56,7 @@ export enum APIPath {
   GET_PROJECTS_VALUE = `${apiPrefix}/toBeDefined`,
   GET_PERIOD_PROFIT = `${apiPrefix}/toBeDefined`,
   GET_PROJECT_VOUCHERS = `${apiPrefix}/toBeDefined`,
-  GET_INVOCIE = `${apiPrefix}/toBeDefined`,
+  GET_INVOCIE = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
   UPLOAD_INVOCIE = `${apiPrefix}/company/:companyId/invoice`,
   GET_AUDIT_REPORTS = `${apiPrefix}/toBeDefined`,
   GENERATE_FINANCIAL_REPORT = `${apiPrefix}/toBeDefined`,

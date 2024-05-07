@@ -1,5 +1,6 @@
 /* eslint-disable */
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
 import { LuTag } from 'react-icons/lu';
@@ -11,6 +12,10 @@ import AccountingVoucherRow from '../accounting_voucher_row/accounting_voucher_r
 import { useAccountingCtx } from '../../contexts/accounting_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { timestampToString } from '@/lib/utils/common';
+import APIHandler from '@/lib/utils/api_handler';
+import { IVoucher } from '@/interfaces/voucher';
+import { APIName } from '@/constants/api_connection';
+//import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -21,25 +26,47 @@ interface IConfirmModalProps {
 const ConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
-  confirmModalData,
+  //confirmModalData,
 }: IConfirmModalProps) => {
   const router = useRouter();
 
-  const {
-    type,
-    dateTimestamp,
-    reason,
-    vendor,
-    description,
-    totalPrice,
-    tax,
-    fee,
-    paymentMethod,
-    paymentPeriod,
-    paymentStatus,
-    project,
-    contract,
-  } = confirmModalData;
+  const [voucherType, setVoucherType] = useState<string>('');
+  const [date, setDate] = useState<number>(0);
+  const [reason, setReason] = useState<string>('');
+  const [companyName, setCompanyName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [taxPercentage, setTaxPercentage] = useState<number>(0);
+  const [fee, setFee] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentPeriod, setPaymentPeriod] = useState<string>('');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
+  const [project, setProject] = useState<string>('');
+  const [contract, setContract] = useState<string>('');
+  //const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+
+  const { data: voucherData, isLoading: isVoucherLoading } = APIHandler<IVoucher>(
+    APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
+    {}
+  );
+
+  useEffect(() => {
+    if (!isVoucherLoading && voucherData) {
+      setVoucherType(voucherData.metadatas[0].voucherType);
+      setDate(voucherData.metadatas[0].date);
+      setReason(voucherData.metadatas[0].reason);
+      setCompanyName(voucherData.metadatas[0].companyName);
+      setDescription(voucherData.metadatas[0].description);
+      setTotalPrice(voucherData.metadatas[0].totalPrice);
+      setTaxPercentage(voucherData.metadatas[0].taxPercentage);
+      setFee(voucherData.metadatas[0].fee);
+      setPaymentMethod(voucherData.metadatas[0].paymentMethod);
+      setPaymentPeriod(voucherData.metadatas[0].paymentPeriod);
+      setPaymentStatus(voucherData.metadatas[0].paymentStatus);
+      setProject(voucherData.metadatas[0].project);
+      setContract(voucherData.metadatas[0].contract);
+    }
+  }, [isVoucherLoading, voucherData]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();
@@ -56,9 +83,9 @@ const ConfirmModal = ({
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
-  const displayType = <p className="text-lightRed">{type}</p>;
+  const displayType = <p className="text-lightRed">{voucherType}</p>;
 
-  const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
+  const displayDate = <p>{timestampToString(date).date}</p>;
 
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
@@ -70,7 +97,7 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayVendor = <p className="font-semibold text-navyBlue2">{vendor}</p>;
+  const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
 
   const displayDescription = <p className="font-semibold text-navyBlue2">{description}</p>;
 
@@ -80,7 +107,7 @@ const ConfirmModal = ({
         <span className="font-semibold text-navyBlue2">{totalPrice}</span> TWD
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{tax}%</span> Tax /{' '}
+        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> Tax /{' '}
         <span className="font-semibold text-navyBlue2">{fee}</span> TWD fee)
       </p>
     </div>
