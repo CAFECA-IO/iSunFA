@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IClient } from '@/interfaces/client';
-import { IResponseData } from '../../../../../../interfaces/response_data';
+import { IResponseData } from '@/interfaces/response_data';
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   try {
     if (!req.headers.userId) {
-      throw new Error('Resource not found');
+      throw new Error('RESOURCE_NOT_FOUND');
     }
     // Info: (20240419 - Jacky) C010001 - GET /client
     if (req.method === 'GET') {
@@ -55,7 +55,7 @@ export default async function handler(
         payload: newClient,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

@@ -16,10 +16,8 @@ export interface AccountResultStatus {
 }
 
 export interface AccountInvoiceData {
-  date: {
-    start_date: number; // timestamp
-    end_date: number; // timestamp
-  };
+  date: number; // timestamp
+  invoiceId: string;
   eventType: EventType;
   paymentReason: string;
   description: string;
@@ -34,6 +32,8 @@ export interface AccountInvoiceData {
 }
 
 export interface AccountInvoiceWithPaymentMethod extends AccountInvoiceData {
+  projectId: string;
+  contractId: string;
   payment: AccountInvoiceData['payment'] & {
     paymentMethod: string;
     paymentPeriod: PaymentPeriodType;
@@ -53,7 +53,11 @@ export interface AccountLineItem {
 
 export interface AccountVoucherMetaData {
   date: number;
+  paymentReason: string;
   voucherType: VoucherType;
+  invoiceId: string;
+  projectId: string;
+  contractId: string;
   venderOrSupplyer: string;
   description: string;
   totalPrice: number;
@@ -147,8 +151,9 @@ export function isPaymentPeriodType(data: string): data is PaymentPeriodType {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
   // 檢查date是否存在，且start_date和end_date是否為數字
-  const validDate =
-    data.date && typeof data.date.start_date === 'number' && typeof data.date.end_date === 'number';
+  const validDate = data.date && typeof data.date === 'number';
+
+  const validInvoiceId = typeof data.invoiceId === 'string';
 
   // 檢查eventType是否符合EventType類型（假設EventType為一個字符串的聯合類型）
   const validEventType = isEventType(data.eventType);
@@ -169,6 +174,7 @@ export function isAccountInvoiceData(data: any): data is AccountInvoiceData {
 
   return (
     validDate &&
+    validInvoiceId &&
     validEventType &&
     validPaymentReason &&
     validDescription &&
@@ -182,6 +188,8 @@ export function isAccountInvoiceWithPaymentMethod(
   data: any
 ): data is AccountInvoiceWithPaymentMethod {
   return (
+    typeof data.projectId === 'string' &&
+    typeof data.contractId === 'string' &&
     typeof data.payment?.paymentMethod === 'string' &&
     isPaymentPeriodType(data.payment?.paymentPeriod) &&
     typeof data.payment?.installmentPeriod === 'number' &&
@@ -215,6 +223,10 @@ export function isAccountVoucherMetaData(data: any): data is AccountVoucherMetaD
   return (
     data &&
     typeof data.date === 'number' &&
+    typeof data.invoiceId === 'string' &&
+    typeof data.projectId === 'string' &&
+    typeof data.contractId === 'string' &&
+    typeof data.paymentReason === 'string' &&
     isVoucherType(data.voucherType) &&
     typeof data.venderOrSupplyer === 'string' &&
     typeof data.description === 'string' &&
@@ -298,10 +310,8 @@ export function cleanInvoiceData(rawData: any): AccountInvoiceData {
 
   // Construct the new object with the cleaned and converted data
   const cleanedData: AccountInvoiceData = {
-    date: {
-      start_date: convertDateToTimestamp(date.start_date),
-      end_date: convertDateToTimestamp(date.end_date),
-    },
+    date: convertDateToTimestamp(date),
+    invoiceId: rawData.invoiceId || '',
     eventType: isEventType(eventType) ? eventType : 'income',
     paymentReason: paymentReason || '',
     description: description || '',
@@ -346,6 +356,10 @@ export function cleanedVoucherMetaData(rawData: any): AccountVoucherMetaData {
 
   const cleanedData: AccountVoucherMetaData = {
     date: convertDateToTimestamp(date),
+    invoiceId: rawData.invoiceId || '',
+    projectId: rawData.projectId || '',
+    contractId: rawData.contractId || '',
+    paymentReason: rawData.paymentReason || '',
     voucherType: isVoucherType(voucherType) ? voucherType : 'receive',
     venderOrSupplyer: venderOrSupplyer || '',
     description: description || '',

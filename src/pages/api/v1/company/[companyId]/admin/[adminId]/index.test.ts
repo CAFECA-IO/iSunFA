@@ -100,7 +100,7 @@ describe('test admin API', () => {
     );
   });
 
-  it('should return error for invalid input parameter', async () => {
+  it('should return error for INVALID_INPUT_PARAMETER', async () => {
     req.method = 'PUT';
     req.headers.userId = '1';
     req.query = { id: '1' };
@@ -124,7 +124,7 @@ describe('test admin API', () => {
     );
   });
 
-  it('should return error for resource not found', async () => {
+  it('should return error for RESOURCE_NOT_FOUND', async () => {
     req.headers.userId = '1';
     req.query = { id: '2' };
     await handler(req, res);
@@ -140,7 +140,7 @@ describe('test admin API', () => {
     );
   });
 
-  it('should return error for method not allowed', async () => {
+  it('should return error for METHOD_NOT_ALLOWED', async () => {
     req.headers.userId = '1';
     req.method = 'POST';
     req.query = { id: '1' };

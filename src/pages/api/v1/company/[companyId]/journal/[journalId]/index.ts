@@ -1,6 +1,6 @@
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/errorCode';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { journalArray } from '../index';
@@ -11,8 +11,8 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      if (!req.query.journalId) {
-        throw new Error('Invalid input parameter');
+      if (!req.query.voucherId) {
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const getJournalById = journalArray.find((journal) => journal.id === req.query.journalId);
       if (getJournalById) {
@@ -27,7 +27,7 @@ export default async function handler(
         throw new Error('Journal not found');
       }
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;

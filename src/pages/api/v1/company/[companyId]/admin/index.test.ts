@@ -98,7 +98,7 @@ describe('test admin API handler', () => {
     );
   });
 
-  it('should return error for method not allowed', async () => {
+  it('should return error for METHOD_NOT_ALLOWED', async () => {
     req.method = 'PUT';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);

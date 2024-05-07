@@ -2,6 +2,7 @@ export type IAPIName =
   | 'SIGN_UP'
   | 'SIGN_IN'
   | 'SIGN_OUT'
+  | 'LIST_AUDIT_REPORTS'
   | 'LIST_ALL_PROJECTS'
   | 'GET_PROJECTS_STATUS'
   | 'GET_PROJECTS_VALUE'
@@ -27,7 +28,7 @@ export type IAPIName =
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
-  header?: { [key: string]: unknown };
+  header?: { [key: string]: string };
   body?: { [key: string]: unknown };
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };

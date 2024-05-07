@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
-import { IResponseData } from '../../../../../../interfaces/response_data';
-import version from '../../../../../../lib/version';
-import { errorMessageToErrorCode } from '../../../../../../lib/utils/errorCode';
+import version from '@/lib/version';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
+import { IResponseData } from '@/interfaces/response_data';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   try {
@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
     } else if (req.method === 'POST') {
       const { name, email } = req.body;
       if (!name || !email) {
-        throw new Error('Invalid input parameter');
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const admin: IAdmin = {
         id: '3',
@@ -69,7 +69,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         payload: admin,
       });
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error('METHOD_NOT_ALLOWED');
     }
   } catch (_error) {
     const error = _error as Error;
