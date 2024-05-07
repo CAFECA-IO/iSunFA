@@ -2,7 +2,7 @@
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { pdfjs, Document, Page } from 'react-pdf';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../button/button';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -339,6 +339,7 @@ const ViewReportSection = ({
   reportLink,
 }: IViewReportSectionProps) => {
   const globalCtx = useGlobalCtx();
+
   const [chartWidth, setChartWidth] = React.useState(580);
   const [chartHeight, setChartHeight] = React.useState(250);
 
@@ -349,9 +350,11 @@ const ViewReportSection = ({
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
+    setIsLoading(false);
   }
 
   const thumbnailClickHandler = (index: number) => {
@@ -418,6 +421,10 @@ const ViewReportSection = ({
   };
 
   useEffect(() => {
+    console.log('reportTypesName', reportTypesName);
+
+    if (!pdfFile) return;
+
     switch (reportTypesName.id) {
       case ReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
@@ -431,7 +438,7 @@ const ViewReportSection = ({
       default:
         setReportThumbnails([]);
     }
-  }, [reportTypesName]);
+  }, [pdfFile]);
 
   useEffect(() => {
     fetchPDF();
@@ -444,45 +451,45 @@ const ViewReportSection = ({
     ).toString();
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const windowWidth = globalCtx.width;
-      const windowHeight = window.innerHeight;
-      const DESKTOP_WIDTH = 1024;
-      const TABLET_WIDTH = 768;
-      const MOBILE_WIDTH = 500;
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     const windowWidth = globalCtx.width;
+  //     const windowHeight = window.innerHeight;
+  //     const DESKTOP_WIDTH = 1024;
+  //     const TABLET_WIDTH = 768;
+  //     const MOBILE_WIDTH = 500;
 
-      if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 250;
-        const presentHeight = 250;
+  //     if (windowWidth <= MOBILE_WIDTH) {
+  //       const presentWidth = 250;
+  //       const presentHeight = 250;
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else if (windowWidth <= TABLET_WIDTH) {
-        const presentWidth = 370;
-        const presentHeight = 250;
+  //       setChartWidth(presentWidth);
+  //       setChartHeight(presentHeight);
+  //     } else if (windowWidth <= TABLET_WIDTH) {
+  //       const presentWidth = 370;
+  //       const presentHeight = 250;
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 580;
-        const presentHeight = 250;
+  //       setChartWidth(presentWidth);
+  //       setChartHeight(presentHeight);
+  //     } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
+  //       const presentWidth = 580;
+  //       const presentHeight = 250;
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else {
-        const presentWidth = windowWidth / 12;
-        const presentHeight = windowHeight / 3.5;
+  //       setChartWidth(presentWidth);
+  //       setChartHeight(presentHeight);
+  //     } else {
+  //       const presentWidth = windowWidth / 12;
+  //       const presentHeight = windowHeight / 3.5;
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      }
-    };
+  //       setChartWidth(presentWidth);
+  //       setChartHeight(presentHeight);
+  //     }
+  //   };
 
-    handleResize();
-  }, [globalCtx.width]);
+  //   handleResize();
+  // }, [globalCtx.width]);
 
-  console.log('chartWidth', chartWidth, 'chartHeight', chartHeight);
+  // console.log('chartWidth', chartWidth, 'chartHeight', chartHeight);
 
   console.log('thumbnail', reportThumbnails);
 
@@ -520,6 +527,7 @@ const ViewReportSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
+              disabled={isLoading}
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -542,6 +550,8 @@ const ViewReportSection = ({
               </div>
             </Button>
             <Button
+              // TODO: yet to dev (20240507 - Shirley)
+              disabled={true}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -695,41 +705,42 @@ const ViewReportSection = ({
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      <div className="mt-12 flex w-full px-40 pb-2">
+      <div className="mt-12 flex h-850px w-full px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="hidden h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:flex lg:h-850px">
-          <ul className="mt-5 flex w-full flex-col items-center justify-center space-y-5">
-            {reportThumbnails.map((thumbnail, index) => (
-              <button onClick={() => thumbnailClickHandler(index)} key={index}>
-                <div
-                  className={`flex flex-col rounded-2xl px-5 py-4 ${
-                    index === activeIndex
-                      ? 'bg-surface-brand-primary-soft'
-                      : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
-                  }`}
-                >
-                  <div className="flex items-center justify-center border border-solid border-blue-950">
-                    <Image
-                      width={150}
-                      height={106}
-                      loading="lazy"
-                      src={thumbnail.src}
-                      alt={thumbnail.alt}
-                    />
-                  </div>
-                  <div
-                    className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
-                      thumbnail.active
-                        ? 'text-text-neutral-solid-dark'
-                        : 'text-text-text-neutral-primary'
-                    }`}
-                  >
-                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </ul>
+        <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+          <div className="mt-9 flex w-full flex-col items-center justify-center space-y-5">
+            {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
+            <div className="flex h-850px flex-col">
+              {!isLoading ? (
+                reportThumbnails.map((thumbnail, index) => (
+                  <button onClick={() => thumbnailClickHandler(index)} key={index}>
+                    <div
+                      className={`flex flex-col rounded-2xl px-5 py-4 ${
+                        index === activeIndex
+                          ? 'bg-surface-brand-primary-soft'
+                          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center border border-solid border-blue-950">
+                        <Image width={150} height={106} src={thumbnail.src} alt={thumbnail.alt} />
+                      </div>
+                      <div
+                        className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
+                          thumbnail.active
+                            ? 'text-text-neutral-solid-dark'
+                            : 'text-text-text-neutral-primary'
+                        }`}
+                      >
+                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p>Loading...</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {pdfFile ? (
