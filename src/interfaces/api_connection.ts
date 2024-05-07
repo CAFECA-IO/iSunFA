@@ -44,3 +44,11 @@ export type IAPIConfig = {
   output: IAPIOutput;
   useWorker: boolean;
 };
+
+export type IAPIResponse<Data> = {
+  success: boolean | undefined;
+  trigger: () => void;
+  isLoading: boolean | undefined;
+  data: Data | undefined;
+  error: Error | null;
+};
