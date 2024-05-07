@@ -416,8 +416,6 @@ const ViewReportSection = ({
   };
 
   useEffect(() => {
-    console.log('reportTypesName', reportTypesName);
-
     if (!pdfFile) return;
 
     switch (reportTypesName.id) {
@@ -483,8 +481,6 @@ const ViewReportSection = ({
 
     handleResize();
   }, [globalCtx.width]);
-
-  console.log('reportWidth', chartWidth, 'reportHeight', chartHeight);
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (

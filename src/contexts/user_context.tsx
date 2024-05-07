@@ -25,6 +25,7 @@ interface UserContextType {
   userAuth: IUserAuth | null;
   username: string | null;
   signedIn: boolean;
+  isSignInError: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -35,6 +36,7 @@ export const UserContext = createContext<UserContextType>({
   userAuth: {} as IUserAuth,
   username: '',
   signedIn: false,
+  isSignInError: false,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -56,7 +58,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false,
     false
   );
-  console.log('signOutSuccess:', signOutSuccess);
+  const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
+
+  // console.log('signOutSuccess:', signOutSuccess);
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_DISPLAYED_USER_NAME;
@@ -93,6 +97,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setUserAuth(data);
       setCredential(credential);
       setSignedIn(true);
+      setIsSignInError(false);
 
       // TODO: workaround for demo for registration (20240409 - Shirley)
       if (data) {
@@ -177,6 +182,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         writeCookie();
       }
 
+      // eslint-disable-next-line no-console
+      console.log('in signIn, authentication:', authentication);
+
       // const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
       //   authenticatorType: 'both',
       //   userVerification: 'required',
@@ -203,7 +211,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
-      console.error('signUp error:', error);
+      console.error('signIn error and try to call singUp function:', error);
+      // signUp({ username: '' });
+      setIsSignInError(true);
+      if (!(error instanceof DOMException)) {
+        throw new Error('signIn error thrown in userCtx');
+      }
     }
   };
 
@@ -239,6 +252,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setUsername(null);
     setCredential(null);
     setSignedIn(false);
+    setIsSignInError(false);
   };
 
   const readCookie = async () => {
@@ -307,6 +321,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
+      isSignInError: isSignInErrorRef.current,
     }),
     [credentialRef.current]
   );
