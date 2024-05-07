@@ -47,7 +47,7 @@ export enum APIPath {
   SIGN_IN = `${apiPrefix}/sign-in`,
   SIGN_OUT = `${apiPrefix}/sign-out`,
   // GET_USER_BY_ID = `${apiPrefix}/toBeDefined`,
-  LIST_AUDIT_REPORTS = `${apiPrefix}/audit_reports`,
+  LIST_AUDIT_REPORTS = `${apiPrefix}/audit_report`,
   LIST_ALL_PROJECTS = `${apiPrefix}/toBeDefined`,
   GET_PROJECTS_STATUS = `${apiPrefix}/company/:companyId/project/:projectId/status`,
   GET_PROJECTS_VALUE = `${apiPrefix}/toBeDefined`,
