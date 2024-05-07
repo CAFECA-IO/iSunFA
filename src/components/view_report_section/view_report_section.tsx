@@ -575,9 +575,11 @@ const ViewReportSection = ({
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">Token Contract </div>
             <div className="flex items-center space-x-3">
-              <Link href={''} className="font-semibold text-link-text-primary">
+              {/* TODO: link (20240507 - Shirley) */}
+              {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
-              </Link>
+              </Link> */}
+              <div className="font-semibold text-link-text-primary">{tokenContract} </div>
 
               <button onClick={copyTokenContractClickHandler} type="button">
                 {' '}
@@ -602,9 +604,12 @@ const ViewReportSection = ({
             <div className="text-text-neutral-tertiary">Token ID </div>
 
             <div className="flex items-center space-x-3">
-              <Link href={''} className="font-semibold text-link-text-primary">
-                {tokenId}{' '}
-              </Link>
+              {/* TODO: link (20240507 - Shirley) */}
+              {/* <Link href={''} className="font-semibold text-link-text-primary">
+                {tokenId}
+              </Link> */}
+
+              <div className="font-semibold text-link-text-primary">{tokenId} </div>
 
               <button onClick={copyTokenIdClickHandler} type="button">
                 {' '}
@@ -655,10 +660,10 @@ const ViewReportSection = ({
                 </div>
               </div>
             </div>
+            {/* TODO: link (20240507 - Shirley) */}
+
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
-              <div className="justify-center rounded-md">
-                0x00000000219ab540356cBB839Cbe05303d7705Fa
-              </div>
+              <div className="justify-center rounded-md">{tokenContract}</div>
             </div>
           </div>
           <div className="mt-4 flex flex-col">
@@ -688,8 +693,10 @@ const ViewReportSection = ({
                 </div>
               </div>
             </div>
+            {/* TODO: link (20240507 - Shirley) */}
+
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
-              <div className="justify-center rounded-md">37002036</div>
+              <div className="justify-center rounded-md">{tokenId}</div>
             </div>
           </div>
         </div>
@@ -741,20 +748,21 @@ const ViewReportSection = ({
             <button
               onClick={prevClickHandler}
               disabled={pageNumber <= 1}
-              className="absolute bottom-40 left-0 z-10 m-4 iphonese:bottom-96 md:bottom-56 lg:hidden"
+              className="absolute bottom-20 left-0 z-10 m-4 iphonese:bottom-1/5 iphone12pro:bottom-96 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                className="bi bi-chevron-left"
-                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 17 16"
               >
                 <path
+                  fill="#001840"
                   fillRule="evenodd"
-                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
-                />
+                  d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
             </button>
 
@@ -764,22 +772,13 @@ const ViewReportSection = ({
               </Document>
             </div>
             <div className="flex h-screen lg:hidden">
-              <Document
-                file={pdfFile}
-                onLoadSuccess={onDocumentLoadSuccess}
-                className={`relative`}
-                //  left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-              >
+              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
                 <Page
                   scale={1}
                   pageNumber={pageNumber}
-                  // Deprecated: 20240519 - Shirley
                   width={chartWidth}
                   height={chartHeight}
-                  // className={`-translate-x-2/5`}
-                  className="absolute left-1/4 top-1/5 w-full -translate-x-1/2 -translate-y-1/2 sm:left-1/2 sm:top-1/2"
-                  // max-h-full max-w-full
-                  // className={`absolute left-0 top-0 max-h-full max-w-full`}
+                  className="absolute left-1/5 top-2 w-full -translate-x-1/2 -translate-y-1/2 iphonese:top-1/5 sm:left-1/2 sm:top-1/2"
                 />
               </Document>
             </div>
@@ -787,20 +786,21 @@ const ViewReportSection = ({
             <button
               onClick={nextClickHandler}
               disabled={pageNumber >= numPages}
-              className="absolute bottom-40 right-0 z-10 m-4 md:bottom-56 lg:hidden"
+              className="absolute bottom-20 right-0 z-10 m-4 iphonese:bottom-1/5 iphone12pro:bottom-96 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                className="bi bi-chevron-right"
-                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 17 16"
               >
                 <path
+                  fill="#001840"
                   fillRule="evenodd"
-                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
-                />
+                  d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
             </button>
           </div>

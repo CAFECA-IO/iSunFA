@@ -824,8 +824,8 @@ module.exports = {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
 
         iphonese: '376px',
-        iphonexr: '415px',
         iphone12pro: '391px',
+        iphonexr: '415px',
         iphone12promax: '431px',
 
         sm: '500px', // mobile
@@ -1081,6 +1081,7 @@ module.exports = {
         '1000px': '1000px',
         '1100px': '1100px',
         '1200px': '1200px',
+        '1300px': '1300px',
         '1400px': '1400px',
         '1440px': '1440px',
         '1500px': '1500px',
