@@ -4,8 +4,8 @@ import { ILineItem, isILineItem } from './line_item';
 export interface IVoucherMetaData {
   date: number;
   voucherType: VoucherType;
-  companyId: string;
-  companyName: string;
+  companyId: string; // 手動輸入
+  companyName: string; // vendor supplier 改成這個
   description: string;
   totalPrice: number;
   taxPercentage: number;
@@ -15,7 +15,7 @@ export interface IVoucherMetaData {
   installmentPeriod: number;
   paymentStatus: PaymentStatusType;
   alreadyPaidAmount: number;
-  reason: string;
+  reason: string; // 從paymentReason改這個
   projectId: string;
   project: string;
   contractId: string;
@@ -24,7 +24,7 @@ export interface IVoucherMetaData {
 
 export interface IVoucher {
   voucherIndex: string;
-  invoiceIndex: string;
+  invoiceIndex: string; // 改在這裡
   metadatas: IVoucherMetaData[];
   lineItems: ILineItem[];
 }

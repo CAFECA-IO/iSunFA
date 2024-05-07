@@ -9,7 +9,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { invoiceId } = req.query;
     if (!invoiceId) {
-      throw new Error('Invalid input parameter');
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
     // Find the invoice with the given id
     // Find the invoice with the given id

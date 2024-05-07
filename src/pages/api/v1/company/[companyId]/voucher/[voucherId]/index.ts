@@ -1,6 +1,6 @@
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucher, IVoucherMetaData } from '@/interfaces/voucher';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import version from '@/lib/version';
@@ -22,7 +22,23 @@ export default async function handler(
         throw new Error('GATEWAY_TIMEOUT');
       }
 
-      const voucher: IVoucher = (await result.json()).payload;
+      const { voucherIndex, metadatas, lineItems } = (await result.json()).payload;
+
+      const { venderOrSupplyer, paymentReason, invoiceId, ...rawMetadata } = metadatas[0];
+      const trueMetadatas: IVoucherMetaData = {
+        ...rawMetadata,
+        companyId: '810af23',
+        companyName: venderOrSupplyer,
+        reason: paymentReason,
+        contract: 'ISunFa開發',
+        project: 'ISunFa',
+      };
+      const voucher: IVoucher = {
+        voucherIndex,
+        metadatas: [trueMetadatas],
+        lineItems,
+        invoiceIndex: invoiceId,
+      };
 
       res.status(RESPONSE_STATUS_CODE.success).json({
         powerby: 'ISunFa api ' + version,

@@ -85,6 +85,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   // Info: (20240506 - Julian) 取得攝影機畫面
   const getCameraVideo = () => {
+    if (!isModalVisible) return;
     navigator.mediaDevices
       .getUserMedia({
         video: {

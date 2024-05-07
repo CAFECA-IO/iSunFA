@@ -1,43 +1,51 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-// import { IInvoice } from '@/interfaces/invoice';
-// import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
+// Info Murky (20240416):  this is mock api need to migrate to microservice
+import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { AICH_URI } from '@/constants/config';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
+import { IResponseData } from '@/interfaces/response_data';
+import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IInvoice[]>>
+) {
   try {
     const { invoiceId } = req.query;
-    if (!invoiceId) {
-      throw new Error('Invalid input parameter');
+    // Info Murky (20240416): Check if invoiceId is string
+    if (Array.isArray(invoiceId) || !invoiceId || typeof invoiceId !== 'string') {
+      throw new Error('INVALID_INPUT_PARAMETER');
     }
-    const invoice: IInvoice = {
-      date: 21321321,
-      invoiceId: '123123',
-      eventType: 'expense',
-      paymentReason: 'purchase',
-      description: 'description',
-      venderOrSupplyer: 'vender',
-      payment: {
-        price: 100,
-        hasTax: true,
-        taxPercentage: 10,
-        hasFee: true,
-        fee: 10,
-      },
-    };
-    res.status(200).json({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: invoice,
-    });
+
+    switch (req.method) {
+      case 'GET': {
+        const result = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/result`);
+
+        if (!result.ok) {
+          throw new Error('GATEWAY_TIMEOUT');
+        }
+
+        const ocrResultData: IInvoice = (await result.json()).payload;
+
+        res.status(RESPONSE_STATUS_CODE.success).json({
+          powerby: `ISunFa api ${version}`,
+          success: true,
+          code: String(RESPONSE_STATUS_CODE.success),
+          message: `OCR analyzing result of id:${invoiceId} return successfully`,
+          payload: [ocrResultData],
+        });
+        break;
+      }
+      default: {
+        throw new Error('METHOD_NOT_ALLOWED');
+      }
+    }
   } catch (_error) {
     const error = _error as Error;
     const statusCode = errorMessageToErrorCode(error.message);
     res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
+      powerby: `ISunFa api ${version}`,
       success: false,
       code: String(statusCode),
       payload: {},
