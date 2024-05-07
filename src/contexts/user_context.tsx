@@ -60,7 +60,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   );
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
 
-  console.log('signOutSuccess:', signOutSuccess);
+  // console.log('signOutSuccess:', signOutSuccess);
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_DISPLAYED_USER_NAME;
