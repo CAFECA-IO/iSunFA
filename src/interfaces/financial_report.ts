@@ -1,5 +1,6 @@
 import { IBalanceSheet, isIBalanceSheet } from './balance_sheet';
 import { ICashFlow, isICashFlow } from './cash_flow';
+import { isStringNumberPair } from './common';
 import { IComprehensiveIncome, isIComprehensiveIncome } from './comprehensive_income';
 
 export enum ILifeCycleType {
@@ -57,9 +58,12 @@ export function isIFinancialReportJSON(obj: unknown): obj is IFinancialReportJSO
   }
   const o = obj as IFinancialReportJSON;
   return (
-    isIBalanceSheet(o.balanceSheet) &&
-    isIComprehensiveIncome(o.comprehensiveIncome) &&
-    isICashFlow(o.cashFlow) &&
+    isIBalanceSheet(o.balanceSheet.balanceSheet) &&
+    isIComprehensiveIncome(o.comprehensiveIncome.comprehensiveIncome) &&
+    isICashFlow(o.cashFlow.cashFlow) &&
+    isStringNumberPair(o.balanceSheet.balanceSheetRatios) &&
+    isStringNumberPair(o.comprehensiveIncome.comprehensiveIncomeRatios) &&
+    isStringNumberPair(o.cashFlow.cashFlowRatios) &&
     typeof o.lifeCycle === 'string' &&
     typeof o.creditRating === 'string' &&
     typeof o.financialStatementsAnalysis === 'string' &&

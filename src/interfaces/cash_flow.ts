@@ -89,8 +89,8 @@ export interface IBreakdownCost {
 export function isIBreakdown(obj: any): boolean {
   if (typeof obj !== 'object' || obj === null) return false;
   return Object.keys(obj).every(
-    (key) =>
-      typeof obj[key] === 'object' &&
+    // prettier-ignore
+    (key) => typeof obj[key] === 'object' &&
       obj[key] !== null &&
       isStringNumber(obj[key].amount) &&
       isStringNumber(obj[key].weightedAverageCost)
@@ -136,6 +136,7 @@ export function isIOtherSupplementaryItems(obj: any): obj is IOtherSupplementary
     ['relatedToNonCash', 'relatedToCash'].every(
       (subKey) =>
         typeof obj.details[subKey] === 'object' &&
+        // prettier-ignore
         Object.keys(obj.details[subKey]).every((key) => isIWeightedCost(obj.details[subKey][key]))
     )
   );

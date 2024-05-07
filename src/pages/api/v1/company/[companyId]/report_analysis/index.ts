@@ -6,6 +6,7 @@ import { isIFinancialStatements } from '@/interfaces/financial_report';
 import { AICH_URI } from '@/constants/config';
 import { AccountResultStatus } from '@/interfaces/account';
 import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
 
@@ -120,12 +121,14 @@ export default async function handler(
       }
     }
   } catch (_error) {
-    res.status(500).json({
-      powerby: 'iSunFA v' + version,
+    const error = _error as Error;
+    const statusCode = errorMessageToErrorCode(error.message);
+    res.status(statusCode).json({
+      powerby: 'ISunFa api ' + version,
       success: false,
-      code: '500',
-      message: 'internal server error',
-      payload: null,
+      code: String(statusCode),
+      payload: {},
+      message: error.message,
     });
   }
 }

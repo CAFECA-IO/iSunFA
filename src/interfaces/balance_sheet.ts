@@ -60,9 +60,9 @@ function isIBreakdown(obj: any): boolean {
   if (typeof obj !== 'object' || obj === null) return false;
   return Object.values(obj).every(
     // Info Murky (20240505): type guards can input any type and return a boolean
+    // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (item: any) =>
-      typeof item === 'object' &&
+    (item: any) => typeof item === 'object' &&
       item !== null &&
       isStringNumber(item.amount) &&
       isStringNumber(item.fairValue)

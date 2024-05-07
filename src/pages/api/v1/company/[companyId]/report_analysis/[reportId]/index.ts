@@ -16,13 +16,23 @@ export default async function handler(
         throw new Error('INVALID_INPUT_PARAMETER');
       }
 
-      const result = await fetch(`${AICH_URI}/api/v1/vouchers/${req.query.reportId}/result`);
+      const result = await fetch(`${AICH_URI}/api/v1/audit_reports/${req.query.reportId}/result`);
 
       if (!result.ok) {
         throw new Error('GATEWAY_TIMEOUT');
       }
 
       const financialReportJSON = (await result.json()).payload;
+
+      if (!financialReportJSON) {
+        res.status(RESPONSE_STATUS_CODE.success).json({
+          powerby: 'ISunFa api ' + version,
+          success: false,
+          code: String(RESPONSE_STATUS_CODE.success),
+          message: 'get Financial JSON result by id',
+          payload: financialReportJSON,
+        });
+      }
 
       if (!isIFinancialReportJSON(financialReportJSON)) {
         throw new Error('INTERNAL_SERVICE_ERROR');
@@ -32,7 +42,7 @@ export default async function handler(
         powerby: 'ISunFa api ' + version,
         success: true,
         code: String(RESPONSE_STATUS_CODE.success),
-        message: 'get voucher analyzation result by id',
+        message: 'get Financial JSON result by id',
         payload: financialReportJSON,
       });
     } else {

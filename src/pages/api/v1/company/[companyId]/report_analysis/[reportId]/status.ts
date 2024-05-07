@@ -32,7 +32,7 @@ export default async function handler(
           powerby: `ISunFa api ${version}`,
           success: false,
           code: String(RESPONSE_STATUS_CODE.success),
-          message: `Voucher preview creating process of id:${reportId} return successfully`,
+          message: `Financial JSON creating process of id:${reportId} return successfully`,
           payload: resultJson,
         });
         break;

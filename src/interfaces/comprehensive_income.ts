@@ -91,8 +91,8 @@ export function isISimpleCost(obj: any): obj is ISimpleCost {
 export function isIBreakdown(obj: any): boolean {
   if (typeof obj !== 'object' || obj === null) return false;
   return Object.keys(obj).every(
-    (key) =>
-      typeof obj[key] === 'object' &&
+    // prettier-ignore
+    (key) => typeof obj[key] === 'object' &&
       obj[key] !== null &&
       isStringNumber(obj[key].amount) &&
       isStringNumber(obj[key].weightedAverageCost)
