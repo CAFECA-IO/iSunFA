@@ -5,6 +5,8 @@ import { useTranslation } from 'next-i18next';
 import { FormAnimation } from '../../constants/form_animation';
 import Image from 'next/image';
 import { Button } from '../button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 function ContactForm() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -34,6 +36,21 @@ function ContactForm() {
   const emailChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputEmail(event.target.value);
   };
+  const [comment, setComment] = useState({ comment: '' });
+
+  const {
+    trigger: email,
+    error: enmailError,
+    success: enmailSuccess,
+  } = APIHandler<void>(
+    APIName.EMAIL,
+    {
+      header: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: { comment },
+    },
+    false,
+    false
+  );
 
   // Info: (20230731 - Shirley) 送出失敗事件處理
   const failedProcess = async () => {
@@ -48,7 +65,7 @@ function ContactForm() {
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     // Info: (20230731 - Shirley) 清空表單
     setInputName('');
     setInputPhone('');
@@ -67,25 +84,38 @@ function ContactForm() {
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    setComment(emailData);
 
     // Info: (20230731 - Shirley) call API
-    const res = await fetch('/api/v1/email', {
-      method: 'POST',
-      body: JSON.stringify(emailData),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    });
-    const result = await res.json();
+    // const res = await fetch('/api/v1/email', {
+    //   method: 'POST',
+    //   body: JSON.stringify(emailData),
+    //   headers: {
+    //     'Content-Type': 'application/json; charset=UTF-8',
+    //   },
+    // });
 
-    const { success } = result;
-    if (success) {
-      await successProcess();
-    } else {
-      await failedProcess();
-    }
+    email();
+    // const result = await res.json();
+
+    // const { success } = result;
+    // if (success) {
+    //   await successProcess();
+    // } else {
+    //   await failedProcess();
+    // }
   };
+
+  useEffect(() => {
+    if (enmailSuccess) {
+      successProcess();
+    }
+    if (enmailError) {
+      failedProcess();
+    }
+  }, [enmailSuccess, enmailError]);
 
   // Info: (20230731 - Shirley) 點擊送出按鈕
   const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
