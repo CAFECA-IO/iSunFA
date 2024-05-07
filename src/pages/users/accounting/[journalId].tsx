@@ -66,6 +66,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const paymentStatus: string = journalDetail ? journalDetail.metadatas[0].paymentStatus : '';
   const project: string = journalDetail ? journalDetail.metadatas[0].project : '';
   const contract: string = journalDetail ? journalDetail.metadatas[0].contract : '';
+  const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';
 
   const lineItems = journalDetail ? journalDetail.lineItems : [];
 
@@ -352,7 +353,12 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
                     {/* Info: (20240503 - Julian) certificate */}
                     <div className="flex w-fit flex-col gap-y-30px">
-                      <div className="h-300px w-236px bg-slate-400">I am Certificate</div>
+                      <Image
+                        src={`/api/v1/company/1/${invoiceIndex}/sam/image`}
+                        width={236}
+                        height={300}
+                        alt="certificate"
+                      />
                       {displayJournalType}
                     </div>
                     {/* Info: (20240503 - Julian) details */}
