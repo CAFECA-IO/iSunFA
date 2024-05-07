@@ -9,8 +9,9 @@ import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
 import Toggle from '../toggle/toggle';
-import { IConfirmModal } from '../../interfaces/confirm_modal';
+// import { IConfirmModal } from '../../interfaces/confirm_modal';
 import ProgressBar from '../progress_bar/progress_bar';
+import { MessageType } from '../../interfaces/message_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
@@ -35,10 +36,10 @@ const enum EventType {
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
   const {
-    warningModalVisibilityHandler,
-    warningModalDataHandler,
+    messageModalVisibilityHandler,
+    messageModalDataHandler,
     confirmModalVisibilityHandler,
-    confirmModalDataHandler,
+    // confirmModalDataHandler,
     addPropertyModalVisibilityHandler,
   } = useGlobalCtx();
 
@@ -119,7 +120,7 @@ const NewJournalForm = () => {
   }, [ocrResultId]);
 
   // Info: (20240425 - Julian) 整理要匯入 confirm modal 的日記帳資料
-  const newJournalData: IConfirmModal = {
+  /*   const newJournalData: IConfirmModal = {
     dateTimestamp: datePeriod.startTimeStamp,
     type: selectedEventType,
     reason: selectedPaymentReason,
@@ -137,7 +138,7 @@ const NewJournalForm = () => {
         : paymentState,
     project: selectedProject,
     contract: selectedContract,
-  };
+  }; */
 
   const {
     targetRef: eventMenuRef,
@@ -279,23 +280,37 @@ const NewJournalForm = () => {
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
-  const dataWarningModal = {
+  const dataMessageModal = {
     title: 'Clear form content',
     content: 'Are you sure you want to clear form content?',
-    modalSubmitBtn: 'Clear All',
+    submitBtnStr: 'Clear All',
     submitBtnFunction: () => clearFormHandler(),
+    messageType: MessageType.WARNING,
   };
 
   // Info: (20240425 - Julian) 點擊 Clear All 按鈕時，彈出警告視窗
   const clearAllClickHandler = () => {
-    warningModalDataHandler(dataWarningModal);
-    warningModalVisibilityHandler();
+    messageModalDataHandler(dataMessageModal);
+    messageModalVisibilityHandler();
   };
 
   // Info: (20240429 - Julian) 上傳日記帳資料
-  const uploadJournalHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    confirmModalDataHandler(newJournalData);
+    // confirmModalDataHandler(newJournalData);
+
+    // Info: (20240507 - Julian) call API to upload journal data
+    // ToDo: (20240507 - Julian) API 文件調整中
+    /*     const response = await fetch(`/api/v1/company/1/voucher`, {
+      method: 'POST',
+      body: JSON.stringify(newJournalData),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
+      const { invoiceId } = data.payload; //[0];
+      setOcrResultIdHandler(invoiceId);
+    } */
     confirmModalVisibilityHandler();
   };
 

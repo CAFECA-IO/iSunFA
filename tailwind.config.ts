@@ -726,6 +726,7 @@ module.exports = {
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',
+        successGreen3: '#4BD394',
 
         warningYellow: '#FFCF24',
 

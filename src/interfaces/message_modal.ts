@@ -1,0 +1,24 @@
+export enum MessageType {
+  WARNING = 'warning',
+  SUCCESS = 'success',
+  ERROR = 'error',
+}
+
+export interface IMessageModal {
+  title: string;
+  content: string;
+  subMsg?: string;
+  submitBtnStr: string;
+  submitBtnFunction: () => void;
+  backBtnStr?: string;
+  backBtnFunction?: () => void;
+  messageType: MessageType;
+}
+
+export const dummyMessageModalData: IMessageModal = {
+  title: 'Warning',
+  content: '',
+  submitBtnStr: 'Delete',
+  submitBtnFunction: () => {},
+  messageType: MessageType.WARNING,
+};

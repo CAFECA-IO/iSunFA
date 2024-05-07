@@ -4,11 +4,11 @@ import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '../components/register_form_modal/register_form_modal';
 import AddBookmarkModal from '../components/add_bookmark_modal/add_bookmark_modal';
-import WarningModal from '../components/warning_modal/warning_modal';
+import MessageModal from '../components/message_modal/message_modal';
 import useWindowSize from '../lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '../constants/display';
 import { LayoutAssertion } from '../interfaces/layout_assertion';
-import { IWaringModal, dummyWarningModalData } from '../interfaces/warning_modal';
+import { IMessageModal, dummyMessageModalData } from '../interfaces/message_modal';
 import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
 import AddPropertyModal from '../components/add_property_modal/add_property_modal';
@@ -30,10 +30,10 @@ interface IGlobalContext {
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
 
-  isWarningModalVisible: boolean;
-  warningModalVisibilityHandler: () => void;
-  warningModalData: IWaringModal;
-  warningModalDataHandler: (data: IWaringModal) => void;
+  isMessageModalVisible: boolean;
+  messageModalVisibilityHandler: () => void;
+  messageModalData: IMessageModal;
+  messageModalDataHandler: (data: IMessageModal) => void;
 
   isConfirmModalVisible: boolean;
   confirmModalVisibilityHandler: () => void;
@@ -62,8 +62,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
 
-  const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
-  const [warningModalData, setWarningModalData] = useState<IWaringModal>(dummyWarningModalData);
+  const [isMessageModalVisible, setIsMessageModalVisible] = useState(false);
+  const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
 
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
@@ -94,12 +94,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAddBookmarkModalVisible(!isAddBookmarkModalVisible);
   };
 
-  const warningModalVisibilityHandler = () => {
-    setIsWarningModalVisible(!isWarningModalVisible);
+  const messageModalVisibilityHandler = () => {
+    setIsMessageModalVisible(!isMessageModalVisible);
   };
 
-  const warningModalDataHandler = (data: IWaringModal) => {
-    setWarningModalData(data);
+  const messageModalDataHandler = (data: IMessageModal) => {
+    setMessageModalData(data);
   };
 
   const confirmModalVisibilityHandler = () => {
@@ -131,10 +131,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     registerModalDataHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
-    isWarningModalVisible,
-    warningModalVisibilityHandler,
-    warningModalData,
-    warningModalDataHandler,
+    isMessageModalVisible,
+    messageModalVisibilityHandler,
+    messageModalData,
+    messageModalDataHandler,
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
     confirmModalDataHandler,
@@ -161,10 +161,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />
 
-      <WarningModal
-        isModalVisible={isWarningModalVisible}
-        modalVisibilityHandler={warningModalVisibilityHandler}
-        warningModalData={warningModalData}
+      <MessageModal
+        isModalVisible={isMessageModalVisible}
+        modalVisibilityHandler={messageModalVisibilityHandler}
+        messageModalData={messageModalData}
       />
 
       <ConfirmModal
