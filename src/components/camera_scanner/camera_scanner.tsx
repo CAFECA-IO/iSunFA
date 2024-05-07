@@ -37,7 +37,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   } = APIHandler<string[]>(
     APIName.UPLOAD_INVOCIE,
     {
-      body: { formData },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: formData as any,
     },
     false,
     false
@@ -141,7 +142,14 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       // const formData = new FormData();
       const photo = photoRef.current;
       if (!photo) return;
-      formData.append('file', photo.toDataURL('image/jpeg'));
+      const blob = await new Promise((resolve) => {
+        photo.toBlob(resolve, 'image/png');
+      });
+      // Create a new file from the blob (optional but helpful for naming)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
+
+      formData.append('image', file);
 
       // ToDo: (20240506 - Julian) API 文件調整中
       // const response = await fetch(`/api/v1/company/1/invoice`, {
@@ -330,8 +338,9 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         </button>
       ) : (
         /* ToDo: (20240507 - Julian) album button */
-        <div
-          // htmlFor="uploadImageFromAlbum"
+        // eslint-disable-next-line jsx-a11y/label-has-associated-control
+        <label
+          htmlFor="uploadImageFromAlbum"
           className="relative flex items-center justify-center rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
         >
           <svg
@@ -365,7 +374,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
             className="hidden"
             onChange={handleInputChange}
           />
-        </div>
+        </label>
       )}
       <Button
         type="button"
