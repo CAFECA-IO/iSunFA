@@ -823,7 +823,12 @@ module.exports = {
       screens: {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
 
-        sm: '320px', // mobile
+        iphonese: '376px',
+        iphonexr: '415px',
+        iphone12pro: '391px',
+        iphone12promax: '431px',
+
+        sm: '500px', // mobile
         md: '768px', // tablet
         lg: '1024px', // desktop
         xl: '1440px',

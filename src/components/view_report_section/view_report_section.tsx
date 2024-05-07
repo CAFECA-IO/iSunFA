@@ -183,11 +183,6 @@ const comprehensiveIncomeReportThumbnails = [
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
     src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_17.png',
     alt: 'Report Thumbnail 17',
     active: false,
@@ -451,47 +446,45 @@ const ViewReportSection = ({
     ).toString();
   }, []);
 
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     const windowWidth = globalCtx.width;
-  //     const windowHeight = window.innerHeight;
-  //     const DESKTOP_WIDTH = 1024;
-  //     const TABLET_WIDTH = 768;
-  //     const MOBILE_WIDTH = 500;
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = globalCtx.width;
+      const windowHeight = window.innerHeight;
+      const DESKTOP_WIDTH = 1024;
+      const TABLET_WIDTH = 910;
+      const MOBILE_WIDTH = 500;
 
-  //     if (windowWidth <= MOBILE_WIDTH) {
-  //       const presentWidth = 250;
-  //       const presentHeight = 250;
+      if (windowWidth <= MOBILE_WIDTH) {
+        const presentWidth = 200;
+        const presentHeight = 150;
 
-  //       setChartWidth(presentWidth);
-  //       setChartHeight(presentHeight);
-  //     } else if (windowWidth <= TABLET_WIDTH) {
-  //       const presentWidth = 370;
-  //       const presentHeight = 250;
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= TABLET_WIDTH) {
+        const presentWidth = 370;
+        const presentHeight = 250;
 
-  //       setChartWidth(presentWidth);
-  //       setChartHeight(presentHeight);
-  //     } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-  //       const presentWidth = 580;
-  //       const presentHeight = 250;
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
+        const presentWidth = 500;
+        const presentHeight = 250;
 
-  //       setChartWidth(presentWidth);
-  //       setChartHeight(presentHeight);
-  //     } else {
-  //       const presentWidth = windowWidth / 12;
-  //       const presentHeight = windowHeight / 3.5;
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else {
+        const presentWidth = windowWidth / 12;
+        const presentHeight = windowHeight / 3.5;
 
-  //       setChartWidth(presentWidth);
-  //       setChartHeight(presentHeight);
-  //     }
-  //   };
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      }
+    };
 
-  //   handleResize();
-  // }, [globalCtx.width]);
+    handleResize();
+  }, [globalCtx.width]);
 
-  // console.log('chartWidth', chartWidth, 'chartHeight', chartHeight);
-
-  console.log('thumbnail', reportThumbnails);
+  console.log('reportWidth', chartWidth, 'reportHeight', chartHeight);
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
@@ -705,12 +698,12 @@ const ViewReportSection = ({
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      <div className="mt-12 flex h-850px w-full px-40 pb-2">
+      <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
         <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
-          <div className="mt-9 flex w-full flex-col items-center justify-center space-y-5">
+          <div className="mt-9 flex w-full flex-col items-center justify-center">
             {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
-            <div className="flex h-850px flex-col">
+            <div className="flex h-850px flex-col gap-3">
               {!isLoading ? (
                 reportThumbnails.map((thumbnail, index) => (
                   <button onClick={() => thumbnailClickHandler(index)} key={index}>
@@ -745,29 +738,10 @@ const ViewReportSection = ({
 
         {pdfFile ? (
           <div className="flex flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
-            {/* <button
-              onClick={prevClickHandler}
-              disabled={pageNumber <= 1}
-              className="flex lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-left"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
-                />
-              </svg>
-            </button> */}
             <button
               onClick={prevClickHandler}
               disabled={pageNumber <= 1}
-              className="absolute bottom-40 left-0 z-10 m-4 md:bottom-56 lg:hidden"
+              className="absolute bottom-40 left-0 z-10 m-4 iphonese:bottom-96 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -784,20 +758,27 @@ const ViewReportSection = ({
               </svg>
             </button>
 
-            <div className="hidden md:flex">
+            <div className="hidden lg:flex">
               <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page scale={1} pageNumber={pageNumber} className={`max-lg:-translate-x-1/12`} />
+                <Page scale={1} pageNumber={pageNumber} />
               </Document>
             </div>
-            <div className="flex h-screen md:hidden">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+            <div className="flex h-screen lg:hidden">
+              <Document
+                file={pdfFile}
+                onLoadSuccess={onDocumentLoadSuccess}
+                className={`relative`}
+                //  left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+              >
                 <Page
                   scale={1}
                   pageNumber={pageNumber}
                   // Deprecated: 20240519 - Shirley
                   width={chartWidth}
                   height={chartHeight}
-                  className={`-translate-x-2/5`}
+                  // className={`-translate-x-2/5`}
+                  className="absolute left-1/4 top-1/5 w-full -translate-x-1/2 -translate-y-1/2 sm:left-1/2 sm:top-1/2"
+                  // max-h-full max-w-full
                   // className={`absolute left-0 top-0 max-h-full max-w-full`}
                 />
               </Document>
@@ -822,25 +803,6 @@ const ViewReportSection = ({
                 />
               </svg>
             </button>
-            {/* <button
-              onClick={nextClickHandler}
-              disabled={pageNumber >= numPages}
-              className="flex lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-right"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
-                />
-              </svg>
-            </button> */}
           </div>
         ) : (
           <div className="flex h-850px w-full flex-1 justify-center bg-white">

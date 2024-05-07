@@ -179,6 +179,67 @@ const FinancialReportSection = () => {
     </div>
   );
 
+  const displayedButtonOrLink =
+    !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
+      <Button
+        disabled={true}
+        className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+      >
+        <Link href={targetedReportViewLink}>
+          <div className="flex gap-1">
+            <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+            <div className="my-auto flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="17"
+                height="16"
+                fill="none"
+                viewBox="0 0 17 16"
+              >
+                <g>
+                  <path
+                    className="fill-current"
+                    fill="none"
+                    fillRule="evenodd"
+                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  ></path>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </Link>
+      </Button>
+    ) : (
+      <Link
+        href={targetedReportViewLink}
+        className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+      >
+        <div className="flex gap-1">
+          <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+          <div className="my-auto flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="17"
+              height="16"
+              fill="none"
+              viewBox="0 0 17 16"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </Link>
+    );
+
   return (
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
@@ -283,35 +344,7 @@ const FinancialReportSection = () => {
             />
           </div>
         </div>
-        <Button
-          disabled={!period.endTimeStamp || !selectedLanguage.id || !selectedReportType}
-          className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
-        >
-          <Link href={targetedReportViewLink}>
-            <div className="flex gap-1">
-              <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
-              <div className="my-auto flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="17"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 17 16"
-                >
-                  <g>
-                    <path
-                      className="fill-current"
-                      fill="none"
-                      fillRule="evenodd"
-                      d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    ></path>
-                  </g>
-                </svg>
-              </div>
-            </div>
-          </Link>
-        </Button>
+        {displayedButtonOrLink}
       </div>
     </div>
   );
