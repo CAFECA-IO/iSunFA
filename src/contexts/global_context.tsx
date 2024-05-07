@@ -13,6 +13,7 @@ import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
 import AddPropertyModal from '../components/add_property_modal/add_property_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
+import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
 
 interface IGlobalContext {
   width: number;
@@ -44,6 +45,9 @@ interface IGlobalContext {
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
+
+  isEmbedCodeModalVisible: boolean;
+  embedCodeModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -71,6 +75,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isAddPropertyModalVisible, setIsAddPropertyModalVisible] = useState(false);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
+
+  const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -118,6 +124,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsCameraScannerVisible(!isCameraScannerVisible);
   };
 
+  const embedCodeModalVisibilityHandler = () => {
+    setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -142,6 +152,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addPropertyModalVisibilityHandler,
     isCameraScannerVisible,
     cameraScannerVisibilityHandler,
+    isEmbedCodeModalVisible,
+    embedCodeModalVisibilityHandler,
   };
 
   return (
@@ -181,6 +193,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <CameraScanner
         isModalVisible={isCameraScannerVisible}
         modalVisibilityHandler={cameraScannerVisibilityHandler}
+      />
+
+      <EmbedCodeModal
+        isModalVisible={isEmbedCodeModalVisible}
+        modalVisibilityHandler={embedCodeModalVisibilityHandler}
       />
 
       {children}

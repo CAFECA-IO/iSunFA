@@ -28,7 +28,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
   }, [isModalVisible]);
 
   const isDisplayedRegisterModal = isModalVisible ? (
-    <div className=" fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative mx-auto flex flex-col items-center rounded-xl bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="flex gap-2.5 bg-white py-4 pl-10 pr-5">
           <div className="flex flex-1 flex-col justify-center text-center">
