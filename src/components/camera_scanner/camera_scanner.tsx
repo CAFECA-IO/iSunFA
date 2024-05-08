@@ -28,7 +28,6 @@ enum ScannerStep {
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { setOcrResultIdHandler } = useAccountingCtx();
-  const formData = new FormData();
   const {
     trigger: uploadInvoice,
     data: resultIds,
@@ -37,8 +36,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   } = APIHandler<string[]>(
     APIName.UPLOAD_INVOCIE,
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      body: formData as any,
+      params: { companyId: 1 },
     },
     false,
     false
@@ -139,7 +137,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   const handleUploadImage = async () => {
     try {
       // Info: (20240506 - Julian) 將拍照後的畫面上傳至 OCR API
-      // const formData = new FormData();
+      const formData = new FormData();
       const photo = photoRef.current;
       if (!photo) return;
       const blob = await new Promise((resolve) => {
@@ -156,7 +154,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       //   method: 'POST',
       //   body: formData,
       // });
-      uploadInvoice();
+      uploadInvoice(formData);
       // if (response.ok) {
       //   const data = await response.json();
       //   // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context

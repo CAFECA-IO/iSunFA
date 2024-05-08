@@ -49,7 +49,7 @@ export type IAPIConfig = {
 
 export type IAPIResponse<Data> = {
   success: boolean | undefined;
-  trigger: () => void;
+  trigger: (body?: { [key: string]: unknown } | FormData, signal?: AbortSignal) => void;
   isLoading: boolean | undefined;
   data: Data | undefined;
   error: Error | null;
