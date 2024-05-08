@@ -28,6 +28,7 @@ describe('Client API Handler Tests', () => {
     req.method = 'GET';
     req.headers.userId = '1';
     await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
@@ -55,12 +56,12 @@ describe('Client API Handler Tests', () => {
       code: '5678',
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
+        code: expect.stringContaining('201'),
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(String),
@@ -100,7 +101,7 @@ describe('Client API Handler Tests', () => {
         success: expect.any(Boolean),
         code: expect.stringContaining('405'),
         payload: {},
-        message: expect.stringContaining('Method Not Allowed'),
+        message: expect.stringContaining('Method not allowed'),
       })
     );
   });

@@ -1,7 +1,7 @@
+import { STATUS_CODE } from '@/constants/status_code';
 import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import version from '@/lib/version';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -12,13 +12,13 @@ export default async function handler(
 
   try {
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
-    if (!req.query.id) {
-      throw new Error('INVALID_INPUT_PARAMETER');
+    if (!req.query.clientId) {
+      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
     }
-    if (req.query.id !== '1') {
-      throw new Error('RESOURCE_NOT_FOUND');
+    if (req.query.clientId !== '1') {
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) C010002 - GET /client/:id
     if (method === 'GET') {
@@ -29,13 +29,8 @@ export default async function handler(
         code: '1234',
         favorite: false,
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list all clients',
-        payload: client,
-      });
+      const { httpCode, result } = formatApiResponse<IClient>(STATUS_CODE.SUCCESS_GET, client);
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010004 - PUT /client/:id
     } else if (method === 'PUT') {
       const { name, code } = req.body;
@@ -48,13 +43,8 @@ export default async function handler(
       };
       client.companyName = name;
       client.code = code;
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'create client',
-        payload: client,
-      });
+      const { httpCode, result } = formatApiResponse<IClient>(STATUS_CODE.SUCCESS_UPDATE, client);
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
       const client: IClient = {
@@ -64,25 +54,14 @@ export default async function handler(
         code: '1234',
         favorite: false,
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'delete ' + client.id + ' client',
-        payload: client,
-      });
+      const { httpCode, result } = formatApiResponse<IClient>(STATUS_CODE.SUCCESS_DELETE, client);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IClient>(error.message, {} as IClient);
+    res.status(httpCode).json(result);
   }
 }

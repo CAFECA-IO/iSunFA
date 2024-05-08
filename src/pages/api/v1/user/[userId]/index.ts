@@ -1,6 +1,7 @@
+import { STATUS_CODE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
-import version from '@/lib/version';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IUser>>) {
@@ -8,13 +9,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
   const { userId } = req.query;
   try {
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (!userId) {
-      throw new Error('INVALID_INPUT_PARAMETER');
+      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
     }
     if (userId !== '1') {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (method === 'GET') {
       // Handle GET request to retrieve user by userId
@@ -29,13 +30,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         publicKey: 'public-key',
         algorithm: 'ES256',
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        payload: user,
-        message: 'Get User sucessfully',
-      });
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_GET, user);
+      res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       // Handle PUT request to update user by userId
       const user: IUser = {
@@ -49,13 +45,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         publicKey: 'public-key',
         algorithm: 'ES256',
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        payload: user,
-        message: 'Update User sucessfully',
-      });
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_UPDATE, user);
+      res.status(httpCode).json(result);
     } else if (method === 'DELETE') {
       // Handle DELETE request to delete user by userId
       const user: IUser = {
@@ -69,25 +60,15 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         publicKey: 'public-key',
         algorithm: 'ES256',
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        payload: user,
-        message: 'Delete User sucessfully',
-      });
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_DELETE, user);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     // Handle errors
     const error = _error as Error;
-    res.status(500).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '500',
-      message: error.message,
-      payload: {},
-    });
+    const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
+    res.status(httpCode).json(result);
   }
 }

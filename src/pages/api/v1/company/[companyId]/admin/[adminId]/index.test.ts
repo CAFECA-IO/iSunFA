@@ -22,7 +22,7 @@ beforeEach(() => {
 describe('test admin API', () => {
   it('should get admin by id', async () => {
     req.headers.userId = '1';
-    req.query = { id: '1' };
+    req.query = { adminId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -51,7 +51,7 @@ describe('test admin API', () => {
   it('should update admin successfully', async () => {
     req.method = 'PUT';
     req.headers.userId = '1';
-    req.query = { id: '1' };
+    req.query = { adminId: '1' };
     req.body = {
       name: 'John Doe',
       email: 'john@example.com',
@@ -86,7 +86,7 @@ describe('test admin API', () => {
   it('should delete admin successfully', async () => {
     req.method = 'DELETE';
     req.headers.userId = '1';
-    req.query = { id: '1' };
+    req.query = { adminId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -103,7 +103,7 @@ describe('test admin API', () => {
   it('should return error for INVALID_INPUT_PARAMETER', async () => {
     req.method = 'PUT';
     req.headers.userId = '1';
-    req.query = { id: '1' };
+    req.query = { adminId: '1' };
     req.body = {
       name: 'John Doe',
       email: 'john@example.com',
@@ -126,7 +126,7 @@ describe('test admin API', () => {
 
   it('should return error for RESOURCE_NOT_FOUND', async () => {
     req.headers.userId = '1';
-    req.query = { id: '2' };
+    req.query = { adminId: '2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -143,7 +143,7 @@ describe('test admin API', () => {
   it('should return error for METHOD_NOT_ALLOWED', async () => {
     req.headers.userId = '1';
     req.method = 'POST';
-    req.query = { id: '1' };
+    req.query = { adminId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(

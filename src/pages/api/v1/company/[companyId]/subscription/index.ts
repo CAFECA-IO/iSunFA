@@ -1,16 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { ISubscription } from '@/interfaces/subscription';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ISubscription>>
+  res: NextApiResponse<IResponseData<ISubscription | ISubscription[]>>
 ) {
   try {
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {
@@ -27,18 +27,16 @@ export default async function handler(
           status: 'paid',
         },
       ];
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list all subscriptions',
-        payload: subscriptionList,
-      });
+      const { httpCode, result } = formatApiResponse<ISubscription[]>(
+        STATUS_CODE.SUCCESS_LIST,
+        subscriptionList
+      );
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010002 - POST /subscription
     } else if (req.method === 'POST') {
       const { plan, paymentId, autoRenew } = req.body;
       if (!plan || !paymentId || !autoRenew) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
       const newSubscription: ISubscription = {
         id: '3',
@@ -51,25 +49,20 @@ export default async function handler(
         expireDate: 1746187324,
         status: 'paid',
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'create subscription',
-        payload: newSubscription,
-      });
+      const { httpCode, result } = formatApiResponse<ISubscription>(
+        STATUS_CODE.CREATED,
+        newSubscription
+      );
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<ISubscription>(
+      error.message,
+      {} as ISubscription
+    );
+    res.status(httpCode).json(result);
   }
 }

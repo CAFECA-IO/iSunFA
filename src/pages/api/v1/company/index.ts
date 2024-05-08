@@ -1,30 +1,52 @@
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import version from '@/lib/version';
+import { STATUS_CODE } from '@/constants/status_code';
+import { ICompany } from '@/interfaces/company';
+import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ICompany | ICompany[]>>
+) {
   try {
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
-      // Handle GET request to retrieve all companies
-      // Your code here...
+      const companyList: ICompany[] = [
+        {
+          id: 1,
+          code: 'ABC123',
+          regional: 'North',
+          name: 'ABC Company',
+        },
+        {
+          id: 2,
+          code: 'DEF456',
+          regional: 'South',
+          name: 'DEF Company',
+        },
+      ];
+      const { httpCode, result } = formatApiResponse<ICompany[]>(
+        STATUS_CODE.SUCCESS_GET,
+        companyList
+      );
+      res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
-      // Handle POST request to create a new company
-      // Your code here...
+      const newCompany: ICompany = {
+        id: 3,
+        code: 'GHI789',
+        regional: 'East',
+        name: 'GHI Company',
+      };
+      const { httpCode, result } = formatApiResponse<ICompany>(STATUS_CODE.CREATED, newCompany);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<ICompany>(error.message, {} as ICompany);
+    res.status(httpCode).json(result);
   }
 }

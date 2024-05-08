@@ -34,14 +34,14 @@ describe('Entity KYC handler', () => {
 
     await handler(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
+        code: expect.stringContaining('201'),
         message: expect.any(String),
-        payload: expect.any(Object),
+        payload: expect.any(String),
       })
     );
   });

@@ -1,10 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
-import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_CODE } from '@/constants/status_code';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAdmin | IAdmin[]>>
+) {
   try {
     if (req.method === 'GET') {
       const adminList: IAdmin[] = [
@@ -35,18 +38,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
           permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
         },
       ];
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list all admins',
-        payload: adminList,
-      });
+      const { httpCode, result } = formatApiResponse<IAdmin[]>(STATUS_CODE.SUCCESS_LIST, adminList);
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) A010003 - POST /admin
     } else if (req.method === 'POST') {
       const { name, email } = req.body;
       if (!name || !email) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
       const admin: IAdmin = {
         id: '3',
@@ -61,25 +59,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         endDate: 123123123,
         permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'Create admin successfully',
-        payload: admin,
-      });
+      const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_CODE.CREATED, admin);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IAdmin | IAdmin[]>(error.message, {} as IAdmin);
+    res.status(httpCode).json(result);
   }
 }

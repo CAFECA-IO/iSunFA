@@ -1,16 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IClient>>
+  res: NextApiResponse<IResponseData<IClient | IClient[]>>
 ) {
   try {
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) C010001 - GET /client
     if (req.method === 'GET') {
@@ -30,13 +30,11 @@ export default async function handler(
           favorite: false,
         },
       ];
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list all clients',
-        payload: clientList,
-      });
+      const { httpCode, result } = formatApiResponse<IClient[]>(
+        STATUS_CODE.SUCCESS_LIST,
+        clientList
+      );
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010003 - POST /client
     } else if (req.method === 'POST') {
       const { companyId, code } = req.body;
@@ -47,25 +45,14 @@ export default async function handler(
         code,
         favorite: false,
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'create client',
-        payload: newClient,
-      });
+      const { httpCode, result } = formatApiResponse<IClient>(STATUS_CODE.CREATED, newClient);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IClient>(error.message, {} as IClient);
+    res.status(httpCode).json(result);
   }
 }

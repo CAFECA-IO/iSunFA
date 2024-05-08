@@ -1,7 +1,7 @@
+import { STATUS_CODE } from '@/constants/status_code';
 import { IPayment } from '@/interfaces/payment';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import version from '@/lib/version';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -12,13 +12,13 @@ export default async function handler(
 
   try {
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (!req.query.id) {
-      throw new Error('INVALID_INPUT_PARAMETER');
+      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
     }
     if (req.query.id !== '1') {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) P010002 - GET /payment/:id
     if (method === 'GET') {
@@ -31,17 +31,12 @@ export default async function handler(
         cvc: '330',
         name: 'Taiwan Bank',
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list payment by id',
-        payload: payment,
-      });
+      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.SUCCESS_GET, payment);
+      res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
       const payment: IPayment = {
         id: '3',
@@ -54,13 +49,8 @@ export default async function handler(
       };
       payment.name = name;
       payment.no = no;
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'update payment by id',
-        payload: payment,
-      });
+      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.SUCCESS_UPDATE, payment);
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) P010004 - DELETE /payment/:id
     } else if (method === 'DELETE') {
       const payment: IPayment = {
@@ -72,25 +62,14 @@ export default async function handler(
         cvc: '330',
         name: 'Taiwan Bank',
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'delete payment ' + payment.id + ' successfully',
-        payload: payment,
-      });
+      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.SUCCESS_DELETE, payment);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IPayment>(error.message, {} as IPayment);
+    res.status(httpCode).json(result);
   }
 }
