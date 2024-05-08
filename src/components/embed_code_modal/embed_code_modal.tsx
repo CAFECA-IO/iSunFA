@@ -1,0 +1,329 @@
+/* eslint-disable */
+
+import React, { useRef, useState } from 'react';
+import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
+import useOuterClick from '../../lib/hooks/use_outer_click';
+import Image from 'next/image';
+import { Button } from '../button/button';
+
+interface IEmbedCodeModal {
+  isModalVisible: boolean;
+  modalVisibilityHandler: () => void;
+}
+
+const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
+  const balanceSheetRef = useRef<HTMLInputElement>(null);
+  const incomeStatementRef = useRef<HTMLInputElement>(null);
+  const cashFlowStatementRef = useRef<HTMLInputElement>(null);
+
+  const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
+    ReportLanguagesKey.en
+  );
+  const [step, setStep] = useState<number>(0);
+  const [generatedCode, setGeneratedCode] = useState<string>('');
+
+  const {
+    targetRef: languageMenuRef,
+    componentVisible: isLanguageMenuOpen,
+    setComponentVisible: setIsLanguageMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
+
+  const languageMenuClickHandler = () => {
+    setIsLanguageMenuOpen(!isLanguageMenuOpen);
+  };
+
+  const languageMenuOptionClickHandler = (id: ReportLanguagesKey) => {
+    setSelectedReportLanguage(id);
+    setIsLanguageMenuOpen(false);
+  };
+
+  const toggleCheckbox = (ref: React.RefObject<HTMLInputElement>) => {
+    if (ref.current) {
+      ref.current.checked = !ref.current.checked;
+    }
+  };
+
+  const cancelClickHandler = () => {
+    setStep(0);
+    modalVisibilityHandler();
+  };
+
+  const copyClickHandler = () => {
+    navigator.clipboard.writeText(generatedCode);
+    window.alert('Code copied to clipboard');
+  };
+
+  const generateClickHandler = () => {
+    setStep(1);
+
+    // TODO: dummy data (20240507 - Shirley)
+    const balanceLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`;
+    const comprehensiveIncomeLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`;
+    const cashFlowLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`;
+    const allReportsLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/all-reports`;
+
+    if (
+      balanceSheetRef.current?.checked &&
+      !incomeStatementRef.current?.checked &&
+      !cashFlowStatementRef.current?.checked
+    ) {
+      const code = `  <iframe
+    src="${balanceLink}"
+    title="balance-sheet"
+    width={600}
+    height={600}
+    />`;
+      setGeneratedCode(code);
+    } else if (
+      !balanceSheetRef.current?.checked &&
+      incomeStatementRef.current?.checked &&
+      !cashFlowStatementRef.current?.checked
+    ) {
+      const code = `  <iframe
+    src="${comprehensiveIncomeLink}"
+    title="comprehensive-income-statement"
+    width={600}
+    height={600}
+    />`;
+      setGeneratedCode(code);
+    } else if (
+      !balanceSheetRef.current?.checked &&
+      !incomeStatementRef.current?.checked &&
+      cashFlowStatementRef.current?.checked
+    ) {
+      const code = `  <iframe
+    src="${cashFlowLink}"
+    title="cash-flow-statement"
+    width={600}
+    height={600}
+    />`;
+      setGeneratedCode(code);
+    } else {
+      const code = `  <iframe
+    src="${allReportsLink}"
+    title="financial-reports"
+    width={600}
+    height={600}
+    />`;
+      setGeneratedCode(code);
+    }
+  };
+
+  const displayedLanguageMenu = (
+    <div ref={languageMenuRef} className="relative flex w-full">
+      <button
+        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 max-md:max-w-full ${
+          isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
+        onClick={languageMenuClickHandler}
+      >
+        <Image
+          width={20}
+          height={20}
+          src={selectedLanguage?.icon ?? '/icons/en.svg'}
+          alt="language icon"
+        />
+        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-slate-700">
+          {selectedLanguage?.name}
+        </div>
+        <div className="my-auto flex flex-col justify-center px-0 py-0">
+          <div className="flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </button>
+      {/* Info: Language Menu (20240425 - Shirley) */}
+      <div
+        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isLanguageMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
+      >
+        <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
+          {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
+            <li
+              key={id}
+              onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+            >
+              <img src={icon} alt={name} className="h-6 w-6" />
+              <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
+  const displayedConfigSection = (
+    <>
+      <div className="flex w-full flex-col justify-center bg-white px-4 py-2.5 max-md:max-w-full">
+        <div className="flex flex-col max-md:max-w-full">
+          <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
+            <div className="font-semibold text-slate-700 max-md:max-w-full">
+              What type of Report do you want to display on your web?
+            </div>
+            <div className="mt-4 flex flex-wrap justify-between gap-1 text-slate-700 sm:gap-2">
+              <div
+                className="flex gap-2 py-2.5 hover:cursor-pointer"
+                onClick={() => toggleCheckbox(balanceSheetRef)}
+              >
+                <input
+                  type="checkbox"
+                  ref={balanceSheetRef}
+                  className="my-auto h-4 w-4 shrink-0 rounded border border-solid border-slate-600 bg-white"
+                />
+                <div>Balance Sheet</div>
+              </div>
+              <div
+                className="flex gap-2 py-2.5 hover:cursor-pointer"
+                onClick={() => toggleCheckbox(incomeStatementRef)}
+              >
+                <input
+                  type="checkbox"
+                  ref={incomeStatementRef}
+                  className="my-auto h-4 w-4 shrink-0 rounded border border-solid border-slate-600 bg-white"
+                />
+                <div>Comprehensive Income Statement</div>
+              </div>
+              <div
+                className="flex gap-2 py-2.5 hover:cursor-pointer"
+                onClick={() => toggleCheckbox(cashFlowStatementRef)}
+              >
+                <input
+                  type="checkbox"
+                  ref={cashFlowStatementRef}
+                  className="my-auto h-4 w-4 shrink-0 rounded border border-solid border-slate-600 bg-white"
+                />
+                <div>Cash Flow Statement</div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-10 flex flex-col justify-center max-md:max-w-full">
+            <div className="flex flex-col space-y-3 max-md:max-w-full">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+                Report Language
+              </div>
+              {displayedLanguageMenu}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
+        <div className="flex gap-3">
+          <button
+            onClick={cancelClickHandler}
+            className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
+          >
+            Cancel
+          </button>
+          <Button variant={'tertiary'} onClick={generateClickHandler}>
+            Generate
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
+  const displayedEmbedCode = (
+    <>
+      <div className="flex w-full flex-col justify-center bg-white px-4 py-2.5">
+        <div className="flex flex-col">
+          <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-gray-300 bg-gray-100 px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
+            {generatedCode}
+          </div>
+
+          <div className="mt-3 flex flex-col justify-center text-base leading-6 tracking-normal text-slate-700 max-md:max-w-full md:mt-8">
+            <ol className=" max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
+              {balanceSheetRef.current?.checked && <li>Balance Sheet</li>}
+              {incomeStatementRef.current?.checked && <li>Comprehensive Income Statement</li>}
+              {cashFlowStatementRef.current?.checked && <li>Cash Flow Statement</li>}
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
+        <Button variant={'tertiary'} onClick={copyClickHandler}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill="#FCFDFF"
+              fillRule="evenodd"
+              d="M11.426 2.786c-.407-.033-.932-.034-1.69-.034H5.001a.75.75 0 110-1.5h4.765c.72 0 1.306 0 1.78.039.492.04.93.125 1.34.333.642.328 1.165.85 1.493 1.493.208.41.293.848.333 1.34.039.474.039 1.06.039 1.78v4.765a.75.75 0 01-1.5 0V6.269c0-.76 0-1.284-.034-1.69-.032-.4-.092-.619-.175-.78a1.917 1.917 0 00-.838-.838c-.161-.083-.381-.143-.78-.175zm-7.319.8H9.563c.35 0 .656 0 .91.02.268.022.542.07.808.206.392.2.71.519.91.91.136.267.185.541.207.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908a2.12 2.12 0 01-.206.81c-.2.391-.519.71-.91.91a2.12 2.12 0 01-.81.206c-.253.021-.56.021-.909.021H4.107c-.35 0-.655 0-.909-.02a2.12 2.12 0 01-.809-.207c-.392-.2-.71-.519-.91-.91a2.118 2.118 0 01-.206-.81c-.021-.253-.021-.559-.021-.908V6.44c0-.349 0-.655.02-.908.023-.269.072-.543.207-.81.2-.391.518-.71.91-.91.266-.135.54-.184.81-.206.253-.02.559-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25a11.28 11.28 0 00-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.055.11.145.2.254.255.02.01.075.034.25.048.185.015.43.016.815.016h5.4c.386 0 .63 0 .815-.016.176-.014.23-.038.25-.048a.583.583 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386-.001-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.02-.01-.074-.034-.25-.048a11.28 11.28 0 00-.815-.016h-5.4c-.385 0-.63 0-.814.016z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+          <p>Copy</p>
+        </Button>
+      </div>
+    </>
+  );
+
+  const isDisplayedEmbedCodeModal = isModalVisible ? (
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
+      <div className="relative mx-auto flex flex-col items-center rounded-xl bg-white p-6 shadow-lg shadow-black/80 sm:max-w-[511px] sm:px-3">
+        <div className="flex w-full gap-2.5 bg-white pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
+          <div className="flex flex-1 flex-col items-center justify-center px-20 pb-10 text-center max-md:px-5">
+            <div className="justify-center text-xl font-bold leading-8 text-slate-700">
+              Embed Code
+            </div>
+            <div className="text-xs leading-5 tracking-normal text-slate-500">
+              To show the Latest Report on your website
+            </div>
+          </div>
+          <button
+            onClick={cancelClickHandler}
+            className="-mr-3 flex items-center justify-center self-start"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M6.223 6.22a.75.75 0 011.06 0l10.5 10.5a.75.75 0 01-1.06 1.061l-10.5-10.5a.75.75 0 010-1.06z"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M17.783 6.22a.75.75 0 010 1.061l-10.5 10.5a.75.75 0 11-1.06-1.06l10.5-10.5a.75.75 0 011.06 0z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          </button>
+        </div>
+        {step === 0 ? displayedConfigSection : displayedEmbedCode}
+      </div>
+    </div>
+  ) : null;
+  return <>{isDisplayedEmbedCodeModal}</>;
+};
+
+export default EmbedCodeModal;

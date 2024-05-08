@@ -18,6 +18,7 @@ import {
   IPreviewInvoiceModal,
   dummyPreviewInvoiceModalData,
 } from '@/interfaces/preview_invoice_modal';
+import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
 
 interface IGlobalContext {
   width: number;
@@ -53,6 +54,9 @@ interface IGlobalContext {
   isPreviewInvoiceModalVisible: boolean;
   previewInvoiceModalVisibilityHandler: () => void;
   previewInvoiceModalDataHandler: (data: IPreviewInvoiceModal) => void;
+
+  isEmbedCodeModalVisible: boolean;
+  embedCodeModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -85,6 +89,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [previewInvoiceModalData, setPreviewInvoiceModalData] = useState<IPreviewInvoiceModal>(
     dummyPreviewInvoiceModalData
   );
+
+  const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -139,6 +145,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const previewInvoiceModalDataHandler = (data: IPreviewInvoiceModal) => {
     setPreviewInvoiceModalData(data);
   };
+  const embedCodeModalVisibilityHandler = () => {
+    setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
+  };
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
@@ -167,6 +176,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isPreviewInvoiceModalVisible,
     previewInvoiceModalVisibilityHandler,
     previewInvoiceModalDataHandler,
+    isEmbedCodeModalVisible,
+    embedCodeModalVisibilityHandler,
   };
 
   return (
@@ -212,6 +223,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isPreviewInvoiceModalVisible}
         modalVisibilityHandler={previewInvoiceModalVisibilityHandler}
         previewInvoiceModalData={previewInvoiceModalData}
+      />
+
+      <EmbedCodeModal
+        isModalVisible={isEmbedCodeModalVisible}
+        modalVisibilityHandler={embedCodeModalVisibilityHandler}
       />
 
       {children}
