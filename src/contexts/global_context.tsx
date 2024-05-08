@@ -11,8 +11,13 @@ import { LayoutAssertion } from '../interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '../interfaces/message_modal';
 import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
-import AddPropertyModal from '../components/add_property_modal/add_property_modal';
+import AddAssetModal from '../components/add_asset_modal/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
+import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
+import {
+  IPreviewInvoiceModal,
+  dummyPreviewInvoiceModalData,
+} from '@/interfaces/preview_invoice_modal';
 import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
 
 interface IGlobalContext {
@@ -40,11 +45,15 @@ interface IGlobalContext {
   confirmModalVisibilityHandler: () => void;
   confirmModalDataHandler: (data: IConfirmModal) => void;
 
-  isAddPropertyModalVisible: boolean;
-  addPropertyModalVisibilityHandler: () => void;
+  isAddAssetModalVisible: boolean;
+  addAssetModalVisibilityHandler: () => void;
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
+
+  isPreviewInvoiceModalVisible: boolean;
+  previewInvoiceModalVisibilityHandler: () => void;
+  previewInvoiceModalDataHandler: (data: IPreviewInvoiceModal) => void;
 
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
@@ -72,9 +81,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
-  const [isAddPropertyModalVisible, setIsAddPropertyModalVisible] = useState(false);
+  const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
+
+  const [isPreviewInvoiceModalVisible, setIsPreviewInvoiceModalVisible] = useState(false);
+  const [previewInvoiceModalData, setPreviewInvoiceModalData] = useState<IPreviewInvoiceModal>(
+    dummyPreviewInvoiceModalData
+  );
 
   const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
 
@@ -116,14 +130,21 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setConfirmModalData(data);
   };
 
-  const addPropertyModalVisibilityHandler = () => {
-    setIsAddPropertyModalVisible(!isAddPropertyModalVisible);
+  const addAssetModalVisibilityHandler = () => {
+    setIsAddAssetModalVisible(!isAddAssetModalVisible);
   };
 
   const cameraScannerVisibilityHandler = () => {
     setIsCameraScannerVisible(!isCameraScannerVisible);
   };
 
+  const previewInvoiceModalVisibilityHandler = () => {
+    setIsPreviewInvoiceModalVisible(!isPreviewInvoiceModalVisible);
+  };
+
+  const previewInvoiceModalDataHandler = (data: IPreviewInvoiceModal) => {
+    setPreviewInvoiceModalData(data);
+  };
   const embedCodeModalVisibilityHandler = () => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
@@ -148,10 +169,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
     confirmModalDataHandler,
-    isAddPropertyModalVisible,
-    addPropertyModalVisibilityHandler,
+    isAddAssetModalVisible,
+    addAssetModalVisibilityHandler,
     isCameraScannerVisible,
     cameraScannerVisibilityHandler,
+    isPreviewInvoiceModalVisible,
+    previewInvoiceModalVisibilityHandler,
+    previewInvoiceModalDataHandler,
     isEmbedCodeModalVisible,
     embedCodeModalVisibilityHandler,
   };
@@ -185,14 +209,20 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         confirmModalData={confirmModalData}
       />
 
-      <AddPropertyModal
-        isModalVisible={isAddPropertyModalVisible}
-        modalVisibilityHandler={addPropertyModalVisibilityHandler}
+      <AddAssetModal
+        isModalVisible={isAddAssetModalVisible}
+        modalVisibilityHandler={addAssetModalVisibilityHandler}
       />
 
       <CameraScanner
         isModalVisible={isCameraScannerVisible}
         modalVisibilityHandler={cameraScannerVisibilityHandler}
+      />
+
+      <PreviewInvoiceModal
+        isModalVisible={isPreviewInvoiceModalVisible}
+        modalVisibilityHandler={previewInvoiceModalVisibilityHandler}
+        previewInvoiceModalData={previewInvoiceModalData}
       />
 
       <EmbedCodeModal
