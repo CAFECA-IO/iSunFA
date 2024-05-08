@@ -26,7 +26,7 @@ afterEach(() => {
 describe('Payment API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -51,7 +51,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle PUT requests successfully', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     req.body = {
       type: 'MASTERCARD',
@@ -84,7 +84,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle DELETE requests successfully', async () => {
     req.method = 'DELETE';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -107,7 +107,7 @@ describe('Payment API Handler Tests', () => {
     );
   });
 
-  it('should handle missing userId in headers for GET requests', async () => {
+  it('should handle missing userid in headers for GET requests', async () => {
     req.method = 'GET';
     req.query.id = '1';
     await handler(req, res);
@@ -125,7 +125,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle missing id in query for GET requests', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
@@ -139,7 +139,7 @@ describe('Payment API Handler Tests', () => {
     );
   });
 
-  it('should handle missing userId in headers for PUT requests', async () => {
+  it('should handle missing userid in headers for PUT requests', async () => {
     req.method = 'PUT';
     req.query.id = '3';
     req.body = {
@@ -165,7 +165,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle missing id in query for PUT requests', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.body = {
       type: 'MASTERCARD',
       no: '5678-5678-5678-5678',
@@ -187,7 +187,7 @@ describe('Payment API Handler Tests', () => {
     );
   });
 
-  it('should handle missing userId in headers for DELETE requests', async () => {
+  it('should handle missing userid in headers for DELETE requests', async () => {
     req.method = 'DELETE';
     req.query.id = '1';
     await handler(req, res);
@@ -205,7 +205,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);

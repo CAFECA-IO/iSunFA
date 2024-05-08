@@ -9,7 +9,7 @@ export default function handler(
   res: NextApiResponse<IResponseData<ICompany | ICompany[]>>
 ) {
   try {
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {

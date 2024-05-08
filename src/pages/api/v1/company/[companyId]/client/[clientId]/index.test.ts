@@ -26,7 +26,7 @@ afterEach(() => {
 describe('Client API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.clientId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -49,7 +49,7 @@ describe('Client API Handler Tests', () => {
 
   it('should handle PUT requests successfully', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.clientId = '1';
     req.body = {
       name: 'New Company Name',
@@ -76,7 +76,7 @@ describe('Client API Handler Tests', () => {
 
   it('should handle DELETE requests successfully', async () => {
     req.method = 'DELETE';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.clientId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -97,9 +97,9 @@ describe('Client API Handler Tests', () => {
     );
   });
 
-  it('should handle requests without userId header', async () => {
+  it('should handle requests without userid header', async () => {
     req.method = 'GET';
-    delete req.headers.userId;
+    delete req.headers.userid;
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -115,7 +115,7 @@ describe('Client API Handler Tests', () => {
 
   it('should handle requests with INVALID_INPUT_PARAMETER', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.clientId = '';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
@@ -132,7 +132,7 @@ describe('Client API Handler Tests', () => {
 
   it('should handle requests with unsupported methods', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.clientId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);

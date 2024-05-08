@@ -21,7 +21,7 @@ beforeEach(() => {
 
 describe('test admin API', () => {
   it('should get admin by id', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query = { adminId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -50,7 +50,7 @@ describe('test admin API', () => {
 
   it('should update admin successfully', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query = { adminId: '1' };
     req.body = {
       name: 'John Doe',
@@ -85,7 +85,7 @@ describe('test admin API', () => {
 
   it('should delete admin successfully', async () => {
     req.method = 'DELETE';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query = { adminId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -102,7 +102,7 @@ describe('test admin API', () => {
 
   it('should return error for INVALID_INPUT_PARAMETER', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query = { adminId: '1' };
     req.body = {
       name: 'John Doe',
@@ -125,7 +125,7 @@ describe('test admin API', () => {
   });
 
   it('should return error for RESOURCE_NOT_FOUND', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query = { adminId: '2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
@@ -141,7 +141,7 @@ describe('test admin API', () => {
   });
 
   it('should return error for METHOD_NOT_ALLOWED', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.method = 'POST';
     req.query = { adminId: '1' };
     await handler(req, res);

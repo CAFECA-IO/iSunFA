@@ -9,7 +9,7 @@ export default async function handler(
   res: NextApiResponse<IResponseData<IClient | IClient[]>>
 ) {
   try {
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) C010001 - GET /client

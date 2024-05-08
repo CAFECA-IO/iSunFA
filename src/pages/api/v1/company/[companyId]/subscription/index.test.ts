@@ -21,7 +21,7 @@ beforeEach(() => {
 
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -48,7 +48,7 @@ describe('test subscription API', () => {
   });
 
   it('should create a new subscription', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.method = 'POST';
     req.body = {
       plan: 'pro',
@@ -79,7 +79,7 @@ describe('test subscription API', () => {
   });
 
   it('should handle unsupported HTTP methods', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.method = 'PUT';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);

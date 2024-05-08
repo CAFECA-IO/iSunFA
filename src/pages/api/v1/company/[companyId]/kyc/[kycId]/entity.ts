@@ -7,7 +7,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
   try {
     // Info: (20240419 - Jacky) K012001 - POST /kyc/entity
     if (req.method === 'POST') {
-      if (!req.headers.userId) {
+      if (!req.headers.userid) {
         throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

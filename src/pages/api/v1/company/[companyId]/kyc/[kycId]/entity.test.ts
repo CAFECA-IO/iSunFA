@@ -25,7 +25,7 @@ afterEach(() => {
 describe('Entity KYC handler', () => {
   it('should create Entity KYC and return status when method is POST', async () => {
     req.method = 'POST';
-    req.headers.userId = 'user123';
+    req.headers.userid = 'user123';
     req.body = {
       formData: {
         // Add form data here
@@ -63,7 +63,7 @@ describe('Entity KYC handler', () => {
     );
   });
 
-  it('should return an error when userId is missing', async () => {
+  it('should return an error when userid is missing', async () => {
     req.method = 'POST';
 
     await handler(req, res);

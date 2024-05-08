@@ -26,7 +26,7 @@ afterEach(() => {
 describe('Client API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -50,7 +50,7 @@ describe('Client API Handler Tests', () => {
 
   it('should handle POST requests successfully', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.body = {
       companyId: '2',
       code: '5678',
@@ -74,9 +74,9 @@ describe('Client API Handler Tests', () => {
     );
   });
 
-  it('should handle requests without userId header', async () => {
+  it('should handle requests without userid header', async () => {
     req.method = 'GET';
-    delete req.headers.userId;
+    delete req.headers.userid;
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -92,7 +92,7 @@ describe('Client API Handler Tests', () => {
 
   it('should handle requests with unsupported methods', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(

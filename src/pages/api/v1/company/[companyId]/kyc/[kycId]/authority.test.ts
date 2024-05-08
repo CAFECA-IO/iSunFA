@@ -22,7 +22,7 @@ afterEach(() => {
 });
 describe('authority API', () => {
   it('should create Authority KYC', async () => {
-    req.headers.userId = 'user123';
+    req.headers.userid = 'user123';
     req.method = 'POST';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(201);
@@ -37,7 +37,7 @@ describe('authority API', () => {
     );
   });
 
-  it('should return error for missing userId', async () => {
+  it('should return error for missing userid', async () => {
     req.method = 'POST';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);

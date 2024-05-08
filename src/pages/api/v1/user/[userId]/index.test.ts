@@ -19,10 +19,10 @@ beforeEach(() => {
   } as unknown as jest.Mocked<NextApiResponse>;
 });
 
-describe('test user API by userId', () => {
-  it('should retrieve user by userId', async () => {
-    req.headers.userId = '1';
-    req.query.userId = '1';
+describe('test user API by userid', () => {
+  it('should retrieve user by userid', async () => {
+    req.headers.userid = '1';
+    req.query.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -42,9 +42,9 @@ describe('test user API by userId', () => {
     );
   });
 
-  it('should update user by userId', async () => {
-    req.headers.userId = '1';
-    req.query.userId = '1';
+  it('should update user by userid', async () => {
+    req.headers.userid = '1';
+    req.query.userid = '1';
     req.method = 'PUT';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -65,9 +65,9 @@ describe('test user API by userId', () => {
     );
   });
 
-  it('should delete user by userId', async () => {
-    req.headers.userId = '1';
-    req.query.userId = '1';
+  it('should delete user by userid', async () => {
+    req.headers.userid = '1';
+    req.query.userid = '1';
     req.method = 'DELETE';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -89,8 +89,8 @@ describe('test user API by userId', () => {
   });
 
   it('should handle unsupported HTTP methods', async () => {
-    req.headers.userId = '1';
-    req.query.userId = '1';
+    req.headers.userid = '1';
+    req.query.userid = '1';
     req.method = 'POST';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
@@ -105,8 +105,8 @@ describe('test user API by userId', () => {
     );
   });
 
-  it('should handle missing userId in headers', async () => {
-    req.query.userId = '1';
+  it('should handle missing userid in headers', async () => {
+    req.query.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -120,8 +120,8 @@ describe('test user API by userId', () => {
     );
   });
 
-  it('should handle missing userId in query', async () => {
-    req.headers.userId = '1';
+  it('should handle missing userid in query', async () => {
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
@@ -135,8 +135,8 @@ describe('test user API by userId', () => {
     );
   });
 
-  it('should handle invalid userId', async () => {
-    req.headers.userId = '1';
+  it('should handle invalid userid', async () => {
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(

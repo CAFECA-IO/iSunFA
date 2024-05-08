@@ -6,19 +6,19 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IUser>>) {
   const { method } = req;
-  const { userId } = req.query;
+  const { userid } = req.query;
   try {
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
-    if (!userId) {
+    if (!userid) {
       throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
     }
-    if (userId !== '1') {
+    if (userid !== '1') {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (method === 'GET') {
-      // Handle GET request to retrieve user by userId
+      // Handle GET request to retrieve user by userid
       const user: IUser = {
         id: '1',
         name: 'John',
@@ -33,9 +33,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_GET, user);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
-      // Handle PUT request to update user by userId
+      // Handle PUT request to update user by userid
       const user: IUser = {
-        id: userId,
+        id: userid,
         name: 'John',
         fullName: 'John Doe',
         email: 'john@mermer.cc',
@@ -48,9 +48,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_UPDATE, user);
       res.status(httpCode).json(result);
     } else if (method === 'DELETE') {
-      // Handle DELETE request to delete user by userId
+      // Handle DELETE request to delete user by userid
       const user: IUser = {
-        id: userId,
+        id: userid,
         name: 'John',
         fullName: 'John Doe',
         email: 'john@mermer.cc',

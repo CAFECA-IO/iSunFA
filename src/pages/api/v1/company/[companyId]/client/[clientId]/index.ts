@@ -11,7 +11,7 @@ export default async function handler(
   const { method } = req;
 
   try {
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (!req.query.clientId) {

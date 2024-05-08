@@ -26,7 +26,7 @@ afterEach(() => {
 describe('Payment API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -50,7 +50,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle POST requests successfully', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.body = {
       type: 'VISA',
       no: '1234-1234-1234-1234',
@@ -82,7 +82,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle INVALID_INPUT_PARAMETERs for POST requests', async () => {
     req.method = 'POST';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.body = {
       type: 'VISA',
       no: '1234-1234-1234-1234',
@@ -106,7 +106,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
@@ -120,7 +120,7 @@ describe('Payment API Handler Tests', () => {
     );
   });
 
-  it('should handle missing userId in headers', async () => {
+  it('should handle missing userid in headers', async () => {
     req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);

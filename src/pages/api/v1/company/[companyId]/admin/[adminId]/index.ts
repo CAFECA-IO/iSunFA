@@ -7,7 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IAdmin>>) {
   const { adminId } = req.query;
   try {
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (!adminId) {

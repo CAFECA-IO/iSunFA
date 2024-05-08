@@ -22,7 +22,7 @@ beforeEach(() => {
 describe('test subscription API by id', () => {
   it('should get subscription by id', async () => {
     req.method = 'GET';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -49,7 +49,7 @@ describe('test subscription API by id', () => {
 
   it('should update subscription', async () => {
     req.method = 'PUT';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     req.body = {
       plan: 'basic',
@@ -81,7 +81,7 @@ describe('test subscription API by id', () => {
 
   it('should delete subscription', async () => {
     req.method = 'DELETE';
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.query.id = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -108,7 +108,7 @@ describe('test subscription API by id', () => {
 
   it('should handle INVALID_INPUT_PARAMETER', async () => {
     req.method = 'GET';
-    req.headers.userId = 'user-id';
+    req.headers.userid = 'user-id';
     req.query.id = '';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
@@ -125,7 +125,7 @@ describe('test subscription API by id', () => {
 
   it('should handle RESOURCE_NOT_FOUND', async () => {
     req.method = 'GET';
-    req.headers.userId = 'user-id';
+    req.headers.userid = 'user-id';
     req.query.id = '2';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
@@ -142,7 +142,7 @@ describe('test subscription API by id', () => {
 
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'POST';
-    req.headers.userId = 'user-id';
+    req.headers.userid = 'user-id';
     req.query.id = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);

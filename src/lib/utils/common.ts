@@ -215,19 +215,13 @@ export function formatApiResponse<T>(
 ): { httpCode: number; result: IResponseData<T> } {
   // TODO: Implement the logic to format the API response
   let httpCodeStr: string;
-  let message: string;
   if (status_code in STATUS_MESSAGE) {
     httpCodeStr = status_code.slice(0, 3);
   } else {
     httpCodeStr = STATUS_CODE.INVALID_STATUS_CODE_ERROR.slice(0, 3);
   }
   const success = !!httpCodeStr.startsWith('2');
-  if (success) {
-    message =
-      (typeof payload as T) + ' ' + STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
-  } else {
-    message = STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
-  }
+  const message = STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
   const httpCode = Number(httpCodeStr);
   const result: IResponseData<T> = {
     powerby: 'ISunFa api ' + version,

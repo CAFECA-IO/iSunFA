@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
