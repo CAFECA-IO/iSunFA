@@ -63,7 +63,15 @@ const useAPI = <Data>(
     async (body?: { [key: string]: unknown } | FormData, signal?: AbortSignal) => {
       setIsLoading(true);
       try {
-        const response = await fetchData<Data>(path, method, options, signal);
+        const response = await fetchData<Data>(
+          path,
+          method,
+          {
+            ...options,
+            body: body || options.body,
+          },
+          signal
+        );
         if (!response.success) {
           throw new Error(response.message ?? 'Unknown error');
         }
