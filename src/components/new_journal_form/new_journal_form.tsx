@@ -41,7 +41,7 @@ const NewJournalForm = () => {
     messageModalVisibilityHandler,
     messageModalDataHandler,
     confirmModalVisibilityHandler,
-    addPropertyModalVisibilityHandler,
+    addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
   const { ocrResultId } = useAccountingCtx();
@@ -494,13 +494,13 @@ const NewJournalForm = () => {
                 </ul>
               </div>
             </div>
-            {/* ToDo: (20240423 - Julian) Add new property */}
+            {/* ToDo: (20240423 - Julian) Add new asset */}
             <button
               type="button"
-              onClick={addPropertyModalVisibilityHandler}
+              onClick={addAssetModalVisibilityHandler}
               className="ml-auto text-secondaryBlue hover:text-primaryYellow"
             >
-              + Add new property
+              + Add new asset
             </button>
           </div>
         </div>

@@ -11,7 +11,7 @@ import { LayoutAssertion } from '../interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '../interfaces/message_modal';
 import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
-import AddPropertyModal from '../components/add_property_modal/add_property_modal';
+import AddAssetModal from '../components/add_asset_modal/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {
@@ -44,8 +44,8 @@ interface IGlobalContext {
   confirmModalVisibilityHandler: () => void;
   confirmModalDataHandler: (data: IConfirmModal) => void;
 
-  isAddPropertyModalVisible: boolean;
-  addPropertyModalVisibilityHandler: () => void;
+  isAddAssetModalVisible: boolean;
+  addAssetModalVisibilityHandler: () => void;
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
@@ -77,7 +77,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
-  const [isAddPropertyModalVisible, setIsAddPropertyModalVisible] = useState(false);
+  const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
 
@@ -124,8 +124,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setConfirmModalData(data);
   };
 
-  const addPropertyModalVisibilityHandler = () => {
-    setIsAddPropertyModalVisible(!isAddPropertyModalVisible);
+  const addAssetModalVisibilityHandler = () => {
+    setIsAddAssetModalVisible(!isAddAssetModalVisible);
   };
 
   const cameraScannerVisibilityHandler = () => {
@@ -160,8 +160,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
     confirmModalDataHandler,
-    isAddPropertyModalVisible,
-    addPropertyModalVisibilityHandler,
+    isAddAssetModalVisible,
+    addAssetModalVisibilityHandler,
     isCameraScannerVisible,
     cameraScannerVisibilityHandler,
     isPreviewInvoiceModalVisible,
@@ -198,9 +198,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         confirmModalData={confirmModalData}
       />
 
-      <AddPropertyModal
-        isModalVisible={isAddPropertyModalVisible}
-        modalVisibilityHandler={addPropertyModalVisibilityHandler}
+      <AddAssetModal
+        isModalVisible={isAddAssetModalVisible}
+        modalVisibilityHandler={addAssetModalVisibilityHandler}
       />
 
       <CameraScanner
