@@ -44,7 +44,7 @@ const PreviewInvoiceModal = ({
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <div
-        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs bg-white py-16px md:w-700px`}
+        className={`relative flex h-700px w-90vw flex-col gap-16px rounded-xs bg-white py-16px md:w-700px`}
       >
         <button
           type="button"
@@ -53,7 +53,7 @@ const PreviewInvoiceModal = ({
         >
           <RxCross2 size={20} />
         </button>
-        <div className="flex w-full flex-col items-center divide-y divide-lightGray6">
+        <div className="flex h-full w-full flex-col items-center divide-y divide-lightGray6">
           {/* Info: (20240508 - Julian) Title */}
           <div className="flex flex-col items-center pb-16px">
             <h1 className="text-xl font-bold text-navyBlue2">Preview Invoice</h1>
@@ -78,11 +78,11 @@ const PreviewInvoiceModal = ({
             </button>
           </div>
           {/* Info: (20240508 - Julian) Invoice Preview */}
-          <div className="w-full overflow-x-auto py-16px">
+          <div className="h-full w-full flex-1 overflow-x-auto p-16px">
             <Image
               src={imgStr}
-              width={700}
-              height={666}
+              width={500}
+              height={300}
               alt="invoice_preview"
               style={{ objectFit: 'contain' }}
             />
