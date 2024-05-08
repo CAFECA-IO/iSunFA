@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { useEffect, useState, useCallback } from 'react';
 import { IAPIInput, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
@@ -18,7 +17,8 @@ export async function fetchData<Data>(
     method,
     signal,
   };
-
+  // Deprecated: debug log (20240510 - Tzuahan)
+  // eslint-disable-next-line no-console
   console.log('fetchData, path:', path, `options:`, options);
 
   if (method !== HttpMethod.GET && options.body) {
@@ -32,7 +32,8 @@ export async function fetchData<Data>(
       };
     }
   }
-
+  // Deprecated: debug log (20240510 - Tzuahan)
+  // eslint-disable-next-line no-console
   console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
