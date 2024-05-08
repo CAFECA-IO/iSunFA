@@ -180,38 +180,32 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               What type of Report do you want to display on your web?
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
-              <div
-                className="flex gap-2 py-2.5 hover:cursor-pointer"
-                onClick={() => toggleCheckbox(balanceSheetRef)}
-              >
+              <div className="flex gap-2 py-2.5" onClick={() => toggleCheckbox(balanceSheetRef)}>
                 <input
                   type="checkbox"
                   ref={balanceSheetRef}
-                  className="my-auto h-4 w-4 shrink-0 rounded border border-solid border-slate-600 bg-white"
+                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <div>Balance Sheet</div>
+                <button type="button">Balance Sheet</button>
               </div>
-              <div
-                className="flex gap-2 py-2.5 hover:cursor-pointer"
-                onClick={() => toggleCheckbox(incomeStatementRef)}
-              >
+              <div className="flex gap-2 py-2.5" onClick={() => toggleCheckbox(incomeStatementRef)}>
                 <input
                   type="checkbox"
                   ref={incomeStatementRef}
-                  className="my-auto h-4 w-4 shrink-0 rounded border border-solid border-slate-600 bg-white"
+                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <div>Comprehensive Income Statement</div>
+                <button type="button">Comprehensive Income Statement</button>
               </div>
               <div
-                className="flex gap-2 py-2.5 hover:cursor-pointer"
+                className="flex gap-2 py-2.5"
                 onClick={() => toggleCheckbox(cashFlowStatementRef)}
               >
                 <input
                   type="checkbox"
                   ref={cashFlowStatementRef}
-                  className="my-auto h-4 w-4 shrink-0 rounded border border-solid border-slate-600 bg-white"
+                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <div>Cash Flow Statement</div>
+                <button type="button">Cash Flow Statement</button>
               </div>
             </div>
           </div>
