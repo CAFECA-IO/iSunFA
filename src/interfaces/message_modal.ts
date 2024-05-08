@@ -2,6 +2,7 @@ export enum MessageType {
   WARNING = 'warning',
   SUCCESS = 'success',
   ERROR = 'error',
+  INFO = 'info',
 }
 
 export interface IMessageModal {

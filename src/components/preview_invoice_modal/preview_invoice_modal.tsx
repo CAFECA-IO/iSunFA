@@ -6,6 +6,8 @@ import { RxCross2 } from 'react-icons/rx';
 import { PiShareFat } from 'react-icons/pi';
 import { IPreviewInvoiceModal } from '@/interfaces/preview_invoice_modal';
 import { Button } from '../button/button';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IPreviewInvoiceModalProps {
   isModalVisible: boolean;
@@ -19,10 +21,24 @@ const PreviewInvoiceModal = ({
   previewInvoiceModalData,
 }: IPreviewInvoiceModalProps) => {
   const { date, imgStr } = previewInvoiceModalData;
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
-  // Info: (20240508 - Julian) 執行 submitBtnFunction 後，關閉 modal
-  const closeClickHandler = () => {
-    modalVisibilityHandler();
+  // Info: (20240508 - Julian) 關閉 modal
+  const closeClickHandler = () => modalVisibilityHandler();
+
+  // Info: (20240508 - Julian) 下載
+  const downloadClickHandler = () => {
+    messageModalDataHandler({
+      title: 'Download Selected Voucher',
+      content: 'Are you sure you want to download the selected items?',
+      messageType: MessageType.INFO,
+      submitBtnStr: 'Download',
+      // ToDo: (20240508 - Julian) 下載功能
+      submitBtnFunction: () => {
+        modalVisibilityHandler();
+      },
+    });
+    messageModalVisibilityHandler();
   };
 
   const isDisplayModal = isModalVisible ? (
@@ -45,9 +61,10 @@ const PreviewInvoiceModal = ({
           </div>
           {/* Info: (20240508 - Julian) Function Buttons */}
           <div className="flex w-full items-center justify-end gap-16px p-16px">
-            {/* ToDo: (20240508 - Julian) Download Button */}
+            {/* Info: (20240508 - Julian) Download Button */}
             <button
               type="button"
+              onClick={downloadClickHandler}
               className="rounded-xs bg-navyBlue2 p-12px text-white hover:bg-primaryYellow disabled:bg-lightGray5"
             >
               <MdOutlineFileDownload size={20} />
