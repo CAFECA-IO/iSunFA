@@ -726,6 +726,7 @@ module.exports = {
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',
+        successGreen3: '#4BD394',
 
         warningYellow: '#FFCF24',
 
@@ -1341,7 +1342,7 @@ module.exports = {
       },
       maxHeight: {
         '230px': '230px',
-        '450px': '450px',
+        '500px': '500px',
       },
       minHeight: {
         fit: 'fit-content',

@@ -1,20 +1,24 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
+import { IJournal } from '@/interfaces/journal';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '../../../constants/url';
+import { timestampToString } from '../../../lib/utils/common';
 
 interface IJournalDetailPageProps {
   journalId: string;
 }
 
 interface IVoucherItem {
+  id: string;
   accounting: string;
   particulars: string;
   debit: number;
@@ -29,36 +33,52 @@ enum VoucherItem {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
-  // ToDo: (20240503 - Julian) Get real data from API
-  const tokenContract: string = '0x00000000219ab540356cBB839Cbe05303d7705Fa';
-  const tokenId: string = '37002036';
-  const type: string = 'Payment';
-  const reason: string = '';
-  const vendor: string = '華碩雲端股份有限公司';
-  const description: string = 'ASUS Cloud';
-  const totalPrice: number = 100000;
-  const tax: number = 5;
-  const fee: number = 5000;
-  const paymentMethod: string = 'Credit Card';
-  const paymentPeriod: string = '2024-04-30';
-  const paymentStatus: string = 'Paid';
-  const project: string = 'None';
-  const contract: string = 'None';
+  const [journalDetail, setJournalDetail] = useState<IJournal>();
 
-  const voucherList: IVoucherItem[] = [
-    {
-      accounting: '1141- Accounts receivable',
-      particulars: 'Buy a pineapple',
-      debit: 1785000,
-      credit: 0,
-    },
-    {
-      accounting: '1113- Cash in banks',
-      particulars: 'Buy a pineapple',
-      debit: 0,
-      credit: 1785000,
-    },
-  ];
+  const getJournalDetail = async () => {
+    const response = await fetch(`/api/v1/company/:companyId/journal`, {
+      method: 'GET',
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      setJournalDetail(data.payload[0]);
+    }
+  };
+
+  useEffect(() => {
+    getJournalDetail();
+  }, [journalId]);
+
+  // ToDo: (20240503 - Julian) Get real data from API
+  const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
+  const tokenId: string = journalDetail ? journalDetail.tokenId : '';
+  const type: string = journalDetail ? journalDetail.metadatas[0].voucherType : '';
+  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date : 0;
+  const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
+  const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
+  const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
+  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].totalPrice : 0;
+  const tax: number = journalDetail ? journalDetail.metadatas[0].taxPercentage : 0;
+  const fee: number = journalDetail ? journalDetail.metadatas[0].fee : 0;
+  const paymentMethod: string = journalDetail ? journalDetail.metadatas[0].paymentMethod : '';
+  const paymentPeriod: string = journalDetail ? journalDetail.metadatas[0].paymentPeriod : '';
+  const paymentStatus: string = journalDetail ? journalDetail.metadatas[0].paymentStatus : '';
+  const project: string = journalDetail ? journalDetail.metadatas[0].project : '';
+  const contract: string = journalDetail ? journalDetail.metadatas[0].contract : '';
+  const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';
+
+  const lineItems = journalDetail ? journalDetail.lineItems : [];
+
+  const voucherList: IVoucherItem[] = lineItems.map((lineItem) => {
+    return {
+      id: lineItem.lineItemIndex,
+      accounting: lineItem.account,
+      particulars: lineItem.description,
+      debit: lineItem.debit ? lineItem.amount : 0,
+      credit: !lineItem.debit ? lineItem.amount : 0,
+    };
+  });
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(tokenContract);
@@ -126,6 +146,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const displayType = <p className="text-lightRed">{type}</p>;
 
+  const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
+
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
       <p>{reason}</p>
@@ -185,7 +207,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
               ? voucher.debit
               : voucher.credit;
       return (
-        <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+        <div key={voucher.id} className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
           <p className="w-9/10 whitespace-nowrap">{str}</p>
         </div>
       );
@@ -200,7 +222,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   // ToDo: (20240503 - Julian) Mobile version
   const displayVoucherDesktop = (
-    <div className="hidden w-full flex-col gap-24px text-sm text-lightGray5 md:flex md:text-base">
+    <div className="flex w-90vw flex-col gap-24px overflow-x-auto text-sm text-lightGray5 md:w-full md:text-base">
       {/* Info: (20240503 - Julian) Divider */}
       <div className="flex items-center gap-4">
         <hr className="flex-1 border-lightGray3" />
@@ -237,6 +259,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
       </div>
     </div>
   );
+
+  // const
 
   return (
     <>
@@ -329,7 +353,12 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
                     {/* Info: (20240503 - Julian) certificate */}
                     <div className="flex w-fit flex-col gap-y-30px">
-                      <div className="h-300px w-236px bg-slate-400">I am Certificate</div>
+                      <Image
+                        src={`/api/v1/company/1/${invoiceIndex}/sam/image`}
+                        width={236}
+                        height={300}
+                        alt="certificate"
+                      />
                       {displayJournalType}
                     </div>
                     {/* Info: (20240503 - Julian) details */}
@@ -338,6 +367,11 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                       <div className="flex items-center justify-between">
                         <p>Type</p>
                         {displayType}
+                      </div>
+                      {/* Info: (20240507 - Julian) Date */}
+                      <div className="flex items-center justify-between">
+                        <p>Date</p>
+                        {displayDate}
                       </div>
                       {/* Info: (20240503 - Julian) Reason */}
                       <div className="flex items-center justify-between">
