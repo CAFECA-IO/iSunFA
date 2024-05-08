@@ -32,7 +32,10 @@ export default async function handler(
           paymentReason: 'purchase',
           description: 'description',
           venderOrSupplyer: 'vender',
+          projectId: '123',
+          contractId: '123',
           payment: {
+            isRevenue: false,
             price: 100,
             hasTax: true,
             taxPercentage: 10,
@@ -47,7 +50,10 @@ export default async function handler(
           paymentReason: 'sale',
           description: 'description',
           venderOrSupplyer: 'vender',
+          projectId: '123',
+          contractId: '123',
           payment: {
+            isRevenue: false,
             price: 100,
             hasTax: true,
             taxPercentage: 10,

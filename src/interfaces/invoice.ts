@@ -1,11 +1,20 @@
-import {
-  PaymentPeriodType,
-  PaymentStatusType,
-  isEventType,
-  isPaymentPeriodType,
-  isPaymentStatusType,
-} from './account';
+import { isEventType, isPaymentPeriodType, isPaymentStatusType } from './account';
+import { IPartialPaymentForInvoiceUpload, IPayment } from './payment';
 
+// IInvoiceWithPaymentMethod Interface
+export interface IInvoiceWithPaymentMethod {
+  invoiceId: string;
+  date: number; // timestamp
+  eventType: string; // 'income' | 'payment' | 'transfer';
+  paymentReason: string;
+  description: string;
+  venderOrSupplyer: string;
+  projectId: string;
+  contractId: string;
+  payment: IPayment;
+}
+
+// IInvoice Interface
 export interface IInvoice {
   invoiceId: string;
   date: number; // timestamp
@@ -13,25 +22,9 @@ export interface IInvoice {
   paymentReason: string;
   description: string;
   venderOrSupplyer: string;
-  payment: {
-    price: number;
-    hasTax: boolean;
-    taxPercentage: number;
-    hasFee: boolean;
-    fee: number;
-  };
-}
-
-export interface IInvoiceWithPaymentMethod extends IInvoice {
   projectId: string;
   contractId: string;
-  payment: IInvoice['payment'] & {
-    paymentMethod: string;
-    paymentPeriod: PaymentPeriodType;
-    installmentPeriod: number;
-    paymentStatus: PaymentStatusType;
-    alreadyPaidAmount: number;
-  };
+  payment: IPartialPaymentForInvoiceUpload;
 }
 // Info Murky (20240416): Type Guard
 //  Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性

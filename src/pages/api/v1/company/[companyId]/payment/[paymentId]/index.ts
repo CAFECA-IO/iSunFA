@@ -1,12 +1,12 @@
 import { STATUS_CODE } from '@/constants/status_code';
-import { IPayment } from '@/interfaces/payment';
+import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPayment>>
+  res: NextApiResponse<IResponseData<ICard>>
 ) {
   const { method } = req;
 
@@ -22,7 +22,7 @@ export default async function handler(
     }
     // Info: (20240419 - Jacky) P010002 - GET /payment/:id
     if (method === 'GET') {
-      const payment: IPayment = {
+      const payment: ICard = {
         id: '1',
         type: 'VISA',
         no: '1234-1234-1234-1234',
@@ -31,14 +31,14 @@ export default async function handler(
         cvc: '330',
         name: 'Taiwan Bank',
       };
-      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.SUCCESS_GET, payment);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_CODE.SUCCESS_GET, payment);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
-      const payment: IPayment = {
+      const payment: ICard = {
         id: '3',
         type,
         no: '1234-1234-1234-1234',
@@ -49,11 +49,11 @@ export default async function handler(
       };
       payment.name = name;
       payment.no = no;
-      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.SUCCESS_UPDATE, payment);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_CODE.SUCCESS_UPDATE, payment);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) P010004 - DELETE /payment/:id
     } else if (method === 'DELETE') {
-      const payment: IPayment = {
+      const payment: ICard = {
         id: '1',
         type: 'VISA',
         no: '1234-1234-1234-5678',
@@ -62,14 +62,14 @@ export default async function handler(
         cvc: '330',
         name: 'Taiwan Bank',
       };
-      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.SUCCESS_DELETE, payment);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_CODE.SUCCESS_DELETE, payment);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IPayment>(error.message, {} as IPayment);
+    const { httpCode, result } = formatApiResponse<ICard>(error.message, {} as ICard);
     res.status(httpCode).json(result);
   }
 }
