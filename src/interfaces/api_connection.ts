@@ -31,7 +31,7 @@ export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown };
+  body?: { [key: string]: unknown } | FormData;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };

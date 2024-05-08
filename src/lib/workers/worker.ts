@@ -1,37 +1,54 @@
+/* eslint-disable no-console */
 import { HttpMethod } from '@/constants/api_connection';
 import { Action } from '@/constants/action';
+import { IAPIInput, IHttpMethod } from '@/interfaces/api_connection';
+import { IResponseData } from '@/interfaces/response_data';
 
 interface FetchRequestData {
   requestId: string;
   method: HttpMethod;
   path: string;
-  body: Record<string, string | number | Record<string, string | number>> | null;
+  options: IAPIInput;
   action?: Action.CANCEL;
 }
 
-async function fetchData(
-  method: HttpMethod,
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+};
+
+export async function fetchData<Data>(
   path: string,
-  body: Record<string, string | number | Record<string, string | number>> | null,
-  signal: AbortSignal
-): Promise<unknown> {
+  method: IHttpMethod,
+  options: IAPIInput,
+  signal?: AbortSignal
+): Promise<IResponseData<Data>> {
   const fetchOptions: RequestInit = {
     method,
     signal,
   };
 
-  if (method !== HttpMethod.GET && body) {
-    fetchOptions.body = JSON.stringify(body);
-    fetchOptions.headers = {
-      'Content-Type': 'application/json',
-    };
+  console.log('fetchData, path:', path, `options:`, options);
+
+  if (method !== HttpMethod.GET && options.body) {
+    if (options.body instanceof FormData) {
+      fetchOptions.body = options.body;
+    } else {
+      fetchOptions.body = JSON.stringify(options.body);
+      fetchOptions.headers = {
+        ...DEFAULT_HEADERS,
+        ...(options.header || {}),
+      };
+    }
   }
+
+  console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  const result = (await response.json()) as IResponseData<Data>;
+  return result;
 }
 
 let activeRequest: string | null = null;
@@ -39,9 +56,9 @@ let controller: AbortController | null = null;
 
 const handleRequest = async (
   requestId: string,
-  method: HttpMethod,
   path: string,
-  body: Record<string, string | number | Record<string, string | number>> | null
+  method: HttpMethod,
+  options: IAPIInput
 ) => {
   if (controller) {
     controller.abort();
@@ -50,7 +67,7 @@ const handleRequest = async (
   activeRequest = requestId;
 
   try {
-    const data = await fetchData(method, path, body, controller.signal);
+    const data = await fetchData(path, method, options, controller.signal);
     if (activeRequest !== requestId) {
       return;
     }
@@ -65,7 +82,7 @@ const handleRequest = async (
 
 // eslint-disable-next-line no-restricted-globals
 self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
-  const { requestId, method, path, body, action } = event.data;
+  const { requestId, method, path, options, action } = event.data;
 
   if (action === Action.CANCEL) {
     if (activeRequest === requestId && controller) {
@@ -79,7 +96,7 @@ self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
     return;
   }
 
-  await handleRequest(requestId, method, path, body);
+  await handleRequest(requestId, path, method, options);
 };
 
 export {};
