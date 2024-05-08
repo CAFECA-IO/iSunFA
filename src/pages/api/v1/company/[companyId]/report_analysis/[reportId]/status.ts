@@ -4,23 +4,23 @@ import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<AccountProgressStatus>>
 ) {
   try {
-    const { voucherId } = req.query;
+    const { reportId } = req.query;
 
     // Info Murky (20240416): Check if resultId is string
-    if (typeof voucherId !== 'string' || !voucherId || Array.isArray(voucherId)) {
+    if (typeof reportId !== 'string' || !reportId || Array.isArray(reportId)) {
       throw new Error('INVALID_INPUT_PARAMETER');
     }
 
     switch (req.method) {
       case 'GET': {
-        const result = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/process_status`);
+        const result = await fetch(`${AICH_URI}/api/v1/audit_reports/${reportId}/process_status`);
 
         if (!result.ok) {
           throw new Error('GATEWAY_TIMEOUT');
@@ -28,11 +28,11 @@ export default async function handler(
 
         const resultJson: AccountProgressStatus = (await result.json()).payload;
 
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: false,
-          code: String(RESPONSE_STATUS_CODE.success),
-          message: `Voucher preview creating process of id:${voucherId} return successfully`,
+          code: String(200),
+          message: `Financial JSON creating process of id:${reportId} return successfully`,
           payload: resultJson,
         });
         break;

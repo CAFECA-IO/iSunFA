@@ -1,8 +1,8 @@
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucher, IVoucherMetaData } from '@/interfaces/voucher';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -12,22 +12,44 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      if (!req.query.voucherId) {
+      const { voucherId } = req.query;
+
+      // Info Murky (20240416): Check if resultId is string
+      if (typeof voucherId !== 'string' || !voucherId || Array.isArray(voucherId)) {
         throw new Error('INVALID_INPUT_PARAMETER');
       }
 
-      const result = await fetch(`${AICH_URI}/api/v1/vouchers/${req.query.voucherId}/result`);
+      const result = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/result`);
 
       if (!result.ok) {
         throw new Error('GATEWAY_TIMEOUT');
       }
 
-      const voucher: IVoucher = (await result.json()).payload;
+      const rawVoucher = (await result.json()).payload;
+      if (!rawVoucher) {
+        throw new Error('RESOURCE_NOT_FOUND');
+      }
+      const { voucherIndex, metadatas, lineItems } = rawVoucher;
+      const { venderOrSupplyer, paymentReason, invoiceId, ...rawMetadata } = metadatas[0];
+      const trueMetadatas: IVoucherMetaData = {
+        ...rawMetadata,
+        companyId: '810af23',
+        companyName: venderOrSupplyer,
+        reason: paymentReason,
+        contract: 'ISunFa開發',
+        project: 'ISunFa',
+      };
+      const voucher: IVoucher = {
+        voucherIndex,
+        metadatas: [trueMetadatas],
+        lineItems,
+        invoiceIndex: invoiceId,
+      };
 
-      res.status(RESPONSE_STATUS_CODE.success).json({
+      res.status(200).json({
         powerby: 'ISunFa api ' + version,
         success: true,
-        code: String(RESPONSE_STATUS_CODE.success),
+        code: String(200),
         message: 'get voucher analyzation result by id',
         payload: voucher,
       });

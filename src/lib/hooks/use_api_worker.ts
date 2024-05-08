@@ -1,22 +1,16 @@
-/* eslint-disable no-console */
-import { IAPIInput } from '@/interfaces/api_connection';
+import { IAPIInput, IAPIName, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
 import { Action } from '@/constants/action';
-import { Response } from '@/interfaces/response';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { APIConfig, APIName } from '@/constants/api_connection';
-import { checkInput, getAPIPath } from '../utils/common';
-
-interface ResponseData<Data> {
-  data?: Data;
-  error?: Error | undefined;
-}
+import { IResponseData } from '@/interfaces/response_data';
 
 const useAPIWorker = <Data>(
-  apiName: APIName,
+  apiName: IAPIName,
+  method: IHttpMethod,
+  path: string,
   options: IAPIInput,
   cancel?: boolean,
   triggerImmediately: boolean = true
-): Response<Data> => {
+): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
@@ -24,53 +18,39 @@ const useAPIWorker = <Data>(
   const requestIdRef = useRef<string | undefined>(undefined);
   const controllerRef = useRef<AbortController | null>(null);
 
-  const apiConfig = APIConfig[apiName];
-  checkInput(apiConfig, options);
-
-  const path = getAPIPath(apiConfig, options);
-
-  const handleResponse = (responseData: ResponseData<Data>, requestId: string) => {
-    const { data: newData, error: workerError } = responseData;
-
+  const handleResponse = (response: { data: IResponseData<Data>; requestId: string }) => {
+    const { data: responseData, requestId } = response;
+    const { success: apiSuccess, payload, message } = responseData;
     if (requestId !== requestIdRef.current) return;
-    if (workerError) {
-      setError(workerError instanceof Error ? workerError : new Error(workerError));
-      setSuccess(false);
+    if (!apiSuccess) {
+      setError(new Error(message));
     } else {
-      setData(newData);
+      setData(payload as Data);
       setError(null);
-      setSuccess(true);
     }
+    setSuccess(apiSuccess);
     setIsLoading(false);
   };
 
   const fetchData = useCallback(() => {
-    console.log(
-      `useAPIWorker fetchData is called, path`,
-      path,
-      `options`,
-      options,
-      `cancel`,
-      cancel
-    );
     const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
       type: 'module',
     });
-    const requestId = apiConfig.name;
+    const requestId = apiName;
     requestIdRef.current = requestId;
 
     setIsLoading(true);
 
     worker.postMessage({
       requestId,
-      apiConfig,
+      method,
       path,
       body: options.body,
       action: cancel ? Action.CANCEL : undefined,
     });
 
     const handleMessage = (event: MessageEvent) => {
-      handleResponse(event.data, requestId);
+      handleResponse(event.data);
     };
 
     worker.addEventListener(Action.MESSAGE, handleMessage);

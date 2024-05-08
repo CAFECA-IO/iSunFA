@@ -1,16 +1,16 @@
 import { AICH_URI } from '@/constants/config';
-import { AccountResultStatus } from '@/interfaces/account';
 import { isIInvoiceWithPaymentMethod } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucher } from '@/interfaces/voucher';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IVoucher | AccountResultStatus>>
+  res: NextApiResponse<IResponseData<IVoucher | IAccountResultStatus>>
 ) {
   try {
     // Depreciate Murky (20240416): 這邊應該要搬到Journal
@@ -88,12 +88,12 @@ export default async function handler(
         throw new Error('GATEWAY_TIMEOUT');
       }
 
-      const resultStatus: AccountResultStatus = (await result.json()).payload;
+      const resultStatus: IAccountResultStatus = (await result.json()).payload;
 
-      res.status(RESPONSE_STATUS_CODE.success).json({
+      res.status(200).json({
         powerby: 'ISunFa api ' + version,
         success: true,
-        code: String(RESPONSE_STATUS_CODE.success),
+        code: String(200),
         message: 'create voucher',
         payload: resultStatus,
       });

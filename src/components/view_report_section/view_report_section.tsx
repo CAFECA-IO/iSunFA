@@ -2,7 +2,7 @@
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { pdfjs, Document, Page } from 'react-pdf';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../button/button';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -183,11 +183,6 @@ const comprehensiveIncomeReportThumbnails = [
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
     src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_17.png',
     alt: 'Report Thumbnail 17',
     active: false,
@@ -339,6 +334,7 @@ const ViewReportSection = ({
   reportLink,
 }: IViewReportSectionProps) => {
   const globalCtx = useGlobalCtx();
+
   const [chartWidth, setChartWidth] = React.useState(580);
   const [chartHeight, setChartHeight] = React.useState(250);
 
@@ -349,9 +345,11 @@ const ViewReportSection = ({
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
+    setIsLoading(false);
   }
 
   const thumbnailClickHandler = (index: number) => {
@@ -418,6 +416,8 @@ const ViewReportSection = ({
   };
 
   useEffect(() => {
+    if (!pdfFile) return;
+
     switch (reportTypesName.id) {
       case ReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
@@ -431,7 +431,7 @@ const ViewReportSection = ({
       default:
         setReportThumbnails([]);
     }
-  }, [reportTypesName]);
+  }, [pdfFile]);
 
   useEffect(() => {
     fetchPDF();
@@ -449,12 +449,12 @@ const ViewReportSection = ({
       const windowWidth = globalCtx.width;
       const windowHeight = window.innerHeight;
       const DESKTOP_WIDTH = 1024;
-      const TABLET_WIDTH = 768;
+      const TABLET_WIDTH = 910;
       const MOBILE_WIDTH = 500;
 
       if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 250;
-        const presentHeight = 250;
+        const presentWidth = 200;
+        const presentHeight = 150;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
@@ -465,7 +465,7 @@ const ViewReportSection = ({
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 580;
+        const presentWidth = 500;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
@@ -481,10 +481,6 @@ const ViewReportSection = ({
 
     handleResize();
   }, [globalCtx.width]);
-
-  console.log('chartWidth', chartWidth, 'chartHeight', chartHeight);
-
-  console.log('thumbnail', reportThumbnails);
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
@@ -520,6 +516,7 @@ const ViewReportSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
+              disabled={isLoading}
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -542,6 +539,8 @@ const ViewReportSection = ({
               </div>
             </Button>
             <Button
+              // TODO: yet to dev (20240507 - Shirley)
+              disabled={true}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -572,9 +571,11 @@ const ViewReportSection = ({
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">Token Contract </div>
             <div className="flex items-center space-x-3">
-              <Link href={''} className="font-semibold text-link-text-primary">
+              {/* TODO: link (20240507 - Shirley) */}
+              {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
-              </Link>
+              </Link> */}
+              <div className="font-semibold text-link-text-primary">{tokenContract} </div>
 
               <button onClick={copyTokenContractClickHandler} type="button">
                 {' '}
@@ -599,9 +600,12 @@ const ViewReportSection = ({
             <div className="text-text-neutral-tertiary">Token ID </div>
 
             <div className="flex items-center space-x-3">
-              <Link href={''} className="font-semibold text-link-text-primary">
-                {tokenId}{' '}
-              </Link>
+              {/* TODO: link (20240507 - Shirley) */}
+              {/* <Link href={''} className="font-semibold text-link-text-primary">
+                {tokenId}
+              </Link> */}
+
+              <div className="font-semibold text-link-text-primary">{tokenId} </div>
 
               <button onClick={copyTokenIdClickHandler} type="button">
                 {' '}
@@ -652,10 +656,10 @@ const ViewReportSection = ({
                 </div>
               </div>
             </div>
+            {/* TODO: link (20240507 - Shirley) */}
+
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
-              <div className="justify-center rounded-md">
-                0x00000000219ab540356cBB839Cbe05303d7705Fa
-              </div>
+              <div className="justify-center rounded-md">{tokenContract}</div>
             </div>
           </div>
           <div className="mt-4 flex flex-col">
@@ -685,8 +689,10 @@ const ViewReportSection = ({
                 </div>
               </div>
             </div>
+            {/* TODO: link (20240507 - Shirley) */}
+
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
-              <div className="justify-center rounded-md">37002036</div>
+              <div className="justify-center rounded-md">{tokenId}</div>
             </div>
           </div>
         </div>
@@ -695,99 +701,80 @@ const ViewReportSection = ({
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      <div className="mt-12 flex w-full px-40 pb-2">
+      <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-40 pb-2">
         {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="hidden h-200px w-1/4 overflow-y-auto bg-white pl-0 lg:flex lg:h-850px">
-          <ul className="mt-5 flex w-full flex-col items-center justify-center space-y-5">
-            {reportThumbnails.map((thumbnail, index) => (
-              <button onClick={() => thumbnailClickHandler(index)} key={index}>
-                <div
-                  className={`flex flex-col rounded-2xl px-5 py-4 ${
-                    index === activeIndex
-                      ? 'bg-surface-brand-primary-soft'
-                      : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
-                  }`}
-                >
-                  <div className="flex items-center justify-center border border-solid border-blue-950">
-                    <Image
-                      width={150}
-                      height={106}
-                      loading="lazy"
-                      src={thumbnail.src}
-                      alt={thumbnail.alt}
-                    />
-                  </div>
-                  <div
-                    className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
-                      thumbnail.active
-                        ? 'text-text-neutral-solid-dark'
-                        : 'text-text-text-neutral-primary'
-                    }`}
-                  >
-                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </ul>
+        <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+          <div className="mt-9 flex w-full flex-col items-center justify-center">
+            {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
+            <div className="flex h-850px flex-col gap-3">
+              {!isLoading ? (
+                reportThumbnails.map((thumbnail, index) => (
+                  <button onClick={() => thumbnailClickHandler(index)} key={index}>
+                    <div
+                      className={`flex flex-col rounded-2xl px-5 py-4 ${
+                        index === activeIndex
+                          ? 'bg-surface-brand-primary-soft'
+                          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center border border-solid border-blue-950">
+                        <Image width={150} height={106} src={thumbnail.src} alt={thumbnail.alt} />
+                      </div>
+                      <div
+                        className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
+                          thumbnail.active
+                            ? 'text-text-neutral-solid-dark'
+                            : 'text-text-text-neutral-primary'
+                        }`}
+                      >
+                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p>Loading...</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {pdfFile ? (
           <div className="flex flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
-            {/* <button
-              onClick={prevClickHandler}
-              disabled={pageNumber <= 1}
-              className="flex lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-left"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
-                />
-              </svg>
-            </button> */}
             <button
               onClick={prevClickHandler}
               disabled={pageNumber <= 1}
-              className="absolute bottom-40 left-0 z-10 m-4 md:bottom-56 lg:hidden"
+              className="absolute bottom-20 left-0 z-10 m-4 iphonese:bottom-1/5 iphone12pro:bottom-96 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                className="bi bi-chevron-left"
-                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 17 16"
               >
                 <path
+                  fill="#001840"
                   fillRule="evenodd"
-                  d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"
-                />
+                  d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
             </button>
 
-            <div className="hidden md:flex">
+            <div className="hidden lg:flex">
               <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page scale={1} pageNumber={pageNumber} className={`max-lg:-translate-x-1/12`} />
+                <Page scale={1} pageNumber={pageNumber} />
               </Document>
             </div>
-            <div className="flex h-screen md:hidden">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+            <div className="flex h-screen lg:hidden">
+              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
                 <Page
                   scale={1}
                   pageNumber={pageNumber}
-                  // Deprecated: 20240519 - Shirley
                   width={chartWidth}
                   height={chartHeight}
-                  className={`-translate-x-2/5`}
-                  // className={`absolute left-0 top-0 max-h-full max-w-full`}
+                  className="absolute left-1/5 top-2 w-full -translate-x-1/2 -translate-y-1/2 iphonese:top-1/5 sm:left-1/2 sm:top-1/2"
                 />
               </Document>
             </div>
@@ -795,41 +782,23 @@ const ViewReportSection = ({
             <button
               onClick={nextClickHandler}
               disabled={pageNumber >= numPages}
-              className="absolute bottom-40 right-0 z-10 m-4 md:bottom-56 lg:hidden"
+              className="absolute bottom-20 right-0 z-10 m-4 iphonese:bottom-1/5 iphone12pro:bottom-96 md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="currentColor"
-                className="bi bi-chevron-right"
-                viewBox="0 0 16 16"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 17 16"
               >
                 <path
+                  fill="#001840"
                   fillRule="evenodd"
-                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
-                />
+                  d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
             </button>
-            {/* <button
-              onClick={nextClickHandler}
-              disabled={pageNumber >= numPages}
-              className="flex lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-chevron-right"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
-                />
-              </svg>
-            </button> */}
           </div>
         ) : (
           <div className="flex h-850px w-full flex-1 justify-center bg-white">
