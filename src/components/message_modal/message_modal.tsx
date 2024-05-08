@@ -2,20 +2,20 @@
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '../button/button';
-import { IWaringModal } from '../../interfaces/warning_modal';
+import { IMessageModal, MessageType } from '../../interfaces/message_modal';
 
-interface IWaringModalProps {
+interface IMessageModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  warningModalData: IWaringModal;
+  messageModalData: IMessageModal;
 }
 
-const WarningModal = ({
+const MessageModal = ({
   isModalVisible,
   modalVisibilityHandler,
-  warningModalData,
-}: IWaringModalProps) => {
-  const { title, content, warningMsg, modalSubmitBtn, submitBtnFunction } = warningModalData;
+  messageModalData,
+}: IMessageModalProps) => {
+  const { title, content, subMsg, submitBtnStr, submitBtnFunction, messageType } = messageModalData;
 
   // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {
@@ -23,9 +23,29 @@ const WarningModal = ({
     modalVisibilityHandler();
   };
 
+  // ToDo: (20240507 - Julian) warning message (red color)
+  const imgStr = messageType === MessageType.WARNING ? '/icons/warning.svg' : '/icons/success.svg';
+  const imgAlt = messageType === MessageType.WARNING ? 'warning_icon' : 'success_icon';
+
+  const borderColor =
+    messageType === MessageType.WARNING
+      ? 'border-warningYellow'
+      : messageType === MessageType.SUCCESS
+        ? 'border-successGreen3'
+        : 'border-errorRed';
+
+  const titleColor =
+    messageType === MessageType.WARNING
+      ? 'text-primaryYellow6'
+      : messageType === MessageType.SUCCESS
+        ? 'text-lightGreen'
+        : 'text-errorRed';
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-376px relative flex h-fit flex-col gap-16px rounded-xs border-t-5px border-warningYellow bg-white px-32px py-16px">
+      <div
+        className={`w-376px relative flex h-fit flex-col gap-16px rounded-xs border-t-5px ${borderColor} bg-white px-32px py-16px`}
+      >
         <button
           type="button"
           onClick={modalVisibilityHandler}
@@ -34,12 +54,12 @@ const WarningModal = ({
           <RxCross2 size={20} />
         </button>
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
-          <h1 className="text-xl font-bold text-primaryYellow6">{title}</h1>
-          <Image src="/icons/warning.svg" width={48} height={48} alt="warning_icon" />
+          <h1 className={`text-xl font-bold ${titleColor}`}>{title}</h1>
+          <Image src={imgStr} width={48} height={48} alt={imgAlt} />
           {/* Info: (20240425 - Julian) common message (gray color) */}
           <p className="text-lightGray5">{content}</p>
-          {/* Info: (20240425 - Julian) warning message (red color) */}
-          <p className="text-lightRed">{warningMsg}</p>
+          {/* Info: (20240507 - Julian) sub message (red color) */}
+          <p className="text-lightRed">{subMsg}</p>
         </div>
         <div className="flex items-center justify-center gap-24px">
           <Button
@@ -56,7 +76,7 @@ const WarningModal = ({
             onClick={submitClickHandler}
             variant="tertiary"
           >
-            {modalSubmitBtn}
+            {submitBtnStr}
           </Button>
         </div>
       </div>
@@ -66,4 +86,4 @@ const WarningModal = ({
   return isDisplayModal;
 };
 
-export default WarningModal;
+export default MessageModal;
