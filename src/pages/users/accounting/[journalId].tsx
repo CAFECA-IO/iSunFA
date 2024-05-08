@@ -8,6 +8,7 @@ import { LuTag } from 'react-icons/lu';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
 import { IJournal } from '@/interfaces/journal';
+import { useGlobalCtx } from '@/contexts/global_context';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '../../../constants/url';
@@ -33,6 +34,7 @@ enum VoucherItem {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
+  const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
   const [journalDetail, setJournalDetail] = useState<IJournal>();
 
   const getJournalDetail = async () => {
@@ -50,11 +52,10 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     getJournalDetail();
   }, [journalId]);
 
-  // ToDo: (20240503 - Julian) Get real data from API
   const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
   const type: string = journalDetail ? journalDetail.metadatas[0].voucherType : '';
-  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date : 0;
+  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date / 1000 : 0;
   const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
   const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
   const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
@@ -80,11 +81,46 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     };
   });
 
+  // Info: (20240503 - Julian) Filter debit and credit
+  const debitList = lineItems
+    .filter((voucher) => voucher.debit)
+    .map((lineItem) => {
+      return {
+        id: lineItem.lineItemIndex,
+        accounting: lineItem.account,
+        particulars: lineItem.description,
+        debit: lineItem.amount,
+        credit: 0,
+      };
+    });
+
+  const creditList = lineItems
+    .filter((voucher) => !voucher.debit)
+    .map((lineItem) => {
+      return {
+        id: lineItem.lineItemIndex,
+        accounting: lineItem.account,
+        particulars: lineItem.description,
+        debit: 0,
+        credit: lineItem.amount,
+      };
+    });
+
+  const invoicePreviewSrc = `/api/v1/company/1/invoice/${invoiceIndex}/image`;
+
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(tokenContract);
   };
   const copyTokenIdHandler = () => {
     navigator.clipboard.writeText(tokenId);
+  };
+
+  const invoicePreviewClickHandler = () => {
+    previewInvoiceModalDataHandler({
+      date: dateTimestamp,
+      imgStr: invoicePreviewSrc,
+    });
+    previewInvoiceModalVisibilityHandler();
   };
 
   const displayJournalType =
@@ -220,9 +256,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const displayVoucherDebit = createVoucherLayout(VoucherItem.DEBIT);
   const displayVoucherCredit = createVoucherLayout(VoucherItem.CREDIT);
 
-  // ToDo: (20240503 - Julian) Mobile version
   const displayVoucherDesktop = (
-    <div className="flex w-90vw flex-col gap-24px overflow-x-auto text-sm text-lightGray5 md:w-full md:text-base">
+    <div className="hidden w-full flex-col gap-24px overflow-x-auto text-base text-lightGray5 md:flex">
       {/* Info: (20240503 - Julian) Divider */}
       <div className="flex items-center gap-4">
         <hr className="flex-1 border-lightGray3" />
@@ -260,7 +295,93 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     </div>
   );
 
-  // const
+  const displayDebitList = debitList.map((debit) => {
+    return (
+      <div className="flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+        {/* Info: (20240508 - Julian) Accounting */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-navyBlue2">Accounting</p>
+          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+            <p className="whitespace-nowrap">{debit.accounting}</p>
+          </div>
+        </div>
+        {/* Info: (20240508 - Julian) Particulars */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-navyBlue2">Particulars</p>
+          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+            <p className="whitespace-nowrap">{debit.particulars}</p>
+          </div>
+        </div>
+        {/* Info: (20240508 - Julian) amount */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-navyBlue2">Debit</p>
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+            <p className="whitespace-nowrap">{debit.debit}</p>
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  const displayCreditList = creditList.map((credit) => {
+    return (
+      <div className="flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+        {/* Info: (20240508 - Julian) Accounting */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-navyBlue2">Accounting</p>
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+            <p className="whitespace-nowrap">{credit.accounting}</p>
+          </div>
+        </div>
+        {/* Info: (20240508 - Julian) Particulars */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-navyBlue2">Particulars</p>
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+            <p className="whitespace-nowrap">{credit.particulars}</p>
+          </div>
+        </div>
+        {/* Info: (20240508 - Julian) amount */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-navyBlue2">Credit</p>
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+            <p className="whitespace-nowrap">{credit.credit}</p>
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  const displayVoucherMobile = (
+    <div className="flex flex-col gap-32px text-sm text-lightGray5 md:hidden">
+      <div className="flex flex-col gap-32px">
+        {/* Info: (20240508 - Julian) Debit divider */}
+        <div className="flex items-center gap-4">
+          <hr className="flex-1 border-lightGray3" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+            <p>Debit</p>
+          </div>
+          <hr className="flex-1 border-lightGray3" />
+        </div>
+        {/* Info: (20240508 - Julian) Debit list */}
+        {displayDebitList}
+      </div>
+
+      <div className="flex flex-col gap-32px">
+        {/* Info: (20240508 - Julian) Credit divider */}
+        <div className="flex items-center gap-4">
+          <hr className="flex-1 border-lightGray3" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+            <p>Credit</p>
+          </div>
+          <hr className="flex-1 border-lightGray3" />
+        </div>
+        {/* Info: (20240508 - Julian) Credit list */}
+        {displayCreditList}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -280,7 +401,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           {/* Info: (20240503 - Julian) Sidebar */}
           <AccountingSidebar />
-          {/* ToDo: (20240503 - Julian) Overview */}
+          {/* Info: (20240503 - Julian) Overview */}
           <div className="flex h-full w-full bg-gray-100">
             <div className="mt-100px flex-1 md:ml-80px">
               <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
@@ -292,8 +413,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   >
                     <FaArrowLeft />
                   </Link>
-                  <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-                    <span className="hidden md:block">View Journal-</span>
+                  <h1 className="flex gap-4px text-base font-semibold text-lightGray5 md:text-4xl">
+                    <span className="hidden md:block">View Journal - </span>
                     {journalId}
                   </h1>
                 </div>
@@ -353,68 +474,69 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
                     {/* Info: (20240503 - Julian) certificate */}
                     <div className="flex w-fit flex-col gap-y-30px">
-                      <Image
-                        src={`/api/v1/company/1/${invoiceIndex}/sam/image`}
-                        width={236}
-                        height={300}
-                        alt="certificate"
-                      />
+                      <button
+                        type="button"
+                        onClick={invoicePreviewClickHandler}
+                        className="border border-lightGray6"
+                      >
+                        <Image src={invoicePreviewSrc} width={236} height={300} alt="certificate" />
+                      </button>
                       {displayJournalType}
                     </div>
                     {/* Info: (20240503 - Julian) details */}
                     <div className="flex w-full flex-col gap-12px text-base text-lightGray5 md:w-2/3">
                       {/* Info: (20240503 - Julian) Type */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Type</p>
                         {displayType}
                       </div>
                       {/* Info: (20240507 - Julian) Date */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Date</p>
                         {displayDate}
                       </div>
                       {/* Info: (20240503 - Julian) Reason */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Reason</p>
                         {displayReason}
                       </div>
                       {/* Info: (20240503 - Julian) Vendor/Supplier */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Vendor/Supplier</p>
                         {displayVendor}
                       </div>
                       {/* Info: (20240503 - Julian) Description */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Description</p>
                         {displayDescription}
                       </div>
                       {/* Info: (20240503 - Julian) Total Price */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p className="whitespace-nowrap">Total Price</p>
                         {displayTotalPrice}
                       </div>
                       {/* Info: (20240503 - Julian) Payment Method */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p className="whitespace-nowrap">Payment Method</p>
                         {displayMethod}
                       </div>
                       {/* Info: (20240503 - Julian) Payment Period */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p className="whitespace-nowrap">Payment Period</p>
                         {displayPeriod}
                       </div>
                       {/* Info: (20240503 - Julian) Payment Status */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p className="whitespace-nowrap">Payment Status</p>
                         {displayStatus}
                       </div>
                       {/* Info: (20240503 - Julian) Project */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Project</p>
                         {displayProject}
                       </div>
                       {/* Info: (20240503 - Julian) Contract */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-x-10px">
                         <p>Contract</p>
                         {displayContract}
                       </div>
@@ -422,6 +544,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   </div>
                   {/* Info: (20240503 - Julian) Accounting Voucher */}
                   {displayVoucherDesktop}
+                  {displayVoucherMobile}
                 </div>
               </div>
             </div>

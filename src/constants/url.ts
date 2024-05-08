@@ -16,10 +16,11 @@ export const ISUNFA_ROUTE = {
   ACCOUNTING: '/users/accounting',
   JOURNAL_LIST: '/users/accounting/journal-list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
-  USERS_ANALYSIS_REPORTS: '/users/reports/analyses',
+  USERS_ANALYSES_REPORTS: '/users/reports/analyses',
   USERS_FINANCIAL_REPORTS_VIEW: '/users/reports/financials/view',
+  USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
 };
 
-export const ENTERNAL_API = {
+export const EXTERNAL_API = {
   CFV_PDF: 'https://cfv.cafeca.io/api/pdf',
 };
