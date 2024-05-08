@@ -8,6 +8,7 @@ import { LuTag } from 'react-icons/lu';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
 import { IJournal } from '@/interfaces/journal';
+import { useGlobalCtx } from '@/contexts/global_context';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '../../../constants/url';
@@ -33,6 +34,7 @@ enum VoucherItem {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
+  const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
   const [journalDetail, setJournalDetail] = useState<IJournal>();
 
   const getJournalDetail = async () => {
@@ -54,7 +56,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
   const type: string = journalDetail ? journalDetail.metadatas[0].voucherType : '';
-  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date : 0;
+  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date / 1000 : 0;
   const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
   const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
   const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
@@ -80,11 +82,21 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     };
   });
 
+  const invoicePreviewSrc = `/api/v1/company/1/invoice/${invoiceIndex}/image`;
+
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(tokenContract);
   };
   const copyTokenIdHandler = () => {
     navigator.clipboard.writeText(tokenId);
+  };
+
+  const invoicePreviewClickHandler = () => {
+    previewInvoiceModalDataHandler({
+      date: dateTimestamp,
+      imgStr: invoicePreviewSrc,
+    });
+    previewInvoiceModalVisibilityHandler();
   };
 
   const displayJournalType =
@@ -292,8 +304,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   >
                     <FaArrowLeft />
                   </Link>
-                  <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-                    <span className="hidden md:block">View Journal-</span>
+                  <h1 className="flex gap-4px text-base font-semibold text-lightGray5 md:text-4xl">
+                    <span className="hidden md:block">View Journal - </span>
                     {journalId}
                   </h1>
                 </div>
@@ -353,12 +365,13 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                   <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
                     {/* Info: (20240503 - Julian) certificate */}
                     <div className="flex w-fit flex-col gap-y-30px">
-                      <Image
-                        src={`/api/v1/company/1/${invoiceIndex}/sam/image`}
-                        width={236}
-                        height={300}
-                        alt="certificate"
-                      />
+                      <button
+                        type="button"
+                        onClick={invoicePreviewClickHandler}
+                        className="border border-lightGray6"
+                      >
+                        <Image src={invoicePreviewSrc} width={236} height={300} alt="certificate" />
+                      </button>
                       {displayJournalType}
                     </div>
                     {/* Info: (20240503 - Julian) details */}

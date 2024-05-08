@@ -13,6 +13,11 @@ import ConfirmModal from '../components/confirm_modal/confirm_modal';
 import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
 import AddPropertyModal from '../components/add_property_modal/add_property_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
+import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
+import {
+  IPreviewInvoiceModal,
+  dummyPreviewInvoiceModalData,
+} from '@/interfaces/preview_invoice_modal';
 
 interface IGlobalContext {
   width: number;
@@ -44,6 +49,10 @@ interface IGlobalContext {
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
+
+  isPreviewInvoiceModalVisible: boolean;
+  previewInvoiceModalVisibilityHandler: () => void;
+  previewInvoiceModalDataHandler: (data: IPreviewInvoiceModal) => void;
 }
 
 export interface IGlobalProvider {
@@ -71,6 +80,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isAddPropertyModalVisible, setIsAddPropertyModalVisible] = useState(false);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
+
+  const [isPreviewInvoiceModalVisible, setIsPreviewInvoiceModalVisible] = useState(false);
+  const [previewInvoiceModalData, setPreviewInvoiceModalData] = useState<IPreviewInvoiceModal>(
+    dummyPreviewInvoiceModalData
+  );
 
   const { width, height } = windowSize;
 
@@ -118,6 +132,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsCameraScannerVisible(!isCameraScannerVisible);
   };
 
+  const previewInvoiceModalVisibilityHandler = () => {
+    setIsPreviewInvoiceModalVisible(!isPreviewInvoiceModalVisible);
+  };
+
+  const previewInvoiceModalDataHandler = (data: IPreviewInvoiceModal) => {
+    setPreviewInvoiceModalData(data);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -142,6 +164,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addPropertyModalVisibilityHandler,
     isCameraScannerVisible,
     cameraScannerVisibilityHandler,
+    isPreviewInvoiceModalVisible,
+    previewInvoiceModalVisibilityHandler,
+    previewInvoiceModalDataHandler,
   };
 
   return (
@@ -181,6 +206,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <CameraScanner
         isModalVisible={isCameraScannerVisible}
         modalVisibilityHandler={cameraScannerVisibilityHandler}
+      />
+
+      <PreviewInvoiceModal
+        isModalVisible={isPreviewInvoiceModalVisible}
+        modalVisibilityHandler={previewInvoiceModalVisibilityHandler}
+        previewInvoiceModalData={previewInvoiceModalData}
       />
 
       {children}
