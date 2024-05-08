@@ -69,7 +69,7 @@ export enum APIPath {
   VOUCHER_UPLOAD_INVOICES = `${apiPrefix}/toBeDefined`,
   VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID = `${apiPrefix}/toBeDefined`,
   VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_GENERATE = `${apiPrefix}/toBeDefined`,
+  VOUCHER_GENERATE = `${apiPrefix}/company/:companyId/voucher`,
   UPLOAD_JOURNAL_DOCUMENT_IMAGE = `${apiPrefix}/toBeDefined`,
   GET_JOURNAL_PROCESSING_STATUS = `${apiPrefix}/toBeDefined`,
   GET_PROCESSED_JOURNAL_DATA = `${apiPrefix}/toBeDefined`,

@@ -46,11 +46,12 @@ const NewJournalForm = () => {
 
   const { ocrResultId } = useAccountingCtx();
 
+  // Info: (20240508 - Julian) call API to get invoice data
   const {
     isLoading: invoiceLoading,
     data: invoiceData,
     success: invoiceSuccess,
-  } = APIHandler<IInvoice>(APIName.GET_INVOCIE, {
+  } = APIHandler<IInvoice[]>(APIName.GET_INVOCIE, {
     params: { invoiceId: ocrResultId },
   });
 
@@ -85,19 +86,21 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
+  // ToDo: (20240508 - Julian) call post API to upload journal data (body: IInvoiceWithPaymentMethod)
+
   useEffect(() => {
     if (invoiceData && invoiceSuccess && !invoiceLoading && ocrResultId !== '') {
       // Info: (20240506 - Julian) 設定表單的預設值
-      setDatePeriod({ startTimeStamp: invoiceData.date, endTimeStamp: invoiceData.date });
-      setSelectedEventType(invoiceData.eventType);
-      setSelectedPaymentReason(invoiceData.paymentReason);
-      setInputDescription(invoiceData.description);
-      setInputVendor(invoiceData.venderOrSupplyer);
-      setInputTotalPrice(invoiceData.payment.price);
-      setTaxToggle(invoiceData.payment.hasTax);
-      setTaxRate(invoiceData.payment.taxPercentage);
-      setFeeToggle(invoiceData.payment.hasFee);
-      setInputFee(invoiceData.payment.fee);
+      setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
+      setSelectedEventType(invoiceData[0].eventType);
+      setSelectedPaymentReason(invoiceData[0].paymentReason);
+      setInputDescription(invoiceData[0].description);
+      setInputVendor(invoiceData[0].venderOrSupplyer);
+      setInputTotalPrice(invoiceData[0].payment.price);
+      setTaxToggle(invoiceData[0].payment.hasTax);
+      setTaxRate(invoiceData[0].payment.taxPercentage);
+      setFeeToggle(invoiceData[0].payment.hasFee);
+      setInputFee(invoiceData[0].payment.fee);
     }
   }, [invoiceLoading, invoiceData, invoiceSuccess, ocrResultId]);
 
@@ -278,6 +281,7 @@ const NewJournalForm = () => {
       method: 'POST',
       body: JSON.stringify(newJournalData),
     });
+
     if (response.ok) {
       const data = await response.json();
       // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
