@@ -69,13 +69,14 @@ const NavBar = () => {
       >
         <FaChevronLeft />
       </button>
-      <Link
-        href={''}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+      {/* TODO: temp disabled (20240507 - Shirley) */}
+      <button
+        disabled={true}
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
         <p>Project</p>
-      </Link>
+      </button>
       <Link
         href={ISUNFA_ROUTE.ACCOUNTING}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -83,13 +84,14 @@ const NavBar = () => {
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
         <p>Account</p>
       </Link>
-      <Link
-        href={''}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+      {/* TODO: temp disabled (20240507 - Shirley) */}
+      <button
+        disabled={true}
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
         <p>Contract</p>
-      </Link>
+      </button>
       <Link
         href={ISUNFA_ROUTE.SALARY}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -138,8 +140,9 @@ const NavBar = () => {
         <p>Contact us</p>
       </Link>
       <button
+        disabled={true}
         type="button"
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50"
       >
         <div className="flex flex-1 items-center gap-8px">
           <FiBell size={20} />
@@ -148,8 +151,9 @@ const NavBar = () => {
         <FaChevronRight />
       </button>
       <button
+        disabled={true}
         type="button"
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50"
       >
         <div className="flex flex-1 items-center gap-8px">
           <PiGlobe size={20} />
@@ -167,7 +171,11 @@ const NavBar = () => {
       className={`absolute right-0 top-45px grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Project button */}
-      <button className="flex flex-col items-center gap-8px px-20px ">
+      {/* TODO: temp disabled (20240507 - Shirley) */}
+      <button
+        disabled={true}
+        className="flex flex-col items-center gap-8px px-20px disabled:opacity-50"
+      >
         <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
         <p>Project</p>
       </button>
@@ -179,7 +187,8 @@ const NavBar = () => {
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Contract button */}
-      <button className="flex flex-col items-center gap-8px">
+      {/* TODO: temp disabled (20240507 - Shirley) */}
+      <button disabled={true} className="flex flex-col items-center gap-8px disabled:opacity-50">
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
         <p>Contract</p>
       </button>
@@ -215,7 +224,10 @@ const NavBar = () => {
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
             {signedIn ? (!!username ? username : DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
-          <button className="flex shrink-0 flex-col justify-center rounded-xs px-2.5">
+          <button
+            disabled={true}
+            className="flex shrink-0 flex-col justify-center rounded-xs px-2.5 disabled:opacity-50"
+          >
             <div className="flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -239,7 +251,10 @@ const NavBar = () => {
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
-        <button className="mt-3 flex gap-2 rounded-xs px-4 py-2.5">
+        <button
+          disabled={true}
+          className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
+        >
           <div className="my-auto flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -260,7 +275,10 @@ const NavBar = () => {
             Subscription & Bills
           </div>
         </button>
-        <button className="mt-3 flex gap-2 rounded-xs px-4 py-2.5">
+        <button
+          disabled={true}
+          className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
+        >
           <div className="my-auto flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -403,7 +421,7 @@ const NavBar = () => {
           <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
             <Link
               href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
-              className="flex justify-center gap-2 rounded-xs px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
+              className="flex justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -427,7 +445,7 @@ const NavBar = () => {
             </Link>
             <Link
               href={ISUNFA_ROUTE.CONTACT_US}
-              className="flex justify-center gap-2 rounded-xs px-6 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5"
+              className="flex justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -453,7 +471,7 @@ const NavBar = () => {
         </div>
         {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
-          <button>
+          <button disabled={true} className="disabled:opacity-50">
             <svg
               width="22"
               height="22"
@@ -470,7 +488,7 @@ const NavBar = () => {
               />
             </svg>
           </button>
-          <button>
+          <button disabled={true} className="disabled:opacity-50">
             <svg
               width="22"
               height="22"
