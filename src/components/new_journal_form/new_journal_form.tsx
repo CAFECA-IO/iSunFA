@@ -17,7 +17,6 @@ import { MessageType } from '../../interfaces/message_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
-const paymentReasonSelection: string[] = [];
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Transfer', 'Credit Card', 'Cash'];
 const ficSelection: string[] = [
@@ -62,9 +61,7 @@ const NewJournalForm = () => {
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
-  const [selectedPaymentReason, setSelectedPaymentReason] = useState<string>(
-    paymentReasonSelection[0]
-  );
+  const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
@@ -93,7 +90,7 @@ const NewJournalForm = () => {
       // Info: (20240506 - Julian) 設定表單的預設值
       setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
       setSelectedEventType(invoiceData[0].eventType);
-      setSelectedPaymentReason(invoiceData[0].paymentReason);
+      setInputPaymentReason(invoiceData[0].paymentReason);
       setInputDescription(invoiceData[0].description);
       setInputVendor(invoiceData[0].venderOrSupplyer);
       setInputTotalPrice(invoiceData[0].payment.price);
@@ -120,12 +117,6 @@ const NewJournalForm = () => {
     targetRef: eventMenuRef,
     componentVisible: isEventMenuOpen,
     setComponentVisible: setIsEventMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
-
-  const {
-    targetRef: reasonRef,
-    componentVisible: isReasonMenuOpen,
-    setComponentVisible: setIsReasonMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
   const {
@@ -160,7 +151,6 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 開啟/關閉下拉選單
   const eventMenuOpenHandler = () => setIsEventMenuOpen(!isEventMenuOpen);
-  const reasonMenuHandler = () => setIsReasonMenuOpen(!isReasonMenuOpen);
   const taxMenuHandler = () => setIsTaxMenuOpen(!isTaxMenuOpen);
   const methodMenuHandler = () => setIsMethodMenuOpen(!isMethodMenuOpen);
   const bankAccountMenuHandler = () => setIsBankAccountMenuOpen(!isBankAccountMenuOpen);
@@ -168,6 +158,9 @@ const NewJournalForm = () => {
   const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
 
   // Info: (20240423 - Julian) 處理 input 輸入
+  const paymentReasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputPaymentReason(e.target.value);
+  };
   const descriptionChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputDescription(e.target.value);
   };
@@ -236,7 +229,7 @@ const NewJournalForm = () => {
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
     setSelectedEventType(eventTypeSelection[0]);
-    setSelectedPaymentReason(paymentReasonSelection[0]);
+    setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
     setInputTotalPrice(0);
@@ -320,23 +313,6 @@ const NewJournalForm = () => {
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
         {type}
-      </li>
-    );
-  });
-
-  const displayReasonDropmenu = paymentReasonSelection.map((reason: string) => {
-    const selectionClickHandler = () => {
-      setSelectedPaymentReason(reason);
-      setIsReasonMenuOpen(false);
-    };
-
-    return (
-      <li
-        key={reason}
-        onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-      >
-        {reason}
       </li>
     );
   });
@@ -475,14 +451,23 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Payment Reason */}
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
             <p className="text-sm font-semibold text-navyBlue2">Payment Reason</p>
-            <div
+            <input
+              id="inputPaymentReason"
+              name="inputPaymentReason"
+              type="text"
+              placeholder="Why you pay"
+              value={inputPaymentReason}
+              onChange={paymentReasonChangeHandler}
+              required
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+            />
+            {/*             <div
               id="paymentReasonMenu"
               onClick={reasonMenuHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedPaymentReason}</p>
               <FaChevronDown />
-              {/* Info: (20240423 - Julian) Dropmenu */}
               <div
                 className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
@@ -493,7 +478,7 @@ const NewJournalForm = () => {
                   {displayReasonDropmenu}
                 </ul>
               </div>
-            </div>
+            </div> */}
             {/* ToDo: (20240423 - Julian) Add new asset */}
             <button
               type="button"

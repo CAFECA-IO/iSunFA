@@ -297,25 +297,25 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const displayDebitList = debitList.map((debit) => {
     return (
-      <div className="flex flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
-          <div className="max-w-300px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Particulars</p>
-          <div className="max-w-300px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Debit</p>
-          <div className="max-w-300px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.debit}</p>
           </div>
         </div>
@@ -325,25 +325,25 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const displayCreditList = creditList.map((credit) => {
     return (
-      <div className="flex flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
-          <div className="max-w-300px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Particulars</p>
-          <div className="max-w-300px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Credit</p>
-          <div className="max-w-300px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.credit}</p>
           </div>
         </div>
