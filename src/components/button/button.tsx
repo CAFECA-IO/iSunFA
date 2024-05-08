@@ -14,7 +14,7 @@ const buttonVariants = cva(
         // outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         // secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         tertiary:
-          'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover',
+          'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable',
         tertiaryOutline:
           'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
         // outline:
