@@ -125,7 +125,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           src={selectedLanguage?.icon ?? '/icons/en.svg'}
           alt="language icon"
         />
-        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-slate-700">
+        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
           {selectedLanguage?.name}
         </div>
         <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -176,10 +176,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       <div className="flex w-full flex-col justify-center bg-white px-4 py-2.5 max-md:max-w-full">
         <div className="flex flex-col max-md:max-w-full">
           <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
-            <div className="font-semibold text-slate-700 max-md:max-w-full">
+            <div className="font-semibold text-input-text-input-filled max-md:max-w-full">
               What type of Report do you want to display on your web?
             </div>
-            <div className="mt-4 flex flex-wrap justify-between gap-1 text-slate-700 sm:gap-2">
+            <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
               <div
                 className="flex gap-2 py-2.5 hover:cursor-pointer"
                 onClick={() => toggleCheckbox(balanceSheetRef)}
@@ -217,7 +217,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           </div>
           <div className="mt-10 flex flex-col justify-center max-md:max-w-full">
             <div className="flex flex-col space-y-3 max-md:max-w-full">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-input-filled max-md:max-w-full">
                 Report Language
               </div>
               {displayedLanguageMenu}
@@ -249,11 +249,20 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             {generatedCode}
           </div>
 
-          <div className="mt-3 flex flex-col justify-center text-base leading-6 tracking-normal text-slate-700 max-md:max-w-full md:mt-8">
+          <div className="mt-3 flex flex-col justify-center text-base leading-6 tracking-normal text-input-text-input-filled max-md:max-w-full md:mt-8">
             <ol className=" max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
               {balanceSheetRef.current?.checked && <li>Balance Sheet</li>}
               {incomeStatementRef.current?.checked && <li>Comprehensive Income Statement</li>}
               {cashFlowStatementRef.current?.checked && <li>Cash Flow Statement</li>}
+              {!balanceSheetRef.current?.checked &&
+                !incomeStatementRef.current?.checked &&
+                !cashFlowStatementRef.current?.checked && (
+                  <>
+                    <li>Balance Sheet</li>
+                    <li>Comprehensive Income Statement</li>
+                    <li>Cash Flow Statement</li>{' '}
+                  </>
+                )}
             </ol>
           </div>
         </div>
@@ -283,13 +292,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const isDisplayedEmbedCodeModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-center rounded-xl bg-white p-6 shadow-lg shadow-black/80 sm:max-w-[511px] sm:px-3">
+      <div className="relative mx-auto flex flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:max-w-[511px] sm:px-3">
         <div className="flex w-full gap-2.5 bg-white pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 pb-10 text-center max-md:px-5">
-            <div className="justify-center text-xl font-bold leading-8 text-slate-700">
+            <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
               Embed Code
             </div>
-            <div className="text-xs leading-5 tracking-normal text-slate-500">
+            <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
               To show the Latest Report on your website
             </div>
           </div>
