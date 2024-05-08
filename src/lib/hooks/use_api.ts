@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect, useState, useCallback } from 'react';
 import { IAPIInput, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
@@ -7,7 +8,7 @@ const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-async function fetchData<Data>(
+export async function fetchData<Data>(
   path: string,
   method: IHttpMethod,
   options: IAPIInput,
@@ -18,13 +19,21 @@ async function fetchData<Data>(
     signal,
   };
 
+  console.log('fetchData, path:', path, `options:`, options);
+
   if (method !== HttpMethod.GET && options.body) {
-    fetchOptions.body = JSON.stringify(options.body);
-    fetchOptions.headers = {
-      ...DEFAULT_HEADERS,
-      ...(options.header ?? {}),
-    };
+    if (options.body instanceof FormData) {
+      fetchOptions.body = options.body;
+    } else {
+      fetchOptions.body = JSON.stringify(options.body);
+      fetchOptions.headers = {
+        ...DEFAULT_HEADERS,
+        ...(options.header || {}),
+      };
+    }
   }
+
+  console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
   if (!response.ok) {
@@ -51,7 +60,7 @@ const useAPI = <Data>(
   }, []);
 
   const fetchDataCallback = useCallback(
-    async (signal?: AbortSignal) => {
+    async (body?: { [key: string]: unknown } | FormData, signal?: AbortSignal) => {
       setIsLoading(true);
       try {
         const response = await fetchData<Data>(path, method, options, signal);
@@ -74,7 +83,7 @@ const useAPI = <Data>(
     const controller = new AbortController();
 
     if (triggerImmediately) {
-      fetchDataCallback(cancel ? controller.signal : undefined);
+      fetchDataCallback(undefined, cancel ? controller.signal : undefined);
     }
 
     return () => {

@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import { HttpMethod } from '@/constants/api_connection';
 import { Action } from '@/constants/action';
-import { IAPIInput, IHttpMethod } from '@/interfaces/api_connection';
-import { IResponseData } from '@/interfaces/response_data';
+import { IAPIInput } from '@/interfaces/api_connection';
+import { fetchData } from '../hooks/use_api';
 
 interface FetchRequestData {
   requestId: string;
@@ -10,45 +10,6 @@ interface FetchRequestData {
   path: string;
   options: IAPIInput;
   action?: Action.CANCEL;
-}
-
-const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-};
-
-export async function fetchData<Data>(
-  path: string,
-  method: IHttpMethod,
-  options: IAPIInput,
-  signal?: AbortSignal
-): Promise<IResponseData<Data>> {
-  const fetchOptions: RequestInit = {
-    method,
-    signal,
-  };
-
-  console.log('fetchData, path:', path, `options:`, options);
-
-  if (method !== HttpMethod.GET && options.body) {
-    if (options.body instanceof FormData) {
-      fetchOptions.body = options.body;
-    } else {
-      fetchOptions.body = JSON.stringify(options.body);
-      fetchOptions.headers = {
-        ...DEFAULT_HEADERS,
-        ...(options.header || {}),
-      };
-    }
-  }
-
-  console.log('fetchData, fetchOptions:', fetchOptions);
-
-  const response = await fetch(path, fetchOptions);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const result = (await response.json()) as IResponseData<Data>;
-  return result;
 }
 
 let activeRequest: string | null = null;
