@@ -31,7 +31,7 @@ export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown };
+  body?: { [key: string]: unknown } | FormData;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };
@@ -49,7 +49,7 @@ export type IAPIConfig = {
 
 export type IAPIResponse<Data> = {
   success: boolean | undefined;
-  trigger: () => void;
+  trigger: (body?: { [key: string]: unknown } | FormData, signal?: AbortSignal) => void;
   isLoading: boolean | undefined;
   data: Data | undefined;
   error: Error | null;
