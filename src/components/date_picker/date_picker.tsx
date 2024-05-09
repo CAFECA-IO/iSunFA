@@ -350,7 +350,7 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 font-inter text-lightGray3 hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-lightGray3 hover:cursor-pointer',
           // props control style
           className,
           // variables control style
@@ -388,7 +388,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white p-3 font-inter hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
           className,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
@@ -435,7 +435,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white p-3 font-inter hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
           className,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
