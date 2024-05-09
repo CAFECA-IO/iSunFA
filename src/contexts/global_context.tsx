@@ -61,7 +61,7 @@ interface IGlobalContext {
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
 
-  toastHandler: (title: string, message: string, type: string) => void;
+  toastHandler: (content: JSX.Element | string, type: string) => void;
 }
 
 export interface IGlobalProvider {
@@ -155,36 +155,32 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   };
 
   // Info: (20240509 - Julian) 呼叫 toast ----------(施工中)----------
-  const toastHandler = useCallback((title: string, message: string, type: string) => {
+  const toastHandler = useCallback((content: JSX.Element | string, type: string) => {
     try {
       switch (type) {
         case 'success':
-          toastify.success(message);
+          toastify.success(content);
           break;
         case 'error':
-          toastify.error(message, {
+          toastify.error(content, {
             position: 'top-center',
           });
           break;
         case 'warning':
-          toastify.warning(message);
+          toastify.warning(content);
           break;
         case 'info':
-          toastify.info(message, {
+          toastify.info(content, {
             position: 'top-center',
-            icon: (
-              <div className="flex  items-center gap-12px text-base text-navyBlue2">
-                <Image src="/icons/info.svg" alt="info" width={24} height={24} />
-                <h2>{title}</h2>
-              </div>
-            ),
+            icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
             autoClose: false,
             closeOnClick: true,
-            bodyClassName: 'flex flex-col items-start',
+            className:
+              'before:absolute before:h-100vh before:w-5px before:bg-navyBlue2 before:top-0 before:left-0',
           });
           break;
         default:
-          toastify(message);
+          toastify(content);
           break;
       }
     } catch (error) {

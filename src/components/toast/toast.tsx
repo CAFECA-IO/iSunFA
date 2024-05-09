@@ -10,11 +10,12 @@ const Toast = () => {
       newestOnTop
       rtl={false}
       pauseOnFocusLoss
-      draggable
       pauseOnHover
       theme="light"
       limit={5}
       closeButton={closeButton}
+      className="mt-70px"
+      style={{ width: '500px' }}
     />
   );
 };
