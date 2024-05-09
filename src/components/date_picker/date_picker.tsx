@@ -46,6 +46,7 @@ interface IDatePickerProps {
   className?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
+  onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -191,6 +192,7 @@ const DatePicker = ({
   className,
   calenderClassName,
   buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
+  onClose,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -224,6 +226,10 @@ const DatePicker = ({
         startTimeStamp: dateOneStamp,
         endTimeStamp: isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp,
       });
+      // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
+      if (onClose) {
+        onClose();
+      }
     } else {
       setFilteredPeriod({
         startTimeStamp: 0,
