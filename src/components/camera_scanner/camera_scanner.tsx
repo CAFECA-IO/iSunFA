@@ -8,6 +8,7 @@ import { TbArrowBackUp } from 'react-icons/tb';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { Button } from '../button/button';
 // import { MessageType } from '../../interfaces/message_modal';
 
@@ -28,17 +29,15 @@ enum ScannerStep {
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { setOcrResultIdHandler } = useAccountingCtx();
-  const formData = new FormData();
   const {
     trigger: uploadInvoice,
-    data: resultIds,
+    data: results,
     error: uploadError,
     success: uploadSuccess,
-  } = APIHandler<string[]>(
+  } = APIHandler<IAccountResultStatus[]>(
     APIName.UPLOAD_INVOCIE,
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      body: formData as any,
+      params: { companyId: 1 },
     },
     false,
     false
@@ -137,41 +136,22 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   // Info: (20240506 - Julian) 上傳照片
   const handleUploadImage = async () => {
-    try {
-      // Info: (20240506 - Julian) 將拍照後的畫面上傳至 OCR API
-      // const formData = new FormData();
-      const photo = photoRef.current;
-      if (!photo) return;
-      const blob = await new Promise((resolve) => {
-        photo.toBlob(resolve, 'image/png');
-      });
-      // Create a new file from the blob (optional but helpful for naming)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
+    // Info: (20240506 - Julian) 將拍照後的畫面上傳至 OCR API
+    const formData = new FormData();
+    const photo = photoRef.current;
+    if (!photo) return;
+    const blob = await new Promise((resolve) => {
+      photo.toBlob(resolve, 'image/png');
+    });
+    // Create a new file from the blob (optional but helpful for naming)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
-      formData.append('image', file);
+    formData.append('image', file);
+    uploadInvoice(formData);
 
-      // ToDo: (20240506 - Julian) API 文件調整中
-      // const response = await fetch(`/api/v1/company/1/invoice`, {
-      //   method: 'POST',
-      //   body: formData,
-      // });
-      uploadInvoice();
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
-      //   const { resultId } = data.payload[0];
-      //   const { invoiceId } = data.payload;
-      //   setResultId(invoiceId);
-      //   setOcrResultIdHandler(invoiceId);
-      // }
-
-      // Info: (20240506 - Julian) 關閉攝影機
-      handleCloseCamera();
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error: ', error);
-    }
+    // Info: (20240506 - Julian) 關閉攝影機
+    handleCloseCamera();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,14 +167,30 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       setCurrentStep(ScannerStep.Camera);
       getCameraVideo();
     }
-    if (uploadSuccess && resultIds && resultIds.length > 0) {
-      const resultId = resultIds[0];
+    if (uploadSuccess && results && results.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log('results: ', results);
+      /**   TODO: 可能需要調整 resultId 的解析 (20240508 - tzuhan)
+       * 目前的回傳格式
+        {
+            "resultId": "Already uploaded, resultId: 487a357c89",
+            "status": "inProgress"
+        }
+       * 期望的回傳格式
+        {
+            "resultId": "487a357c89",
+            "status": "inProgress"
+        }
+       */
+      const result = results[0];
+      const resultIdIndex = result.resultId.lastIndexOf(':');
+      const resultId = result.resultId.substring(resultIdIndex + 1).trim();
       setOcrResultIdHandler(resultId);
     } else {
       // eslint-disable-next-line no-console
       console.error('Error: ', uploadError);
     }
-  }, [uploadSuccess, resultIds, isModalVisible]);
+  }, [uploadSuccess, results, isModalVisible]);
 
   useEffect(() => {
     // Info: (20240507 - Julian) 如果從相簿選擇照片，則將照片顯示在 canvas 上，並轉為預覽模式
