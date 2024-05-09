@@ -93,7 +93,7 @@ function ContactForm() {
     //   },
     // });
 
-    email(emailData);
+    email({ body: emailData });
     // const result = await res.json();
 
     // const { success } = result;

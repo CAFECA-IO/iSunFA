@@ -49,18 +49,18 @@ const NewJournalForm = () => {
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
-    isLoading: invoiceLoading,
+    isLoading,
+    trigger: getInvoice,
     data: invoiceData,
-    success: invoiceSuccess,
   } = APIHandler<IInvoice[]>(APIName.GET_INVOCIE, {
     params: { companyId, invoiceId: ocrResultId },
   });
 
   const {
     trigger: voucherGenerate, // TODO: (20240508 - Tzuhan) call API to upload journal data
-    data: results,
+    data: result,
     success: uploadSuccess,
-  } = APIHandler<IAccountResultStatus[]>(
+  } = APIHandler<IAccountResultStatus>(
     APIName.VOUCHER_GENERATE,
     {
       params: { companyId: 1 },
@@ -101,20 +101,26 @@ const NewJournalForm = () => {
   // ToDo: (20240508 - Julian) call post API to upload journal data (body: IInvoiceWithPaymentMethod)
 
   useEffect(() => {
-    if (invoiceData && invoiceSuccess && !invoiceLoading && ocrResultId !== '') {
-      // Info: (20240506 - Julian) 設定表單的預設值
-      setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
-      setSelectedEventType(invoiceData[0].eventType);
-      setInputPaymentReason(invoiceData[0].paymentReason);
-      setInputDescription(invoiceData[0].description);
-      setInputVendor(invoiceData[0].venderOrSupplyer);
-      setInputTotalPrice(invoiceData[0].payment.price);
-      setTaxToggle(invoiceData[0].payment.hasTax);
-      setTaxRate(invoiceData[0].payment.taxPercentage);
-      setFeeToggle(invoiceData[0].payment.hasFee);
-      setInputFee(invoiceData[0].payment.fee);
+    if (invoiceData && invoiceData.length > 0) {
+      if (invoiceData[0]) {
+        // Info: (20240506 - Julian) 設定表單的預設值
+        setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
+        setSelectedEventType(invoiceData[0].eventType);
+        setInputPaymentReason(invoiceData[0].paymentReason);
+        setInputDescription(invoiceData[0].description);
+        setInputVendor(invoiceData[0].venderOrSupplyer);
+        setInputTotalPrice(invoiceData[0].payment.price);
+        setTaxToggle(invoiceData[0].payment.hasTax);
+        setTaxRate(invoiceData[0].payment.taxPercentage);
+        setFeeToggle(invoiceData[0].payment.hasFee);
+        setInputFee(invoiceData[0].payment.fee);
+      } else if (!isLoading) {
+        setTimeout(() => {
+          getInvoice();
+        }, 2000);
+      }
     }
-  }, [invoiceLoading, invoiceData, invoiceSuccess, ocrResultId]);
+  }, [isLoading, invoiceData]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -304,19 +310,16 @@ const NewJournalForm = () => {
       },
     };
 
-    voucherGenerate({ invoiceWithPaymentMethod });
+    voucherGenerate({ body: { invoices: [invoiceWithPaymentMethod] } });
   };
 
   useEffect(() => {
-    if (uploadSuccess && results && results.length > 0) {
-      const result = results[0];
-      const resultIdIndex = result.resultId.lastIndexOf(':');
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const voucherId = result.resultId.substring(resultIdIndex + 1).trim();
+    if (uploadSuccess && result) {
+      const voucherId = result.resultId;
       setVoucherIdHandler(voucherId);
       confirmModalVisibilityHandler();
     }
-  }, [uploadSuccess, results]);
+  }, [uploadSuccess, result]);
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
