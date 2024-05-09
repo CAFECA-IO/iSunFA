@@ -5,14 +5,14 @@ interface IAccountingProvider {
 }
 
 export enum PaymentPeriod {
-  AT_ONCE = 'At Once',
-  INSTALLMENT = 'Installment',
+  AT_ONCE = 'atOnce',
+  INSTALLMENT = 'installment',
 }
 
 export enum PaymentState {
-  PAID = 'Paid',
-  UNPAID = 'Unpaid',
-  PARTIAL_PAID = 'Partial Paid',
+  PAID = 'paid',
+  UNPAID = 'unpaid',
+  PARTIAL_PAID = 'partial',
 }
 
 export enum VoucherType {
@@ -47,8 +47,11 @@ interface IAccountingContext {
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
 
+  companyId: string;
   ocrResultId: string;
   setOcrResultIdHandler: (id: string) => void;
+  voucherId: string;
+  setVoucherIdHandler: (id: string) => void;
 
   accountingVoucher: IAccountingVoucher[];
   addVoucherRowHandler: () => void;
@@ -67,8 +70,11 @@ const initialAccountingContext: IAccountingContext = {
   // duplicateTempJournal: () => {},
   // removeTempJournal: () => {},
 
+  companyId: '',
   ocrResultId: '',
   setOcrResultIdHandler: () => {},
+  voucherId: '',
+  setVoucherIdHandler: () => {},
 
   accountingVoucher: [defaultAccountingVoucher],
   addVoucherRowHandler: () => {},
@@ -84,6 +90,8 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
+  const [companyId, setCompanyId] = useState<string>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
+  const [voucherId, setVoucherResultId] = useState<string>('');
   const [ocrResultId, setOcrResultId] = useState<string>('');
 
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
@@ -168,7 +176,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [accountingVoucher]);
 
   // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
+  const setCompanyIdHandler = useCallback((id: string) => setCompanyId(id), [companyId]);
   const setOcrResultIdHandler = useCallback((id: string) => setOcrResultId(id), [ocrResultId]);
+  const setVoucherIdHandler = useCallback((id: string) => setVoucherResultId(id), [voucherId]);
 
   // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
@@ -215,8 +225,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       totalDebit,
       totalCredit,
 
+      companyId,
+      setCompanyIdHandler,
       ocrResultId,
       setOcrResultIdHandler,
+      voucherId,
+      setVoucherIdHandler,
     }),
     [
       accountingVoucher,
@@ -227,7 +241,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearVoucherHandler,
       totalDebit,
       totalCredit,
+      companyId,
       ocrResultId,
+      voucherId,
     ]
   );
 

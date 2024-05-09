@@ -28,7 +28,7 @@ enum ScannerStep {
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { setOcrResultIdHandler } = useAccountingCtx();
+  const { companyId, setOcrResultIdHandler } = useAccountingCtx();
   const {
     trigger: uploadInvoice,
     data: results,
@@ -37,7 +37,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   } = APIHandler<IAccountResultStatus[]>(
     APIName.UPLOAD_INVOCIE,
     {
-      params: { companyId: 1 },
+      params: { companyId },
     },
     false,
     false

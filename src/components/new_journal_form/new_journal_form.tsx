@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice } from '@/interfaces/invoice';
+import { IInvoice, IInvoiceWithPaymentMethod } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { PaymentPeriodType, PaymentStatusType } from '@/interfaces/account';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
@@ -44,7 +45,7 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { ocrResultId } = useAccountingCtx();
+  const { companyId, ocrResultId, setVoucherIdHandler } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
@@ -52,17 +53,15 @@ const NewJournalForm = () => {
     data: invoiceData,
     success: invoiceSuccess,
   } = APIHandler<IInvoice[]>(APIName.GET_INVOCIE, {
-    params: { companyId: 1, invoiceId: ocrResultId },
+    params: { companyId, invoiceId: ocrResultId },
   });
 
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trigger: uploadVoucher, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    trigger: voucherGenerate, // TODO: (20240508 - Tzuhan) call API to upload journal data
     data: results,
-
     success: uploadSuccess,
   } = APIHandler<IAccountResultStatus[]>(
-    APIName.UPLOAD_INVOCIE,
+    APIName.VOUCHER_GENERATE,
     {
       params: { companyId: 1 },
     },
@@ -89,9 +88,9 @@ const NewJournalForm = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriod>(PaymentPeriod.AT_ONCE);
+  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriod.AT_ONCE);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
-  const [paymentState, setPaymentState] = useState<PaymentState>(PaymentState.UNPAID);
+  const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentState.UNPAID);
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
   const [selectedProject, setSelectedProject] = useState<string>(projectSelection[0]);
@@ -282,14 +281,30 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // confirmModalDataHandler(newJournalData);
+    const invoiceWithPaymentMethod: IInvoiceWithPaymentMethod = {
+      invoiceId: ocrResultId,
+      date: datePeriod.startTimeStamp,
+      eventType: selectedEventType as EventType,
+      paymentReason: inputPaymentReason,
+      description: inputDescription,
+      venderOrSupplyer: inputVendor,
+      projectId: selectedProject,
+      contractId: selectedContract,
+      payment: {
+        price: inputTotalPrice,
+        hasTax: taxToggle,
+        taxPercentage: taxRate,
+        hasFee: feeToggle,
+        fee: inputFee,
+        paymentMethod: selectedMethod,
+        installmentPeriod: inputInstallment,
+        alreadyPaidAmount: inputPartialPaid,
+        paymentPeriod,
+        paymentStatus: paymentState,
+      },
+    };
 
-    // Info: (20240507 - Julian) call API to upload journal data
-    // ToDo: (20240507 - Julian) API 文件調整中
-    /**
-    uploadVoucher(newJournalData)
-    */
-    confirmModalVisibilityHandler();
+    voucherGenerate({ invoiceWithPaymentMethod });
   };
 
   useEffect(() => {
@@ -297,8 +312,9 @@ const NewJournalForm = () => {
       const result = results[0];
       const resultIdIndex = result.resultId.lastIndexOf(':');
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const invoiceId = result.resultId.substring(resultIdIndex + 1).trim();
-      // setOcrResultIdHandler(invoiceId);
+      const voucherId = result.resultId.substring(resultIdIndex + 1).trim();
+      setVoucherIdHandler(voucherId);
+      confirmModalVisibilityHandler();
     }
   }, [uploadSuccess, results]);
 

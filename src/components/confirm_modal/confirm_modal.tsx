@@ -15,6 +15,7 @@ import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { IVoucher } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
+import { AccountProgressStatus, AccountVoucher } from '@/interfaces/account';
 //import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
@@ -28,7 +29,38 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   //confirmModalData,
 }: IConfirmModalProps) => {
+  const { companyId, voucherId } = useAccountingCtx();
+
+  const {
+    trigger: getVoucherProcessStatus,
+    data: voucherProcessStatus,
+    success: getVoucherProcessStatusSuccess,
+  } = APIHandler<AccountProgressStatus>(
+    APIName.VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+
+  const {
+    trigger: getVoucherPreview,
+    data: voucherPreview,
+    success: successGetVoucherPreview,
+    error: errorGetVoucherPreview,
+  } = APIHandler<IVoucher>(
+    APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+
   const router = useRouter();
+  const [processStatus, setProcessStatus] = useState<AccountProgressStatus>('inProgress');
+  const [wait, setWait] = useState<boolean>(false);
 
   const [voucherType, setVoucherType] = useState<string>('');
   const [date, setDate] = useState<number>(0);
@@ -45,33 +77,49 @@ const ConfirmModal = ({
   const [contract, setContract] = useState<string>('');
   //const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
-  const { data: voucherData, isLoading: isVoucherLoading } = APIHandler<IVoucher>(
-    APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
-    {
-      params: {
-        companyId: 1,
-        voucherId: 1,
-      },
+  useEffect(() => {
+    if (!wait && processStatus === 'inProgress') {
+      getVoucherProcessStatus();
+      setWait(true);
     }
-  );
+  }, [wait, processStatus]);
 
   useEffect(() => {
-    if (!isVoucherLoading && voucherData) {
-      setVoucherType(voucherData.metadatas[0].voucherType);
-      setDate(voucherData.metadatas[0].date);
-      setReason(voucherData.metadatas[0].reason);
-      setCompanyName(voucherData.metadatas[0].companyName);
-      setDescription(voucherData.metadatas[0].description);
-      setTotalPrice(voucherData.metadatas[0].totalPrice);
-      setTaxPercentage(voucherData.metadatas[0].taxPercentage);
-      setFee(voucherData.metadatas[0].fee);
-      setPaymentMethod(voucherData.metadatas[0].paymentMethod);
-      setPaymentPeriod(voucherData.metadatas[0].paymentPeriod);
-      setPaymentStatus(voucherData.metadatas[0].paymentStatus);
-      setProject(voucherData.metadatas[0].project);
-      setContract(voucherData.metadatas[0].contract);
+    if (getVoucherProcessStatusSuccess && voucherProcessStatus) {
+      setProcessStatus(voucherProcessStatus);
+      if (voucherProcessStatus === 'inProgress') {
+        setTimeout(() => {
+          setWait(false);
+        }, 1000);
+      }
+    } else {
+      // TODO: Error handling @Julian (20240509 - Tzuhan)
+      console.log(`Failed to get voucher process status: `, voucherProcessStatus);
     }
-  }, [isVoucherLoading, voucherData]);
+  }, []);
+
+  useEffect(() => {
+    if (processStatus === 'success') {
+      if (successGetVoucherPreview && voucherPreview) {
+        setVoucherType(voucherPreview.metadatas[0].voucherType);
+        setDate(voucherPreview.metadatas[0].date);
+        setReason(voucherPreview.metadatas[0].reason);
+        setCompanyName(voucherPreview.metadatas[0].companyName);
+        setDescription(voucherPreview.metadatas[0].description);
+        setTotalPrice(voucherPreview.metadatas[0].totalPrice);
+        setTaxPercentage(voucherPreview.metadatas[0].taxPercentage);
+        setFee(voucherPreview.metadatas[0].fee);
+        setPaymentMethod(voucherPreview.metadatas[0].paymentMethod);
+        setPaymentPeriod(voucherPreview.metadatas[0].paymentPeriod);
+        setPaymentStatus(voucherPreview.metadatas[0].paymentStatus);
+        setProject(voucherPreview.metadatas[0].project);
+        setContract(voucherPreview.metadatas[0].contract);
+      } else {
+        // TODO: Error handling @Julian (20240509 - Tzuhan)
+        console.log(`Failed to get voucher preview: `, errorGetVoucherPreview);
+      }
+    }
+  }, [processStatus, voucherPreview]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();

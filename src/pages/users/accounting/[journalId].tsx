@@ -9,6 +9,9 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '../../../constants/url';
@@ -34,23 +37,31 @@ enum VoucherItem {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
+  const { companyId } = useAccountingCtx();
   const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
   const [journalDetail, setJournalDetail] = useState<IJournal>();
-
-  const getJournalDetail = async () => {
-    const response = await fetch(`/api/v1/company/:companyId/journal`, {
-      method: 'GET',
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      setJournalDetail(data.payload[0]);
-    }
-  };
+  const {
+    data: journalDetails,
+    error,
+    success,
+  } = APIHandler<IJournal[]>(
+    APIName.GET_PROCESSED_JOURNAL_DATA,
+    {
+      params: { companyId, journalId },
+    },
+    false,
+    false
+  );
 
   useEffect(() => {
-    getJournalDetail();
-  }, [journalId]);
+    if (success && journalDetails && journalDetails.length > 0) {
+      setJournalDetail(journalDetails[0]);
+    } else {
+      // TODO: Error handling @Julian (20240509 - Tzuhan)
+      // eslint-disable-next-line no-console
+      console.log('getJournalDetail error', error);
+    }
+  }, [success, journalDetails]);
 
   const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
