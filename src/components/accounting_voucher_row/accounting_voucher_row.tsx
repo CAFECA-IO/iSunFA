@@ -68,7 +68,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   return (
     <tr>
       {/* Info: (20240429 - Julian) Accounting */}
-      <td className="w-1/4">
+      <td className="w-1/4 min-w-200px">
         <div
           id="accountingMenu"
           onClick={accountingMenuHandler}
@@ -90,7 +90,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         </div>
       </td>
       {/* Info: (20240429 - Julian) Particulars */}
-      <td className="w-1/4">
+      <td className="w-1/4 min-w-200px">
         <input
           id="particularsInput"
           name="particularsInput"
@@ -101,7 +101,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         />
       </td>
       {/* Info: (20240429 - Julian) Debit */}
-      <td className="w-1/4">
+      <td className="w-1/4 min-w-200px">
         <input
           id="debitInput"
           name="debitInput"
@@ -114,7 +114,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         />
       </td>
       {/* Info: (20240429 - Julian) Credit */}
-      <td className="w-1/4">
+      <td className="w-1/4 min-w-200px">
         <input
           id="creditInput"
           name="creditInput"

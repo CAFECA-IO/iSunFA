@@ -6,8 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../button/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ReportTypesKey } from '../../interfaces/report_type';
-import { ENTERNAL_API } from '../../constants/url';
+import { FinancialReportTypesKey } from '../../interfaces/report_type';
+import { EXTERNAL_API } from '../../constants/url';
 import { useGlobalCtx } from '../../contexts/global_context';
 
 interface IViewReportSectionProps {
@@ -399,7 +399,7 @@ const ViewReportSection = ({
     try {
       const uri = encodeURIComponent(reportLink);
 
-      const apiUrl = `${ENTERNAL_API.CFV_PDF}/${uri}`;
+      const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
       // TODO: use API service (20240502 - Shirley)
       const response = await fetch(apiUrl, {
@@ -419,13 +419,13 @@ const ViewReportSection = ({
     if (!pdfFile) return;
 
     switch (reportTypesName.id) {
-      case ReportTypesKey.balance_sheet:
+      case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
         break;
-      case ReportTypesKey.comprehensive_income_statement:
+      case FinancialReportTypesKey.comprehensive_income_statement:
         setReportThumbnails(comprehensiveIncomeReportThumbnails);
         break;
-      case ReportTypesKey.cash_flow_statement:
+      case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
         break;
       default:
