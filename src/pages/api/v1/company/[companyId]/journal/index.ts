@@ -1,8 +1,8 @@
+import { STATUS_CODE } from '@/constants/status_code';
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucher } from '@/interfaces/voucher';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import version from '@/lib/version';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export const journalArray: IJournal[] = [
@@ -20,19 +20,25 @@ export const journalArray: IJournal[] = [
         companyName: '文中資訊股份有限公司',
         description:
           'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-        totalPrice: 109725,
-        taxPercentage: 5,
-        fee: 0,
-        paymentMethod: 'transfer',
-        paymentPeriod: 'atOnce',
-        installmentPeriod: 0,
-        paymentStatus: 'unpaid',
-        alreadyPaidAmount: 0,
-        reason: 'haha',
+        reason: '記帳系統',
         projectId: '0',
         project: 'baifa',
         contractId: '3',
         contract: 'asus',
+        payment: {
+          isRevenue: false,
+          price: 109725,
+          hasTax: true,
+          taxPercentage: 5,
+          hasFee: false,
+          fee: 0,
+          paymentMethod: 'transfer',
+          paymentPeriod: 'atOnce',
+          installmentPeriod: 0,
+          paymentAlreadyDone: 0,
+          paymentStatus: 'unpaid',
+          progress: 0,
+        },
       },
     ],
     lineItems: [
@@ -68,19 +74,25 @@ export const journalArray: IJournal[] = [
         companyName: '文中資訊股份有限公司',
         description:
           'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-        totalPrice: 109725,
-        taxPercentage: 5,
-        fee: 0,
-        paymentMethod: 'transfer',
-        paymentPeriod: 'atOnce',
-        installmentPeriod: 0,
-        paymentStatus: 'unpaid',
-        alreadyPaidAmount: 0,
-        reason: 'haha',
+        reason: '記帳系統',
         projectId: '0',
         project: 'baifa',
-        contractId: '2',
+        contractId: '3',
         contract: 'asus',
+        payment: {
+          isRevenue: false,
+          price: 109725,
+          hasTax: true,
+          taxPercentage: 5,
+          hasFee: false,
+          fee: 0,
+          paymentMethod: 'transfer',
+          paymentPeriod: 'atOnce',
+          installmentPeriod: 0,
+          paymentAlreadyDone: 0,
+          paymentStatus: 'unpaid',
+          progress: 0,
+        },
       },
     ],
     lineItems: [
@@ -105,25 +117,26 @@ export const journalArray: IJournal[] = [
 ];
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournal>>
+  res: NextApiResponse<IResponseData<IJournal | IJournal[]>>
 ) {
   try {
     if (req.method === 'GET') {
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'get voucher by id',
-        payload: journalArray,
-      });
+      if (!journalArray) {
+        throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      }
+
+      const { httpCode, result } = formatApiResponse<IJournal[]>(
+        STATUS_CODE.SUCCESS_LIST,
+        journalArray
+      );
+
+      res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       const { voucher } = req.body;
-      if (!voucher) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+      if (!voucher || !isIVoucher(voucher)) {
+        throw new Error(STATUS_CODE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
       }
-      if (!isIVoucher(voucher)) {
-        throw new Error('Invalid input parameter not voucher');
-      }
+
       // combine voucher to journal
       const journal: IJournal = {
         id: '3',
@@ -132,25 +145,16 @@ export default async function handler(
         ...voucher,
       };
       journalArray.push(journal);
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'create journal successfully',
-        payload: journal,
-      });
+
+      const { httpCode, result } = formatApiResponse<IJournal>(STATUS_CODE.CREATED, journal);
+
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IJournal>(error.message, {} as IJournal);
+    res.status(httpCode).json(result);
   }
 }

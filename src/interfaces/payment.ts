@@ -2,7 +2,6 @@ import { PaymentPeriodType } from './account';
 
 export interface IPayment {
   isRevenue: boolean; // 是否會創造收入，true是錢會進來，false是錢會出去
-  installment: string; // 分期期數
   price: number; // 總金額
   hasTax: boolean; // 是否含稅
   taxPercentage: number; // 稅率 0 or 5等金額
@@ -18,7 +17,6 @@ export interface IPayment {
 
 export type IPartialPaymentForInvoiceUpload = Omit<
   IPayment,
-  | 'installment'
   | 'paymentMethod'
   | 'paymentPeriod'
   | 'installmentPeriod'
