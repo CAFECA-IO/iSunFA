@@ -140,7 +140,7 @@ const AnalysisReportSection = () => {
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          <div className="flex w-full max-w-xl justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+          <div className="flex w-full max-w-xl justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
             <input
               type="text"
               placeholder="Search"
@@ -170,7 +170,7 @@ const AnalysisReportSection = () => {
             </svg>
           </div>
 
-          <div className="mt-2 max-h-60 w-full overflow-y-auto">
+          <div className="mt-2 max-h-52 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
               .filter((project) =>
                 DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
@@ -275,7 +275,7 @@ const AnalysisReportSection = () => {
           src={selectedLanguage?.icon ?? '/icons/en.svg'}
           alt="language icon"
         />
-        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-slate-700">
+        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
           {selectedLanguage?.name}
         </div>
         <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -415,7 +415,7 @@ const AnalysisReportSection = () => {
       <div className="mt-16 flex w-600px max-w-full flex-col space-y-20 self-center px-5 max-md:mt-3">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
-            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               Project
             </div>
 
@@ -425,7 +425,7 @@ const AnalysisReportSection = () => {
 
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
-            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               Report Type
             </div>
             {displayedReportTypeMenu}
@@ -433,7 +433,7 @@ const AnalysisReportSection = () => {
         </div>
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
-            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               Report Language
             </div>
             {displayedLanguageMenu}
