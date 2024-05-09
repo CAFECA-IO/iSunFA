@@ -13,7 +13,7 @@ const Toast = () => {
       draggable
       pauseOnHover
       theme="light"
-      limit={10}
+      limit={5}
       closeButton={closeButton}
     />
   );

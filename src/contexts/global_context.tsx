@@ -162,7 +162,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           toastify.success(message);
           break;
         case 'error':
-          toastify.error(message);
+          toastify.error(message, {
+            position: 'top-center',
+          });
           break;
         case 'warning':
           toastify.warning(message);
@@ -170,9 +172,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         case 'info':
           toastify.info(message, {
             position: 'top-center',
-            icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
+            icon: (
+              <div className="flex  items-center gap-12px text-base text-navyBlue2">
+                <Image src="/icons/info.svg" alt="info" width={24} height={24} />
+                <h2>{title}</h2>
+              </div>
+            ),
             autoClose: false,
             closeOnClick: true,
+            bodyClassName: 'flex flex-col items-start',
           });
           break;
         default:
