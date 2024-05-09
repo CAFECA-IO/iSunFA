@@ -224,7 +224,7 @@ export function formatApiResponse<T>(
   const message = STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
   const httpCode = Number(httpCodeStr);
   const result: IResponseData<T> = {
-    powerby: 'ISunFa api ' + version,
+    powerby: 'iSunFA v' + version,
     success,
     code: status_code,
     message,

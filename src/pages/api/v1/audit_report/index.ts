@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAuditReports } from '@/interfaces/audit_reports';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: IAuditReports[] = [
   {
@@ -50,26 +52,29 @@ const responseDataArray2: IAuditReports[] = [
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAuditReports>>
+  res: NextApiResponse<IResponseData<IAuditReports[] | IAuditReports>>
 ) {
   const { region, page, limit, begin, end, search } = req.query;
-  if (region || page || limit || begin || end || search) {
-    const apiResponse: IResponseData<IAuditReports> = {
-      powerby: 'iSunFa api 1.0.0',
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray2,
-    };
-    res.status(200).json(apiResponse);
-  } else {
-    const apiResponse: IResponseData<IAuditReports> = {
-      powerby: 'iSunFa api 1.0.0',
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray,
-    };
-    res.status(200).json(apiResponse);
+  try {
+    if (region || page || limit || begin || end || search) {
+      const { httpCode, result } = formatApiResponse<IAuditReports[]>(
+        STATUS_CODE.SUCCESS_GET,
+        responseDataArray2
+      );
+      res.status(httpCode).json(result);
+    } else {
+      const { httpCode, result } = formatApiResponse<IAuditReports[]>(
+        STATUS_CODE.SUCCESS_GET,
+        responseDataArray
+      );
+      res.status(httpCode).json(result);
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<IAuditReports>(
+      error.message,
+      {} as IAuditReports
+    );
+    res.status(httpCode).json(result);
   }
 }

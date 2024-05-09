@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import {
   AccountingAccountOrEmpty,
   DetailAccountingAccountOrEmpty,
 } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: AccountingAccountOrEmpty[] = [
   {
@@ -27,86 +28,60 @@ const responseDataArray: AccountingAccountOrEmpty[] = [
   },
 ];
 
+const responseData: DetailAccountingAccountOrEmpty = {
+  id: 1,
+  type: 'asset',
+  liquidity: 'current',
+  account: 'cash',
+  code: '1103-1',
+  name: 'Taiwan Bank',
+};
+
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<AccountingAccountOrEmpty | DetailAccountingAccountOrEmpty>>
+  res: NextApiResponse<IResponseData<AccountingAccountOrEmpty[] | DetailAccountingAccountOrEmpty>>
 ) {
-  if (req.method === 'GET') {
-    const { type, liquidity } = req.query;
-    if (type && liquidity) {
-      if (
-        (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-        (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
-      ) {
-        const apiResponse: IResponseData<AccountingAccountOrEmpty> = {
-          powerby: 'iSunFA v' + version,
-          success: false,
-          code: '400',
-          message: 'bad request',
-          payload: null,
-        };
-        res.status(400).json(apiResponse);
-        return;
+  try {
+    if (req.method === 'GET') {
+      const { type, liquidity } = req.query;
+      if (type && liquidity) {
+        if (
+          (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
+          (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
+        ) {
+          throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+        }
+        const { httpCode, result } = formatApiResponse<AccountingAccountOrEmpty[]>(
+          STATUS_CODE.SUCCESS_GET,
+          responseDataArray
+        );
+        res.status(httpCode).json(result);
+      } else {
+        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
-      const apiResponse: IResponseData<AccountingAccountOrEmpty> = {
-        powerby: 'iSunFA v' + version,
-        success: true,
-        code: '200',
-        message: 'request successful',
-        payload: responseDataArray,
-      };
-      res.status(200).json(apiResponse);
-    } else {
-      const apiResponse: IResponseData<AccountingAccountOrEmpty> = {
-        powerby: 'iSunFA v' + version,
-        success: false,
-        code: '400',
-        message: 'bad request',
-        payload: null,
-      };
-      res.status(400).json(apiResponse);
     }
-  }
-  if (req.method === 'POST') {
-    const { type, liquidity, account, code, name } = req.body;
-    if (type && liquidity && account && code && name) {
-      if (
-        (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-        (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
-      ) {
-        const apiResponse: IResponseData<DetailAccountingAccountOrEmpty> = {
-          powerby: 'iSunFA v' + version,
-          success: false,
-          code: '400',
-          message: 'create failed',
-          payload: null,
-        };
-        res.status(400).json(apiResponse);
+    if (req.method === 'POST') {
+      const { type, liquidity, account, code, name } = req.body;
+      if (type && liquidity && account && code && name) {
+        if (
+          (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
+          (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
+        ) {
+          throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+        }
+        const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
+          STATUS_CODE.CREATED,
+          responseData
+        );
+        res.status(httpCode).json(result);
       }
-      res.status(200).json({
-        powerby: 'iSunFA v' + version,
-        success: true,
-        code: '200',
-        message: 'create successful',
-        payload: [
-          {
-            id: 1,
-            type,
-            liquidity,
-            account,
-            code,
-            name,
-          },
-        ],
-      });
-      return;
+      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
     }
-    res.status(400).json({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'create failed',
-      payload: null,
-    });
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<
+      AccountingAccountOrEmpty[] | DetailAccountingAccountOrEmpty
+    >(error.message, {} as AccountingAccountOrEmpty[] | DetailAccountingAccountOrEmpty);
+    res.status(httpCode).json(result);
   }
 }
