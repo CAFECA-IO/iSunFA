@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IProfit } from '@/interfaces/profit';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: IProfit[] = [
   {
@@ -160,16 +162,23 @@ const responseDataArray: IProfit[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IProfit>>) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProfit[] | IProfit>>
+) {
   const { period = 'day' } = req.query;
-  if (period === 'day') {
-    const apiResponse: IResponseData<IProfit> = {
-      powerby: 'iSunFa api 1.0.0',
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray,
-    };
-    res.status(200).json(apiResponse);
+  try {
+    if (period === 'day') {
+      const { httpCode, result } = formatApiResponse<IProfit[]>(
+        STATUS_CODE.SUCCESS_GET,
+        responseDataArray
+      );
+      res.status(httpCode).json(result);
+    }
+    throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<IProfit>(error.message, {} as IProfit);
+    res.status(httpCode).json(result);
   }
 }

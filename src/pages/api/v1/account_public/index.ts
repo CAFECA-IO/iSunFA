@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { IAccountPublic } from '@/interfaces/account_public';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: IAccountPublic[] = [
   {
@@ -35,26 +36,20 @@ const responseDataArray2: IAccountPublic[] = [
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountPublic>>
+  res: NextApiResponse<IResponseData<IAccountPublic[]>>
 ) {
   const { code, account } = req.query;
   if (code || account) {
-    const apiResponse: IResponseData<IAccountPublic> = {
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray2,
-    };
-    res.status(200).json(apiResponse);
+    const { httpCode, result } = formatApiResponse<IAccountPublic[]>(
+      STATUS_CODE.SUCCESS_GET,
+      responseDataArray2
+    );
+    res.status(httpCode).json(result);
   } else {
-    const apiResponse: IResponseData<IAccountPublic> = {
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray,
-    };
-    res.status(200).json(apiResponse);
+    const { httpCode, result } = formatApiResponse<IAccountPublic[]>(
+      STATUS_CODE.SUCCESS_GET,
+      responseDataArray
+    );
+    res.status(httpCode).json(result);
   }
 }
