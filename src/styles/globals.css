@@ -1176,6 +1176,7 @@ div::-webkit-scrollbar {
   background: none;
   overflow: hidden;
 }
+
 /* Info: (20240502 - Julian) 滑動紐 */
 .sliderProgress::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -1191,13 +1192,13 @@ div::-webkit-scrollbar {
 }
 
 .sliderProgress::-webkit-slider-thumb:hover {
-  border: 2px solid #ffd892;
+  border: 2px solid #ffa502;
   cursor: pointer;
 }
 /* Info: (20240502 - Julian) 滑動條 */
 .sliderProgress::-webkit-slider-runnable-track {
   height: 5px;
-  background: #cdd1d9;
+  background-color: #cdd1d9;
   cursor: pointer;
   border-radius: 9999px;
 }
