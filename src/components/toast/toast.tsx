@@ -1,0 +1,22 @@
+import { ToastContainer } from 'react-toastify';
+import { RxCross2 } from 'react-icons/rx';
+
+const Toast = () => {
+  const closeButton = () => <RxCross2 size={16} className="text-secondaryBlue" />;
+
+  return (
+    <ToastContainer
+      hideProgressBar
+      newestOnTop
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+      limit={10}
+      closeButton={closeButton}
+    />
+  );
+};
+
+export default Toast;

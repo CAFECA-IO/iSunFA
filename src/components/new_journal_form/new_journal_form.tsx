@@ -102,7 +102,14 @@ const NewJournalForm = () => {
   // ToDo: (20240508 - Julian) call post API to upload journal data (body: IInvoiceWithPaymentMethod)
 
   useEffect(() => {
-    if (invoiceData && invoiceSuccess && !invoiceLoading && ocrResultId !== '') {
+    if (
+      invoiceData &&
+      invoiceData !== null &&
+      invoiceSuccess &&
+      !invoiceLoading &&
+      ocrResultId !== '' &&
+      ocrResultId !== 'error'
+    ) {
       // Info: (20240506 - Julian) 設定表單的預設值
       setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
       setSelectedEventType(invoiceData[0].eventType);

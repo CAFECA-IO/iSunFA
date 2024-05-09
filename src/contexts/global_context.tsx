@@ -1,5 +1,6 @@
 /* eslint-disable */
-import React, { useState, useContext, createContext, useMemo } from 'react';
+import React, { useState, useContext, createContext, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '../components/register_form_modal/register_form_modal';
@@ -19,6 +20,8 @@ import {
   dummyPreviewInvoiceModalData,
 } from '@/interfaces/preview_invoice_modal';
 import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
+import Toast from '@/components/toast/toast';
+import { toast as toastify } from 'react-toastify';
 
 interface IGlobalContext {
   width: number;
@@ -57,6 +60,8 @@ interface IGlobalContext {
 
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
+
+  toastHandler: (title: string, message: string, type: string) => void;
 }
 
 export interface IGlobalProvider {
@@ -149,6 +154,36 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
 
+  // Info: (20240509 - Julian) 呼叫 toast ----------(施工中)----------
+  const toastHandler = useCallback((title: string, message: string, type: string) => {
+    try {
+      switch (type) {
+        case 'success':
+          toastify.success(message);
+          break;
+        case 'error':
+          toastify.error(message);
+          break;
+        case 'warning':
+          toastify.warning(message);
+          break;
+        case 'info':
+          toastify.info(message, {
+            position: 'top-center',
+            icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
+            autoClose: false,
+            closeOnClick: true,
+          });
+          break;
+        default:
+          toastify(message);
+          break;
+      }
+    } catch (error) {
+      // ToDo: (20240509 - Julian) Add error handling
+    }
+  }, []);
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -178,6 +213,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     previewInvoiceModalDataHandler,
     isEmbedCodeModalVisible,
     embedCodeModalVisibilityHandler,
+    toastHandler,
   };
 
   return (
@@ -229,6 +265,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isEmbedCodeModalVisible}
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
       />
+
+      <Toast />
 
       {children}
     </GlobalContext.Provider>
