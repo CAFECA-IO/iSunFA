@@ -4,6 +4,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IInvoice } from '@/interfaces/invoice';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
@@ -51,8 +52,23 @@ const NewJournalForm = () => {
     data: invoiceData,
     success: invoiceSuccess,
   } = APIHandler<IInvoice[]>(APIName.GET_INVOCIE, {
-    params: { invoiceId: ocrResultId },
+    params: { companyId: 1, invoiceId: ocrResultId },
   });
+
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: uploadVoucher, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    data: results,
+
+    success: uploadSuccess,
+  } = APIHandler<IAccountResultStatus[]>(
+    APIName.UPLOAD_INVOCIE,
+    {
+      params: { companyId: 1 },
+    },
+    false,
+    false
+  );
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -270,19 +286,21 @@ const NewJournalForm = () => {
 
     // Info: (20240507 - Julian) call API to upload journal data
     // ToDo: (20240507 - Julian) API 文件調整中
-    /*     const response = await fetch(`/api/v1/company/1/voucher`, {
-      method: 'POST',
-      body: JSON.stringify(newJournalData),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
-      const { invoiceId } = data.payload; //[0];
-      setOcrResultIdHandler(invoiceId);
-    } */
+    /**
+    uploadVoucher(newJournalData)
+    */
     confirmModalVisibilityHandler();
   };
+
+  useEffect(() => {
+    if (uploadSuccess && results && results.length > 0) {
+      const result = results[0];
+      const resultIdIndex = result.resultId.lastIndexOf(':');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const invoiceId = result.resultId.substring(resultIdIndex + 1).trim();
+      // setOcrResultIdHandler(invoiceId);
+    }
+  }, [uploadSuccess, results]);
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =

@@ -7,7 +7,7 @@ const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-async function fetchData<Data>(
+export async function fetchData<Data>(
   path: string,
   method: IHttpMethod,
   options: IAPIInput,
@@ -17,14 +17,24 @@ async function fetchData<Data>(
     method,
     signal,
   };
+  // Deprecated: debug log (20240510 - Tzuahan)
+  // eslint-disable-next-line no-console
+  console.log('fetchData, path:', path, `options:`, options);
 
   if (method !== HttpMethod.GET && options.body) {
-    fetchOptions.body = JSON.stringify(options.body);
-    fetchOptions.headers = {
-      ...DEFAULT_HEADERS,
-      ...(options.header ?? {}),
-    };
+    if (options.body instanceof FormData) {
+      fetchOptions.body = options.body;
+    } else {
+      fetchOptions.body = JSON.stringify(options.body);
+      fetchOptions.headers = {
+        ...DEFAULT_HEADERS,
+        ...(options.header || {}),
+      };
+    }
   }
+  // Deprecated: debug log (20240510 - Tzuahan)
+  // eslint-disable-next-line no-console
+  console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
   if (!response.ok) {
@@ -51,10 +61,18 @@ const useAPI = <Data>(
   }, []);
 
   const fetchDataCallback = useCallback(
-    async (signal?: AbortSignal) => {
+    async (body?: { [key: string]: unknown } | FormData, signal?: AbortSignal) => {
       setIsLoading(true);
       try {
-        const response = await fetchData<Data>(path, method, options, signal);
+        const response = await fetchData<Data>(
+          path,
+          method,
+          {
+            ...options,
+            body: body || options.body,
+          },
+          signal
+        );
         if (!response.success) {
           throw new Error(response.message ?? 'Unknown error');
         }
@@ -74,7 +92,7 @@ const useAPI = <Data>(
     const controller = new AbortController();
 
     if (triggerImmediately) {
-      fetchDataCallback(cancel ? controller.signal : undefined);
+      fetchDataCallback(undefined, cancel ? controller.signal : undefined);
     }
 
     return () => {

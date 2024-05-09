@@ -47,7 +47,12 @@ const ConfirmModal = ({
 
   const { data: voucherData, isLoading: isVoucherLoading } = APIHandler<IVoucher>(
     APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
-    {}
+    {
+      params: {
+        companyId: 1,
+        voucherId: 1,
+      },
+    }
   );
 
   useEffect(() => {
