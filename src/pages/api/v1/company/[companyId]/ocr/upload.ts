@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import { AICH_URI } from '@/constants/config';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {
@@ -55,10 +55,10 @@ export default async function handler(
 
         const resultJson: AccountResultStatus[] = (await result.json()).payload;
 
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: true,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: 'upload {numberOfImage} images sucessfully',
           payload: resultJson,
         });

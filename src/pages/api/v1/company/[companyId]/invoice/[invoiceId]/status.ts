@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { ProgressStatus } from '@/interfaces/common';
@@ -29,10 +29,10 @@ export default async function handler(
 
         const resultJson: ProgressStatus = (await result.json()).payload;
 
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: false,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: `OCR analyzing progress status of id:${invoiceId} return successfully`,
           payload: resultJson,
         });

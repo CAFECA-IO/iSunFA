@@ -4,7 +4,7 @@ import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,10 +28,10 @@ export default async function handler(
 
         const resultJson: AccountProgressStatus = (await result.json()).payload;
 
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: false,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: `Financial JSON creating process of id:${reportId} return successfully`,
           payload: resultJson,
         });

@@ -1,7 +1,10 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
 import { ALLOWED_ORIGINS } from '../../constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '../../constants/display';
+import version from '../version';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -204,4 +207,34 @@ export function cleanBoolean(booleanStr: unknown): boolean {
   }
 
   return false;
+}
+
+export function formatApiResponse<T>(
+  status_code: string,
+  payload: T
+): { httpCode: number; result: IResponseData<T> } {
+  // TODO: Implement the logic to format the API response
+  let httpCodeStr: string;
+  let message: string;
+  if (status_code in STATUS_MESSAGE) {
+    httpCodeStr = status_code.slice(0, 3);
+  } else {
+    httpCodeStr = STATUS_CODE.INVALID_STATUS_CODE_ERROR.slice(0, 3);
+  }
+  const success = !!httpCodeStr.startsWith('2');
+  if (success) {
+    message =
+      (typeof payload as T) + ' ' + STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
+  } else {
+    message = STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
+  }
+  const httpCode = Number(httpCodeStr);
+  const result: IResponseData<T> = {
+    powerby: 'ISunFa api ' + version,
+    success,
+    code: status_code,
+    message,
+    payload,
+  };
+  return { httpCode, result };
 }

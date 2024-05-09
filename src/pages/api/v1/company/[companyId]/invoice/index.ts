@@ -1,14 +1,14 @@
 import { IInvoice } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { promises as fs } from 'fs';
 import { AICH_URI } from '@/constants/config';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_CODE } from '@/constants/status_code';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {
@@ -19,7 +19,7 @@ export const config = {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice | IAccountResultStatus[]>>
+  res: NextApiResponse<IResponseData<IInvoice[] | IAccountResultStatus[]>>
 ) {
   try {
     if (req.method === 'GET') {
@@ -32,7 +32,10 @@ export default async function handler(
           paymentReason: 'purchase',
           description: 'description',
           venderOrSupplyer: 'vender',
+          projectId: '123',
+          contractId: '123',
           payment: {
+            isRevenue: false,
             price: 100,
             hasTax: true,
             taxPercentage: 10,
@@ -47,7 +50,10 @@ export default async function handler(
           paymentReason: 'sale',
           description: 'description',
           venderOrSupplyer: 'vender',
+          projectId: '123',
+          contractId: '123',
           payment: {
+            isRevenue: false,
             price: 100,
             hasTax: true,
             taxPercentage: 10,
@@ -57,23 +63,21 @@ export default async function handler(
         },
       ];
 
-      res.status(200).json({
-        powerby: 'iSunFA v' + version,
-        success: true,
-        code: '200',
-        message: 'request successful',
-        payload: invoices,
-      });
+      const { httpCode, result } = formatApiResponse<IInvoice[]>(
+        STATUS_CODE.SUCCESS_GET,
+        invoices as IInvoice[]
+      );
+      res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       let files: formidable.Files;
       try {
         files = (await parseForm(req)).files;
       } catch (error) {
-        throw new Error('INTERNAL_SERVICE_ERROR');
+        throw new Error(STATUS_CODE.INVOICE_UPLOAD_FAILED_ERROR);
       }
 
       if (!files || !files.image || !files.image.length) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+        throw new Error(STATUS_CODE.INVALID_INPUT_FORMDATA_IMAGE);
       }
 
       // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
@@ -85,36 +89,29 @@ export default async function handler(
       formData.append('image', imageBlob);
       formData.append('imageName', imageName);
 
-      const result = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
+      const fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
         method: 'POST',
         body: formData,
       });
 
-      if (!result.ok) {
-        throw new Error('GATEWAY_TIMEOUT');
+      if (!fetchResult.ok) {
+        throw new Error(STATUS_CODE.BAD_GATEWAY_AICH_FAILED);
       }
 
-      const resultJson: IAccountResultStatus[] = (await result.json()).payload;
+      const resultJson: IAccountResultStatus[] = (await fetchResult.json()).payload;
 
-      res.status(RESPONSE_STATUS_CODE.success).json({
-        powerby: `ISunFa api ${version}`,
-        success: true,
-        code: String(RESPONSE_STATUS_CODE.success),
-        message: 'upload {numberOfImage} images sucessfully',
-        payload: resultJson,
-      });
+      const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
+        STATUS_CODE.CREATED,
+        resultJson
+      );
+
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IInvoice[]>(error.message, {} as IInvoice[]);
+    res.status(httpCode).json(result);
   }
 }

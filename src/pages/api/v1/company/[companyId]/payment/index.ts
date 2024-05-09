@@ -1,20 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { IPayment } from '@/interfaces/payment';
+import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_CODE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPayment>>
+  res: NextApiResponse<IResponseData<ICard | ICard[]>>
 ) {
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
     if (!req.headers.userId) {
-      throw new Error('RESOURCE_NOT_FOUND');
+      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
-      const paymentList: IPayment[] = [
+      const paymentList: ICard[] = [
         {
           id: '1',
           type: 'VISA',
@@ -34,20 +34,18 @@ export default async function handler(
           name: 'Taishin International Bank',
         },
       ];
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list all payments',
-        payload: paymentList,
-      });
+      const { httpCode, result } = formatApiResponse<ICard[]>(
+        STATUS_CODE.SUCCESS_LIST,
+        paymentList
+      );
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) P010003 - POST /payment
     } else if (req.method === 'POST') {
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
-      const newPayment: IPayment = {
+      const newPayment: ICard = {
         id: '3',
         type,
         no,
@@ -56,25 +54,14 @@ export default async function handler(
         cvc,
         name,
       };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'create payment',
-        payload: newPayment,
-      });
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_CODE.CREATED, newPayment);
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<ICard>(error.message, {} as ICard);
+    res.status(httpCode).json(result);
   }
 }

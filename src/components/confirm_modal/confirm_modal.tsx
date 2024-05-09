@@ -62,12 +62,12 @@ const ConfirmModal = ({
       setReason(voucherData.metadatas[0].reason);
       setCompanyName(voucherData.metadatas[0].companyName);
       setDescription(voucherData.metadatas[0].description);
-      setTotalPrice(voucherData.metadatas[0].totalPrice);
-      setTaxPercentage(voucherData.metadatas[0].taxPercentage);
-      setFee(voucherData.metadatas[0].fee);
-      setPaymentMethod(voucherData.metadatas[0].paymentMethod);
-      setPaymentPeriod(voucherData.metadatas[0].paymentPeriod);
-      setPaymentStatus(voucherData.metadatas[0].paymentStatus);
+      setTotalPrice(voucherData.metadatas[0].payment.price); // Info Murky Edit (20240509)
+      setTaxPercentage(voucherData.metadatas[0].payment.taxPercentage); // Info Murky Edit (20240509)
+      setFee(voucherData.metadatas[0].payment.fee); // Info Murky Edit (20240509)
+      setPaymentMethod(voucherData.metadatas[0].payment.paymentMethod); // Info Murky Edit (20240509)
+      setPaymentPeriod(voucherData.metadatas[0].payment.paymentPeriod); // Info Murky Edit (20240509)
+      setPaymentStatus(voucherData.metadatas[0].payment.paymentPeriod); // Info Murky Edit (20240509)
       setProject(voucherData.metadatas[0].project);
       setContract(voucherData.metadatas[0].contract);
     }

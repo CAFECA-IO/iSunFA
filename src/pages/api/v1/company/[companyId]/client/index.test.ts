@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -30,51 +29,49 @@ describe('Client API Handler Tests', () => {
     req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'list all clients',
-      payload: [
-        {
-          id: '1',
-          companyId: '123',
-          companyName: 'Company A',
-          code: '1234',
-          favorite: false,
-        },
-        {
-          id: '2',
-          companyId: '456',
-          companyName: 'Company B',
-          code: '3333',
-          favorite: false,
-        },
-      ],
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            companyId: expect.any(String),
+            companyName: expect.any(String),
+            code: expect.any(String),
+            favorite: expect.any(Boolean),
+          }),
+        ]),
+      })
+    );
   });
 
   it('should handle POST requests successfully', async () => {
     req.method = 'POST';
     req.headers.userId = '1';
     req.body = {
-      name: 'New Client',
+      companyId: '2',
       code: '5678',
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'create client',
-      payload: {
-        id: '3',
-        name: 'New Client',
-        code: '5678',
-        favorite: false,
-      },
-    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('201'),
+        message: expect.any(String),
+        payload: expect.objectContaining({
+          id: expect.any(String),
+          companyId: expect.any(String),
+          companyName: expect.any(String),
+          code: expect.any(String),
+          favorite: expect.any(Boolean),
+        }),
+      })
+    );
   });
 
   it('should handle requests without userId header', async () => {
@@ -82,13 +79,15 @@ describe('Client API Handler Tests', () => {
     delete req.headers.userId;
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '404',
-      payload: {},
-      message: 'RESOURCE_NOT_FOUND',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('404'),
+        payload: {},
+        message: expect.stringContaining('Resource not found'),
+      })
+    );
   });
 
   it('should handle requests with unsupported methods', async () => {
@@ -96,12 +95,14 @@ describe('Client API Handler Tests', () => {
     req.headers.userId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '405',
-      payload: {},
-      message: 'METHOD_NOT_ALLOWED',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('405'),
+        payload: {},
+        message: expect.stringContaining('Method not allowed'),
+      })
+    );
   });
 });

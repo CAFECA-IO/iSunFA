@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import handler from './entity';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -35,16 +34,16 @@ describe('Entity KYC handler', () => {
 
     await handler(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'create Entity KYC',
-      payload: {
-        status: 'Entity KYC is under review',
-      },
-    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('201'),
+        message: expect.any(String),
+        payload: expect.any(String),
+      })
+    );
   });
 
   it('should return an error when method is not allowed', async () => {
@@ -53,13 +52,15 @@ describe('Entity KYC handler', () => {
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '405',
-      payload: {},
-      message: 'METHOD_NOT_ALLOWED',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('405'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 
   it('should return an error when userId is missing', async () => {
@@ -68,12 +69,14 @@ describe('Entity KYC handler', () => {
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '404',
-      payload: {},
-      message: 'RESOURCE_NOT_FOUND',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('404'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 });

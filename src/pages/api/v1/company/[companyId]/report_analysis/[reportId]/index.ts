@@ -1,7 +1,7 @@
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IFinancialReportJSON, isIFinancialReportJSON } from '@/interfaces/financial_report';
@@ -25,10 +25,10 @@ export default async function handler(
       const financialReportJSON = (await result.json()).payload;
 
       if (!financialReportJSON) {
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        res.status(200).json({
           powerby: 'ISunFa api ' + version,
           success: false,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: 'get Financial JSON result by id',
           payload: financialReportJSON,
         });
@@ -38,10 +38,10 @@ export default async function handler(
         throw new Error('INTERNAL_SERVICE_ERROR');
       }
 
-      res.status(RESPONSE_STATUS_CODE.success).json({
+      res.status(200).json({
         powerby: 'ISunFa api ' + version,
         success: true,
-        code: String(RESPONSE_STATUS_CODE.success),
+        code: String(200),
         message: 'get Financial JSON result by id',
         payload: financialReportJSON,
       });

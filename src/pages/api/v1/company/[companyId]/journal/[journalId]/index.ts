@@ -1,8 +1,8 @@
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_CODE } from '@/constants/status_code';
 import { journalArray } from '../index';
 
 export default async function handler(
@@ -11,33 +11,27 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      if (!req.query.voucherId) {
-        throw new Error('INVALID_INPUT_PARAMETER');
+      const { journalId } = req.query;
+      if (!journalId || Array.isArray(journalId) || typeof journalId !== 'string') {
+        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
       const getJournalById = journalArray.find((journal) => journal.id === req.query.journalId);
-      if (getJournalById) {
-        res.status(200).json({
-          powerby: 'ISunFa api ' + version,
-          success: true,
-          code: '200',
-          message: 'get journal by id',
-          payload: getJournalById,
-        });
-      } else {
-        throw new Error('Journal not found');
+
+      if (!getJournalById) {
+        throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
       }
+
+      const { httpCode, result } = formatApiResponse<IJournal>(
+        STATUS_CODE.SUCCESS_GET,
+        getJournalById
+      );
+      res.status(httpCode).json(result);
     } else {
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IJournal>(error.message, {} as IJournal);
+    res.status(httpCode).json(result);
   }
 }
