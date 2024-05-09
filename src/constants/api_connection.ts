@@ -25,7 +25,6 @@ export enum APIName {
   GET_PERIOD_PROFIT = 'GET_PERIOD_PROFIT',
   GET_PROJECT_VOUCHERS = 'GET_PROJECT_VOUCHERS',
   GET_INVOCIE = 'GET_INVOCIE',
-  GET_INVOCIE_IMAGE = 'GET_INVOCIE_IMAGE',
   UPLOAD_INVOCIE = 'UPLOAD_INVOCIE',
   GET_AUDIT_REPORTS = 'GET_AUDIT_REPORTS',
   GENERATE_FINANCIAL_REPORT = 'GENERATE_FINANCIAL_REPORT',
@@ -176,19 +175,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_INVOCIE,
     method: HttpMethod.GET,
     path: APIPath.GET_INVOCIE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.GET_INVOCIE_IMAGE]: {
-    name: APIName.GET_INVOCIE_IMAGE,
-    method: HttpMethod.GET,
-    path: APIPath.GET_INVOCIE_IMAGE,
     input: {
       header: {},
       body: {},
