@@ -1,5 +1,4 @@
 /* eslint-disable */
-
 import React, { useEffect, useRef, useState } from 'react';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 import useOuterClick from '../../lib/hooks/use_outer_click';
@@ -344,7 +343,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   type="checkbox"
                   checked={isBalanceSheetChecked}
                   readOnly
-                  // ref={balanceSheetRef}
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Balance Sheet</button>
@@ -357,8 +355,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   type="checkbox"
                   checked={isIncomeStatementChecked}
                   readOnly
-                  // ref={incomeStatementRef}
-
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Comprehensive Income Statement</button>
@@ -371,7 +367,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   type="checkbox"
                   checked={isCashFlowStatementChecked}
                   readOnly
-                  // ref={cashFlowStatementRef}
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Cash Flow Statement</button>
@@ -436,18 +431,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                     <li>Cash Flow Statement</li>
                   </>
                 )}
-              {/* {balanceSheetRef.current?.checked && <li>Balance Sheet</li>}
-              {incomeStatementRef.current?.checked && <li>Comprehensive Income Statement</li>}
-              {cashFlowStatementRef.current?.checked && <li>Cash Flow Statement</li>}
-              {!balanceSheetRef.current?.checked &&
-                !incomeStatementRef.current?.checked &&
-                !cashFlowStatementRef.current?.checked && (
-                  <>
-                    <li>Balance Sheet</li>
-                    <li>Comprehensive Income Statement</li>
-                    <li>Cash Flow Statement</li>{' '}
-                  </>
-                )} */}
             </ol>
           </div>
         </div>
