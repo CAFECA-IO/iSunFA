@@ -17,6 +17,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const incomeStatementRef = useRef<HTMLInputElement>(null);
   const cashFlowStatementRef = useRef<HTMLInputElement>(null);
 
+  const [isBalanceSheetChecked, setIsBalanceSheetChecked] = useState(true);
+  const [isIncomeStatementChecked, setIsIncomeStatementChecked] = useState(true);
+  const [isCashFlowStatementChecked, setIsCashFlowStatementChecked] = useState(true);
+
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,12 +60,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const languageMenuOptionClickHandler = (id: ReportLanguagesKey) => {
     setSelectedReportLanguage(id);
     setIsLanguageMenuOpen(false);
-  };
-
-  const toggleCheckbox = (ref: React.RefObject<HTMLInputElement>) => {
-    if (ref.current) {
-      ref.current.checked = !ref.current.checked;
-    }
   };
 
   const cancelClickHandler = () => {
@@ -338,29 +336,42 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               What type of Report do you want to display on your web?
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
-              <div className="flex gap-2 py-2.5" onClick={() => toggleCheckbox(balanceSheetRef)}>
+              <div
+                className="flex gap-2 py-2.5"
+                onClick={() => setIsBalanceSheetChecked(!isBalanceSheetChecked)}
+              >
                 <input
                   type="checkbox"
-                  ref={balanceSheetRef}
+                  checked={isBalanceSheetChecked}
+                  readOnly
+                  // ref={balanceSheetRef}
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Balance Sheet</button>
               </div>
-              <div className="flex gap-2 py-2.5" onClick={() => toggleCheckbox(incomeStatementRef)}>
+              <div
+                className="flex gap-2 py-2.5"
+                onClick={() => setIsIncomeStatementChecked(!isIncomeStatementChecked)}
+              >
                 <input
                   type="checkbox"
-                  ref={incomeStatementRef}
+                  checked={isIncomeStatementChecked}
+                  readOnly
+                  // ref={incomeStatementRef}
+
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Comprehensive Income Statement</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => toggleCheckbox(cashFlowStatementRef)}
+                onClick={() => setIsCashFlowStatementChecked(!isCashFlowStatementChecked)}
               >
                 <input
                   type="checkbox"
-                  ref={cashFlowStatementRef}
+                  checked={isCashFlowStatementChecked}
+                  readOnly
+                  // ref={cashFlowStatementRef}
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Cash Flow Statement</button>
@@ -385,7 +396,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           >
             Cancel
           </button>
-          <Button variant={'tertiary'} onClick={generateClickHandler}>
+          <Button
+            disabled={
+              !isBalanceSheetChecked && !isIncomeStatementChecked && !isCashFlowStatementChecked
+            }
+            variant={'tertiary'}
+            onClick={generateClickHandler}
+          >
             Generate
           </Button>
         </div>
@@ -407,7 +424,19 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               <p className="text-input-text-primary"> {selectedProjectName}</p>
             </div>
             <ol className=" max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
-              {balanceSheetRef.current?.checked && <li>Balance Sheet</li>}
+              {isBalanceSheetChecked && <li>Balance Sheet</li>}
+              {isIncomeStatementChecked && <li>Comprehensive Income Statement</li>}
+              {isCashFlowStatementChecked && <li>Cash Flow Statement</li>}
+              {!isBalanceSheetChecked &&
+                !isIncomeStatementChecked &&
+                !isCashFlowStatementChecked && (
+                  <>
+                    <li>Balance Sheet</li>
+                    <li>Comprehensive Income Statement</li>
+                    <li>Cash Flow Statement</li>
+                  </>
+                )}
+              {/* {balanceSheetRef.current?.checked && <li>Balance Sheet</li>}
               {incomeStatementRef.current?.checked && <li>Comprehensive Income Statement</li>}
               {cashFlowStatementRef.current?.checked && <li>Cash Flow Statement</li>}
               {!balanceSheetRef.current?.checked &&
@@ -418,7 +447,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                     <li>Comprehensive Income Statement</li>
                     <li>Cash Flow Statement</li>{' '}
                   </>
-                )}
+                )} */}
             </ol>
           </div>
         </div>
