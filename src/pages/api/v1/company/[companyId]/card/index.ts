@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPayment } from '@/interfaces/payment';
+import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_CODE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPayment | IPayment[]>>
+  res: NextApiResponse<IResponseData<ICard | ICard[]>>
 ) {
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
@@ -14,7 +14,7 @@ export default async function handler(
       throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
-      const paymentList: IPayment[] = [
+      const paymentList: ICard[] = [
         {
           id: '1',
           type: 'VISA',
@@ -34,7 +34,7 @@ export default async function handler(
           name: 'Taishin International Bank',
         },
       ];
-      const { httpCode, result } = formatApiResponse<IPayment[]>(
+      const { httpCode, result } = formatApiResponse<ICard[]>(
         STATUS_CODE.SUCCESS_LIST,
         paymentList
       );
@@ -45,7 +45,7 @@ export default async function handler(
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
       }
-      const newPayment: IPayment = {
+      const newPayment: ICard = {
         id: '3',
         type,
         no,
@@ -54,14 +54,14 @@ export default async function handler(
         cvc,
         name,
       };
-      const { httpCode, result } = formatApiResponse<IPayment>(STATUS_CODE.CREATED, newPayment);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_CODE.CREATED, newPayment);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IPayment>(error.message, {} as IPayment);
+    const { httpCode, result } = formatApiResponse<ICard>(error.message, {} as ICard);
     res.status(httpCode).json(result);
   }
 }

@@ -34,14 +34,8 @@ describe('test admin API', () => {
         payload: expect.objectContaining({
           id: expect.any(String),
           name: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
           companyId: expect.any(String),
           companyName: expect.any(String),
-          email: expect.any(String),
-          startDate: expect.any(Number),
-          endDate: expect.any(Number),
           permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })
@@ -69,14 +63,8 @@ describe('test admin API', () => {
         payload: expect.objectContaining({
           id: expect.any(String),
           name: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
           companyId: expect.any(String),
           companyName: expect.any(String),
-          email: expect.any(String),
-          startDate: expect.any(Number),
-          endDate: expect.any(Number),
           permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })

@@ -1,12 +1,12 @@
 export interface IUser {
-  id: string;
+  id: number;
   name: string;
-  fullName?: string;
-  email?: string;
-  phone?: string;
-  kycStatus?: string;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  kycStatus: boolean;
   credentialId: string;
   publicKey: string;
   algorithm: string;
-  imageId?: string;
+  imageId?: string | null;
 }
