@@ -8,14 +8,15 @@ import { FiPlus } from 'react-icons/fi';
 import { Button } from '../button/button';
 import { checkboxStyle } from '../../constants/display';
 import { IConfirmModal } from '../../interfaces/confirm_modal';
-import AccountingVoucherRow from '../accounting_voucher_row/accounting_voucher_row';
-import { useAccountingCtx } from '../../contexts/accounting_context';
+import AccountingVoucherRow, {
+  AccountingVoucherRowMobile,
+} from '../accounting_voucher_row/accounting_voucher_row';
+import { VoucherRowType, useAccountingCtx } from '../../contexts/accounting_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { IVoucher } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-import { AccountProgressStatus, AccountVoucher } from '@/interfaces/account';
 //import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
@@ -101,6 +102,10 @@ const ConfirmModal = ({
     router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journalId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
   };
 
+  const addRowHandler = () => addVoucherRowHandler();
+  const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
+  const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
+
   const disableConfirmButton = totalCredit !== totalDebit;
 
   const displayType = <p className="text-lightRed">{voucherType}</p>;
@@ -161,7 +166,7 @@ const ConfirmModal = ({
 
   // ToDo: (20240429 - Julian) mobile version
   const displayAccountingVoucher = (
-    <div className="flex w-full flex-col gap-24px text-sm text-lightGray5 md:text-base">
+    <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
       {/* Info: (20240429 - Julian) Divider */}
       <div className="flex items-center gap-4">
         <hr className="flex-1 border-lightGray3" />
@@ -186,6 +191,70 @@ const ConfirmModal = ({
           {/* Info: (20240429 - Julian) Body */}
           <tbody>{accountingVoucherRow}</tbody>
         </table>
+      </div>
+    </div>
+  );
+
+  const displayAccountingVoucherMobile = (
+    <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
+      {/* Info: (20240510 - Julian) Debit */}
+      <div className="flex flex-col gap-24px">
+        {/* Info: (20240510 - Julian) Divider */}
+        <div className="flex items-center gap-4">
+          <hr className="flex-1 border-lightGray3" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+            <p>Debit</p>
+          </div>
+          <hr className="flex-1 border-lightGray3" />
+        </div>
+        {/* Info: (20240510 - Julian) List */}
+        <div className="flex flex-col">
+          {accountingVoucher
+            .filter((voucher) => !!voucher.debit)
+            .map((debit) =>
+              AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
+            )}
+        </div>
+
+        {/* Info: (20240510 - Julian) Add Button */}
+        <button
+          type="button"
+          onClick={addDebitRowHandler}
+          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+        >
+          <FiPlus size={20} />
+        </button>
+      </div>
+
+      {/* Info: (20240510 - Julian) Credit */}
+      <div className="flex flex-col gap-24px">
+        {/* Info: (20240510 - Julian) Divider */}
+        <div className="flex items-center gap-4">
+          <hr className="flex-1 border-lightGray3" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+            <p>Credit</p>
+          </div>
+          <hr className="flex-1 border-lightGray3" />
+        </div>
+        {/* Info: (20240510 - Julian) List */}
+        <div className="flex flex-col">
+          {accountingVoucher
+            .filter((voucher) => !!voucher.credit)
+            .map((credit) =>
+              AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
+            )}
+        </div>
+
+        {/* Info: (20240510 - Julian) Add Button */}
+        <button
+          type="button"
+          onClick={addCreditRowHandler}
+          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+        >
+          <FiPlus size={20} />
+        </button>
       </div>
     </div>
   );
@@ -274,12 +343,13 @@ const ConfirmModal = ({
 
           {/* Info: (20240429 - Julian) Accounting Voucher */}
           {displayAccountingVoucher}
+          {displayAccountingVoucherMobile}
 
           {/* Info: (20240430 - Julian) Add Button */}
           <button
             type="button"
-            onClick={addVoucherRowHandler}
-            className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+            onClick={addRowHandler}
+            className="mx-auto mt-24px hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
           >
             <FiPlus size={20} />
           </button>
