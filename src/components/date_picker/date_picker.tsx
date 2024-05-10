@@ -334,14 +334,21 @@ const DatePicker = ({
 
   // Info: (20240417 - Shirley) 顯示時間區間
   const displayedPeriod =
-    dateOne && dateTwo
-      ? dateOne.getTime() !== 0 && dateTwo.getTime() !== 0
-        ? type === DatePickerType.CHOOSE_DATE
-          ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date}`
-          : `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
-              'DATE_PICKER.TO'
-            )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
-        : defaultPeriodText
+    // dateOne && dateTwo
+    //   ? dateOne.getTime() !== 0 && dateTwo.getTime() !== 0
+    //     ? type === DatePickerType.CHOOSE_DATE
+    //       ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date}`
+    //       : `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
+    //           'DATE_PICKER.TO'
+    //         )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
+    //     : defaultPeriodText
+    //   : defaultPeriodText;
+    period.startTimeStamp !== 0 && period.endTimeStamp !== 0 // Info: (20240510 - Julian) edited
+      ? type === DatePickerType.CHOOSE_DATE
+        ? `${timestampToString(period.startTimeStamp).date}`
+        : `${timestampToString(period.startTimeStamp).date} ${t(
+            'DATE_PICKER.TO'
+          )} ${timestampToString(period.endTimeStamp).date}`
       : defaultPeriodText;
 
   // Info: (20240417 - Shirley) 顯示月份和年份

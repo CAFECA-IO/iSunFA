@@ -321,6 +321,9 @@ const NewJournalForm = () => {
     }
   }, [uploadSuccess, result]);
 
+  // Info: (20240510 - Julian) 檢查是否要填銀行帳號
+  const isAccountNumberVisible = selectedMethod !== 'Cash';
+
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
     // Info: (20240429 - Julian) 檢查日期是否有填寫
@@ -328,13 +331,16 @@ const NewJournalForm = () => {
     datePeriod.endTimeStamp === 0 ||
     inputDescription === '' ||
     inputVendor === '' ||
-    inputAccountNumber === '' ||
-    // Info: (20240429 - Julian) 檢查手續費是否有填寫
-    (!!feeToggle && inputFee === 0) ||
-    // Info: (20240429 - Julian) 檢查總價是否有填寫
-    (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
-    // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-    (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
+    // Info: (20240510 - Julian) 如果非現金支付，則檢查銀行帳號是否有填寫
+    isAccountNumberVisible
+      ? inputAccountNumber === ''
+      : false ||
+        // Info: (20240429 - Julian) 檢查手續費是否有填寫
+        (!!feeToggle && inputFee === 0) ||
+        // Info: (20240429 - Julian) 檢查總價是否有填寫
+        (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
+        // Info: (20240429 - Julian) 檢查部分支付是否有填寫
+        (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = eventTypeSelection.map((type: string) => {
@@ -396,7 +402,7 @@ const NewJournalForm = () => {
       <li
         key={account}
         onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+        className="w-full cursor-pointer px-3 py-2 text-left text-navyBlue2 hover:text-primaryYellow"
       >
         {account}
       </li>
@@ -706,10 +712,12 @@ const NewJournalForm = () => {
           {/* Info: (20240424 - Julian) Financial Institution Code */}
           <div className="flex w-full flex-col items-start gap-8px md:w-300px">
             <p className="text-sm font-semibold text-navyBlue2">Bank Account</p>
-            <div
+            <button
               id="ficMenu"
+              type="button"
               onClick={bankAccountMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              disabled={selectedMethod === 'Cash'}
+              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6 disabled:hover:border-lightGray3 disabled:hover:text-navyBlue2`}
             >
               <p>{selectedFIC}</p>
               <FaChevronDown />
@@ -724,7 +732,7 @@ const NewJournalForm = () => {
                   {displayFICDropmenu}
                 </ul>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Info: (20240424 - Julian) Bank Account */}
@@ -736,8 +744,9 @@ const NewJournalForm = () => {
               placeholder="Account Number"
               value={inputAccountNumber}
               onChange={accountNumberChangeHandler}
-              required
-              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+              required={isAccountNumberVisible}
+              disabled={!isAccountNumberVisible}
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none disabled:cursor-default disabled:bg-lightGray6"
             />
           </div>
         </div>
