@@ -20,7 +20,7 @@ import { MessageType } from '../../interfaces/message_modal';
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
 const taxRateSelection: number[] = [0, 5, 20, 25];
-const paymentMethodSelection: string[] = ['Transfer', 'Credit Card', 'Cash'];
+const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
 const ficSelection: string[] = [
   '004 Bank of Taiwan',
   '005 Land Bank of Taiwan',
@@ -45,7 +45,7 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { companyId, ocrResultId, setVoucherIdHandler } = useAccountingCtx();
+  const { companyId, ocrResultId, setOcrResultIdHandler, setVoucherIdHandler } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
@@ -114,6 +114,8 @@ const NewJournalForm = () => {
         setTaxRate(invoiceData[0].payment.taxPercentage);
         setFeeToggle(invoiceData[0].payment.hasFee);
         setInputFee(invoiceData[0].payment.fee);
+        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 ocrResultId 重置
+        setOcrResultIdHandler('');
       } else if (!isLoading) {
         setTimeout(() => {
           getInvoice();
@@ -315,7 +317,12 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (uploadSuccess && result) {
-      const voucherId = result.resultId;
+      // const voucherId = result.resultId;
+      // Info: (20240510 - Julian) 解析 voucherId
+      const results = result.resultId.split(' ');
+      const resultIdIndex = results.lastIndexOf('resultId:');
+      const voucherId = results[resultIdIndex + 1].trim();
+
       setVoucherIdHandler(voucherId);
       confirmModalVisibilityHandler();
     }
@@ -329,6 +336,7 @@ const NewJournalForm = () => {
     // Info: (20240429 - Julian) 檢查日期是否有填寫
     datePeriod.startTimeStamp === 0 ||
     datePeriod.endTimeStamp === 0 ||
+    inputPaymentReason === '' ||
     inputDescription === '' ||
     inputVendor === '' ||
     // Info: (20240510 - Julian) 如果非現金支付，則檢查銀行帳號是否有填寫

@@ -86,7 +86,7 @@ const ConfirmModal = ({
       // TODO: Error handling @Julian (20240509 - Tzuhan)
       console.log(`Failed to get voucher preview: `, errorGetVoucherPreview);
     }
-  }, [voucherId, voucherPreview]);
+  }, [voucherId, voucherPreview, isLoading]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();
