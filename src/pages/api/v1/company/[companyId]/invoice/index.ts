@@ -9,6 +9,7 @@ import { promises as fs } from 'fs';
 import { AICH_URI } from '@/constants/config';
 import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { EventTypeEnum } from '@/interfaces/account';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {
@@ -28,7 +29,7 @@ export default async function handler(
         {
           date: 21321321,
           invoiceId: '123123',
-          eventType: 'expense',
+          eventType: EventTypeEnum.EXPENSE,
           paymentReason: 'purchase',
           description: 'description',
           venderOrSupplyer: 'vender',
@@ -43,7 +44,7 @@ export default async function handler(
         {
           invoiceId: '2',
           date: 123123123,
-          eventType: 'income',
+          eventType: EventTypeEnum.INCOME,
           paymentReason: 'sale',
           description: 'description',
           venderOrSupplyer: 'vender',
