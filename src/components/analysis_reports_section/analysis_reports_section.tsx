@@ -7,19 +7,24 @@ import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '../../constants/url';
-import { FinancialReportTypesKey, FinancialReportTypesMap } from '../../interfaces/report_type';
+import {
+  AnalysisReportTypesKey,
+  AnalysisReportTypesMap,
+  FinancialReportTypesKey,
+  FinancialReportTypesMap,
+} from '../../interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 
-const FinancialReportSection = () => {
+const AnalysisReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);
 
-  const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
-    FinancialReportTypesKey.balance_sheet
+  const [selectedReportType, setSelectedReportType] = useState<AnalysisReportTypesKey>(
+    AnalysisReportTypesKey.financial_performance
   );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
+  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const {
     targetRef: menuRef,
@@ -37,12 +42,12 @@ const FinancialReportSection = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const menuOptionClickHandler = (id: FinancialReportTypesKey) => {
+  const menuOptionClickHandler = (id: AnalysisReportTypesKey) => {
     setSelectedReportType(id);
     setIsMenuOpen(false);
   };
 
-  const selectedReportName = FinancialReportTypesMap[selectedReportType].name;
+  const selectedReportName = AnalysisReportTypesMap[selectedReportType].name;
   const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
 
   const languageMenuClickHandler = () => {
@@ -54,17 +59,7 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
-
-  useEffect(() => {
-    setDatePickerType((prev) => {
-      if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
-        return DatePickerType.CHOOSE_DATE;
-      } else {
-        return DatePickerType.CHOOSE_PERIOD;
-      }
-    });
-  }, [selectedReportType]);
+  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}?report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   const displayedReportTypeMenu = (
     <div ref={menuRef} className="relative flex w-full">
@@ -105,10 +100,10 @@ const FinancialReportSection = () => {
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
-          {Object.entries(FinancialReportTypesMap).map(([id, { name }]) => (
+          {Object.entries(AnalysisReportTypesMap).map(([id, { name }]) => (
             <li
               key={id}
-              onClick={() => menuOptionClickHandler(id as FinancialReportTypesKey)}
+              onClick={() => menuOptionClickHandler(id as AnalysisReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {name}
@@ -245,7 +240,7 @@ const FinancialReportSection = () => {
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">Financial Report</div>
+            <div className="w-full justify-center px-10 md:px-28">Analysis Report</div>
           </div>
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
@@ -259,7 +254,7 @@ const FinancialReportSection = () => {
                 />
               </div>
 
-              <div className="mt-1.5">Financial Report</div>
+              <div className="mt-1.5">Analysis Report</div>
             </div>
           </div>
 
@@ -350,4 +345,4 @@ const FinancialReportSection = () => {
   );
 };
 
-export default FinancialReportSection;
+export default AnalysisReportSection;

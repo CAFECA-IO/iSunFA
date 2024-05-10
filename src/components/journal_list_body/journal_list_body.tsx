@@ -130,7 +130,7 @@ const JournalListTab = () => {
       {/* Info: (20240418 - Julian) Print button */}
       <button
         type="button"
-        className="rounded-lg border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+        className="rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +152,7 @@ const JournalListTab = () => {
       {/* Info: (20240418 - Julian) Download button */}
       <button
         type="button"
-        className="rounded-lg border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+        className="rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

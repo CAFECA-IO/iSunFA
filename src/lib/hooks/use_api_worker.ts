@@ -32,7 +32,7 @@ const useAPIWorker = <Data>(
     setIsLoading(false);
   };
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback((body?: { [key: string]: unknown } | FormData) => {
     const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
       type: 'module',
     });
@@ -45,7 +45,7 @@ const useAPIWorker = <Data>(
       requestId,
       method,
       path,
-      body: options.body,
+      options: { ...options, body: body || options.body },
       action: cancel ? Action.CANCEL : undefined,
     });
 

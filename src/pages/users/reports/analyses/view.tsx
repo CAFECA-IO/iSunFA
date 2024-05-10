@@ -4,41 +4,15 @@ import Head from 'next/head';
 import React from 'react';
 import NavBar from '../../../../components/nav_bar/nav_bar';
 import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import ViewReportSection from '../../../../components/view_report_section/view_report_section';
-import {
-  FinancialReportTypesKey,
-  FinancialReportTypesMap,
-} from '../../../../interfaces/report_type';
-import { ReportLanguagesKey } from '../../../../interfaces/report_language';
+import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '../../../../interfaces/report_type';
 
 interface IServerSideProps {
-  reportType: FinancialReportTypesKey;
-  reportLanguage: ReportLanguagesKey;
-  startTimestamp: string;
-  endTimestamp: string;
+  reportType: AnalysisReportTypesKey;
 }
-
-// TODO: dummy data to be replaced (20240429 - Shirley)
-const getBaseUrl = (): string => {
-  return 'https://baifa.io';
-};
-
-// TODO: dummy data to be replaced (20240429 - Shirley)
-const ReportLink = {
-  balance_sheet: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
-  comprehensive_income_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`,
-  cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
-} as const;
 
 // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: IServerSideProps) => {
-  const dummyReportData = {
-    tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-    tokenId: '37002036',
-    reportLink: ReportLink[reportType],
-  };
-
+const AnalysisReportViewPage = ({ reportType }: IServerSideProps) => {
   return (
     <div>
       <Head>
@@ -46,7 +20,7 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title>
+        <title>{AnalysisReportTypesMap[reportType].name} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -70,20 +44,16 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
           <ReportsSidebar />
         </div>
 
+        {/* TODO: Analysis Report View section (20240508 - Shirley) */}
         <div className="h-screen bg-surface-neutral-main-background">
-          <ViewReportSection
-            reportTypesName={FinancialReportTypesMap[reportType] as { id: string; name: string }}
-            tokenContract={dummyReportData.tokenContract}
-            tokenId={dummyReportData.tokenId}
-            reportLink={dummyReportData.reportLink}
-          />
+          <p className="pl-40 pt-32 text-3xl">{AnalysisReportTypesMap[reportType].name}</p>
         </div>
       </div>
     </div>
   );
 };
 
-export default View;
+export default AnalysisReportViewPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
   // Info: variable from URL query (20240429 - Shirley)
