@@ -1,13 +1,18 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { IJournal } from '@/interfaces/journal';
 import CalendarIcon from '../calendar_icon/calendar_icon';
 
 interface IJournalItemProps {
   key: string;
+  journal: IJournal;
 }
 
-const JournalItem = ({ key }: IJournalItemProps) => {
-  // ToDo: (20240419 - Julian) after api complete, replace the following dummy data with api data
+const JournalItem = ({ key, journal }: IJournalItemProps) => {
+  // TODO: use journal data to display @Julian (20240510 - tzuhan)
+  // Info: journal data from api, log is for Julian to check the data structure, should be removed later (20240510 - tzuahan)
+  // eslint-disable-next-line no-console
+  console.log(journal);
   const createdTimestamp = 1629148800;
   const type: string = 'Transfer';
   const particulars = 'Buy a pineapple';
@@ -147,7 +152,7 @@ const JournalItem = ({ key }: IJournalItemProps) => {
 
       {/* Info: (20240418 - Julian) Link */}
       <Link
-        href={`${ISUNFA_ROUTE.ACCOUNTING}/${voucherNumber}`}
+        href={`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`}
         className="absolute left-46px h-80px w-95%"
       ></Link>
     </tr>

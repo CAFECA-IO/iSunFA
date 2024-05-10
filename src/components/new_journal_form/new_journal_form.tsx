@@ -5,7 +5,13 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IInvoice, IInvoiceWithPaymentMethod } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { PaymentPeriodType, PaymentStatusType } from '@/interfaces/account';
+import {
+  PaymentPeriodType,
+  PaymentStatusType,
+  EventType,
+  EventTypeEnum,
+} from '@/interfaces/account';
+import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
@@ -18,7 +24,7 @@ import ProgressBar from '../progress_bar/progress_bar';
 import { MessageType } from '../../interfaces/message_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
-const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
+
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Transfer', 'Credit Card', 'Cash'];
 const ficSelection: string[] = [
@@ -29,12 +35,6 @@ const ficSelection: string[] = [
 ];
 const projectSelection: string[] = ['None', 'Project A', 'Project B', 'Project C'];
 const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contract C'];
-
-const enum EventType {
-  PAYMENT = 'Payment',
-  RECEIVING = 'Receiving',
-  TRANSFER = 'Transfer',
-}
 
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
@@ -59,11 +59,12 @@ const NewJournalForm = () => {
   const {
     trigger: voucherGenerate, // TODO: (20240508 - Tzuhan) call API to upload journal data
     data: result,
+    code: uploadCode,
     success: uploadSuccess,
   } = APIHandler<IAccountResultStatus>(
     APIName.VOUCHER_GENERATE,
     {
-      params: { companyId: 1 },
+      params: { companyId },
     },
     false,
     false
@@ -75,7 +76,7 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Basic Info states
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventTypeEnum.INCOME);
   const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
   const [inputVendor, setInputVendor] = useState<string>('');
@@ -249,7 +250,7 @@ const NewJournalForm = () => {
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
-    setSelectedEventType(eventTypeSelection[0]);
+    setSelectedEventType(EventTypeEnum.INCOME);
     setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
@@ -290,7 +291,7 @@ const NewJournalForm = () => {
     const invoiceWithPaymentMethod: IInvoiceWithPaymentMethod = {
       invoiceId: ocrResultId,
       date: datePeriod.startTimeStamp,
-      eventType: selectedEventType as EventType,
+      eventType: selectedEventType,
       paymentReason: inputPaymentReason,
       description: inputDescription,
       venderOrSupplyer: inputVendor,
@@ -318,6 +319,10 @@ const NewJournalForm = () => {
       const voucherId = result.resultId;
       setVoucherIdHandler(voucherId);
       confirmModalVisibilityHandler();
+    } else {
+      // TODO: error handling @Julian (20240510 - tzuhan)
+      // eslint-disable-next-line no-console
+      console.error(`Upload journal failed: ${uploadCode}`);
     }
   }, [uploadSuccess, result]);
 
@@ -337,7 +342,7 @@ const NewJournalForm = () => {
     (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
-  const displayEventDropmenu = eventTypeSelection.map((type: string) => {
+  const displayEventDropmenu = Object.values(EventTypeEnum).map((type: EventType) => {
     const selectionClickHandler = () => {
       setSelectedEventType(type);
       setIsEventMenuOpen(false);
@@ -349,7 +354,7 @@ const NewJournalForm = () => {
         onClick={selectionClickHandler}
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
-        {type}
+        {firstCharToUpperCase(type)}
       </li>
     );
   });
@@ -469,7 +474,7 @@ const NewJournalForm = () => {
               onClick={eventMenuOpenHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
-              <p>{selectedEventType}</p>
+              <p>{firstCharToUpperCase(selectedEventType)}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
@@ -877,7 +882,7 @@ const NewJournalForm = () => {
   );
 
   const displayedProjectSecondLine =
-    selectedEventType === EventType.RECEIVING ? (
+    selectedEventType === EventTypeEnum.INCOME ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
         <ProgressBar

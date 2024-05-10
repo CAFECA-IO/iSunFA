@@ -16,6 +16,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IVoucher } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { AccountProgressStatus, AccountVoucher } from '@/interfaces/account';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 //import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
@@ -36,8 +37,24 @@ const ConfirmModal = ({
     trigger: getVoucherPreview,
     data: voucherPreview,
     success: successGetVoucherPreview,
+    code: codeGetVoucherPreview,
     error: errorGetVoucherPreview,
   } = APIHandler<IVoucher>(APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID, {}, false, false);
+
+  const {
+    trigger: uploadJournal, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    data: result,
+    success: uploadSuccess,
+    error: errorUploadJournal,
+    code: codeUploadJournal,
+  } = APIHandler<IAccountResultStatus>(
+    APIName.UPLOAD_JOURNAL,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
 
   const router = useRouter();
 
@@ -84,7 +101,12 @@ const ConfirmModal = ({
         successGetVoucherPreview ? 0 : 2000
       );
       // TODO: Error handling @Julian (20240509 - Tzuhan)
-      console.log(`Failed to get voucher preview: `, errorGetVoucherPreview);
+      console.log(
+        `Failed to get voucher preview: `,
+        errorGetVoucherPreview,
+        `code: `,
+        codeGetVoucherPreview
+      );
     }
   }, [voucherId, voucherPreview]);
 
@@ -92,14 +114,25 @@ const ConfirmModal = ({
     useAccountingCtx();
 
   // ToDo: (20240503 - Julian) Get real journalId from API
-  const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
+  // const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
 
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
-    clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-    router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journalId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+    // Info: (20240510 - tzuhan) Add API call to upload journal data
+    uploadJournal();
+    // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
   };
+
+  useEffect(() => {
+    if (uploadSuccess && result) {
+      modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
+      clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${result.resultId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+    } else {
+      // TODO: Error handling @Julian (20240510 - Tzuhan)
+      console.log(`Failed to upload journal: `, codeUploadJournal, `error: `, errorUploadJournal);
+    }
+  }, [uploadSuccess]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 

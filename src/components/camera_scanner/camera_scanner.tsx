@@ -34,6 +34,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     data: results,
     error: uploadError,
     success: uploadSuccess,
+    code: uploadCode,
   } = APIHandler<IAccountResultStatus[]>(
     APIName.UPLOAD_INVOCIE,
     {
@@ -188,7 +189,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       setOcrResultIdHandler(resultId);
     } else {
       // eslint-disable-next-line no-console
-      console.error('Error: ', uploadError);
+      console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }
   }, [uploadSuccess, results, isModalVisible]);
 

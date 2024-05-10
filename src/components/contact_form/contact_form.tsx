@@ -40,6 +40,7 @@ function ContactForm() {
   const {
     trigger: email,
     error: enmailError,
+    code: emailCode,
     success: enmailSuccess,
   } = APIHandler<void>(
     APIName.EMAIL,
@@ -110,6 +111,7 @@ function ContactForm() {
     }
     if (enmailError) {
       failedProcess();
+      console.log(`enmailError(${emailCode}): `, enmailError);
     }
   }, [enmailSuccess, enmailError]);
 
