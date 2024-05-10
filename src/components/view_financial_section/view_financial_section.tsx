@@ -327,7 +327,7 @@ const cashFlowReportThumbnails = [
   },
 ];
 
-const ViewReportSection = ({
+const ViewFinancialSection = ({
   reportTypesName,
   tokenContract,
   tokenId,
@@ -810,4 +810,4 @@ const ViewReportSection = ({
   );
 };
 
-export default ViewReportSection;
+export default ViewFinancialSection;
