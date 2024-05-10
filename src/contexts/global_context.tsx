@@ -22,6 +22,7 @@ import {
 import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { toast as toastify } from 'react-toastify';
+import { IToastify, ToastPosition } from '@/interfaces/toastify';
 
 interface IGlobalContext {
   width: number;
@@ -61,7 +62,7 @@ interface IGlobalContext {
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
 
-  toastHandler: (content: JSX.Element | string, type: string) => void;
+  toastHandler: (props: IToastify) => void;
 }
 
 export interface IGlobalProvider {
@@ -155,28 +156,50 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   };
 
   // Info: (20240509 - Julian) 呼叫 toast ----------(施工中)----------
-  const toastHandler = useCallback((content: JSX.Element | string, type: string) => {
+  const toastHandler = useCallback((props: IToastify) => {
+    const { type, content, autoClose, position, draggable, closeOnClick } = props;
+    const bodyStyle = 'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0';
     try {
       switch (type) {
         case 'success':
-          toastify.success(content);
+          toastify.success(content, {
+            icon: <Image src="/icons/success.svg" alt="info" width={24} height={24} />,
+            position: position ?? ToastPosition.TOP_CENTER,
+            autoClose: autoClose ?? 5000,
+            closeOnClick: closeOnClick ?? true,
+            draggable: draggable ?? true,
+            className: `${bodyStyle} before:bg-successGreen3`,
+          });
           break;
         case 'error':
           toastify.error(content, {
-            position: 'top-center',
+            // ToDo: (20240510 - Julian) error icon 待捕上
+            icon: <Image src="/icons/error.svg" alt="info" width={24} height={24} />,
+            position: position ?? ToastPosition.TOP_CENTER,
+            autoClose: autoClose ?? 5000,
+            closeOnClick: closeOnClick ?? true,
+            draggable: draggable ?? true,
+            className: `${bodyStyle} before:bg-errorRed`,
           });
           break;
         case 'warning':
-          toastify.warning(content);
+          toastify.warning(content, {
+            icon: <Image src="/icons/warning.svg" alt="info" width={24} height={24} />,
+            position: position ?? ToastPosition.TOP_CENTER,
+            autoClose: autoClose ?? 5000,
+            closeOnClick: closeOnClick ?? true,
+            draggable: draggable ?? true,
+            className: `${bodyStyle} before:bg-warningYellow`,
+          });
           break;
         case 'info':
           toastify.info(content, {
-            position: 'top-center',
             icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
-            autoClose: false,
-            closeOnClick: true,
-            className:
-              'before:absolute before:h-100vh before:w-5px before:bg-navyBlue2 before:top-0 before:left-0',
+            position: position ?? ToastPosition.TOP_CENTER,
+            autoClose: autoClose ?? 5000,
+            closeOnClick: closeOnClick ?? true,
+            draggable: draggable ?? true,
+            className: `${bodyStyle} before:bg-navyBlue2`,
           });
           break;
         default:

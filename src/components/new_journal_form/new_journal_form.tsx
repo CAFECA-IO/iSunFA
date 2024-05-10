@@ -45,7 +45,7 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { companyId, ocrResultId, setVoucherIdHandler } = useAccountingCtx();
+  const { companyId, ocrResultId, setOcrResultIdHandler, setVoucherIdHandler } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
@@ -114,6 +114,8 @@ const NewJournalForm = () => {
         setTaxRate(invoiceData[0].payment.taxPercentage);
         setFeeToggle(invoiceData[0].payment.hasFee);
         setInputFee(invoiceData[0].payment.fee);
+        // Info: (20240510 - Julian) 表單填入後要清空 OCR id
+        setOcrResultIdHandler('');
       } else if (!isLoading) {
         setTimeout(() => {
           getInvoice();
