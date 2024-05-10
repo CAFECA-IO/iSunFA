@@ -1,4 +1,4 @@
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucher } from '@/interfaces/voucher';
@@ -122,11 +122,11 @@ export default async function handler(
   try {
     if (req.method === 'GET') {
       if (!journalArray) {
-        throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
 
       const { httpCode, result } = formatApiResponse<IJournal[]>(
-        STATUS_CODE.SUCCESS_LIST,
+        STATUS_MESSAGE.SUCCESS_LIST,
         journalArray
       );
 
@@ -134,7 +134,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { voucher } = req.body;
       if (!voucher || !isIVoucher(voucher)) {
-        throw new Error(STATUS_CODE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
       }
 
       // combine voucher to journal
@@ -146,11 +146,11 @@ export default async function handler(
       };
       journalArray.push(journal);
 
-      const { httpCode, result } = formatApiResponse<IJournal>(STATUS_CODE.CREATED, journal);
+      const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.CREATED, journal);
 
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

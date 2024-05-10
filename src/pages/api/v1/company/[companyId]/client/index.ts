@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   try {
     if (!req.headers.userid) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) C010001 - GET /client
     if (req.method === 'GET') {
@@ -31,7 +31,7 @@ export default async function handler(
         },
       ];
       const { httpCode, result } = formatApiResponse<IClient[]>(
-        STATUS_CODE.SUCCESS_LIST,
+        STATUS_MESSAGE.SUCCESS_LIST,
         clientList
       );
       res.status(httpCode).json(result);
@@ -45,10 +45,10 @@ export default async function handler(
         code,
         favorite: false,
       };
-      const { httpCode, result } = formatApiResponse<IClient>(STATUS_CODE.CREATED, newClient);
+      const { httpCode, result } = formatApiResponse<IClient>(STATUS_MESSAGE.CREATED, newClient);
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

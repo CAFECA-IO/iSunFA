@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import { AICH_URI } from '@/constants/config';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
-// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {

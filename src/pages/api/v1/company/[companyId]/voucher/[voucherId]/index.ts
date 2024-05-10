@@ -2,7 +2,7 @@ import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucher, isIVoucher } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
@@ -15,18 +15,18 @@ export default async function handler(
 
       // Info Murky (20240416): Check if resultId is string
       if (typeof voucherId !== 'string' || !voucherId || Array.isArray(voucherId)) {
-        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
       const fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/result`);
 
       if (!fetchResult.ok) {
-        throw new Error(STATUS_CODE.BAD_GATEWAY_AICH_FAILED);
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
       }
 
       const rawVoucher: IVoucher = (await fetchResult.json()).payload;
       if (!rawVoucher || isIVoucher(rawVoucher)) {
-        throw new Error(STATUS_CODE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
       // Depreciate: AICH需要match這邊的type
@@ -47,10 +47,13 @@ export default async function handler(
       //   invoiceIndex: invoiceId,
       // };
 
-      const { httpCode, result } = formatApiResponse<IVoucher>(STATUS_CODE.SUCCESS_GET, rawVoucher);
+      const { httpCode, result } = formatApiResponse<IVoucher>(
+        STATUS_MESSAGE.SUCCESS_GET,
+        rawVoucher
+      );
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

@@ -1,4 +1,4 @@
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -14,10 +14,10 @@ export default async function handler(
   const userIdNum = Number(userId);
   try {
     if (!req.headers.userid) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     if (!userIdNum) {
-      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
     if (method === 'GET') {
       // Handle GET request to retrieve user by userid
@@ -27,9 +27,9 @@ export default async function handler(
         },
       });
       if (!user) {
-        throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_GET, user);
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_GET, user);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       // Handle PUT request to update user by userid
@@ -42,7 +42,7 @@ export default async function handler(
           email: 'curry@curry.com',
         },
       });
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_UPDATE, user);
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_UPDATE, user);
       res.status(httpCode).json(result);
     } else if (method === 'DELETE') {
       // Handle DELETE request to delete user by userid
@@ -51,10 +51,10 @@ export default async function handler(
           id: userIdNum,
         },
       });
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_DELETE, user);
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_DELETE, user);
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     // Handle errors

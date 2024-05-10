@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import prisma from '@/../prisma/client';
 import { IRole } from '@/interfaces/role';
 
@@ -29,13 +29,17 @@ export default async function handler(
         company: null,
       }));
 
-      const { httpCode, result } = formatApiResponse<IRole[]>(STATUS_CODE.SUCCESS_LIST, roleList);
+      const { httpCode, result } = formatApiResponse<IRole[]>(
+        STATUS_MESSAGE.SUCCESS_LIST,
+        roleList
+      );
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) A010003 - POST /role
     } else if (req.method === 'POST') {
-      const { name, email } = req.body;
-      if (!name || !email) {
-        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+      const { name } = req.body;
+      // console.log('name:', name);
+      if (!name) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const createdRole = await prisma.role.create({
         data: {
@@ -64,10 +68,10 @@ export default async function handler(
         companyName: company.name,
       };
 
-      const { httpCode, result } = formatApiResponse<IRole>(STATUS_CODE.CREATED, formattedRole);
+      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.CREATED, formattedRole);
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

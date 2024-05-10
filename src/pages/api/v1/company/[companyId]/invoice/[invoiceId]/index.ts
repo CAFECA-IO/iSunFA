@@ -2,10 +2,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-// import {  } from '@/constants/status_code';
+// import {  } from '@/constants/STATUS_MESSAGE';
 import { IInvoice, isIInvoice } from '@/interfaces/invoice';
 import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +15,7 @@ export default async function handler(
     const { invoiceId } = req.query;
     // Info Murky (20240416): Check if invoiceId is string
     if (Array.isArray(invoiceId) || !invoiceId || typeof invoiceId !== 'string') {
-      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
     switch (req.method) {
@@ -23,16 +23,16 @@ export default async function handler(
         const fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/result`);
 
         if (!fetchResult.ok) {
-          throw new Error(STATUS_CODE.BAD_GATEWAY_AICH_FAILED);
+          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
         const ocrResultData: IInvoice = (await fetchResult.json()).payload;
 
         if (!ocrResultData || !isIInvoice(ocrResultData)) {
-          throw new Error(STATUS_CODE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
         }
 
-        const { httpCode, result } = formatApiResponse<IInvoice[]>(STATUS_CODE.SUCCESS, [
+        const { httpCode, result } = formatApiResponse<IInvoice[]>(STATUS_MESSAGE.SUCCESS, [
           ocrResultData,
         ]);
 
@@ -40,7 +40,7 @@ export default async function handler(
         break;
       }
       default: {
-        throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     }
   } catch (_error) {

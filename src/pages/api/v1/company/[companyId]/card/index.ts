@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
@@ -11,7 +11,7 @@ export default async function handler(
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
     if (!req.headers.userid) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
       const paymentList: ICard[] = [
@@ -35,7 +35,7 @@ export default async function handler(
         },
       ];
       const { httpCode, result } = formatApiResponse<ICard[]>(
-        STATUS_CODE.SUCCESS_LIST,
+        STATUS_MESSAGE.SUCCESS_LIST,
         paymentList
       );
       res.status(httpCode).json(result);
@@ -43,7 +43,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
-        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const newPayment: ICard = {
         id: '3',
@@ -54,10 +54,10 @@ export default async function handler(
         cvc,
         name,
       };
-      const { httpCode, result } = formatApiResponse<ICard>(STATUS_CODE.CREATED, newPayment);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.CREATED, newPayment);
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

@@ -5,10 +5,10 @@ import formidable from 'formidable';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { promises as fs } from 'fs';
 import { AICH_URI } from '@/constants/config';
-// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {
@@ -64,7 +64,7 @@ export default async function handler(
       ];
 
       const { httpCode, result } = formatApiResponse<IInvoice[]>(
-        STATUS_CODE.SUCCESS_GET,
+        STATUS_MESSAGE.SUCCESS_GET,
         invoices as IInvoice[]
       );
       res.status(httpCode).json(result);
@@ -73,11 +73,11 @@ export default async function handler(
       try {
         files = (await parseForm(req)).files;
       } catch (error) {
-        throw new Error(STATUS_CODE.INVOICE_UPLOAD_FAILED_ERROR);
+        throw new Error(STATUS_MESSAGE.INVOICE_UPLOAD_FAILED_ERROR);
       }
 
       if (!files || !files.image || !files.image.length) {
-        throw new Error(STATUS_CODE.INVALID_INPUT_FORMDATA_IMAGE);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
       }
 
       // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
@@ -95,19 +95,19 @@ export default async function handler(
       });
 
       if (!fetchResult.ok) {
-        throw new Error(STATUS_CODE.BAD_GATEWAY_AICH_FAILED);
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
       }
 
       const resultJson: IAccountResultStatus[] = (await fetchResult.json()).payload;
 
       const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
-        STATUS_CODE.CREATED,
+        STATUS_MESSAGE.CREATED,
         resultJson
       );
 
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

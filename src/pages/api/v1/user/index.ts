@@ -1,4 +1,4 @@
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -13,39 +13,43 @@ export default async function handler(
     if (req.method === 'GET') {
       // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
       const userList: IUser[] = await prisma.user.findMany();
-      const { httpCode, result } = formatApiResponse<IUser[]>(STATUS_CODE.SUCCESS_LIST, userList);
+      const { httpCode, result } = formatApiResponse<IUser[]>(
+        STATUS_MESSAGE.SUCCESS_LIST,
+        userList
+      );
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       // Handle POST request to create a new user
-      const { name } = req.body;
-      const newUser: IUser = {
-        id: 3,
+      const {
         name,
-        fullName: 'John Doe',
-        email: 'john@mermer.cc',
-        phone: '12345678',
-        kycStatus: true,
-        credentialId: '1',
-        publicKey: 'public-key',
-        algorithm: 'ES256',
-      };
+        fullName,
+        email,
+        phone,
+        kycStatus,
+        credentialId,
+        publicKey,
+        algorithm,
+        imageId,
+      } = req.body;
       const createdUser: IUser = await prisma.user.create({
         data: {
-          name: newUser.name,
-          email: newUser.email,
-          phone: newUser.phone,
-          kycStatus: newUser.kycStatus,
-          credentialId: newUser.credentialId,
-          publicKey: newUser.publicKey,
-          algorithm: newUser.algorithm,
+          name,
+          fullName,
+          email,
+          phone,
+          kycStatus,
+          credentialId,
+          publicKey,
+          algorithm,
+          imageId,
         },
       });
 
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.CREATED, createdUser);
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
       res.status(httpCode).json(result);
     } else {
       // Handle unsupported HTTP methods
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     // Handle errors

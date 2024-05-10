@@ -1,7 +1,7 @@
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
-// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 import version from '@/lib/version';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IFinancialReportJSON, isIFinancialReportJSON } from '@/interfaces/financial_report';

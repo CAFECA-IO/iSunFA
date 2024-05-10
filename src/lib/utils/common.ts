@@ -209,26 +209,37 @@ export function cleanBoolean(booleanStr: unknown): boolean {
   return false;
 }
 
+function getCodeByMessage(statusMessage: string) {
+  let code: string;
+  let message: string;
+  if (statusMessage in STATUS_CODE) {
+    code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
+    message = statusMessage;
+  } else if (/prisma/i.test(statusMessage)) {
+    code = STATUS_CODE[STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR];
+    message = STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR;
+  } else {
+    code = STATUS_CODE[STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR];
+    message = STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR;
+  }
+  return { code, message };
+}
+
 export function formatApiResponse<T>(
-  status_code: string,
+  statusMessage: string,
   payload: T
 ): { httpCode: number; result: IResponseData<T> } {
-  // TODO: Implement the logic to format the API response
-  let httpCodeStr: string;
-  if (status_code in STATUS_MESSAGE) {
-    httpCodeStr = status_code.slice(0, 3);
-  } else {
-    httpCodeStr = STATUS_CODE.INVALID_STATUS_CODE_ERROR.slice(0, 3);
-  }
-  const success = !!httpCodeStr.startsWith('2');
-  const message = STATUS_MESSAGE[status_code as keyof typeof STATUS_MESSAGE];
+  const { code, message } = getCodeByMessage(statusMessage);
+  const success = !!code.startsWith('2');
+  const httpCodeStr = code.slice(0, 3);
   const httpCode = Number(httpCodeStr);
   const result: IResponseData<T> = {
     powerby: 'ISunFa api ' + version,
     success,
-    code: status_code,
+    code,
     message,
     payload,
   };
+
   return { httpCode, result };
 }

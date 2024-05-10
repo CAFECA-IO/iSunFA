@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ISubscription } from '@/interfaces/subscription';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   try {
     if (!req.headers.userid) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {
@@ -28,7 +28,7 @@ export default async function handler(
         },
       ];
       const { httpCode, result } = formatApiResponse<ISubscription[]>(
-        STATUS_CODE.SUCCESS_LIST,
+        STATUS_MESSAGE.SUCCESS_LIST,
         subscriptionList
       );
       res.status(httpCode).json(result);
@@ -36,7 +36,7 @@ export default async function handler(
     } else if (req.method === 'POST') {
       const { plan, paymentId, autoRenew } = req.body;
       if (!plan || !paymentId || !autoRenew) {
-        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const newSubscription: ISubscription = {
         id: '3',
@@ -50,12 +50,12 @@ export default async function handler(
         status: 'paid',
       };
       const { httpCode, result } = formatApiResponse<ISubscription>(
-        STATUS_CODE.CREATED,
+        STATUS_MESSAGE.CREATED,
         newSubscription
       );
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

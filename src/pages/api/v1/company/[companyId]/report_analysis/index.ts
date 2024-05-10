@@ -5,7 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { isIFinancialStatements } from '@/interfaces/financial_report';
 import { AICH_URI } from '@/constants/config';
 import { AccountResultStatus } from '@/interfaces/account';
-// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';

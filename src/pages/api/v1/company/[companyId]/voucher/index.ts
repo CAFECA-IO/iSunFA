@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAccountResultStatus, isIAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +15,7 @@ export default async function handler(
       const { invoices } = req.body;
       // Info Murky (20240416): Check if invoices is array and is Invoice type
       if (!Array.isArray(invoices) || !invoices.every(isIInvoiceWithPaymentMethod)) {
-        throw new Error(STATUS_CODE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
       const fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
@@ -27,22 +27,22 @@ export default async function handler(
       });
 
       if (!fetchResult.ok) {
-        throw new Error(STATUS_CODE.BAD_GATEWAY_AICH_FAILED);
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
       }
 
       const resultStatus: IAccountResultStatus = (await fetchResult.json()).payload;
 
       if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-        throw new Error(STATUS_CODE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
       const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
-        STATUS_CODE.CREATED,
+        STATUS_MESSAGE.CREATED,
         resultStatus
       );
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

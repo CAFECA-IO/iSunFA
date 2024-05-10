@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 // import { IResponseData } from '@/interfaces/response_data';
 import fs from 'fs';
 import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -18,11 +18,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       .readdirSync('tmp')
       .find((fileName) => invoiceFileNameRegex.test(fileName));
     if (!invoiceFilePath) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     const invoiceImage = fs.readFileSync(`tmp/${invoiceFilePath}`);
     if (!invoiceImage) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     res.setHeader('Content-Type', 'image/jpeg');
     res.status(200).send(invoiceImage);
