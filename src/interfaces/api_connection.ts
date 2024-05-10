@@ -53,5 +53,6 @@ export type IAPIResponse<Data> = {
   trigger: (input?: IAPIInput, signal?: AbortSignal) => void;
   isLoading: boolean | undefined;
   data: Data | undefined;
+  code: string | undefined;
   error: Error | null;
 };
