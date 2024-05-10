@@ -179,7 +179,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
             autoClose: autoClose ?? 5000,
             closeOnClick: closeOnClick ?? true,
             draggable: draggable ?? true,
-            className: `${bodyStyle} before:bg-errorRed`,
+            className: `${bodyStyle} before:bg-errorRed3`,
           });
           break;
         case 'warning':
