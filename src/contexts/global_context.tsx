@@ -155,59 +155,56 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
 
-  // Info: (20240509 - Julian) 呼叫 toast ----------(施工中)----------
+  // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
     const { type, content, autoClose, position, draggable, closeOnClick } = props;
     const bodyStyle = 'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0';
-    try {
-      switch (type) {
-        case 'success':
-          toastify.success(content, {
-            icon: <Image src="/icons/success.svg" alt="info" width={24} height={24} />,
-            position: position ?? ToastPosition.TOP_CENTER,
-            autoClose: autoClose ?? 5000,
-            closeOnClick: closeOnClick ?? true,
-            draggable: draggable ?? true,
-            className: `${bodyStyle} before:bg-successGreen3`,
-          });
-          break;
-        case 'error':
-          toastify.error(content, {
-            // ToDo: (20240510 - Julian) error icon 待捕上
-            icon: <Image src="/icons/error.svg" alt="info" width={24} height={24} />,
-            position: position ?? ToastPosition.TOP_CENTER,
-            autoClose: autoClose ?? 5000,
-            closeOnClick: closeOnClick ?? true,
-            draggable: draggable ?? true,
-            className: `${bodyStyle} before:bg-errorRed3`,
-          });
-          break;
-        case 'warning':
-          toastify.warning(content, {
-            icon: <Image src="/icons/warning.svg" alt="info" width={24} height={24} />,
-            position: position ?? ToastPosition.TOP_CENTER,
-            autoClose: autoClose ?? 5000,
-            closeOnClick: closeOnClick ?? true,
-            draggable: draggable ?? true,
-            className: `${bodyStyle} before:bg-warningYellow`,
-          });
-          break;
-        case 'info':
-          toastify.info(content, {
-            icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
-            position: position ?? ToastPosition.TOP_CENTER,
-            autoClose: autoClose ?? 5000,
-            closeOnClick: closeOnClick ?? true,
-            draggable: draggable ?? true,
-            className: `${bodyStyle} before:bg-navyBlue2`,
-          });
-          break;
-        default:
-          toastify(content);
-          break;
-      }
-    } catch (error) {
-      // ToDo: (20240509 - Julian) Add error handling
+
+    switch (type) {
+      case 'success':
+        toastify.success(content, {
+          icon: <Image src="/icons/success.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-successGreen3`,
+        });
+        break;
+      case 'error':
+        toastify.error(content, {
+          // ToDo: (20240510 - Julian) error icon 待捕上
+          icon: <Image src="/icons/error.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-errorRed3`,
+        });
+        break;
+      case 'warning':
+        toastify.warning(content, {
+          icon: <Image src="/icons/warning.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-warningYellow`,
+        });
+        break;
+      case 'info':
+        toastify.info(content, {
+          icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-navyBlue2`,
+        });
+        break;
+      default:
+        toastify(content);
+        break;
     }
   }, []);
 
