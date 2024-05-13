@@ -100,7 +100,7 @@ const NavBar = () => {
         <p>Salary</p>
       </Link>
       <Link
-        href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
+        href={ISUNFA_ROUTE.USERS_MY_REPORTS}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
@@ -200,7 +200,7 @@ const NavBar = () => {
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Report button */}
-      <Link href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS} className="mx-auto">
+      <Link href={ISUNFA_ROUTE.USERS_MY_REPORTS} className="mx-auto">
         <button className="flex flex-col items-center gap-8px">
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
           <p>Report</p>

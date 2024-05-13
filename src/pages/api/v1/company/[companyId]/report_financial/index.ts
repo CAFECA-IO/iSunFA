@@ -1,13 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
-import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
+import {
+  // IFinancialReport,
+  IFinancialReportRequest,
+  isFinancialReportType,
+} from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
-const mockFinancialReportUrl: IFinancialReport = 'http://www.google.com.br';
+// const mockFinancialReportUrl: IFinancialReport = 'http://www.google.com.br';
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFinancialReport>>
+  res: NextApiResponse<IResponseData<IAccountResultStatus | null>>
 ) {
   const {
     type,
@@ -25,7 +30,8 @@ export default function handler(
     });
     return;
   }
-  if (type !== 'Balance Sheet' && type !== 'Income Statement' && type !== 'Cash Flow Statement') {
+  if (!isFinancialReportType(type)) {
+    // if (type !== 'Balance Sheet' && type !== 'Income Statement' && type !== 'Cash Flow Statement') {
     res.status(400).json({
       powerby: 'iSunFA v' + version,
       success: false,
@@ -40,6 +46,9 @@ export default function handler(
     success: true,
     code: '200',
     message: 'request successful',
-    payload: mockFinancialReportUrl,
+    payload: {
+      resultId: 'resultId',
+      status: 'inProgress',
+    },
   });
 }
