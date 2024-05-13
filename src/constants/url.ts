@@ -14,6 +14,7 @@ export const ISUNFA_ROUTE = {
   DASHBOARD: '/users/dashboard',
   SALARY: '/users/salary',
   ACCOUNTING: '/users/accounting',
+  SELECT_ENTITY: '/users/select-entity',
   JOURNAL_LIST: '/users/accounting/journal-list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',
