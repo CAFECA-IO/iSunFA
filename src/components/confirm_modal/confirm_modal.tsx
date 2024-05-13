@@ -229,6 +229,14 @@ const ConfirmModal = ({
     </div>
   );
 
+  const debitListMobile = accountingVoucher
+    .filter((voucher) => !!voucher.debit)
+    .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
+
+  const creditListMobile = accountingVoucher
+    .filter((voucher) => !!voucher.credit)
+    .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
+
   const displayAccountingVoucherMobile = (
     <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
       {/* Info: (20240510 - Julian) Debit */}
@@ -243,13 +251,7 @@ const ConfirmModal = ({
           <hr className="flex-1 border-lightGray3" />
         </div>
         {/* Info: (20240510 - Julian) List */}
-        <div className="flex flex-col">
-          {accountingVoucher
-            .filter((voucher) => !!voucher.debit)
-            .map((debit) =>
-              AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
-            )}
-        </div>
+        <div className="flex flex-col">{debitListMobile}</div>
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
@@ -273,13 +275,7 @@ const ConfirmModal = ({
           <hr className="flex-1 border-lightGray3" />
         </div>
         {/* Info: (20240510 - Julian) List */}
-        <div className="flex flex-col">
-          {accountingVoucher
-            .filter((voucher) => !!voucher.credit)
-            .map((credit) =>
-              AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
-            )}
-        </div>
+        <div className="flex flex-col">{creditListMobile}</div>
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
