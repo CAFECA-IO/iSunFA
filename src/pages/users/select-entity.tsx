@@ -1,10 +1,20 @@
 import Head from 'next/head';
+import { useEffect } from 'react';
+import { useGlobalCtx } from '@/contexts/global_context';
 import SelectEntityPageBody from '@/components/select_entity_page_body/select_entity_page_body';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { ToastId } from '@/constants/toast_id';
 import NavBar from '../../components/nav_bar/nav_bar';
 import { ILocale } from '../../interfaces/locale';
 
 const SelectEntityPage = () => {
+  const { eliminateToast } = useGlobalCtx();
+
+  useEffect(() => {
+    // Info: (20240513 - Julian) 回到選擇公司頁面時，要把提醒試用版的 Toast 關掉
+    eliminateToast(ToastId.TRIAL);
+  }, []);
+
   return (
     <>
       <Head>

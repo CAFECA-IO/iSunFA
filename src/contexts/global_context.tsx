@@ -70,6 +70,7 @@ interface IGlobalContext {
   createEntityModalVisibilityHandler: () => void;
 
   toastHandler: (props: IToastify) => void;
+  eliminateToast: (id?: string) => void;
 }
 
 export interface IGlobalProvider {
@@ -255,6 +256,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     }
   }, []);
 
+  const eliminateToast = (id?: string) => {
+    if (id) {
+      toastify.dismiss(id);
+    } else {
+      toastify.dismiss(); // Info:(20240513 - Julian) dismiss all toasts
+    }
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -289,6 +298,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isCreateEntityModalVisible,
     createEntityModalVisibilityHandler,
     toastHandler,
+    eliminateToast,
   };
 
   return (

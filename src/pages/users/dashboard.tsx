@@ -5,6 +5,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';
+import { ToastId } from '@/constants/toast_id';
 import NavBar from '../../components/nav_bar/nav_bar';
 import { ILocale } from '../../interfaces/locale';
 import { useUserCtx } from '../../contexts/user_context';
@@ -29,7 +30,7 @@ const DashboardPage = () => {
     if (!isSelectEntity) {
       // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
       toastHandler({
-        id: 'trial',
+        id: ToastId.TRIAL,
         type: ToastType.INFO,
         closeable: false,
         content: (

@@ -11,6 +11,7 @@ import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types'
 import { useRouter } from 'next/router';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { toast as toastify } from 'react-toastify';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -274,6 +275,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(false);
     setEntityList([]);
     setSelectedEntity(null);
+    setIsSelectEntity(false);
+
+    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
   };
 
   const readCookie = async () => {
