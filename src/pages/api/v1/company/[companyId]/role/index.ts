@@ -21,6 +21,7 @@ export default async function handler(
           },
         },
       });
+
       const roleList: IRole[] = rawRoleList.map((role) => ({
         ...role,
         id: role.id.toString(), // Convert the id to a string
