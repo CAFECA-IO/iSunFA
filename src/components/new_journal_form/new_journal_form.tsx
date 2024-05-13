@@ -57,7 +57,7 @@ const NewJournalForm = () => {
   });
 
   const {
-    trigger: voucherGenerate, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    trigger: voucherGenerate,
     data: result,
     code: uploadCode,
     success: uploadSuccess,
