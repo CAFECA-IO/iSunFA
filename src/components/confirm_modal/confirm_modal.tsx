@@ -40,7 +40,7 @@ const ConfirmModal = ({
   } = APIHandler<IVoucher>(APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID, {}, false, false);
 
   const {
-    trigger: uploadJournal, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    trigger: uploadJournal,
     data: result,
     success: uploadSuccess,
     error: errorUploadJournal,
