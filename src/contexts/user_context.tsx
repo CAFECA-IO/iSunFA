@@ -26,6 +26,7 @@ interface UserContextType {
   username: string | null;
   signedIn: boolean;
   isSignInError: boolean;
+  entityList: string[];
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -37,6 +38,7 @@ export const UserContext = createContext<UserContextType>({
   username: '',
   signedIn: false,
   isSignInError: false,
+  entityList: [],
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +48,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
+  const [entityList, setEntityList, entityListRef] = useStateRef<string[]>([]);
+
   const {
     trigger: signOut,
     error: signOutError,
@@ -59,6 +63,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false,
     false
   );
+
+  // ToDo: (20240513 - Julian) Get the entity list from API
 
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
 
@@ -322,6 +328,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       signedIn: signedInRef.current,
       isSignInError: isSignInErrorRef.current,
+      entityList: entityListRef.current,
     }),
     [credentialRef.current]
   );

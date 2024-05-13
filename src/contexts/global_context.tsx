@@ -57,6 +57,12 @@ interface IGlobalContext {
 
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
+
+  isEntityInvitationModalVisible: boolean;
+  entityInvitationModalVisibilityHandler: () => void;
+
+  isCreateEntityModalVisible: boolean;
+  createEntityModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -91,6 +97,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   );
 
   const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
+
+  const [isEntityInvitationModalVisible, setIsEntityInvitationModalVisible] = useState(false);
+
+  const [isCreateEntityModalVisible, setIsCreateEntityModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -149,6 +159,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
 
+  const entityInvitationModalVisibilityHandler = () => {
+    setIsEntityInvitationModalVisible(!isEntityInvitationModalVisible);
+  };
+
+  const createEntityModalVisibilityHandler = () => {
+    setIsCreateEntityModalVisible(!isCreateEntityModalVisible);
+  };
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -178,6 +196,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     previewInvoiceModalDataHandler,
     isEmbedCodeModalVisible,
     embedCodeModalVisibilityHandler,
+    isEntityInvitationModalVisible,
+    entityInvitationModalVisibilityHandler,
+    isCreateEntityModalVisible,
+    createEntityModalVisibilityHandler,
   };
 
   return (

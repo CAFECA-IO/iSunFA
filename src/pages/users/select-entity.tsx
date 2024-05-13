@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import SelectEntityPageBody from '@/components/select_entity_page_body/select_entity_page_body';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '../../components/nav_bar/nav_bar';
+import { ILocale } from '../../interfaces/locale';
 
 const SelectEntityPage = () => {
   return (
@@ -36,5 +38,13 @@ const SelectEntityPage = () => {
     </>
   );
 };
+
+const getStaticPropsFunction = async ({ locale }: ILocale) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});
+
+export const getStaticProps = getStaticPropsFunction;
 
 export default SelectEntityPage;

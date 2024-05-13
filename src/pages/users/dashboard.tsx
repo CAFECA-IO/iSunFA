@@ -13,6 +13,8 @@ const DashboardPage = () => {
 
   const { signedIn } = useUserCtx();
 
+  // ToDo: (20240513 - Julian) If the user is not select any entity, show a toast to remind the user that this is a trial mode
+
   useEffect(() => {
     if (!signedIn) {
       router.push(ISUNFA_ROUTE.LOGIN);
