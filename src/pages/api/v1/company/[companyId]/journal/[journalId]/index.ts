@@ -11,9 +11,8 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const { journalId } = req.query;
-      if (!journalId || Array.isArray(journalId) || typeof journalId !== 'string') {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      if (!req.query.journalId) {
+        throw new Error('INVALID_INPUT_PARAMETER');
       }
       const getJournalById = journalArray.find((journal) => journal.id === req.query.journalId);
 

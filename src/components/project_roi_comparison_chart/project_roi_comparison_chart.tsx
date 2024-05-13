@@ -160,11 +160,32 @@ const ProjectRoiComparisonChart = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const displayedYear = maxDate.getFullYear();
-  const displayedMonth = period.startTimeStamp
-    ? MONTH_ABR_LIST[new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND).getMonth()]
-    : MONTH_ABR_LIST[maxDate.getMonth()];
 
-  const displayedDate = `${displayedYear} ${t(displayedMonth)}`;
+  // Deprecate: 在還沒有選好 endTimestamp 顯示 2024 May 的做法 (20240523 - Shirley)
+  // const displayedMonth = period.startTimeStamp
+  //   ? MONTH_ABR_LIST[new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND).getMonth()]
+  //   : MONTH_ABR_LIST[maxDate.getMonth()];
+  // const displayedYearAndMonth = `${displayedYear} ${t(displayedMonth)}`;
+
+  const displayedDate = (() => {
+    const startDate = period.startTimeStamp
+      ? new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
+      : new Date();
+
+    // Deprecate: 在還沒有選好 endTimestamp 顯示 2024 May 的做法 (20240523 - Shirley)
+    // if (!period.endTimeStamp) {
+    //   return displayedYearAndMonth;
+    // }
+
+    const endDate = period.endTimeStamp
+      ? new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND)
+      : new Date();
+
+    const startDateStr = `${(startDate.getMonth() + 1).toString().padStart(2, '0')}/${startDate.getDate().toString().padStart(2, '0')}`;
+    const endDateStr = `${(endDate.getMonth() + 1).toString().padStart(2, '0')}/${endDate.getDate().toString().padStart(2, '0')}`;
+
+    return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
+  })();
 
   const categories = [
     'iSunFA',
@@ -215,8 +236,15 @@ const ProjectRoiComparisonChart = () => {
     }
   };
 
+  const displayedDateSection = (
+    <div className="text-neutral-primary my-auto text-xl font-bold leading-5 tracking-normal">
+      {displayedYear}{' '}
+      <span className="text-sm font-semibold leading-5 tracking-normal">{displayedDate}</span>{' '}
+    </div>
+  );
+
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-550px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-600px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-550px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Project ROI Comparison Graph</div>
@@ -234,8 +262,8 @@ const ProjectRoiComparisonChart = () => {
 
       <div className="mt-2">
         <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
-          <div className="my-auto flex w-100px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-2 lg:w-fit">
-            {displayedDate}
+          <div className="my-3 flex w-200px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-2 md:my-auto lg:w-fit">
+            {displayedDateSection}
           </div>
 
           <div className="hidden lg:block">

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
@@ -9,6 +9,9 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '../../../constants/url';
@@ -34,23 +37,24 @@ enum VoucherItem {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
+  const { companyId } = useAccountingCtx();
   const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
-  const [journalDetail, setJournalDetail] = useState<IJournal>();
-
-  const getJournalDetail = async () => {
-    const response = await fetch(`/api/v1/company/:companyId/journal`, {
-      method: 'GET',
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      setJournalDetail(data.payload[0]);
-    }
-  };
+  const {
+    data: journalDetail,
+    error,
+    success,
+    code,
+  } = APIHandler<IJournal>(APIName.GET_PROCESSED_JOURNAL_DATA, {
+    params: { companyId, journalId },
+  });
 
   useEffect(() => {
-    getJournalDetail();
-  }, [journalId]);
+    if (success === false) {
+      // TODO: Error handling @Julian (20240509 - Tzuhan)
+      // eslint-disable-next-line no-console
+      console.log('getJournalDetail error', error, 'code: ', code);
+    }
+  }, [success]);
 
   const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';

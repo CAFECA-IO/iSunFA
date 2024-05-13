@@ -1,17 +1,17 @@
-import { IAPIInput, IAPIName, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
+import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { Action } from '@/constants/action';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IResponseData } from '@/interfaces/response_data';
+import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
 
 const useAPIWorker = <Data>(
-  apiName: IAPIName,
-  method: IHttpMethod,
-  path: string,
+  apiConfig: IAPIConfig,
   options: IAPIInput,
   cancel?: boolean,
   triggerImmediately: boolean = true
 ): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const [code, setCode] = useState<string | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
@@ -20,8 +20,9 @@ const useAPIWorker = <Data>(
 
   const handleResponse = (response: { data: IResponseData<Data>; requestId: string }) => {
     const { data: responseData, requestId } = response;
-    const { success: apiSuccess, payload, message } = responseData;
+    const { success: apiSuccess, payload, message, code: responseCode } = responseData;
     if (requestId !== requestIdRef.current) return;
+    setCode(responseCode);
     if (!apiSuccess) {
       setError(new Error(message));
     } else {
@@ -32,20 +33,23 @@ const useAPIWorker = <Data>(
     setIsLoading(false);
   };
 
-  const fetchData = useCallback((body?: { [key: string]: unknown } | FormData) => {
+  const fetchData = useCallback((input?: IAPIInput) => {
     const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
       type: 'module',
     });
-    const requestId = apiName;
+    const requestId = apiConfig.name;
     requestIdRef.current = requestId;
 
     setIsLoading(true);
 
     worker.postMessage({
-      requestId,
-      method,
-      path,
-      options: { ...options, body: body || options.body },
+      apiConfig,
+      options: {
+        ...options,
+        params: input?.params || options.params,
+        query: input?.query || options.query,
+        body: input?.body || options.body,
+      },
       action: cancel ? Action.CANCEL : undefined,
     });
 
@@ -56,6 +60,7 @@ const useAPIWorker = <Data>(
     worker.addEventListener(Action.MESSAGE, handleMessage);
     worker.onerror = (e: ErrorEvent) => {
       setError(e instanceof Error ? e : new Error('An error occurred'));
+      setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       setSuccess(false);
       setIsLoading(false);
     };
@@ -74,11 +79,12 @@ const useAPIWorker = <Data>(
     controllerRef.current = new AbortController();
     const cleanup = triggerImmediately ? fetchData() : () => {};
     return cleanup;
-  }, [path, cancel, triggerImmediately]);
+  }, [apiConfig.name, options.params, cancel, triggerImmediately]);
 
   return {
     trigger: fetchData,
     success,
+    code,
     isLoading,
     data,
     error,

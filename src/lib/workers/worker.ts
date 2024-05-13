@@ -1,13 +1,9 @@
-/* eslint-disable no-console */
-import { HttpMethod } from '@/constants/api_connection';
 import { Action } from '@/constants/action';
-import { IAPIInput } from '@/interfaces/api_connection';
+import { IAPIConfig, IAPIInput } from '@/interfaces/api_connection';
 import { fetchData } from '../hooks/use_api';
 
 interface FetchRequestData {
-  requestId: string;
-  method: HttpMethod;
-  path: string;
+  apiConfig: IAPIConfig;
   options: IAPIInput;
   action?: Action.CANCEL;
 }
@@ -15,38 +11,36 @@ interface FetchRequestData {
 let activeRequest: string | null = null;
 let controller: AbortController | null = null;
 
-const handleRequest = async (
-  requestId: string,
-  path: string,
-  method: HttpMethod,
-  options: IAPIInput
-) => {
+const handleRequest = async (apiConfig: IAPIConfig, options: IAPIInput) => {
   if (controller) {
     controller.abort();
   }
   controller = new AbortController();
-  activeRequest = requestId;
+  activeRequest = apiConfig.name;
 
   try {
-    const data = await fetchData(path, method, options, controller.signal);
-    if (activeRequest !== requestId) {
+    const data = await fetchData(apiConfig, options, controller.signal);
+    if (activeRequest !== apiConfig.name) {
       return;
     }
-    postMessage({ data, requestId });
+    postMessage({ data, requestId: apiConfig.name });
   } catch (error) {
-    if (activeRequest !== requestId) {
+    if (activeRequest !== apiConfig.name) {
       return;
     }
-    postMessage({ error: error instanceof Error ? error.message : 'Unknown error', requestId });
+    postMessage({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId: apiConfig.name,
+    });
   }
 };
 
 // eslint-disable-next-line no-restricted-globals
 self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
-  const { requestId, method, path, options, action } = event.data;
+  const { apiConfig, options, action } = event.data;
 
   if (action === Action.CANCEL) {
-    if (activeRequest === requestId && controller) {
+    if (activeRequest === apiConfig.name && controller) {
       controller.abort();
       controller = null;
       setTimeout(() => {
@@ -57,7 +51,7 @@ self.onmessage = async (event: MessageEvent<FetchRequestData>) => {
     return;
   }
 
-  await handleRequest(requestId, path, method, options);
+  await handleRequest(apiConfig, options);
 };
 
 export {};

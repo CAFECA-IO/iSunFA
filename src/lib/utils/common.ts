@@ -243,3 +243,14 @@ export function formatApiResponse<T>(
 
   return { httpCode, result };
 }
+
+export const getValueByKey = <T extends string>(
+  obj: Record<string, T>,
+  key: keyof typeof obj
+): T | null => {
+  return obj[key] || null;
+};
+
+export const firstCharToUpperCase = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};

@@ -28,16 +28,17 @@ enum ScannerStep {
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { setOcrResultIdHandler } = useAccountingCtx();
+  const { companyId, setOcrResultIdHandler } = useAccountingCtx();
   const {
     trigger: uploadInvoice,
     data: results,
     error: uploadError,
     success: uploadSuccess,
+    code: uploadCode,
   } = APIHandler<IAccountResultStatus[]>(
     APIName.UPLOAD_INVOCIE,
     {
-      params: { companyId: 1 },
+      params: { companyId },
     },
     false,
     false
@@ -148,7 +149,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
-    uploadInvoice(formData);
+    uploadInvoice({ body: formData });
 
     // Info: (20240506 - Julian) 關閉攝影機
     handleCloseCamera();
@@ -187,8 +188,9 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       const resultId = result.resultId.substring(resultIdIndex + 1).trim();
       setOcrResultIdHandler(resultId);
     } else {
+      // Info: TODO error handling @Julian (20240513 - tzuhan)
       // eslint-disable-next-line no-console
-      console.error('Error: ', uploadError);
+      console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }
   }, [uploadSuccess, results, isModalVisible]);
 

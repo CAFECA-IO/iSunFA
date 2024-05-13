@@ -1,27 +1,48 @@
 import { useEffect, useState, useCallback } from 'react';
-import { IAPIInput, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
+import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { HttpMethod } from '@/constants/api_connection';
+import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
 };
 
+function getAPIPath(apiConfig: IAPIConfig, input: IAPIInput) {
+  const originalPath = apiConfig.path;
+  const path = originalPath.replace(/:([^/]+)/g, (match: string, key: string): string => {
+    const value = input.params?.[key] as string;
+
+    return value;
+  });
+  const queryString = input.query
+    ? Object.keys(input.query)
+        .map(
+          (key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(input.query?.[key]))}`
+        )
+        .join('&')
+    : '';
+  const result = queryString ? `${path}?${queryString}` : path;
+
+  return result;
+}
+
 export async function fetchData<Data>(
-  path: string,
-  method: IHttpMethod,
+  apiConfig: IAPIConfig,
   options: IAPIInput,
   signal?: AbortSignal
 ): Promise<IResponseData<Data>> {
   const fetchOptions: RequestInit = {
-    method,
+    method: apiConfig.method,
     signal,
   };
+  const path = getAPIPath(apiConfig, options);
+
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console
-  console.log('fetchData, path:', path, `options:`, options);
+  console.log(`fetchDat(${apiConfig.name}), path:`, path, `options:`, options);
 
-  if (method !== HttpMethod.GET && options.body) {
+  if (apiConfig.method !== HttpMethod.GET && options.body) {
     if (options.body instanceof FormData) {
       fetchOptions.body = options.body;
     } else {
@@ -45,13 +66,13 @@ export async function fetchData<Data>(
 }
 
 const useAPI = <Data>(
-  method: IHttpMethod,
-  path: string,
+  apiConfig: IAPIConfig,
   options: IAPIInput,
   cancel?: boolean,
   triggerImmediately: boolean = true
 ): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const [code, setCode] = useState<string | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
@@ -61,18 +82,20 @@ const useAPI = <Data>(
   }, []);
 
   const fetchDataCallback = useCallback(
-    async (body?: { [key: string]: unknown } | FormData, signal?: AbortSignal) => {
+    async (input?: IAPIInput, signal?: AbortSignal) => {
       setIsLoading(true);
       try {
         const response = await fetchData<Data>(
-          path,
-          method,
+          apiConfig,
           {
             ...options,
-            body: body || options.body,
+            params: input?.params || options.params,
+            query: input?.query || options.query,
+            body: input?.body || options.body,
           },
           signal
         );
+        setCode(response.code);
         if (!response.success) {
           throw new Error(response.message ?? 'Unknown error');
         }
@@ -81,11 +104,12 @@ const useAPI = <Data>(
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
+        setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       } finally {
         setIsLoading(false);
       }
     },
-    [method, options, path, handleError]
+    [apiConfig.name, options, handleError]
   );
 
   useEffect(() => {
@@ -98,11 +122,12 @@ const useAPI = <Data>(
     return () => {
       controller.abort();
     };
-  }, [path, cancel, triggerImmediately]);
+  }, [apiConfig.name, cancel, triggerImmediately]);
 
   return {
     trigger: fetchDataCallback,
     success,
+    code,
     isLoading,
     data,
     error,

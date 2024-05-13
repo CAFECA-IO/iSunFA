@@ -1,10 +1,10 @@
 /* eslint-disable */
-
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
 import { Button } from '../button/button';
+import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -16,11 +16,24 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const incomeStatementRef = useRef<HTMLInputElement>(null);
   const cashFlowStatementRef = useRef<HTMLInputElement>(null);
 
+  const [isBalanceSheetChecked, setIsBalanceSheetChecked] = useState(true);
+  const [isIncomeStatementChecked, setIsIncomeStatementChecked] = useState(true);
+  const [isCashFlowStatementChecked, setIsCashFlowStatementChecked] = useState(true);
+
+  const [selectedProjectName, setSelectedProjectName] =
+    useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
   const [step, setStep] = useState<number>(0);
   const [generatedCode, setGeneratedCode] = useState<string>('');
+
+  const {
+    targetRef: projectMenuRef,
+    componentVisible: isProjectMenuOpen,
+    setComponentVisible: setIsProjectMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const {
     targetRef: languageMenuRef,
@@ -30,6 +43,15 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
 
+  const projectMenuClickHandler = () => {
+    setIsProjectMenuOpen(!isProjectMenuOpen);
+  };
+
+  const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
+    setSelectedProjectName(projectName);
+    setIsProjectMenuOpen(false);
+  };
+
   const languageMenuClickHandler = () => {
     setIsLanguageMenuOpen(!isLanguageMenuOpen);
   };
@@ -37,12 +59,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const languageMenuOptionClickHandler = (id: ReportLanguagesKey) => {
     setSelectedReportLanguage(id);
     setIsLanguageMenuOpen(false);
-  };
-
-  const toggleCheckbox = (ref: React.RefObject<HTMLInputElement>) => {
-    if (ref.current) {
-      ref.current.checked = !ref.current.checked;
-    }
   };
 
   const cancelClickHandler = () => {
@@ -111,6 +127,135 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     }
   };
 
+  useEffect(() => {
+    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    if (isProjectMenuOpen) {
+      setSearchQuery('');
+    }
+  }, [isProjectMenuOpen]);
+
+  const displayedProjectMenu = (
+    <div ref={projectMenuRef} className="relative flex w-full">
+      <div
+        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+          isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
+      >
+        <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
+          <div className="text-center text-input-text-input-filled">Project</div>
+          <div
+            className={`h-11 w-px ${
+              isProjectMenuOpen ? 'bg-input-stroke-selected' : 'bg-dropdown-stroke-menu'
+            }`}
+          />
+        </div>
+
+        <button
+          className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
+          onClick={projectMenuClickHandler}
+        >
+          <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
+            {selectedProjectName}
+          </div>
+
+          <div className="my-auto flex flex-col justify-center px-0 py-0">
+            <div className="flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill="#314362"
+                  fillRule="evenodd"
+                  d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Info: Project Menu (20240425 - Shirley) */}
+      <div
+        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isProjectMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
+      >
+        <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border-none focus:outline-none"
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M3.906 2.413a5.409 5.409 0 116.01 8.994 5.409 5.409 0 01-6.01-8.994zm3.005.088a4.409 4.409 0 104.41 4.41M6.91 2.5a4.41 4.41 0 014.41 4.41"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M10.22 10.219a.5.5 0 01.707 0l3.429 3.428a.5.5 0 01-.707.707l-3.429-3.428a.5.5 0 010-.707z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          </div>
+
+          <div className="mt-2 max-h-60 w-full overflow-y-auto">
+            {Object.keys(DUMMY_PROJECTS_MAP)
+              .filter((project) =>
+                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+              )
+              .map((project) => (
+                <li
+                  key={project}
+                  onClick={() =>
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                  }
+                  className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
+                >
+                  <div className="flex cursor-pointer items-center gap-2">
+                    {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon ? (
+                      <div className="h-6 w-6">
+                        <Image
+                          src={DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon}
+                          alt={project}
+                          width={20}
+                          height={20}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="text-base font-medium leading-6 tracking-normal">
+                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
+                    </div>
+                  </div>
+                </li>
+              ))}
+          </div>
+        </ul>
+      </div>
+    </div>
+  );
+
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
@@ -176,33 +321,52 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       <div className="flex w-full flex-col justify-center bg-white px-4 py-2.5 max-md:max-w-full">
         <div className="flex flex-col max-md:max-w-full">
           <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
-            <div className="font-semibold text-input-text-input-filled max-md:max-w-full">
+            <div className="flex flex-col justify-center max-md:max-w-full">
+              <div className="flex flex-col gap-3 max-md:max-w-full">
+                <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+                  Project
+                </div>
+
+                {displayedProjectMenu}
+              </div>
+            </div>
+
+            <div className="mt-10 font-semibold text-input-text-input-filled max-md:max-w-full">
               What type of Report do you want to display on your web?
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
-              <div className="flex gap-2 py-2.5" onClick={() => toggleCheckbox(balanceSheetRef)}>
+              <div
+                className="flex gap-2 py-2.5"
+                onClick={() => setIsBalanceSheetChecked(!isBalanceSheetChecked)}
+              >
                 <input
                   type="checkbox"
-                  ref={balanceSheetRef}
+                  checked={isBalanceSheetChecked}
+                  readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Balance Sheet</button>
               </div>
-              <div className="flex gap-2 py-2.5" onClick={() => toggleCheckbox(incomeStatementRef)}>
+              <div
+                className="flex gap-2 py-2.5"
+                onClick={() => setIsIncomeStatementChecked(!isIncomeStatementChecked)}
+              >
                 <input
                   type="checkbox"
-                  ref={incomeStatementRef}
+                  checked={isIncomeStatementChecked}
+                  readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Comprehensive Income Statement</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
-                onClick={() => toggleCheckbox(cashFlowStatementRef)}
+                onClick={() => setIsCashFlowStatementChecked(!isCashFlowStatementChecked)}
               >
                 <input
                   type="checkbox"
-                  ref={cashFlowStatementRef}
+                  checked={isCashFlowStatementChecked}
+                  readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
                 <button type="button">Cash Flow Statement</button>
@@ -227,7 +391,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           >
             Cancel
           </button>
-          <Button variant={'tertiary'} onClick={generateClickHandler}>
+          <Button
+            disabled={
+              !isBalanceSheetChecked && !isIncomeStatementChecked && !isCashFlowStatementChecked
+            }
+            variant={'tertiary'}
+            onClick={generateClickHandler}
+          >
             Generate
           </Button>
         </div>
@@ -243,18 +413,22 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             {generatedCode}
           </div>
 
-          <div className="mt-3 flex flex-col justify-center text-base leading-6 tracking-normal text-input-text-input-filled max-md:max-w-full md:mt-8">
+          <div className="mt-3 flex flex-col justify-center space-y-3 text-base leading-6 tracking-normal text-input-text-input-filled max-md:max-w-full md:mt-8">
+            <div className="flex space-x-3 text-input-text-primary">
+              <Image src={'/icons/rocket.svg'} width={20} height={20} alt="rocket_icon" />
+              <p className="text-input-text-primary"> {selectedProjectName}</p>
+            </div>
             <ol className=" max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
-              {balanceSheetRef.current?.checked && <li>Balance Sheet</li>}
-              {incomeStatementRef.current?.checked && <li>Comprehensive Income Statement</li>}
-              {cashFlowStatementRef.current?.checked && <li>Cash Flow Statement</li>}
-              {!balanceSheetRef.current?.checked &&
-                !incomeStatementRef.current?.checked &&
-                !cashFlowStatementRef.current?.checked && (
+              {isBalanceSheetChecked && <li>Balance Sheet</li>}
+              {isIncomeStatementChecked && <li>Comprehensive Income Statement</li>}
+              {isCashFlowStatementChecked && <li>Cash Flow Statement</li>}
+              {!isBalanceSheetChecked &&
+                !isIncomeStatementChecked &&
+                !isCashFlowStatementChecked && (
                   <>
                     <li>Balance Sheet</li>
                     <li>Comprehensive Income Statement</li>
-                    <li>Cash Flow Statement</li>{' '}
+                    <li>Cash Flow Statement</li>
                   </>
                 )}
             </ol>
@@ -326,6 +500,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       </div>
     </div>
   ) : null;
+
   return <>{isDisplayedEmbedCodeModal}</>;
 };
 

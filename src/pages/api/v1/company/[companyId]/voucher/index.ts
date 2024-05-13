@@ -1,5 +1,5 @@
 import { AICH_URI } from '@/constants/config';
-import { isIInvoiceWithPaymentMethod } from '@/interfaces/invoice';
+import { isIInvoice } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAccountResultStatus, isIAccountResultStatus } from '@/interfaces/accounting_account';
@@ -14,7 +14,7 @@ export default async function handler(
     if (req.method === 'POST') {
       const { invoices } = req.body;
       // Info Murky (20240416): Check if invoices is array and is Invoice type
-      if (!Array.isArray(invoices) || !invoices.every(isIInvoiceWithPaymentMethod)) {
+      if (!Array.isArray(invoices) || !invoices.every(isIInvoice)) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
