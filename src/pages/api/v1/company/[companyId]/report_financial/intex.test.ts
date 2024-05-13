@@ -39,7 +39,10 @@ describe('generateFinancialReport API Handler Tests', () => {
       success: true,
       code: '200',
       message: 'request successful',
-      payload: expect.any(String),
+      payload: expect.objectContaining({
+        resultId: expect.any(String),
+        status: expect.any(String),
+      }),
     });
   });
   it('should handle POST request with bad request body', async () => {
