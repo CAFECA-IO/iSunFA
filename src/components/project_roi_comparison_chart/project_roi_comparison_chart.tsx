@@ -10,6 +10,7 @@ import { TranslateFunction } from '../../interfaces/locale';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { Button } from '../button/button';
+import { DUMMY_START_DATE, generateRandomData } from '../../interfaces/project_progress_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -146,7 +147,6 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
   return <Chart options={options} series={series} type="bar" height={350} />;
 };
 
-const DUMMY_START_DATE = '2024/02/12';
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
@@ -157,25 +157,15 @@ const ProjectRoiComparisonChart = () => {
 
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
   const [series, setSeries] = useState<number[][]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   const displayedYear = maxDate.getFullYear();
-
-  // Deprecate: 在還沒有選好 endTimestamp 顯示 2024 May 的做法 (20240523 - Shirley)
-  // const displayedMonth = period.startTimeStamp
-  //   ? MONTH_ABR_LIST[new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND).getMonth()]
-  //   : MONTH_ABR_LIST[maxDate.getMonth()];
-  // const displayedYearAndMonth = `${displayedYear} ${t(displayedMonth)}`;
 
   const displayedDate = (() => {
     const startDate = period.startTimeStamp
       ? new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
       : new Date();
-
-    // Deprecate: 在還沒有選好 endTimestamp 顯示 2024 May 的做法 (20240523 - Shirley)
-    // if (!period.endTimeStamp) {
-    //   return displayedYearAndMonth;
-    // }
 
     const endDate = period.endTimeStamp
       ? new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND)
@@ -187,39 +177,26 @@ const ProjectRoiComparisonChart = () => {
     return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
   })();
 
-  const categories = [
-    'iSunFA',
-    'BAIFA',
-    'iSunOne',
-    'TideBitEx',
-    'ProjectE',
-    'ProjectF',
-    'ProjectG',
-    'ProjectH',
-    'ProjectI',
-    'ProjectJ',
-  ];
-
   useEffect(() => {
     if (period.endTimeStamp !== 0) {
-      const newSeries = [
-        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 150) + 100),
-        Array.from({ length: categories.length }, () => Math.floor(Math.random() * 150) + 100),
-      ];
+      const data = generateRandomData();
+      const newSeries = data.series;
+      const newCategories = data.categories;
 
       setSeries(newSeries);
+      setCategories(newCategories);
     }
   }, [period.endTimeStamp, period.startTimeStamp]);
 
-  const itemsPerPage = 6;
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  // Info: pagination in frontend (20240419 - Shirley)
+  const ITEMS_PER_PAGE = 6;
+  const totalPages = Math.ceil(categories.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedCategories = categories.slice(startIndex, endIndex);
   const paginatedSeriesData = series.map((series: number[]) => series.slice(startIndex, endIndex));
 
-  const dummyData = {
+  const data = {
     categories: paginatedCategories,
     seriesData: paginatedSeriesData,
   };
@@ -335,7 +312,7 @@ const ProjectRoiComparisonChart = () => {
       </div>
 
       <div className="mt-5 max-md:-ml-3 md:mt-10">
-        <ColumnChart data={dummyData} />
+        <ColumnChart data={data} />
       </div>
     </div>
   );
