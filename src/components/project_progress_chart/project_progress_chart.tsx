@@ -216,7 +216,7 @@ const ProjectProgressChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-430px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Project Progress Chart</div>
@@ -234,7 +234,7 @@ const ProjectProgressChart = () => {
 
       <div className="mt-2">
         <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
-          <div className="my-auto text-xl font-bold leading-8 text-navyBlue2 md:mx-2">
+          <div className="my-3 text-xl font-bold leading-8 text-navyBlue2 md:mx-2 md:my-auto">
             {displayedDateSection}
           </div>
           <div>

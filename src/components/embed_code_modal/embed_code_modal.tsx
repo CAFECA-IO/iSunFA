@@ -188,7 +188,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          <div className="flex w-full max-w-xl justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
             <input
               type="text"
               placeholder="Search"

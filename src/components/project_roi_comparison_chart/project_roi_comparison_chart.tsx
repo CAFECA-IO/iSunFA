@@ -244,7 +244,7 @@ const ProjectRoiComparisonChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-550px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-600px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-550px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Project ROI Comparison Graph</div>
@@ -262,7 +262,7 @@ const ProjectRoiComparisonChart = () => {
 
       <div className="mt-2">
         <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
-          <div className="my-auto flex w-100px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-2 lg:w-fit">
+          <div className="my-3 flex w-200px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-2 md:my-auto lg:w-fit">
             {displayedDateSection}
           </div>
 
