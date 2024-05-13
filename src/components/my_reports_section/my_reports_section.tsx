@@ -1,20 +1,8 @@
-/* eslint-disable */
-import React, { useEffect, useState } from 'react';
-import { Button } from '../button/button';
+import Image from 'next/image';
+import React, { useState } from 'react';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import {
-  AnalysisReportTypesKey,
-  AnalysisReportTypesMap,
-  FinancialReportTypesKey,
-  FinancialReportTypesMap,
-} from '../../interfaces/report_type';
-import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
-import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -26,12 +14,16 @@ const MyReportsSection = () => {
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
+  // TODO: in dev (20240513 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pendingDatePickerType, setPendingDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortingType>(SortingType.NEWEST);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
+  // TODO: in dev (20240513 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [historyDatePickerType, setHistoryDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const {
@@ -58,12 +50,10 @@ const MyReportsSection = () => {
 
   const pendingInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchPendingQuery(e.target.value);
-    console.log('pendingInputChangeHandler', e.target.value);
   };
 
   const historyInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchHistoryQuery(e.target.value);
-    console.log('historyInputChangeHandler', e.target.value);
   };
 
   const displayedPendingSortMenu = (
