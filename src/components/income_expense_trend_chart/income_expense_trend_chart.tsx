@@ -7,19 +7,16 @@ import { Button } from '../button/button';
 import { cn } from '../../lib/utils/common';
 import { useGlobalCtx } from '../../contexts/global_context';
 import { LayoutAssertion } from '../../interfaces/layout_assertion';
+import { Period } from '../../interfaces/chart_unit';
+import {
+  DUMMY_INCOME_EXPENSE_TREND_CHART_DATA,
+  IIncomeExpenseTrendChartData,
+} from '../../interfaces/income_expense_trend_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-interface LineChartData {
-  categories: string[];
-  series: {
-    name: string;
-    data: number[];
-  }[];
-}
-
 interface LineChartProps {
-  data: LineChartData;
+  data: IIncomeExpenseTrendChartData;
 }
 
 const LineChart = ({ data }: LineChartProps) => {
@@ -199,133 +196,14 @@ const LineChart = ({ data }: LineChartProps) => {
   );
 };
 
-enum Period {
-  WEEK = 'week',
-  MONTH = 'month',
-  YEAR = 'year',
-}
-
-// Dummy data definitions
-const dataMap = {
-  week: {
-    categories: ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'],
-    series: [
-      {
-        name: 'Income',
-        data: [-10, -5, 40, 35, 0, 49, 60],
-      },
-      {
-        name: 'Expense',
-        data: [20, 15, 30, 25, 10, 35, 50],
-      },
-    ],
-  },
-  month: {
-    categories: [
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-    ],
-    series: [
-      {
-        name: 'Income',
-        data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
-      },
-      {
-        name: 'Expense',
-        data: [15, 10, 20, 25, 15, 30, 20, 25, 15, 35, 30, 45],
-      },
-    ],
-  },
-  year: {
-    categories: ['2020', '2021', '2022', '2023', '2024'],
-    series: [
-      {
-        name: 'Income',
-        data: [-10, -5, 40, 35, 20],
-      },
-      {
-        name: 'Expense',
-        data: [15, 10, 30, 25, 35],
-      },
-    ],
-  },
-};
-
 const IncomeExpenseTrendChart = () => {
+  const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
-  const [data, setData] = React.useState(dataMap[selectedPeriod]);
+  const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
 
   const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
-    setData(dataMap[period]);
-  };
-
-  const WEEKDAYS = ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'];
-
-  const dummyWeekData = {
-    // categories: Array.from({ length: 7 }, (_, i) => `Day ${i + 1}`),
-    categories: WEEKDAYS,
-    series: [
-      {
-        name: 'Income',
-        data: [-10, -5, 40, 35, 0, 49, 60],
-      },
-    ],
-  };
-
-  const MONTHS = [
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-  ];
-
-  const dummyMonthData = {
-    // categories: Array.from({ length: 12 }, (_, i) => MONTHS[i]),
-    categories: MONTHS,
-    series: [
-      {
-        name: 'Income',
-        data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
-      },
-    ],
-  };
-
-  const YEARS = ['2020', '2021', '2022', '2023', '2024'];
-
-  const dummyYearData = {
-    // categories: Array.from({ length: 5 }, (_, i) => YEARS[i]),
-    categories: YEARS,
-    series: [
-      {
-        name: 'Income',
-        data: [-10, -5, 40, 35, 20],
-        type: 'line',
-      },
-      // {
-      //   name: 'income 2',
-      //   data: [10, 5, -10, 15, 5],
-      //   type: 'line',
-      // },
-    ],
+    setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[period]);
   };
 
   const displayedDataSection = (
