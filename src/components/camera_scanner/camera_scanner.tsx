@@ -188,6 +188,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       const resultId = result.resultId.substring(resultIdIndex + 1).trim();
       setOcrResultIdHandler(resultId);
     } else {
+      // Info: TODO error handling @Julian (20240513 - tzuhan)
       // eslint-disable-next-line no-console
       console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }

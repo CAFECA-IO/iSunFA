@@ -1,23 +1,21 @@
-/* eslint-disable */
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
 import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
+import { timestampToString } from '@/lib/utils/common';
+import APIHandler from '@/lib/utils/api_handler';
+import { IVoucher } from '@/interfaces/voucher';
+import { APIName } from '@/constants/api_connection';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { Button } from '../button/button';
 import { checkboxStyle } from '../../constants/display';
 import { IConfirmModal } from '../../interfaces/confirm_modal';
 import AccountingVoucherRow from '../accounting_voucher_row/accounting_voucher_row';
 import { useAccountingCtx } from '../../contexts/accounting_context';
 import { ISUNFA_ROUTE } from '../../constants/url';
-import { timestampToString } from '@/lib/utils/common';
-import APIHandler from '@/lib/utils/api_handler';
-import { IVoucher } from '@/interfaces/voucher';
-import { APIName } from '@/constants/api_connection';
-import { AccountProgressStatus, AccountVoucher } from '@/interfaces/account';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
-//import { ILineItem } from '@/interfaces/line_item';
+// import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -28,7 +26,7 @@ interface IConfirmModalProps {
 const ConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
-  //confirmModalData,
+  // confirmModalData,
 }: IConfirmModalProps) => {
   const { companyId, voucherId } = useAccountingCtx();
 
@@ -71,7 +69,7 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  //const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   useEffect(() => {
     if (successGetVoucherPreview && voucherPreview) {
@@ -101,6 +99,7 @@ const ConfirmModal = ({
         successGetVoucherPreview ? 0 : 2000
       );
       // TODO: Error handling @Julian (20240509 - Tzuhan)
+      // eslint-disable-next-line no-console
       console.log(
         `Failed to get voucher preview: `,
         errorGetVoucherPreview,
@@ -130,6 +129,7 @@ const ConfirmModal = ({
       router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${result.resultId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
     } else {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
+      // eslint-disable-next-line no-console
       console.log(`Failed to upload journal: `, codeUploadJournal, `error: `, errorUploadJournal);
     }
   }, [uploadSuccess]);
@@ -224,6 +224,8 @@ const ConfirmModal = ({
   );
 
   const isDisplayModal = isModalVisible ? (
+    // TODO: Eslint recommendation: Classname 'bg-opacity-50' should be replaced by an opacity suffix (eg. '/50') @Julian (20240513 - Tzuhan)
+    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
         {/* Info: (20240429 - Julian) title */}
@@ -319,8 +321,9 @@ const ConfirmModal = ({
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
-              Attention: Saving this voucher means it's permanent on the blockchain. Mistakes can't
-              be fixed. You'll need new vouchers to make corrections.
+              {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
+              Attention: Saving this voucher means it&#39;s permanent on the blockchain. Mistakes
+              can&#39;t be fixed. You&#39;ll need new vouchers to make corrections.
             </p>
             <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
