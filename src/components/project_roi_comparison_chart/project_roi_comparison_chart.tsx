@@ -3,7 +3,11 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '../tooltip/tooltip';
-import { MILLISECONDS_IN_A_SECOND, MONTH_ABR_LIST } from '../../constants/display';
+import {
+  ITEMS_PER_PAGE_ON_DASHBOARD,
+  MILLISECONDS_IN_A_SECOND,
+  MONTH_ABR_LIST,
+} from '../../constants/display';
 import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
 import { useTranslation } from 'react-i18next';
 import { TranslateFunction } from '../../interfaces/locale';
@@ -12,7 +16,7 @@ import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { Button } from '../button/button';
 import {
   DUMMY_START_DATE,
-  generateRandomData,
+  generateRandomPaginatedData,
 } from '../../interfaces/project_roi_comparison_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -162,6 +166,7 @@ const ProjectRoiComparisonChart = () => {
   const [series, setSeries] = useState<number[][]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const displayedYear = maxDate.getFullYear();
 
@@ -182,37 +187,47 @@ const ProjectRoiComparisonChart = () => {
 
   useEffect(() => {
     if (period.endTimeStamp !== 0) {
-      const data = generateRandomData();
+      // Info: pagination implemented in backend (20240419 - Shirley)
+      const data = generateRandomPaginatedData(currentPage, ITEMS_PER_PAGE_ON_DASHBOARD);
       const newSeries = data.series;
       const newCategories = data.categories;
+      setTotalPages(data.totalPages);
 
       setSeries(newSeries);
       setCategories(newCategories);
     }
   }, [period.endTimeStamp, period.startTimeStamp]);
 
-  // Info: pagination in frontend (20240419 - Shirley)
-  const ITEMS_PER_PAGE = 6;
-  const totalPages = Math.ceil(categories.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedCategories = categories.slice(startIndex, endIndex);
-  const paginatedSeriesData = series.map((series: number[]) => series.slice(startIndex, endIndex));
-
   const data = {
-    categories: paginatedCategories,
-    seriesData: paginatedSeriesData,
+    categories,
+    seriesData: series,
   };
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
+
+      const data = generateRandomPaginatedData(currentPage + 1, ITEMS_PER_PAGE_ON_DASHBOARD);
+      const newSeries = data.series;
+      const newCategories = data.categories;
+      const newTotalPages = data.totalPages;
+      setSeries(newSeries);
+      setCategories(newCategories);
+      setTotalPages(newTotalPages);
     }
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
+
+      const data = generateRandomPaginatedData(currentPage - 1, ITEMS_PER_PAGE_ON_DASHBOARD);
+      const newSeries = data.series;
+      const newCategories = data.categories;
+      const newTotalPages = data.totalPages;
+      setSeries(newSeries);
+      setCategories(newCategories);
+      setTotalPages(newTotalPages);
     }
   };
 
