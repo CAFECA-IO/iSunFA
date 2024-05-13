@@ -52,6 +52,7 @@ export function generateRandomPaginatedData(
 
   const paginatedSeriesData = newSeries.map(
     (series: number[]) =>
+      // TODO: eslint disable for workaround (20240513 - Shirley)
       // eslint-disable-next-line implicit-arrow-linebreak
       series.slice(startIndex, endIndex)
     // eslint-disable-next-line function-paren-newline

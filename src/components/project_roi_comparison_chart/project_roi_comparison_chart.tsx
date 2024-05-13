@@ -1,18 +1,11 @@
-/* eslint-disable */
+import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '../tooltip/tooltip';
-import {
-  ITEMS_PER_PAGE_ON_DASHBOARD,
-  MILLISECONDS_IN_A_SECOND,
-  MONTH_ABR_LIST,
-} from '../../constants/display';
+import { ITEMS_PER_PAGE_ON_DASHBOARD, MILLISECONDS_IN_A_SECOND } from '../../constants/display';
 import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
-import { useTranslation } from 'react-i18next';
-import { TranslateFunction } from '../../interfaces/locale';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { Button } from '../button/button';
 import {
   DUMMY_START_DATE,
@@ -133,7 +126,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         show: false,
       },
       y: {
-        formatter: function (val: number) {
+        formatter: function t(val: number) {
           return val + ' K';
         },
       },
@@ -157,8 +150,6 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
-
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 
@@ -207,10 +198,10 @@ const ProjectRoiComparisonChart = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
 
-      const data = generateRandomPaginatedData(currentPage + 1, ITEMS_PER_PAGE_ON_DASHBOARD);
-      const newSeries = data.series;
-      const newCategories = data.categories;
-      const newTotalPages = data.totalPages;
+      const newData = generateRandomPaginatedData(currentPage + 1, ITEMS_PER_PAGE_ON_DASHBOARD);
+      const newSeries = newData.series;
+      const newCategories = newData.categories;
+      const newTotalPages = newData.totalPages;
       setSeries(newSeries);
       setCategories(newCategories);
       setTotalPages(newTotalPages);
@@ -221,10 +212,10 @@ const ProjectRoiComparisonChart = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
 
-      const data = generateRandomPaginatedData(currentPage - 1, ITEMS_PER_PAGE_ON_DASHBOARD);
-      const newSeries = data.series;
-      const newCategories = data.categories;
-      const newTotalPages = data.totalPages;
+      const newData = generateRandomPaginatedData(currentPage - 1, ITEMS_PER_PAGE_ON_DASHBOARD);
+      const newSeries = newData.series;
+      const newCategories = newData.categories;
+      const newTotalPages = newData.totalPages;
       setSeries(newSeries);
       setCategories(newCategories);
       setTotalPages(newTotalPages);
