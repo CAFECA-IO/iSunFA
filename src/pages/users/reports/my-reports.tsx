@@ -1,15 +1,12 @@
-/* eslint-disable */
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import ReportsSidebar from '../../../components/reports_sidebar/reports_sidebar';
-import FinancialReportSection from '../../../components/financial_report_section/financial_report_section';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '../../../interfaces/locale';
-import AnalysisReportSection from '../../../components/analysis_reports_section/analysis_reports_section';
 import MyReportsSection from '../../../components/my_reports_section/my_reports_section';
 
-const AnalysesReportsPage = () => {
+const MyReportsPage = () => {
   return (
     <>
       <Head>
@@ -57,4 +54,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default AnalysesReportsPage;
+export default MyReportsPage;
