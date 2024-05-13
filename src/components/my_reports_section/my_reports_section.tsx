@@ -59,7 +59,7 @@ const MyReportsSection = () => {
           clipRule="evenodd"
         ></path>
       </svg>{' '}
-      {/* Info: (20240418 - Julian) Dropmenu */}
+      {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
       >

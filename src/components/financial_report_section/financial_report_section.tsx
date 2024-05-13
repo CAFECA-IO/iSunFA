@@ -419,7 +419,8 @@ const FinancialReportSection = () => {
           </div>
         </div>
       </div>
-      <div className="mt-16 flex w-600px max-w-full flex-col space-y-20 self-center px-5 max-md:mt-3">
+      {/* Info: options for generation (20240513 - Shirley) */}
+      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -429,7 +430,6 @@ const FinancialReportSection = () => {
             {displayedProjectMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -438,7 +438,6 @@ const FinancialReportSection = () => {
             {displayedReportTypeMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -504,7 +503,14 @@ const FinancialReportSection = () => {
             />
           </div>
         </div>
-        {displayedButtonOrLink}
+        <div className="my-10 flex flex-col justify-center">
+          <p>
+            Attention: The report will take approximately 30 to 40 minutes to generate. Once
+            completed, it will be stored in "My Reports." Please check back later. Thank you for
+            your patience.
+          </p>
+        </div>
+        {displayedButtonOrLink}{' '}
       </div>
     </div>
   );
