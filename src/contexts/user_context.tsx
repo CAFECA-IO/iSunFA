@@ -49,6 +49,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const {
     trigger: signOut,
     error: signOutError,
+    code: signOutCode,
     success: signOutSuccess,
   } = APIHandler<void>(
     APIName.SIGN_OUT,
@@ -307,7 +308,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       clearState();
     } else {
       // eslint-disable-next-line no-console
-      console.log('signOutError:', signOutError);
+      console.log(`signOutError(${signOutCode}): `, signOutError);
     }
   }, [signOutSuccess]);
 

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
@@ -39,29 +39,22 @@ enum VoucherItem {
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const { companyId } = useAccountingCtx();
   const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
-  const [journalDetail, setJournalDetail] = useState<IJournal>();
   const {
-    data: journalDetails,
+    data: journalDetail,
     error,
     success,
-  } = APIHandler<IJournal[]>(
-    APIName.GET_PROCESSED_JOURNAL_DATA,
-    {
-      params: { companyId, journalId },
-    },
-    false,
-    false
-  );
+    code,
+  } = APIHandler<IJournal>(APIName.GET_PROCESSED_JOURNAL_DATA, {
+    params: { companyId, journalId },
+  });
 
   useEffect(() => {
-    if (success && journalDetails && journalDetails.length > 0) {
-      setJournalDetail(journalDetails[0]);
-    } else {
+    if (success === false) {
       // TODO: Error handling @Julian (20240509 - Tzuhan)
       // eslint-disable-next-line no-console
-      console.log('getJournalDetail error', error);
+      console.log('getJournalDetail error', error, 'code: ', code);
     }
-  }, [success, journalDetails]);
+  }, [success]);
 
   const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
