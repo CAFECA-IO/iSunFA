@@ -329,7 +329,9 @@ const NewJournalForm = () => {
   }, [uploadSuccess, result]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
-  const isAccountNumberVisible = selectedMethod !== 'Cash';
+  const isAccountNumberVisible = selectedMethod === 'Transfer';
+  // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
+  const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
@@ -339,16 +341,13 @@ const NewJournalForm = () => {
     inputPaymentReason === '' ||
     inputDescription === '' ||
     inputVendor === '' ||
-    // Info: (20240510 - Julian) 如果非現金支付，則檢查銀行帳號是否有填寫
-    isAccountNumberVisible
-      ? inputAccountNumber === ''
-      : false ||
-        // Info: (20240429 - Julian) 檢查手續費是否有填寫
-        (!!feeToggle && inputFee === 0) ||
-        // Info: (20240429 - Julian) 檢查總價是否有填寫
-        (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
-        // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-        (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
+    isAccountNumberInvalid ||
+    // Info: (20240429 - Julian) 檢查手續費是否有填寫
+    (!!feeToggle && inputFee === 0) ||
+    // Info: (20240429 - Julian) 檢查總價是否有填寫
+    (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
+    // Info: (20240429 - Julian) 檢查部分支付是否有填寫
+    (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = eventTypeSelection.map((type: string) => {
@@ -724,7 +723,7 @@ const NewJournalForm = () => {
               id="ficMenu"
               type="button"
               onClick={bankAccountMenuHandler}
-              disabled={selectedMethod === 'Cash'}
+              disabled={!isAccountNumberVisible}
               className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6 disabled:hover:border-lightGray3 disabled:hover:text-navyBlue2`}
             >
               <p>{selectedFIC}</p>
