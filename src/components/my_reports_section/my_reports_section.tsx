@@ -16,32 +16,64 @@ import {
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
+enum SortingType {
+  NEWEST = 'Newest',
+  OLDEST = 'Oldest',
+}
+
 const MyReportsSection = () => {
-  const [period, setPeriod] = useState(default30DayPeriodInSec);
+  const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
+  const [searchPendingQuery, setSearchPendingQuery] = useState('');
+  const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
+  const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
+  const [pendingDatePickerType, setPendingDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
-
-  const [filteredPendingSort, setFilteredPendingSort] = useState<string>('Newest');
-  const isSortBySelected = filteredPendingSort !== 'Newest';
+  const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
+  const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
+  const [filteredHistorySort, setFilteredHistorySort] = useState<SortingType>(SortingType.NEWEST);
+  const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
+  const [historyDatePickerType, setHistoryDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const {
-    targetRef: sortByMenuRef,
-    componentVisible: isSortByMenuOpen,
-    setComponentVisible: setIsSortByMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+    targetRef: pendingSortMenuRef,
+    componentVisible: isPendingSortMenuOpen,
+    setComponentVisible: setIsPendingSortMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
-  const toggleSortingMenu = () => {
-    setIsSortByMenuOpen(!isSortByMenuOpen);
+  const {
+    targetRef: historySortMenuRef,
+    componentVisible: isHistorySortMenuOpen,
+    setComponentVisible: setIsHistorySortMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const togglePendingSortMenu = () => {
+    setIsPendingSortSelected(true);
+    setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
   };
 
-  const displayedPendingSortingMenu = (
+  const toggleHistorySortMenu = () => {
+    setIsHistorySortSelected(true);
+    setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+  };
+
+  const pendingInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchPendingQuery(e.target.value);
+    console.log('pendingInputChangeHandler', e.target.value);
+  };
+
+  const historyInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchHistoryQuery(e.target.value);
+    console.log('historyInputChangeHandler', e.target.value);
+  };
+
+  const displayedPendingSortMenu = (
     <div
-      onClick={toggleSortingMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      ref={pendingSortMenuRef}
+      onClick={togglePendingSortMenu}
+      className={`group relative flex h-44px w-200px cursor-pointer ${isPendingSortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? ' text-primaryYellow' : isSortBySelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isPendingSortMenuOpen ? ' text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {filteredPendingSort}
       </p>
@@ -61,15 +93,14 @@ const MyReportsSection = () => {
       </svg>{' '}
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isPendingSortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={sortByMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {['Newest', 'Oldest'].map((sorting: string) => (
+        <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
+          {Object.values(SortingType).map((sorting: SortingType) => (
             <li
               key={sorting}
               onClick={() => {
                 setFilteredPendingSort(sorting);
-                setIsSortByMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -81,12 +112,88 @@ const MyReportsSection = () => {
     </div>
   );
 
-  const displayedSearchBar = (
+  const displayedPendingSearchBar = (
     <div className="relative flex-1">
       <input
+        value={searchPendingQuery}
+        onChange={pendingInputChangeHandler}
         type="text"
         placeholder="Search"
-        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-md border border-lightGray3 bg-white p-10px outline-none`}
+        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
+      />
+      <div className="absolute right-3 top-3 hover:cursor-pointer">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="none"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill="#314362"
+            fillRule="evenodd"
+            d="M9.17 3.252a5.917 5.917 0 104.109 10.173.754.754 0 01.147-.147A5.917 5.917 0 009.169 3.252zm5.747 10.604a7.417 7.417 0 10-1.06 1.06l3.115 3.116a.75.75 0 001.06-1.06l-3.115-3.116z"
+            clipRule="evenodd"
+          ></path>
+        </svg>{' '}
+      </div>
+    </div>
+  );
+
+  const displayedHistorySortMenu = (
+    <div
+      ref={historySortMenuRef}
+      onClick={toggleHistorySortMenu}
+      className={`group relative flex h-44px w-200px cursor-pointer ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+    >
+      <p
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
+      >
+        {filteredHistorySort}
+      </p>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          className="fill-current"
+          fillRule="evenodd"
+          d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+          clipRule="evenodd"
+        ></path>
+      </svg>{' '}
+      {/* Info: (20240513 - Shirley) Dropdown menu */}
+      <div
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+      >
+        <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
+          {Object.values(SortingType).map((sorting: SortingType) => (
+            <li
+              key={sorting}
+              onClick={() => {
+                setFilteredHistorySort(sorting);
+              }}
+              className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+            >
+              {sorting}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
+  const displayedHistorySearchBar = (
+    <div className="relative flex-1">
+      <input
+        value={searchHistoryQuery}
+        onChange={historyInputChangeHandler}
+        type="text"
+        placeholder="Search"
+        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
       <div className="absolute right-3 top-3 hover:cursor-pointer">
         <svg
@@ -139,52 +246,26 @@ const MyReportsSection = () => {
         </div>
       </div>
 
-      {/* Info: pending reports (20240513 - Shirley) */}
+      {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
       <div className="mx-10 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5">
         <div className="flex flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:space-x-5">
           <div className="flex flex-col space-y-2 self-stretch">
             <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
               Sort by
             </div>
-            {displayedPendingSortingMenu}
-
             {/* Info: sort menu (20240513 - Shirley) */}
-            {/* <div className="mt-2 flex justify-between gap-5 whitespace-nowrap rounded-lg border border-solid border-slate-300 bg-white px-3 py-2.5 text-base font-medium leading-6 tracking-normal text-slate-500 shadow-sm">
-              <div>Newest</div>
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/b67d0ac3a6557252b43dd8e4883a9de1994cd47ee633a36d71557f6ba612891f?"
-                className="my-auto aspect-square w-5 shrink-0"
-              />
-            </div> */}
+            {displayedPendingSortMenu}
           </div>
           {/* Info: date picker (20240513 - Shirley) */}
           <DatePicker
-            // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-            type={datePickerType}
-            period={period}
-            setFilteredPeriod={setPeriod}
+            type={pendingDatePickerType}
+            period={pendingPeriod}
+            setFilteredPeriod={setPendingPeriod}
             className="w-250px"
           />{' '}
-          {/* <div className="mt-7 flex flex-col justify-center text-base font-medium leading-6 tracking-normal text-slate-500">
-            <div className="flex justify-between gap-5 rounded-lg border border-solid border-slate-300 bg-white px-3 py-2.5 shadow-sm">
-              <div>Start Date - End Date</div>
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/95692f20a4c90e2b150184725d3efb39ed5d2e5250a77be733dc93f06bdb888d?"
-                className="my-auto aspect-square w-5 shrink-0"
-              />
-            </div>
-          </div> */}
           {/* Info: Search bar (20240513 - Shirley) */}
           <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
-            {displayedSearchBar}
-            {/* <div>Search</div>
-            <img
-              loading="lazy"
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/27a3a16b8296be34108044d15bd8d67ae6bf88956b5a8276a096057296ee48a0?"
-              className="my-auto aspect-square w-5 shrink-0"
-            /> */}
+            {displayedPendingSearchBar}
           </div>
         </div>
 
@@ -278,49 +359,50 @@ const MyReportsSection = () => {
           </section>
         </div>
       </div>
-      {/* </div> */}
 
       {/* Info: ----- reports history (20240513 - Shirley) ----- */}
-      <div className="mx-10 mt-20 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5">
-        <div className="flex items-end justify-between gap-5 pr-14 max-md:flex-wrap max-md:pr-5">
-          <div className="flex flex-col self-stretch">
+
+      <div className="mx-10 mt-20 flex flex-col pl-20 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-20">
+        {/* <div className="mx-10 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5"> */}
+        <div className="flex flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:space-x-5">
+          <div className="flex flex-col space-y-2 self-stretch">
             <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
               Sort by
             </div>
-
             {/* Info: sort menu (20240513 - Shirley) */}
-            <div className="mt-2 flex justify-between gap-5 whitespace-nowrap rounded-lg border border-solid border-slate-300 bg-white px-3 py-2.5 text-base font-medium leading-6 tracking-normal text-slate-500 shadow-sm">
-              <div>Newest</div>
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/b67d0ac3a6557252b43dd8e4883a9de1994cd47ee633a36d71557f6ba612891f?"
-                className="my-auto aspect-square w-5 shrink-0"
-              />
-            </div>
+            {displayedHistorySortMenu}
           </div>
-
           {/* Info: date picker (20240513 - Shirley) */}
-          <div className="mt-7 flex flex-col justify-center text-base font-medium leading-6 tracking-normal text-slate-500">
-            <div className="flex justify-between gap-5 rounded-lg border border-solid border-slate-300 bg-white px-3 py-2.5 shadow-sm">
-              <div>Start Date - End Date</div>
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/95692f20a4c90e2b150184725d3efb39ed5d2e5250a77be733dc93f06bdb888d?"
-                className="my-auto aspect-square w-5 shrink-0"
-              />
-            </div>
-          </div>
-
+          <DatePicker
+            type={historyDatePickerType}
+            period={historyPeriod}
+            setFilteredPeriod={setHistoryPeriod}
+            className="w-250px"
+          />{' '}
           {/* Info: Search bar (20240513 - Shirley) */}
-          <div className="mt-7 flex justify-between gap-5 whitespace-nowrap rounded-lg border border-solid border-slate-300 bg-white px-3 py-2.5 text-base font-medium leading-6 tracking-normal text-slate-500 shadow-sm max-md:max-w-full max-md:flex-wrap">
-            <div>Search</div>
-            <img
-              loading="lazy"
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/27a3a16b8296be34108044d15bd8d67ae6bf88956b5a8276a096057296ee48a0?"
-              className="my-auto aspect-square w-5 shrink-0"
-            />
+          <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+            {displayedHistorySearchBar}
           </div>
         </div>
+        {/* </div> */}
+
+        {/* <div className="flex items-end justify-between gap-5 pr-14 max-md:flex-wrap max-md:pr-5">
+          <div className="flex flex-col space-y-2 self-stretch">
+            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+              Sort by
+            </div>
+            {displayedHistorySortMenu}
+          </div>
+          <DatePicker
+            type={historyDatePickerType}
+            period={historyPeriod}
+            setFilteredPeriod={setHistoryPeriod}
+            className="w-250px"
+          />{' '}
+          <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+            {displayedHistorySearchBar}
+          </div>
+        </div> */}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
           <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">
