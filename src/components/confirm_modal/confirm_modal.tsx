@@ -251,21 +251,7 @@ const ConfirmModal = ({
           <hr className="flex-1 border-lightGray3" />
         </div>
         {/* Info: (20240510 - Julian) List */}
-<<<<<<< feature/select_entity_page
         <div className="flex flex-col">{debitListMobile}</div>
-=======
-        <div className="flex flex-col">
-          {accountingVoucher
-            .filter((voucher) => !!voucher.debit)
-            .map(
-              (debit) =>
-                // TODO: eslint workaround (20240513 - Shirley)
-                // eslint-disable-next-line implicit-arrow-linebreak
-                AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
-              // eslint-disable-next-line function-paren-newline
-            )}
-        </div>
->>>>>>> develop
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
@@ -289,21 +275,7 @@ const ConfirmModal = ({
           <hr className="flex-1 border-lightGray3" />
         </div>
         {/* Info: (20240510 - Julian) List */}
-<<<<<<< feature/select_entity_page
         <div className="flex flex-col">{creditListMobile}</div>
-=======
-        <div className="flex flex-col">
-          {accountingVoucher
-            .filter((voucher) => !!voucher.credit)
-            .map(
-              (credit) =>
-                // TODO: eslint workaround (20240513 - Shirley)
-                // eslint-disable-next-line implicit-arrow-linebreak
-                AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
-              // eslint-disable-next-line function-paren-newline
-            )}
-        </div>
->>>>>>> develop
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
