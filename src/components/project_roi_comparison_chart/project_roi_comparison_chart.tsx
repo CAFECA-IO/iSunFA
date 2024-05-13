@@ -10,7 +10,10 @@ import { TranslateFunction } from '../../interfaces/locale';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { Button } from '../button/button';
-import { DUMMY_START_DATE, generateRandomData } from '../../interfaces/project_progress_chart';
+import {
+  DUMMY_START_DATE,
+  generateRandomData,
+} from '../../interfaces/project_roi_comparison_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 

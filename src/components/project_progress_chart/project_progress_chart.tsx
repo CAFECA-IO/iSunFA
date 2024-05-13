@@ -16,7 +16,7 @@ import {
   DUMMY_CATEGORIES,
   DUMMY_START_DATE,
   generateRandomData,
-} from '../../interfaces/project_roi_comparison_chart';
+} from '../../interfaces/project_progress_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 

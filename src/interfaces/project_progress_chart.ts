@@ -1,35 +1,36 @@
 export interface IProjectProgressChartData {
   categories: string[];
-  series: number[][];
-}
-
-export interface IProjectProgressChartDataWithPagination extends IProjectProgressChartData {
-  currentPage: number;
-  totalPages: number;
+  series: {
+    name: string;
+    data: number[];
+  }[];
 }
 
 export const DUMMY_CATEGORIES = [
-  'iSunFA',
-  'BAIFA',
-  'iSunOne',
-  'TideBit',
-  'ProjectE',
-  'ProjectF',
-  'ProjectG',
-  'ProjectH',
-  'ProjectI',
-  'ProjectJ',
+  'Designing',
+  'Beta Testing',
+  'Develop',
+  'Sold',
+  'Selling',
+  'Archived',
 ];
 
 export function generateRandomData(): IProjectProgressChartData {
-  const newSeries = [
-    Array.from({ length: DUMMY_CATEGORIES.length }, () => Math.floor(Math.random() * 150) + 100),
-    Array.from({ length: DUMMY_CATEGORIES.length }, () => Math.floor(Math.random() * 150) + 100),
-  ];
-
   return {
     categories: DUMMY_CATEGORIES,
-    series: newSeries,
+    series: [
+      {
+        name: 'Projects',
+        data: [
+          Math.floor(Math.random() * 200),
+          Math.floor(Math.random() * 200),
+          Math.floor(Math.random() * 200),
+          Math.floor(Math.random() * 200),
+          Math.floor(Math.random() * 200),
+          Math.floor(Math.random() * 200),
+        ],
+      },
+    ],
   };
 }
 
