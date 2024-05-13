@@ -27,6 +27,9 @@ interface UserContextType {
   signedIn: boolean;
   isSignInError: boolean;
   entityList: string[];
+  selectedEntity: string | null;
+  selectEntity: (entity: string) => void;
+  isSelectEntity: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -39,6 +42,9 @@ export const UserContext = createContext<UserContextType>({
   signedIn: false,
   isSignInError: false,
   entityList: [],
+  selectedEntity: null,
+  selectEntity: () => {},
+  isSelectEntity: false,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -49,6 +55,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
   const [entityList, setEntityList, entityListRef] = useStateRef<string[]>([]);
+  const [selectedEntity, setSelectedEntity, selectedEntityRef] = useStateRef<string | null>(null);
+  const [isSelectEntity, setIsSelectEntity, isSelectEntityRef] = useStateRef(false);
 
   const {
     trigger: signOut,
@@ -253,12 +261,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20240513 - Julian) 選擇公司的功能
+  const selectEntity = (entity: string) => {
+    setSelectedEntity(entity);
+  };
+
   const clearState = () => {
     setUserAuth(null);
     setUsername(null);
     setCredential(null);
     setSignedIn(false);
     setIsSignInError(false);
+    setEntityList([]);
+    setSelectedEntity(null);
   };
 
   const readCookie = async () => {
@@ -318,6 +333,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [signOutSuccess]);
 
+  useEffect(() => {
+    if (selectedEntity) {
+      setIsSelectEntity(true);
+    }
+  }, [selectedEntity]);
+
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
@@ -329,6 +350,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       signedIn: signedInRef.current,
       isSignInError: isSignInErrorRef.current,
       entityList: entityListRef.current,
+      selectedEntity: selectedEntityRef.current,
+      selectEntity,
+      isSelectEntity: isSelectEntityRef.current,
     }),
     [credentialRef.current]
   );

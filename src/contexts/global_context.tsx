@@ -22,7 +22,8 @@ import {
 import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { toast as toastify } from 'react-toastify';
-import { IToastify, ToastPosition } from '@/interfaces/toastify';
+import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
+import { RxCross2 } from 'react-icons/rx';
 
 interface IGlobalContext {
   width: number;
@@ -175,49 +176,77 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
-    const { type, content, autoClose, position, draggable, closeOnClick } = props;
+    const {
+      id,
+      type,
+      content,
+      closeable,
+      autoClose: isAutoClose,
+      position: toastPosition,
+      draggable: isDraggable,
+      closeOnClick: isCloseOnClick,
+    } = props;
+
     const bodyStyle = 'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0';
 
+    const toastId = id;
+    const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
+
+    // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
+    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const closeOnClick = closeable ? isCloseOnClick : false; // Info:(20240513 - Julian) default closeOnClick true
+    const draggable = closeable ? isDraggable : false; // Info:(20240513 - Julian) default draggable true
+    const closeButton = closeable
+      ? () => <RxCross2 size={16} className="text-secondaryBlue" />
+      : false;
+
     switch (type) {
-      case 'success':
+      case ToastType.SUCCESS:
         toastify.success(content, {
           icon: <Image src="/icons/success.svg" alt="info" width={24} height={24} />,
-          position: position ?? ToastPosition.TOP_CENTER,
-          autoClose: autoClose ?? 5000,
-          closeOnClick: closeOnClick ?? true,
-          draggable: draggable ?? true,
           className: `${bodyStyle} before:bg-successGreen3`,
+          toastId,
+          position,
+          autoClose,
+          closeOnClick,
+          draggable,
+          closeButton,
         });
         break;
-      case 'error':
+      case ToastType.ERROR:
         toastify.error(content, {
-          // ToDo: (20240510 - Julian) error icon 待捕上
           icon: <Image src="/icons/error.svg" alt="info" width={24} height={24} />,
-          position: position ?? ToastPosition.TOP_CENTER,
-          autoClose: autoClose ?? 5000,
-          closeOnClick: closeOnClick ?? true,
-          draggable: draggable ?? true,
           className: `${bodyStyle} before:bg-errorRed3`,
+          toastId,
+          position,
+          autoClose,
+          closeOnClick,
+          draggable,
+          closeButton,
         });
         break;
-      case 'warning':
+      case ToastType.WARNING:
         toastify.warning(content, {
           icon: <Image src="/icons/warning.svg" alt="info" width={24} height={24} />,
-          position: position ?? ToastPosition.TOP_CENTER,
-          autoClose: autoClose ?? 5000,
-          closeOnClick: closeOnClick ?? true,
-          draggable: draggable ?? true,
           className: `${bodyStyle} before:bg-warningYellow`,
+          toastId,
+          position,
+          autoClose,
+          closeOnClick,
+          draggable,
+          closeButton,
         });
         break;
-      case 'info':
+      case ToastType.INFO:
         toastify.info(content, {
           icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
-          position: position ?? ToastPosition.TOP_CENTER,
-          autoClose: autoClose ?? 5000,
-          closeOnClick: closeOnClick ?? true,
-          draggable: draggable ?? true,
           className: `${bodyStyle} before:bg-navyBlue2`,
+          toastId,
+          position,
+          autoClose,
+          closeOnClick,
+          draggable,
+          closeButton,
         });
         break;
       default:

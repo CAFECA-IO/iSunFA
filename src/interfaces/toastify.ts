@@ -15,8 +15,10 @@ export enum ToastPosition {
 }
 
 export interface IToastify {
+  id: string;
   type: ToastType;
   content: JSX.Element | string;
+  closeable: boolean;
   position?: ToastPosition;
   autoClose?: false | number;
   closeOnClick?: boolean;
