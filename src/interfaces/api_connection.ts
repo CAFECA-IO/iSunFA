@@ -23,6 +23,7 @@ export type IAPIName =
   | 'VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID'
   | 'VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID'
   | 'VOUCHER_GENERATE'
+  | 'LIST_ALL_JOURNALS'
   | 'UPLOAD_JOURNAL'
   | 'UPLOAD_JOURNAL_DOCUMENT_IMAGE'
   | 'GET_JOURNAL_PROCESSING_STATUS'
@@ -53,5 +54,6 @@ export type IAPIResponse<Data> = {
   trigger: (input?: IAPIInput, signal?: AbortSignal) => void;
   isLoading: boolean | undefined;
   data: Data | undefined;
+  code: string | undefined;
   error: Error | null;
 };

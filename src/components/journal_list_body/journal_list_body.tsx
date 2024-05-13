@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
+import APIHandler from '@/lib/utils/api_handler';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { APIName } from '@/constants/api_connection';
+import { IJournal } from '@/interfaces/journal';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import JournalList from '../journal_list/journal_list';
 import Pagination from '../pagination/pagination';
@@ -10,6 +14,17 @@ import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec } from '../../constants/display';
 
 const JournalListTab = () => {
+  const { companyId } = useAccountingCtx();
+  const {
+    isLoading,
+    success,
+    code,
+    error,
+    data: journals,
+  } = APIHandler<IJournal[]>(APIName.LIST_ALL_JOURNALS, {
+    params: { companyId },
+  });
+
   const {
     targetRef: typeMenuRef,
     componentVisible: isTypeMenuOpen,
@@ -30,7 +45,7 @@ const JournalListTab = () => {
 
   // ToDo: (20240418 - Julian) Replace with real data
   const totalPages = 100;
-  const isShowJournalList = true;
+  // const isShowJournalList = false;
 
   // Info: (20240418 - Julian) for css
   const isTypeSelected = filteredJournalType !== 'All';
@@ -196,24 +211,33 @@ const JournalListTab = () => {
     </div>
   );
 
-  const isDisplayedJournalList = isShowJournalList ? (
-    <>
-      <JournalList />
-      <div className="mx-auto my-40px">
-        <Pagination
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalPages={totalPages}
-        />
+  const isDisplayedJournalList =
+    isLoading === false ? (
+      success && journals ? (
+        <>
+          <JournalList journals={journals} />
+          <div className="mx-auto my-40px">
+            <Pagination
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalPages={totalPages}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <p>Failed to fetch data</p>
+          <p>{code}</p>
+          <p>{error?.message}</p>
+        </>
+      )
+    ) : (
+      // Info: (20240419 - Julian) If no data
+      <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
+        <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
+        <p>Empty</p>
       </div>
-    </>
-  ) : (
-    // Info: (20240419 - Julian) If no data
-    <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
-      <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-      <p>Empty</p>
-    </div>
-  );
+    );
 
   return (
     <div className="flex min-h-screen w-full flex-col p-10">

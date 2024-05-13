@@ -1,8 +1,12 @@
+import { IJournal } from '@/interfaces/journal';
 import JournalItem from '../journal_item/journal_item';
 
-const JournalList = () => {
+const JournalList = ({ journals }: { journals: IJournal[] }) => {
   // ToDo: (20240418 - Julian) replace with prop
-  const displayedList = Array.from({ length: 10 }, (_, index) => <JournalItem key={`${index}`} />);
+  // const displayedList = Array.from({ length: 10 }, (_, index) => <JournalItem key={`${index}`} />);
+  const displayedList = journals.map((journal) => (
+    <JournalItem key={journal.id} journal={journal} />
+  ));
 
   return (
     <table className="my-20px w-full border border-lightGray6">
