@@ -28,6 +28,8 @@ export enum APIName {
   UPLOAD_INVOCIE = 'UPLOAD_INVOCIE',
   GET_AUDIT_REPORTS = 'GET_AUDIT_REPORTS',
   GENERATE_FINANCIAL_REPORT = 'GENERATE_FINANCIAL_REPORT',
+  GET_FINANCIAL_REPORTS_PROGRESS = 'GET_FINANCIAL_REPORTS_PROGRESS',
+  GET_FINANCIAL_REPORT = 'GET_FINANCIAL_REPORT',
   GENERATE_ANALYSIS_REPORT = 'GENERATE_ANALYSIS_REPORT',
   OCR_UPLOAD_INVOICE_PICTURE = 'OCR_UPLOAD_INVOICE_PICTURE',
   OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS = 'OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS',
@@ -62,7 +64,9 @@ export enum APIPath {
   GET_INVOCIE_IMAGE = `${apiPrefix}/company/:companyId/invoice/:invoiceId/image`,
   UPLOAD_INVOCIE = `${apiPrefix}/company/:companyId/invoice`,
   GET_AUDIT_REPORTS = `${apiPrefix}/toBeDefined`,
-  GENERATE_FINANCIAL_REPORT = `${apiPrefix}/toBeDefined`,
+  GENERATE_FINANCIAL_REPORT = `${apiPrefix}/company/:companyId/report_financial`,
+  GET_FINANCIAL_REPORTS_PROGRESS = `${apiPrefix}/company/:companyId/report_financial/status`,
+  GET_FINANCIAL_REPORT = `${apiPrefix}/company/:companyId/report_financial/:reportId`,
   GENERATE_ANALYSIS_REPORT = `${apiPrefix}/toBeDefined`,
   OCR_UPLOAD_INVOICE_PICTURE = `${apiPrefix}/toBeDefined`,
   OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS = `${apiPrefix}/toBeDefined`,
@@ -253,6 +257,32 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   },
   [APIName.GENERATE_FINANCIAL_REPORT]: {
     name: APIName.GENERATE_FINANCIAL_REPORT,
+    method: HttpMethod.POST,
+    path: APIPath.GENERATE_FINANCIAL_REPORT,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.GET_FINANCIAL_REPORTS_PROGRESS]: {
+    name: APIName.GET_FINANCIAL_REPORTS_PROGRESS,
+    method: HttpMethod.GET,
+    path: APIPath.GET_FINANCIAL_REPORTS_PROGRESS,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.GET_FINANCIAL_REPORT]: {
+    name: APIName.GENERATE_FINANCIAL_REPORT,
     method: HttpMethod.GET,
     path: APIPath.GENERATE_FINANCIAL_REPORT,
     input: {
@@ -266,7 +296,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   },
   [APIName.GENERATE_ANALYSIS_REPORT]: {
     name: APIName.GENERATE_ANALYSIS_REPORT,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.GENERATE_ANALYSIS_REPORT,
     input: {
       header: {},
