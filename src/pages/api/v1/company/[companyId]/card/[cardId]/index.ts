@@ -3,65 +3,89 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/../prisma/client';
+
+async function getCardById(cardId: number) {
+  const card: ICard = (await prisma.card.findUnique({
+    where: {
+      id: cardId,
+    },
+  })) as ICard;
+  return card;
+}
+
+async function updateCardById(
+  cardId: number,
+  type?: string,
+  no?: string,
+  expireYear?: string,
+  expireMonth?: string,
+  cvc?: string,
+  name?: string
+) {
+  const updatedCard = await prisma.card.update({
+    where: {
+      id: cardId,
+    },
+    data: {
+      type,
+      no,
+      expireYear,
+      expireMonth,
+      cvc,
+      name,
+    },
+  });
+  return updatedCard;
+}
+
+async function deleteCardById(cardId: number) {
+  const deletedCard = await prisma.card.delete({
+    where: {
+      id: cardId,
+    },
+  });
+  return deletedCard;
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ICard>>
 ) {
   const { method } = req;
-
+  const { cardId } = req.query;
+  const cardIdNum = Number(cardId);
   try {
     if (!req.headers.userid) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
-    if (!req.query.id) {
+    if (!cardId) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-    if (req.query.id !== '1') {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     // Info: (20240419 - Jacky) P010002 - GET /payment/:id
     if (method === 'GET') {
-      const payment: ICard = {
-        id: '1',
-        type: 'VISA',
-        no: '1234-1234-1234-1234',
-        expireYear: '29',
-        expireMonth: '01',
-        cvc: '330',
-        name: 'Taiwan Bank',
-      };
-      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_GET, payment);
+      const card: ICard = await getCardById(cardIdNum);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_GET, card);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       const { type, no, expireYear, expireMonth, cvc, name } = req.body;
-      if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
+      if (!type && !no && !expireYear && !expireMonth && !cvc && !name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const payment: ICard = {
-        id: '3',
+      const card: ICard = await updateCardById(
+        cardIdNum,
         type,
-        no: '1234-1234-1234-1234',
+        no,
         expireYear,
         expireMonth,
         cvc,
-        name: 'Taiwan Bank',
-      };
-      payment.name = name;
-      payment.no = no;
-      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_UPDATE, payment);
+        name
+      );
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_UPDATE, card);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) P010004 - DELETE /payment/:id
     } else if (method === 'DELETE') {
-      const payment: ICard = {
-        id: '1',
-        type: 'VISA',
-        no: '1234-1234-1234-5678',
-        expireYear: '29',
-        expireMonth: '01',
-        cvc: '330',
-        name: 'Taiwan Bank',
-      };
+      const payment: ICard = await deleteCardById(cardIdNum);
       const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_DELETE, payment);
       res.status(httpCode).json(result);
     } else {

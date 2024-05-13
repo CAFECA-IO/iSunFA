@@ -17,9 +17,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
     if (req.method === 'GET') {
       if (roleId === '1') {
         const admin: IRole = {
-          id: '1',
+          id: 1,
           name: 'bob',
-          companyId: '1',
+          companyId: 1,
           companyName: 'mermer',
           permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
         };
@@ -35,9 +35,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const role: IRole = {
-        id: roleId as string,
+        id: Number(roleId),
         name,
-        companyId: '1',
+        companyId: 1,
         companyName: 'mermer',
         permissions,
       };
@@ -46,9 +46,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<IRespo
       // Info: (20240419 - Jacky) A010005 - DELETE /admin/:id
     } else if (req.method === 'DELETE') {
       const admin: IRole = {
-        id: '1',
+        id: 1,
         name: 'bob',
-        companyId: '1',
+        companyId: 1,
         companyName: 'mermer',
         permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
       };

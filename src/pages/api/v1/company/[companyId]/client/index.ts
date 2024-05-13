@@ -3,6 +3,57 @@ import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import prisma from '@/../prisma/client';
+
+async function listClient(): Promise<IClient[]> {
+  const findManyClient = await prisma.client.findMany({
+    include: {
+      company: {
+        select: {
+          name: true,
+          code: true,
+        },
+      },
+    },
+  });
+  const listedClient: IClient[] = findManyClient.map((client) => ({
+    ...client,
+    id: client.id,
+    companyId: client.companyId,
+    companyName: client.company.name,
+    code: client.company.code,
+    company: null,
+  }));
+  return listedClient;
+}
+
+async function createClient(companyId: number, favorite: boolean): Promise<IClient> {
+  const createdClient = await prisma.client.create({
+    data: {
+      company: {
+        connect: {
+          id: companyId,
+        },
+      },
+      favorite,
+    },
+    include: {
+      company: {
+        select: {
+          name: true,
+          code: true,
+        },
+      },
+    },
+  });
+  const client: IClient = {
+    ...createdClient,
+    companyId: createdClient.companyId,
+    companyName: createdClient.company.name,
+    code: createdClient.company.code,
+  };
+  return client;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,22 +65,7 @@ export default async function handler(
     }
     // Info: (20240419 - Jacky) C010001 - GET /client
     if (req.method === 'GET') {
-      const clientList: IClient[] = [
-        {
-          id: '1',
-          companyId: '123',
-          companyName: 'Company A',
-          code: '1234',
-          favorite: false,
-        },
-        {
-          id: '2',
-          companyId: '456',
-          companyName: 'Company B',
-          code: '3333',
-          favorite: false,
-        },
-      ];
+      const clientList: IClient[] = await listClient();
       const { httpCode, result } = formatApiResponse<IClient[]>(
         STATUS_MESSAGE.SUCCESS_LIST,
         clientList
@@ -37,14 +73,8 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010003 - POST /client
     } else if (req.method === 'POST') {
-      const { companyId, code } = req.body;
-      const newClient: IClient = {
-        id: '3',
-        companyId,
-        companyName: 'Company C',
-        code,
-        favorite: false,
-      };
+      const { companyId, favorite } = req.body;
+      const newClient: IClient = await createClient(companyId, favorite);
       const { httpCode, result } = formatApiResponse<IClient>(STATUS_MESSAGE.CREATED, newClient);
       res.status(httpCode).json(result);
     } else {

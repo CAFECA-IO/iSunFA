@@ -1,5 +1,5 @@
 export interface ICard {
-  id: string;
+  id: number;
   type: string;
   no: string;
   expireYear: string;

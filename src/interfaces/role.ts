@@ -1,17 +1,7 @@
-// import { IUser } from './user';
-
-// export interface IAdmin extends IUser {
-//   companyId: string;
-//   companyName: string;
-//   permissions: string[];
-//   startDate: number;
-//   endDate: number;
-// }
-
 export interface IRole {
-  id: string;
+  id: number;
   name: string;
-  companyId: string;
+  companyId: number;
   companyName: string;
   permissions: string[];
 }

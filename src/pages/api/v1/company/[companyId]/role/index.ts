@@ -23,8 +23,6 @@ export default async function handler(
       });
       const roleList: IRole[] = rawRoleList.map((role) => ({
         ...role,
-        id: role.id.toString(), // Convert the id to a string
-        companyId: role.companyId.toString(), // Convert the companyId to a string
         companyName: role.company.name,
         company: null,
       }));
@@ -49,7 +47,6 @@ export default async function handler(
               id: 1,
             },
           },
-          startDate: new Date().toISOString(),
           permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
         },
         include: {
@@ -60,12 +57,10 @@ export default async function handler(
           },
         },
       });
-      const { company, ...role } = createdRole;
+      // const { company, ...role } = createdRole;
       const formattedRole: IRole = {
-        ...role,
-        id: role.id.toString(), // Convert the id to a string
-        companyId: role.companyId.toString(), // Convert the companyId to a string
-        companyName: company.name,
+        ...createdRole,
+        companyName: createdRole.company.name,
       };
 
       const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.CREATED, formattedRole);

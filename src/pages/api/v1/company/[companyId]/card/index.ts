@@ -3,6 +3,33 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import prisma from '@/../prisma/client';
+
+async function getCardList() {
+  const cardList = await prisma.card.findMany();
+  return cardList;
+}
+
+async function createCard(
+  type: string,
+  no: string,
+  expireYear: string,
+  expireMonth: string,
+  cvc: string,
+  name: string
+): Promise<ICard> {
+  const createdCard = await prisma.card.create({
+    data: {
+      type,
+      no,
+      expireYear,
+      expireMonth,
+      cvc,
+      name,
+    },
+  });
+  return createdCard;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,29 +41,10 @@ export default async function handler(
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
-      const paymentList: ICard[] = [
-        {
-          id: '1',
-          type: 'VISA',
-          no: '1234-1234-1234-1234',
-          expireYear: '29',
-          expireMonth: '01',
-          cvc: '330',
-          name: 'Taiwan Bank',
-        },
-        {
-          id: '2',
-          type: 'VISA',
-          no: '5678-5678-5678-5678',
-          expireYear: '29',
-          expireMonth: '01',
-          cvc: '355',
-          name: 'Taishin International Bank',
-        },
-      ];
+      const cardList = await getCardList();
       const { httpCode, result } = formatApiResponse<ICard[]>(
         STATUS_MESSAGE.SUCCESS_LIST,
-        paymentList
+        cardList
       );
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) P010003 - POST /payment
@@ -45,16 +53,8 @@ export default async function handler(
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const newPayment: ICard = {
-        id: '3',
-        type,
-        no,
-        expireYear,
-        expireMonth,
-        cvc,
-        name,
-      };
-      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.CREATED, newPayment);
+      const createdCard: ICard = await createCard(type, no, expireYear, expireMonth, cvc, name);
+      const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.CREATED, createdCard);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);

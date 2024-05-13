@@ -217,9 +217,7 @@ model role {
     id               Int      @id @default(autoincrement())
     companyId        Int      @map("company_id")
     name             String   
-    startDate        DateTime
     permissions       String[]
-    // users            user[]
 
     usersToRoles     userToRole[]
 
@@ -295,6 +293,7 @@ model userToRole {
     @@id([userId, roleId])
     userId     Int
     roleId    Int
+    startDate DateTime
 
     user       user  @relation(fields: [userId], references: [id])
     role      role @relation(fields: [roleId], references: [id])
