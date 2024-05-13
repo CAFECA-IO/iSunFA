@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -9,7 +10,7 @@ beforeEach(() => {
   req = {
     headers: {},
     body: {
-      type: 'Balance Sheet',
+      type: FinancialReportTypesKey.balance_sheet,
       language: 'English',
       start_date: '2024-03-31',
       end_date: '2024-03-31',

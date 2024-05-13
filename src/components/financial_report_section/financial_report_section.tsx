@@ -1,17 +1,65 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+// import Link from 'next/link';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '../button/button';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '../../constants/url';
+// import { ISUNFA_ROUTE } from '../../constants/url';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '../../interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
 const FinancialReportSection = () => {
+  const { companyId } = useAccountingCtx();
+  const {
+    trigger: generateFinancialReport,
+    data: generatedResult,
+    // code: generatedCode,
+    success: generatedSuccess,
+  } = APIHandler<IAccountResultStatus>(
+    APIName.GENERATE_FINANCIAL_REPORT,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: getFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: progress, // Info: 這邊預計得到 IFinancialReportsProgreseStatusResponse[] (20240513 - Tzuahan)
+    // code: progressCodee,
+    // success: getProgressSuccess,
+  } = APIHandler<IAccountResultStatus[]>(
+    APIName.GET_FINANCIAL_REPORTS_PROGRESS,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: getFinancialReport, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    // data: report,
+    // code: reportCodee,
+    // success: getReportSuccess,
+  } = APIHandler<IFinancialReport>(
+    APIName.GET_FINANCIAL_REPORT,
+    {
+      params: { companyId, reportId: 'reportId' },
+    },
+    false,
+    false
+  );
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
@@ -73,7 +121,21 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+  // const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+
+  const genereateReportHandler = () => {
+    const body: IFinancialReportRequest = {
+      project_id: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
+      type: selectedReportType,
+      language: selectedReportLanguage,
+      start_date: new Date(period.startTimeStamp),
+      end_date: new Date(period.endTimeStamp),
+    };
+
+    generateFinancialReport({
+      body,
+    });
+  };
 
   useEffect(() => {
     setDatePickerType((prev) => {
@@ -327,40 +389,46 @@ const FinancialReportSection = () => {
     </div>
   );
 
+  useEffect(() => {
+    // TODO: 這邊要根據新的 UI 規格來設計，目前先用 console.log 來測試 @Shirley (20240513 - tzuhan)
+    console.log('generatedResult', generatedResult);
+  }, [generatedSuccess]);
+
   const displayedButtonOrLink =
     !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
       <Button
-        disabled={true}
         className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        onClick={genereateReportHandler}
       >
-        <Link href={targetedReportViewLink}>
-          <div className="flex gap-1">
-            <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
-            <div className="my-auto flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="17"
-                height="16"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <g>
-                  <path
-                    className="fill-current"
-                    fill="none"
-                    fillRule="evenodd"
-                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
-              </svg>
-            </div>
+        {/* <Link href={targetedReportViewLink}> */}
+        <div className="flex gap-1">
+          <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+          <div className="my-auto flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="17"
+              height="16"
+              fill="none"
+              viewBox="0 0 17 16"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
           </div>
-        </Link>
+        </div>
+        {/* </Link> */}
       </Button>
     ) : (
-      <Link
-        href={targetedReportViewLink}
+      <Button
+        // href={targetedReportViewLink}
+        onClick={genereateReportHandler}
         className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <div className="flex gap-1">
@@ -385,7 +453,7 @@ const FinancialReportSection = () => {
             </svg>
           </div>
         </div>
-      </Link>
+      </Button>
     );
 
   return (
