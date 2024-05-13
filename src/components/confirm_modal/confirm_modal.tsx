@@ -246,9 +246,9 @@ const ConfirmModal = ({
         <div className="flex flex-col">
           {accountingVoucher
             .filter((voucher) => !!voucher.debit)
-            .map((debit) =>
+            .map((debit) => (
               AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
-            )}
+            ))}
         </div>
 
         {/* Info: (20240510 - Julian) Add Button */}
@@ -276,9 +276,9 @@ const ConfirmModal = ({
         <div className="flex flex-col">
           {accountingVoucher
             .filter((voucher) => !!voucher.credit)
-            .map((credit) =>
+            .map((credit) => (
               AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
-            )}
+            ))}
         </div>
 
         {/* Info: (20240510 - Julian) Add Button */}
