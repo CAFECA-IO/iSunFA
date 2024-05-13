@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from 'prisma/client';
+import prisma from '@/../prisma/client';
 import { IClient } from '@/interfaces/client';
 import handler from './index';
 
@@ -85,8 +85,8 @@ describe('Client API Handler Tests', () => {
         message: expect.any(String),
         payload: expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(String),
-            companyId: expect.any(String),
+            id: expect.any(Number),
+            companyId: expect.any(Number),
             companyName: expect.any(String),
             code: expect.any(String),
             favorite: expect.any(Boolean),

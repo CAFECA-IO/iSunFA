@@ -59,7 +59,7 @@ describe('test user API', () => {
         message: expect.any(String),
         payload: expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(String),
+            id: expect.any(Number),
             name: expect.any(String),
             credentialId: expect.any(String),
             publicKey: expect.any(String),
@@ -74,12 +74,21 @@ describe('test user API', () => {
     req.method = 'POST';
     req.body = {
       name: 'John',
+      fullName: 'John Doe',
+      email: 'john@mermer.cc',
+      phone: '1234567890',
+      kycStatus: false,
       credentialId: '123456',
       publicKey: 'publicKey',
       algorithm: 'ES256',
       imageId: 'imageId',
     };
     await handler(req, res);
+    await prisma.user.delete({
+      where: {
+        id: res.json.mock.calls[0][0].payload.id,
+      },
+    });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -88,12 +97,12 @@ describe('test user API', () => {
         code: expect.stringContaining('201'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
+          id: expect.any(Number),
           name: expect.any(String),
           fullName: expect.any(String),
           email: expect.any(String),
           phone: expect.any(String),
-          kycStatus: expect.any(String),
+          kycStatus: expect.any(Boolean),
           credentialId: expect.any(String),
           publicKey: expect.any(String),
           algorithm: expect.any(String),
