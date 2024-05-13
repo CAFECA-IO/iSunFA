@@ -246,8 +246,11 @@ const ConfirmModal = ({
         <div className="flex flex-col">
           {accountingVoucher
             .filter((voucher) => !!voucher.debit)
-            .map((debit) =>
-              AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
+            .map(
+              (debit) =>
+                // eslint-disable-next-line implicit-arrow-linebreak
+                AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
+              // eslint-disable-next-line function-paren-newline
             )}
         </div>
 
@@ -276,8 +279,11 @@ const ConfirmModal = ({
         <div className="flex flex-col">
           {accountingVoucher
             .filter((voucher) => !!voucher.credit)
-            .map((credit) =>
-              AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
+            .map(
+              (credit) =>
+                // eslint-disable-next-line implicit-arrow-linebreak
+                AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
+              // eslint-disable-next-line function-paren-newline
             )}
         </div>
 
