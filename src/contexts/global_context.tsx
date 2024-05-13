@@ -1,5 +1,6 @@
 /* eslint-disable */
-import React, { useState, useContext, createContext, useMemo } from 'react';
+import React, { useState, useContext, createContext, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { RegisterFormModalProps } from '../interfaces/modals';
 import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '../components/register_form_modal/register_form_modal';
@@ -19,6 +20,9 @@ import {
   dummyPreviewInvoiceModalData,
 } from '@/interfaces/preview_invoice_modal';
 import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
+import Toast from '@/components/toast/toast';
+import { toast as toastify } from 'react-toastify';
+import { IToastify, ToastPosition } from '@/interfaces/toastify';
 
 interface IGlobalContext {
   width: number;
@@ -63,6 +67,8 @@ interface IGlobalContext {
 
   isCreateEntityModalVisible: boolean;
   createEntityModalVisibilityHandler: () => void;
+
+  toastHandler: (props: IToastify) => void;
 }
 
 export interface IGlobalProvider {
@@ -167,6 +173,59 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsCreateEntityModalVisible(!isCreateEntityModalVisible);
   };
 
+  // Info: (20240509 - Julian) toast handler
+  const toastHandler = useCallback((props: IToastify) => {
+    const { type, content, autoClose, position, draggable, closeOnClick } = props;
+    const bodyStyle = 'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0';
+
+    switch (type) {
+      case 'success':
+        toastify.success(content, {
+          icon: <Image src="/icons/success.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-successGreen3`,
+        });
+        break;
+      case 'error':
+        toastify.error(content, {
+          // ToDo: (20240510 - Julian) error icon 待捕上
+          icon: <Image src="/icons/error.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-errorRed3`,
+        });
+        break;
+      case 'warning':
+        toastify.warning(content, {
+          icon: <Image src="/icons/warning.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-warningYellow`,
+        });
+        break;
+      case 'info':
+        toastify.info(content, {
+          icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
+          position: position ?? ToastPosition.TOP_CENTER,
+          autoClose: autoClose ?? 5000,
+          closeOnClick: closeOnClick ?? true,
+          draggable: draggable ?? true,
+          className: `${bodyStyle} before:bg-navyBlue2`,
+        });
+        break;
+      default:
+        toastify(content);
+        break;
+    }
+  }, []);
+
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
     width,
@@ -200,6 +259,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     entityInvitationModalVisibilityHandler,
     isCreateEntityModalVisible,
     createEntityModalVisibilityHandler,
+    toastHandler,
   };
 
   return (
@@ -252,6 +312,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
       />
 
+      <Toast />
       {children}
     </GlobalContext.Provider>
   );
