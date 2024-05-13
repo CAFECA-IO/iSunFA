@@ -246,9 +246,13 @@ const ConfirmModal = ({
         <div className="flex flex-col">
           {accountingVoucher
             .filter((voucher) => !!voucher.debit)
-            .map((debit) => (
-              AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
-            ))}
+            .map(
+              (debit) =>
+                // TODO: eslint workaround (20240513 - Shirley)
+                // eslint-disable-next-line implicit-arrow-linebreak
+                AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
+              // eslint-disable-next-line function-paren-newline
+            )}
         </div>
 
         {/* Info: (20240510 - Julian) Add Button */}
@@ -276,9 +280,13 @@ const ConfirmModal = ({
         <div className="flex flex-col">
           {accountingVoucher
             .filter((voucher) => !!voucher.credit)
-            .map((credit) => (
-              AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
-            ))}
+            .map(
+              (credit) =>
+                // TODO: eslint workaround (20240513 - Shirley)
+                // eslint-disable-next-line implicit-arrow-linebreak
+                AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
+              // eslint-disable-next-line function-paren-newline
+            )}
         </div>
 
         {/* Info: (20240510 - Julian) Add Button */}
