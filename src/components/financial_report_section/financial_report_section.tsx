@@ -316,9 +316,9 @@ const FinancialReportSection = () => {
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
             >
-              <img src={icon} alt={name} className="h-6 w-6" />
+              <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
             </li>
           ))}
@@ -392,9 +392,11 @@ const FinancialReportSection = () => {
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
+          {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">Financial Report</div>
+            <div className="w-full justify-center px-10 md:px-28">Financial Reports</div>
           </div>
+          {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <div>
@@ -406,8 +408,7 @@ const FinancialReportSection = () => {
                   className="aspect-square shrink-0"
                 />
               </div>
-
-              <div className="mt-1.5">Financial Report</div>
+              <div className="mt-1.5">Financial Reports</div>
             </div>
           </div>
 
@@ -418,7 +419,8 @@ const FinancialReportSection = () => {
           </div>
         </div>
       </div>
-      <div className="mt-16 flex w-600px max-w-full flex-col space-y-20 self-center px-5 max-md:mt-3">
+      {/* Info: options for generation (20240513 - Shirley) */}
+      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -428,7 +430,6 @@ const FinancialReportSection = () => {
             {displayedProjectMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -437,7 +438,6 @@ const FinancialReportSection = () => {
             {displayedReportTypeMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -503,7 +503,14 @@ const FinancialReportSection = () => {
             />
           </div>
         </div>
-        {displayedButtonOrLink}
+        <div className="my-10 flex flex-col justify-center">
+          <p>
+            Attention: The report will take approximately 30 to 40 minutes to generate. Once
+            completed, it will be stored in "My Reports." Please check back later. Thank you for
+            your patience.
+          </p>
+        </div>
+        {displayedButtonOrLink}{' '}
       </div>
     </div>
   );
