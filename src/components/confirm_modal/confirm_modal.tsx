@@ -248,6 +248,7 @@ const ConfirmModal = ({
             .filter((voucher) => !!voucher.debit)
             .map(
               (debit) =>
+                // TODO: eslint workaround (20240513 - Shirley)
                 // eslint-disable-next-line implicit-arrow-linebreak
                 AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
               // eslint-disable-next-line function-paren-newline
@@ -281,6 +282,7 @@ const ConfirmModal = ({
             .filter((voucher) => !!voucher.credit)
             .map(
               (credit) =>
+                // TODO: eslint workaround (20240513 - Shirley)
                 // eslint-disable-next-line implicit-arrow-linebreak
                 AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
               // eslint-disable-next-line function-paren-newline
