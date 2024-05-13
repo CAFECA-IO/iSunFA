@@ -4,7 +4,12 @@ import { cleanBoolean, cleanNumber, convertDateToTimestamp } from '@/lib/utils/c
 
 // Info Murky (20240416): type
 export type AccountProgressStatus = 'success' | 'inProgress' | 'error' | 'notFound';
-export type EventType = 'income' | 'payment' | 'transfer';
+export enum EventTypeEnum {
+  INCOME = 'income',
+  EXPENSE = 'expense',
+  TRANSFER = 'transfer',
+}
+export type EventType = (typeof EventTypeEnum)[keyof typeof EventTypeEnum];
 export type VoucherType = 'receive' | 'expense' | 'transfer';
 export type PaymentStatusType = 'paid' | 'unpaid' | 'partial';
 export type PaymentPeriodType = 'atOnce' | 'installment';
@@ -312,7 +317,7 @@ export function cleanInvoiceData(rawData: any): AccountInvoiceData {
   const cleanedData: AccountInvoiceData = {
     date: convertDateToTimestamp(date),
     invoiceId: rawData.invoiceId || '',
-    eventType: isEventType(eventType) ? eventType : 'income',
+    eventType: isEventType(eventType) ? eventType : EventTypeEnum.INCOME,
     paymentReason: paymentReason || '',
     description: description || '',
     venderOrSupplyer: venderOrSupplyer || '',

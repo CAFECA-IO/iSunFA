@@ -45,7 +45,7 @@ const DashboardPage = () => {
         <div className="">
           <NavBar />
         </div>
-        <div className="pt-16">
+        <div className="pt-14">
           <DashboardPageBody />
         </div>
       </div>

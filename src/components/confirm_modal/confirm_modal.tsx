@@ -1,10 +1,14 @@
-/* eslint-disable */
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
 import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
+import { timestampToString } from '@/lib/utils/common';
+import APIHandler from '@/lib/utils/api_handler';
+import { IVoucher } from '@/interfaces/voucher';
+import { APIName } from '@/constants/api_connection';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { Button } from '../button/button';
 import { checkboxStyle } from '../../constants/display';
 import { IConfirmModal } from '../../interfaces/confirm_modal';
@@ -17,7 +21,7 @@ import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { IVoucher } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-//import { ILineItem } from '@/interfaces/line_item';
+// import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -28,7 +32,7 @@ interface IConfirmModalProps {
 const ConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
-  //confirmModalData,
+  // confirmModalData,
 }: IConfirmModalProps) => {
   const { companyId, voucherId } = useAccountingCtx();
 
@@ -37,8 +41,24 @@ const ConfirmModal = ({
     trigger: getVoucherPreview,
     data: voucherPreview,
     success: successGetVoucherPreview,
+    code: codeGetVoucherPreview,
     error: errorGetVoucherPreview,
   } = APIHandler<IVoucher>(APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID, {}, false, false);
+
+  const {
+    trigger: uploadJournal,
+    data: result,
+    success: uploadSuccess,
+    error: errorUploadJournal,
+    code: codeUploadJournal,
+  } = APIHandler<IAccountResultStatus>(
+    APIName.UPLOAD_JOURNAL,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
 
   const router = useRouter();
 
@@ -55,7 +75,7 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  //const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   useEffect(() => {
     if (successGetVoucherPreview && voucherPreview) {
@@ -85,7 +105,13 @@ const ConfirmModal = ({
         successGetVoucherPreview ? 0 : 2000
       );
       // TODO: Error handling @Julian (20240509 - Tzuhan)
-      console.log(`Failed to get voucher preview: `, errorGetVoucherPreview);
+      // eslint-disable-next-line no-console
+      console.log(
+        `Failed to get voucher preview: `,
+        errorGetVoucherPreview,
+        `code: `,
+        codeGetVoucherPreview
+      );
     }
   }, [voucherId, voucherPreview, isLoading]);
 
@@ -93,18 +119,30 @@ const ConfirmModal = ({
     useAccountingCtx();
 
   // ToDo: (20240503 - Julian) Get real journalId from API
-  const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
+  // const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
 
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
-    clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-    router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journalId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+    // Info: (20240510 - tzuhan) Add API call to upload journal data
+    uploadJournal();
+    // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
   };
 
   const addRowHandler = () => addVoucherRowHandler();
   const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
+
+  useEffect(() => {
+    if (uploadSuccess && result) {
+      modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
+      clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${result.resultId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+    } else {
+      // TODO: Error handling @Julian (20240510 - Tzuhan)
+      // eslint-disable-next-line no-console
+      console.log(`Failed to upload journal: `, codeUploadJournal, `error: `, errorUploadJournal);
+    }
+  }, [uploadSuccess]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
@@ -260,6 +298,8 @@ const ConfirmModal = ({
   );
 
   const isDisplayModal = isModalVisible ? (
+    // TODO: Eslint recommendation: Classname 'bg-opacity-50' should be replaced by an opacity suffix (eg. '/50') @Julian (20240513 - Tzuhan)
+    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
         {/* Info: (20240429 - Julian) title */}
@@ -356,8 +396,9 @@ const ConfirmModal = ({
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
-              Attention: Saving this voucher means it's permanent on the blockchain. Mistakes can't
-              be fixed. You'll need new vouchers to make corrections.
+              {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
+              Attention: Saving this voucher means it&#39;s permanent on the blockchain. Mistakes
+              can&#39;t be fixed. You&#39;ll need new vouchers to make corrections.
             </p>
             <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
               <input id="addToBook" className={checkboxStyle} type="checkbox" />

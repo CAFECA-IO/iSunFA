@@ -418,7 +418,7 @@ const NavBar = () => {
           </div>
 
           {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
-          <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex lg:pr-20">
+          <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex">
             <Link
               href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
               className="flex justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
