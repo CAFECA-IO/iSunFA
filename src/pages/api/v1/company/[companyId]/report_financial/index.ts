@@ -8,7 +8,7 @@ const mockFinancialReportUrl: IFinancialReport = 'http://www.google.com.br';
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFinancialReport>>
+  res: NextApiResponse<IResponseData<IFinancialReport | null>>
 ) {
   try {
     switch (req.method) {

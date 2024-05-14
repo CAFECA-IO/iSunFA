@@ -1,9 +1,9 @@
 import React from 'react';
-import { useDashboardCtx } from '../../contexts/dashboard_context';
 import { cn } from '../../lib/utils/common';
+import { DUMMY_DASHBOARD_OVERVIEW } from '../../interfaces/dashboard_overview';
 
 const DashboardOverview = () => {
-  const { dashboardOverview } = useDashboardCtx();
+  const dashboardOverview = DUMMY_DASHBOARD_OVERVIEW;
 
   const displayedAssetsGrowthRate = `${dashboardOverview.profitGrowthRate ?? `-`} %`;
   const displayedProjectROI = dashboardOverview.projectROI ?? `-`;
