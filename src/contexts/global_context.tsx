@@ -24,6 +24,7 @@ import Toast from '@/components/toast/toast';
 import { toast as toastify } from 'react-toastify';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import { RxCross2 } from 'react-icons/rx';
+import CreateEntityModal from '@/components/create_entity_modal/create_entity_modal';
 
 interface IGlobalContext {
   width: number;
@@ -349,6 +350,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <EmbedCodeModal
         isModalVisible={isEmbedCodeModalVisible}
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
+      />
+
+      <CreateEntityModal
+        isModalVisible={isCreateEntityModalVisible}
+        modalVisibilityHandler={createEntityModalVisibilityHandler}
       />
 
       <Toast />

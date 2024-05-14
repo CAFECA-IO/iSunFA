@@ -322,27 +322,37 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     iSunCloud: {
       name: 'iSunCloud',
       role: 'Owner',
+      brn: '001',
       icon: '/entities/isuncloud.png',
+      isPassedKyc: true,
     },
     TSMC: {
       name: 'TSMC',
       role: 'Accountant',
+      brn: '002',
       icon: '/entities/tsmc.png',
+      isPassedKyc: true,
     },
     Tesla: {
       name: 'Tesla',
       role: 'Bookkeeper',
+      brn: '003',
       icon: '/entities/tesla.png',
+      isPassedKyc: true,
     },
     'Happy Inc.': {
       name: 'Happy Inc.',
       role: 'Finance',
+      brn: '004',
       icon: '/entities/happy.png',
+      isPassedKyc: false,
     },
     TideBit: {
       name: 'TideBit',
       role: 'Viewer',
+      brn: '005',
       icon: '/entities/tidebit.png',
+      isPassedKyc: false,
     },
   };
 

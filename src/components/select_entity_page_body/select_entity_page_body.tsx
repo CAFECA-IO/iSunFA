@@ -117,9 +117,9 @@ const SelectEntityPageBody = () => {
 
   return (
     <div className="flex min-h-100vh w-full flex-col items-center justify-center font-barlow">
-      <div className="flex grow flex-col items-center justify-center pb-20 max-lg:mt-20 max-lg:max-w-full">
+      <div className="mx-16px flex grow flex-col items-center justify-center pb-20 max-lg:mt-20">
         {/* Info: (20240513 - Julian) title & description */}
-        <div className="flex flex-col items-center justify-center self-stretch max-lg:max-w-full">
+        <div className="flex flex-col items-center justify-center self-stretch">
           <div className="text-48px font-bold text-tertiaryBlue max-lg:text-4xl">
             Welcome back, <span className="text-amber-400">{userName}</span>!
           </div>
@@ -172,6 +172,7 @@ const SelectEntityPageBody = () => {
               </button>
               <div className="w-px self-stretch bg-slate-300" />
               <button
+                // ToDo: (20240514 - Julian) select entity function
                 type="button"
                 disabled={selectedEntity === ''}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
