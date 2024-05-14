@@ -1113,6 +1113,7 @@ module.exports = {
         '11rem': '11rem',
         '12rem': '12rem',
         '13rem': '13rem',
+        '14rem': '14rem',
         '15rem': '15rem',
         '16rem': '16rem',
         '17rem': '17rem',
@@ -1336,6 +1337,7 @@ module.exports = {
         '250px': '250px',
         '260px': '260px',
         '280px': '280px',
+        '300px': '300px',
       },
       minWidth: {
         '200px': '200px',

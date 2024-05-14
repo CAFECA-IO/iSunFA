@@ -1,10 +1,13 @@
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { useGlobalCtx } from '../../contexts/global_context';
+import { cn } from '../../lib/utils/common';
 
 const ReportsSidebar = () => {
+  const router = useRouter();
   const { embedCodeModalVisibilityHandler } = useGlobalCtx();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -77,7 +80,12 @@ const ReportsSidebar = () => {
           <div className="flex w-full flex-col items-start justify-center py-16px">
             <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
-              className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-active"
+              className={cn(
+                'flex w-full items-center gap-8px py-8px pl-10px',
+                router.pathname.includes(ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS)
+                  ? 'text-tabs-text-active'
+                  : 'text-tabs-text-default hover:text-tabs-text-active'
+              )}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -88,7 +96,7 @@ const ReportsSidebar = () => {
               >
                 <g clipPath="url(#clip0_904_38640)">
                   <path
-                    className="stroke-current"
+                    className="stroke-current transition-all duration-300 ease-in-out"
                     stroke="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -110,8 +118,15 @@ const ReportsSidebar = () => {
               </p>
             </Link>
 
-            {/* TODO: temp disabled (20240507 - Shirley) */}
-            <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default opacity-50">
+            <Link
+              href={ISUNFA_ROUTE.USERS_ANALYSES_REPORTS}
+              className={cn(
+                'flex w-full items-center gap-8px py-8px pl-10px',
+                router.pathname.includes(ISUNFA_ROUTE.USERS_ANALYSES_REPORTS)
+                  ? 'text-tabs-text-active'
+                  : 'text-tabs-text-default hover:text-tabs-text-active'
+              )}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -120,7 +135,7 @@ const ReportsSidebar = () => {
                 viewBox="0 0 20 20"
               >
                 <path
-                  className="stroke-current"
+                  className="stroke-current transition-all duration-300 ease-in-out"
                   stroke="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -134,7 +149,7 @@ const ReportsSidebar = () => {
               >
                 Analysis Report
               </p>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -170,7 +185,12 @@ const ReportsSidebar = () => {
         </div>
         <Link
           href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
-          className="mx-auto p-16px text-primaryYellow"
+          className={cn(
+            'mx-auto p-16px',
+            router.pathname.includes(ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS)
+              ? 'text-tabs-text-active'
+              : 'text-tabs-text-default hover:text-tabs-text-active'
+          )}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -197,8 +217,13 @@ const ReportsSidebar = () => {
           </svg>{' '}
         </Link>
         <Link
-          href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
-          className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
+          href={ISUNFA_ROUTE.USERS_ANALYSES_REPORTS}
+          className={cn(
+            'mx-auto p-16px',
+            router.pathname.includes(ISUNFA_ROUTE.USERS_ANALYSES_REPORTS)
+              ? 'text-tabs-text-active'
+              : 'text-tabs-text-default hover:text-tabs-text-active'
+          )}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

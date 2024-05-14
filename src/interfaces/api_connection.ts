@@ -23,6 +23,7 @@ export type IAPIName =
   | 'VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID'
   | 'VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID'
   | 'VOUCHER_GENERATE'
+  | 'UPLOAD_JOURNAL'
   | 'UPLOAD_JOURNAL_DOCUMENT_IMAGE'
   | 'GET_JOURNAL_PROCESSING_STATUS'
   | 'GET_PROCESSED_JOURNAL_DATA';
@@ -31,7 +32,7 @@ export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown };
+  body?: { [key: string]: unknown } | FormData;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };
@@ -49,7 +50,7 @@ export type IAPIConfig = {
 
 export type IAPIResponse<Data> = {
   success: boolean | undefined;
-  trigger: () => void;
+  trigger: (input?: IAPIInput, signal?: AbortSignal) => void;
   isLoading: boolean | undefined;
   data: Data | undefined;
   error: Error | null;

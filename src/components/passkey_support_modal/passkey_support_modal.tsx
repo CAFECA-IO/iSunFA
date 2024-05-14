@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Button } from '../button/button';
+import Image from 'next/image';
 
 interface IPasskeySupportModal {
   isModalVisible: boolean;
@@ -10,7 +11,7 @@ interface IPasskeySupportModal {
 
 const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasskeySupportModal) => {
   const isDisplayedPasskeySupportModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
       <div className="relative mx-auto flex flex-col items-start rounded-md bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="absolute right-3 top-3">
           <button onClick={modalVisibilityHandler} className="flex items-center justify-center">
@@ -31,21 +32,16 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
           </button>
         </div>
         <div className="mx-auto flex bg-white pb-4 pt-4">
-          <div className="flex w-full flex-1 flex-col justify-between text-center text-xl font-bold text-slate-700">
+          <div className="flex w-full flex-1 flex-col justify-between text-center text-xl font-bold text-card-text-primary">
             <div className="">Passkey support summary</div>
           </div>
         </div>
-        <div className="flex w-full flex-col justify-center">
-          <div className="flex items-center gap-1 px-5">
+        <div className="mt-2 flex w-full flex-col justify-center space-y-4">
+          <div className="flex items-center gap-3 px-5">
             <div className="flex items-center justify-center">
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/ee4af403cbb6082baadbb2e0c5aa581fcdf9d39fc8a6e87fa933509ed66e1240?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-square w-4"
-                alt=""
-              />
+              <Image src="/icons/android_icon.svg" alt="android_icon" width={20} height={20} />
             </div>
-            <div className="flex flex-1 flex-col justify-center text-xs text-slate-500">
+            <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
               Android OS9 or later
             </div>
             <div className="flex items-center justify-center">
@@ -70,16 +66,11 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
               </svg>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-1 px-5">
+          <div className="mt-4 flex items-center gap-3 px-5">
             <div className="flex items-center justify-center">
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/a76bdf6789717d5c8a173c1830b6818ea5c0184110f6491b6bd966e1452c6167?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-square w-4"
-                alt=""
-              />
+              <Image src="/icons/mac_os_icon.svg" alt="mac_os_icon" width={20} height={20} />
             </div>
-            <div className="flex flex-1 flex-col justify-center text-xs text-slate-500">
+            <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
               MacOS 13.5 or later
             </div>
             <div className="flex items-center justify-center">
@@ -104,17 +95,12 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
               </svg>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-1 px-5">
+          <div className="mt-4 flex items-center gap-3 px-5">
             <div className="flex items-center justify-center">
-              <img
-                loading="lazy"
-                src="https://cdn.builder.io/api/v1/image/assets/TEMP/1b622d343745a1986a911bbb53cbdb13c1ef6ffc3a9161b8a5cb02d880537e4f?apiKey=0e17b0b875f041659e186639705112b1&"
-                className="aspect-square w-4"
-                alt=""
-              />
+              <Image src="/icons/ios_icon.svg" alt="ios_icon" width={20} height={20} />
             </div>
 
-            <div className="flex flex-1 flex-col justify-center text-xs text-slate-500">
+            <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
               iOS 16 & iPadOS 16 or later
             </div>
             <div className="flex items-center justify-center">

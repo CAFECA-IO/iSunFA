@@ -24,25 +24,43 @@ const MessageModal = ({
   };
 
   // ToDo: (20240507 - Julian) warning message (red color)
-  const imgStr = messageType === MessageType.WARNING ? '/icons/warning.svg' : '/icons/success.svg';
-  const imgAlt = messageType === MessageType.WARNING ? 'warning_icon' : 'success_icon';
+  const imgStr =
+    messageType === MessageType.WARNING
+      ? '/icons/warning.svg'
+      : messageType === MessageType.SUCCESS
+        ? '/icons/success.svg'
+        : messageType === MessageType.ERROR
+          ? ''
+          : '/icons/info.svg';
+  const imgAlt =
+    messageType === MessageType.WARNING
+      ? 'warning_icon'
+      : messageType === MessageType.SUCCESS
+        ? 'success_icon'
+        : messageType === MessageType.ERROR
+          ? 'error_icon'
+          : 'info_icon';
 
   const borderColor =
     messageType === MessageType.WARNING
       ? 'border-warningYellow'
       : messageType === MessageType.SUCCESS
         ? 'border-successGreen3'
-        : 'border-errorRed';
+        : messageType === MessageType.ERROR
+          ? 'border-errorRed'
+          : 'border-navyBlue';
 
   const titleColor =
     messageType === MessageType.WARNING
       ? 'text-primaryYellow6'
       : messageType === MessageType.SUCCESS
         ? 'text-lightGreen'
-        : 'text-errorRed';
+        : messageType === MessageType.ERROR
+          ? 'text-errorRed'
+          : 'text-navyBlue2';
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-50">
       <div
         className={`w-376px relative flex h-fit flex-col gap-16px rounded-xs border-t-5px ${borderColor} bg-white px-32px py-16px`}
       >

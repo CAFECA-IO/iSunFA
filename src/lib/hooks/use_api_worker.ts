@@ -1,12 +1,10 @@
-import { IAPIInput, IAPIName, IAPIResponse, IHttpMethod } from '@/interfaces/api_connection';
+import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { Action } from '@/constants/action';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IResponseData } from '@/interfaces/response_data';
 
 const useAPIWorker = <Data>(
-  apiName: IAPIName,
-  method: IHttpMethod,
-  path: string,
+  apiConfig: IAPIConfig,
   options: IAPIInput,
   cancel?: boolean,
   triggerImmediately: boolean = true
@@ -32,20 +30,23 @@ const useAPIWorker = <Data>(
     setIsLoading(false);
   };
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback((input?: IAPIInput) => {
     const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
       type: 'module',
     });
-    const requestId = apiName;
+    const requestId = apiConfig.name;
     requestIdRef.current = requestId;
 
     setIsLoading(true);
 
     worker.postMessage({
-      requestId,
-      method,
-      path,
-      body: options.body,
+      apiConfig,
+      options: {
+        ...options,
+        params: input?.params || options.params,
+        query: input?.query || options.query,
+        body: input?.body || options.body,
+      },
       action: cancel ? Action.CANCEL : undefined,
     });
 
@@ -74,7 +75,7 @@ const useAPIWorker = <Data>(
     controllerRef.current = new AbortController();
     const cleanup = triggerImmediately ? fetchData() : () => {};
     return cleanup;
-  }, [path, cancel, triggerImmediately]);
+  }, [apiConfig.name, options.params, cancel, triggerImmediately]);
 
   return {
     trigger: fetchData,

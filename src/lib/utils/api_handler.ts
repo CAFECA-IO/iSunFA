@@ -12,25 +12,6 @@ function checkInput(apiConfig: IAPIConfig, input: IAPIInput) {
   return true;
 }
 
-function getAPIPath(apiConfig: IAPIConfig, input: IAPIInput) {
-  const originalPath = apiConfig.path;
-  const path = originalPath.replace(/:([^/]+)/g, (match: string, key: string): string => {
-    const value = input.params?.[key] as string;
-
-    return value;
-  });
-  const queryString = input.query
-    ? Object.keys(input.query)
-        .map(
-          (key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(input.query?.[key]))}`
-        )
-        .join('&')
-    : '';
-  const result = queryString ? `${path}?${queryString}` : path;
-
-  return result;
-}
-
 function APIHandler<Data>(
   apiName: APIName,
   options: IAPIInput,
@@ -41,11 +22,9 @@ function APIHandler<Data>(
   if (!apiConfig) throw new Error(`API ${apiName} is not defined`);
   checkInput(apiConfig, options);
 
-  const path = getAPIPath(apiConfig, options);
-
   if (apiConfig.useWorker) {
-    return useAPIWorker<Data>(apiName, apiConfig.method, path, options, cancel, triggerImmediately);
-  } else return useAPI<Data>(apiConfig.method, path, options, cancel, triggerImmediately);
+    return useAPIWorker<Data>(apiConfig, options, cancel, triggerImmediately);
+  } else return useAPI<Data>(apiConfig, options, cancel, triggerImmediately);
 }
 
 export default APIHandler;

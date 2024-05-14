@@ -7,22 +7,27 @@ import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '../../constants/url';
-import { FinancialReportTypesKey, FinancialReportTypesMap } from '../../interfaces/report_type';
+import {
+  AnalysisReportTypesKey,
+  AnalysisReportTypesMap,
+  FinancialReportTypesKey,
+  FinancialReportTypesMap,
+} from '../../interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
-const FinancialReportSection = () => {
+const AnalysisReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
-    FinancialReportTypesKey.balance_sheet
+  const [selectedReportType, setSelectedReportType] = useState<AnalysisReportTypesKey>(
+    AnalysisReportTypesKey.financial_performance
   );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
+  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const {
     targetRef: projectMenuRef,
@@ -47,8 +52,7 @@ const FinancialReportSection = () => {
   };
 
   const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
-    setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
-
+    setSelectedProjectName(projectName);
     setIsProjectMenuOpen(false);
   };
 
@@ -56,12 +60,12 @@ const FinancialReportSection = () => {
     setIsTypeMenuOpen(!isTypeMenuOpen);
   };
 
-  const menuOptionClickHandler = (id: FinancialReportTypesKey) => {
+  const menuOptionClickHandler = (id: AnalysisReportTypesKey) => {
     setSelectedReportType(id);
     setIsTypeMenuOpen(false);
   };
 
-  const selectedReportName = FinancialReportTypesMap[selectedReportType].name;
+  const selectedReportName = AnalysisReportTypesMap[selectedReportType].name;
   const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
 
   const languageMenuClickHandler = () => {
@@ -73,17 +77,7 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
-
-  useEffect(() => {
-    setDatePickerType((prev) => {
-      if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
-        return DatePickerType.CHOOSE_DATE;
-      } else {
-        return DatePickerType.CHOOSE_PERIOD;
-      }
-    });
-  }, [selectedReportType]);
+  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   useEffect(() => {
     // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
@@ -176,7 +170,7 @@ const FinancialReportSection = () => {
             </svg>
           </div>
 
-          <div className="mt-2 max-h-14rem w-full overflow-y-auto">
+          <div className="mt-2 max-h-52 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
               .filter((project) =>
                 DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
@@ -189,7 +183,7 @@ const FinancialReportSection = () => {
                   onClick={() =>
                     projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
                   }
-                  className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
+                  className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">
                     {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon ? (
@@ -253,10 +247,10 @@ const FinancialReportSection = () => {
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          {Object.entries(FinancialReportTypesMap).map(([id, { name }]) => (
+          {Object.entries(AnalysisReportTypesMap).map(([id, { name }]) => (
             <li
               key={id}
-              onClick={() => menuOptionClickHandler(id as FinancialReportTypesKey)}
+              onClick={() => menuOptionClickHandler(id as AnalysisReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {name}
@@ -393,7 +387,7 @@ const FinancialReportSection = () => {
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">Financial Report</div>
+            <div className="w-full justify-center px-10 md:px-28">Analysis Report</div>
           </div>
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
@@ -407,7 +401,7 @@ const FinancialReportSection = () => {
                 />
               </div>
 
-              <div className="mt-1.5">Financial Report</div>
+              <div className="mt-1.5">Analysis Report</div>
             </div>
           </div>
 
@@ -429,7 +423,7 @@ const FinancialReportSection = () => {
           </div>
         </div>
 
-        <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
+        <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               Report Type
@@ -437,7 +431,6 @@ const FinancialReportSection = () => {
             {displayedReportTypeMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -509,4 +502,4 @@ const FinancialReportSection = () => {
   );
 };
 
-export default FinancialReportSection;
+export default AnalysisReportSection;

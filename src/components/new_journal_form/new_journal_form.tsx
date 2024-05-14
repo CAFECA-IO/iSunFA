@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice } from '@/interfaces/invoice';
+import { IInvoice, IInvoiceWithPaymentMethod } from '@/interfaces/invoice';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { PaymentPeriodType, PaymentStatusType } from '@/interfaces/account';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
@@ -17,7 +19,6 @@ import { MessageType } from '../../interfaces/message_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
-const paymentReasonSelection: string[] = [];
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Transfer', 'Credit Card', 'Cash'];
 const ficSelection: string[] = [
@@ -41,19 +42,32 @@ const NewJournalForm = () => {
     messageModalVisibilityHandler,
     messageModalDataHandler,
     confirmModalVisibilityHandler,
-    addPropertyModalVisibilityHandler,
+    addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { ocrResultId } = useAccountingCtx();
+  const { companyId, ocrResultId, setVoucherIdHandler } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
-    isLoading: invoiceLoading,
+    isLoading,
+    trigger: getInvoice,
     data: invoiceData,
-    success: invoiceSuccess,
   } = APIHandler<IInvoice[]>(APIName.GET_INVOCIE, {
-    params: { invoiceId: ocrResultId },
+    params: { companyId, invoiceId: ocrResultId },
   });
+
+  const {
+    trigger: voucherGenerate, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    data: result,
+    success: uploadSuccess,
+  } = APIHandler<IAccountResultStatus>(
+    APIName.VOUCHER_GENERATE,
+    {
+      params: { companyId: 1 },
+    },
+    false,
+    false
+  );
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -62,9 +76,7 @@ const NewJournalForm = () => {
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
-  const [selectedPaymentReason, setSelectedPaymentReason] = useState<string>(
-    paymentReasonSelection[0]
-  );
+  const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
@@ -76,9 +88,9 @@ const NewJournalForm = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriod>(PaymentPeriod.AT_ONCE);
+  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriod.AT_ONCE);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
-  const [paymentState, setPaymentState] = useState<PaymentState>(PaymentState.UNPAID);
+  const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentState.UNPAID);
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
   const [selectedProject, setSelectedProject] = useState<string>(projectSelection[0]);
@@ -89,20 +101,26 @@ const NewJournalForm = () => {
   // ToDo: (20240508 - Julian) call post API to upload journal data (body: IInvoiceWithPaymentMethod)
 
   useEffect(() => {
-    if (invoiceData && invoiceSuccess && !invoiceLoading && ocrResultId !== '') {
-      // Info: (20240506 - Julian) 設定表單的預設值
-      setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
-      setSelectedEventType(invoiceData[0].eventType);
-      setSelectedPaymentReason(invoiceData[0].paymentReason);
-      setInputDescription(invoiceData[0].description);
-      setInputVendor(invoiceData[0].venderOrSupplyer);
-      setInputTotalPrice(invoiceData[0].payment.price);
-      setTaxToggle(invoiceData[0].payment.hasTax);
-      setTaxRate(invoiceData[0].payment.taxPercentage);
-      setFeeToggle(invoiceData[0].payment.hasFee);
-      setInputFee(invoiceData[0].payment.fee);
+    if (invoiceData && invoiceData.length > 0) {
+      if (invoiceData[0]) {
+        // Info: (20240506 - Julian) 設定表單的預設值
+        setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
+        setSelectedEventType(invoiceData[0].eventType);
+        setInputPaymentReason(invoiceData[0].paymentReason);
+        setInputDescription(invoiceData[0].description);
+        setInputVendor(invoiceData[0].venderOrSupplyer);
+        setInputTotalPrice(invoiceData[0].payment.price);
+        setTaxToggle(invoiceData[0].payment.hasTax);
+        setTaxRate(invoiceData[0].payment.taxPercentage);
+        setFeeToggle(invoiceData[0].payment.hasFee);
+        setInputFee(invoiceData[0].payment.fee);
+      } else if (!isLoading) {
+        setTimeout(() => {
+          getInvoice();
+        }, 2000);
+      }
     }
-  }, [invoiceLoading, invoiceData, invoiceSuccess, ocrResultId]);
+  }, [isLoading, invoiceData]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -120,12 +138,6 @@ const NewJournalForm = () => {
     targetRef: eventMenuRef,
     componentVisible: isEventMenuOpen,
     setComponentVisible: setIsEventMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
-
-  const {
-    targetRef: reasonRef,
-    componentVisible: isReasonMenuOpen,
-    setComponentVisible: setIsReasonMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
   const {
@@ -160,7 +172,6 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 開啟/關閉下拉選單
   const eventMenuOpenHandler = () => setIsEventMenuOpen(!isEventMenuOpen);
-  const reasonMenuHandler = () => setIsReasonMenuOpen(!isReasonMenuOpen);
   const taxMenuHandler = () => setIsTaxMenuOpen(!isTaxMenuOpen);
   const methodMenuHandler = () => setIsMethodMenuOpen(!isMethodMenuOpen);
   const bankAccountMenuHandler = () => setIsBankAccountMenuOpen(!isBankAccountMenuOpen);
@@ -168,6 +179,9 @@ const NewJournalForm = () => {
   const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
 
   // Info: (20240423 - Julian) 處理 input 輸入
+  const paymentReasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputPaymentReason(e.target.value);
+  };
   const descriptionChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputDescription(e.target.value);
   };
@@ -236,7 +250,7 @@ const NewJournalForm = () => {
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
     setSelectedEventType(eventTypeSelection[0]);
-    setSelectedPaymentReason(paymentReasonSelection[0]);
+    setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
     setInputTotalPrice(0);
@@ -273,23 +287,39 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // confirmModalDataHandler(newJournalData);
+    const invoiceWithPaymentMethod: IInvoiceWithPaymentMethod = {
+      invoiceId: ocrResultId,
+      date: datePeriod.startTimeStamp,
+      eventType: selectedEventType as EventType,
+      paymentReason: inputPaymentReason,
+      description: inputDescription,
+      venderOrSupplyer: inputVendor,
+      projectId: selectedProject,
+      contractId: selectedContract,
+      payment: {
+        price: inputTotalPrice,
+        hasTax: taxToggle,
+        taxPercentage: taxRate,
+        hasFee: feeToggle,
+        fee: inputFee,
+        paymentMethod: selectedMethod,
+        installmentPeriod: inputInstallment,
+        alreadyPaidAmount: inputPartialPaid,
+        paymentPeriod,
+        paymentStatus: paymentState,
+      },
+    };
 
-    // Info: (20240507 - Julian) call API to upload journal data
-    // ToDo: (20240507 - Julian) API 文件調整中
-    /*     const response = await fetch(`/api/v1/company/1/voucher`, {
-      method: 'POST',
-      body: JSON.stringify(newJournalData),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      // Info: (20240506 - Julian) 將 OCR 結果 id 寫入 context
-      const { invoiceId } = data.payload; //[0];
-      setOcrResultIdHandler(invoiceId);
-    } */
-    confirmModalVisibilityHandler();
+    voucherGenerate({ body: { invoices: [invoiceWithPaymentMethod] } });
   };
+
+  useEffect(() => {
+    if (uploadSuccess && result) {
+      const voucherId = result.resultId;
+      setVoucherIdHandler(voucherId);
+      confirmModalVisibilityHandler();
+    }
+  }, [uploadSuccess, result]);
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
@@ -320,23 +350,6 @@ const NewJournalForm = () => {
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
         {type}
-      </li>
-    );
-  });
-
-  const displayReasonDropmenu = paymentReasonSelection.map((reason: string) => {
-    const selectionClickHandler = () => {
-      setSelectedPaymentReason(reason);
-      setIsReasonMenuOpen(false);
-    };
-
-    return (
-      <li
-        key={reason}
-        onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-      >
-        {reason}
       </li>
     );
   });
@@ -475,14 +488,23 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Payment Reason */}
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
             <p className="text-sm font-semibold text-navyBlue2">Payment Reason</p>
-            <div
+            <input
+              id="inputPaymentReason"
+              name="inputPaymentReason"
+              type="text"
+              placeholder="Why you pay"
+              value={inputPaymentReason}
+              onChange={paymentReasonChangeHandler}
+              required
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+            />
+            {/*             <div
               id="paymentReasonMenu"
               onClick={reasonMenuHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
               <p>{selectedPaymentReason}</p>
               <FaChevronDown />
-              {/* Info: (20240423 - Julian) Dropmenu */}
               <div
                 className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
@@ -493,14 +515,14 @@ const NewJournalForm = () => {
                   {displayReasonDropmenu}
                 </ul>
               </div>
-            </div>
-            {/* ToDo: (20240423 - Julian) Add new property */}
+            </div> */}
+            {/* ToDo: (20240423 - Julian) Add new asset */}
             <button
               type="button"
-              onClick={addPropertyModalVisibilityHandler}
+              onClick={addAssetModalVisibilityHandler}
               className="ml-auto text-secondaryBlue hover:text-primaryYellow"
             >
-              + Add new property
+              + Add new asset
             </button>
           </div>
         </div>
