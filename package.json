@@ -10,8 +10,7 @@
     "test": "jest",
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
-    "validate": "npm run test && npm run check-format && npm run lint",
-    "production": "next start -p 80"
+    "validate": "npm run test && npm run check-format && npm run lint"
   },
   "dependencies": {
     "@passwordless-id/webauthn": "^1.5.0",
@@ -21,6 +20,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cookie": "^0.6.0",
+    "dotenv": "^16.4.5",
     "eslint-config-airbnb": "^19.0.4",
     "formidable": "^3.5.1",
     "i18next": "^23.7.16",
