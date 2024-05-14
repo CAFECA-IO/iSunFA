@@ -9,13 +9,19 @@ import {
   PaymentPeriodType,
   PaymentStatusType,
   EventType,
-  EventTypeEnum,
+  // EventTypeEnum, Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
 } from '@/interfaces/account';
+
 import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
-import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
+
+// Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
+// origin
+// import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
+import { useAccountingCtx } from '../../contexts/accounting_context';
+
 import { IDatePeriod } from '../../interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
 import { Button } from '../button/button';
@@ -76,7 +82,12 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Basic Info states
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventTypeEnum.INCOME);
+
+  // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
+  // Origin:
+  // const [selectedEventType, setSelectedEventType] = useState<EventType>(EventTypeEnum.INCOME);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.Income);
+
   const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
   const [inputVendor, setInputVendor] = useState<string>('');
@@ -89,9 +100,18 @@ const NewJournalForm = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriod.AT_ONCE);
+
+  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+  // Origin:
+  // const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriod.AT_ONCE);
+  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AtOnce);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
-  const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentState.UNPAID);
+
+  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+  // Origin:
+  // const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentState.UNPAID);
+  const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentStatusType.Unpaid);
+
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
   const [selectedProject, setSelectedProject] = useState<string>(projectSelection[0]);
@@ -240,11 +260,18 @@ const NewJournalForm = () => {
   const feeToggleHandler = () => setFeeToggle(!feeToggle);
 
   // Info: (20240423 - Julian) 處理 radio button 選擇
-  const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriod.AT_ONCE);
-  const installmentClickHandler = () => setPaymentPeriod(PaymentPeriod.INSTALLMENT);
-  const paidClickHandler = () => setPaymentState(PaymentState.PAID);
-  const partialPaidClickHandler = () => setPaymentState(PaymentState.PARTIAL_PAID);
-  const unpaidClickHandler = () => setPaymentState(PaymentState.UNPAID);
+  // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType, PaymentPeriod的型別 新的放在account.ts, PaymentState的型別 新的放在account.ts
+  // origin:
+  // const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriod.AT_ONCE);
+  // const installmentClickHandler = () => setPaymentPeriod(PaymentPeriod.INSTALLMENT);
+  // const paidClickHandler = () => setPaymentState(PaymentState.PAID);
+  // const partialPaidClickHandler = () => setPaymentState(PaymentState.PARTIAL_PAID);
+  // const unpaidClickHandler = () => setPaymentState(PaymentState.UNPAID);
+  const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriodType.AtOnce);
+  const installmentClickHandler = () => setPaymentPeriod(PaymentPeriodType.Installment);
+  const paidClickHandler = () => setPaymentState(PaymentStatusType.Paid);
+  const partialPaidClickHandler = () => setPaymentState(PaymentStatusType.Partial);
+  const unpaidClickHandler = () => setPaymentState(PaymentStatusType.Unpaid);
 
   //  Info: (20240425 - Julian) 檢查表單內容是否有變動
   const formChangedHandler = () => setFormHasChanged(true);
@@ -252,7 +279,12 @@ const NewJournalForm = () => {
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
-    setSelectedEventType(EventTypeEnum.INCOME);
+
+    // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
+    // origin:
+    // setSelectedEventType(EventTypeEnum.INCOME);
+    setSelectedEventType(EventType.Income);
+
     setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
@@ -262,9 +294,18 @@ const NewJournalForm = () => {
     setSelectedMethod(paymentMethodSelection[0]);
     setSelectedFIC(ficSelection[0]);
     setInputAccountNumber('');
-    setPaymentPeriod(PaymentPeriod.AT_ONCE);
+
+    // Info (Murky - 20240514) To Emily, TO Julian, PaymentPeriod的型別 新的放在account.ts
+    // origin:
+    // setPaymentPeriod(PaymentPeriod.AT_ONCE);
+    setPaymentPeriod(PaymentPeriodType.AtOnce);
+
     setInputInstallment(0);
-    setPaymentState(PaymentState.UNPAID);
+
+    // Info (Murky - 20240514) To Emily, TO Julian, PaymentState的型別 新的放在account.ts
+    // origin:
+    // setPaymentState(PaymentState.UNPAID);
+    setPaymentState(PaymentStatusType.Unpaid);
     setInputPartialPaid(0);
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
@@ -290,6 +331,9 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Info (Murky - 20240514) To Emily, TO Julian, IInvoice 現在要多加 Project和Contract 要放名稱
+    // origin:
     const invoiceWithPaymentMethod: IInvoice = {
       invoiceId: ocrResultId,
       date: datePeriod.startTimeStamp,
@@ -297,7 +341,9 @@ const NewJournalForm = () => {
       paymentReason: inputPaymentReason,
       description: inputDescription,
       venderOrSupplyer: inputVendor,
+      project: 'To Emily, TO Julian 請修改我', // Info (Murky - 20240514) To Emily, TO Julian, IInvoice 現在要多加 Project和Contract 要放名稱
       projectId: selectedProject,
+      contract: 'To Emily, TO Julian 請修改我', // Info (Murky - 20240514) To Emily, TO Julian, IInvoice 現在要多加 Project和Contract 要放名稱
       contractId: selectedContract,
       payment: {
         price: inputTotalPrice,
@@ -352,12 +398,21 @@ const NewJournalForm = () => {
     // Info: (20240429 - Julian) 檢查手續費是否有填寫
     (!!feeToggle && inputFee === 0) ||
     // Info: (20240429 - Julian) 檢查總價是否有填寫
-    (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
+    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+    // origin:
+    // (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
+    (paymentPeriod === PaymentPeriodType.Installment && inputInstallment === 0) ||
     // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-    (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
+    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+    // origin:
+    // (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
+    (paymentState === PaymentStatusType.Partial && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
-  const displayEventDropmenu = Object.values(EventTypeEnum).map((type: EventType) => {
+  // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
+  // origin
+  // const displayEventDropmenu = Object.values(EventTypeEnum).map((type: EventType) => {
+  const displayEventDropmenu = Object.values(EventType).map((type: EventType) => {
     const selectionClickHandler = () => {
       setSelectedEventType(type);
       setIsEventMenuOpen(false);
@@ -779,7 +834,11 @@ const NewJournalForm = () => {
                   id="inputAtOnce"
                   name="paymentPeriod"
                   className={radioButtonStyle}
-                  checked={paymentPeriod === PaymentPeriod.AT_ONCE}
+                  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+                  // Origin:
+                  // checked={paymentPeriod === PaymentPeriod.AT_ONCE}
+                  // eslint-disable-next-line react/jsx-props-no-multi-spaces
+                  checked={paymentPeriod === PaymentPeriodType.AtOnce}
                   onChange={atOnceClickHandler}
                 />
                 <p>At Once</p>
@@ -796,14 +855,22 @@ const NewJournalForm = () => {
                     id="inputInstallment"
                     name="paymentPeriod"
                     className={radioButtonStyle}
-                    checked={paymentPeriod === PaymentPeriod.INSTALLMENT}
+                    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+                    // Origin:
+                    // checked={paymentPeriod === PaymentPeriod.INSTALLMENT}
+                    // eslint-disable-next-line react/jsx-props-no-multi-spaces
+                    checked={paymentPeriod === PaymentPeriodType.Installment}
+                    // eslint-disable-next-line react/jsx-props-no-multi-spaces
                     onChange={installmentClickHandler}
                   />
                   Installment:
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+                  // Origin:
+                  // className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.Installment ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputInstallmentTimes"
@@ -811,7 +878,10 @@ const NewJournalForm = () => {
                     name="inputInstallmentTimes"
                     value={inputInstallment}
                     onChange={installmentChangeHandler}
-                    disabled={paymentPeriod !== PaymentPeriod.INSTALLMENT}
+                    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
+                    // Origin:
+                    // disabled={paymentPeriod !== PaymentPeriod.INSTALLMENT}
+                    disabled={paymentPeriod !== PaymentPeriodType.Installment}
                     className="flex-1 bg-transparent px-10px outline-none"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -834,7 +904,10 @@ const NewJournalForm = () => {
                   id="inputUnpaid"
                   name="paymentState"
                   className={radioButtonStyle}
-                  checked={paymentState === PaymentState.UNPAID}
+                  // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
+                  // Origin:
+                  // checked={paymentState === PaymentState.UNPAID}
+                  checked={paymentState === PaymentStatusType.Unpaid}
                   onChange={unpaidClickHandler}
                 />
                 <p>Unpaid</p>
@@ -850,14 +923,20 @@ const NewJournalForm = () => {
                     id="inputPartialPaid"
                     name="paymentState"
                     className={radioButtonStyle}
-                    checked={paymentState === PaymentState.PARTIAL_PAID}
+                    // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
+                    // Origin:
+                    // checked={paymentState === PaymentState.PARTIAL_PAID}
+                    checked={paymentState === PaymentStatusType.Partial}
                     onChange={partialPaidClickHandler}
                   />
                   <p>Partial Paid:</p>
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
+                  // Origin:
+                  // className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentStatusType.Partial ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputPartialPaidAmount"
@@ -865,7 +944,10 @@ const NewJournalForm = () => {
                     name="inputPartialPaidAmount"
                     value={inputPartialPaid}
                     onChange={partialPaidChangeHandler}
-                    disabled={paymentState !== PaymentState.PARTIAL_PAID}
+                    // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
+                    // Origin:
+                    // disabled={paymentState !== PaymentState.PARTIAL_PAID}
+                    disabled={paymentState !== PaymentStatusType.Partial}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -887,7 +969,10 @@ const NewJournalForm = () => {
                   id="inputPaid"
                   name="paymentState"
                   className={radioButtonStyle}
-                  checked={paymentState === PaymentState.PAID}
+                  // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
+                  // Origin:
+                  // checked={paymentState === PaymentState.PAID}
+                  checked={paymentState === PaymentStatusType.Paid}
                   onChange={paidClickHandler}
                 />
                 <p>Paid</p>
@@ -900,7 +985,10 @@ const NewJournalForm = () => {
   );
 
   const displayedProjectSecondLine =
-    selectedEventType === EventTypeEnum.INCOME ? (
+    // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
+    // Origin
+    // selectedEventType === EventTypeEnum.INCOME ? (
+    selectedEventType === EventType.Income ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
         <ProgressBar
