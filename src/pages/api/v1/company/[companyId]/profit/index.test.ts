@@ -30,9 +30,10 @@ describe('Result API Handler Tests', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = expect.arrayContaining([
       expect.objectContaining({
-        period: expect.any(String),
         income: expect.any(Number),
         expenses: expect.any(Number),
+        date: expect.any(Date),
+        profit: expect.any(Number),
       }),
     ]);
     expect(res.json).toHaveBeenCalledWith(
