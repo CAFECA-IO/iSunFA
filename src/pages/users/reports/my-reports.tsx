@@ -1,24 +1,12 @@
-import { useRouter } from 'next/router';
-import Head from 'next/head';
-import React, { useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import NavBar from '../../components/nav_bar/nav_bar';
-import LoginPageBody from '../../components/login_page_body/login_page_body';
-import { ILocale } from '../../interfaces/locale';
-import { useUserCtx } from '../../contexts/user_context';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import Head from 'next/head';
+import React from 'react';
+import NavBar from '../../../components/nav_bar/nav_bar';
+import ReportsSidebar from '../../../components/reports_sidebar/reports_sidebar';
+import { ILocale } from '../../../interfaces/locale';
+import MyReportsSection from '../../../components/my_reports_section/my_reports_section';
 
-const LoginPage = () => {
-  const router = useRouter();
-  const { signedIn } = useUserCtx();
-
-  useEffect(() => {
-    if (signedIn) {
-      router.push(ISUNFA_ROUTE.SELECT_ENTITY);
-      // window.location.href = '/users/dashboard';
-    }
-  }, [signedIn]);
-
+const MyReportsPage = () => {
   return (
     <>
       <Head>
@@ -26,7 +14,7 @@ const LoginPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Login - iSunFA</title>
+        <title>My Reports - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -41,12 +29,17 @@ const LoginPage = () => {
         />
       </Head>
 
-      <div className="h-screen bg-white">
+      <div className="-mt-4 font-barlow">
         <div className="">
           <NavBar />
         </div>
-        <div className="pt-16">
-          <LoginPageBody />
+
+        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+          <ReportsSidebar />
+        </div>
+
+        <div className="bg-surface-neutral-main-background pb-40">
+          <MyReportsSection />
         </div>
       </div>
     </>
@@ -61,4 +54,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default LoginPage;
+export default MyReportsPage;

@@ -1,4 +1,9 @@
+import { IAccountResultStatus } from './accounting_account';
+import { ReportLanguagesKey } from './report_language';
+import { AnalysisReportTypesKey, FinancialReportTypesKey } from './report_type';
+
 export interface IAnalysisReportRequest {
+  project_id: string;
   type: string;
   language: string;
   start_date: Date;
@@ -9,11 +14,33 @@ export type IAnalysisReport = string | null;
 
 export type IFinancialReport = string | null;
 
+export type FinancialReportType =
+  (typeof FinancialReportTypesKey)[keyof typeof FinancialReportTypesKey];
+export type AnalysisReportType =
+  (typeof AnalysisReportTypesKey)[keyof typeof AnalysisReportTypesKey];
+
+export type FinancialReportLanguage = (typeof ReportLanguagesKey)[keyof typeof ReportLanguagesKey];
+
 export interface IFinancialReportRequest {
-  type: string;
-  language: string;
+  project_id: string;
+  type: FinancialReportType;
+  language: FinancialReportLanguage;
   start_date: Date;
   end_date: Date;
+}
+
+export function isFinancialReportType(data: string): data is FinancialReportType {
+  return (
+    data === FinancialReportTypesKey.balance_sheet ||
+    data === FinancialReportTypesKey.comprehensive_income_statement ||
+    data === FinancialReportTypesKey.cash_flow_statement
+  );
+}
+
+export interface IFinancialReportsProgreseStatusResponse extends IAccountResultStatus {
+  type: FinancialReportType;
+  startDate: Date;
+  endDate: Date;
 }
 
 // Info Murky (20240505): type guards can input any type and return a boolean
