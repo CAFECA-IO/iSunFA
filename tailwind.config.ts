@@ -1399,7 +1399,9 @@ module.exports = {
         slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
         slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
         slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
+        spinFast: 'spin 1s linear infinite',
       },
+
       content: {
         checked: '"✔"',
       },

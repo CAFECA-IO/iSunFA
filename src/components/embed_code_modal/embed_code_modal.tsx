@@ -307,7 +307,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
               className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
             >
-              <img src={icon} alt={name} className="h-6 w-6" />
+              <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
             </li>
           ))}
