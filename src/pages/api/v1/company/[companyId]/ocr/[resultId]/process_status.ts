@@ -29,6 +29,7 @@ export default async function handler(
 
         const resultJson: AccountProgressStatus = (await result.json()).payload;
 
+        // ToDo: (20240514 - Jacky) Should use uniform response handler
         res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: false,
@@ -44,6 +45,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+    // ToDo: (20240514 - Jacky) Should use uniform response handler
     const statusCode = errorMessageToErrorCode(error.message);
     res.status(statusCode).json({
       powerby: `ISunFa api ${version}`,

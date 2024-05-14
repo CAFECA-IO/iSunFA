@@ -36,6 +36,7 @@ export default async function handler(
           !end_date ||
           Array.isArray(end_date)
         ) {
+          // ToDo: (20240514 - Jacky) Should use uniform response handler
           res.status(400).json({
             powerby: 'iSunFA v' + version,
             success: false,
@@ -106,7 +107,7 @@ export default async function handler(
         }
 
         const resultJson: AccountResultStatus = (await result.json()).payload;
-
+        // ToDo: (20240514 - Jacky) Should use uniform response handler
         res.status(200).json({
           powerby: 'iSunFA v' + version,
           success: true,

@@ -23,7 +23,7 @@ export default async function handler(
       }
 
       const financialReportJSON = (await result.json()).payload;
-
+      // ToDo: (20240514 - Jacky) Should use uniform response handler
       if (!financialReportJSON) {
         res.status(200).json({
           powerby: 'ISunFa api ' + version,
@@ -37,7 +37,7 @@ export default async function handler(
       if (!isIFinancialReportJSON(financialReportJSON)) {
         throw new Error('INTERNAL_SERVICE_ERROR');
       }
-
+      // ToDo: (20240514 - Jacky) Should use uniform response handler
       res.status(200).json({
         powerby: 'ISunFa api ' + version,
         success: true,

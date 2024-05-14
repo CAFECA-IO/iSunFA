@@ -54,7 +54,7 @@ export default async function handler(
         }
 
         const resultJson: AccountResultStatus[] = (await result.json()).payload;
-
+        // ToDo: (20240514 - Jacky) Should use uniform response handler
         res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: true,
