@@ -24,7 +24,7 @@ import Toast from '@/components/toast/toast';
 import { toast as toastify } from 'react-toastify';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import { RxCross2 } from 'react-icons/rx';
-import CreateEntityModal from '@/components/create_entity_modal/create_entity_modal';
+import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 
 interface IGlobalContext {
   width: number;
@@ -64,11 +64,11 @@ interface IGlobalContext {
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
 
-  isEntityInvitationModalVisible: boolean;
-  entityInvitationModalVisibilityHandler: () => void;
+  isCompanyInvitationModalVisible: boolean;
+  companyInvitationModalVisibilityHandler: () => void;
 
-  isCreateEntityModalVisible: boolean;
-  createEntityModalVisibilityHandler: () => void;
+  isCreateCompanyModalVisible: boolean;
+  createCompanyModalVisibilityHandler: () => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -107,9 +107,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isEmbedCodeModalVisible, setIsEmbedCodeModalVisible] = useState(false);
 
-  const [isEntityInvitationModalVisible, setIsEntityInvitationModalVisible] = useState(false);
+  const [isCompanyInvitationModalVisible, setIsCompanyInvitationModalVisible] = useState(false);
 
-  const [isCreateEntityModalVisible, setIsCreateEntityModalVisible] = useState(false);
+  const [isCreateCompanyModalVisible, setIsCreateCompanyModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -168,12 +168,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsEmbedCodeModalVisible(!isEmbedCodeModalVisible);
   };
 
-  const entityInvitationModalVisibilityHandler = () => {
-    setIsEntityInvitationModalVisible(!isEntityInvitationModalVisible);
+  const companyInvitationModalVisibilityHandler = () => {
+    setIsCompanyInvitationModalVisible(!isCompanyInvitationModalVisible);
   };
 
-  const createEntityModalVisibilityHandler = () => {
-    setIsCreateEntityModalVisible(!isCreateEntityModalVisible);
+  const createCompanyModalVisibilityHandler = () => {
+    setIsCreateCompanyModalVisible(!isCreateCompanyModalVisible);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -294,10 +294,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     previewInvoiceModalDataHandler,
     isEmbedCodeModalVisible,
     embedCodeModalVisibilityHandler,
-    isEntityInvitationModalVisible,
-    entityInvitationModalVisibilityHandler,
-    isCreateEntityModalVisible,
-    createEntityModalVisibilityHandler,
+    isCompanyInvitationModalVisible,
+    companyInvitationModalVisibilityHandler,
+    isCreateCompanyModalVisible,
+    createCompanyModalVisibilityHandler,
     toastHandler,
     eliminateToast,
   };
@@ -352,9 +352,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={embedCodeModalVisibilityHandler}
       />
 
-      <CreateEntityModal
-        isModalVisible={isCreateEntityModalVisible}
-        modalVisibilityHandler={createEntityModalVisibilityHandler}
+      <CreateCompanyModal
+        isModalVisible={isCreateCompanyModalVisible}
+        modalVisibilityHandler={createCompanyModalVisibilityHandler}
       />
 
       <Toast />

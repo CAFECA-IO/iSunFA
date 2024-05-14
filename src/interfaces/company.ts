@@ -21,3 +21,11 @@ export interface ICompany {
   subscriptions: ISubscription[];
   users: IUser[];
 }
+
+export interface ICompanyItem {
+  name: string;
+  role: string;
+  brn: string;
+  icon: string;
+  isPassedKyc: boolean;
+}

@@ -9,7 +9,7 @@ import useOuterClick from '../../lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
 import { MessageType } from '@/interfaces/message_modal';
 
-interface ICreateEntityModal {
+interface ICreateCompanyModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
 }
@@ -26,14 +26,14 @@ const countryList = [
   },
 ];
 
-const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEntityModal) => {
+const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
   const {
     targetRef: menuRef,
     componentVisible: isMenuOpen,
     setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const { entityList } = useUserCtx();
+  const { companyList } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
   const [nameValue, setNameValue] = useState<string>('');
@@ -59,21 +59,21 @@ const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEn
     setIsMenuOpen(false);
   };
 
-  const createEntity = () => {
-    const isEntityPassedKyc =
-      Object.values(entityList).find(
-        (entity) => entity.name === nameValue || entity.brn === registrationNumberValue
+  const createCompany = () => {
+    const isCompanyPassedKyc =
+      Object.values(companyList).find(
+        (company) => company.name === nameValue || company.brn === registrationNumberValue
       )?.isPassedKyc ?? false;
 
-    const isRegistered = Object.values(entityList).some(
-      (entity) => entity.name === nameValue || entity.brn === registrationNumberValue
+    const isRegistered = Object.values(companyList).some(
+      (company) => company.name === nameValue || company.brn === registrationNumberValue
     );
 
     // Info: (20240514 - Julian) If the company has passed KYC, show a error message
-    if (isEntityPassedKyc) {
+    if (isCompanyPassedKyc) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'This Entity is already exist',
+        title: 'This Company is already exist',
         subMsg: 'This company has already been registered.',
         content: `Please review the entered information again, or you can contact the company administrator to join the company.`,
         submitBtnStr: 'Close',
@@ -103,7 +103,7 @@ const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEn
 
   const confirmClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    createEntity();
+    createCompany();
   };
 
   const displayCountryMenu = countryList.map((country) => {
@@ -129,7 +129,7 @@ const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEn
     );
   });
 
-  const isDisplayedCreateEntityModal = isModalVisible ? (
+  const isDisplayedCreateCompanyModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <form
         onSubmit={confirmClickHandler}
@@ -137,7 +137,7 @@ const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEn
       >
         {/* Info: (20240514 - Julian) Title */}
         <div className="flex justify-center px-20px">
-          <h2 className="text-xl font-bold leading-8 text-navyBlue2">Create My Entity</h2>
+          <h2 className="text-xl font-bold leading-8 text-navyBlue2">Create My Company</h2>
           <button
             onClick={cancelBtnClickHandler}
             className="absolute right-3 top-3 flex items-center justify-center text-darkBlue2"
@@ -147,15 +147,15 @@ const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEn
         </div>
 
         <div className="flex w-full flex-col justify-center gap-y-16px border-b border-t p-40px">
-          {/* Info: (20240514 - Julian) Entity Name */}
+          {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              Entity Name
+              Company Name
             </p>
             <input
-              id="entityNameInput"
+              id="companyNameInput"
               type="text"
-              placeholder="Enter entity name"
+              placeholder="Enter company name"
               value={nameValue}
               onChange={changeNameHandler}
               required
@@ -219,7 +219,7 @@ const CreateEntityModal = ({ isModalVisible, modalVisibilityHandler }: ICreateEn
     </div>
   ) : null;
 
-  return <div className="font-barlow">{isDisplayedCreateEntityModal}</div>;
+  return <div className="font-barlow">{isDisplayedCreateCompanyModal}</div>;
 };
 
-export default CreateEntityModal;
+export default CreateCompanyModal;

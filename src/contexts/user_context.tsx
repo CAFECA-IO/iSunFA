@@ -12,7 +12,7 @@ import { useRouter } from 'next/router';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { toast as toastify } from 'react-toastify';
-import { IEntityItem } from '@/interfaces/entity';
+import { ICompanyItem } from '@/interfaces/company';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -28,10 +28,10 @@ interface UserContextType {
   username: string | null;
   signedIn: boolean;
   isSignInError: boolean;
-  entityList: Record<string, IEntityItem>;
-  selectedEntity: string | null;
-  selectEntity: (entity: string) => void;
-  isSelectEntity: boolean;
+  companyList: Record<string, ICompanyItem>;
+  selectedCompany: string | null;
+  selectCompany: (company: string) => void;
+  isSelectCompany: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -43,10 +43,10 @@ export const UserContext = createContext<UserContextType>({
   username: '',
   signedIn: false,
   isSignInError: false,
-  entityList: {},
-  selectedEntity: null,
-  selectEntity: () => {},
-  isSelectEntity: false,
+  companyList: {},
+  selectedCompany: null,
+  selectCompany: () => {},
+  isSelectCompany: false,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -56,8 +56,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
-  const [selectedEntity, setSelectedEntity, selectedEntityRef] = useStateRef<string | null>(null);
-  const [isSelectEntity, setIsSelectEntity, isSelectEntityRef] = useStateRef(false);
+  const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<string | null>(
+    null
+  );
+  const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
 
   const {
     trigger: signOut,
@@ -73,7 +75,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  // ToDo: (20240513 - Julian) Get the entity list from API
+  // ToDo: (20240513 - Julian) Get the company list from API
 
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
 
@@ -263,8 +265,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ToDo: (20240513 - Julian) 選擇公司的功能
-  const selectEntity = (entity: string) => {
-    setSelectedEntity(entity);
+  const selectCompany = (company: string) => {
+    setSelectedCompany(company);
   };
 
   const clearState = () => {
@@ -273,8 +275,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setCredential(null);
     setSignedIn(false);
     setIsSignInError(false);
-    setSelectedEntity(null);
-    setIsSelectEntity(false);
+    setSelectedCompany(null);
+    setIsSelectCompany(false);
 
     toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
   };
@@ -317,8 +319,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20240514 - Julian) replace the defaultEntityList with the real data
-  const defaultEntityList: Record<string, IEntityItem> = {
+  // ToDo: (20240514 - Julian) replace the defaultCompanyList with the real data
+  const defaultCompanyList: Record<string, ICompanyItem> = {
     iSunCloud: {
       name: 'iSunCloud',
       role: 'Owner',
@@ -376,10 +378,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [signOutSuccess]);
 
   useEffect(() => {
-    if (selectedEntity) {
-      setIsSelectEntity(true);
+    if (selectedCompany) {
+      setIsSelectCompany(true);
     }
-  }, [selectedEntity]);
+  }, [selectedCompany]);
 
   const value = useMemo(
     () => ({
@@ -391,10 +393,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       signedIn: signedInRef.current,
       isSignInError: isSignInErrorRef.current,
-      entityList: defaultEntityList,
-      selectedEntity: selectedEntityRef.current,
-      selectEntity,
-      isSelectEntity: isSelectEntityRef.current,
+      companyList: defaultCompanyList,
+      selectedCompany: selectedCompanyRef.current,
+      selectCompany,
+      isSelectCompany: isSelectCompanyRef.current,
     }),
     [credentialRef.current]
   );

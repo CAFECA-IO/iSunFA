@@ -15,7 +15,7 @@ import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 import version from '../../lib/version';
 
 const NavBar = () => {
-  const { credential: credential, signedIn, signOut, username, isSelectEntity } = useUserCtx();
+  const { credential: credential, signedIn, signOut, username, isSelectCompany } = useUserCtx();
 
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
@@ -252,8 +252,8 @@ const NavBar = () => {
           </div>
         </div>
         <Link
-          href={ISUNFA_ROUTE.SELECT_ENTITY}
-          className={`mt-3 flex gap-2 rounded-xs px-4 py-2.5 ${isSelectEntity ? '' : 'pointer-events-none opacity-50'}`}
+          href={ISUNFA_ROUTE.SELECT_COMPANY}
+          className={`mt-3 flex gap-2 rounded-xs px-4 py-2.5 ${isSelectCompany ? '' : 'pointer-events-none opacity-50'}`}
         >
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -279,11 +279,11 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
-            Switch Entity
+            Switch Company
           </div>
         </Link>
         <button
-          disabled={!isSelectEntity} // Info: (20240513 - Julian) 如果沒有選擇 entity 就不能使用
+          disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
           <div className="my-auto flex items-center justify-center">
@@ -307,7 +307,7 @@ const NavBar = () => {
           </div>
         </button>
         <button
-          disabled={!isSelectEntity} // Info: (20240513 - Julian) 如果沒有選擇 entity 就不能使用
+          disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
           <div className="my-auto flex items-center justify-center">

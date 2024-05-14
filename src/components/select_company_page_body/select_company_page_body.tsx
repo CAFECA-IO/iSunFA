@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
-import { IEntityItem } from '@/interfaces/entity';
+import { ICompanyItem } from '../../interfaces/company';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { Button } from '../button/button';
@@ -11,26 +11,26 @@ import { useUserCtx } from '../../contexts/user_context';
 import { useGlobalCtx } from '../../contexts/global_context';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 
-const SelectEntityPageBody = () => {
-  const { signedIn, username, entityList } = useUserCtx();
-  const { entityInvitationModalVisibilityHandler, createEntityModalVisibilityHandler } =
+const SelectCompanyPageBody = () => {
+  const { signedIn, username, companyList } = useUserCtx();
+  const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
     useGlobalCtx();
 
-  const [selectedEntity, setSelectedEntity] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [searchValue, setSearchValue] = useState<string>('');
-  const [filteredEntityList, setFilteredEntityList] =
-    useState<Record<string, IEntityItem>>(entityList);
+  const [filteredCompanyList, setFilteredCompanyList] =
+    useState<Record<string, ICompanyItem>>(companyList);
 
   const {
-    targetRef: entityMenuRef,
-    componentVisible: isEntityMenuOpen,
-    setComponentVisible: setIsEntityMenuOpen,
+    targetRef: companyMenuRef,
+    componentVisible: isCompanyMenuOpen,
+    setComponentVisible: setIsCompanyMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedEntityName = selectedEntity || 'Select an Entity';
+  const selectedCompanyName = selectedCompany || 'Select an Company';
 
-  const menuOpenHandler = () => setIsEntityMenuOpen(!isEntityMenuOpen);
+  const menuOpenHandler = () => setIsCompanyMenuOpen(!isCompanyMenuOpen);
 
   const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);
@@ -38,9 +38,9 @@ const SelectEntityPageBody = () => {
 
   useEffect(() => {
     if (searchValue !== '') {
-      const filteredList = Object.entries(entityList).reduce(
+      const filteredList = Object.entries(companyList).reduce(
         (acc, [key, value]) => {
-          // Info: (20240514 - Julian) 搜尋 entity 名稱或角色
+          // Info: (20240514 - Julian) 搜尋 company 名稱或角色
           if (
             value.name.toLowerCase().includes(searchValue.toLowerCase()) ||
             value.role.toLowerCase().includes(searchValue.toLowerCase())
@@ -49,26 +49,26 @@ const SelectEntityPageBody = () => {
           }
           return acc;
         },
-        {} as Record<string, IEntityItem>
+        {} as Record<string, ICompanyItem>
       );
-      setFilteredEntityList(filteredList);
+      setFilteredCompanyList(filteredList);
     } else {
-      setFilteredEntityList(entityList);
+      setFilteredCompanyList(companyList);
     }
   }, [searchValue]);
 
-  const displayEntityMenu = (
+  const displayCompanyMenu = (
     <div
-      ref={entityMenuRef}
+      ref={companyMenuRef}
       className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5
-      ${isEntityMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
+      ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
       `}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240514 - Julian) search bar */}
         <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
           <input
-            id="entitySearchBar"
+            id="companySearchBar"
             type="text"
             placeholder="Search"
             value={searchValue}
@@ -77,17 +77,17 @@ const SelectEntityPageBody = () => {
           />
           <FiSearch size={16} />
         </div>
-        {/* Info: (20240514 - Julian) entity list */}
+        {/* Info: (20240514 - Julian) company list */}
         <div className="flex max-h-100px w-full flex-col items-start overflow-y-auto overflow-x-hidden">
-          {Object.entries(filteredEntityList).map(([key, value]) => {
-            const entityClickHandler = () => {
-              setSelectedEntity(value.name);
-              setIsEntityMenuOpen(false);
+          {Object.entries(filteredCompanyList).map(([key, value]) => {
+            const companyClickHandler = () => {
+              setSelectedCompany(value.name);
+              setIsCompanyMenuOpen(false);
             };
             return (
               <button
                 key={key}
-                onClick={entityClickHandler}
+                onClick={companyClickHandler}
                 type="button"
                 className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
               >
@@ -105,7 +105,7 @@ const SelectEntityPageBody = () => {
         {/* Info: (20240514 - Julian) enter invitation code */}
         <button
           type="button"
-          onClick={entityInvitationModalVisibilityHandler}
+          onClick={companyInvitationModalVisibilityHandler}
           className="gap flex w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
@@ -124,10 +124,10 @@ const SelectEntityPageBody = () => {
             Welcome back, <span className="text-amber-400">{userName}</span>!
           </div>
           <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
-            Select your Entity to log in, or create your own Entity team.
+            Select your Company to log in, or create your own Company team.
           </div>
         </div>
-        {/* Info: (20240513 - Julian) entity selection */}
+        {/* Info: (20240513 - Julian) company selection */}
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
           <div className="relative flex w-200px items-center justify-center py-4">
@@ -153,10 +153,10 @@ const SelectEntityPageBody = () => {
             </div>
           </div>
 
-          {/* Info: (20240513 - Julian) entity selection */}
+          {/* Info: (20240513 - Julian) company selection */}
           <div className="relative inline-flex w-full flex-col items-start justify-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-slate-700">
-              My Entity List
+              My Company List
             </p>
             <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-slate-300 bg-white shadow">
               <button
@@ -164,17 +164,17 @@ const SelectEntityPageBody = () => {
                 onClick={menuOpenHandler}
                 className="flex shrink grow items-center justify-between px-16px py-8px text-center text-base font-medium leading-normal tracking-tight"
               >
-                <p className=" text-lightGray4">{selectedEntityName}</p>
+                <p className=" text-lightGray4">{selectedCompanyName}</p>
                 <FaChevronDown
                   size={16}
-                  className={`text-darkBlue2 ${isEntityMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+                  className={`text-darkBlue2 ${isCompanyMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
                 />
               </button>
               <div className="w-px self-stretch bg-slate-300" />
               <button
-                // ToDo: (20240514 - Julian) select entity function
+                // ToDo: (20240514 - Julian) select company function
                 type="button"
-                disabled={selectedEntity === ''}
+                disabled={selectedCompany === ''}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
               >
                 <svg
@@ -195,14 +195,14 @@ const SelectEntityPageBody = () => {
               </button>
 
               {/* Info: (20240514 - Julian) dropdown menu */}
-              {displayEntityMenu}
+              {displayCompanyMenu}
             </div>
           </div>
           <div className="flex flex-col items-center gap-y-16px">
-            {/* Info: (20240513 - Julian) create entity button */}
+            {/* Info: (20240513 - Julian) create company button */}
             <Button
               type="button"
-              onClick={createEntityModalVisibilityHandler}
+              onClick={createCompanyModalVisibilityHandler}
               variant={'tertiary'}
               className="mx-auto flex h-44px items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal"
             >
@@ -220,7 +220,7 @@ const SelectEntityPageBody = () => {
                   fill="#FCFDFF"
                 />
               </svg>
-              <p>Create My Entity</p>
+              <p>Create My Company</p>
               <FaArrowRight />
             </Button>
 
@@ -240,4 +240,4 @@ const SelectEntityPageBody = () => {
   );
 };
 
-export default SelectEntityPageBody;
+export default SelectCompanyPageBody;
