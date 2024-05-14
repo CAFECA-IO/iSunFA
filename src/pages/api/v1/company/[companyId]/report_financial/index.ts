@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
-import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
+import { IFinancialReport } from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 const mockFinancialReportUrl: IFinancialReport = 'http://www.google.com.br';
 
@@ -9,37 +10,47 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IFinancialReport>>
 ) {
-  const {
-    type,
-    language,
-    start_date: startDate,
-    end_date: endDate,
-  }: IFinancialReportRequest = req.body;
-  if (req.method !== 'POST' || !type || !language || !startDate || !endDate) {
-    res.status(400).json({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'bad request',
-      payload: null,
-    });
-    return;
+  try {
+    switch (req.method) {
+      case 'GET': {
+        const { type } = req.query;
+        const { language } = req.query;
+        const startDate = req.query.start_date;
+        const endDate = req.query.end_date;
+
+        if (
+          !type ||
+          !language ||
+          !startDate ||
+          !endDate ||
+          typeof type !== 'string' ||
+          typeof language !== 'string' ||
+          typeof startDate !== 'string' ||
+          typeof endDate !== 'string' ||
+          (type !== 'Balance Sheet' &&
+            type !== 'Income Statement' &&
+            type !== 'Cash Flow Statement')
+        ) {
+          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+        }
+
+        const { httpCode, result } = formatApiResponse<IFinancialReport>(
+          STATUS_MESSAGE.CREATED,
+          mockFinancialReportUrl
+        );
+        res.status(httpCode).json(result);
+        break;
+      }
+      default: {
+        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      }
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<IFinancialReport>(
+      error.message,
+      {} as IFinancialReport
+    );
+    res.status(httpCode).json(result);
   }
-  if (type !== 'Balance Sheet' && type !== 'Income Statement' && type !== 'Cash Flow Statement') {
-    res.status(400).json({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'bad request',
-      payload: null,
-    });
-    return;
-  }
-  res.status(200).json({
-    powerby: 'iSunFA v' + version,
-    success: true,
-    code: '200',
-    message: 'request successful',
-    payload: mockFinancialReportUrl,
-  });
 }
