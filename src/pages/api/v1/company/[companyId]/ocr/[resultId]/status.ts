@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AccountProgressStatus } from '@/interfaces/account';
 import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 
@@ -28,11 +28,11 @@ export default async function handler(
         }
 
         const resultJson: AccountProgressStatus = (await result.json()).payload;
-
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        // ToDo: (20240514 - Jacky) Should use uniform response handler
+        res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: false,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: `OCR analyzing progress status of id:${resultId} return successfully`,
           payload: resultJson,
         });

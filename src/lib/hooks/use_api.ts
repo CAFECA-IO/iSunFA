@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { HttpMethod } from '@/constants/api_connection';
-import { STATUS_CODE } from '@/constants/status_code';
+import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ const useAPI = <Data>(
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
-        setCode(STATUS_CODE.INTERNAL_SERVICE_ERROR);
+        setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       } finally {
         setIsLoading(false);
       }

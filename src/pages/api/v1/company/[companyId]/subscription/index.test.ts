@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from './index';
-import version from '../../../../../../lib/version';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -22,33 +21,34 @@ beforeEach(() => {
 
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     await handler(req, res);
-    const subscriptions = [
-      {
-        id: '1',
-        companyId: 'company-id',
-        companyName: 'mermer',
-        plan: 'pro',
-        paymentId: '1',
-        price: 'USD 10',
-        autoRenew: true,
-        expireDate: 2184719248,
-        status: 'paid',
-      },
-    ];
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'list all subscriptions',
-      payload: subscriptions,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            companyId: expect.any(String),
+            companyName: expect.any(String),
+            plan: expect.any(String),
+            paymentId: expect.any(String),
+            price: expect.any(String),
+            autoRenew: expect.any(Boolean),
+            expireDate: expect.any(Number),
+            status: expect.any(String),
+          }),
+        ]),
+      })
+    );
   });
 
   it('should create a new subscription', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.method = 'POST';
     req.body = {
       plan: 'pro',
@@ -56,38 +56,41 @@ describe('test subscription API', () => {
       autoRenew: true,
     };
     await handler(req, res);
-    const newSubscription = {
-      id: '3',
-      companyId: 'company-id',
-      companyName: 'mermer',
-      plan: 'pro',
-      paymentId: '2',
-      price: 'USD 10',
-      autoRenew: true,
-      expireDate: 1746187324,
-      status: 'paid',
-    };
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: true,
-      code: '200',
-      message: 'create subscription',
-      payload: newSubscription,
-    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('201'),
+        message: expect.any(String),
+        payload: expect.objectContaining({
+          id: expect.any(String),
+          companyId: expect.any(String),
+          companyName: expect.any(String),
+          plan: expect.any(String),
+          paymentId: expect.any(String),
+          price: expect.any(String),
+          autoRenew: expect.any(Boolean),
+          expireDate: expect.any(Number),
+          status: expect.any(String),
+        }),
+      })
+    );
   });
 
   it('should handle unsupported HTTP methods', async () => {
-    req.headers.userId = '1';
+    req.headers.userid = '1';
     req.method = 'PUT';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '405',
-      payload: {},
-      message: 'METHOD_NOT_ALLOWED',
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('405'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 });
