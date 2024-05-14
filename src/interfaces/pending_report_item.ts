@@ -64,14 +64,14 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
   },
   {
     id: 'sclika',
-    name: 'Balance Sheet-20240505-1',
+    name: 'Cash Flow Statement-20240505-1',
     createdTimestamp: 1714897574,
     period: { startTimestamp: 1695609600, endTimestamp: 1698106883 }, // 2023-09-25 to 2023-10-24
     remainingSeconds: 3800,
   },
   {
     id: 'qxh66j',
-    name: 'Balance Sheet-20240412-1',
+    name: 'Comprehensive Income Statement-20240412-1',
     createdTimestamp: 1712863312,
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
     remainingSeconds: 3800,
@@ -126,3 +126,21 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 3800,
   },
 ];
+
+export interface IGeneratedReportItem {
+  id: string;
+  name: string;
+  createdTimestamp: number;
+  period: {
+    startTimestamp: number;
+    endTimestamp: number;
+  };
+  blockchainExplorerLink: string;
+  project: {
+    id: string;
+    name: string;
+    abbreviation: string;
+  };
+  downloadLink: string;
+  // shareLink: string;
+}

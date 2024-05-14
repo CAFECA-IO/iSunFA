@@ -119,7 +119,7 @@ const PendingReportItem = ({
       key={id}
       className="h-20 border-b border-lightGray6 text-center align-middle text-lightGray4"
     >
-      {/* Info: (20240514 - Shirley) 選取方塊 */}
+      {/* Info: (20240514 - Shirley) checkboxes */}
       {isCheckboxVisible ? (
         <td className="h-20 px-10px">
           <input
@@ -134,7 +134,7 @@ const PendingReportItem = ({
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdTimestamp} />
       </td>
-      <td className="pl-5 text-start text-base">{name}</td>
+      <td className="pl-5 text-start text-base text-text-neutral-primary">{name}</td>
       <td className="px-16px text-left font-medium text-navyBlue2">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">From</span>
@@ -143,7 +143,7 @@ const PendingReportItem = ({
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
-      {/* Info: (20240514 - Shirley) From / To */}
+      {/* Info: (20240514 - Shirley) Remaining time */}
       <td className="px-16px text-left font-medium text-navyBlue2">
         <div className="space-x-1 text-xs">
           <span className="text-text-neutral-primary">{remaining.minutes}</span>

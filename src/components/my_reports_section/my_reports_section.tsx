@@ -78,6 +78,20 @@ const MyReportsSection = () => {
     setIsCheckboxVisible(!isCheckboxVisible);
   };
 
+  const toggleAllPaused = () => {
+    setIsAllPaused(!isAllPaused);
+  };
+
+  const pauseClickHandler = () => {
+    toggleAllPaused();
+    // TODO: LOCK and send paused request (20240514 - Shirley)
+  };
+
+  const resumeClickHandler = () => {
+    toggleAllPaused();
+    // TODO:LOCK and send resumed request (20240514 - Shirley)
+  };
+
   const displayedPendingSortMenu = (
     <div
       ref={pendingSortMenuRef}
@@ -153,7 +167,7 @@ const MyReportsSection = () => {
   );
 
   const displayedPauseOrResumeButton = !isAllPaused ? (
-    <Button variant={'secondaryOutline'} className="px-2 py-2">
+    <Button onClick={pauseClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
       {' '}
       {/* Info: Pause (20240513 - Shirley) */}
       <svg
@@ -172,7 +186,7 @@ const MyReportsSection = () => {
       </svg>
     </Button>
   ) : (
-    <Button variant={'secondaryOutline'} className="px-2 py-2">
+    <Button onClick={resumeClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
       {' '}
       {/* Info: Resume (20240514 - Shirley) */}
       <svg
@@ -249,7 +263,7 @@ const MyReportsSection = () => {
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
-    <div className="hideScrollbar mr-10 overflow-x-scroll">
+    <div className="hideScrollbar overflow-x-scroll lg:mr-10">
       {' '}
       <PendingReportList reports={pendingData} isCheckboxVisible={isCheckboxVisible} />
     </div>

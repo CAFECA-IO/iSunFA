@@ -46,7 +46,7 @@ const PendingReportList = ({ reports, isCheckboxVisible }: IPendingReportListPro
     <th className="flex h-10 justify-center pt-10px">
       <input
         checked={allChecked}
-        onClick={allCheckboxClickHandler}
+        onChange={allCheckboxClickHandler}
         type="checkbox"
         className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
       />
@@ -58,7 +58,7 @@ const PendingReportList = ({ reports, isCheckboxVisible }: IPendingReportListPro
       {/* Info: (20240514 - Shirley) Header */}
       <thead>
         <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
-          {/* Info: (20240514 - Shirley) 全選 */}
+          {/* Info: (20240514 - Shirley) checkboxes */}
           {displayedCheckbox}
           <th className="text-center">Date</th>
           <th className="px-16px">Report Name</th>
