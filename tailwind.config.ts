@@ -723,6 +723,7 @@ module.exports = {
 
         errorRed: '#963737',
         errorRed2: '#FED7D7',
+        errorRed3: '#FB5C5C',
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',
@@ -1113,6 +1114,7 @@ module.exports = {
         '11rem': '11rem',
         '12rem': '12rem',
         '13rem': '13rem',
+        '14rem': '14rem',
         '15rem': '15rem',
         '16rem': '16rem',
         '17rem': '17rem',
@@ -1336,6 +1338,7 @@ module.exports = {
         '250px': '250px',
         '260px': '260px',
         '280px': '280px',
+        '300px': '300px',
       },
       minWidth: {
         '200px': '200px',

@@ -20,7 +20,7 @@ const DashboardPageBody = () => {
   );
 
   return (
-    <div className="mx-10 pb-20 pt-5 max-md:pt-10">
+    <div className="bg-surface-neutral-main-background px-10 pb-20 pt-5 max-md:pt-10">
       {' '}
       <div className="mt-14 flex w-full flex-col px-3 max-md:mt-10 max-md:max-w-full max-md:px-5">
         {pageHeader}

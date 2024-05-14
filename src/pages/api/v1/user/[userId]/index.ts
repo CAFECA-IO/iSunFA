@@ -1,69 +1,60 @@
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/../prisma/client';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IUser>>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IUser>>
+) {
   const { method } = req;
-  const { userid } = req.query;
+  const { userId } = req.query;
+  const userIdNum = Number(userId);
   try {
     if (!req.headers.userid) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
-    if (!userid) {
-      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
-    }
-    if (userid !== '1') {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+    if (!userIdNum) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
     if (method === 'GET') {
       // Handle GET request to retrieve user by userid
-      const user: IUser = {
-        id: '1',
-        name: 'John',
-        fullName: 'John Doe',
-        email: 'john@mermer.cc',
-        phone: '12345678',
-        kycStatus: 'verified',
-        credentialId: '1',
-        publicKey: 'public-key',
-        algorithm: 'ES256',
-      };
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_GET, user);
+      const user: IUser | null = await prisma.user.findUnique({
+        where: {
+          id: userIdNum,
+        },
+      });
+      if (!user) {
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_GET, user);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       // Handle PUT request to update user by userid
-      const user: IUser = {
-        id: userid,
-        name: 'John',
-        fullName: 'John Doe',
-        email: 'john@mermer.cc',
-        phone: '12345678',
-        kycStatus: 'verified',
-        credentialId: '1',
-        publicKey: 'public-key',
-        algorithm: 'ES256',
-      };
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_UPDATE, user);
+      const user: IUser = await prisma.user.update({
+        where: {
+          id: userIdNum,
+        },
+        data: {
+          name: 'Curry111',
+          email: 'curry@curry.com',
+        },
+      });
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_UPDATE, user);
       res.status(httpCode).json(result);
     } else if (method === 'DELETE') {
       // Handle DELETE request to delete user by userid
-      const user: IUser = {
-        id: userid,
-        name: 'John',
-        fullName: 'John Doe',
-        email: 'john@mermer.cc',
-        phone: '12345678',
-        kycStatus: 'verified',
-        credentialId: '1',
-        publicKey: 'public-key',
-        algorithm: 'ES256',
-      };
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_CODE.SUCCESS_DELETE, user);
+      const user: IUser = await prisma.user.delete({
+        where: {
+          id: userIdNum,
+        },
+      });
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_DELETE, user);
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     // Handle errors

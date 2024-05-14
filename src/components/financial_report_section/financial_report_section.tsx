@@ -1,20 +1,71 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+// import Link from 'next/link';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '../button/button';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import { ReportTypesKey, ReportTypesMap } from '../../interfaces/report_type';
+// import { ISUNFA_ROUTE } from '../../constants/url';
+import { FinancialReportTypesKey, FinancialReportTypesMap } from '../../interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
+import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
 const FinancialReportSection = () => {
+  const { companyId } = useAccountingCtx();
+  const {
+    trigger: generateFinancialReport,
+    data: generatedResult,
+    // code: generatedCode,
+    success: generatedSuccess,
+  } = APIHandler<IAccountResultStatus>(
+    APIName.GENERATE_FINANCIAL_REPORT,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: getFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: progress, // Info: 這邊預計得到 IFinancialReportsProgreseStatusResponse[] (20240513 - Tzuahan)
+    // code: progressCodee,
+    // success: getProgressSuccess,
+  } = APIHandler<IAccountResultStatus[]>(
+    APIName.GET_FINANCIAL_REPORTS_PROGRESS,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: getFinancialReport, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    // data: report,
+    // code: reportCodee,
+    // success: getReportSuccess,
+  } = APIHandler<IFinancialReport>(
+    APIName.GET_FINANCIAL_REPORT,
+    {
+      params: { companyId, reportId: 'reportId' },
+    },
+    false,
+    false
+  );
   const [period, setPeriod] = useState(default30DayPeriodInSec);
-
-  const [selectedReportType, setSelectedReportType] = useState<ReportTypesKey>(
-    ReportTypesKey.balance_sheet
+  const [selectedProjectName, setSelectedProjectName] =
+    useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
+    FinancialReportTypesKey.balance_sheet
   );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
@@ -22,9 +73,15 @@ const FinancialReportSection = () => {
   const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
 
   const {
-    targetRef: menuRef,
-    componentVisible: isMenuOpen,
-    setComponentVisible: setIsMenuOpen,
+    targetRef: projectMenuRef,
+    componentVisible: isProjectMenuOpen,
+    setComponentVisible: setIsProjectMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: typeMenuRef,
+    componentVisible: isTypeMenuOpen,
+    setComponentVisible: setIsTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
@@ -33,16 +90,26 @@ const FinancialReportSection = () => {
     setComponentVisible: setIsLanguageMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const menuClickHandler = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const projectMenuClickHandler = () => {
+    setIsProjectMenuOpen(!isProjectMenuOpen);
   };
 
-  const menuOptionClickHandler = (id: ReportTypesKey) => {
+  const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
+    setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
+
+    setIsProjectMenuOpen(false);
+  };
+
+  const typeMenuClickHandler = () => {
+    setIsTypeMenuOpen(!isTypeMenuOpen);
+  };
+
+  const menuOptionClickHandler = (id: FinancialReportTypesKey) => {
     setSelectedReportType(id);
-    setIsMenuOpen(false);
+    setIsTypeMenuOpen(false);
   };
 
-  const selectedReportName = ReportTypesMap[selectedReportType].name;
+  const selectedReportName = FinancialReportTypesMap[selectedReportType].name;
   const selectedLanguage = ReportLanguagesMap[selectedReportLanguage];
 
   const languageMenuClickHandler = () => {
@@ -54,11 +121,25 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+  // const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+
+  const genereateReportHandler = () => {
+    const body: IFinancialReportRequest = {
+      project_id: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
+      type: selectedReportType,
+      language: selectedReportLanguage,
+      start_date: new Date(period.startTimeStamp),
+      end_date: new Date(period.endTimeStamp),
+    };
+
+    generateFinancialReport({
+      body,
+    });
+  };
 
   useEffect(() => {
     setDatePickerType((prev) => {
-      if (selectedReportType === ReportTypesKey.balance_sheet) {
+      if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
         return DatePickerType.CHOOSE_DATE;
       } else {
         return DatePickerType.CHOOSE_PERIOD;
@@ -66,13 +147,142 @@ const FinancialReportSection = () => {
     });
   }, [selectedReportType]);
 
-  const displayedReportTypeMenu = (
-    <div ref={menuRef} className="relative flex w-full">
-      <button
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-white px-3 py-2.5 ${
-          isMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+  useEffect(() => {
+    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    if (isProjectMenuOpen) {
+      setSearchQuery('');
+    }
+  }, [isProjectMenuOpen]);
+
+  const displayedProjectMenu = (
+    <div ref={projectMenuRef} className="relative flex w-full">
+      <div
+        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+          isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
-        onClick={menuClickHandler}
+      >
+        <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
+          <div className="text-center text-input-text-input-filled">Project</div>
+          <div
+            className={`h-11 w-px ${
+              isProjectMenuOpen ? 'bg-input-stroke-selected' : 'bg-dropdown-stroke-menu'
+            }`}
+          />
+        </div>
+
+        <button
+          className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
+          onClick={projectMenuClickHandler}
+        >
+          <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
+            {selectedProjectName}
+          </div>
+
+          <div className="my-auto flex flex-col justify-center px-0 py-0">
+            <div className="flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill="#314362"
+                  fillRule="evenodd"
+                  d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Info: Project Menu (20240425 - Shirley) */}
+      <div
+        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isProjectMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
+      >
+        <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border-none focus:outline-none"
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M3.906 2.413a5.409 5.409 0 116.01 8.994 5.409 5.409 0 01-6.01-8.994zm3.005.088a4.409 4.409 0 104.41 4.41M6.91 2.5a4.41 4.41 0 014.41 4.41"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M10.22 10.219a.5.5 0 01.707 0l3.429 3.428a.5.5 0 01-.707.707l-3.429-3.428a.5.5 0 010-.707z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          </div>
+
+          <div className="mt-2 max-h-14rem w-full overflow-y-auto">
+            {Object.keys(DUMMY_PROJECTS_MAP)
+              .filter((project) =>
+                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+              )
+              .map((project) => (
+                <li
+                  key={project}
+                  onClick={() =>
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                  }
+                  className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
+                >
+                  <div className="flex cursor-pointer items-center gap-2">
+                    {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon ? (
+                      <div className="h-6 w-6">
+                        <Image
+                          src={DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].icon}
+                          alt={project}
+                          width={20}
+                          height={20}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="text-base font-medium leading-6 tracking-normal">
+                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
+                    </div>
+                  </div>
+                </li>
+              ))}
+          </div>
+        </ul>
+      </div>
+    </div>
+  );
+
+  const displayedReportTypeMenu = (
+    <div ref={typeMenuRef} className="relative flex w-full">
+      <button
+        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
+          isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
+        onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
           {selectedReportName}
@@ -99,16 +309,16 @@ const FinancialReportSection = () => {
       {/* Info: Report Type Menu (20240425 - Shirley) */}
       <div
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
-          isMenuOpen
+          isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
         }`}
       >
-        <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
-          {Object.entries(ReportTypesMap).map(([id, { name }]) => (
+        <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
+          {Object.entries(FinancialReportTypesMap).map(([id, { name }]) => (
             <li
               key={id}
-              onClick={() => menuOptionClickHandler(id as ReportTypesKey)}
+              onClick={() => menuOptionClickHandler(id as FinancialReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {name}
@@ -122,7 +332,7 @@ const FinancialReportSection = () => {
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 max-md:max-w-full ${
+        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
@@ -133,7 +343,7 @@ const FinancialReportSection = () => {
           src={selectedLanguage?.icon ?? '/icons/en.svg'}
           alt="language icon"
         />
-        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-slate-700">
+        <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
           {selectedLanguage?.name}
         </div>
         <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -163,14 +373,14 @@ const FinancialReportSection = () => {
             : 'grid-rows-0 border-transparent'
         }`}
       >
-        <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
+        <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
           {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
             >
-              <img src={icon} alt={name} className="h-6 w-6" />
+              <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
             </li>
           ))}
@@ -179,40 +389,46 @@ const FinancialReportSection = () => {
     </div>
   );
 
+  useEffect(() => {
+    // TODO: 這邊要根據新的 UI 規格來設計，目前先用 console.log 來測試 @Shirley (20240513 - tzuhan)
+    console.log('generatedResult', generatedResult);
+  }, [generatedSuccess]);
+
   const displayedButtonOrLink =
     !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
       <Button
-        disabled={true}
         className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        onClick={genereateReportHandler}
       >
-        <Link href={targetedReportViewLink}>
-          <div className="flex gap-1">
-            <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
-            <div className="my-auto flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="17"
-                height="16"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <g>
-                  <path
-                    className="fill-current"
-                    fill="none"
-                    fillRule="evenodd"
-                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
-              </svg>
-            </div>
+        {/* <Link href={targetedReportViewLink}> */}
+        <div className="flex gap-1">
+          <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+          <div className="my-auto flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="17"
+              height="16"
+              fill="none"
+              viewBox="0 0 17 16"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
           </div>
-        </Link>
+        </div>
+        {/* </Link> */}
       </Button>
     ) : (
-      <Link
-        href={targetedReportViewLink}
+      <Button
+        // href={targetedReportViewLink}
+        onClick={genereateReportHandler}
         className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <div className="flex gap-1">
@@ -237,16 +453,18 @@ const FinancialReportSection = () => {
             </svg>
           </div>
         </div>
-      </Link>
+      </Button>
     );
 
   return (
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
+          {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">Financial Report</div>
+            <div className="w-full justify-center px-10 md:px-28">Financial Reports</div>
           </div>
+          {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <div>
@@ -258,8 +476,7 @@ const FinancialReportSection = () => {
                   className="aspect-square shrink-0"
                 />
               </div>
-
-              <div className="mt-1.5">Financial Report</div>
+              <div className="mt-1.5">Financial Reports</div>
             </div>
           </div>
 
@@ -270,24 +487,34 @@ const FinancialReportSection = () => {
           </div>
         </div>
       </div>
-      <div className="mt-16 flex w-600px max-w-full flex-col self-center px-5 max-md:mt-3">
+      {/* Info: options for generation (20240513 - Shirley) */}
+      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
-            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+              Project
+            </div>
+
+            {displayedProjectMenu}
+          </div>
+        </div>
+        <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
+          <div className="flex flex-col gap-3 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               Report Type
             </div>
             {displayedReportTypeMenu}
           </div>
         </div>
-        <div className="mt-20 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
+        <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
-            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-slate-700 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               Report Language
             </div>
             {displayedLanguageMenu}
           </div>
         </div>
-        <div className="mt-20 flex flex-col max-md:mt-10 max-md:max-w-full">
+        <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
             {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
             {/* Info: 左橫線 (20240425 - Shirley) */}
@@ -344,7 +571,14 @@ const FinancialReportSection = () => {
             />
           </div>
         </div>
-        {displayedButtonOrLink}
+        <div className="my-10 flex flex-col justify-center">
+          <p>
+            Attention: The report will take approximately 30 to 40 minutes to generate. Once
+            completed, it will be stored in "My Reports." Please check back later. Thank you for
+            your patience.
+          </p>
+        </div>
+        {displayedButtonOrLink}{' '}
       </div>
     </div>
   );

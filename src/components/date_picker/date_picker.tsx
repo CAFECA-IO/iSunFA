@@ -46,6 +46,7 @@ interface IDatePickerProps {
   className?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
+  onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -191,6 +192,7 @@ const DatePicker = ({
   className,
   calenderClassName,
   buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
+  onClose,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -224,6 +226,10 @@ const DatePicker = ({
         startTimeStamp: dateOneStamp,
         endTimeStamp: isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp,
       });
+      // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
+      if (onClose) {
+        onClose();
+      }
     } else {
       setFilteredPeriod({
         startTimeStamp: 0,
@@ -328,14 +334,21 @@ const DatePicker = ({
 
   // Info: (20240417 - Shirley) 顯示時間區間
   const displayedPeriod =
-    dateOne && dateTwo
-      ? dateOne.getTime() !== 0 && dateTwo.getTime() !== 0
-        ? type === DatePickerType.CHOOSE_DATE
-          ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date}`
-          : `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
-              'DATE_PICKER.TO'
-            )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
-        : defaultPeriodText
+    // dateOne && dateTwo
+    //   ? dateOne.getTime() !== 0 && dateTwo.getTime() !== 0
+    //     ? type === DatePickerType.CHOOSE_DATE
+    //       ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date}`
+    //       : `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
+    //           'DATE_PICKER.TO'
+    //         )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
+    //     : defaultPeriodText
+    //   : defaultPeriodText;
+    period.startTimeStamp !== 0 && period.endTimeStamp !== 0 // Info: (20240510 - Julian) edited
+      ? type === DatePickerType.CHOOSE_DATE
+        ? `${timestampToString(period.startTimeStamp).date}`
+        : `${timestampToString(period.startTimeStamp).date} ${t(
+            'DATE_PICKER.TO'
+          )} ${timestampToString(period.endTimeStamp).date}`
       : defaultPeriodText;
 
   // Info: (20240417 - Shirley) 顯示月份和年份
@@ -350,7 +363,7 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 font-inter text-lightGray3 hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-lightGray3 hover:cursor-pointer',
           // props control style
           className,
           // variables control style
@@ -388,7 +401,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white p-3 font-inter hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
           className,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
@@ -435,7 +448,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white p-3 font-inter hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
           className,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,

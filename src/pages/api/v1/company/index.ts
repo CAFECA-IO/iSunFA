@@ -1,4 +1,4 @@
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -10,7 +10,7 @@ export default function handler(
 ) {
   try {
     if (!req.headers.userid) {
-      throw new Error(STATUS_CODE.RESOURCE_NOT_FOUND);
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
       const companyList: ICompany[] = [
@@ -28,7 +28,7 @@ export default function handler(
         },
       ];
       const { httpCode, result } = formatApiResponse<ICompany[]>(
-        STATUS_CODE.SUCCESS_GET,
+        STATUS_MESSAGE.SUCCESS_GET,
         companyList
       );
       res.status(httpCode).json(result);
@@ -39,10 +39,10 @@ export default function handler(
         regional: 'East',
         name: 'GHI Company',
       };
-      const { httpCode, result } = formatApiResponse<ICompany>(STATUS_CODE.CREATED, newCompany);
+      const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.CREATED, newCompany);
       res.status(httpCode).json(result);
     } else {
-      throw new Error(STATUS_CODE.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

@@ -1,25 +1,19 @@
-import { PaymentPeriodType, PaymentStatusType, VoucherType } from './account';
+import { VoucherType } from './account';
 import { ILineItem, isILineItem } from './line_item';
+import { IPayment, isIPayment } from './payment';
 
 export interface IVoucherMetaData {
   date: number;
   voucherType: VoucherType;
-  companyId: string; // 手動輸入
-  companyName: string; // vendor supplier 改成這個
+  companyId: string;
+  companyName: string;
   description: string;
-  totalPrice: number;
-  taxPercentage: number;
-  fee: number;
-  paymentMethod: string;
-  paymentPeriod: PaymentPeriodType;
-  installmentPeriod: number;
-  paymentStatus: PaymentStatusType;
-  alreadyPaidAmount: number;
   reason: string; // 從paymentReason改這個
   projectId: string;
   project: string;
   contractId: string;
   contract: string;
+  payment: IPayment;
 }
 
 export interface IVoucher {
@@ -36,19 +30,12 @@ function isIVoucherMetaData(arg: IVoucherMetaData): arg is IVoucherMetaData {
     typeof arg.companyId !== 'string' ||
     typeof arg.companyName !== 'string' ||
     typeof arg.description !== 'string' ||
-    typeof arg.totalPrice !== 'number' ||
-    typeof arg.taxPercentage !== 'number' ||
-    typeof arg.fee !== 'number' ||
-    typeof arg.paymentMethod !== 'string' ||
-    typeof arg.paymentPeriod !== 'string' ||
-    typeof arg.installmentPeriod !== 'number' ||
-    typeof arg.paymentStatus !== 'string' ||
-    typeof arg.alreadyPaidAmount !== 'number' ||
     typeof arg.reason !== 'string' ||
     typeof arg.projectId !== 'string' ||
     typeof arg.project !== 'string' ||
     typeof arg.contractId !== 'string' ||
-    typeof arg.contract !== 'string'
+    typeof arg.contract !== 'string' ||
+    isIPayment(arg.payment)
   ) {
     return false;
   }

@@ -1,15 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
 import NavBar from '../../../../components/nav_bar/nav_bar';
 import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import ViewReportSection from '../../../../components/view_report_section/view_report_section';
-import { ReportTypesKey, ReportTypesMap } from '../../../../interfaces/report_type';
+import ViewFinancialSection from '../../../../components/view_financial_section/view_financial_section';
+import {
+  FinancialReportTypesKey,
+  FinancialReportTypesMap,
+} from '../../../../interfaces/report_type';
 import { ReportLanguagesKey } from '../../../../interfaces/report_language';
 
 interface IServerSideProps {
-  reportType: ReportTypesKey;
+  reportType: FinancialReportTypesKey;
   reportLanguage: ReportLanguagesKey;
   startTimestamp: string;
   endTimestamp: string;
@@ -27,9 +31,9 @@ const ReportLink = {
   cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
 } as const;
 
-// TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: IServerSideProps) => {
+  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+
   const dummyReportData = {
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
@@ -43,7 +47,7 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{ReportTypesMap[reportType].name} - iSunFA</title>
+        <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -68,8 +72,8 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
         </div>
 
         <div className="h-screen bg-surface-neutral-main-background">
-          <ViewReportSection
-            reportTypesName={ReportTypesMap[reportType] as { id: string; name: string }}
+          <ViewFinancialSection
+            reportTypesName={FinancialReportTypesMap[reportType] as { id: string; name: string }}
             tokenContract={dummyReportData.tokenContract}
             tokenId={dummyReportData.tokenId}
             reportLink={dummyReportData.reportLink}

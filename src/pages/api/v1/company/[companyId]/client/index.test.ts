@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/../prisma/client';
+import { IClient } from '@/interfaces/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
+let client: IClient;
 
-beforeEach(() => {
+beforeEach(async () => {
   req = {
     headers: {},
     body: null,
@@ -17,10 +20,55 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  const createdClient = await prisma.client.create({
+    data: {
+      company: {
+        connectOrCreate: {
+          where: {
+            id: 1,
+          },
+          create: {
+            name: 'Test Company',
+            code: 'TST',
+            regional: 'TW',
+          },
+        },
+      },
+      favorite: false,
+    },
+    include: {
+      company: {
+        select: {
+          name: true,
+          code: true,
+        },
+      },
+    },
+  });
+  client = {
+    ...createdClient,
+    companyId: createdClient.companyId,
+    companyName: createdClient.company.name,
+    code: createdClient.company.code,
+  };
+  return client;
 });
 
-afterEach(() => {
+afterEach(async () => {
   jest.clearAllMocks();
+  const afterClient = await prisma.client.findUnique({
+    where: {
+      id: client.id,
+    },
+  });
+  if (afterClient) {
+    await prisma.client.delete({
+      where: {
+        id: client.id,
+      },
+    });
+  }
 });
 
 describe('Client API Handler Tests', () => {
@@ -37,8 +85,8 @@ describe('Client API Handler Tests', () => {
         message: expect.any(String),
         payload: expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(String),
-            companyId: expect.any(String),
+            id: expect.any(Number),
+            companyId: expect.any(Number),
             companyName: expect.any(String),
             code: expect.any(String),
             favorite: expect.any(Boolean),
@@ -52,8 +100,8 @@ describe('Client API Handler Tests', () => {
     req.method = 'POST';
     req.headers.userid = '1';
     req.body = {
-      companyId: '2',
-      code: '5678',
+      companyId: 1,
+      favorite: false,
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(201);
@@ -64,8 +112,8 @@ describe('Client API Handler Tests', () => {
         code: expect.stringContaining('201'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
-          companyId: expect.any(String),
+          id: expect.any(Number),
+          companyId: expect.any(Number),
           companyName: expect.any(String),
           code: expect.any(String),
           favorite: expect.any(Boolean),

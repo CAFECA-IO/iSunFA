@@ -12,6 +12,11 @@ import { TranslateFunction } from '../../interfaces/locale';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '../tooltip/tooltip';
 import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
+import {
+  DUMMY_CATEGORIES,
+  DUMMY_START_DATE,
+  generateRandomData,
+} from '../../interfaces/project_progress_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -136,7 +141,6 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
   return <Chart options={options} series={data.series} type="bar" height={200} />;
 };
 
-const DUMMY_START_DATE = '2024/02/12';
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectProgressChart = () => {
@@ -152,43 +156,48 @@ const ProjectProgressChart = () => {
       data: number[];
     }[]
   >([]);
+  const [categories, setCategories] = useState<string[]>(DUMMY_CATEGORIES);
 
   const displayedYear = maxDate.getFullYear();
-  const displayedMonth = period.startTimeStamp
-    ? MONTH_ABR_LIST[new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND).getMonth()]
-    : MONTH_ABR_LIST[maxDate.getMonth()];
 
-  const displayedDate = `${displayedYear} ${t(displayedMonth)}`;
+  const displayedDate = (() => {
+    const startDate = period.startTimeStamp
+      ? new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
+      : new Date();
 
-  const categories = ['Designing', 'Beta Testing', 'Develop', 'Sold', 'Selling', 'Archived'];
+    const endDate = period.endTimeStamp
+      ? new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND)
+      : new Date();
+
+    const startDateStr = `${(startDate.getMonth() + 1).toString().padStart(2, '0')}/${startDate.getDate().toString().padStart(2, '0')}`;
+    const endDateStr = `${(endDate.getMonth() + 1).toString().padStart(2, '0')}/${endDate.getDate().toString().padStart(2, '0')}`;
+
+    return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
+  })();
 
   useEffect(() => {
     // Info: generate series when period change is done (20240418 - Shirley)
     if (period.endTimeStamp !== 0) {
-      const newSeries = [
-        {
-          name: 'Units',
-          data: [
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-          ],
-        },
-      ];
-      setSeries(newSeries);
+      const newData = generateRandomData();
+      setSeries(newData.series);
+      setCategories(newData.categories);
     }
   }, [period.endTimeStamp, period.startTimeStamp]);
 
-  const dummyData = {
+  const data = {
     categories,
     series: series,
   };
 
+  const displayedDateSection = (
+    <div className="text-neutral-primary my-auto text-xl font-bold leading-5 tracking-normal">
+      {displayedYear}{' '}
+      <span className="text-sm font-semibold leading-5 tracking-normal">{displayedDate}</span>{' '}
+    </div>
+  );
+
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-400px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full">
+    <div className="dashboardCardShadow flex h-430px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">Project Progress Chart</div>
@@ -206,8 +215,8 @@ const ProjectProgressChart = () => {
 
       <div className="mt-2">
         <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
-          <div className="my-auto text-xl font-bold leading-8 text-navyBlue2 md:mx-2">
-            {displayedDate}
+          <div className="my-3 text-xl font-bold leading-8 text-navyBlue2 md:mx-2 md:my-auto">
+            {displayedDateSection}
           </div>
           <div>
             <DatePicker
@@ -222,7 +231,7 @@ const ProjectProgressChart = () => {
       </div>
 
       <div className="mt-5 max-md:-ml-3 md:mt-10">
-        <ColumnChart data={dummyData} />
+        <ColumnChart data={data} />
       </div>
     </div>
   );
