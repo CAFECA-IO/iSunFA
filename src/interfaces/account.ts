@@ -71,7 +71,7 @@ export function isProgressStatus(data: any): data is ProgressStatus {
 //   EXPENSE = 'expense',
 //   TRANSFER = 'transfer',
 // }
-// export type AccountProgressStatus = 'success' | 'inProgress' | 'error' | 'notFound';
+// export type ProgressStatus = 'success' | 'inProgress' | 'error' | 'notFound';
 // export type EventType = (typeof EventTypeEnum)[keyof typeof EventTypeEnum];
 // export type VoucherType = 'receive' | 'expense' | 'transfer';
 // export type PaymentStatusType = 'paid' | 'unpaid' | 'partial';
@@ -81,7 +81,7 @@ export function isProgressStatus(data: any): data is ProgressStatus {
 // Info Murky (20240416): Interface
 // export interface AccountResultStatus {
 //   resultId: string;
-//   status: AccountProgressStatus;
+//   status: ProgressStatus;
 // }
 
 // export interface AccountInvoiceData {

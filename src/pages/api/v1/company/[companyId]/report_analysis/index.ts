@@ -3,16 +3,17 @@ import { IAnalysisReport, isIAnalysisReportRequest } from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIFinancialStatements } from '@/interfaces/financial_report';
 import { AICH_URI } from '@/constants/config';
-import { AccountResultStatus } from '@/interfaces/account';
+
 // import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAnalysisReport | AccountResultStatus>>
+  res: NextApiResponse<IResponseData<IAnalysisReport | IAccountResultStatus>>
 ) {
   try {
     switch (req.method) {
@@ -82,8 +83,8 @@ export default async function handler(
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
-        const resultJson: AccountResultStatus = (await fetchResult.json()).payload;
-        const { httpCode, result } = formatApiResponse<AccountResultStatus>(
+        const resultJson: IAccountResultStatus = (await fetchResult.json()).payload;
+        const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
           STATUS_MESSAGE.SUCCESS_GET,
           resultJson
         );
