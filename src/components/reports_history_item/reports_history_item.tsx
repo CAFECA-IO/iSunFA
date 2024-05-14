@@ -1,6 +1,7 @@
 import { IGeneratedReportItem } from '../../interfaces/report_item';
 import CalendarIcon from '../calendar_icon/calendar_icon';
 import { timestampToString } from '../../lib/utils/common';
+import { Button } from '../button/button';
 
 interface IReportsHistoryItemProps {
   report: IGeneratedReportItem;
@@ -75,9 +76,23 @@ const ReportsHistoryItem = ({
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
       <td className="px-16px text-left font-medium text-navyBlue2">
-        <div className="space-x-1 text-xs">
-          <p>{'icon'}</p>
-        </div>
+        <Button variant={'tertiaryBorderless'}>
+          {' '}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M12.952 2.932a5.75 5.75 0 018.13 8.131l-.009.01-3 3a5.75 5.75 0 01-8.67-.622.75.75 0 011.2-.898 4.25 4.25 0 006.41.459l2.995-2.996a4.25 4.25 0 00-6.01-6.008l-1.716 1.706a.75.75 0 01-1.058-1.064l1.72-1.71.008-.008zM7.989 8.61a5.75 5.75 0 016.615 1.944.75.75 0 01-1.202.898 4.247 4.247 0 00-4.888-1.436 4.249 4.249 0 00-1.52.977l-2.996 2.995a4.25 4.25 0 006.01 6.01l1.705-1.705a.75.75 0 111.06 1.06l-1.71 1.71-.009.01a5.75 5.75 0 01-8.13-8.131l.008-.01 3-3A5.75 5.75 0 017.99 8.61z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
       </td>
       <td className="px-16px">
         <div className="flex items-center">label</div>
