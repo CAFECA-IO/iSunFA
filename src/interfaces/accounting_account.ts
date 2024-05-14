@@ -1,4 +1,4 @@
-import { ProgressStatus, isProgressStatus } from './common';
+import { ProgressStatus, isProgressStatus } from './account';
 
 export interface IAccountingAccount {
   id: number;

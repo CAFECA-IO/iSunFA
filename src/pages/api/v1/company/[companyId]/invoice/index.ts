@@ -9,7 +9,7 @@ import { AICH_URI } from '@/constants/config';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { EventType } from '@/interfaces/account';
+import { EventType, PaymentPeriodType, PaymentStatusType } from '@/interfaces/account';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {
@@ -25,7 +25,7 @@ export default async function handler(
   try {
     if (req.method === 'GET') {
       // Handle GET request to fetch all invoices
-      const invoices = [
+      const invoices: IInvoice[] = [
         {
           date: 21321321,
           invoiceId: '123123',
@@ -33,15 +33,23 @@ export default async function handler(
           paymentReason: 'purchase',
           description: 'description',
           venderOrSupplyer: 'vender',
+          project: 'ISunFa',
+          contract: 'ISunFa buy',
           projectId: '123',
           contractId: '123',
           payment: {
             isRevenue: false,
-            price: 100,
+            price: 1500,
             hasTax: true,
             taxPercentage: 10,
             hasFee: true,
             fee: 10,
+            paymentMethod: 'transfer',
+            paymentPeriod: PaymentPeriodType.AtOnce,
+            installmentPeriod: 0,
+            paymentAlreadyDone: 1500,
+            paymentStatus: PaymentStatusType.Paid,
+            progress: 0,
           },
         },
         {
@@ -51,6 +59,8 @@ export default async function handler(
           paymentReason: 'sale',
           description: 'description',
           venderOrSupplyer: 'vender',
+          project: 'ISunFa',
+          contract: 'ISunFa buy',
           projectId: '123',
           contractId: '123',
           payment: {
@@ -60,6 +70,12 @@ export default async function handler(
             taxPercentage: 10,
             hasFee: true,
             fee: 10,
+            paymentMethod: 'transfer',
+            paymentPeriod: PaymentPeriodType.AtOnce,
+            installmentPeriod: 0,
+            paymentAlreadyDone: 110,
+            paymentStatus: PaymentStatusType.Paid,
+            progress: 0,
           },
         },
       ];
@@ -71,13 +87,44 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       let files: formidable.Files;
+      let fields: formidable.Fields;
       try {
-        files = (await parseForm(req)).files;
+        const parsedForm = await parseForm(req);
+        files = parsedForm.files;
+        fields = parsedForm.fields;
       } catch (error) {
         throw new Error(STATUS_MESSAGE.INVOICE_UPLOAD_FAILED_ERROR);
       }
 
-      if (!files || !files.image || !files.image.length) {
+      // Info (20240504 - Murky): fields會長會這樣
+      // fields {
+      //   project: [ '我的project' ],
+      //   projectId: [ 'project001' ],
+      //   contract: [ '我的contract' ],
+      //   contractId: [ 'contractId' ]
+      // }
+      if (
+        !files ||
+        !files.image ||
+        !files.image.length ||
+        !fields ||
+        !fields.project ||
+        !fields.projectId ||
+        !fields.contract ||
+        !fields.contractId ||
+        !Array.isArray(fields.project) ||
+        !Array.isArray(fields.projectId) ||
+        !Array.isArray(fields.contract) ||
+        !Array.isArray(fields.contractId) ||
+        !fields.project.length ||
+        !fields.projectId.length ||
+        !fields.contract.length ||
+        !fields.contractId.length ||
+        !(typeof fields.project[0] === 'string') ||
+        !(typeof fields.projectId[0] === 'string') ||
+        !(typeof fields.contract[0] === 'string') ||
+        !(typeof fields.contractId[0] === 'string')
+      ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
       }
 
@@ -89,11 +136,20 @@ export default async function handler(
       const formData = new FormData();
       formData.append('image', imageBlob);
       formData.append('imageName', imageName);
+      formData.append('project', fields.project[0]);
+      formData.append('projectId', fields.projectId[0]);
+      formData.append('contract', fields.contract[0]);
+      formData.append('contractId', fields.contractId[0]);
 
-      const fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
-        method: 'POST',
-        body: formData,
-      });
+      let fetchResult: Response;
+      try {
+        fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (error) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+      }
 
       if (!fetchResult.ok) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);

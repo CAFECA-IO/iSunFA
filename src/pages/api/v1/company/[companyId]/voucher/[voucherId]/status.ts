@@ -2,8 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { ProgressStatus, isProgressStatus } from '@/interfaces/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { ProgressStatus, isProgressStatus } from '@/interfaces/account';
 
 export default async function handler(
   req: NextApiRequest,

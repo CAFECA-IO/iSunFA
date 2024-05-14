@@ -18,13 +18,19 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
-      const fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invoices),
-      });
+      let fetchResult: Response;
+
+      try {
+        fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(invoices),
+        });
+      } catch (error) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+      }
 
       if (!fetchResult.ok) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
@@ -46,6 +52,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+
     const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
       error.message,
       {} as IAccountResultStatus
