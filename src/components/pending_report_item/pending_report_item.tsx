@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IPendingReportItem } from '../../interfaces/pending_report_item';
+import { IPendingReportItem } from '../../interfaces/report_item';
 import CalendarIcon from '../calendar_icon/calendar_icon';
 import { countdown, timestampToString } from '../../lib/utils/common';
 import { Button } from '../button/button';

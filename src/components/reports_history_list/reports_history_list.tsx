@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { IPendingReportItem } from '../../interfaces/report_item';
-import PendingReportItem from '../pending_report_item/pending_report_item';
+import { IGeneratedReportItem } from '../../interfaces/report_item';
+import ReportsHistoryItem from '../reports_history_item/reports_history_item';
 
-interface IPendingReportListProps {
-  reports: IPendingReportItem[];
+interface IReportsHistoryListProps {
+  reports: IGeneratedReportItem[];
   isCheckboxVisible: boolean;
 }
 
-const PendingReportList = ({ reports, isCheckboxVisible }: IPendingReportListProps) => {
+const ReportsHistoryList = ({ reports, isCheckboxVisible }: IReportsHistoryListProps) => {
   const [allChecked, setAllChecked] = useState(false);
   const [individualChecks, setIndividualChecks] = useState<boolean[]>(
     new Array(reports.length).fill(false)
@@ -33,7 +33,7 @@ const PendingReportList = ({ reports, isCheckboxVisible }: IPendingReportListPro
   };
 
   const displayedList = reports.map((report, index) => (
-    <PendingReportItem
+    <ReportsHistoryItem
       key={report.id}
       report={report}
       checked={individualChecks[index]}
@@ -63,7 +63,8 @@ const PendingReportList = ({ reports, isCheckboxVisible }: IPendingReportListPro
           <th className="text-center">Date</th>
           <th className="px-16px">Report Name</th>
           <th className="px-16px">Period</th>
-          <th className="px-16px">Remaining Time</th>
+          <th className="px-16px">Blockchain</th>
+          <th className="px-16px">Project</th>
           <th className="px-16px">Operations</th>
         </tr>
       </thead>
@@ -74,4 +75,4 @@ const PendingReportList = ({ reports, isCheckboxVisible }: IPendingReportListPro
   );
 };
 
-export default PendingReportList;
+export default ReportsHistoryList;

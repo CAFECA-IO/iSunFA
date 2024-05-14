@@ -4,11 +4,14 @@ import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import {
+  FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
+  IGeneratedReportItem,
   IPendingReportItem,
-} from '../../interfaces/pending_report_item';
+} from '../../interfaces/report_item';
 import PendingReportList from '../pending_report_list/pending_report_list';
 import { Button } from '../button/button';
+import ReportsHistoryList from '../reports_history_list/reports_history_list';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -38,11 +41,9 @@ const MyReportsSection = () => {
   const [isAllPaused, setIsAllPaused] = useState(false);
 
   const isPendingDataLoading = false;
-  // const isHistoryDataLoading = false;
+  const isHistoryDataLoading = false;
   const pendingData: IPendingReportItem[] = FIXED_DUMMY_PENDING_REPORT_ITEMS;
-  // const historyData: IReport[] = [];
-
-  // const pendingData: IPendingReportItem[] = DUMMY_PENDING_REPORT_ITEMS;
+  const historyData: IGeneratedReportItem[] = FIXED_DUMMY_GENERATED_REPORT_ITEMS;
 
   const {
     targetRef: pendingSortMenuRef,
@@ -405,7 +406,11 @@ const MyReportsSection = () => {
     </div>
   );
 
-  const displayedHistoryDataSection = (
+  const displayedHistoryDataSection = isHistoryDataLoading ? (
+    <div>Loading...</div>
+  ) : historyData.length !== 0 ? (
+    <ReportsHistoryList reports={historyData} isCheckboxVisible={false} />
+  ) : (
     <div className="mt-20 flex w-full items-center justify-center">
       {' '}
       <section className="flex flex-col items-center">
