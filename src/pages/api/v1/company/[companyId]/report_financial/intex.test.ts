@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import version from '@/lib/version';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -9,7 +10,7 @@ beforeEach(() => {
   req = {
     headers: {},
     body: {
-      type: 'Balance Sheet',
+      type: FinancialReportTypesKey.balance_sheet,
       language: 'English',
       start_date: '2024-03-31',
       end_date: '2024-03-31',
@@ -38,7 +39,10 @@ describe('generateFinancialReport API Handler Tests', () => {
       success: true,
       code: '200',
       message: 'request successful',
-      payload: expect.any(String),
+      payload: expect.objectContaining({
+        resultId: expect.any(String),
+        status: expect.any(String),
+      }),
     });
   });
   it('should handle POST request with bad request body', async () => {

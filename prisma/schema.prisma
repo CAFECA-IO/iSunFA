@@ -18,21 +18,6 @@ model account {
     name        String
 }
 
-model admin {
-    id               Int      @id @default(autoincrement())
-    companyId        Int      @map("company_id")
-    email            String
-    startDate        DateTime
-    auditing         String
-    accounting       String
-    internalControl  String
-
-    users            user[]
-    userToAdmins     userToAdmin[]
-
-    company          company  @relation(fields: [companyId], references: [id])
-}
-
 model asset {
     id                Int      @id @default(autoincrement())
     name              String
@@ -63,6 +48,16 @@ model auditReport {
     company           company  @relation(fields: [companyId], references: [id])
 }
 
+model card {
+    id          Int   @id @default(autoincrement())
+    type        String
+    no          String
+    expireYear  String
+    expireMonth String
+    cvc         String
+    name        String
+}
+
 model cashflow {
     id          Int   @id @default(autoincrement())
     period      String
@@ -80,21 +75,19 @@ model client {
 
 model company {
     id                Int      @id @default(autoincrement())
+    name              String
     code              String
     regional          String
-    company           String
 
-    admins            admin[]
+    roles            role[]
     auditReports      auditReport[]
     clients           client[]
-    departments       department[]
     employees         employee[]
     imvoices          invoice[]
     companyKYCs       companyKYC[]
     subscriptions     subscription[]
-    users             user[]
-    userToCompanies   userToCompany[]
-    companyToDepartments companyToDepartment[]
+    usersToCompanies   userToCompany[]
+    companysToDepartments companyToDepartment[]
 }
 
 model companyKYC {
@@ -150,8 +143,6 @@ model contract {
 model department {
     id         Int      @id @default(autoincrement())
     name       String
-    companyId  Int
-    company    company  @relation(fields: [companyId], references: [id])
 
     employees  employee[]
     companyToDepartment companyToDepartment[]
@@ -209,16 +200,6 @@ model lineItem {
     @@map("line_item")
 }
 
-model payment {
-    id          Int   @id @default(autoincrement())
-    type        String
-    no          String
-    expireYear  String
-    expireMonth String
-    cvc         String
-    name        String
-}
-
 model project {
     id          Int      @id @default(autoincrement())
     name        String
@@ -229,17 +210,18 @@ model project {
 
     assets            asset[]
     contracts   contract[]
-    employeeToProjects employeeToProject[]
+    employeesToProjects employeeToProject[]
 }
 
-model property {
-    id                  Int   @id @default(autoincrement())
-    name                String
-    description         String
-    purchaseDate        DateTime
-    purchasePrice       String
-    depreciationMethod  String
-    estimatedUsefulLife String
+model role {
+    id               Int      @id @default(autoincrement())
+    companyId        Int      @map("company_id")
+    name             String   
+    permissions       String[]
+
+    usersToRoles     userToRole[]
+
+    company          company  @relation(fields: [companyId], references: [id])
 }
 
 model subscription {
@@ -258,19 +240,18 @@ model subscription {
 model user {
     id              Int      @id @default(autoincrement())
     name            String
-    fullName        String
-    email           String
-    phone           String
-    kycStatus       String
+    fullName        String?
+    email           String?
+    phone           String?
+    kycStatus       Boolean   @default(false)
     credentialId    String
     publicKey       String
     algorithm       String
+    imageId         String
 
-    admins          admin[]
-    companys        company[]
     userKYCs        userKYC[]
-    userToAdmins    userToAdmin[]
-    userToCompanys  userToCompany[]
+    usersToroles    userToRole[]
+    usersToCompanys  userToCompany[]
 }
 
 model userKYC {
@@ -297,17 +278,6 @@ model userKYC {
     @@map("user_kyc")
 }
 
-model userToAdmin {
-    id         Int      @id @default(autoincrement())
-    userId     Int
-    adminId    Int
-
-    user       user  @relation(fields: [userId], references: [id])
-    admin      admin @relation(fields: [adminId], references: [id])
-
-    @@map("user_to_admin")
-}
-
 model userToCompany {
     id         Int      @id @default(autoincrement())
     userId     Int
@@ -317,4 +287,17 @@ model userToCompany {
     company    company @relation(fields: [companyId], references: [id])
 
     @@map("user_to_company")
+}
+
+model userToRole {
+    @@id([userId, roleId])
+    userId     Int
+    roleId    Int
+    startDate DateTime
+
+    user       user  @relation(fields: [userId], references: [id])
+    role      role @relation(fields: [roleId], references: [id])
+
+    
+    @@map("user_to_role")
 }

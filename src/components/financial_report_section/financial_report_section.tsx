@@ -1,17 +1,65 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+// import Link from 'next/link';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '../button/button';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { default30DayPeriodInSec } from '../../constants/display';
 import useOuterClick from '../../lib/hooks/use_outer_click';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '../../constants/url';
+// import { ISUNFA_ROUTE } from '../../constants/url';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '../../interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
 
 const FinancialReportSection = () => {
+  const { companyId } = useAccountingCtx();
+  const {
+    trigger: generateFinancialReport,
+    data: generatedResult,
+    // code: generatedCode,
+    success: generatedSuccess,
+  } = APIHandler<IAccountResultStatus>(
+    APIName.GENERATE_FINANCIAL_REPORT,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: getFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: progress, // Info: 這邊預計得到 IFinancialReportsProgreseStatusResponse[] (20240513 - Tzuahan)
+    // code: progressCodee,
+    // success: getProgressSuccess,
+  } = APIHandler<IAccountResultStatus[]>(
+    APIName.GET_FINANCIAL_REPORTS_PROGRESS,
+    {
+      params: { companyId },
+    },
+    false,
+    false
+  );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trigger: getFinancialReport, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    // data: report,
+    // code: reportCodee,
+    // success: getReportSuccess,
+  } = APIHandler<IFinancialReport>(
+    APIName.GET_FINANCIAL_REPORT,
+    {
+      params: { companyId, reportId: 'reportId' },
+    },
+    false,
+    false
+  );
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
@@ -73,7 +121,21 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+  // const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+
+  const genereateReportHandler = () => {
+    const body: IFinancialReportRequest = {
+      project_id: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
+      type: selectedReportType,
+      language: selectedReportLanguage,
+      start_date: new Date(period.startTimeStamp),
+      end_date: new Date(period.endTimeStamp),
+    };
+
+    generateFinancialReport({
+      body,
+    });
+  };
 
   useEffect(() => {
     setDatePickerType((prev) => {
@@ -316,9 +378,9 @@ const FinancialReportSection = () => {
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
             >
-              <img src={icon} alt={name} className="h-6 w-6" />
+              <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
             </li>
           ))}
@@ -327,40 +389,46 @@ const FinancialReportSection = () => {
     </div>
   );
 
+  useEffect(() => {
+    // TODO: 這邊要根據新的 UI 規格來設計，目前先用 console.log 來測試 @Shirley (20240513 - tzuhan)
+    console.log('generatedResult', generatedResult);
+  }, [generatedSuccess]);
+
   const displayedButtonOrLink =
     !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
       <Button
-        disabled={true}
         className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        onClick={genereateReportHandler}
       >
-        <Link href={targetedReportViewLink}>
-          <div className="flex gap-1">
-            <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
-            <div className="my-auto flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="17"
-                height="16"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <g>
-                  <path
-                    className="fill-current"
-                    fill="none"
-                    fillRule="evenodd"
-                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
-              </svg>
-            </div>
+        {/* <Link href={targetedReportViewLink}> */}
+        <div className="flex gap-1">
+          <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+          <div className="my-auto flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="17"
+              height="16"
+              fill="none"
+              viewBox="0 0 17 16"
+            >
+              <g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                ></path>
+              </g>
+            </svg>
           </div>
-        </Link>
+        </div>
+        {/* </Link> */}
       </Button>
     ) : (
-      <Link
-        href={targetedReportViewLink}
+      <Button
+        // href={targetedReportViewLink}
+        onClick={genereateReportHandler}
         className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <div className="flex gap-1">
@@ -385,16 +453,18 @@ const FinancialReportSection = () => {
             </svg>
           </div>
         </div>
-      </Link>
+      </Button>
     );
 
   return (
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
+          {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">Financial Report</div>
+            <div className="w-full justify-center px-10 md:px-28">Financial Reports</div>
           </div>
+          {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <div>
@@ -406,8 +476,7 @@ const FinancialReportSection = () => {
                   className="aspect-square shrink-0"
                 />
               </div>
-
-              <div className="mt-1.5">Financial Report</div>
+              <div className="mt-1.5">Financial Reports</div>
             </div>
           </div>
 
@@ -418,7 +487,8 @@ const FinancialReportSection = () => {
           </div>
         </div>
       </div>
-      <div className="mt-16 flex w-600px max-w-full flex-col space-y-20 self-center px-5 max-md:mt-3">
+      {/* Info: options for generation (20240513 - Shirley) */}
+      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -428,7 +498,6 @@ const FinancialReportSection = () => {
             {displayedProjectMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -437,7 +506,6 @@ const FinancialReportSection = () => {
             {displayedReportTypeMenu}
           </div>
         </div>
-
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -503,7 +571,14 @@ const FinancialReportSection = () => {
             />
           </div>
         </div>
-        {displayedButtonOrLink}
+        <div className="my-10 flex flex-col justify-center">
+          <p>
+            Attention: The report will take approximately 30 to 40 minutes to generate. Once
+            completed, it will be stored in "My Reports." Please check back later. Thank you for
+            your patience.
+          </p>
+        </div>
+        {displayedButtonOrLink}{' '}
       </div>
     </div>
   );

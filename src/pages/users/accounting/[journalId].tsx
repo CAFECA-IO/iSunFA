@@ -63,12 +63,18 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
   const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
   const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
-  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].totalPrice : 0;
-  const tax: number = journalDetail ? journalDetail.metadatas[0].taxPercentage : 0;
-  const fee: number = journalDetail ? journalDetail.metadatas[0].fee : 0;
-  const paymentMethod: string = journalDetail ? journalDetail.metadatas[0].paymentMethod : '';
-  const paymentPeriod: string = journalDetail ? journalDetail.metadatas[0].paymentPeriod : '';
-  const paymentStatus: string = journalDetail ? journalDetail.metadatas[0].paymentStatus : '';
+  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].payment.price : 0; // Info Murky Edit (20240509)
+  const tax: number = journalDetail ? journalDetail.metadatas[0].payment.taxPercentage : 0; // Info Murky Edit (20240509)
+  const fee: number = journalDetail ? journalDetail.metadatas[0].payment.fee : 0; // Info Murky Edit (20240509)
+  const paymentMethod: string = journalDetail
+    ? journalDetail.metadatas[0].payment.paymentMethod
+    : ''; // Info Murky Edit (20240509)
+  const paymentPeriod: string = journalDetail
+    ? journalDetail.metadatas[0].payment.paymentPeriod
+    : ''; // Info Murky Edit (20240509)
+  const paymentStatus: string = journalDetail
+    ? journalDetail.metadatas[0].payment.paymentStatus
+    : ''; // Info Murky Edit (20240509)
   const project: string = journalDetail ? journalDetail.metadatas[0].project : '';
   const contract: string = journalDetail ? journalDetail.metadatas[0].contract : '';
   const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';

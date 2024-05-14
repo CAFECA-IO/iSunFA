@@ -35,6 +35,7 @@
     "react-i18next": "^14.0.0",
     "react-icons": "^5.0.1",
     "react-pdf": "^8.0.0",
+    "react-toastify": "^10.0.5",
     "react-usestateref": "^1.0.8",
     "sharp": "^0.33.3",
     "tailwind-merge": "^2.2.2",

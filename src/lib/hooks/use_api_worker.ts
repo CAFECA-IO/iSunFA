@@ -2,7 +2,7 @@ import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection
 import { Action } from '@/constants/action';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
 
 const useAPIWorker = <Data>(
   apiConfig: IAPIConfig,
@@ -60,7 +60,7 @@ const useAPIWorker = <Data>(
     worker.addEventListener(Action.MESSAGE, handleMessage);
     worker.onerror = (e: ErrorEvent) => {
       setError(e instanceof Error ? e : new Error('An error occurred'));
-      setCode(STATUS_CODE.INTERNAL_SERVICE_ERROR);
+      setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       setSuccess(false);
       setIsLoading(false);
     };

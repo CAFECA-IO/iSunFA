@@ -14,11 +14,13 @@ export const ISUNFA_ROUTE = {
   DASHBOARD: '/users/dashboard',
   SALARY: '/users/salary',
   ACCOUNTING: '/users/accounting',
+  SELECT_ENTITY: '/users/select-entity',
   JOURNAL_LIST: '/users/accounting/journal-list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',
   USERS_FINANCIAL_REPORTS_VIEW: '/users/reports/financials/view',
   USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
+  USERS_MY_REPORTS: '/users/reports/my-reports',
 };
 
 export const EXTERNAL_API = {

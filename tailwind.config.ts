@@ -723,6 +723,7 @@ module.exports = {
 
         errorRed: '#963737',
         errorRed2: '#FED7D7',
+        errorRed3: '#FB5C5C',
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',

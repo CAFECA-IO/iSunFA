@@ -5,7 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { isIFinancialStatements } from '@/interfaces/financial_report';
 import { AICH_URI } from '@/constants/config';
 import { AccountResultStatus } from '@/interfaces/account';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
@@ -36,6 +36,7 @@ export default async function handler(
           !end_date ||
           Array.isArray(end_date)
         ) {
+          // ToDo: (20240514 - Jacky) Should use uniform response handler
           res.status(400).json({
             powerby: 'iSunFA v' + version,
             success: false,
@@ -106,11 +107,11 @@ export default async function handler(
         }
 
         const resultJson: AccountResultStatus = (await result.json()).payload;
-
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        // ToDo: (20240514 - Jacky) Should use uniform response handler
+        res.status(200).json({
           powerby: 'iSunFA v' + version,
           success: true,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: 'request successful',
           payload: resultJson,
         });

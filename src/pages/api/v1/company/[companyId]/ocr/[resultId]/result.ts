@@ -5,7 +5,7 @@ import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,11 +27,11 @@ export default async function handler(
         }
 
         const ocrResultData: AccountInvoiceData = (await result.json()).payload;
-
-        res.status(RESPONSE_STATUS_CODE.success).json({
+        // ToDo: (20240514 - Jacky) Should use uniform response handler
+        res.status(200).json({
           powerby: `ISunFa api ${version}`,
           success: true,
-          code: String(RESPONSE_STATUS_CODE.success),
+          code: String(200),
           message: `OCR analyzing result of id:${resultId} return successfully`,
           payload: [ocrResultData],
         });
