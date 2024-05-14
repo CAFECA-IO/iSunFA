@@ -301,7 +301,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const displayDebitList = debitList.map((debit) => {
     return (
-      <div className="flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
@@ -329,7 +329,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const displayCreditList = creditList.map((credit) => {
     return (
-      <div className="flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>

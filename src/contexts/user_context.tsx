@@ -12,6 +12,7 @@ import { useRouter } from 'next/router';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { toast as toastify } from 'react-toastify';
+import { IEntityItem } from '@/interfaces/entity';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -27,7 +28,7 @@ interface UserContextType {
   username: string | null;
   signedIn: boolean;
   isSignInError: boolean;
-  entityList: string[];
+  entityList: Record<string, IEntityItem>;
   selectedEntity: string | null;
   selectEntity: (entity: string) => void;
   isSelectEntity: boolean;
@@ -42,7 +43,7 @@ export const UserContext = createContext<UserContextType>({
   username: '',
   signedIn: false,
   isSignInError: false,
-  entityList: [],
+  entityList: {},
   selectedEntity: null,
   selectEntity: () => {},
   isSelectEntity: false,
@@ -55,7 +56,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
-  const [entityList, setEntityList, entityListRef] = useStateRef<string[]>([]);
   const [selectedEntity, setSelectedEntity, selectedEntityRef] = useStateRef<string | null>(null);
   const [isSelectEntity, setIsSelectEntity, isSelectEntityRef] = useStateRef(false);
 
@@ -273,7 +273,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setCredential(null);
     setSignedIn(false);
     setIsSignInError(false);
-    setEntityList([]);
     setSelectedEntity(null);
     setIsSelectEntity(false);
 
@@ -318,6 +317,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20240514 - Julian) replace the defaultEntityList with the real data
+  const defaultEntityList: Record<string, IEntityItem> = {
+    iSunCloud: {
+      name: 'iSunCloud',
+      role: 'Owner',
+      icon: '/entities/isuncloud.png',
+    },
+    TSMC: {
+      name: 'TSMC',
+      role: 'Accountant',
+      icon: '/entities/tsmc.png',
+    },
+    Tesla: {
+      name: 'Tesla',
+      role: 'Bookkeeper',
+      icon: '/entities/tesla.png',
+    },
+    'Happy Inc.': {
+      name: 'Happy Inc.',
+      role: 'Finance',
+      icon: '/entities/happy.png',
+    },
+    TideBit: {
+      name: 'TideBit',
+      role: 'Viewer',
+      icon: '/entities/tidebit.png',
+    },
+  };
+
   useEffect(() => {
     (async () => {
       await init();
@@ -353,7 +381,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       signedIn: signedInRef.current,
       isSignInError: isSignInErrorRef.current,
-      entityList: entityListRef.current,
+      entityList: defaultEntityList,
       selectedEntity: selectedEntityRef.current,
       selectEntity,
       isSelectEntity: isSelectEntityRef.current,

@@ -1,130 +1,209 @@
 import Image from 'next/image';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
+import { FiSearch } from 'react-icons/fi';
+import { IEntityItem } from '@/interfaces/entity';
 import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
 import { ISUNFA_ROUTE } from '../../constants/url';
 import { Button } from '../button/button';
 import { useUserCtx } from '../../contexts/user_context';
 import { useGlobalCtx } from '../../contexts/global_context';
+import useOuterClick from '../../lib/hooks/use_outer_click';
 
 const SelectEntityPageBody = () => {
-  const { signedIn, username } = useUserCtx();
+  const { signedIn, username, entityList } = useUserCtx();
   const { entityInvitationModalVisibilityHandler, createEntityModalVisibilityHandler } =
     useGlobalCtx();
 
-  const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
+  const [selectedEntity, setSelectedEntity] = useState<string>('');
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [filteredEntityList, setFilteredEntityList] =
+    useState<Record<string, IEntityItem>>(entityList);
 
-  // ToDo: (20240513 - Julian) entity list
+  const {
+    targetRef: entityMenuRef,
+    componentVisible: isEntityMenuOpen,
+    setComponentVisible: setIsEntityMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
+  const selectedEntityName = selectedEntity || 'Select an Entity';
+
+  const menuOpenHandler = () => setIsEntityMenuOpen(!isEntityMenuOpen);
+
+  const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(event.target.value);
+  };
+
+  useEffect(() => {
+    if (searchValue !== '') {
+      const filteredList = Object.entries(entityList).reduce(
+        (acc, [key, value]) => {
+          // Info: (20240514 - Julian) 搜尋 entity 名稱或角色
+          if (
+            value.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+            value.role.toLowerCase().includes(searchValue.toLowerCase())
+          ) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, IEntityItem>
+      );
+      setFilteredEntityList(filteredList);
+    } else {
+      setFilteredEntityList(entityList);
+    }
+  }, [searchValue]);
+
+  const displayEntityMenu = (
+    <div
+      ref={entityMenuRef}
+      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5
+      ${isEntityMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
+      `}
+    >
+      <div className="flex flex-col items-start">
+        {/* Info: (20240514 - Julian) search bar */}
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+          <input
+            id="entitySearchBar"
+            type="text"
+            placeholder="Search"
+            value={searchValue}
+            onChange={changeSearchHandler}
+            className="w-full outline-none placeholder:text-lightGray4"
+          />
+          <FiSearch size={16} />
+        </div>
+        {/* Info: (20240514 - Julian) entity list */}
+        <div className="flex max-h-100px w-full flex-col items-start overflow-y-auto overflow-x-hidden">
+          {Object.entries(filteredEntityList).map(([key, value]) => {
+            const entityClickHandler = () => {
+              setSelectedEntity(value.name);
+              setIsEntityMenuOpen(false);
+            };
+            return (
+              <button
+                key={key}
+                onClick={entityClickHandler}
+                type="button"
+                className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
+              >
+                <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
+                  <Image alt={value.name} src={value.icon} width={20} height={20} />
+                </div>
+                <p className="justify-center text-sm font-medium leading-5 tracking-normal">
+                  {value.name}
+                </p>
+                <p className="text-xs text-lightGray5">{value.role}</p>
+              </button>
+            );
+          })}
+        </div>
+        {/* Info: (20240514 - Julian) enter invitation code */}
+        <button
+          type="button"
+          onClick={entityInvitationModalVisibilityHandler}
+          className="gap flex w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
+        >
+          <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
+          <p>Enter Invitation Code</p>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex gap-x-5 font-barlow max-lg:flex-col">
-      {/* Info: (20240513 - Julian) graphic */}
-      <div className="order-2 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1">
-        <div className="pointer-events-none -mt-20px flex grow flex-col justify-start max-lg:max-w-full md:-mt-50px lg:-mt-65px">
-          <div className="relative flex h-full w-full flex-col overflow-hidden py-0 max-lg:max-w-full">
-            <img
-              src="/elements/login_bg.svg"
-              className="size-full object-cover"
-              alt="login_background"
-            />
+    <div className="flex min-h-100vh w-full flex-col items-center justify-center font-barlow">
+      <div className="flex grow flex-col items-center justify-center pb-20 max-lg:mt-20 max-lg:max-w-full">
+        {/* Info: (20240513 - Julian) title & description */}
+        <div className="flex flex-col items-center justify-center self-stretch max-lg:max-w-full">
+          <div className="text-48px font-bold text-tertiaryBlue max-lg:text-4xl">
+            Welcome back, <span className="text-amber-400">{userName}</span>!
+          </div>
+          <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
+            Select your Entity to log in, or create your own Entity team.
           </div>
         </div>
-      </div>
-      {/* Info: (20240513 - Julian) select entity part */}
-      <div className="order-1 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-2">
-        <div className="mt-16 flex grow flex-col items-center justify-center pb-20 max-lg:mt-20 max-lg:max-w-full">
-          {/* Info: (20240513 - Julian) title & description */}
-          <div className="flex flex-col items-center justify-center self-stretch max-lg:max-w-full">
-            <div className="text-48px font-bold text-tertiaryBlue max-lg:text-4xl">
-              Welcome back, <span className="text-amber-400">{userName}</span>!
-            </div>
-            <div className="mt-2 w-220px text-center text-base font-medium leading-6 tracking-normal text-slate-600">
-              Select your Entity to log in, or create your own Entity team.
+        {/* Info: (20240513 - Julian) entity selection */}
+        <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
+          {/* Info: (20240513 - Julian) user avatar */}
+          <div className="relative flex w-200px items-center justify-center py-4">
+            <Image alt="avatar" src="/elements/avatar.png" width={200} height={200} />
+            {/* Info: (20240513 - Julian) green dot */}
+            <div className="absolute bottom-4 right-4">
+              <svg
+                width="41"
+                height="40"
+                viewBox="0 0 41 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="20.4999"
+                  cy="20"
+                  r="18.1667"
+                  fill="#2FD181"
+                  stroke="#FCFDFF"
+                  strokeWidth="3"
+                />
+              </svg>
             </div>
           </div>
+
           {/* Info: (20240513 - Julian) entity selection */}
-          <div className="mt-10 flex max-w-full flex-col justify-center gap-y-40px">
-            {/* Info: (20240513 - Julian) user avatar */}
-            <div className="flex flex-col justify-center rounded-full max-lg:mx-2.5">
-              <div className="flex aspect-square flex-col items-center justify-center px-16 max-lg:px-5">
-                <div className="relative flex items-center justify-center max-lg:mx-2">
-                  <Image
-                    alt="avatar"
-                    src="/elements/avatar.png"
-                    width={200}
-                    height={200}
-                    className="mx-auto aspect-square w-200px self-center"
-                  />
-                  {/* Info: (20240513 - Julian) green dot */}
-                  <div className="absolute bottom-2 right-2">
-                    <svg
-                      width="41"
-                      height="40"
-                      viewBox="0 0 41 40"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle
-                        cx="20.4999"
-                        cy="20"
-                        r="18.1667"
-                        fill="#2FD181"
-                        stroke="#FCFDFF"
-                        strokeWidth="3"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Info: (20240513 - Julian) entity selection dropdown */}
-            <div className="inline-flex flex-col items-start justify-start gap-2">
-              <p className="self-stretch text-sm font-semibold leading-tight tracking-tight text-slate-700">
-                My Entity List
-              </p>
-              <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-slate-300 bg-white shadow">
-                <div className="flex h-52px shrink grow items-center justify-center gap-2.5">
-                  <div className="text-center text-base font-medium leading-normal tracking-tight text-lightGray4">
-                    Select an Entity
-                  </div>
-                  <FaChevronDown size={16} className="text-darkBlue2" />
-                </div>
-                <div className="w-px self-stretch bg-slate-300" />
-                <button
-                  type="button"
-                  className="inline-flex flex-col items-center justify-center p-4"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M8.22784 1.75107C8.26328 1.75108 8.29925 1.7511 8.33577 1.7511H13.5024L13.5339 1.7511C14.2072 1.75109 14.7579 1.75108 15.2055 1.78765C15.6688 1.8255 16.0872 1.90624 16.4779 2.10533L16.1397 2.76903L16.4779 2.10533C17.0894 2.41692 17.5866 2.9141 17.8982 3.52563C18.0973 3.91637 18.178 4.33477 18.2159 4.79803C18.2525 5.2456 18.2524 5.79632 18.2524 6.46971V6.5011V13.5011V13.5325C18.2524 14.2059 18.2525 14.7566 18.2159 15.2042C18.178 15.6674 18.0973 16.0858 17.8982 16.4766C17.5866 17.0881 17.0894 17.5853 16.4779 17.8969C16.0872 18.096 15.6688 18.1767 15.2055 18.2146C14.7579 18.2511 14.2072 18.2511 13.5338 18.2511H13.5024H8.33577C8.29926 18.2511 8.26329 18.2511 8.22785 18.2511C7.55797 18.2514 7.07664 18.2517 6.66128 18.1404C5.53973 17.8398 4.6637 16.9638 4.36318 15.8423C4.25189 15.4269 4.25211 14.9456 4.25241 14.2757C4.25242 14.2403 4.25244 14.2043 4.25244 14.1678C4.25244 13.7536 4.58823 13.4178 5.00244 13.4178C5.41665 13.4178 5.75244 13.7536 5.75244 14.1678C5.75244 14.991 5.75888 15.2555 5.81207 15.454L5.08763 15.6481L5.81207 15.454C5.97389 16.0579 6.4456 16.5297 7.04951 16.6915C7.24801 16.7447 7.51251 16.7511 8.33577 16.7511H13.5024C14.2149 16.7511 14.7041 16.7505 15.0834 16.7195C15.4539 16.6893 15.6529 16.6338 15.7969 16.5604C16.1262 16.3926 16.3939 16.1249 16.5617 15.7956C16.6351 15.6515 16.6906 15.4525 16.7209 15.082C16.7519 14.7028 16.7524 14.2135 16.7524 13.5011V6.5011C16.7524 5.78866 16.7519 5.29943 16.7209 4.92018C16.6906 4.54968 16.6351 4.35066 16.5617 4.20662L17.1951 3.8839L16.5617 4.20662C16.3939 3.87733 16.1262 3.60962 15.7969 3.44184C15.6529 3.36845 15.4539 3.31294 15.0834 3.28267C14.7041 3.25168 14.2149 3.2511 13.5024 3.2511H8.33577C7.51251 3.2511 7.24801 3.25754 7.04951 3.31073C6.4456 3.47255 5.97389 3.94426 5.81207 4.54817C5.75888 4.74667 5.75244 5.01117 5.75244 5.83443C5.75244 6.24865 5.41665 6.58443 5.00244 6.58443C4.58823 6.58443 4.25244 6.24865 4.25244 5.83443C4.25244 5.79791 4.25242 5.76194 4.25241 5.7265C4.25211 5.05662 4.25189 4.57529 4.36318 4.15994C4.6637 3.03839 5.53973 2.16236 6.66128 1.86184C7.07663 1.75055 7.55796 1.75077 8.22784 1.75107ZM9.47211 6.13744C9.765 5.84454 10.2399 5.84454 10.5328 6.13744L13.8661 9.47077C14.159 9.76366 14.159 10.2385 13.8661 10.5314L10.5328 13.8648C10.2399 14.1577 9.765 14.1577 9.47211 13.8648C9.17922 13.5719 9.17922 13.097 9.47211 12.8041L11.5251 10.7511H2.50244C2.08823 10.7511 1.75244 10.4153 1.75244 10.0011C1.75244 9.58689 2.08823 9.2511 2.50244 9.2511H11.5251L9.47211 7.1981C9.17922 6.9052 9.17922 6.43033 9.47211 6.13744Z"
-                      fill="#314362"
-                    />
-                  </svg>
-                </button>
-              </div>
+          <div className="relative inline-flex w-full flex-col items-start justify-start gap-2">
+            <p className="text-sm font-semibold leading-tight tracking-tight text-slate-700">
+              My Entity List
+            </p>
+            <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-slate-300 bg-white shadow">
               <button
                 type="button"
-                onClick={entityInvitationModalVisibilityHandler}
-                className="shrink self-stretch text-right text-sm font-medium text-darkBlue"
+                onClick={menuOpenHandler}
+                className="flex shrink grow items-center justify-between px-16px py-8px text-center text-base font-medium leading-normal tracking-tight"
               >
-                Add Entity to list
+                <p className=" text-lightGray4">{selectedEntityName}</p>
+                <FaChevronDown
+                  size={16}
+                  className={`text-darkBlue2 ${isEntityMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+                />
               </button>
+              <div className="w-px self-stretch bg-slate-300" />
+              <button
+                type="button"
+                disabled={selectedEntity === ''}
+                className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    className="fill-current"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M8.22784 1.75107C8.26328 1.75108 8.29925 1.7511 8.33577 1.7511H13.5024L13.5339 1.7511C14.2072 1.75109 14.7579 1.75108 15.2055 1.78765C15.6688 1.8255 16.0872 1.90624 16.4779 2.10533L16.1397 2.76903L16.4779 2.10533C17.0894 2.41692 17.5866 2.9141 17.8982 3.52563C18.0973 3.91637 18.178 4.33477 18.2159 4.79803C18.2525 5.2456 18.2524 5.79632 18.2524 6.46971V6.5011V13.5011V13.5325C18.2524 14.2059 18.2525 14.7566 18.2159 15.2042C18.178 15.6674 18.0973 16.0858 17.8982 16.4766C17.5866 17.0881 17.0894 17.5853 16.4779 17.8969C16.0872 18.096 15.6688 18.1767 15.2055 18.2146C14.7579 18.2511 14.2072 18.2511 13.5338 18.2511H13.5024H8.33577C8.29926 18.2511 8.26329 18.2511 8.22785 18.2511C7.55797 18.2514 7.07664 18.2517 6.66128 18.1404C5.53973 17.8398 4.6637 16.9638 4.36318 15.8423C4.25189 15.4269 4.25211 14.9456 4.25241 14.2757C4.25242 14.2403 4.25244 14.2043 4.25244 14.1678C4.25244 13.7536 4.58823 13.4178 5.00244 13.4178C5.41665 13.4178 5.75244 13.7536 5.75244 14.1678C5.75244 14.991 5.75888 15.2555 5.81207 15.454L5.08763 15.6481L5.81207 15.454C5.97389 16.0579 6.4456 16.5297 7.04951 16.6915C7.24801 16.7447 7.51251 16.7511 8.33577 16.7511H13.5024C14.2149 16.7511 14.7041 16.7505 15.0834 16.7195C15.4539 16.6893 15.6529 16.6338 15.7969 16.5604C16.1262 16.3926 16.3939 16.1249 16.5617 15.7956C16.6351 15.6515 16.6906 15.4525 16.7209 15.082C16.7519 14.7028 16.7524 14.2135 16.7524 13.5011V6.5011C16.7524 5.78866 16.7519 5.29943 16.7209 4.92018C16.6906 4.54968 16.6351 4.35066 16.5617 4.20662L17.1951 3.8839L16.5617 4.20662C16.3939 3.87733 16.1262 3.60962 15.7969 3.44184C15.6529 3.36845 15.4539 3.31294 15.0834 3.28267C14.7041 3.25168 14.2149 3.2511 13.5024 3.2511H8.33577C7.51251 3.2511 7.24801 3.25754 7.04951 3.31073C6.4456 3.47255 5.97389 3.94426 5.81207 4.54817C5.75888 4.74667 5.75244 5.01117 5.75244 5.83443C5.75244 6.24865 5.41665 6.58443 5.00244 6.58443C4.58823 6.58443 4.25244 6.24865 4.25244 5.83443C4.25244 5.79791 4.25242 5.76194 4.25241 5.7265C4.25211 5.05662 4.25189 4.57529 4.36318 4.15994C4.6637 3.03839 5.53973 2.16236 6.66128 1.86184C7.07663 1.75055 7.55796 1.75077 8.22784 1.75107ZM9.47211 6.13744C9.765 5.84454 10.2399 5.84454 10.5328 6.13744L13.8661 9.47077C14.159 9.76366 14.159 10.2385 13.8661 10.5314L10.5328 13.8648C10.2399 14.1577 9.765 14.1577 9.47211 13.8648C9.17922 13.5719 9.17922 13.097 9.47211 12.8041L11.5251 10.7511H2.50244C2.08823 10.7511 1.75244 10.4153 1.75244 10.0011C1.75244 9.58689 2.08823 9.2511 2.50244 9.2511H11.5251L9.47211 7.1981C9.17922 6.9052 9.17922 6.43033 9.47211 6.13744Z"
+                    fill="#314362"
+                  />
+                </svg>
+              </button>
+
+              {/* Info: (20240514 - Julian) dropdown menu */}
+              {displayEntityMenu}
             </div>
+          </div>
+          <div className="flex flex-col items-center gap-y-16px">
             {/* Info: (20240513 - Julian) create entity button */}
             <Button
               type="button"
               onClick={createEntityModalVisibilityHandler}
               variant={'tertiary'}
-              className="mx-auto flex justify-center gap-4px"
+              className="mx-auto flex h-44px items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal"
             >
               <svg
                 width="17"
@@ -140,19 +219,20 @@ const SelectEntityPageBody = () => {
                   fill="#FCFDFF"
                 />
               </svg>
-              <p className="text-sm font-medium leading-7 tracking-normal">Create My Entity</p>
+              <p>Create My Entity</p>
               <FaArrowRight />
             </Button>
+
+            <Link href={ISUNFA_ROUTE.DASHBOARD} className="w-full">
+              <Button
+                variant={'tertiaryOutline'}
+                className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
+              >
+                <p>Try it out</p>
+                <FaArrowRight />
+              </Button>
+            </Link>
           </div>
-          <Link
-            href={ISUNFA_ROUTE.DASHBOARD}
-            className="mt-10 flex items-center gap-1 rounded-sm px-4 py-2 hover:opacity-70"
-          >
-            <div className="text-sm font-medium leading-5 tracking-normal text-secondaryBlue">
-              Try it out
-            </div>
-            <FaArrowRight />
-          </Link>
         </div>
       </div>
     </div>
