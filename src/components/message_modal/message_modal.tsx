@@ -15,7 +15,19 @@ const MessageModal = ({
   modalVisibilityHandler,
   messageModalData,
 }: IMessageModalProps) => {
-  const { title, content, subMsg, submitBtnStr, submitBtnFunction, messageType } = messageModalData;
+  const {
+    title,
+    content,
+    subMsg,
+    submitBtnStr,
+    submitBtnFunction,
+    backBtnStr,
+    backBtnFunction,
+    messageType,
+  } = messageModalData;
+
+  // Info: (20240514 - Julian) 如果沒有 backBtnFunction，則預設為關閉 modal
+  const backBtnClickHandler = backBtnFunction ? backBtnFunction : modalVisibilityHandler;
 
   // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {
@@ -30,7 +42,7 @@ const MessageModal = ({
       : messageType === MessageType.SUCCESS
         ? '/icons/success.svg'
         : messageType === MessageType.ERROR
-          ? ''
+          ? '/icons/error.svg'
           : '/icons/info.svg';
   const imgAlt =
     messageType === MessageType.WARNING
@@ -47,7 +59,7 @@ const MessageModal = ({
       : messageType === MessageType.SUCCESS
         ? 'border-successGreen3'
         : messageType === MessageType.ERROR
-          ? 'border-errorRed'
+          ? 'border-errorRed3'
           : 'border-navyBlue';
 
   const titleColor =
@@ -56,13 +68,24 @@ const MessageModal = ({
       : messageType === MessageType.SUCCESS
         ? 'text-lightGreen'
         : messageType === MessageType.ERROR
-          ? 'text-errorRed'
+          ? 'text-lightRed'
           : 'text-navyBlue2';
+
+  const isBackBtn = backBtnStr ? (
+    <Button
+      className="px-16px py-8px"
+      type="button"
+      onClick={backBtnClickHandler}
+      variant="tertiaryOutline"
+    >
+      {backBtnStr}
+    </Button>
+  ) : null;
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-50">
       <div
-        className={`w-376px relative flex h-fit flex-col gap-16px rounded-xs border-t-5px ${borderColor} bg-white px-32px py-16px`}
+        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-white px-32px py-16px`}
       >
         <button
           type="button"
@@ -74,20 +97,13 @@ const MessageModal = ({
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
           <h1 className={`text-xl font-bold ${titleColor}`}>{title}</h1>
           <Image src={imgStr} width={48} height={48} alt={imgAlt} />
-          {/* Info: (20240425 - Julian) common message (gray color) */}
-          <p className="text-lightGray5">{content}</p>
           {/* Info: (20240507 - Julian) sub message (red color) */}
           <p className="text-lightRed">{subMsg}</p>
+          {/* Info: (20240425 - Julian) common message (gray color) */}
+          <p className="text-lightGray5">{content}</p>
         </div>
         <div className="flex items-center justify-center gap-24px">
-          <Button
-            className="px-16px py-8px"
-            type="button"
-            onClick={modalVisibilityHandler}
-            variant={null}
-          >
-            Cancel
-          </Button>
+          {isBackBtn}
           <Button
             className="px-16px py-8px"
             type="button"
