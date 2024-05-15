@@ -5,7 +5,7 @@ import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { PiGlobe } from 'react-icons/pi';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import Image from 'next/image';

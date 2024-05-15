@@ -9,7 +9,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 
 const SelectCompanyPageBody = () => {
   const { signedIn, username, companyList } = useUserCtx();
