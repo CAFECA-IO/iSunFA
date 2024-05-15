@@ -6,11 +6,11 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';
 import { ToastId } from '@/constants/toast_id';
-import NavBar from '../../components/nav_bar/nav_bar';
-import { ILocale } from '../../interfaces/locale';
-import { useUserCtx } from '../../contexts/user_context';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import DashboardPageBody from '../../components/dashboard_page_body/dashboard_page_body';
+import NavBar from '@/components/nav_bar/nav_bar';
+import { ILocale } from '@/interfaces/locale';
+import { useUserCtx } from '@/contexts/user_context';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import DashboardPageBody from '@/components/dashboard_page_body/dashboard_page_body';
 
 const DashboardPage = () => {
   const router = useRouter();

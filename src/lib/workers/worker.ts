@@ -1,6 +1,6 @@
 import { Action } from '@/constants/action';
 import { IAPIConfig, IAPIInput } from '@/interfaces/api_connection';
-import { fetchData } from '../hooks/use_api';
+import { fetchData } from '@/lib/hooks/use_api';
 
 interface FetchRequestData {
   apiConfig: IAPIConfig;

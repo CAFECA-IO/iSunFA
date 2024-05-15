@@ -1,9 +1,9 @@
 import cookie from 'cookie';
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDomains } from '../../../lib/utils/common';
-import { ICredential, IUserAuth } from '../../../interfaces/webauthn';
-import { COOKIE_NAME, DUMMY_CHALLENGE } from '../../../constants/config';
+import { getDomains } from '@/lib/utils/common';
+import { ICredential, IUserAuth } from '@/interfaces/webauthn';
+import { COOKIE_NAME, DUMMY_CHALLENGE } from '@/constants/config';
 
 type Data = {
   payload: null | IUserAuth;

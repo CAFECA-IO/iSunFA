@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/utils/common';
+import { cn } from '@/lib/utils/common';
 
 // Info: 用 cva 來定義 button 的樣式 (20240319 - Shirley)
 const buttonVariants = cva(

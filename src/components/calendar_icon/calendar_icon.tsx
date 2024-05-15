@@ -1,4 +1,4 @@
-import { timestampToString } from '../../lib/utils/common';
+import { timestampToString } from '@/lib/utils/common';
 
 interface ICalendarIconProps {
   timestamp: number;

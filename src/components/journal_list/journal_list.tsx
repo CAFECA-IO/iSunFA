@@ -1,5 +1,5 @@
 import { IJournal } from '@/interfaces/journal';
-import JournalItem from '../journal_item/journal_item';
+import JournalItem from '@/components/journal_item/journal_item';
 
 const JournalList = ({ journals }: { journals: IJournal[] }) => {
   // ToDo: (20240418 - Julian) replace with prop

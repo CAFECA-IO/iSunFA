@@ -12,16 +12,16 @@ import {
   EventTypeEnum,
 } from '@/interfaces/account';
 import { firstCharToUpperCase } from '@/lib/utils/common';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
-import { IDatePeriod } from '../../interfaces/date_period';
-import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
-import { Button } from '../button/button';
-import Toggle from '../toggle/toggle';
-import ProgressBar from '../progress_bar/progress_bar';
-import { MessageType } from '../../interfaces/message_modal';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx, PaymentPeriod, PaymentState } from '@/contexts/accounting_context';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import { Button } from '@/components/button/button';
+import Toggle from '@/components/toggle/toggle';
+import ProgressBar from '@/components/progress_bar/progress_bar';
+import { MessageType } from '@/interfaces/message_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 

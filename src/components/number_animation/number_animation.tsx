@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   INTERVAL_NUMBER_ANIMATION_DESKTOP,
   INTERVAL_NUMBER_ANIMATION_MOBILE,
-} from '../../constants/display';
+} from '@/constants/display';
 
 interface NumberAnimationProps {
   targetNumber: number;

@@ -1,10 +1,10 @@
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
-import NavBar from '../../../components/nav_bar/nav_bar';
-import ReportsSidebar from '../../../components/reports_sidebar/reports_sidebar';
-import { ILocale } from '../../../interfaces/locale';
-import MyReportsSection from '../../../components/my_reports_section/my_reports_section';
+import NavBar from '@/components/nav_bar/nav_bar';
+import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
+import { ILocale } from '@/interfaces/locale';
+import MyReportsSection from '@/components/my_reports_section/my_reports_section';
 
 const MyReportsPage = () => {
   return (

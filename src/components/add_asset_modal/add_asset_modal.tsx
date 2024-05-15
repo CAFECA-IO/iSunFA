@@ -4,9 +4,9 @@ import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { PiWrenchFill } from 'react-icons/pi';
-import { Button } from '../button/button';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
+import { Button } from '@/components/button/button';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;

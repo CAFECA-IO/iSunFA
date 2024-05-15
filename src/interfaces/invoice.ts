@@ -1,5 +1,5 @@
-import { EventType, isEventType } from './account';
-import { IPayment, isIPayment } from './payment';
+import { EventType, isEventType } from '@/interfaces/account';
+import { IPayment, isIPayment } from '@/interfaces/payment';
 
 export interface IInvoice {
   invoiceId: string;

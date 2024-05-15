@@ -3,9 +3,9 @@ import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { Button } from '../button/button';
-import { FormAnimation } from '../../constants/form_animation';
-import { TranslateFunction } from '../../interfaces/locale';
+import { Button } from '@/components/button/button';
+import { FormAnimation } from '@/constants/form_animation';
+import { TranslateFunction } from '@/interfaces/locale';
 
 function ContactForm() {
   const { t }: { t: TranslateFunction } = useTranslation('common');

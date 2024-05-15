@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { IGeneratedReportItem } from '@/interfaces/report_item';
 import ReportsHistoryItem from '@/components/reports_history_item/reports_history_item';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 
 interface IReportsHistoryListProps {
   reports: IGeneratedReportItem[];

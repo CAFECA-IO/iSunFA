@@ -2,9 +2,9 @@ import cookie from 'cookie';
 // TODO: check if the user's public key is registered on the server (20240403 - Shirley)
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { ICredential } from '../../../interfaces/webauthn';
-import { getDomains } from '../../../lib/utils/common';
-import { COOKIE_NAME } from '../../../constants/config';
+import { ICredential } from '@/interfaces/webauthn';
+import { getDomains } from '@/lib/utils/common';
+import { COOKIE_NAME } from '@/constants/config';
 
 type Data = {
   payload: string | ICredential;

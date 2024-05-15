@@ -1,13 +1,13 @@
 /* eslint-disable */
 import { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
-import useOuterClick from '../../lib/hooks/use_outer_click';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
-import { MONTH_ABR_LIST, WEEK_LIST } from '../../constants/display';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { MONTH_ABR_LIST, WEEK_LIST } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
-import { TranslateFunction } from '../../interfaces/locale';
-import { IDatePeriod } from '../../interfaces/date_period';
-import { cn, timestampToString } from '../../lib/utils/common';
-import { Button } from '../button/button';
+import { TranslateFunction } from '@/interfaces/locale';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { cn, timestampToString } from '@/lib/utils/common';
+import { Button } from '@/components/button/button';
 
 type Dates = {
   date: number;

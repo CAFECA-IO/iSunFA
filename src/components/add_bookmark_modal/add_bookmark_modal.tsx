@@ -1,10 +1,10 @@
 /* eslint-disable */
 import useStateRef from 'react-usestateref';
 import React, { useEffect } from 'react';
-import { Button } from '../button/button';
-import { useDashboardCtx } from '../../contexts/dashboard_context';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-import { useGlobalCtx } from '../../contexts/global_context';
+import { Button } from '@/components/button/button';
+import { useDashboardCtx } from '@/contexts/dashboard_context';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;

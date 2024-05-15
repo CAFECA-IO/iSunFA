@@ -1,8 +1,8 @@
 /* eslint-disable */
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
-import { Button } from '../button/button';
-import { IMessageModal, MessageType } from '../../interfaces/message_modal';
+import { Button } from '@/components/button/button';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface IMessageModalProps {
   isModalVisible: boolean;

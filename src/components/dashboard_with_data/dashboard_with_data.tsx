@@ -1,9 +1,9 @@
 import React from 'react';
-import DashboardOverview from '../dashboard_overview/dashboard_overview';
-import ProfitTrendChart from '../profit_trend_chart/profit_trend_chart';
-import IncomeExpenseTrendChart from '../income_expense_trend_chart/income_expense_trend_chart';
-import ProjectProgressChart from '../project_progress_chart/project_progress_chart';
-import ProjectRoiComparisonChart from '../project_roi_comparison_chart/project_roi_comparison_chart';
+import DashboardOverview from '@/components/dashboard_overview/dashboard_overview';
+import ProfitTrendChart from '@/components/profit_trend_chart/profit_trend_chart';
+import IncomeExpenseTrendChart from '@/components/income_expense_trend_chart/income_expense_trend_chart';
+import ProjectProgressChart from '@/components/project_progress_chart/project_progress_chart';
+import ProjectRoiComparisonChart from '@/components/project_roi_comparison_chart/project_roi_comparison_chart';
 
 const DashboardWithData = () => {
   const displayedDataSection = (
