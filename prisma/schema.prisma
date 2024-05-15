@@ -88,7 +88,7 @@ model company {
     imvoices          invoice[]
     companyKYCs       companyKYC[]
     subscriptions     subscription[]
-    usersToCompanysToroles    userCompanyRole[]
+    usersCompanysRoles    userCompanyRole[]
     companysToDepartments companyDepartment[]
 }
 
@@ -221,7 +221,7 @@ model role {
     name             String   
     permissions       String[]
 
-    usersToCompanysToroles    userCompanyRole[]
+    usersCompanysRoles    userCompanyRole[]
 
     company          company  @relation(fields: [companyId], references: [id])
 }
@@ -254,7 +254,7 @@ model user {
     imageId         String?
 
     userKYCs        userKYC[]
-    usersToCompanysToroles    userCompanyRole[]
+    usersCompanysRoles    userCompanyRole[]
 }
 
 model userKYC {
