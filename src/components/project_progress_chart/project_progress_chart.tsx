@@ -12,6 +12,11 @@ import { TranslateFunction } from '../../interfaces/locale';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '../tooltip/tooltip';
 import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
+import {
+  DUMMY_CATEGORIES,
+  DUMMY_START_DATE,
+  generateRandomData,
+} from '../../interfaces/project_progress_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -136,7 +141,6 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
   return <Chart options={options} series={data.series} type="bar" height={200} />;
 };
 
-const DUMMY_START_DATE = '2024/02/12';
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectProgressChart = () => {
@@ -152,24 +156,14 @@ const ProjectProgressChart = () => {
       data: number[];
     }[]
   >([]);
+  const [categories, setCategories] = useState<string[]>(DUMMY_CATEGORIES);
 
   const displayedYear = maxDate.getFullYear();
-
-  // Deprecate: 在還沒有選好 endTimestamp 顯示 2024 May 的做法 (20240523 - Shirley)
-  // const displayedMonth = period.startTimeStamp
-  //   ? MONTH_ABR_LIST[new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND).getMonth()]
-  //   : MONTH_ABR_LIST[maxDate.getMonth()];
-  // const displayedYearAndMonth = `${displayedYear} ${t(displayedMonth)}`;
 
   const displayedDate = (() => {
     const startDate = period.startTimeStamp
       ? new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
       : new Date();
-
-    // Deprecate: 在還沒有選好 endTimestamp 顯示 2024 May 的做法 (20240523 - Shirley)
-    // if (!period.endTimeStamp) {
-    //   return displayedYearAndMonth;
-    // }
 
     const endDate = period.endTimeStamp
       ? new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND)
@@ -181,29 +175,16 @@ const ProjectProgressChart = () => {
     return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
   })();
 
-  const categories = ['Designing', 'Beta Testing', 'Develop', 'Sold', 'Selling', 'Archived'];
-
   useEffect(() => {
     // Info: generate series when period change is done (20240418 - Shirley)
     if (period.endTimeStamp !== 0) {
-      const newSeries = [
-        {
-          name: 'Units',
-          data: [
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-            Math.floor(Math.random() * 200),
-          ],
-        },
-      ];
-      setSeries(newSeries);
+      const newData = generateRandomData();
+      setSeries(newData.series);
+      setCategories(newData.categories);
     }
   }, [period.endTimeStamp, period.startTimeStamp]);
 
-  const dummyData = {
+  const data = {
     categories,
     series: series,
   };
@@ -250,7 +231,7 @@ const ProjectProgressChart = () => {
       </div>
 
       <div className="mt-5 max-md:-ml-3 md:mt-10">
-        <ColumnChart data={dummyData} />
+        <ColumnChart data={data} />
       </div>
     </div>
   );

@@ -11,6 +11,8 @@ import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types'
 import { useRouter } from 'next/router';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { toast as toastify } from 'react-toastify';
+import { ICompanyItem } from '@/interfaces/company';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -26,6 +28,10 @@ interface UserContextType {
   username: string | null;
   signedIn: boolean;
   isSignInError: boolean;
+  companyList: Record<string, ICompanyItem>;
+  selectedCompany: string | null;
+  selectCompany: (company: string) => void;
+  isSelectCompany: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -37,6 +43,10 @@ export const UserContext = createContext<UserContextType>({
   username: '',
   signedIn: false,
   isSignInError: false,
+  companyList: {},
+  selectedCompany: null,
+  selectCompany: () => {},
+  isSelectCompany: false,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +56,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
+  const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<string | null>(
+    null
+  );
+  const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
+
   const {
     trigger: signOut,
     error: signOutError,
@@ -59,6 +74,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false,
     false
   );
+
+  // ToDo: (20240513 - Julian) Get the company list from API
 
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
 
@@ -247,12 +264,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20240513 - Julian) 選擇公司的功能
+  const selectCompany = (company: string) => {
+    setSelectedCompany(company);
+  };
+
   const clearState = () => {
     setUserAuth(null);
     setUsername(null);
     setCredential(null);
     setSignedIn(false);
     setIsSignInError(false);
+    setSelectedCompany(null);
+    setIsSelectCompany(false);
+
+    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
   };
 
   const readCookie = async () => {
@@ -293,6 +319,45 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20240514 - Julian) replace the defaultCompanyList with the real data
+  const defaultCompanyList: Record<string, ICompanyItem> = {
+    iSunCloud: {
+      name: 'iSunCloud',
+      role: 'Owner',
+      brn: '001',
+      icon: '/entities/isuncloud.png',
+      isPassedKyc: true,
+    },
+    TSMC: {
+      name: 'TSMC',
+      role: 'Accountant',
+      brn: '002',
+      icon: '/entities/tsmc.png',
+      isPassedKyc: true,
+    },
+    Tesla: {
+      name: 'Tesla',
+      role: 'Bookkeeper',
+      brn: '003',
+      icon: '/entities/tesla.png',
+      isPassedKyc: true,
+    },
+    'Happy Inc.': {
+      name: 'Happy Inc.',
+      role: 'Finance',
+      brn: '004',
+      icon: '/entities/happy.png',
+      isPassedKyc: false,
+    },
+    TideBit: {
+      name: 'TideBit',
+      role: 'Viewer',
+      brn: '005',
+      icon: '/entities/tidebit.png',
+      isPassedKyc: false,
+    },
+  };
+
   useEffect(() => {
     (async () => {
       await init();
@@ -312,6 +377,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [signOutSuccess]);
 
+  useEffect(() => {
+    if (selectedCompany) {
+      setIsSelectCompany(true);
+    }
+  }, [selectedCompany]);
+
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
@@ -322,6 +393,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       username: usernameRef.current,
       signedIn: signedInRef.current,
       isSignInError: isSignInErrorRef.current,
+      companyList: defaultCompanyList,
+      selectedCompany: selectedCompanyRef.current,
+      selectCompany,
+      isSelectCompany: isSelectCompanyRef.current,
     }),
     [credentialRef.current]
   );

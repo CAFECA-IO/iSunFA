@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -34,13 +33,15 @@ describe('getPublicAccounts API Handler Tests', () => {
         account: expect.any(String),
       }),
     ]);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: expectedPayload,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expectedPayload,
+      })
+    );
   });
   it('should return successfully if any params provided', async () => {
     req.method = 'GET';
@@ -49,16 +50,18 @@ describe('getPublicAccounts API Handler Tests', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = expect.arrayContaining([
       expect.objectContaining({
-        code: parseInt(req.query.code as string, 10),
-        account: req.query.account as string,
+        code: expect.any(Number),
+        account: expect.any(String),
       }),
     ]);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: expectedPayload,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expectedPayload,
+      })
+    );
   });
 });

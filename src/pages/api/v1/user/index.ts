@@ -1,69 +1,60 @@
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
-import version from '@/lib/version';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/client';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<IUser>>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IUser | IUser[]>>
+) {
   try {
     if (req.method === 'GET') {
-      // Handle GET request to list all users
-      const users: IUser[] = [
-        {
-          id: '1',
-          name: 'John',
-          fullName: 'John Doe',
-          email: 'john@mermer.cc',
-          phone: '12345678',
-          kycStatus: 'verified',
-          credentialId: '1',
-          publicKey: 'public-key',
-          algorithm: 'ES256',
-        },
-        {
-          id: '2',
-          name: 'Jane',
-          credentialId: '2',
-          publicKey: 'public-key',
-          algorithm: 'ES256',
-        },
-      ];
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        payload: users,
-        message: 'List Users sucessfully',
-      });
+      // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
+      const userList: IUser[] = await prisma.user.findMany();
+      const { httpCode, result } = formatApiResponse<IUser[]>(
+        STATUS_MESSAGE.SUCCESS_LIST,
+        userList
+      );
+      res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       // Handle POST request to create a new user
-      const { name } = req.body;
-      const newUser: IUser = {
-        id: '2',
+      const {
         name,
-        credentialId: '2',
-        publicKey: 'public-key',
-        algorithm: 'ES256',
-      };
-      res.status(201).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        payload: newUser,
-        message: 'Create User sucessfully',
+        fullName,
+        email,
+        phone,
+        kycStatus,
+        credentialId,
+        publicKey,
+        algorithm,
+        imageId,
+      } = req.body;
+      const createdUser: IUser = await prisma.user.create({
+        data: {
+          name,
+          fullName,
+          email,
+          phone,
+          kycStatus,
+          credentialId,
+          publicKey,
+          algorithm,
+          imageId,
+        },
       });
+
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
+      res.status(httpCode).json(result);
     } else {
       // Handle unsupported HTTP methods
-      throw new Error('METHOD_NOT_ALLOWED');
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     // Handle errors
     const error = _error as Error;
-    res.status(500).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: '500',
-      message: error.message,
-      payload: {},
-    });
+    const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
+    res.status(httpCode).json(result);
   }
 }

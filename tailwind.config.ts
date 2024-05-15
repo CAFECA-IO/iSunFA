@@ -723,6 +723,7 @@ module.exports = {
 
         errorRed: '#963737',
         errorRed2: '#FED7D7',
+        errorRed3: '#FB5C5C',
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',
@@ -1033,6 +1034,7 @@ module.exports = {
         '360px': '360px',
         '370px': '370px',
         '372px': '372px',
+        '376px': '376px',
         '380px': '380px',
         '388px': '388px',
         '390px': '390px',
