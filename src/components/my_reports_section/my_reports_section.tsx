@@ -146,7 +146,7 @@ const MyReportsSection = () => {
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
-    <div className="hideScrollbar overflow-x-scroll lg:mr-10">
+    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
       {' '}
       <PendingReportList reports={pendingData} />
     </div>
@@ -291,7 +291,7 @@ const MyReportsSection = () => {
   const displayedHistoryDataSection = isHistoryDataLoading ? (
     <div>Loading...</div>
   ) : historyData.length !== 0 ? (
-    <div className="hideScrollbar overflow-x-scroll lg:mr-10">
+    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-0">
       <ReportsHistoryList reports={historyData} />
     </div>
   ) : (
