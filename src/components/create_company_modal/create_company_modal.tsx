@@ -1,7 +1,7 @@
 /* eslint-disable */
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
