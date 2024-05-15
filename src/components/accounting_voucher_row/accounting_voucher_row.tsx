@@ -5,13 +5,18 @@ import useOuterClick from '../../lib/hooks/use_outer_click';
 import {
   useAccountingCtx,
   IAccountingVoucher,
-  VoucherType,
+  VoucherRowType,
   VoucherString,
 } from '../../contexts/accounting_context';
 
 const accountingList = ['1441- Machinery', '1113- Cash in banks'];
 
 interface IAccountingVoucherRow {
+  accountingVoucher: IAccountingVoucher;
+}
+
+interface IAccountingVoucherRowMobile {
+  type: 'Debit' | 'Credit';
   accountingVoucher: IAccountingVoucher;
 }
 
@@ -29,7 +34,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   } = useOuterClick<HTMLUListElement>(false);
 
   // Info: (20240430 - Julian) 判斷是借方還是貸方
-  const voucherRowType = debit ? VoucherType.DEBIT : credit ? VoucherType.CREDIT : '';
+  const voucherRowType = debit ? VoucherRowType.DEBIT : credit ? VoucherRowType.CREDIT : '';
 
   // Info: (20240430 - Julian) 選單開關
   const accountingMenuHandler = () => setAccountingMenuOpen(!isAccountingMenuOpen);
@@ -39,10 +44,10 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     changeVoucherStringHandler(id, event.target.value, VoucherString.PARTICULARS);
   };
   const changeDebitHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    changeVoucherAmountHandler(id, Number(event.target.value), VoucherType.DEBIT);
+    changeVoucherAmountHandler(id, Number(event.target.value), VoucherRowType.DEBIT);
   };
   const changeCreditHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    changeVoucherAmountHandler(id, Number(event.target.value), VoucherType.CREDIT);
+    changeVoucherAmountHandler(id, Number(event.target.value), VoucherRowType.CREDIT);
   };
   const deleteClickHandler = () => deleteVoucherRowHandler(id);
 
@@ -108,7 +113,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           type="number"
           value={debit ?? ''}
           onChange={changeDebitHandler}
-          disabled={voucherRowType === VoucherType.CREDIT} // Info: (20240430 - Julian) 如果是借方，則不能輸入 credit
+          disabled={voucherRowType === VoucherRowType.CREDIT} // Info: (20240430 - Julian) 如果是借方，則不能輸入 credit
           onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
           className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
         />
@@ -120,7 +125,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           name="creditInput"
           type="number"
           value={credit ?? ''}
-          disabled={voucherRowType === VoucherType.DEBIT} // Info: (20240430 - Julian) 如果是貸方，則不能輸入 debit
+          disabled={voucherRowType === VoucherRowType.DEBIT} // Info: (20240430 - Julian) 如果是貸方，則不能輸入 debit
           onChange={changeCreditHandler}
           onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
           className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
@@ -133,6 +138,91 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         </button>
       </td>
     </tr>
+  );
+};
+
+export const AccountingVoucherRowMobile = ({
+  type,
+  accountingVoucher,
+}: IAccountingVoucherRowMobile) => {
+  const isDebit = type === 'Debit';
+
+  const { id, accountTitle, particulars, debit, credit } = accountingVoucher;
+  const { deleteVoucherRowHandler, changeVoucherStringHandler, changeVoucherAmountHandler } =
+    useAccountingCtx();
+
+  const selectAccountTitleHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    changeVoucherStringHandler(id, event.target.value, VoucherString.ACCOUNT_TITLE);
+  };
+
+  const changeParticularMobileHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    changeVoucherStringHandler(id, event.target.value, VoucherString.PARTICULARS);
+  };
+
+  const changeAmountHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    changeVoucherAmountHandler(
+      id,
+      Number(event.target.value),
+      isDebit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT
+    );
+  };
+
+  const debitAmount = debit ?? 0;
+  const creditAmount = credit ?? 0;
+
+  const amountTitle = isDebit ? 'Debit' : 'Credit';
+
+  return (
+    <div key={id} className="flex flex-col gap-y-16px rounded-sm p-20px">
+      {/* Info: (20240508 - Julian) Accounting */}
+      <div className="flex flex-col gap-y-8px">
+        <p className="text-navyBlue2">Accounting</p>
+        <select
+          id="accountTitleSelectMobile"
+          name="accountTitleSelectMobile"
+          value={accountTitle}
+          onChange={selectAccountTitleHandler}
+          className={`relative flex h-46px w-full cursor-pointer items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none hover:border-primaryYellow hover:text-primaryYellow hover:outline-none`}
+        >
+          {accountingList.map((title: string) => (
+            <option key={title} value={title}>
+              {title}
+            </option>
+          ))}
+        </select>
+      </div>
+      {/* Info: (20240508 - Julian) Particulars */}
+      <div className="flex flex-col gap-y-8px">
+        <p className="text-navyBlue2">Particulars</p>
+        <input
+          id="particularsInputMobile"
+          name="particularsInputMobile"
+          type="text"
+          value={particulars ?? ''}
+          onChange={changeParticularMobileHandler}
+          className={`h-46px rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
+        />
+      </div>
+      {/* Info: (20240508 - Julian) amount */}
+      <div className="flex flex-col gap-y-8px">
+        <p className="text-navyBlue2">{amountTitle}</p>
+        <input
+          id={isDebit ? 'debitInputMobile' : 'creditInputMobile'}
+          name={isDebit ? 'debitInputMobile' : 'creditInputMobile'}
+          type="number"
+          value={isDebit ? debitAmount : creditAmount}
+          onChange={changeAmountHandler}
+          onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
+          className={`h-46px rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+        />
+      </div>
+      {/* Info: (20240510 - Julian) Buttons */}
+      <div className="flex items-center justify-center">
+        <button type="button" onClick={() => deleteVoucherRowHandler(id)}>
+          <RiDeleteBinLine size={24} />
+        </button>
+      </div>
+    </div>
   );
 };
 

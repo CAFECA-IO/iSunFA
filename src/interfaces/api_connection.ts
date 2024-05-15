@@ -1,3 +1,5 @@
+import { IFinancialReportRequest } from './report';
+
 export type IAPIName =
   | 'SIGN_UP'
   | 'SIGN_IN'
@@ -13,6 +15,8 @@ export type IAPIName =
   | 'UPLOAD_INVOCIE'
   | 'GET_AUDIT_REPORTS'
   | 'GENERATE_FINANCIAL_REPORT'
+  | 'GET_FINANCIAL_REPORTS_PROGRESS'
+  | 'GET_FINANCIAL_REPORT'
   | 'GENERATE_ANALYSIS_REPORT'
   | 'OCR_UPLOAD_INVOICE_PICTURE'
   | 'OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS'
@@ -23,6 +27,7 @@ export type IAPIName =
   | 'VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID'
   | 'VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID'
   | 'VOUCHER_GENERATE'
+  | 'LIST_ALL_JOURNALS'
   | 'UPLOAD_JOURNAL'
   | 'UPLOAD_JOURNAL_DOCUMENT_IMAGE'
   | 'GET_JOURNAL_PROCESSING_STATUS'
@@ -32,7 +37,7 @@ export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown } | FormData;
+  body?: { [key: string]: unknown } | FormData | IFinancialReportRequest;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };
@@ -53,5 +58,6 @@ export type IAPIResponse<Data> = {
   trigger: (input?: IAPIInput, signal?: AbortSignal) => void;
   isLoading: boolean | undefined;
   data: Data | undefined;
+  code: string | undefined;
   error: Error | null;
 };

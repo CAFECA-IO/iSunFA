@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
@@ -39,29 +39,22 @@ enum VoucherItem {
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const { companyId } = useAccountingCtx();
   const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
-  const [journalDetail, setJournalDetail] = useState<IJournal>();
   const {
-    data: journalDetails,
+    data: journalDetail,
     error,
     success,
-  } = APIHandler<IJournal[]>(
-    APIName.GET_PROCESSED_JOURNAL_DATA,
-    {
-      params: { companyId, journalId },
-    },
-    false,
-    false
-  );
+    code,
+  } = APIHandler<IJournal>(APIName.GET_PROCESSED_JOURNAL_DATA, {
+    params: { companyId, journalId },
+  });
 
   useEffect(() => {
-    if (success && journalDetails && journalDetails.length > 0) {
-      setJournalDetail(journalDetails[0]);
-    } else {
+    if (success === false) {
       // TODO: Error handling @Julian (20240509 - Tzuhan)
       // eslint-disable-next-line no-console
-      console.log('getJournalDetail error', error);
+      console.log('getJournalDetail error', error, 'code: ', code);
     }
-  }, [success, journalDetails]);
+  }, [success]);
 
   const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
@@ -70,12 +63,18 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
   const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
   const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
-  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].totalPrice : 0;
-  const tax: number = journalDetail ? journalDetail.metadatas[0].taxPercentage : 0;
-  const fee: number = journalDetail ? journalDetail.metadatas[0].fee : 0;
-  const paymentMethod: string = journalDetail ? journalDetail.metadatas[0].paymentMethod : '';
-  const paymentPeriod: string = journalDetail ? journalDetail.metadatas[0].paymentPeriod : '';
-  const paymentStatus: string = journalDetail ? journalDetail.metadatas[0].paymentStatus : '';
+  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].payment.price : 0; // Info Murky Edit (20240509)
+  const tax: number = journalDetail ? journalDetail.metadatas[0].payment.taxPercentage : 0; // Info Murky Edit (20240509)
+  const fee: number = journalDetail ? journalDetail.metadatas[0].payment.fee : 0; // Info Murky Edit (20240509)
+  const paymentMethod: string = journalDetail
+    ? journalDetail.metadatas[0].payment.paymentMethod
+    : ''; // Info Murky Edit (20240509)
+  const paymentPeriod: string = journalDetail
+    ? journalDetail.metadatas[0].payment.paymentPeriod
+    : ''; // Info Murky Edit (20240509)
+  const paymentStatus: string = journalDetail
+    ? journalDetail.metadatas[0].payment.paymentStatus
+    : ''; // Info Murky Edit (20240509)
   const project: string = journalDetail ? journalDetail.metadatas[0].project : '';
   const contract: string = journalDetail ? journalDetail.metadatas[0].contract : '';
   const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';

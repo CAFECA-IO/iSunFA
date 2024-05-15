@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IProfit } from '@/interfaces/profit';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { Period } from '@/interfaces/chart_unit';
 
@@ -58,12 +58,12 @@ export default function handler(
   try {
     if (period === Period.WEEK) {
       const { httpCode, result } = formatApiResponse<IProfit[]>(
-        STATUS_CODE.SUCCESS_GET,
+        STATUS_MESSAGE.SUCCESS_GET,
         responseDataArray
       );
       res.status(httpCode).json(result);
     }
-    throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   } catch (_error) {
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IProfit>(error.message, {} as IProfit);

@@ -3,9 +3,15 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice, IInvoiceWithPaymentMethod } from '@/interfaces/invoice';
+import { IInvoice } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { PaymentPeriodType, PaymentStatusType } from '@/interfaces/account';
+import {
+  PaymentPeriodType,
+  PaymentStatusType,
+  EventType,
+  EventTypeEnum,
+} from '@/interfaces/account';
+import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '../../lib/hooks/use_outer_click';
 import DatePicker, { DatePickerType } from '../date_picker/date_picker';
 import { useGlobalCtx } from '../../contexts/global_context';
@@ -18,9 +24,9 @@ import ProgressBar from '../progress_bar/progress_bar';
 import { MessageType } from '../../interfaces/message_modal';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
-const eventTypeSelection: string[] = ['Payment', 'Receiving', 'Transfer'];
+
 const taxRateSelection: number[] = [0, 5, 20, 25];
-const paymentMethodSelection: string[] = ['Transfer', 'Credit Card', 'Cash'];
+const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
 const ficSelection: string[] = [
   '004 Bank of Taiwan',
   '005 Land Bank of Taiwan',
@@ -29,12 +35,6 @@ const ficSelection: string[] = [
 ];
 const projectSelection: string[] = ['None', 'Project A', 'Project B', 'Project C'];
 const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contract C'];
-
-const enum EventType {
-  PAYMENT = 'Payment',
-  RECEIVING = 'Receiving',
-  TRANSFER = 'Transfer',
-}
 
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
@@ -45,7 +45,7 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { companyId, ocrResultId, setVoucherIdHandler } = useAccountingCtx();
+  const { companyId, ocrResultId, setOcrResultIdHandler, setVoucherIdHandler } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
@@ -57,13 +57,14 @@ const NewJournalForm = () => {
   });
 
   const {
-    trigger: voucherGenerate, // TODO: (20240508 - Tzuhan) call API to upload journal data
+    trigger: voucherGenerate,
     data: result,
+    code: uploadCode,
     success: uploadSuccess,
   } = APIHandler<IAccountResultStatus>(
     APIName.VOUCHER_GENERATE,
     {
-      params: { companyId: 1 },
+      params: { companyId },
     },
     false,
     false
@@ -75,7 +76,7 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Basic Info states
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [selectedEventType, setSelectedEventType] = useState<string>(eventTypeSelection[0]);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventTypeEnum.INCOME);
   const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
   const [inputVendor, setInputVendor] = useState<string>('');
@@ -114,6 +115,8 @@ const NewJournalForm = () => {
         setTaxRate(invoiceData[0].payment.taxPercentage);
         setFeeToggle(invoiceData[0].payment.hasFee);
         setInputFee(invoiceData[0].payment.fee);
+        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 ocrResultId 重置
+        setOcrResultIdHandler('');
       } else if (!isLoading) {
         setTimeout(() => {
           getInvoice();
@@ -249,7 +252,7 @@ const NewJournalForm = () => {
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
-    setSelectedEventType(eventTypeSelection[0]);
+    setSelectedEventType(EventTypeEnum.INCOME);
     setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
@@ -287,10 +290,10 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoiceWithPaymentMethod: IInvoiceWithPaymentMethod = {
+    const invoiceWithPaymentMethod: IInvoice = {
       invoiceId: ocrResultId,
       date: datePeriod.startTimeStamp,
-      eventType: selectedEventType as EventType,
+      eventType: selectedEventType,
       paymentReason: inputPaymentReason,
       description: inputDescription,
       venderOrSupplyer: inputVendor,
@@ -304,7 +307,9 @@ const NewJournalForm = () => {
         fee: inputFee,
         paymentMethod: selectedMethod,
         installmentPeriod: inputInstallment,
-        alreadyPaidAmount: inputPartialPaid,
+        paymentAlreadyDone: inputPartialPaid,
+        isRevenue: true,
+        progress: 0,
         paymentPeriod,
         paymentStatus: paymentState,
       },
@@ -315,20 +320,35 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (uploadSuccess && result) {
-      const voucherId = result.resultId;
+      // const voucherId = result.resultId;
+      // Info: (20240510 - Julian) 解析 voucherId
+      const results = result.resultId.split(' ');
+      const resultIdIndex = results.lastIndexOf('resultId:');
+      const voucherId = results[resultIdIndex + 1].trim();
+
       setVoucherIdHandler(voucherId);
       confirmModalVisibilityHandler();
+    } else {
+      // TODO: error handling @Julian (20240510 - tzuhan)
+      // eslint-disable-next-line no-console
+      console.error(`Upload journal failed: ${uploadCode}`);
     }
   }, [uploadSuccess, result]);
+
+  // Info: (20240510 - Julian) 檢查是否要填銀行帳號
+  const isAccountNumberVisible = selectedMethod === 'Transfer';
+  // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
+  const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
     // Info: (20240429 - Julian) 檢查日期是否有填寫
     datePeriod.startTimeStamp === 0 ||
     datePeriod.endTimeStamp === 0 ||
+    inputPaymentReason === '' ||
     inputDescription === '' ||
     inputVendor === '' ||
-    inputAccountNumber === '' ||
+    isAccountNumberInvalid ||
     // Info: (20240429 - Julian) 檢查手續費是否有填寫
     (!!feeToggle && inputFee === 0) ||
     // Info: (20240429 - Julian) 檢查總價是否有填寫
@@ -337,7 +357,7 @@ const NewJournalForm = () => {
     (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
-  const displayEventDropmenu = eventTypeSelection.map((type: string) => {
+  const displayEventDropmenu = Object.values(EventTypeEnum).map((type: EventType) => {
     const selectionClickHandler = () => {
       setSelectedEventType(type);
       setIsEventMenuOpen(false);
@@ -349,7 +369,7 @@ const NewJournalForm = () => {
         onClick={selectionClickHandler}
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
-        {type}
+        {firstCharToUpperCase(type)}
       </li>
     );
   });
@@ -396,7 +416,7 @@ const NewJournalForm = () => {
       <li
         key={account}
         onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+        className="w-full cursor-pointer px-3 py-2 text-left text-navyBlue2 hover:text-primaryYellow"
       >
         {account}
       </li>
@@ -469,7 +489,7 @@ const NewJournalForm = () => {
               onClick={eventMenuOpenHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
-              <p>{selectedEventType}</p>
+              <p>{firstCharToUpperCase(selectedEventType)}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
@@ -706,10 +726,12 @@ const NewJournalForm = () => {
           {/* Info: (20240424 - Julian) Financial Institution Code */}
           <div className="flex w-full flex-col items-start gap-8px md:w-300px">
             <p className="text-sm font-semibold text-navyBlue2">Bank Account</p>
-            <div
+            <button
               id="ficMenu"
+              type="button"
               onClick={bankAccountMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              disabled={!isAccountNumberVisible}
+              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6 disabled:hover:border-lightGray3 disabled:hover:text-navyBlue2`}
             >
               <p>{selectedFIC}</p>
               <FaChevronDown />
@@ -724,7 +746,7 @@ const NewJournalForm = () => {
                   {displayFICDropmenu}
                 </ul>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Info: (20240424 - Julian) Bank Account */}
@@ -736,8 +758,9 @@ const NewJournalForm = () => {
               placeholder="Account Number"
               value={inputAccountNumber}
               onChange={accountNumberChangeHandler}
-              required
-              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+              required={isAccountNumberVisible}
+              disabled={!isAccountNumberVisible}
+              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none disabled:cursor-default disabled:bg-lightGray6"
             />
           </div>
         </div>
@@ -877,7 +900,7 @@ const NewJournalForm = () => {
   );
 
   const displayedProjectSecondLine =
-    selectedEventType === EventType.RECEIVING ? (
+    selectedEventType === EventTypeEnum.INCOME ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
         <ProgressBar

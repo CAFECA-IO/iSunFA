@@ -1,18 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { IAnalysisReport, isIAnalysisReportRequest } from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIFinancialStatements } from '@/interfaces/financial_report';
 import { AICH_URI } from '@/constants/config';
 import { AccountResultStatus } from '@/interfaces/account';
-// import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
+// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAnalysisReport>>
+  res: NextApiResponse<IResponseData<IAnalysisReport | AccountResultStatus>>
 ) {
   try {
     switch (req.method) {
@@ -36,28 +36,14 @@ export default async function handler(
           !end_date ||
           Array.isArray(end_date)
         ) {
-          res.status(400).json({
-            powerby: 'iSunFA v' + version,
-            success: false,
-            code: '400',
-            message: 'bad request',
-            payload: null,
-          });
-          return;
+          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
 
         const startDate = new Date(start_date);
         const endDate = new Date(end_date);
 
         if (!isIAnalysisReportRequest({ type, language, startDate, endDate })) {
-          res.status(400).json({
-            powerby: 'iSunFA v' + version,
-            success: false,
-            code: '400',
-            message: 'bad request',
-            payload: null,
-          });
-          return;
+          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
 
         // Financial Performance / Cost Analysis / HR Utilization / Forecast Report
@@ -67,22 +53,13 @@ export default async function handler(
           type !== 'HR Utilization' &&
           type !== 'Forecast Report'
         ) {
-          res.status(400).json({
-            powerby: 'iSunFA v' + version,
-            success: false,
-            code: '400',
-            message: 'bad request',
-            payload: null,
-          });
-          return;
+          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
-        res.status(200).json({
-          powerby: 'iSunFA v' + version,
-          success: true,
-          code: '200',
-          message: 'request successful',
-          payload: mockAnalysisReportUrl,
-        });
+        const { httpCode, result } = formatApiResponse<IAnalysisReport>(
+          STATUS_MESSAGE.SUCCESS_GET,
+          mockAnalysisReportUrl
+        );
+        res.status(httpCode).json(result);
 
         break;
       }
@@ -93,7 +70,7 @@ export default async function handler(
           throw new Error('INVALID_INPUT_PARAMETER');
         }
 
-        const result = await fetch(`${AICH_URI}/api/v1/audit_reports`, {
+        const fetchResult = await fetch(`${AICH_URI}/api/v1/audit_reports`, {
           method: 'POST',
           body: JSON.stringify(body),
           headers: {
@@ -101,34 +78,28 @@ export default async function handler(
           },
         });
 
-        if (!result.ok) {
-          throw new Error('GATEWAY_TIMEOUT');
+        if (!fetchResult.ok) {
+          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
-        const resultJson: AccountResultStatus = (await result.json()).payload;
-
-        res.status(200).json({
-          powerby: 'iSunFA v' + version,
-          success: true,
-          code: String(200),
-          message: 'request successful',
-          payload: resultJson,
-        });
+        const resultJson: AccountResultStatus = (await fetchResult.json()).payload;
+        const { httpCode, result } = formatApiResponse<AccountResultStatus>(
+          STATUS_MESSAGE.SUCCESS_GET,
+          resultJson
+        );
+        res.status(httpCode).json(result);
         break;
       }
       default: {
-        break;
+        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<IAnalysisReport>(
+      error.message,
+      {} as IAnalysisReport
+    );
+    res.status(httpCode).json(result);
   }
 }

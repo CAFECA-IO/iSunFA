@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { IRole } from '@/interfaces/role';
+import prisma from '@/../prisma/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
+let role: IRole;
 
-beforeEach(() => {
+beforeEach(async () => {
   req = {
     headers: {},
     body: null,
@@ -17,10 +20,56 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  const createdRole = await prisma.role.create({
+    data: {
+      company: {
+        connectOrCreate: {
+          where: {
+            id: 1,
+          },
+          create: {
+            name: 'Test Company',
+            code: 'TST',
+            regional: 'TW',
+          },
+        },
+      },
+      name: 'KING',
+      permissions: ['READ', 'WRITE'],
+    },
+    include: {
+      company: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  role = {
+    ...createdRole,
+    companyName: createdRole.company.name,
+  };
 });
 
-describe('test admin API handler', () => {
-  it('should list all admins', async () => {
+afterEach(async () => {
+  jest.clearAllMocks();
+  const afterRole = await prisma.role.findUnique({
+    where: {
+      id: role.id,
+    },
+  });
+  if (afterRole) {
+    await prisma.role.delete({
+      where: {
+        id: role.id,
+      },
+    });
+  }
+});
+
+describe('test role API handler', () => {
+  it('should list all roles', async () => {
     req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -32,16 +81,10 @@ describe('test admin API handler', () => {
         message: expect.any(String),
         payload: expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(String),
+            id: expect.any(Number),
             name: expect.any(String),
-            credentialId: expect.any(String),
-            publicKey: expect.any(String),
-            algorithm: expect.any(String),
-            companyId: expect.any(String),
+            companyId: expect.any(Number),
             companyName: expect.any(String),
-            email: expect.any(String),
-            startDate: expect.any(Number),
-            endDate: expect.any(Number),
             permissions: expect.arrayContaining([expect.any(String)]),
           }),
         ]),
@@ -49,11 +92,10 @@ describe('test admin API handler', () => {
     );
   });
 
-  it('should create admin successfully', async () => {
+  it('should create role successfully', async () => {
     req.method = 'POST';
     req.body = {
-      name: 'John Doe',
-      email: 'john@example.com',
+      name: 'queen',
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(201);
@@ -64,16 +106,10 @@ describe('test admin API handler', () => {
         code: expect.stringContaining('201'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
+          id: expect.any(Number),
           name: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
-          companyId: expect.any(String),
+          companyId: expect.any(Number),
           companyName: expect.any(String),
-          email: expect.any(String),
-          startDate: expect.any(Number),
-          endDate: expect.any(Number),
           permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })
@@ -83,7 +119,7 @@ describe('test admin API handler', () => {
   it('should return error for missing input parameters', async () => {
     req.method = 'POST';
     req.body = {
-      name: 'John Doe',
+      // name: 'John Doe',
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);

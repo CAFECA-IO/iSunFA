@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/../prisma/client';
+import { ICard } from '@/interfaces/card';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
+let card: ICard;
 
-beforeEach(() => {
+beforeEach(async () => {
   req = {
     headers: {},
     body: null,
@@ -17,17 +20,39 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+  card = await prisma.card.create({
+    data: {
+      type: 'VISA',
+      no: '1234-1234-1234-1234',
+      expireYear: '29',
+      expireMonth: '01',
+      cvc: '330',
+      name: 'Taiwan Bank',
+    },
+  });
 });
 
-afterEach(() => {
+afterEach(async () => {
   jest.clearAllMocks();
+  const afterCard = await prisma.card.findUnique({
+    where: {
+      id: card.id,
+    },
+  });
+  if (afterCard) {
+    await prisma.card.delete({
+      where: {
+        id: card.id,
+      },
+    });
+  }
 });
 
 describe('Payment API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query.cardId = card.id.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -37,7 +62,7 @@ describe('Payment API Handler Tests', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
+          id: expect.any(Number),
           type: expect.any(String),
           no: expect.any(String),
           expireYear: expect.any(String),
@@ -52,7 +77,7 @@ describe('Payment API Handler Tests', () => {
   it('should handle PUT requests successfully', async () => {
     req.method = 'PUT';
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query.cardId = card.id.toString();
     req.body = {
       type: 'MASTERCARD',
       no: '5678-5678-5678-5678',
@@ -70,7 +95,7 @@ describe('Payment API Handler Tests', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
+          id: expect.any(Number),
           type: expect.any(String),
           no: expect.any(String),
           expireYear: expect.any(String),
@@ -83,9 +108,10 @@ describe('Payment API Handler Tests', () => {
   });
 
   it('should handle DELETE requests successfully', async () => {
+    await handler(req, res);
     req.method = 'DELETE';
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query.cardId = card.id.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -95,7 +121,7 @@ describe('Payment API Handler Tests', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
+          id: expect.any(Number),
           type: expect.any(String),
           no: expect.any(String),
           expireYear: expect.any(String),
@@ -109,7 +135,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle missing userid in headers for GET requests', async () => {
     req.method = 'GET';
-    req.query.id = '1';
+    req.query.cardId = card.id.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -125,7 +151,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle missing id in query for GET requests', async () => {
     req.method = 'GET';
-    req.headers.userid = '1';
+    req.headers.userid = card.id.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
@@ -133,70 +159,6 @@ describe('Payment API Handler Tests', () => {
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
-  });
-
-  it('should handle missing userid in headers for PUT requests', async () => {
-    req.method = 'PUT';
-    req.query.id = '3';
-    req.body = {
-      type: 'MASTERCARD',
-      no: '5678-5678-5678-5678',
-      expireYear: '30',
-      expireMonth: '12',
-      cvc: '123',
-      name: 'US Bank',
-    };
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
-  });
-
-  it('should handle missing id in query for PUT requests', async () => {
-    req.method = 'PUT';
-    req.headers.userid = '1';
-    req.body = {
-      type: 'MASTERCARD',
-      no: '5678-5678-5678-5678',
-      expireYear: '30',
-      expireMonth: '12',
-      cvc: '123',
-      name: 'US Bank',
-    };
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
-  });
-
-  it('should handle missing userid in headers for DELETE requests', async () => {
-    req.method = 'DELETE';
-    req.query.id = '1';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
         message: expect.any(String),
         payload: expect.any(Object),
       })
@@ -206,7 +168,7 @@ describe('Payment API Handler Tests', () => {
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'POST';
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query.cardId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(

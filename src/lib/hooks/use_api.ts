@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { HttpMethod } from '@/constants/api_connection';
+import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -39,7 +40,7 @@ export async function fetchData<Data>(
 
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console
-  console.log(`fetchDat(${apiConfig.name}), path:`, path, `options:`, options);
+  console.log(`fetchData(${apiConfig.name}), path:`, path, `options:`, options, apiConfig);
 
   if (apiConfig.method !== HttpMethod.GET && options.body) {
     if (options.body instanceof FormData) {
@@ -71,6 +72,7 @@ const useAPI = <Data>(
   triggerImmediately: boolean = true
 ): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const [code, setCode] = useState<string | undefined>(undefined);
   const [data, setData] = useState<Data | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
@@ -93,6 +95,7 @@ const useAPI = <Data>(
           },
           signal
         );
+        setCode(response.code);
         if (!response.success) {
           throw new Error(response.message ?? 'Unknown error');
         }
@@ -101,6 +104,7 @@ const useAPI = <Data>(
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
+        setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       } finally {
         setIsLoading(false);
       }
@@ -123,6 +127,7 @@ const useAPI = <Data>(
   return {
     trigger: fetchDataCallback,
     success,
+    code,
     isLoading,
     data,
     error,

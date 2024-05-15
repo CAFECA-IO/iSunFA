@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
@@ -5,14 +6,38 @@ import React from 'react';
 import NavBar from '../../../../components/nav_bar/nav_bar';
 import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
 import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '../../../../interfaces/report_type';
+import ViewAnalysisSection from '../../../../components/view_analysis_section/view_analysis_section';
+import { ReportLanguagesKey } from '../../../../interfaces/report_language';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
+  reportLanguage: ReportLanguagesKey;
+  startTimestamp: string;
+  endTimestamp: string;
 }
 
-// TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const AnalysisReportViewPage = ({ reportType }: IServerSideProps) => {
+// TODO: dummy data to be replaced (20240429 - Shirley)
+const ReportLink = {
+  [AnalysisReportTypesKey.financial_performance]: ``,
+  [AnalysisReportTypesKey.cost_analysis]: ``,
+  [AnalysisReportTypesKey.hr_utilization]: ``,
+  [AnalysisReportTypesKey.forecast_report]: ``,
+} as const;
+
+const AnalysisReportViewPage = ({
+  reportType,
+  reportLanguage,
+  startTimestamp,
+  endTimestamp,
+}: IServerSideProps) => {
+  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+
+  const dummyReportData = {
+    tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+    tokenId: '37002036',
+    reportLink: ReportLink[reportType],
+  };
+
   return (
     <div>
       <Head>
@@ -46,7 +71,13 @@ const AnalysisReportViewPage = ({ reportType }: IServerSideProps) => {
 
         {/* TODO: Analysis Report View section (20240508 - Shirley) */}
         <div className="h-screen bg-surface-neutral-main-background">
-          <p className="pl-40 pt-32 text-3xl">{AnalysisReportTypesMap[reportType].name}</p>
+          {/* <p className="pl-40 pt-32 text-3xl">{AnalysisReportTypesMap[reportType].name}</p> */}
+          <ViewAnalysisSection
+            reportTypesName={AnalysisReportTypesMap[reportType]}
+            tokenContract={dummyReportData.tokenContract}
+            tokenId={dummyReportData.tokenId}
+            reportLink={dummyReportData.reportLink}
+          />
         </div>
       </div>
     </div>

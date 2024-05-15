@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAuditReports } from '@/interfaces/audit_reports';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: IAuditReports[] = [
@@ -58,13 +58,13 @@ export default function handler(
   try {
     if (region || page || limit || begin || end || search) {
       const { httpCode, result } = formatApiResponse<IAuditReports[]>(
-        STATUS_CODE.SUCCESS_GET,
+        STATUS_MESSAGE.SUCCESS_GET,
         responseDataArray2
       );
       res.status(httpCode).json(result);
     } else {
       const { httpCode, result } = formatApiResponse<IAuditReports[]>(
-        STATUS_CODE.SUCCESS_GET,
+        STATUS_MESSAGE.SUCCESS_GET,
         responseDataArray
       );
       res.status(httpCode).json(result);

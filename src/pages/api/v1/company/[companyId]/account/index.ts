@@ -4,7 +4,7 @@ import {
   DetailAccountingAccountOrEmpty,
 } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: AccountingAccountOrEmpty[] = [
@@ -49,15 +49,15 @@ export default function handler(
           (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
           (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
         ) {
-          throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
         const { httpCode, result } = formatApiResponse<AccountingAccountOrEmpty[]>(
-          STATUS_CODE.SUCCESS_GET,
+          STATUS_MESSAGE.SUCCESS_GET,
           responseDataArray
         );
         res.status(httpCode).json(result);
       } else {
-        throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
     }
     if (req.method === 'POST') {
@@ -67,15 +67,15 @@ export default function handler(
           (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
           (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
         ) {
-          throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
         const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
-          STATUS_CODE.CREATED,
+          STATUS_MESSAGE.CREATED,
           responseData
         );
         res.status(httpCode).json(result);
       }
-      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
   } catch (_error) {
     const error = _error as Error;

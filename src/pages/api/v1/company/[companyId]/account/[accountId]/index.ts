@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { DetailAccountingAccountOrEmpty } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
-import { STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 const responseData: DetailAccountingAccountOrEmpty = {
@@ -23,25 +23,25 @@ export default function handler(
       const { type, liquidity, account, code, name } = req.body;
       if (accountId && type && liquidity && account && code && name) {
         const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
-          STATUS_CODE.SUCCESS_UPDATE,
+          STATUS_MESSAGE.SUCCESS_UPDATE,
           responseData
         );
         res.status(httpCode).json(result);
         return;
       }
-      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
     if (req.method === 'DELETE') {
       const { accountId } = req.query;
       if (accountId) {
         const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
-          STATUS_CODE.SUCCESS_DELETE,
+          STATUS_MESSAGE.SUCCESS_DELETE,
           null
         );
         res.status(httpCode).json(result);
         return;
       }
-      throw new Error(STATUS_CODE.INVALID_INPUT_PARAMETER);
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
   } catch (_error) {
     const error = _error as Error;
