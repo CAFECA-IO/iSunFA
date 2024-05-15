@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const SalarySidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import ContactForm from '../contact_form/contact_form';
+import ContactForm from '@/components/contact_form/contact_form';
 
 const ContactFormSection = () => {
   const animeRef61 = useRef(null);

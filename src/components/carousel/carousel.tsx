@@ -1,8 +1,8 @@
 /* eslint-disable */
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
-import { TranslateFunction } from '../../interfaces/locale';
 import { useTranslation } from 'next-i18next';
+import { TranslateFunction } from '@/interfaces/locale';
 
 interface CarouselProps {
   children: JSX.Element[];

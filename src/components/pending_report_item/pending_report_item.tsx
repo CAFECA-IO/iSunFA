@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;
   checked: boolean;
   isCheckboxVisible: boolean;
   onCheckChange?: () => void;
+  onReportItemUpdate?: (report: IPendingReportItem) => void;
+  onReportItemDelete?: (id: string) => void;
 }
 
 export const AnimatedSVG = () => {
@@ -40,33 +44,68 @@ const PendingReportItem = ({
   checked,
   isCheckboxVisible,
   onCheckChange = () => {},
+  onReportItemUpdate = () => {},
+  onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
-  const [paused, setPaused] = useState(false);
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
-  const { id, createdTimestamp, name, period, remainingSeconds } = report;
+  const [reportItem, setReportItem] = useState(report);
+  const { id, createdTimestamp, name, period, remainingSeconds, paused } = reportItem;
+
+  const [isPaused, setIsPaused] = useState(paused);
 
   const startDate = timestampToString(period.startTimestamp);
   const endDate = timestampToString(period.endTimestamp);
   const remaining = countdown(remainingSeconds);
 
   const togglePausedStatus = () => {
-    setPaused(!paused);
+    setIsPaused(!isPaused);
+    const updatedReport = { ...reportItem, paused: !isPaused };
+    onReportItemUpdate(updatedReport);
   };
 
-  const pauseClickHandler = () => {
+  const pauseItem = () => {
     togglePausedStatus();
     // TODO: send paused request (20240514 - Shirley)
   };
 
-  const resumeClickHandler = () => {
+  const resumeItem = () => {
     togglePausedStatus();
+    // TODO: send resumed request (20240514 - Shirley)
+  };
+
+  const pauseClickHandler = () => {
+    pauseItem();
+  };
+
+  const resumeClickHandler = () => {
+    resumeItem();
+  };
+
+  const deleteItem = () => {
+    // Info: 調用 onReportItemDelete 並傳入要刪除的報告 ID (20240515 - Shirley)
+    onReportItemDelete(report.id);
   };
 
   const deleteClickHandler = () => {
     // TODO: show notification modal (20240514 - Shirley)
+    messageModalDataHandler({
+      title: '',
+      subtitle: 'Are you sure\n you want to delete the process?',
+      content: `It will take 30 - 40 minutes to apply the changes.\n You can apply it again after 30 - 40 minutes.`,
+      submitBtnStr: 'Yes, Delete it',
+      submitBtnFunction: deleteItem,
+      messageType: MessageType.WARNING,
+    });
+    messageModalVisibilityHandler();
   };
 
-  const displayedPauseOrResumeButton = !paused ? (
+  useEffect(() => {
+    setReportItem(report);
+    setIsPaused(report.paused);
+  }, [report]);
+
+  const displayedPauseOrResumeButton = !isPaused ? (
     <Button
       onClick={pauseClickHandler}
       variant={'tertiaryBorderless'}
@@ -112,7 +151,7 @@ const PendingReportItem = ({
     </Button>
   );
 
-  const displayedSpinner = !paused ? <AnimatedSVG /> : null;
+  const displayedSpinner = !isPaused ? <AnimatedSVG /> : null;
 
   return (
     <tr

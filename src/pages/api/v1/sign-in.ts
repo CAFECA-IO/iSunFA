@@ -1,10 +1,11 @@
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
+
 import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, getDomains } from '../../../lib/utils/common';
+import { formatApiResponse, getDomains } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,

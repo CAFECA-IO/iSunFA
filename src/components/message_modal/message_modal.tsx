@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
-import { Button } from '../button/button';
-import { IMessageModal, MessageType } from '../../interfaces/message_modal';
+import { Button } from '@/components/button/button';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface IMessageModalProps {
   isModalVisible: boolean;
@@ -16,6 +16,7 @@ const MessageModal = ({
 }: IMessageModalProps) => {
   const {
     title,
+    subtitle,
     content,
     subMsg,
     submitBtnStr,
@@ -70,6 +71,7 @@ const MessageModal = ({
           ? 'text-lightRed'
           : 'text-navyBlue2';
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isBackBtn = backBtnStr ? (
     <Button
       className="px-16px py-8px"
@@ -80,6 +82,23 @@ const MessageModal = ({
       {backBtnStr}
     </Button>
   ) : null;
+
+  const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
+    // eslint-disable-next-line react/no-array-index-key
+    <div key={index}>
+      {line}
+      {index < subtitle.split('\n').length - 1 && <br />}
+    </div>
+  ));
+
+  // Info: 換行處理 (20240515 - Shirley)
+  const displayedContent = content.split('\n').map((line, index) => (
+    // eslint-disable-next-line react/no-array-index-key
+    <div key={index}>
+      {line}
+      {index < content.split('\n').length - 1 && <br />}
+    </div>
+  ));
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
@@ -95,14 +114,22 @@ const MessageModal = ({
         </button>
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
           <h1 className={`text-xl font-bold ${titleColor}`}>{title}</h1>
+          <h1 className={`text-base font-medium ${titleColor}`}>{displayedSubtitles}</h1>
           <Image src={imgStr} width={48} height={48} alt={imgAlt} />
           {/* Info: (20240507 - Julian) sub message (red color) */}
           <p className="text-lightRed">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <p className="text-xs text-lightGray5">{content}</p>
+          <div className="text-lightGray5">{displayedContent}</div>
         </div>
         <div className="flex items-center justify-center gap-24px">
-          {isBackBtn}
+          <Button
+            className="px-16px py-8px"
+            type="button"
+            onClick={modalVisibilityHandler}
+            variant={'tertiaryOutline'}
+          >
+            Cancel
+          </Button>
           <Button
             className="px-16px py-8px"
             type="button"

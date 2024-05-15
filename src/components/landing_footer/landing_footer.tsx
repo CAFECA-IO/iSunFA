@@ -3,14 +3,14 @@ import Image from 'next/image';
 import { BiLogoGithub } from 'react-icons/bi';
 import { BsTelephone } from 'react-icons/bs';
 import { FiMapPin } from 'react-icons/fi';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import {
   copyright,
   iSunFAAddress,
   iSunFAAddressOnMap,
   iSunFAPhone,
   githubLink,
-} from '../../constants/config';
+} from '@/constants/config';
 
 function LandingFooter() {
   return (

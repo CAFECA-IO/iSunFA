@@ -1,14 +1,15 @@
 /* eslint-disable */
+import { pdfjs, Document, Page } from 'react-pdf';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { Button } from '@/components/button/button';
+
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
+import { EXTERNAL_API } from '@/constants/url';
+import { useGlobalCtx } from '@/contexts/global_context';
+
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { pdfjs, Document, Page } from 'react-pdf';
-import React, { useEffect, useRef, useState } from 'react';
-import { Button } from '../button/button';
-import Link from 'next/link';
-import Image from 'next/image';
-import { FinancialReportTypesKey } from '../../interfaces/report_type';
-import { EXTERNAL_API } from '../../constants/url';
-import { useGlobalCtx } from '../../contexts/global_context';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: string; name: string };
@@ -347,8 +348,8 @@ const ViewFinancialSection = ({
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
-    setNumPages(numPages);
+  function onDocumentLoadSuccess(data: { numPages: number }): void {
+    setNumPages(data.numPages);
     setIsLoading(false);
   }
 
@@ -411,6 +412,8 @@ const ViewFinancialSection = ({
 
       setPdfFile(pdfUrl);
     } catch (error) {
+      // TODO: error handling (20240502 - Shirley)
+      // eslint-disable-next-line no-console
       console.error(error);
     }
   };

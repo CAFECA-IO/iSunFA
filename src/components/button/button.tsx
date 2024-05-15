@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/utils/common';
+import { cn } from '@/lib/utils/common';
 
 // Info: 用 cva 來定義 button 的樣式 (20240319 - Shirley)
 const buttonVariants = cva(
@@ -31,6 +31,7 @@ const buttonVariants = cva(
         default: 'px-6 py-3',
         medium: 'px-5 py-2',
         small: 'px-4 py-1',
+        extraSmall: 'px-2 py-1',
       },
     },
     defaultVariants: {

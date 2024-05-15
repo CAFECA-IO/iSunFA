@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { RiDeleteBinLine } from 'react-icons/ri';
-import useOuterClick from '../../lib/hooks/use_outer_click';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   useAccountingCtx,
   IAccountingVoucher,
   VoucherRowType,
   VoucherString,
-} from '../../contexts/accounting_context';
+} from '@/contexts/accounting_context';
 
 const accountingList = ['1441- Machinery', '1113- Cash in banks'];
 

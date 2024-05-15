@@ -1,6 +1,6 @@
-import { VoucherType } from './account';
-import { ILineItem, isILineItem } from './line_item';
-import { IPayment, isIPayment } from './payment';
+import { VoucherType } from '@/interfaces/account';
+import { ILineItem, isILineItem } from '@/interfaces/line_item';
+import { IPayment, isIPayment } from '@/interfaces/payment';
 
 export interface IVoucherMetaData {
   date: number;

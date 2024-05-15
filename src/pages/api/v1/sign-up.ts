@@ -1,5 +1,6 @@
-import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
+
+import { server } from '@passwordless-id/webauthn';
 import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';

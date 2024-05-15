@@ -1,10 +1,10 @@
 /* eslint-disable */
 import React, { useEffect, useRef, useState } from 'react';
-import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
-import useOuterClick from '../../lib/hooks/use_outer_click';
 import Image from 'next/image';
-import { Button } from '../button/button';
-import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
+import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { Button } from '@/components/button/button';
+import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;

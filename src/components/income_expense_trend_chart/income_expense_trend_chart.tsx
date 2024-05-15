@@ -2,16 +2,16 @@
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import React, { useEffect } from 'react';
-import Tooltip from '../tooltip/tooltip';
-import { Button } from '../button/button';
-import { cn } from '../../lib/utils/common';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { LayoutAssertion } from '../../interfaces/layout_assertion';
-import { Period } from '../../interfaces/chart_unit';
+import Tooltip from '@/components/tooltip/tooltip';
+import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils/common';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { LayoutAssertion } from '@/interfaces/layout_assertion';
+import { Period } from '@/interfaces/chart_unit';
 import {
   DUMMY_INCOME_EXPENSE_TREND_CHART_DATA,
   IIncomeExpenseTrendChartData,
-} from '../../interfaces/income_expense_trend_chart';
+} from '@/interfaces/income_expense_trend_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 

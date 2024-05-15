@@ -1,12 +1,12 @@
 /* eslint-disable */
 import Head from 'next/head';
 import React from 'react';
-import NavBar from '../../../../components/nav_bar/nav_bar';
-import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import FinancialReportSection from '../../../../components/financial_report_section/financial_report_section';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '../../../../interfaces/locale';
-import AnalysisReportSection from '../../../../components/analysis_reports_section/analysis_reports_section';
+import NavBar from '@/components/nav_bar/nav_bar';
+import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
+import FinancialReportSection from '@/components/financial_report_section/financial_report_section';
+import { ILocale } from '@/interfaces/locale';
+import AnalysisReportSection from '@/components/analysis_reports_section/analysis_reports_section';
 
 const AnalysesReportsPage = () => {
   return (

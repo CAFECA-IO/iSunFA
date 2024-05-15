@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router';
 import React from 'react';
 import useStateRef from 'react-usestateref';
-import { Button } from '../button/button';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { useDashboardCtx } from '../../contexts/dashboard_context';
+import { Button } from '@/components/button/button';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useDashboardCtx } from '@/contexts/dashboard_context';
 
 const DashboardBookmark = () => {
   const router = useRouter();

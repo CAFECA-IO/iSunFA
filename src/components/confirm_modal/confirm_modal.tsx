@@ -9,14 +9,14 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IVoucher } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { Button } from '../button/button';
-import { checkboxStyle } from '../../constants/display';
-import { IConfirmModal } from '../../interfaces/confirm_modal';
+import { Button } from '@/components/button/button';
+import { checkboxStyle } from '@/constants/display';
+import { IConfirmModal } from '@/interfaces/confirm_modal';
 import AccountingVoucherRow, {
   AccountingVoucherRowMobile,
-} from '../accounting_voucher_row/accounting_voucher_row';
-import { VoucherRowType, useAccountingCtx } from '../../contexts/accounting_context';
-import { ISUNFA_ROUTE } from '../../constants/url';
+} from '@/components/accounting_voucher_row/accounting_voucher_row';
+import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
+import { ISUNFA_ROUTE } from '@/constants/url';
 // import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {

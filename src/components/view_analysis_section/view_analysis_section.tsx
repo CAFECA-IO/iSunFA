@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React from 'react';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 
 interface IViewAnalysisSectionProps {
   reportTypesName: { id: string; name: string };

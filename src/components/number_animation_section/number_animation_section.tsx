@@ -1,8 +1,10 @@
 /* eslint-disable */
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import NumberAnimation, { MobileNumberAnimation } from '../number_animation/number_animation';
-import { TranslateFunction } from '../../interfaces/locale';
+import NumberAnimation, {
+  MobileNumberAnimation,
+} from '@/components/number_animation/number_animation';
+import { TranslateFunction } from '@/interfaces/locale';
 
 const NumberAnimationSection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');

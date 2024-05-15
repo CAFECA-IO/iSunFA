@@ -1,9 +1,9 @@
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import React from 'react';
-import Carousel from '../carousel/carousel';
-import Card from '../card/card';
-import { TranslateFunction } from '../../interfaces/locale';
+import Carousel from '@/components/carousel/carousel';
+import Card from '@/components/card/card';
+import { TranslateFunction } from '@/interfaces/locale';
 
 const CarouselSection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');

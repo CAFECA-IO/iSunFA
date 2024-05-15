@@ -1,29 +1,29 @@
 /* eslint-disable */
 import React, { useState, useContext, createContext, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { RegisterFormModalProps } from '../interfaces/modals';
-import PasskeySupportModal from '../components/passkey_support_modal/passkey_support_modal';
-import RegisterFormModal from '../components/register_form_modal/register_form_modal';
-import AddBookmarkModal from '../components/add_bookmark_modal/add_bookmark_modal';
-import MessageModal from '../components/message_modal/message_modal';
-import useWindowSize from '../lib/hooks/use_window_size';
-import { LAYOUT_BREAKPOINT } from '../constants/display';
-import { LayoutAssertion } from '../interfaces/layout_assertion';
-import { IMessageModal, dummyMessageModalData } from '../interfaces/message_modal';
-import ConfirmModal from '../components/confirm_modal/confirm_modal';
-import { IConfirmModal, dummyConfirmModalData } from '../interfaces/confirm_modal';
-import AddAssetModal from '../components/add_asset_modal/add_asset_modal';
+import { toast as toastify } from 'react-toastify';
+import { RxCross2 } from 'react-icons/rx';
+import { RegisterFormModalProps } from '@/interfaces/modals';
+import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
+import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
+import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
+import MessageModal from '@/components/message_modal/message_modal';
+import useWindowSize from '@/lib/hooks/use_window_size';
+import { LAYOUT_BREAKPOINT } from '@/constants/display';
+import { LayoutAssertion } from '@/interfaces/layout_assertion';
+import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
+import ConfirmModal from '@/components/confirm_modal/confirm_modal';
+import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
+import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {
   IPreviewInvoiceModal,
   dummyPreviewInvoiceModalData,
 } from '@/interfaces/preview_invoice_modal';
-import EmbedCodeModal from '../components/embed_code_modal/embed_code_modal';
+import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
-import { toast as toastify } from 'react-toastify';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
-import { RxCross2 } from 'react-icons/rx';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 

@@ -7,6 +7,7 @@ export enum MessageType {
 
 export interface IMessageModal {
   title: string;
+  subtitle?: string;
   content: string;
   subMsg?: string;
   submitBtnStr: string;
@@ -18,6 +19,7 @@ export interface IMessageModal {
 
 export const dummyMessageModalData: IMessageModal = {
   title: 'Warning',
+  subtitle: '',
   content: '',
   submitBtnStr: 'Delete',
   submitBtnFunction: () => {},
