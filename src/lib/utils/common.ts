@@ -2,23 +2,23 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ALLOWED_ORIGINS } from '../../constants/config';
-import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '../../constants/display';
-import version from '../version';
+import { ALLOWED_ORIGINS } from '@/constants/config';
+import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
+import version from '@/lib/version';
 
-export function cn(...inputs: ClassValue[]) {
+export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
-}
+};
 
-export function getDomains() {
+export const getDomains = () => {
   return ALLOWED_ORIGINS;
-}
+};
 
 // Info: truncate the string to the given length (20240416 - Shirley)
-export function truncateString(str: string, length: number) {
+export const truncateString = (str: string, length: number) => {
   const result = str.length > length ? str.slice(0, length) + '...' : str;
   return result;
-}
+};
 
 export const timestampToString = (timestamp: number | undefined) => {
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
@@ -134,7 +134,7 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
 
 // Info Murky (20240425) - Helper function to convert date strings to timestamps
 // will return timestamp of current if input is not valid
-export function convertDateToTimestamp(dateStr: string | number): number {
+export const convertDateToTimestamp = (dateStr: string | number): number => {
   // 檢查是否為有效的日期字串
   const defaultDateTimestamp = new Date().getTime();
   if (!dateStr) {
@@ -171,10 +171,10 @@ export function convertDateToTimestamp(dateStr: string | number): number {
   }
 
   return timestamp;
-}
+};
 
 // Info Murky (20240425) - Helper function to remove special char from numbers and convert to number type
-export function cleanNumber(numberStr: unknown): number {
+export const cleanNumber = (numberStr: unknown): number => {
   if (!numberStr) {
     return 0;
   }
@@ -188,9 +188,9 @@ export function cleanNumber(numberStr: unknown): number {
   }
 
   return parseFloat(numberStr.replace(/[^\w\s]/gi, ''));
-}
+};
 
-export function cleanBoolean(booleanStr: unknown): boolean {
+export const cleanBoolean = (booleanStr: unknown): boolean => {
   if (!booleanStr || ['string', 'number'].includes(typeof booleanStr)) {
     return false;
   }
@@ -208,9 +208,9 @@ export function cleanBoolean(booleanStr: unknown): boolean {
   }
 
   return false;
-}
+};
 
-function getCodeByMessage(statusMessage: string) {
+const getCodeByMessage = (statusMessage: string) => {
   let code: string;
   let message: string;
   if (statusMessage in STATUS_CODE) {
@@ -224,12 +224,12 @@ function getCodeByMessage(statusMessage: string) {
     message = STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR;
   }
   return { code, message };
-}
+};
 
-export function formatApiResponse<T>(
+export const formatApiResponse = <T>(
   statusMessage: string,
   payload: T
-): { httpCode: number; result: IResponseData<T> } {
+): { httpCode: number; result: IResponseData<T> } => {
   const { code, message } = getCodeByMessage(statusMessage);
   const success = !!code.startsWith('2');
   const httpCodeStr = code.slice(0, 3);
@@ -243,7 +243,7 @@ export function formatApiResponse<T>(
   };
 
   return { httpCode, result };
-}
+};
 
 export const getValueByKey = <T extends string>(
   obj: Record<string, T>,
@@ -256,7 +256,7 @@ export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-export function timestampInSeconds(timestamp: number): number {
+export const timestampInSeconds = (timestamp: number): number => {
   return Math.floor(timestamp / 1000);
 };
 
