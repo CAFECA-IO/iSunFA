@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString } from '@/lib/utils/common';
@@ -9,6 +9,7 @@ interface IPendingReportItemProps {
   checked: boolean;
   isCheckboxVisible: boolean;
   onCheckChange?: () => void;
+  onReportItemUpdate?: (report: IPendingReportItem) => void;
 }
 
 export const AnimatedSVG = () => {
@@ -40,17 +41,21 @@ const PendingReportItem = ({
   checked,
   isCheckboxVisible,
   onCheckChange = () => {},
+  onReportItemUpdate = () => {},
 }: IPendingReportItemProps) => {
-  const [paused, setPaused] = useState(false);
+  const [reportItem, setReportItem] = useState(report);
+  const { id, createdTimestamp, name, period, remainingSeconds, paused } = reportItem;
 
-  const { id, createdTimestamp, name, period, remainingSeconds } = report;
+  const [isPaused, setIsPaused] = useState(paused);
 
   const startDate = timestampToString(period.startTimestamp);
   const endDate = timestampToString(period.endTimestamp);
   const remaining = countdown(remainingSeconds);
 
   const togglePausedStatus = () => {
-    setPaused(!paused);
+    setIsPaused(!isPaused);
+    const updatedReport = { ...reportItem, paused: !isPaused };
+    onReportItemUpdate(updatedReport);
   };
 
   const pauseClickHandler = () => {
@@ -66,7 +71,12 @@ const PendingReportItem = ({
     // TODO: show notification modal (20240514 - Shirley)
   };
 
-  const displayedPauseOrResumeButton = !paused ? (
+  useEffect(() => {
+    setReportItem(report);
+    setIsPaused(report.paused);
+  }, [report]);
+
+  const displayedPauseOrResumeButton = !isPaused ? (
     <Button
       onClick={pauseClickHandler}
       variant={'tertiaryBorderless'}
@@ -112,7 +122,7 @@ const PendingReportItem = ({
     </Button>
   );
 
-  const displayedSpinner = !paused ? <AnimatedSVG /> : null;
+  const displayedSpinner = !isPaused ? <AnimatedSVG /> : null;
 
   return (
     <tr

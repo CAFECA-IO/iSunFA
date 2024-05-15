@@ -11,6 +11,7 @@ export interface IBasicReportItem {
 }
 
 export interface IPendingReportItem extends IBasicReportItem {
+  paused: boolean;
   remainingSeconds: number;
 }
 
@@ -53,6 +54,7 @@ export const generateRandomPendingReportItem = (daysAgo: number): IPendingReport
       endTimestamp,
     },
     remainingSeconds: remainingSec,
+    paused: false,
   };
 };
 
@@ -65,10 +67,11 @@ export const DUMMY_PENDING_REPORT_ITEMS = generateRandomPendingReportItems(10);
 export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
   {
     id: '7034v4',
-    name: 'Balance Sheet-20240420-1',
+    name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713611226,
     period: { startTimestamp: 1683043200, endTimestamp: 1704067200 }, // 2023-05-02 to 2024-01-01
     remainingSeconds: 3800,
+    paused: false,
   },
   {
     id: 'sclika',
@@ -76,6 +79,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1714897574,
     period: { startTimestamp: 1695609600, endTimestamp: 1698106883 }, // 2023-09-25 to 2023-10-24
     remainingSeconds: 3800,
+    paused: true,
   },
   {
     id: 'qxh66j',
@@ -83,6 +87,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1712863312,
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
     remainingSeconds: 3800,
+    paused: true,
   },
   {
     id: '4ruh5k',
@@ -90,6 +95,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1713846643,
     period: { startTimestamp: 1693113600, endTimestamp: 1704096000 }, // 2023-08-27 to 2024-01-01
     remainingSeconds: 3800,
+    paused: false,
   },
   {
     id: 'wyt0mi',
@@ -97,6 +103,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1714508675,
     period: { startTimestamp: 1698374400, endTimestamp: 1714022400 }, // 2023-11-01 to 2024-01-01
     remainingSeconds: 3800,
+    paused: false,
   },
   {
     id: 'qmj0ql',
@@ -104,6 +111,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1714030458,
     period: { startTimestamp: 1700179200, endTimestamp: 1715932800 }, // 2023-11-16 to 2024-04-01
     remainingSeconds: 3800,
+    paused: false,
   },
   {
     id: '9xun2',
@@ -111,6 +119,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1713575632,
     period: { startTimestamp: 1684800000, endTimestamp: 1700092800 }, // 2023-05-23 to 2023-11-15
     remainingSeconds: 3800,
+    paused: false,
   },
   {
     id: 'qrplhf',
@@ -118,6 +127,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1713039468,
     period: { startTimestamp: 1694736000, endTimestamp: 1713955200 }, // 2023-09-15 to 2024-02-01
     remainingSeconds: 3800,
+    paused: true,
   },
   {
     id: 'au3m35',
@@ -125,6 +135,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1714246089,
     period: { startTimestamp: 1692662400, endTimestamp: 1705459200 }, // 2023-08-21 to 2024-02-01
     remainingSeconds: 3800,
+    paused: true,
   },
   {
     id: 'dicd1',
@@ -132,6 +143,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     createdTimestamp: 1713679397,
     period: { startTimestamp: 1686009600, endTimestamp: 1707859200 }, // 2023-06-06 to 2024-03-15
     remainingSeconds: 3800,
+    paused: true,
   },
 ];
 
