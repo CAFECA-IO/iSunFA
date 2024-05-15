@@ -291,7 +291,7 @@ const MyReportsSection = () => {
   const displayedHistoryDataSection = isHistoryDataLoading ? (
     <div>Loading...</div>
   ) : historyData.length !== 0 ? (
-    <ReportsHistoryList reports={historyData} isCheckboxVisible={false} />
+    <ReportsHistoryList reports={historyData} />
   ) : (
     <div className="mt-20 flex w-full items-center justify-center">
       {' '}

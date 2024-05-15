@@ -18,6 +18,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
 
   // Info: 如果選取的項目都已暫停，則顯示 resume 按鈕；如果選取的項目並非全部都已暫停，則顯示 pause 按鈕 (20240515 - Shirley)
   const [isSelectedItemPaused, setIsSelectedItemPaused] = useState(false);
+
   const [allChecked, setAllChecked] = useState(false);
   const [individualChecks, setIndividualChecks] = useState<boolean[]>(
     new Array(reportItems.length).fill(false)
@@ -53,6 +54,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
 
   const toggleCheckboxVisibility = () => {
     setIsCheckboxVisible(!isCheckboxVisible);
+    clearAllChecks();
   };
 
   const toggleAllPaused = () => {

@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable */
+// TODO: developing，需要將 route 改為 `users/reports/financials/view/{report_id}`，透過 report_id 去 fetch report 資料 (20240515 - Shirley)
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
@@ -13,10 +14,11 @@ import {
 import { ReportLanguagesKey } from '../../../../interfaces/report_language';
 
 interface IServerSideProps {
-  reportType: FinancialReportTypesKey;
-  reportLanguage: ReportLanguagesKey;
-  startTimestamp: string;
-  endTimestamp: string;
+  reportId: string;
+  // reportType: FinancialReportTypesKey;
+  // reportLanguage: ReportLanguagesKey;
+  // startTimestamp: string;
+  // endTimestamp: string;
 }
 
 // TODO: dummy data to be replaced (20240429 - Shirley)
@@ -31,13 +33,15 @@ const ReportLink = {
   cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
 } as const;
 
-const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: IServerSideProps) => {
+const View = ({ reportId }: IServerSideProps) => {
   // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
 
   const dummyReportData = {
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
-    reportLink: ReportLink[reportType],
+    reportLink:
+      'https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance',
+    // reportLink: ReportLink[reportType],
   };
 
   return (
@@ -47,7 +51,9 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title>
+        {/* <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title> */}
+        <title> - iSunFA</title>
+
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -73,7 +79,8 @@ const View = ({ reportType, reportLanguage, startTimestamp, endTimestamp }: ISer
 
         <div className="h-screen bg-surface-neutral-main-background">
           <ViewFinancialSection
-            reportTypesName={FinancialReportTypesMap[reportType] as { id: string; name: string }}
+            reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
+            // reportTypesName={FinancialReportTypesMap[reportType] as { id: string; name: string }}
             tokenContract={dummyReportData.tokenContract}
             tokenId={dummyReportData.tokenId}
             reportLink={dummyReportData.reportLink}
@@ -89,9 +96,16 @@ export default View;
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
   // Info: variable from URL query (20240429 - Shirley)
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { report_type, report_language, start_timestamp, end_timestamp } = query;
+  // const { report_type, report_language, start_timestamp, end_timestamp } = query;
 
-  if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
+  // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
+  //   return {
+  //     notFound: true,
+  //   };
+  // }
+
+  const { report_id } = query;
+  if (!report_id) {
     return {
       notFound: true,
     };
@@ -99,10 +113,11 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
 
   return {
     props: {
-      reportType: report_type as string,
-      reportLanguage: report_language as string,
-      startTimestamp: start_timestamp as string,
-      endTimestamp: end_timestamp as string,
+      reportId: report_id as string,
+      // reportType: report_type as string,
+      // reportLanguage: report_language as string,
+      // startTimestamp: start_timestamp as string,
+      // endTimestamp: end_timestamp as string,
       ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };
