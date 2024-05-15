@@ -1,5 +1,6 @@
 export interface IProfit {
-  period: string;
   income: number;
   expenses: number;
+  date: Date;
+  profit: number;
 }
