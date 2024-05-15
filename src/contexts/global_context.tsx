@@ -25,6 +25,7 @@ import { toast as toastify } from 'react-toastify';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import { RxCross2 } from 'react-icons/rx';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
+import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 
 interface IGlobalContext {
   width: number;
@@ -178,34 +179,31 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
-    const {
-      id,
-      type,
-      content,
-      closeable,
-      autoClose: isAutoClose,
-      position: toastPosition,
-      draggable: isDraggable,
-      closeOnClick: isCloseOnClick,
-    } = props;
+    const { id, type, content, closeable, autoClose: isAutoClose, position: toastPosition } = props;
 
-    const bodyStyle = 'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0';
+    const bodyStyle =
+      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75';
 
     const toastId = id;
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
     const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
-    const closeOnClick = closeable ? isCloseOnClick : false; // Info:(20240513 - Julian) default closeOnClick true
-    const draggable = closeable ? isDraggable : false; // Info:(20240513 - Julian) default draggable true
+
+    const closeOnClick = closeable ? true : false; // Info:(20240513 - Julian) default closeOnClick true
+    const draggable = closeable ? true : false; // Info:(20240513 - Julian) default draggable true
     const closeButton = closeable
-      ? () => <RxCross2 size={16} className="text-secondaryBlue" />
+      ? () => (
+          <div className="h-20px w-20px">
+            <RxCross2 size={16} className="text-secondaryBlue" />
+          </div>
+        )
       : false;
 
     switch (type) {
       case ToastType.SUCCESS:
         toastify.success(content, {
-          icon: <Image src="/icons/success.svg" alt="info" width={24} height={24} />,
+          icon: <Image src="/icons/success.svg" alt="success" width={24} height={24} />,
           className: `${bodyStyle} before:bg-successGreen3`,
           toastId,
           position,
@@ -217,7 +215,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         break;
       case ToastType.ERROR:
         toastify.error(content, {
-          icon: <Image src="/icons/error.svg" alt="info" width={24} height={24} />,
+          icon: <Image src="/icons/error.svg" alt="error" width={24} height={24} />,
           className: `${bodyStyle} before:bg-errorRed3`,
           toastId,
           position,
@@ -229,7 +227,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         break;
       case ToastType.WARNING:
         toastify.warning(content, {
-          icon: <Image src="/icons/warning.svg" alt="info" width={24} height={24} />,
+          icon: <Image src="/icons/warning.svg" alt="warning" width={24} height={24} />,
           className: `${bodyStyle} before:bg-warningYellow`,
           toastId,
           position,
@@ -355,6 +353,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <CreateCompanyModal
         isModalVisible={isCreateCompanyModalVisible}
         modalVisibilityHandler={createCompanyModalVisibilityHandler}
+      />
+
+      <CompanyInvitationModal
+        isModalVisible={isCompanyInvitationModalVisible}
+        modalVisibilityHandler={companyInvitationModalVisibilityHandler}
+        toastHandler={toastHandler}
       />
 
       <Toast />

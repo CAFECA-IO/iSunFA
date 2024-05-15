@@ -21,14 +21,11 @@ export default async function handler(
     }
     if (method === 'GET') {
       // Handle GET request to retrieve user by userid
-      const user: IUser | null = await prisma.user.findUnique({
+      const user: IUser = await prisma.user.findUniqueOrThrow({
         where: {
           id: userIdNum,
         },
       });
-      if (!user) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_GET, user);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
