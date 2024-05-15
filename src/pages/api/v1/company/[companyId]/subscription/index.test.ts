@@ -161,6 +161,7 @@ describe('test subscription API', () => {
   it('should handle unsupported HTTP methods', async () => {
     req.headers.userid = '1';
     req.method = 'PUT';
+    req.query.companyId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
