@@ -6,13 +6,13 @@ import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { PiGlobe } from 'react-icons/pi';
 import { Button } from '../button/button';
-import { cn } from '../../lib/utils/common';
-import { useUserCtx } from '../../contexts/user_context';
+import { cn } from '@/lib/utils/common';
+import { useUserCtx } from '@/contexts/user_context';
 import Image from 'next/image';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
-import version from '../../lib/version';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import version from '@/lib/version';
 
 const NavBar = () => {
   const { credential: credential, signedIn, signOut, username, isSelectCompany } = useUserCtx();

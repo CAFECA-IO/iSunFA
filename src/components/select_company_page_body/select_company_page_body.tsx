@@ -3,13 +3,13 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
-import { ICompanyItem } from '../../interfaces/company';
-import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { ICompanyItem } from '@/interfaces/company';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useUserCtx } from '@/contexts/user_context';
+import { useGlobalCtx } from '@/contexts/global_context';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '../button/button';
-import { useUserCtx } from '../../contexts/user_context';
-import { useGlobalCtx } from '../../contexts/global_context';
-import useOuterClick from '../../lib/hooks/use_outer_click';
 
 const SelectCompanyPageBody = () => {
   const { signedIn, username, companyList } = useUserCtx();
