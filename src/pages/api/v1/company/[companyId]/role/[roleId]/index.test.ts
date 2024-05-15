@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/../prisma/client';
+import { IRole } from '@/interfaces/role';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
+let role: IRole;
 
-beforeEach(() => {
+beforeEach(async () => {
   req = {
     headers: {},
     body: null,
@@ -17,13 +20,58 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  const createdRole = await prisma.role.create({
+    data: {
+      company: {
+        connectOrCreate: {
+          where: {
+            id: 1,
+          },
+          create: {
+            name: 'Test Company',
+            code: 'TST',
+            regional: 'TW',
+          },
+        },
+      },
+      name: 'KING',
+      permissions: ['READ', 'WRITE'],
+    },
+    include: {
+      company: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  role = {
+    ...createdRole,
+    companyName: createdRole.company.name,
+  };
 });
 
-describe('test subscription API by id', () => {
-  it('should get subscription by id', async () => {
-    req.method = 'GET';
+afterEach(async () => {
+  jest.clearAllMocks();
+  const afterRole = await prisma.role.findUnique({
+    where: {
+      id: role.id,
+    },
+  });
+  if (afterRole) {
+    await prisma.role.delete({
+      where: {
+        id: role.id,
+      },
+    });
+  }
+});
+
+describe('test admin API', () => {
+  it('should get admin by id', async () => {
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query = { roleId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -33,28 +81,25 @@ describe('test subscription API by id', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
-          companyId: expect.any(String),
+          id: expect.any(Number),
+          name: expect.any(String),
+          companyId: expect.any(Number),
           companyName: expect.any(String),
-          plan: expect.any(String),
-          paymentId: expect.any(String),
-          price: expect.any(String),
-          autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
-          status: expect.any(String),
+          permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })
     );
   });
 
-  it('should update subscription', async () => {
+  it('should update admin successfully', async () => {
     req.method = 'PUT';
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query = { roleId: '1' };
     req.body = {
-      plan: 'basic',
-      paymentId: '2',
-      autoRenew: false,
+      name: 'John Doe',
+      email: 'john@example.com',
+      startDate: 1234567890,
+      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -65,24 +110,20 @@ describe('test subscription API by id', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
-          companyId: expect.any(String),
+          id: expect.any(Number),
+          name: expect.any(String),
+          companyId: expect.any(Number),
           companyName: expect.any(String),
-          plan: expect.any(String),
-          paymentId: expect.any(String),
-          price: expect.any(String),
-          autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
-          status: expect.any(String),
+          permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })
     );
   });
 
-  it('should delete subscription', async () => {
+  it('should delete admin successfully', async () => {
     req.method = 'DELETE';
     req.headers.userid = '1';
-    req.query.id = '1';
+    req.query = { roleId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -91,25 +132,22 @@ describe('test subscription API by id', () => {
         success: expect.any(Boolean),
         code: expect.stringContaining('200'),
         message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(String),
-          companyId: expect.any(String),
-          companyName: expect.any(String),
-          plan: expect.any(String),
-          paymentId: expect.any(String),
-          price: expect.any(String),
-          autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
-          status: expect.any(String),
-        }),
+        payload: expect.any(Object),
       })
     );
   });
 
-  it('should handle INVALID_INPUT_PARAMETER', async () => {
-    req.method = 'GET';
-    req.headers.userid = 'user-id';
-    req.query.id = '';
+  it('should return error for INVALID_INPUT_PARAMETER', async () => {
+    req.method = 'PUT';
+    req.headers.userid = '1';
+    req.query = { roleId: '1' };
+    req.body = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      startDate: 1234567890,
+      auditing: 'viewer',
+      accounting: 'editor',
+    };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
@@ -123,10 +161,9 @@ describe('test subscription API by id', () => {
     );
   });
 
-  it('should handle RESOURCE_NOT_FOUND', async () => {
-    req.method = 'GET';
-    req.headers.userid = 'user-id';
-    req.query.id = '2';
+  it('should return error for RESOURCE_NOT_FOUND', async () => {
+    req.headers.userid = '1';
+    req.query = { roleId: '2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -140,10 +177,10 @@ describe('test subscription API by id', () => {
     );
   });
 
-  it('should handle unsupported HTTP methods', async () => {
+  it('should return error for METHOD_NOT_ALLOWED', async () => {
+    req.headers.userid = '1';
     req.method = 'POST';
-    req.headers.userid = 'user-id';
-    req.query.id = '1';
+    req.query = { roleId: '1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(

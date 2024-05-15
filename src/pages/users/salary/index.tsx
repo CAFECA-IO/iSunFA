@@ -5,7 +5,7 @@ import { ILocale } from '../../../interfaces/locale';
 import NavBar from '../../../components/nav_bar/nav_bar';
 import SalarySidebar from '../../../components/salary_sidebar/salary_sidebar';
 
-const AccountingPage = () => {
+const SalaryPage = () => {
   return (
     <>
       <Head>
@@ -468,4 +468,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default AccountingPage;
+export default SalaryPage;

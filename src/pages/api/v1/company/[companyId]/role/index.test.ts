@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IUser } from '@/interfaces/user';
+import { IRole } from '@/interfaces/role';
 import prisma from '@/../prisma/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let user: IUser;
+let role: IRole;
 
 beforeEach(async () => {
   req = {
@@ -20,35 +20,57 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-  user = await prisma.user.create({
+
+  const createdRole = await prisma.role.create({
     data: {
-      name: 'John',
-      credentialId: '123456',
-      publicKey: 'publicKey',
-      algorithm: 'ES256',
-      imageId: 'imageId',
+      company: {
+        connectOrCreate: {
+          where: {
+            id: 1,
+          },
+          create: {
+            name: 'Test Company',
+            code: 'TST',
+            regional: 'TW',
+          },
+        },
+      },
+      name: 'KING',
+      permissions: ['READ', 'WRITE'],
+    },
+    include: {
+      company: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
+  role = {
+    ...createdRole,
+    companyName: createdRole.company.name,
+  };
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterUser = await prisma.user.findUnique({
+  const afterRole = await prisma.role.findUnique({
     where: {
-      id: user.id,
+      id: role.id,
     },
   });
-  if (afterUser) {
-    await prisma.user.delete({
+  if (afterRole) {
+    await prisma.role.delete({
       where: {
-        id: user.id,
+        id: role.id,
       },
     });
   }
 });
 
-describe('test user API', () => {
-  it('should list all users', async () => {
+describe('test role API handler', () => {
+  it('should list all roles', async () => {
+    req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -61,34 +83,21 @@ describe('test user API', () => {
           expect.objectContaining({
             id: expect.any(Number),
             name: expect.any(String),
-            credentialId: expect.any(String),
-            publicKey: expect.any(String),
-            algorithm: expect.any(String),
+            companyId: expect.any(Number),
+            companyName: expect.any(String),
+            permissions: expect.arrayContaining([expect.any(String)]),
           }),
         ]),
       })
     );
   });
 
-  it('should create a new user', async () => {
+  it('should create role successfully', async () => {
     req.method = 'POST';
     req.body = {
-      name: 'John',
-      fullName: 'John Doe',
-      email: 'john@mermer.cc',
-      phone: '1234567890',
-      kycStatus: false,
-      credentialId: '123456',
-      publicKey: 'publicKey',
-      algorithm: 'ES256',
-      imageId: 'imageId',
+      name: 'queen',
     };
     await handler(req, res);
-    await prisma.user.delete({
-      where: {
-        id: res.json.mock.calls[0][0].payload.id,
-      },
-    });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -99,19 +108,33 @@ describe('test user API', () => {
         payload: expect.objectContaining({
           id: expect.any(Number),
           name: expect.any(String),
-          fullName: expect.any(String),
-          email: expect.any(String),
-          phone: expect.any(String),
-          kycStatus: expect.any(Boolean),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
+          companyId: expect.any(Number),
+          companyName: expect.any(String),
+          permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })
     );
   });
 
-  it('should handle unsupported HTTP methods', async () => {
+  it('should return error for missing input parameters', async () => {
+    req.method = 'POST';
+    req.body = {
+      // name: 'John Doe',
+    };
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+
+  it('should return error for METHOD_NOT_ALLOWED', async () => {
     req.method = 'PUT';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);

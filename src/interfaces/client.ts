@@ -1,6 +1,6 @@
 export interface IClient {
-  id: string;
-  companyId: string;
+  id: number;
+  companyId: number;
   companyName: string;
   code: string;
   favorite: boolean;

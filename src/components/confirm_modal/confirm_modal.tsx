@@ -80,12 +80,12 @@ const ConfirmModal = ({
       setReason(voucherPreview.metadatas[0].reason);
       setCompanyName(voucherPreview.metadatas[0].companyName);
       setDescription(voucherPreview.metadatas[0].description);
-      setTotalPrice(voucherPreview.metadatas[0].totalPrice);
-      setTaxPercentage(voucherPreview.metadatas[0].taxPercentage);
-      setFee(voucherPreview.metadatas[0].fee);
-      setPaymentMethod(voucherPreview.metadatas[0].paymentMethod);
-      setPaymentPeriod(voucherPreview.metadatas[0].paymentPeriod);
-      setPaymentStatus(voucherPreview.metadatas[0].paymentStatus);
+      setTotalPrice(voucherPreview.metadatas[0].payment.price);
+      setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
+      setFee(voucherPreview.metadatas[0].payment.fee);
+      setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
+      setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
+      setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
       setProject(voucherPreview.metadatas[0].project);
       setContract(voucherPreview.metadatas[0].contract);
     } else if (!isLoading && voucherId) {

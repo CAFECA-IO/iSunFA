@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice, IInvoiceWithPaymentMethod } from '@/interfaces/invoice';
+import { IInvoice } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
   PaymentPeriodType,
@@ -290,7 +290,7 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoiceWithPaymentMethod: IInvoiceWithPaymentMethod = {
+    const invoiceWithPaymentMethod: IInvoice = {
       invoiceId: ocrResultId,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
@@ -307,7 +307,9 @@ const NewJournalForm = () => {
         fee: inputFee,
         paymentMethod: selectedMethod,
         installmentPeriod: inputInstallment,
-        alreadyPaidAmount: inputPartialPaid,
+        paymentAlreadyDone: inputPartialPaid,
+        isRevenue: true,
+        progress: 0,
         paymentPeriod,
         paymentStatus: paymentState,
       },
