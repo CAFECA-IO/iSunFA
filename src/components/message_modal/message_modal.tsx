@@ -101,7 +101,7 @@ const MessageModal = ({
             className="px-16px py-8px"
             type="button"
             onClick={modalVisibilityHandler}
-            variant={'tertiaryBorderless'}
+            variant={'tertiaryOutline'}
           >
             Cancel
           </Button>
