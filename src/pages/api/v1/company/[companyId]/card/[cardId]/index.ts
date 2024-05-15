@@ -3,7 +3,7 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 
 async function getCardById(cardId: number) {
   const card: ICard = (await prisma.card.findUnique({
