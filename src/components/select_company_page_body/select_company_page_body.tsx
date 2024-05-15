@@ -89,7 +89,7 @@ const SelectCompanyPageBody = () => {
                 key={key}
                 onClick={companyClickHandler}
                 type="button"
-                className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
+                className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
               >
                 <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
                   <Image alt={value.name} src={value.icon} width={20} height={20} />
@@ -106,7 +106,7 @@ const SelectCompanyPageBody = () => {
         <button
           type="button"
           onClick={companyInvitationModalVisibilityHandler}
-          className="gap flex w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
+          className="flex w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
           <p>Enter Invitation Code</p>
