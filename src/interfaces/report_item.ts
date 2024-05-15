@@ -1,4 +1,4 @@
-import { timestampToString } from '../lib/utils/common';
+import { timestampToString } from '@/lib/utils/common';
 
 export interface IBasicReportItem {
   id: string;

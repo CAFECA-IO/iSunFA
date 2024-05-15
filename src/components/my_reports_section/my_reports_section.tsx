@@ -1,17 +1,17 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { default30DayPeriodInSec } from '../../constants/display';
-import useOuterClick from '../../lib/hooks/use_outer_click';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { default30DayPeriodInSec } from '@/constants/display';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
   IPendingReportItem,
-} from '../../interfaces/report_item';
-import PendingReportList from '../pending_report_list/pending_report_list';
-import { Button } from '../button/button';
-import ReportsHistoryList from '../reports_history_list/reports_history_list';
+} from '@/interfaces/report_item';
+import PendingReportList from '@/components/pending_report_list/pending_report_list';
+import { Button } from '@/components/button/button';
+import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 
 enum SortingType {
   NEWEST = 'Newest',

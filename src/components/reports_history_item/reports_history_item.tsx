@@ -1,7 +1,7 @@
-import { IGeneratedReportItem } from '../../interfaces/report_item';
-import CalendarIcon from '../calendar_icon/calendar_icon';
-import { timestampToString } from '../../lib/utils/common';
-import { Button } from '../button/button';
+import { IGeneratedReportItem } from '@/interfaces/report_item';
+import CalendarIcon from '@/components/calendar_icon/calendar_icon';
+import { timestampToString } from '@/lib/utils/common';
+import { Button } from '@/components/button/button';
 
 interface IReportsHistoryItemProps {
   report: IGeneratedReportItem;

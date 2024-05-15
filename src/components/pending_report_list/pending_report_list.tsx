@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { IPendingReportItem } from '../../interfaces/report_item';
-import PendingReportItem from '../pending_report_item/pending_report_item';
+import { IPendingReportItem } from '@/interfaces/report_item';
+import PendingReportItem from '@/components/pending_report_item/pending_report_item';
 
 interface IPendingReportListProps {
   reports: IPendingReportItem[];
