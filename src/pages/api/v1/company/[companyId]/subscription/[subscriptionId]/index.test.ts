@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { ISubscription } from '@/interfaces/subscription';
+import { ONE_MONTH_IN_MS } from '@/constants/time';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -55,7 +56,7 @@ beforeEach(async () => {
       price: '100',
       autoRenew: true,
       startDate: timestampInSeconds(Date.now()),
-      expireDate: timestampInSeconds(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      expireDate: timestampInSeconds(Date.now() + ONE_MONTH_IN_MS),
       status: 'active',
     },
     include: {

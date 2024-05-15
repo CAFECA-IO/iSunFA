@@ -3,7 +3,7 @@ import { ISubscription } from '@/interfaces/subscription';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import { SubscriptionPeriod, SubscriptionStatus } from '@/constants/subscription';
 import { ONE_MONTH_IN_MS, ONE_YEAR_IN_MS } from '@/constants/time';
 

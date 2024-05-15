@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
 import handler from './index';
 

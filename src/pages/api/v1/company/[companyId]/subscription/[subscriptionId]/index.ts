@@ -3,7 +3,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { ISubscription } from '@/interfaces/subscription';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 
 export default async function handler(
   req: NextApiRequest,
