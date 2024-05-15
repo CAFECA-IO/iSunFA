@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
-// import { useGlobalCtx } from '@/contexts/global_context';
-// import { ToastType } from '@/interfaces/toastify';
-// import { ToastId } from '@/constants/toast_id';
+import { IToastify, ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface ICompanyInvitationModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  toastHandler: (props: IToastify) => void;
 }
 
 const CompanyInvitationModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  toastHandler,
 }: ICompanyInvitationModal) => {
-  // const { toastHandler } = useGlobalCtx();
-
   const [codeInput, setCodeInput] = useState<string>('');
+  const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
 
   const changeCodeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCodeInput(e.target.value);
@@ -24,32 +24,39 @@ const CompanyInvitationModal = ({
 
   const cancelBtnClickHandler = () => {
     setCodeInput('');
+    setIsCodeValid(true);
     modalVisibilityHandler();
   };
 
   const submitBtnClickHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Info: (20240515 - Julian) Verify invitation code
+    const codeRegex = /^[A-Za-z0-9]{8}$/; // ToDo: (20240515 - Julian) code regex
+    setIsCodeValid(codeRegex.test(codeInput));
+
     // ToDo: (20240515 - Julian) Implement API call to verify invitation code
     // ToDo: (20240515 - Julian) Success handling
-
-    // Info: (20240515 - Julian) Close modal
-    setCodeInput('');
-    modalVisibilityHandler();
-    // Info: (20240515 - Julian) Toastify
-    // const defaultCompanyName = 'ISUNONE';
-    // toastHandler({
-    //   id: ToastId.INVITATION_SUCCESS,
-    //   type: ToastType.SUCCESS,
-    //   content: (
-    //     <p>
-    //       Congratulations! You&apos;ve successfully joined the{' '}
-    //       <span className="font-semibold">{defaultCompanyName}</span> team!
-    //     </p>
-    //   ),
-    //   closeable: true,
-    // });
-    // ToDo: (20240515 - Julian) Error handling
+    if (codeRegex.test(codeInput)) {
+      // Info: (20240515 - Julian) Close modal
+      setCodeInput('');
+      modalVisibilityHandler();
+      // Info: (20240515 - Julian) Toastify
+      const defaultCompanyName = 'ISUNONE';
+      toastHandler({
+        id: ToastId.INVITATION_SUCCESS,
+        type: ToastType.SUCCESS,
+        content: (
+          <p>
+            Congratulations! You&apos;ve successfully joined the{' '}
+            <span className="font-semibold">{defaultCompanyName}</span> team!
+          </p>
+        ),
+        closeable: true,
+      });
+    } else {
+      // ToDo: (20240515 - Julian) Error handling
+    }
   };
 
   const isDisplayedCompanyInvitationModal = isModalVisible ? (
@@ -74,10 +81,12 @@ const CompanyInvitationModal = ({
             <RxCross2 size={20} />
           </button>
         </div>
-        <div className="flex w-full flex-col justify-center px-20px py-10px">
+        <div className="flex w-full flex-col justify-center gap-8px px-20px py-10px">
           {/* Info: (20240515 - Julian) Invitation Code */}
-          <div className="inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px text-darkBlue2 shadow">
-            <div className="text-lightGray4">Invitation Code</div>
+          <div
+            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-lightRed border-lightRed text-lightRed'}`}
+          >
+            <p className={isCodeValid ? 'text-lightGray4' : 'text-lightRed'}>Invitation Code</p>
             <input
               id="invitationCodeInput"
               type="text"
@@ -85,10 +94,12 @@ const CompanyInvitationModal = ({
               value={codeInput}
               onChange={changeCodeHandler}
               required
-              pattern="[A-Za-z0-9]{6}"
               className="w-full flex-1 px-12px py-10px outline-none placeholder:text-lightGray4"
             />
           </div>
+          <p className={`text-right text-lightRed ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}>
+            Format Error!
+          </p>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
           <button

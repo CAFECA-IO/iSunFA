@@ -353,6 +353,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <CompanyInvitationModal
         isModalVisible={isCompanyInvitationModalVisible}
         modalVisibilityHandler={companyInvitationModalVisibilityHandler}
+        toastHandler={toastHandler}
       />
 
       <Toast />
