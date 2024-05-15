@@ -3,8 +3,8 @@ import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { MessageType } from '../../interfaces/message_modal';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;

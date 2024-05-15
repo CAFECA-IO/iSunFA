@@ -3,8 +3,8 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { timestampToString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import Link from 'next/link';
-import { ReportTypeToBaifaReportType } from '../../interfaces/report_type';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IReportsHistoryItemProps {
   report: IGeneratedReportItem;
@@ -37,18 +37,6 @@ export const AnimatedSVG = () => {
   );
 };
 
-// // TODO: dummy data to be replaced (20240429 - Shirley)
-// const getBaseUrl = (): string => {
-//   return 'https://baifa.io';
-// };
-
-// // TODO: dummy data to be replaced (20240429 - Shirley)
-// const ReportLink = {
-//   balance_sheet: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/${ReportTypeToBaifaReportType.balance_sheet}`,
-//   comprehensive_income_statement: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/${ReportTypeToBaifaReportType.comprehensive_income_statement}`,
-//   cash_flow_statement: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/${ReportTypeToBaifaReportType.cash_flow_statement}`,
-// } as const;
-
 const ReportsHistoryItem = ({
   report,
   checked,
@@ -77,8 +65,6 @@ const ReportsHistoryItem = ({
       <p>{project?.name}</p>
     </div>
   ) : null;
-
-  // const displayedBlockchainLink =
 
   return (
     <tr
@@ -178,12 +164,6 @@ const ReportsHistoryItem = ({
           </Button>
         </div>
       </td>
-
-      {/* <Link
-        href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/?report_id=${reportLinkId}&report_type=${ReportTypeToBaifaReportType[reportType]}`}
-        target="_blank"
-        className={`${isCheckboxVisible ? `left-11rem w-80vw` : `left-7rem w-85vw`} absolute h-80px`}
-      ></Link> */}
     </tr>
   );
 };

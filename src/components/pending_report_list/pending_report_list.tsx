@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { IPendingReportItem } from '@/interfaces/report_item';
 import PendingReportItem from '@/components/pending_report_item/pending_report_item';
-import { Button } from '../button/button';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { MessageType } from '../../interfaces/message_modal';
+import { Button } from '@/components/button/button';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IPendingReportListProps {
   reports: IPendingReportItem[];
