@@ -353,7 +353,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       name: 'TideBit',
       role: 'Viewer',
       brn: '005',
-      icon: '/entities/tidebit.png',
+      icon: '/entities/tidebit.jpeg',
       isPassedKyc: false,
     },
   };

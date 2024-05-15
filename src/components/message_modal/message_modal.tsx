@@ -1,4 +1,3 @@
-/* eslint-disable */
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '../button/button';
@@ -27,7 +26,7 @@ const MessageModal = ({
   } = messageModalData;
 
   // Info: (20240514 - Julian) 如果沒有 backBtnFunction，則預設為關閉 modal
-  const backBtnClickHandler = backBtnFunction ? backBtnFunction : modalVisibilityHandler;
+  const backBtnClickHandler = backBtnFunction || modalVisibilityHandler;
 
   // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {
@@ -83,7 +82,7 @@ const MessageModal = ({
   ) : null;
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div
         className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-white px-32px py-16px`}
       >
@@ -100,7 +99,7 @@ const MessageModal = ({
           {/* Info: (20240507 - Julian) sub message (red color) */}
           <p className="text-lightRed">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <p className="text-lightGray5">{content}</p>
+          <p className="text-xs text-lightGray5">{content}</p>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}
