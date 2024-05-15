@@ -1,6 +1,6 @@
 // Info (Murky - 20240514) To Emily, IInvoice多了project 和 contract, 要填入project name 和 contract name
-import { EventType, isEventType } from './account';
-import { IPayment, isIPayment } from './payment';
+import { EventType, isEventType } from '@/constants/account';
+import { IPayment, isIPayment } from '@/interfaces/payment';
 
 export interface IInvoice {
   invoiceId: string;

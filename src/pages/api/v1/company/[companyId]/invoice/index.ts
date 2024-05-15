@@ -9,7 +9,7 @@ import { AICH_URI } from '@/constants/config';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { EventType, PaymentPeriodType, PaymentStatusType } from '@/interfaces/account';
+import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {

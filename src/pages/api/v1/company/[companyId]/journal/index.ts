@@ -1,5 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/interfaces/account';
+import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucher } from '@/interfaces/voucher';

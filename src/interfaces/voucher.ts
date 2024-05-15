@@ -1,4 +1,4 @@
-import { VoucherType } from './account';
+import { VoucherType } from '../constants/account';
 import { ILineItem, isILineItem } from './line_item';
 import { IPayment, isIPayment } from './payment';
 

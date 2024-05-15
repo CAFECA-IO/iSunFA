@@ -10,7 +10,7 @@ import {
   PaymentStatusType,
   EventType,
   // EventTypeEnum, Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
-} from '@/interfaces/account';
+} from '@/constants/account';
 
 import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '../../lib/hooks/use_outer_click';

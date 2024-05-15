@@ -4,7 +4,7 @@ import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { ProgressStatus } from '@/interfaces/account';
+import { ProgressStatus } from '@/constants/account';
 
 export default async function handler(
   req: NextApiRequest,
