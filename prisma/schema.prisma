@@ -88,8 +88,8 @@ model company {
     imvoices          invoice[]
     companyKYCs       companyKYC[]
     subscriptions     subscription[]
-    usersToCompanies   userToCompany[]
-    companysToDepartments companyToDepartment[]
+    usersCompanysRoles    userCompanyRole[]
+    companysToDepartments companyDepartment[]
 }
 
 model companyKYC {
@@ -117,7 +117,7 @@ model companyKYC {
     company                 company  @relation(fields: [companyId], references: [id])
 }
 
-model companyToDepartment {
+model companyDepartment {
     id           Int      @id @default(autoincrement())
     companyId    Int
     departmentId Int
@@ -125,7 +125,7 @@ model companyToDepartment {
     company      company    @relation(fields: [companyId], references: [id])
     department   department @relation(fields: [departmentId], references: [id])
 
-    @@map("company_to_department")
+    @@map("company_department")
 }
 
 model contract {
@@ -147,7 +147,7 @@ model department {
     name       String
 
     employees  employee[]
-    companyToDepartment companyToDepartment[]
+    companyToDepartment companyDepartment[]
 }
 
 model employee {
@@ -163,13 +163,13 @@ model employee {
     startDate         Int
     endDate           Int
 
-    employeeToProjects employeeToProject[]
+    employeeToProjects employeeProject[]
 
     department        department @relation(fields: [departmentId], references: [id])
     company           company    @relation(fields: [companyId], references: [id])
 }
 
-model employeeToProject {
+model employeeProject {
     id          Int      @id @default(autoincrement())
     employeeId  Int
     projectId   Int
@@ -177,7 +177,7 @@ model employeeToProject {
     employee    employee @relation(fields: [employeeId], references: [id])
     project     project  @relation(fields: [projectId], references: [id])
 
-    @@map("employee_to_project")
+    @@map("employee_project")
 }
 
 model invoice {
@@ -212,7 +212,7 @@ model project {
 
     assets            asset[]
     contracts   contract[]
-    employeesToProjects employeeToProject[]
+    employeesToProjects employeeProject[]
 }
 
 model role {
@@ -221,7 +221,7 @@ model role {
     name             String   
     permissions       String[]
 
-    usersToRoles     userToRole[]
+    usersCompanysRoles    userCompanyRole[]
 
     company          company  @relation(fields: [companyId], references: [id])
 }
@@ -254,8 +254,7 @@ model user {
     imageId         String?
 
     userKYCs        userKYC[]
-    usersToroles    userToRole[]
-    usersToCompanys  userToCompany[]
+    usersCompanysRoles    userCompanyRole[]
 }
 
 model userKYC {
@@ -282,26 +281,16 @@ model userKYC {
     @@map("user_kyc")
 }
 
-model userToCompany {
+model userCompanyRole {
     id         Int      @id @default(autoincrement())
     userId     Int
     companyId  Int
-
-    user       user    @relation(fields: [userId], references: [id])
-    company    company @relation(fields: [companyId], references: [id])
-
-    @@map("user_to_company")
-}
-
-model userToRole {
-    @@id([userId, roleId])
-    userId     Int
     roleId    Int
     startDate Int
 
-    user       user  @relation(fields: [userId], references: [id])
+    user       user    @relation(fields: [userId], references: [id])
+    company    company @relation(fields: [companyId], references: [id])
     role      role @relation(fields: [roleId], references: [id])
 
-    
-    @@map("user_to_role")
+    @@map("user_company_role")
 }

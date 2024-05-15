@@ -1,10 +1,11 @@
+import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ICompany | ICompany[]>>
 ) {
@@ -13,32 +14,24 @@ export default function handler(
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
     if (req.method === 'GET') {
-      const companyList: ICompany[] = [
-        {
-          id: 1,
-          code: 'ABC123',
-          regional: 'North',
-          name: 'ABC Company',
-        },
-        {
-          id: 2,
-          code: 'DEF456',
-          regional: 'South',
-          name: 'DEF Company',
-        },
-      ];
+      const companyList: ICompany[] = await prisma.company.findMany();
       const { httpCode, result } = formatApiResponse<ICompany[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         companyList
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
-      const newCompany: ICompany = {
-        id: 3,
-        code: 'GHI789',
-        regional: 'East',
-        name: 'GHI Company',
-      };
+      const { code, name, regional } = req.body;
+      if (!code || !name || !regional) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const newCompany: ICompany = await prisma.company.create({
+        data: {
+          code,
+          name,
+          regional,
+        },
+      });
       const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.CREATED, newCompany);
       res.status(httpCode).json(result);
     } else {

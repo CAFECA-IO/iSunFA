@@ -34,7 +34,7 @@ export default async function handler(
       // Info: (20240419 - Jacky) C010004 - PUT /client/:id
     } else if (method === 'PUT') {
       const { code, name, regional } = req.body;
-      if (!code || !name || !regional) {
+      if (!code && !name && !regional) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const company: ICompany = await prisma.company.update({
