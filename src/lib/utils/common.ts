@@ -235,7 +235,7 @@ export const formatApiResponse = <T>(
   const httpCodeStr = code.slice(0, 3);
   const httpCode = Number(httpCodeStr);
   const result: IResponseData<T> = {
-    powerby: 'ISunFa api ' + version,
+    powerby: 'iSunFA v' + version,
     success,
     code,
     message,
