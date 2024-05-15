@@ -1,7 +1,10 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
 import { ALLOWED_ORIGINS } from '../../constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '../../constants/display';
+import version from '../version';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -205,6 +208,41 @@ export function cleanBoolean(booleanStr: unknown): boolean {
   }
 
   return false;
+}
+
+function getCodeByMessage(statusMessage: string) {
+  let code: string;
+  let message: string;
+  if (statusMessage in STATUS_CODE) {
+    code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
+    message = statusMessage;
+  } else if (/prisma/i.test(statusMessage)) {
+    code = STATUS_CODE[STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR];
+    message = STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR;
+  } else {
+    code = STATUS_CODE[STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR];
+    message = STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR;
+  }
+  return { code, message };
+}
+
+export function formatApiResponse<T>(
+  statusMessage: string,
+  payload: T
+): { httpCode: number; result: IResponseData<T> } {
+  const { code, message } = getCodeByMessage(statusMessage);
+  const success = !!code.startsWith('2');
+  const httpCodeStr = code.slice(0, 3);
+  const httpCode = Number(httpCodeStr);
+  const result: IResponseData<T> = {
+    powerby: 'ISunFa api ' + version,
+    success,
+    code,
+    message,
+    payload,
+  };
+
+  return { httpCode, result };
 }
 
 export const getValueByKey = <T extends string>(

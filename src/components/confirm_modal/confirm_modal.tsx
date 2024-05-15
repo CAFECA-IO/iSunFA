@@ -80,12 +80,12 @@ const ConfirmModal = ({
       setReason(voucherPreview.metadatas[0].reason);
       setCompanyName(voucherPreview.metadatas[0].companyName);
       setDescription(voucherPreview.metadatas[0].description);
-      setTotalPrice(voucherPreview.metadatas[0].totalPrice);
-      setTaxPercentage(voucherPreview.metadatas[0].taxPercentage);
-      setFee(voucherPreview.metadatas[0].fee);
-      setPaymentMethod(voucherPreview.metadatas[0].paymentMethod);
-      setPaymentPeriod(voucherPreview.metadatas[0].paymentPeriod);
-      setPaymentStatus(voucherPreview.metadatas[0].paymentStatus);
+      setTotalPrice(voucherPreview.metadatas[0].payment.price);
+      setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
+      setFee(voucherPreview.metadatas[0].payment.fee);
+      setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
+      setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
+      setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
       setProject(voucherPreview.metadatas[0].project);
       setContract(voucherPreview.metadatas[0].contract);
     } else if (!isLoading && voucherId) {
@@ -229,6 +229,14 @@ const ConfirmModal = ({
     </div>
   );
 
+  const debitListMobile = accountingVoucher
+    .filter((voucher) => !!voucher.debit)
+    .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
+
+  const creditListMobile = accountingVoucher
+    .filter((voucher) => !!voucher.credit)
+    .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
+
   const displayAccountingVoucherMobile = (
     <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
       {/* Info: (20240510 - Julian) Debit */}
@@ -243,17 +251,7 @@ const ConfirmModal = ({
           <hr className="flex-1 border-lightGray3" />
         </div>
         {/* Info: (20240510 - Julian) List */}
-        <div className="flex flex-col">
-          {accountingVoucher
-            .filter((voucher) => !!voucher.debit)
-            .map(
-              (debit) =>
-                // TODO: eslint workaround (20240513 - Shirley)
-                // eslint-disable-next-line implicit-arrow-linebreak
-                AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit })
-              // eslint-disable-next-line function-paren-newline
-            )}
-        </div>
+        <div className="flex flex-col">{debitListMobile}</div>
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
@@ -277,17 +275,7 @@ const ConfirmModal = ({
           <hr className="flex-1 border-lightGray3" />
         </div>
         {/* Info: (20240510 - Julian) List */}
-        <div className="flex flex-col">
-          {accountingVoucher
-            .filter((voucher) => !!voucher.credit)
-            .map(
-              (credit) =>
-                // TODO: eslint workaround (20240513 - Shirley)
-                // eslint-disable-next-line implicit-arrow-linebreak
-                AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit })
-              // eslint-disable-next-line function-paren-newline
-            )}
-        </div>
+        <div className="flex flex-col">{creditListMobile}</div>
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button

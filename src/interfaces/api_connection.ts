@@ -1,3 +1,5 @@
+import { IFinancialReportRequest } from './report';
+
 export type IAPIName =
   | 'SIGN_UP'
   | 'SIGN_IN'
@@ -13,6 +15,8 @@ export type IAPIName =
   | 'UPLOAD_INVOCIE'
   | 'GET_AUDIT_REPORTS'
   | 'GENERATE_FINANCIAL_REPORT'
+  | 'GET_FINANCIAL_REPORTS_PROGRESS'
+  | 'GET_FINANCIAL_REPORT'
   | 'GENERATE_ANALYSIS_REPORT'
   | 'OCR_UPLOAD_INVOICE_PICTURE'
   | 'OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS'
@@ -33,7 +37,7 @@ export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown } | FormData;
+  body?: { [key: string]: unknown } | FormData | IFinancialReportRequest;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };

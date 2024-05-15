@@ -5,17 +5,17 @@ import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { PiGlobe } from 'react-icons/pi';
-import { Button } from '../button/button';
-import { cn } from '../../lib/utils/common';
-import { useUserCtx } from '../../contexts/user_context';
+import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils/common';
+import { useUserCtx } from '@/contexts/user_context';
 import Image from 'next/image';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
-import version from '../../lib/version';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import version from '@/lib/version';
 
 const NavBar = () => {
-  const { credential: credential, signedIn, signOut, username } = useUserCtx();
+  const { credential: credential, signedIn, signOut, username, isSelectCompany } = useUserCtx();
 
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
@@ -251,8 +251,39 @@ const NavBar = () => {
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
+        <Link
+          href={ISUNFA_ROUTE.SELECT_COMPANY}
+          className={`mt-3 flex gap-2 rounded-xs px-4 py-2.5 ${isSelectCompany ? '' : 'pointer-events-none opacity-50'}`}
+        >
+          <div className="my-auto flex items-center justify-center">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g clip-path="url(#clip0_1966_131937)">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M5.13956 1.75098L5.16907 1.75098H8.16907L8.19857 1.75098C8.64013 1.75096 9.01611 1.75095 9.32481 1.77618C9.64911 1.80267 9.9646 1.8607 10.2662 2.01438C10.7209 2.24607 11.0906 2.61578 11.3223 3.0705C11.476 3.37211 11.534 3.68761 11.5605 4.01191C11.5858 4.3206 11.5857 4.69657 11.5857 5.13812V5.16764V8.41764H14.8357L14.8652 8.41764C15.3068 8.41763 15.6828 8.41762 15.9915 8.44284C16.3158 8.46934 16.6313 8.52737 16.9329 8.68105C17.3876 8.91274 17.7573 9.28244 17.989 9.73717C18.1427 10.0388 18.2007 10.3543 18.2272 10.6786C18.2524 10.9873 18.2524 11.3632 18.2524 11.8048V11.8343V16.751H18.3357C18.7499 16.751 19.0857 17.0868 19.0857 17.501C19.0857 17.9152 18.7499 18.251 18.3357 18.251H17.5024H10.8357H2.5024H1.66907C1.25485 18.251 0.919067 17.9152 0.919067 17.501C0.919067 17.0868 1.25485 16.751 1.66907 16.751H1.7524V5.16764L1.7524 5.13814C1.75239 4.69658 1.75238 4.3206 1.7776 4.01191C1.80409 3.68761 1.86212 3.37211 2.0158 3.0705C2.2475 2.61578 2.6172 2.24607 3.07192 2.01438C3.37353 1.8607 3.68903 1.80267 4.01333 1.77618C4.32202 1.75095 4.69801 1.75096 5.13956 1.75098ZM3.2524 16.751H10.0857V9.16764V5.16764C10.0857 4.68856 10.0852 4.37435 10.0655 4.13405C10.0466 3.90252 10.0138 3.8064 9.98582 3.75149C9.89794 3.579 9.75771 3.43877 9.58523 3.35089C9.53032 3.32291 9.4342 3.29011 9.20266 3.27119C8.96236 3.25156 8.64815 3.25098 8.16907 3.25098H5.16907C4.68998 3.25098 4.37577 3.25156 4.13548 3.27119C3.90394 3.29011 3.80782 3.32291 3.75291 3.35089C3.58043 3.43877 3.4402 3.579 3.35231 3.75149C3.32433 3.8064 3.29153 3.90252 3.27262 4.13405C3.25298 4.37435 3.2524 4.68856 3.2524 5.16764V16.751ZM11.5857 9.91764V16.751H16.7524V11.8343C16.7524 11.3552 16.7518 11.041 16.7322 10.8007C16.7133 10.5692 16.6805 10.4731 16.6525 10.4182C16.5646 10.2457 16.4244 10.1054 16.2519 10.0176C16.197 9.98958 16.1009 9.95678 15.8693 9.93786C15.629 9.91823 15.3148 9.91764 14.8357 9.91764H11.5857ZM4.66907 5.83431C4.66907 5.4201 5.00485 5.08431 5.41907 5.08431H7.91907C8.33328 5.08431 8.66907 5.4201 8.66907 5.83431C8.66907 6.24852 8.33328 6.58431 7.91907 6.58431H5.41907C5.00485 6.58431 4.66907 6.24852 4.66907 5.83431ZM4.66907 9.16764C4.66907 8.75343 5.00485 8.41764 5.41907 8.41764H7.91907C8.33328 8.41764 8.66907 8.75343 8.66907 9.16764C8.66907 9.58186 8.33328 9.91764 7.91907 9.91764H5.41907C5.00485 9.91764 4.66907 9.58186 4.66907 9.16764ZM4.66907 12.501C4.66907 12.0868 5.00485 11.751 5.41907 11.751H7.91907C8.33328 11.751 8.66907 12.0868 8.66907 12.501C8.66907 12.9152 8.33328 13.251 7.91907 13.251H5.41907C5.00485 13.251 4.66907 12.9152 4.66907 12.501Z"
+                  fill="#001840"
+                />
+              </g>
+              <defs>
+                <clipPath id="clip0_1966_131937">
+                  <rect width="20" height="20" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+          </div>
+          <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
+            Switch Company
+          </div>
+        </Link>
         <button
-          disabled={true}
+          disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
           <div className="my-auto flex items-center justify-center">
@@ -276,7 +307,7 @@ const NavBar = () => {
           </div>
         </button>
         <button
-          disabled={true}
+          disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
           <div className="my-auto flex items-center justify-center">

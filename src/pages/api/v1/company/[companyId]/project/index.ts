@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   const millisecondsPerDay = 24 * 60 * 60 * 1000;
   try {
-    if (!req.headers.userId) {
+    if (!req.headers.userid) {
       throw new Error('Resource not found');
     }
     // Info: (20240419 - Jacky) S010001 - GET /project

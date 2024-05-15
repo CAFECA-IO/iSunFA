@@ -1,11 +1,10 @@
 // Info Murky (20240416):  this is mock api need to migrate to microservice
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { AICH_URI } from '@/constants/config';
-import { RESPONSE_STATUS_CODE } from '@/constants/status_code';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { ProgressStatus } from '@/interfaces/common';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,7 +15,7 @@ export default async function handler(
 
     // Info Murky (20240416): Check if invoiceId is string
     if (Array.isArray(invoiceId) || !invoiceId || typeof invoiceId !== 'string') {
-      throw new Error('INVALID_INPUT_PARAMETER');
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
     switch (req.method) {
@@ -24,18 +23,15 @@ export default async function handler(
         const result = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/process_status`);
 
         if (!result.ok) {
-          throw new Error('GATEWAY_TIMEOUT');
+          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
         const resultJson: ProgressStatus = (await result.json()).payload;
-
-        res.status(RESPONSE_STATUS_CODE.success).json({
-          powerby: `ISunFa api ${version}`,
-          success: false,
-          code: String(RESPONSE_STATUS_CODE.success),
-          message: `OCR analyzing progress status of id:${invoiceId} return successfully`,
-          payload: resultJson,
-        });
+        const { httpCode, result: response } = formatApiResponse<ProgressStatus>(
+          STATUS_MESSAGE.SUCCESS_GET,
+          resultJson
+        );
+        res.status(httpCode).json(response);
         break;
       }
       default: {
@@ -44,13 +40,10 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: `ISunFa api ${version}`,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<ProgressStatus>(
+      error.message,
+      {} as ProgressStatus
+    );
+    res.status(httpCode).json(result);
   }
 }
