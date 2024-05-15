@@ -17,6 +17,13 @@ const buttonVariants = cva(
           'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable',
         tertiaryOutline:
           'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+        secondaryOutline:
+          'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+        tertiaryBorderless:
+          'border-none border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+        secondaryBorderless:
+          'border-none border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+
         // outline:
         //   'border border-navyBlue2 text-navyBlue2 hover:border-primaryYellow group-hover:border-primaryYellow group-hover:text-primaryYellow',
       },

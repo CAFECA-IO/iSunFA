@@ -96,7 +96,8 @@ export const timestampToString = (timestamp: number | undefined) => {
     tomorrow: `${year}-${month.toString().padStart(2, '0')}-${(day + 1)
       .toString()
       .padStart(2, '0')}`, // e.g. 2021-01-02
-    month: `${monthString}`, // e.g. January (with i18n)
+    month: `${month}`.padStart(2, '0'), // e.g. 01
+    monthString: `${monthString}`, // e.g. January (with i18n)
     monthFullName: `${monthName}`, // e.g. January
     monthAndDay: `${monthNameShort} ${day}`, // e.g. Jan. 01
     year: `${year}`, // e.g. 2021
@@ -253,4 +254,21 @@ export const getValueByKey = <T extends string>(
 
 export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const countdown = (remainingSeconds: number) => {
+  const days = Math.floor(remainingSeconds / 86400);
+  const hours = Math.floor((remainingSeconds % 86400) / 3600);
+  const minutes = Math.floor((remainingSeconds % 3600) / 60);
+  const seconds = remainingSeconds % 60;
+
+  const remainingTimeStr = `${days ? `${days} D` : ''} ${hours ? `${hours} H` : ''} ${minutes ? `${minutes} M` : ''} ${seconds ? `${seconds}S` : ''}`;
+
+  return {
+    days: `${days}`,
+    hours: `${hours}`,
+    minutes: `${minutes}`,
+    seconds: `${seconds}`,
+    remainingTimeStr,
+  };
 };
