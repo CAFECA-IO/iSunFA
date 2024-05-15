@@ -15,10 +15,10 @@ import DashboardPageBody from '../../components/dashboard_page_body/dashboard_pa
 const DashboardPage = () => {
   const router = useRouter();
 
-  const { signedIn, isSelectEntity } = useUserCtx();
+  const { signedIn, isSelectCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
 
-  // ToDo: (20240513 - Julian) If the user is not select any entity, show a toast to remind the user that this is a trial mode
+  // ToDo: (20240513 - Julian) If the user is not select any company, show a toast to remind the user that this is a trial mode
 
   useEffect(() => {
     if (!signedIn) {
@@ -27,7 +27,7 @@ const DashboardPage = () => {
   }, [signedIn]);
 
   useEffect(() => {
-    if (!isSelectEntity) {
+    if (!isSelectCompany) {
       // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
       toastHandler({
         id: ToastId.TRIAL,
@@ -37,7 +37,7 @@ const DashboardPage = () => {
           <div className="flex items-center justify-between">
             <p className="text-sm">iSunFA Trial Version</p>
             <Link
-              href={ISUNFA_ROUTE.SELECT_ENTITY}
+              href={ISUNFA_ROUTE.SELECT_COMPANY}
               className="text-base font-semibold text-darkBlue"
             >
               End of trial
@@ -46,7 +46,7 @@ const DashboardPage = () => {
         ),
       });
     }
-  }, [isSelectEntity]);
+  }, [isSelectCompany]);
 
   return (
     <>
