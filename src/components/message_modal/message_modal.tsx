@@ -99,7 +99,7 @@ const MessageModal = ({
           {/* Info: (20240507 - Julian) sub message (red color) */}
           <p className="text-lightRed">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <p className="text-lightGray5">{content}</p>
+          <p className="text-xs text-lightGray5">{content}</p>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}

@@ -124,7 +124,7 @@ const SelectCompanyPageBody = () => {
             Welcome back, <span className="text-amber-400">{userName}</span>!
           </div>
           <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
-            Select your Company to log in, or create your own Company team.
+            Select your company to log in, or create your own company.
           </div>
         </div>
         {/* Info: (20240513 - Julian) company selection */}

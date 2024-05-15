@@ -181,7 +181,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const toastHandler = useCallback((props: IToastify) => {
     const { id, type, content, closeable, autoClose: isAutoClose, position: toastPosition } = props;
 
-    const bodyStyle = 'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0';
+    const bodyStyle =
+      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75';
 
     const toastId = id;
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
@@ -192,7 +193,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const closeOnClick = closeable ? true : false; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable ? true : false; // Info:(20240513 - Julian) default draggable true
     const closeButton = closeable
-      ? () => <RxCross2 size={16} className="text-secondaryBlue" />
+      ? () => (
+          <div className="h-20px w-20px">
+            <RxCross2 size={16} className="text-secondaryBlue" />
+          </div>
+        )
       : false;
 
     switch (type) {
