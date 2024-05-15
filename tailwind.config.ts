@@ -1034,6 +1034,7 @@ module.exports = {
         '360px': '360px',
         '370px': '370px',
         '372px': '372px',
+        '376px': '376px',
         '380px': '380px',
         '388px': '388px',
         '390px': '390px',
@@ -1400,7 +1401,9 @@ module.exports = {
         slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
         slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
         slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
+        spinFast: 'spin 1s linear infinite',
       },
+
       content: {
         checked: '"✔"',
       },
