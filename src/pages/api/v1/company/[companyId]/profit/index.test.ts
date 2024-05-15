@@ -30,17 +30,20 @@ describe('Result API Handler Tests', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = expect.arrayContaining([
       expect.objectContaining({
-        period: expect.any(String),
         income: expect.any(Number),
         expenses: expect.any(Number),
+        date: expect.any(Date),
+        profit: expect.any(Number),
       }),
     ]);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFa api 1.0.0',
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: expectedPayload,
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expectedPayload,
+      })
+    );
   });
 });

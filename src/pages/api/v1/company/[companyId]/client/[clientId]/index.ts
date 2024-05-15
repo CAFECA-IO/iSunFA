@@ -3,7 +3,7 @@ import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 
 async function getClientById(clientId: number): Promise<IClient> {
   const getClient = await prisma.client.findUnique({

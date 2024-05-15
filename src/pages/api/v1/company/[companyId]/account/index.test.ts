@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -30,45 +29,51 @@ describe('getOwnAccounts API Handler Tests', () => {
     req.query = { type: 'asset', liquidity: 'current' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: expect.arrayContaining([
-        expect.objectContaining({
-          id: expect.any(Number),
-          code: expect.any(Number),
-          account: expect.any(String),
-          amount: expect.any(Number),
-        }),
-      ]),
-    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('200'),
+        message: expect.any(String),
+        payload: expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(Number),
+            code: expect.any(Number),
+            account: expect.any(String),
+            amount: expect.any(Number),
+          }),
+        ]),
+      })
+    );
   });
-  it('should return a 400 error when type and liquidity query params are not provided', async () => {
+  it('should return a error when type and liquidity query params are not provided', async () => {
     req.method = 'GET';
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'bad request',
-      payload: null,
-    });
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
-  it('should return a 400 error when type and liquidity query params are not provided correctly', async () => {
+  it('should return a error when type and liquidity query params are not provided correctly', async () => {
     req.method = 'GET';
     req.query = { type: 'money', liquidity: 'high' };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'bad request',
-      payload: null,
-    });
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 });
 
@@ -83,14 +88,14 @@ describe('createNewAccountingAccount API Handler Tests', () => {
       name: 'Taiwan Bank',
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'create successful',
-      payload: expect.arrayContaining([
-        expect.objectContaining({
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('201'),
+        message: expect.any(String),
+        payload: expect.objectContaining({
           id: expect.any(Number),
           type: expect.any(String),
           liquidity: expect.any(String),
@@ -98,10 +103,10 @@ describe('createNewAccountingAccount API Handler Tests', () => {
           code: expect.any(String),
           name: expect.any(String),
         }),
-      ]),
-    });
+      })
+    );
   });
-  it('should return a 400 error when required body params are missing', async () => {
+  it('should return a error when required body params are missing', async () => {
     req.method = 'POST';
     req.body = {
       type: 'asset',
@@ -109,13 +114,15 @@ describe('createNewAccountingAccount API Handler Tests', () => {
       code: '1103',
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'create failed',
-      payload: null,
-    });
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
   });
 });

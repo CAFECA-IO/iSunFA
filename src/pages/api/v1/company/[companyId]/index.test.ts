@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { IRole } from '@/interfaces/role';
+import { ICompany } from '@/interfaces/company';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let role: IRole;
+let company: ICompany;
 
 beforeEach(async () => {
   req = {
@@ -21,58 +21,36 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  const createdRole = await prisma.role.create({
+  company = await prisma.company.create({
     data: {
-      company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
-        },
-      },
-      name: 'KING',
-      permissions: ['READ', 'WRITE'],
-    },
-    include: {
-      company: {
-        select: {
-          name: true,
-        },
-      },
+      code: 'COMP123',
+      name: 'Company Name',
+      regional: 'Regional Name',
     },
   });
-  role = {
-    ...createdRole,
-    companyName: createdRole.company.name,
-  };
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterRole = await prisma.role.findUnique({
-    where: {
-      id: role.id,
-    },
-  });
-  if (afterRole) {
-    await prisma.role.delete({
+  try {
+    await prisma.company.delete({
       where: {
-        id: role.id,
+        id: company.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 
-describe('test admin API', () => {
-  it('should get admin by id', async () => {
-    req.headers.userid = '1';
-    req.query = { roleId: '1' };
+describe('handler', () => {
+  it('should handle GET method', async () => {
+    req.method = 'GET';
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -82,25 +60,20 @@ describe('test admin API', () => {
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(Number),
+          code: expect.any(String),
           name: expect.any(String),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
-          permissions: expect.arrayContaining([expect.any(String)]),
+          regional: expect.any(String),
         }),
       })
     );
   });
 
-  it('should update admin successfully', async () => {
+  it('should handle PUT method', async () => {
     req.method = 'PUT';
-    req.headers.userid = '1';
-    req.query = { roleId: '1' };
-    req.body = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      startDate: 1234567890,
-      permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
-    };
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+    req.body = { code: 'C001', name: 'Company B', regional: 'US' };
+
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -111,20 +84,21 @@ describe('test admin API', () => {
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(Number),
+          code: expect.any(String),
           name: expect.any(String),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
-          permissions: expect.arrayContaining([expect.any(String)]),
+          regional: expect.any(String),
         }),
       })
     );
   });
 
-  it('should delete admin successfully', async () => {
+  it('should handle DELETE method', async () => {
     req.method = 'DELETE';
-    req.headers.userid = '1';
-    req.query = { roleId: '1' };
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -132,39 +106,41 @@ describe('test admin API', () => {
         success: expect.any(Boolean),
         code: expect.stringContaining('200'),
         message: expect.any(String),
-        payload: expect.any(Object),
+        payload: expect.objectContaining({
+          id: expect.any(Number),
+          code: expect.any(String),
+          name: expect.any(String),
+          regional: expect.any(String),
+        }),
       })
     );
   });
 
-  it('should return error for INVALID_INPUT_PARAMETER', async () => {
-    req.method = 'PUT';
-    req.headers.userid = '1';
-    req.query = { roleId: '1' };
-    req.body = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      startDate: 1234567890,
-      auditing: 'viewer',
-      accounting: 'editor',
-    };
+  it('should handle invalid method', async () => {
+    req.method = 'POST';
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
+
+    expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
+        code: expect.stringContaining('405'),
         message: expect.any(String),
         payload: expect.any(Object),
       })
     );
   });
 
-  it('should return error for RESOURCE_NOT_FOUND', async () => {
-    req.headers.userid = '1';
-    req.query = { roleId: '2' };
+  it('should handle missing userid header', async () => {
+    req.method = 'GET';
+    req.query = { companyId: '456' };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -177,17 +153,38 @@ describe('test admin API', () => {
     );
   });
 
-  it('should return error for METHOD_NOT_ALLOWED', async () => {
-    req.headers.userid = '1';
-    req.method = 'POST';
-    req.query = { roleId: '1' };
+  it('should handle missing companyId query parameter', async () => {
+    req.method = 'GET';
+    req.headers = { userid: '123' };
+
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(405);
+
+    expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+
+  it('should handle invalid input parameters for PUT method', async () => {
+    req.method = 'PUT';
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+    req.body = {};
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
         message: expect.any(String),
         payload: expect.any(Object),
       })

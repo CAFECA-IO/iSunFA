@@ -3,7 +3,7 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 
 async function getCardList() {
   const cardList = await prisma.card.findMany();
