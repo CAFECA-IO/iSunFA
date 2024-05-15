@@ -3,7 +3,7 @@ import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 
 async function listClient(): Promise<IClient[]> {
   const findManyClient = await prisma.client.findMany({

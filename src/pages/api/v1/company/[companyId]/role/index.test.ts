@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IRole } from '@/interfaces/role';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
