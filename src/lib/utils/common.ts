@@ -254,3 +254,7 @@ export const getValueByKey = <T extends string>(
 export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+export function timestampInSeconds(timestamp: number): number {
+  return Math.floor(timestamp / 1000);
+}

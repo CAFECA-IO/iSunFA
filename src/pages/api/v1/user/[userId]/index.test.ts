@@ -74,6 +74,13 @@ describe('test user API by userid', () => {
     req.headers.userid = '1';
     req.query.userId = user.id.toString();
     req.method = 'PUT';
+    req.body = {
+      name: 'Jane',
+      email: 'Jane@mermer.cc',
+      fullName: 'Jane Doe',
+      phone: '1234567890',
+      imageId: 'imageId',
+    };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(

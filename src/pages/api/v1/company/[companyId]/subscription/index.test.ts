@@ -1,10 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { ISubscription } from '@/interfaces/subscription';
+import prisma from '@/../prisma/client';
+import { timestampInSeconds } from '@/lib/utils/common';
+import { SubscriptionPeriod } from '@/constants/subscription';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
+let subscription: ISubscription;
 
-beforeEach(() => {
+beforeEach(async () => {
   req = {
     headers: {},
     body: null,
@@ -17,11 +22,77 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  const createdSubscription = await prisma.subscription.create({
+    data: {
+      company: {
+        connectOrCreate: {
+          where: {
+            id: 1,
+          },
+          create: {
+            name: 'Test Company',
+            code: 'TST',
+            regional: 'TW',
+          },
+        },
+      },
+      plan: 'pro',
+      card: {
+        connectOrCreate: {
+          where: {
+            id: 1,
+          },
+          create: {
+            no: '1234567890',
+            type: 'VISA',
+            expireYear: '23',
+            expireMonth: '12',
+            cvc: '123',
+            name: 'Test Card',
+          },
+        },
+      },
+      price: '100',
+      autoRenew: true,
+      startDate: timestampInSeconds(Date.now()),
+      expireDate: timestampInSeconds(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      status: 'active',
+    },
+    include: {
+      company: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  subscription = {
+    ...createdSubscription,
+    companyName: createdSubscription.company.name,
+  };
+});
+
+afterEach(async () => {
+  jest.clearAllMocks();
+  const afterSubscription = await prisma.subscription.findUnique({
+    where: {
+      id: subscription.id,
+    },
+  });
+  if (afterSubscription) {
+    await prisma.subscription.delete({
+      where: {
+        id: subscription.id,
+      },
+    });
+  }
 });
 
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
     req.headers.userid = '1';
+    req.query.companyId = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -32,13 +103,14 @@ describe('test subscription API', () => {
         message: expect.any(String),
         payload: expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(String),
-            companyId: expect.any(String),
+            id: expect.any(Number),
+            companyId: expect.any(Number),
             companyName: expect.any(String),
             plan: expect.any(String),
-            paymentId: expect.any(String),
+            cardId: expect.any(Number),
             price: expect.any(String),
             autoRenew: expect.any(Boolean),
+            startDate: expect.any(Number),
             expireDate: expect.any(Number),
             status: expect.any(String),
           }),
@@ -50,13 +122,21 @@ describe('test subscription API', () => {
   it('should create a new subscription', async () => {
     req.headers.userid = '1';
     req.method = 'POST';
+    req.query.companyId = '1';
     req.body = {
       plan: 'pro',
-      paymentId: '2',
       autoRenew: true,
+      cardId: 2,
+      price: '100',
+      period: SubscriptionPeriod.MONTHLY,
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(201);
+    await prisma.subscription.delete({
+      where: {
+        id: res.json.mock.calls[0][0].payload.id,
+      },
+    });
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
@@ -64,11 +144,11 @@ describe('test subscription API', () => {
         code: expect.stringContaining('201'),
         message: expect.any(String),
         payload: expect.objectContaining({
-          id: expect.any(String),
-          companyId: expect.any(String),
+          id: expect.any(Number),
+          companyId: expect.any(Number),
           companyName: expect.any(String),
           plan: expect.any(String),
-          paymentId: expect.any(String),
+          cardId: expect.any(Number),
           price: expect.any(String),
           autoRenew: expect.any(Boolean),
           expireDate: expect.any(Number),

@@ -1,11 +1,12 @@
 export interface ISubscription {
-  id: string;
-  companyId: string;
+  id: number;
+  companyId: number;
   companyName: string;
   plan: string;
-  paymentId: string;
+  cardId: number;
   price: string;
   autoRenew: boolean;
+  startDate: number; // timestamp
   expireDate: number; // timestamp
   status: string;
 }

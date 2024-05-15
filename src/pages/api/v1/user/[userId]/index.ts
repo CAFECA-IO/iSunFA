@@ -33,13 +33,17 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       // Handle PUT request to update user by userid
+      const { name, fullName, email, phone, imageId } = req.body;
       const user: IUser = await prisma.user.update({
         where: {
           id: userIdNum,
         },
         data: {
-          name: 'Curry111',
-          email: 'curry@curry.com',
+          name,
+          email,
+          fullName,
+          phone,
+          imageId,
         },
       });
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_UPDATE, user);

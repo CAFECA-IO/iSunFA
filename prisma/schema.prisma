@@ -42,7 +42,7 @@ model auditReport {
     informationYear   String
     detailedInformation String
     creditRating      String
-    dateOfUpload      DateTime
+    dateOfUpload      Int
     link              String
 
     company           company  @relation(fields: [companyId], references: [id])
@@ -56,6 +56,8 @@ model card {
     expireMonth String
     cvc         String
     name        String
+
+    subscriptions subscription[]
 }
 
 model cashflow {
@@ -133,8 +135,8 @@ model contract {
     signatory    String
     status       String
     payment      String
-    startDate    DateTime
-    endDate      DateTime
+    startDate    Int
+    endDate      Int
     progress     String
 
     project      project  @relation(fields: [projectId], references: [id])
@@ -158,8 +160,8 @@ model employee {
     bonus             String
     salaryPayMode     String
     payFrequency      String
-    startDate         DateTime
-    endDate           DateTime
+    startDate         Int
+    endDate           Int
 
     employeeToProjects employeeToProject[]
 
@@ -182,8 +184,8 @@ model invoice {
     id          Int      @id @default(autoincrement())
     companyId   Int      @map("company_id")
     invoiceNo   String
-    invoiceDate DateTime
-    dueDate     DateTime
+    invoiceDate Int
+    dueDate     Int
     status      String
     totalAmount String
 
@@ -204,8 +206,8 @@ model project {
     id          Int      @id @default(autoincrement())
     name        String
     description String
-    startDate   DateTime
-    endDate     DateTime
+    startDate   Int
+    endDate     Int
     status      String
 
     assets            asset[]
@@ -228,13 +230,15 @@ model subscription {
     id          Int   @id @default(autoincrement())
     companyId   Int      @map("company_id")
     plan        String
-    paymentId   String
+    cardId      Int      @map("card_id")
     price       String
     autoRenew   Boolean
-    expireDate  DateTime
+    startDate   Int 
+    expireDate  Int 
     status      String
 
     company     company  @relation(fields: [companyId], references: [id])
+    card        card     @relation(fields: [cardId], references: [id])
 }
 
 model user {
@@ -293,7 +297,7 @@ model userToRole {
     @@id([userId, roleId])
     userId     Int
     roleId    Int
-    startDate DateTime
+    startDate Int
 
     user       user  @relation(fields: [userId], references: [id])
     role      role @relation(fields: [roleId], references: [id])
