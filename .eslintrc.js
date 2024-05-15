@@ -66,6 +66,7 @@ module.exports = {
         'no-else-return': 'off',
         'import/no-extraneous-dependencies': 'off',
         'no-nested-ternary': 'off',
+        'react/require-default-props': 'off',
       },
     },
   ],
@@ -118,6 +119,7 @@ module.exports = {
     'react/jsx-tag-spacing': 'off',
     'react/jsx-wrap-multilines': 'off',
     'no-nested-ternary': 'off',
+    'react/require-default-props': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

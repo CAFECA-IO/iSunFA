@@ -3,7 +3,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 
 export default async function handler(
   req: NextApiRequest,
@@ -33,13 +33,17 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {
       // Handle PUT request to update user by userid
+      const { name, fullName, email, phone, imageId } = req.body;
       const user: IUser = await prisma.user.update({
         where: {
           id: userIdNum,
         },
         data: {
-          name: 'Curry111',
-          email: 'curry@curry.com',
+          name,
+          email,
+          fullName,
+          phone,
+          imageId,
         },
       });
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_UPDATE, user);
