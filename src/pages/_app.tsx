@@ -23,7 +23,7 @@ function App({ Component, pageProps }: AppProps) {
   }, [router.pathname]);
 
   return (
-    <div className="selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
+    <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
       <UserProvider>
         <DashboardProvider>
           <AccountingProvider>

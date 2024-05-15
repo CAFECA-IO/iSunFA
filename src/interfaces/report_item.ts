@@ -62,7 +62,7 @@ export const generateRandomPendingReportItems = (count: number): IPendingReportI
   return Array.from({ length: count }, (_, index) => generateRandomPendingReportItem(index));
 };
 
-export const DUMMY_PENDING_REPORT_ITEMS = generateRandomPendingReportItems(10);
+export const DUMMY_PENDING_REPORT_ITEMS = generateRandomPendingReportItems(5);
 
 export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
   {
@@ -105,46 +105,6 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 3800,
     paused: false,
   },
-  {
-    id: 'qmj0ql',
-    name: 'Balance Sheet-20240425-1',
-    createdTimestamp: 1714030458,
-    period: { startTimestamp: 1700179200, endTimestamp: 1715932800 }, // 2023-11-16 to 2024-04-01
-    remainingSeconds: 3800,
-    paused: false,
-  },
-  {
-    id: '9xun2',
-    name: 'Balance Sheet-20240420-1',
-    createdTimestamp: 1713575632,
-    period: { startTimestamp: 1684800000, endTimestamp: 1700092800 }, // 2023-05-23 to 2023-11-15
-    remainingSeconds: 3800,
-    paused: false,
-  },
-  {
-    id: 'qrplhf',
-    name: 'Balance Sheet-20240414-1',
-    createdTimestamp: 1713039468,
-    period: { startTimestamp: 1694736000, endTimestamp: 1713955200 }, // 2023-09-15 to 2024-02-01
-    remainingSeconds: 3800,
-    paused: true,
-  },
-  {
-    id: 'au3m35',
-    name: 'Balance Sheet-20240428-1',
-    createdTimestamp: 1714246089,
-    period: { startTimestamp: 1692662400, endTimestamp: 1705459200 }, // 2023-08-21 to 2024-02-01
-    remainingSeconds: 3800,
-    paused: true,
-  },
-  {
-    id: 'dicd1',
-    name: 'Balance Sheet-20240421-1',
-    createdTimestamp: 1713679397,
-    period: { startTimestamp: 1686009600, endTimestamp: 1707859200 }, // 2023-06-06 to 2024-03-15
-    remainingSeconds: 3800,
-    paused: true,
-  },
 ];
 
 export const generateRandomGeneratedReportItem = (daysAgo: number): IGeneratedReportItem => {
@@ -186,7 +146,7 @@ export const generateRandomGeneratedReportItems = (count: number): IGeneratedRep
   return Array.from({ length: count }, (_, index) => generateRandomGeneratedReportItem(index));
 };
 
-export const DUMMY_GENERATED_REPORT_ITEMS = generateRandomGeneratedReportItems(10);
+export const DUMMY_GENERATED_REPORT_ITEMS = generateRandomGeneratedReportItems(5);
 
 export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
   {
@@ -200,7 +160,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
   },
   {
     id: 'y11ggs',
-    name: 'Balance Sheet-20240420-1',
+    name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713543101,
     period: { startTimestamp: 1715529600, endTimestamp: 1718121600 },
     blockchainExplorerLink: 'https://explorer.example.com/tx/123',
@@ -218,7 +178,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
   },
   {
     id: '6pa0sq',
-    name: 'Balance Sheet-20240422-1',
+    name: 'Comprehensive Income Statement-20240422-1',
     createdTimestamp: 1713755682,
     period: { startTimestamp: 1715356800, endTimestamp: 1717948800 },
     blockchainExplorerLink: 'https://explorer.example.com/tx/123',
@@ -232,51 +192,6 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     period: { startTimestamp: 1715270400, endTimestamp: 1717862400 },
     blockchainExplorerLink: 'https://explorer.example.com/tx/123',
     project: { id: '3xza6b', name: 'Example Project', code: 'EX' },
-    downloadLink: 'https://example.com/download/report.pdf',
-  },
-  {
-    id: 'er6d7h',
-    name: 'Balance Sheet-20240418-1',
-    createdTimestamp: 1713441961,
-    period: { startTimestamp: 1715184000, endTimestamp: 1717776000 },
-    blockchainExplorerLink: 'https://explorer.example.com/tx/123',
-    project: { id: 'c3zio', name: 'Example Project', code: 'EX' },
-    downloadLink: 'https://example.com/download/report.pdf',
-  },
-  {
-    id: 'f0lb69',
-    name: 'Balance Sheet-20240414-1',
-    createdTimestamp: 1713056465,
-    period: { startTimestamp: 1715097600, endTimestamp: 1717689600 },
-    blockchainExplorerLink: 'https://explorer.example.com/tx/123',
-    project: { id: 'pbklk9', name: 'Example Project', code: 'EX' },
-    downloadLink: 'https://example.com/download/report.pdf',
-  },
-  {
-    id: 'iun5h',
-    name: 'Balance Sheet-20240424-1',
-    createdTimestamp: 1713972076,
-    period: { startTimestamp: 1715011200, endTimestamp: 1717603200 },
-    blockchainExplorerLink: 'https://explorer.example.com/tx/123',
-    project: { id: 'hd684n', name: 'Example Project', code: 'EX' },
-    downloadLink: 'https://example.com/download/report.pdf',
-  },
-  {
-    id: '3qay0p',
-    name: 'Balance Sheet-20240416-1',
-    createdTimestamp: 1713230545,
-    period: { startTimestamp: 1714924800, endTimestamp: 1717516800 },
-    blockchainExplorerLink: 'https://explorer.example.com/tx/123',
-    project: { id: 'sx3g1c', name: 'Example Project', code: 'EX' },
-    downloadLink: 'https://example.com/download/report.pdf',
-  },
-  {
-    id: 'un244u',
-    name: 'Balance Sheet-20240415-1',
-    createdTimestamp: 1713123159,
-    period: { startTimestamp: 1714838400, endTimestamp: 1717430400 },
-    blockchainExplorerLink: 'https://explorer.example.com/tx/123',
-    project: { id: 'vxwqk', name: 'Example Project', code: 'EX' },
     downloadLink: 'https://example.com/download/report.pdf',
   },
 ];

@@ -15,7 +15,8 @@ const MessageModal = ({
   modalVisibilityHandler,
   messageModalData,
 }: IMessageModalProps) => {
-  const { title, content, subMsg, submitBtnStr, submitBtnFunction, messageType } = messageModalData;
+  const { title, subtitle, content, subMsg, submitBtnStr, submitBtnFunction, messageType } =
+    messageModalData;
 
   // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {
@@ -59,6 +60,21 @@ const MessageModal = ({
           ? 'text-errorRed'
           : 'text-navyBlue2';
 
+  const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
+    <div key={index}>
+      {line}
+      {index < subtitle.split('\n').length - 1 && <br />}
+    </div>
+  ));
+
+  // Info: 換行處理 (20240515 - Shirley)
+  const displayedContent = content.split('\n').map((line, index) => (
+    <div key={index}>
+      {line}
+      {index < content.split('\n').length - 1 && <br />}
+    </div>
+  ));
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-50">
       <div
@@ -73,9 +89,10 @@ const MessageModal = ({
         </button>
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
           <h1 className={`text-xl font-bold ${titleColor}`}>{title}</h1>
+          <h1 className={`text-base font-medium ${titleColor}`}>{displayedSubtitles}</h1>
           <Image src={imgStr} width={48} height={48} alt={imgAlt} />
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <p className="text-lightGray5">{content}</p>
+          <div className="text-lightGray5">{displayedContent}</div>
           {/* Info: (20240507 - Julian) sub message (red color) */}
           <p className="text-lightRed">{subMsg}</p>
         </div>
@@ -84,7 +101,7 @@ const MessageModal = ({
             className="px-16px py-8px"
             type="button"
             onClick={modalVisibilityHandler}
-            variant={null}
+            variant={'tertiaryBorderless'}
           >
             Cancel
           </Button>

@@ -3,6 +3,8 @@ import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
+import { useGlobalCtx } from '../../contexts/global_context';
+import { MessageType } from '../../interfaces/message_modal';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;
@@ -10,6 +12,7 @@ interface IPendingReportItemProps {
   isCheckboxVisible: boolean;
   onCheckChange?: () => void;
   onReportItemUpdate?: (report: IPendingReportItem) => void;
+  onReportItemDelete?: (id: string) => void;
 }
 
 export const AnimatedSVG = () => {
@@ -42,7 +45,10 @@ const PendingReportItem = ({
   isCheckboxVisible,
   onCheckChange = () => {},
   onReportItemUpdate = () => {},
+  onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+
   const [reportItem, setReportItem] = useState(report);
   const { id, createdTimestamp, name, period, remainingSeconds, paused } = reportItem;
 
@@ -58,17 +64,40 @@ const PendingReportItem = ({
     onReportItemUpdate(updatedReport);
   };
 
-  const pauseClickHandler = () => {
+  const pauseItem = () => {
     togglePausedStatus();
     // TODO: send paused request (20240514 - Shirley)
   };
 
-  const resumeClickHandler = () => {
+  const resumeItem = () => {
     togglePausedStatus();
+    // TODO: send resumed request (20240514 - Shirley)
+  };
+
+  const pauseClickHandler = () => {
+    pauseItem();
+  };
+
+  const resumeClickHandler = () => {
+    resumeItem();
+  };
+
+  const deleteItem = () => {
+    // Info: 調用 onReportItemDelete 並傳入要刪除的報告 ID (20240515 - Shirley)
+    onReportItemDelete(report.id);
   };
 
   const deleteClickHandler = () => {
     // TODO: show notification modal (20240514 - Shirley)
+    messageModalDataHandler({
+      title: '',
+      subtitle: 'Are you sure\n you want to delete the process?',
+      content: `It will take 30 - 40 minutes to apply the changes.\n You can apply it again after 30 - 40 minutes.`,
+      submitBtnStr: 'Yes, Delete it',
+      submitBtnFunction: deleteItem,
+      messageType: MessageType.WARNING,
+    });
+    messageModalVisibilityHandler();
   };
 
   useEffect(() => {

@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { IPendingReportItem } from '@/interfaces/report_item';
 import PendingReportItem from '@/components/pending_report_item/pending_report_item';
 import { Button } from '../button/button';
+import { useGlobalCtx } from '../../contexts/global_context';
+import { MessageType } from '../../interfaces/message_modal';
 
 interface IPendingReportListProps {
   reports: IPendingReportItem[];
 }
 
 const PendingReportList = ({ reports }: IPendingReportListProps) => {
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
   // Info: 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來 (20240514 - Shirley)
   const [reportItems, setReportItems] = useState<IPendingReportItem[]>(reports);
 
@@ -38,6 +41,16 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
     );
   };
 
+  const handleReportItemDelete = (reportId: string) => {
+    setReportItems((prevReports) => prevReports.filter((report) => report.id !== reportId));
+  };
+
+  const deleteSelectedReports = () => {
+    setReportItems((prevReports) => prevReports.filter((_, index) => !individualChecks[index]));
+    setIndividualChecks(Array(reportItems.length).fill(false));
+    setAllChecked(false);
+  };
+
   const toggleCheckboxVisibility = () => {
     setIsCheckboxVisible(!isCheckboxVisible);
   };
@@ -46,7 +59,25 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
     setIsSelectedItemPaused(!isSelectedItemPaused);
   };
 
+  const deleteClickHandler = () => {
+    if (!individualChecks.some(Boolean)) {
+      return;
+    }
+
+    messageModalDataHandler({
+      title: 'Are you sure you want to delete the process?',
+      content: `It will take 30 - 40 minutes to apply the changes.\n You can apply it again after 30 - 40 minutes.`,
+      submitBtnStr: 'Yes, Delete it',
+      submitBtnFunction: deleteSelectedReports,
+      messageType: MessageType.WARNING,
+    });
+    messageModalVisibilityHandler();
+  };
+
   const pauseClickHandler = () => {
+    if (!individualChecks.some(Boolean)) {
+      return;
+    }
     toggleAllPaused();
     // TODO: LOCK and send paused request (20240514 - Shirley)
     // Info: 將所有選中的報告項目暫停 (20240515 - Shirley)
@@ -67,7 +98,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
 
   const resumeClickHandler = () => {
     toggleAllPaused();
-    // TODO:LOCK and send resumed request (20240514 - Shirley)
+    // TODO: LOCK and send resumed request (20240514 - Shirley)
     const updatedReports = reportItems.map((report) => {
       if (
         individualChecks.some((checked, index) => {
@@ -154,7 +185,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
         <div className="flex space-x-5">
           {' '}
           {displayedPauseOrResumeButton}
-          <Button variant={'secondaryOutline'} className="px-2 py-2">
+          <Button onClick={deleteClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
             {' '}
             {/* Info: Delete (20240514 - Shirley) */}
             <svg
@@ -214,6 +245,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
       isCheckboxVisible={isCheckboxVisible}
       onCheckChange={() => individualCheckHandler(index)}
       onReportItemUpdate={handleReportItemUpdate}
+      onReportItemDelete={handleReportItemDelete}
     />
   ));
 
