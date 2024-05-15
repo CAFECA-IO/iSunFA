@@ -1,3 +1,5 @@
+import { IPayment } from './payment';
+
 export interface IContract {
   contractId: string;
   contractName: string;
@@ -17,16 +19,7 @@ export interface IContract {
       end: string;
     };
   };
-  payment: {
-    paymentMethod: string;
-    installment: string;
-    totalPrice: number;
-    paymentReceivable: number;
-    paymentReceived: number;
-    taxPercentage: number;
-    fee: number;
-    progress: number;
-  };
+  payment: IPayment;
   signatory: string;
   signingDate: string;
   estimatedCost: {
