@@ -9,6 +9,7 @@ export interface IBasicReportItem {
     startTimestamp: number;
     endTimestamp: number;
   };
+  reportType: FinancialReportTypesKey;
 }
 
 export interface IPendingReportItem extends IBasicReportItem {
@@ -25,7 +26,6 @@ export interface IGeneratedReportItem extends IBasicReportItem {
   reportLinkId: string;
   blockchainExplorerLink: string;
   downloadLink: string;
-  reportType: FinancialReportTypesKey;
 }
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
@@ -57,6 +57,7 @@ export const generateRandomPendingReportItem = (daysAgo: number): IPendingReport
     },
     remainingSeconds: remainingSec,
     paused: false,
+    reportType: FinancialReportTypesKey.balance_sheet,
   };
 };
 
@@ -74,6 +75,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     period: { startTimestamp: 1683043200, endTimestamp: 1704067200 }, // 2023-05-02 to 2024-01-01
     remainingSeconds: 3800,
     paused: false,
+    reportType: FinancialReportTypesKey.cash_flow_statement,
   },
   {
     id: 'sclika',
@@ -82,6 +84,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     period: { startTimestamp: 1695609600, endTimestamp: 1698106883 }, // 2023-09-25 to 2023-10-24
     remainingSeconds: 3800,
     paused: true,
+    reportType: FinancialReportTypesKey.cash_flow_statement,
   },
   {
     id: 'qxh66j',
@@ -90,6 +93,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
     remainingSeconds: 3800,
     paused: true,
+    reportType: FinancialReportTypesKey.comprehensive_income_statement,
   },
   {
     id: '4ruh5k',
@@ -98,6 +102,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     period: { startTimestamp: 1693113600, endTimestamp: 1704096000 }, // 2023-08-27 to 2024-01-01
     remainingSeconds: 3800,
     paused: false,
+    reportType: FinancialReportTypesKey.balance_sheet,
   },
   {
     id: 'wyt0mi',
@@ -106,6 +111,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     period: { startTimestamp: 1698374400, endTimestamp: 1714022400 }, // 2023-11-01 to 2024-01-01
     remainingSeconds: 3800,
     paused: false,
+    reportType: FinancialReportTypesKey.balance_sheet,
   },
 ];
 
@@ -152,13 +158,6 @@ export const generateRandomGeneratedReportItems = (count: number): IGeneratedRep
 };
 
 export const DUMMY_GENERATED_REPORT_ITEMS = generateRandomGeneratedReportItems(5);
-
-/*
-`https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`
-  `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`
-  `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`
-
-*/
 
 export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
   {

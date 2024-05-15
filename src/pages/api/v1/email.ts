@@ -12,8 +12,8 @@ type emailConfig = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   /* Info: (20230324 - Shirley) read config */
   const config = {
-    googleClientID: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-    googleClientPassword: process.env.REACT_APP_GOOGLE_CLIENT_PASSWORD,
+    googleClientID: process.env.GOOGLE_CLIENT_ID,
+    googleClientPassword: process.env.GOOGLE_CLIENT_PASSWORD,
     receiverEmail: process.env.REACT_APP_RECEPIENT_EMAIL,
   };
 

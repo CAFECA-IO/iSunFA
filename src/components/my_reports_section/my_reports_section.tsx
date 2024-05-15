@@ -291,7 +291,9 @@ const MyReportsSection = () => {
   const displayedHistoryDataSection = isHistoryDataLoading ? (
     <div>Loading...</div>
   ) : historyData.length !== 0 ? (
-    <ReportsHistoryList reports={historyData} />
+    <div className="hideScrollbar overflow-x-scroll lg:mr-10">
+      <ReportsHistoryList reports={historyData} />
+    </div>
   ) : (
     <div className="mt-20 flex w-full items-center justify-center">
       {' '}
