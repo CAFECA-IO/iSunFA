@@ -54,17 +54,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterRole = await prisma.role.findUnique({
-    where: {
-      id: role.id,
-    },
-  });
-  if (afterRole) {
+  try {
     await prisma.role.delete({
       where: {
         id: role.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 

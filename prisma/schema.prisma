@@ -251,7 +251,7 @@ model user {
     credentialId    String
     publicKey       String
     algorithm       String
-    imageId         String
+    imageId         String?
 
     userKYCs        userKYC[]
     usersToroles    userToRole[]

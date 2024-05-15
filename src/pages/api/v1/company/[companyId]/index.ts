@@ -26,6 +26,9 @@ export default async function handler(
           id: companyIdNum,
         },
       })) as ICompany;
+      if (!company) {
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
       const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.SUCCESS_GET, company);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010004 - PUT /client/:id
