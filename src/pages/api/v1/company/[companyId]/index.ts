@@ -26,12 +26,15 @@ export default async function handler(
           id: companyIdNum,
         },
       })) as ICompany;
+      if (!company) {
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
       const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.SUCCESS_GET, company);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010004 - PUT /client/:id
     } else if (method === 'PUT') {
       const { code, name, regional } = req.body;
-      if (!code || !name || !regional) {
+      if (!code && !name && !regional) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const company: ICompany = await prisma.company.update({

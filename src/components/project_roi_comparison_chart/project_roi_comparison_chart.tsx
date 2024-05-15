@@ -223,7 +223,7 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const displayedDateSection = (
-    <div className="text-neutral-primary my-auto text-xl font-bold leading-5 tracking-normal">
+    <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-neutral-primary">
       {displayedYear}{' '}
       <span className="text-sm font-semibold leading-5 tracking-normal">{displayedDate}</span>{' '}
     </div>

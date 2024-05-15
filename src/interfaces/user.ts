@@ -8,5 +8,5 @@ export interface IUser {
   credentialId: string;
   publicKey: string;
   algorithm: string;
-  imageId?: string | null;
+  imageId: string | null;
 }

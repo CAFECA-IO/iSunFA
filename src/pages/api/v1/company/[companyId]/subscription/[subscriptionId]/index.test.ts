@@ -75,17 +75,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterSubscription = await prisma.subscription.findUnique({
-    where: {
-      id: subscription.id,
-    },
-  });
-  if (afterSubscription) {
+  try {
     await prisma.subscription.delete({
       where: {
         id: subscription.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 
