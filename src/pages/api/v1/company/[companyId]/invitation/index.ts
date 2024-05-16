@@ -26,6 +26,7 @@ function generateCode() {
 async function createInvitation(
   roleIdNum: number,
   companyIdNum: number,
+  userIdNum: number,
   code: string
 ): Promise<IInvitation> {
   const invitation: IInvitation = await prisma.invitation.create({
@@ -38,6 +39,11 @@ async function createInvitation(
       company: {
         connect: {
           id: companyIdNum,
+        },
+      },
+      createdUser: {
+        connect: {
+          id: userIdNum,
         },
       },
       code,
@@ -91,7 +97,7 @@ export default async function handler(
       //
       for (let i = 0; i < emails.length; i += 1) {
         const code = generateCode();
-        const promise = createInvitation(roleIdNum, companyIdNum, code);
+        const promise = createInvitation(roleIdNum, companyIdNum, userIdNum, code);
         InvitationPromises.push(promise);
       }
       const invitations = await Promise.all(InvitationPromises);
