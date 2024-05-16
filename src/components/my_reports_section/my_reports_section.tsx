@@ -13,11 +13,11 @@ import {
 } from '@/interfaces/report_item';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
-import Pagination from '../pagination/pagination';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { ToastType } from '../../interfaces/toastify';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import { LoadingSVG } from '../loading_svg/loading_svg';
+import Pagination from '@/components/pagination/pagination';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 
 enum SortingType {
   NEWEST = 'Newest',

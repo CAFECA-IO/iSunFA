@@ -5,8 +5,8 @@ import { countdown, timestampToString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
-import { LoadingSVG } from '../loading_svg/loading_svg';
-import { MILLISECONDS_IN_A_SECOND } from '../../constants/display';
+import { LoadingSVG } from '@/components/loading_svg/loading_svg';
+import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;
