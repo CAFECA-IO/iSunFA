@@ -28,7 +28,7 @@ enum ScannerStep {
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { companyId, setOcrResultIdHandler } = useAccountingCtx();
+  const { companyId, setInvoiceIdHandler } = useAccountingCtx();
   const {
     trigger: uploadInvoice,
     data: results,
@@ -36,7 +36,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     success: uploadSuccess,
     code: uploadCode,
   } = APIHandler<IAccountResultStatus[]>(
-    APIName.UPLOAD_INVOCIE,
+    APIName.INVOCIE_UPLOAD,
     {
       params: { companyId },
     },
@@ -129,7 +129,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       content: '',
       messageType: MessageType.SUCCESS,
       submitBtnStr: 'Done',
-      submitBtnFunction: () => setOcrResultIdHandler(resultId),
+      submitBtnFunction: () => setInvoiceIdHandler(resultId),
       backBtnStr: 'Back',
     });
     messageModalVisibilityHandler(); */
@@ -186,7 +186,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       const result = results[0];
       const resultIdIndex = result.resultId.lastIndexOf(':');
       const resultId = result.resultId.substring(resultIdIndex + 1).trim();
-      setOcrResultIdHandler(resultId);
+      setInvoiceIdHandler(resultId);
     } else {
       // Info: TODO error handling @Julian (20240513 - tzuhan)
       // eslint-disable-next-line no-console
