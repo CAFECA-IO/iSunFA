@@ -1,4 +1,4 @@
-import { EventType, isEventType } from '@/interfaces/account';
+import { EventType, isEventType } from '@/constants/account';
 import { IPayment, isIPayment } from '@/interfaces/payment';
 
 export interface IInvoice {
