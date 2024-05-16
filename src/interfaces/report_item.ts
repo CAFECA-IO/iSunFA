@@ -73,7 +73,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713611226,
     period: { startTimestamp: 1683043200, endTimestamp: 1704067200 }, // 2023-05-02 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 25,
     paused: false,
     reportType: FinancialReportTypesKey.cash_flow_statement,
   },
@@ -82,7 +82,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Cash Flow Statement-20240505-1',
     createdTimestamp: 1714897574,
     period: { startTimestamp: 1695609600, endTimestamp: 1698106883 }, // 2023-09-25 to 2023-10-24
-    remainingSeconds: 3800,
+    remainingSeconds: 250,
     paused: true,
     reportType: FinancialReportTypesKey.cash_flow_statement,
   },
@@ -91,7 +91,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Comprehensive Income Statement-20240412-1',
     createdTimestamp: 1712863312,
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 380000,
     paused: true,
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
   },
@@ -100,7 +100,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Balance Sheet-20240423-1',
     createdTimestamp: 1713846643,
     period: { startTimestamp: 1693113600, endTimestamp: 1704096000 }, // 2023-08-27 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 3680,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
   },
@@ -109,7 +109,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Balance Sheet-20240501-1',
     createdTimestamp: 1714508675,
     period: { startTimestamp: 1698374400, endTimestamp: 1714022400 }, // 2023-11-01 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 380,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
   },

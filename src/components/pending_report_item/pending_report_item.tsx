@@ -53,10 +53,11 @@ const PendingReportItem = ({
   const { id, createdTimestamp, name, period, remainingSeconds, paused } = reportItem;
 
   const [isPaused, setIsPaused] = useState(paused);
+  const [remainingTime, setRemainingTime] = useState(remainingSeconds);
 
   const startDate = timestampToString(period.startTimestamp);
   const endDate = timestampToString(period.endTimestamp);
-  const remaining = countdown(remainingSeconds);
+  const remainingData = countdown(remainingTime);
 
   const togglePausedStatus = () => {
     setIsPaused(!isPaused);
@@ -106,6 +107,22 @@ const PendingReportItem = ({
     setIsPaused(report.paused);
   }, [report]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRemainingTime((prevTime) => {
+        if (prevTime > 0) {
+          return prevTime - 1;
+        }
+        clearInterval(timer);
+        return 0;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
   const displayedPauseOrResumeButton = !isPaused ? (
     <Button
       onClick={pauseClickHandler}
@@ -154,6 +171,31 @@ const PendingReportItem = ({
 
   const displayedSpinner = !isPaused ? <AnimatedSVG /> : null;
 
+  // if the remaining time has hours, display it
+  const displayedEstimatedTime =
+    +remainingData.days > 0 ? (
+      <>
+        <span className="text-text-neutral-primary">{remainingData.days}</span>
+        <span className="text-text-neutral-tertiary">D</span>
+        <span className="text-text-neutral-primary">{remainingData.hours}</span>
+        <span className="text-text-neutral-tertiary">H</span>
+      </>
+    ) : +remainingData.hours > 0 ? (
+      <>
+        <span className="text-text-neutral-primary">{remainingData.hours}</span>
+        <span className="text-text-neutral-tertiary">H</span>
+        <span className="text-text-neutral-primary">{remainingData.minutes}</span>
+        <span className="text-text-neutral-tertiary">M</span>
+      </>
+    ) : (
+      <>
+        <span className="text-text-neutral-primary">{remainingData.minutes}</span>
+        <span className="text-text-neutral-tertiary">M</span>
+        <span className="text-text-neutral-primary">{remainingData.seconds}</span>
+        <span className="text-text-neutral-tertiary">S</span>
+      </>
+    );
+
   return (
     <tr
       key={id}
@@ -185,11 +227,9 @@ const PendingReportItem = ({
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
       <td className="px-16px text-left font-medium text-navyBlue2">
-        <div className="space-x-1 text-xs">
-          <span className="text-text-neutral-primary">{remaining.minutes}</span>
-          <span className="text-text-neutral-tertiary">M</span>
-          <span className="text-text-neutral-primary">{remaining.seconds}</span>{' '}
-          <span className="text-text-neutral-tertiary">S</span>
+        <div className="space-x-2 text-xs">
+          <span className="text-text-neutral-tertiary">Estimated</span>
+          {displayedEstimatedTime}
         </div>
       </td>
       <td className="px-16px">
