@@ -1,5 +1,5 @@
-import { APIName, APIConfig } from '@/constants/api_connection';
-import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
+import { APIConfig } from '@/constants/api_connection';
+import { IAPIName, IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import useAPIWorker from '@/lib/hooks/use_api_worker';
 import useAPI from '@/lib/hooks/use_api';
 
@@ -13,7 +13,7 @@ function checkInput(apiConfig: IAPIConfig, input: IAPIInput) {
 }
 
 function APIHandler<Data>(
-  apiName: APIName,
+  apiName: IAPIName,
   options: IAPIInput,
   cancel?: boolean,
   triggerImmediately: boolean = true

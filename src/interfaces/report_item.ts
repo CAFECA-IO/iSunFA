@@ -73,7 +73,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713611226,
     period: { startTimestamp: 1683043200, endTimestamp: 1704067200 }, // 2023-05-02 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 10,
     paused: false,
     reportType: FinancialReportTypesKey.cash_flow_statement,
   },
@@ -82,7 +82,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Cash Flow Statement-20240505-1',
     createdTimestamp: 1714897574,
     period: { startTimestamp: 1695609600, endTimestamp: 1698106883 }, // 2023-09-25 to 2023-10-24
-    remainingSeconds: 3800,
+    remainingSeconds: 250,
     paused: true,
     reportType: FinancialReportTypesKey.cash_flow_statement,
   },
@@ -91,7 +91,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Comprehensive Income Statement-20240412-1',
     createdTimestamp: 1712863312,
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 380000,
     paused: true,
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
   },
@@ -100,7 +100,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Balance Sheet-20240423-1',
     createdTimestamp: 1713846643,
     period: { startTimestamp: 1693113600, endTimestamp: 1704096000 }, // 2023-08-27 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 3680,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
   },
@@ -109,7 +109,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Balance Sheet-20240501-1',
     createdTimestamp: 1714508675,
     period: { startTimestamp: 1698374400, endTimestamp: 1714022400 }, // 2023-11-01 to 2024-01-01
-    remainingSeconds: 3800,
+    remainingSeconds: 30,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
   },
@@ -165,7 +165,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Balance Sheet-20240423-1',
     createdTimestamp: 1713815673,
     period: { startTimestamp: 1715616000, endTimestamp: 1718208000 },
-    blockchainExplorerLink: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: null,
@@ -177,7 +177,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713543101,
     period: { startTimestamp: 1715529600, endTimestamp: 1718121600 },
-    blockchainExplorerLink: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: 'hnhirr', name: 'TideBit', code: 'TB' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -189,7 +189,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Balance Sheet-20240427-1',
     createdTimestamp: 1714220640,
     period: { startTimestamp: 1715443200, endTimestamp: 1718035200 },
-    blockchainExplorerLink: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: '25ptrg', name: 'iSunFA', code: 'IS' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -201,7 +201,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Comprehensive Income Statement-20240422-1',
     createdTimestamp: 1713755682,
     period: { startTimestamp: 1715356800, endTimestamp: 1717948800 },
-    blockchainExplorerLink: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`,
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -213,7 +213,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Balance Sheet-20240429-1',
     createdTimestamp: 1714331987,
     period: { startTimestamp: 1715270400, endTimestamp: 1717862400 },
-    blockchainExplorerLink: `https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: '3xza6b', name: 'BAIFA', code: 'BF' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:

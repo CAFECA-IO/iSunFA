@@ -34,6 +34,7 @@ export enum APIName {
   JOURNAL_GET_PROGRESS_STATUS = 'JOURNAL_GET_PROGRESS_STATUS',
   JOURNAL_LIST = 'JOURNAL_LIST',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
+  GET_JOURNAL_PROCESSING_STATUS = 'GET_JOURNAL_PROCESSING_STATUS',
 }
 
 export enum APIPath {
@@ -124,7 +125,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.INVOCIE_GET_BY_ID]: {
     name: APIName.INVOCIE_GET_BY_ID,
@@ -137,7 +138,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.INVOCIE_UPLOAD]: {
     name: APIName.INVOCIE_UPLOAD,
@@ -150,7 +151,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.FINANCIAL_REPORT_GENERATE]: {
     name: APIName.FINANCIAL_REPORT_GENERATE,
@@ -163,7 +164,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS]: {
     name: APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
@@ -176,7 +177,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.FINANCIAL_REPORT_GET_BY_ID]: {
     name: APIName.FINANCIAL_REPORT_GET_BY_ID,
@@ -189,7 +190,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.ANALYSIS_REPORT_GENERATE]: {
     name: APIName.ANALYSIS_REPORT_GENERATE,
@@ -202,7 +203,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.ANALYSIS_REPORT_GET_PROGRESS_STATUS]: {
     name: APIName.ANALYSIS_REPORT_GET_PROGRESS_STATUS,
@@ -215,7 +216,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.ANALYSIS_REPORT_GET_BY_ID]: {
     name: APIName.ANALYSIS_REPORT_GET_BY_ID,
@@ -228,7 +229,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.VOUCHER_GENERATE]: {
     name: APIName.VOUCHER_GENERATE,
@@ -241,7 +242,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.VOUCHER_GET_PROGRESS_STATUS]: {
     name: APIName.VOUCHER_GET_PROGRESS_STATUS,
@@ -254,7 +255,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.VOUCHER_PREVIEW_GET_BY_ID]: {
     name: APIName.VOUCHER_PREVIEW_GET_BY_ID,
@@ -267,7 +268,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.VOUCHER_LIST]: {
     name: APIName.VOUCHER_LIST,
@@ -280,7 +281,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.JOURNAL_GENERATE]: {
     name: APIName.JOURNAL_GENERATE,
@@ -293,7 +294,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.JOURNAL_GET_PROGRESS_STATUS]: {
     name: APIName.JOURNAL_GET_PROGRESS_STATUS,
@@ -306,7 +307,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.JOURNAL_LIST]: {
     name: APIName.JOURNAL_LIST,
@@ -319,7 +320,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
+    useWorker: false,
   },
   [APIName.JOURNAL_GET_BY_ID]: {
     name: APIName.JOURNAL_GET_BY_ID,
@@ -332,6 +333,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false
-  }
+    useWorker: false,
+  },
+  GET_JOURNAL_PROCESSING_STATUS: {
+    name: 'SIGN_UP',
+    method: 'POST',
+    path: '',
+    input: {
+      header: undefined,
+      body: undefined,
+      params: undefined,
+      query: undefined,
+    },
+    output: {},
+    useWorker: false,
+  },
 };

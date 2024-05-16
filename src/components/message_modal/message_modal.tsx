@@ -93,9 +93,9 @@ const MessageModal = ({
   // Info: 換行處理 (20240515 - Shirley)
   const displayedContent = content.split('\n').map((line, index) => (
     // eslint-disable-next-line react/no-array-index-key
-    <div key={index}>
+    <div key={index} className="-mt-5 mb-5">
       {line}
-      {index < content.split('\n').length - 1 && <br />}
+      {index < content.split('\n').length - 1}
     </div>
   ));
 

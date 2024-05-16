@@ -62,10 +62,8 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
     <div className="flex w-full items-center justify-end space-x-5">
       {isCheckboxVisible ? (
         <div className="flex space-x-5">
-          {' '}
+          {/* Info: Print (20240514 - Shirley) */}
           <Button variant={'secondaryOutline'} className="px-2 py-2">
-            {' '}
-            {/* Info: Print (20240514 - Shirley) */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -81,9 +79,8 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
               ></path>
             </svg>
           </Button>
+          {/* Info: Share (20240514 - Shirley) */}
           <Button variant={'secondaryOutline'} className="px-2 py-2">
-            {' '}
-            {/* Info: Share (20240514 - Shirley) */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
