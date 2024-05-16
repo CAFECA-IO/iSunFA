@@ -98,7 +98,7 @@ export default async function handler(
       for (let i = 0; i < emails.length; i += 1) {
         const email = emails[i];
         const mailOptions: SendMailOptions = {
-          from: process.env.EMAIL_USER,
+          from: process.env.GOOGLE_CLIENT_ID,
           to: email,
           subject: 'Invitation to join the company',
           text: `You have been invited to join the company ${company.name}. Your invitation code is ${invitations[i].code}`,
