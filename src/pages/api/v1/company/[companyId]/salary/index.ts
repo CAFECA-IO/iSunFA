@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { ISalary } from '@/interfaces/salary';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: ISalary[] = [
   {
@@ -30,15 +31,23 @@ const responseDataArray: ISalary[] = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<IResponseData<ISalary>>) {
-  if (req.method === 'GET') {
-    const apiResponse: IResponseData<ISalary> = {
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray,
-    };
-    res.status(200).json(apiResponse);
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISalary[] | ISalary>>
+) {
+  try {
+    if (req.method === 'GET') {
+      const { httpCode, result } = formatApiResponse<ISalary[]>(
+        STATUS_MESSAGE.SUCCESS_GET,
+        responseDataArray
+      );
+      res.status(httpCode).json(result);
+    } else {
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<ISalary>(error.message, {} as ISalary);
+    res.status(httpCode).json(result);
   }
 }

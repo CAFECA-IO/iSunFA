@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { EasyEmployee, IEmployee } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: EasyEmployee[] = [
   {
@@ -26,52 +27,43 @@ const responseDataArray: EasyEmployee[] = [
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<EasyEmployee>>
+  res: NextApiResponse<IResponseData<EasyEmployee[] | EasyEmployee>>
 ) {
-  if (req.method === 'GET') {
-    const apiResponse: IResponseData<EasyEmployee> = {
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
-      payload: responseDataArray,
-    };
-    res.status(200).json(apiResponse);
-  }
-  if (req.method === 'POST') {
-    const {
-      name,
-      salary,
-      department,
-      start_date: startDate,
-      bonus,
-      salary_payment_mode: salaryPaymentMode,
-      pay_frequency: payFrequency,
-    }: IEmployee = req.body;
-    if (
-      !name ||
-      !salary ||
-      !department ||
-      !startDate ||
-      !bonus ||
-      !salaryPaymentMode ||
-      !payFrequency
-    ) {
-      res.status(400).json({
-        powerby: 'iSunFA v' + version,
-        success: false,
-        code: '400',
-        message: 'create employee failed',
-        payload: null,
-      });
-      return;
+  try {
+    if (req.method === 'GET') {
+      const { httpCode, result } = formatApiResponse<EasyEmployee[]>(
+        STATUS_MESSAGE.SUCCESS_GET,
+        responseDataArray
+      );
+      res.status(httpCode).json(result);
     }
-    res.status(200).json({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'create employee successful',
-      payload: null,
-    });
+    if (req.method === 'POST') {
+      const {
+        name,
+        salary,
+        department,
+        start_date: startDate,
+        bonus,
+        salary_payment_mode: salaryPaymentMode,
+        pay_frequency: payFrequency,
+      }: IEmployee = req.body;
+      if (
+        !name ||
+        !salary ||
+        !department ||
+        !startDate ||
+        !bonus ||
+        !salaryPaymentMode ||
+        !payFrequency
+      ) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const { httpCode, result } = formatApiResponse<EasyEmployee>(STATUS_MESSAGE.CREATED, null);
+      res.status(httpCode).json(result);
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<EasyEmployee>(error.message, {} as EasyEmployee);
+    res.status(httpCode).json(result);
   }
 }
