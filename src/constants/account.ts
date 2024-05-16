@@ -1,6 +1,7 @@
-// Info Murky (20240416): this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition
+// Info: this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition (20240416 - Murky)
 
-// Info Murky (20240416): type
+// Info: type (20240416 - Murky)
+// ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum ProgressStatus {
   Success = 'success',
   InProgress = 'inProgress',
@@ -11,55 +12,65 @@ export enum ProgressStatus {
   SystemError = 'systemError',
 }
 
+// ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum EventType {
   Income = 'income',
   Payment = 'payment',
   Transfer = 'transfer',
 }
 
+// ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum VoucherType {
   Receive = 'receive',
   Expense = 'expense',
   Transfer = 'transfer',
 }
 
+// ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum PaymentStatusType {
   Paid = 'paid',
   Unpaid = 'unpaid',
   Partial = 'partial',
 }
 
+// ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum PaymentPeriodType {
   AtOnce = 'atOnce',
   Installment = 'installment',
 }
 
+// ToDo: change to SNAKE_CASE (20240516 - Murky)
 export const eventTypeToVoucherType = {
   income: 'receive' as VoucherType,
   payment: 'expense' as VoucherType,
   transfer: 'transfer' as VoucherType,
 };
 
+// ToDo: move to util (20240516 - Murky)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
   return Object.values(EventType).includes(data);
 }
 
+// ToDo: move to util (20240516 - Murky)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isVoucherType(data: any): data is VoucherType {
   return Object.values(VoucherType).includes(data);
 }
 
+// ToDo: move to util (20240516 - Murky)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPaymentStatusType(data: any): data is PaymentStatusType {
   return Object.values(PaymentStatusType).includes(data);
 }
 
+// ToDo: move to util (20240516 - Murky)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPaymentPeriodType(data: any): data is PaymentPeriodType {
   return Object.values(PaymentPeriodType).includes(data);
 }
 
+// ToDo: move to util (20240516 - Murky)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isProgressStatus(data: any): data is ProgressStatus {
   return Object.values(ProgressStatus).includes(data as ProgressStatus);
