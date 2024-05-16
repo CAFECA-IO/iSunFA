@@ -7,7 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IVoucher>>
+  res: NextApiResponse<IResponseData<IVoucher | null>>
 ) {
   try {
     if (req.method === 'GET') {
@@ -25,7 +25,15 @@ export default async function handler(
       }
 
       const rawVoucher: IVoucher = (await fetchResult.json()).payload;
-      if (!rawVoucher || isIVoucher(rawVoucher)) {
+      if (!rawVoucher) {
+        const { httpCode, result } = formatApiResponse<IVoucher>(
+          STATUS_MESSAGE.SUCCESS_GET,
+          rawVoucher
+        );
+        res.status(httpCode).json(result);
+      }
+
+      if (!isIVoucher(rawVoucher)) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 

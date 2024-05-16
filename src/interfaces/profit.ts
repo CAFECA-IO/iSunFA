@@ -4,3 +4,8 @@ export interface IProfit {
   date: Date;
   profit: number;
 }
+
+export interface IProfitComparison {
+  name: string;
+  profit: IProfit[];
+}

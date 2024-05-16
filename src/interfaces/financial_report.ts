@@ -3,6 +3,7 @@ import { ICashFlow, isICashFlow } from '@/interfaces/cash_flow';
 import { isStringNumberPair } from '@/interfaces/common';
 import { IComprehensiveIncome, isIComprehensiveIncome } from '@/interfaces/comprehensive_income';
 
+// Todo Murky (20240516): move to constants and change to SNAKE_CASE
 export enum ILifeCycleType {
   introduction = '初創期',
   growth = '成長期',
@@ -41,6 +42,8 @@ export interface IFinancialReportJSON {
 }
 
 // Info Murky (20240505): type guards
+
+// ToDo: move to utils (20240516 - Murky)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isIFinancialStatements(obj: any): obj is IFinancialStatements {
   return (
@@ -52,6 +55,7 @@ export function isIFinancialStatements(obj: any): obj is IFinancialStatements {
   );
 }
 
+// ToDo: move to utils (20240516 - Murky)
 export function isIFinancialReportJSON(obj: unknown): obj is IFinancialReportJSON {
   if (typeof obj !== 'object' || obj === null) {
     return false;

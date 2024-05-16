@@ -13,7 +13,7 @@ import { Button } from '@/components/button/button';
 import { AccountingStep } from '@/interfaces/stepper_string';
 
 const AccountingPage = () => {
-  const { ocrResultId } = useAccountingCtx();
+  const { invoiceId } = useAccountingCtx();
 
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
@@ -28,10 +28,10 @@ const AccountingPage = () => {
 
   useEffect(() => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
-    if (ocrResultId) {
+    if (invoiceId) {
       setCurrentStep(AccountingStep.STEP_TWO);
     }
-  }, [ocrResultId]);
+  }, [invoiceId]);
 
   // Info: (20240422 - Julian) 第一步不會顯示 back button
   const displayBackButton = isStepOne ? null : (
