@@ -6,7 +6,7 @@ import ReportsSidebar from '../../../../components/reports_sidebar/reports_sideb
 import FinancialReportSection from '../../../../components/financial_report_section/financial_report_section';
 import { ILocale } from '../../../../interfaces/locale';
 
-const ReportPage = () => {
+const FinancialsReportsPage = () => {
   return (
     <>
       <Head>
@@ -54,4 +54,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default ReportPage;
+export default FinancialsReportsPage;

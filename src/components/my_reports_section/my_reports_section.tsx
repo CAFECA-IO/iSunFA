@@ -17,6 +17,7 @@ import Pagination from '../pagination/pagination';
 import { useGlobalCtx } from '../../contexts/global_context';
 import { ToastType } from '../../interfaces/toastify';
 import { ISUNFA_ROUTE } from '../../constants/url';
+import { LoadingSVG } from '../loading_svg/loading_svg';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -95,7 +96,8 @@ const MyReportsSection = () => {
         content: (
           <div className="flex items-center space-x-2">
             <span>Generating the report</span>
-            <div role="status">
+            <LoadingSVG />
+            {/* <div role="status">
               <svg
                 aria-hidden="true"
                 className="inline h-6 w-6 animate-spinFast fill-progress-bar-surface-bar-primary text-gray-200"
@@ -113,7 +115,7 @@ const MyReportsSection = () => {
                 />
               </svg>
               <span className="sr-only">Loading...</span>
-            </div>
+            </div> */}
           </div>
         ),
         // autoClose: 3000,
