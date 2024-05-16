@@ -78,8 +78,8 @@ const ReportsHistoryItem = ({
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
-      {/* Info: (20240514 - Shirley) Blockchain explorer link */}
       <td className="px-16px text-left font-medium text-navyBlue2">
+        {/* Info: (20240514 - Shirley) Blockchain explorer link */}
         <Link href={blockchainExplorerLink} target="_blank">
           <Button variant={'tertiaryBorderless'} size={'small'}>
             {' '}
@@ -103,6 +103,7 @@ const ReportsHistoryItem = ({
       <td className="px-16px text-left">{displayedProject}</td>
       <td className="px-16px">
         <div className="flex items-center">
+          {/* Info: download button (20240516 - Shirley) */}
           <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
             {' '}
             <svg
@@ -120,6 +121,7 @@ const ReportsHistoryItem = ({
               ></path>
             </svg>
           </Button>{' '}
+          {/* Info: share button (20240516 - Shirley) */}
           <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
             {' '}
             <svg
