@@ -65,7 +65,6 @@ const NewJournalForm = () => {
     voucherId,
     setOcrResultIdHandler,
     setVoucherIdHandler,
-    setVoucherStatusHandler,
     setVoucherPreviewHandler
   } = useAccountingCtx();
 
@@ -369,9 +368,8 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (uploadSuccess && result) {
-      const { resultId, status: s } = result;
+      const { resultId } = result;
       setVoucherIdHandler(resultId);
-      setVoucherStatusHandler(s);
     } else if (uploadSuccess === false) {
       // TODO: error handling @Julian (20240510 - tzuhan)
       // eslint-disable-next-line no-console
@@ -401,7 +399,6 @@ const NewJournalForm = () => {
     }
     if (statusSuccess && status && status !== ProgressStatus.InProgress) {
       if (voucherId && (status === ProgressStatus.Success || status === ProgressStatus.AlreadyUpload)) {
-        setVoucherStatusHandler(status);
         getVoucherPreview({
           params: {
             companyId,

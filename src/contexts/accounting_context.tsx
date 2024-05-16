@@ -41,8 +41,6 @@ interface IAccountingContext {
   companyId: string | undefined;
   ocrResultId: string | undefined;
   setOcrResultIdHandler: (id: string | undefined) => void;
-  voucherStatus: ProgressStatus | undefined;
-  setVoucherStatusHandler: (status: ProgressStatus | undefined) => void;
   voucherId: string | undefined;
   setVoucherIdHandler: (id: string | undefined) => void;
   voucherPreview: IVoucher | undefined;
@@ -70,8 +68,6 @@ const initialAccountingContext: IAccountingContext = {
   setOcrResultIdHandler: () => { },
   voucherId: undefined,
   setVoucherIdHandler: () => { },
-  voucherStatus: undefined,
-  setVoucherStatusHandler: () => { },
   voucherPreview: undefined,
   setVoucherPreviewHandler: () => { },
 
@@ -211,7 +207,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
   const setCompanyIdHandler = useCallback((id: string | undefined) => setCompanyId(id), [companyId]);
   const setOcrResultIdHandler = useCallback((id: string | undefined) => setOcrResultId(id), [ocrResultId]);
-  const setVoucherStatusHandler = useCallback((status: ProgressStatus | undefined) => setVoucherStatus(status), [voucherStatus]);
   const setVoucherIdHandler = useCallback((id: string | undefined) => setVoucherId(id), [voucherId]);
   const setVoucherPreviewHandler = useCallback((voucher: IVoucher | undefined) => setVoucherPreview(voucher), [voucherPreview]);
 
@@ -266,8 +261,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       setOcrResultIdHandler,
       voucherId,
       setVoucherIdHandler,
-      voucherStatus,
-      setVoucherStatusHandler,
       voucherPreview,
       setVoucherPreviewHandler,
     }),
