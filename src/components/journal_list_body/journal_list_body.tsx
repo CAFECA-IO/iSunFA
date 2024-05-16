@@ -21,7 +21,7 @@ const JournalListTab = () => {
     code,
     error,
     data: journals,
-  } = APIHandler<IJournal[]>(APIName.LIST_ALL_JOURNALS, {
+  } = APIHandler<IJournal[]>(APIName.JOURNAL_LIST, {
     params: { companyId },
   });
 

@@ -1,18 +1,9 @@
+import { ProgressStatus } from '@/constants/account';
+import { IVoucher } from '@/interfaces/voucher';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 interface IAccountingProvider {
   children: React.ReactNode;
-}
-
-export enum PaymentPeriod {
-  AT_ONCE = 'atOnce',
-  INSTALLMENT = 'installment',
-}
-
-export enum PaymentState {
-  PAID = 'paid',
-  UNPAID = 'unpaid',
-  PARTIAL_PAID = 'partial',
 }
 
 export enum VoucherRowType {
@@ -47,11 +38,13 @@ interface IAccountingContext {
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
 
-  companyId: string;
-  ocrResultId: string;
-  setOcrResultIdHandler: (id: string) => void;
-  voucherId: string;
-  setVoucherIdHandler: (id: string) => void;
+  companyId: string | undefined;
+  invoiceId: string | undefined;
+  setInvoiceIdHandler: (id: string | undefined) => void;
+  voucherId: string | undefined;
+  setVoucherIdHandler: (id: string | undefined) => void;
+  voucherPreview: IVoucher | undefined;
+  setVoucherPreviewHandler: (voucher: IVoucher | undefined) => void;
 
   accountingVoucher: IAccountingVoucher[];
   addVoucherRowHandler: (type?: VoucherRowType) => void;
@@ -70,18 +63,20 @@ const initialAccountingContext: IAccountingContext = {
   // duplicateTempJournal: () => {},
   // removeTempJournal: () => {},
 
-  companyId: '',
-  ocrResultId: '',
-  setOcrResultIdHandler: () => {},
-  voucherId: '',
-  setVoucherIdHandler: () => {},
+  companyId: undefined,
+  invoiceId: '1',
+  setInvoiceIdHandler: () => { },
+  voucherId: undefined,
+  setVoucherIdHandler: () => { },
+  voucherPreview: undefined,
+  setVoucherPreviewHandler: () => { },
 
   accountingVoucher: [defaultAccountingVoucher],
-  addVoucherRowHandler: () => {},
-  deleteVoucherRowHandler: () => {},
-  changeVoucherStringHandler: () => {},
-  changeVoucherAmountHandler: () => {},
-  clearVoucherHandler: () => {},
+  addVoucherRowHandler: () => { },
+  deleteVoucherRowHandler: () => { },
+  changeVoucherStringHandler: () => { },
+  changeVoucherAmountHandler: () => { },
+  clearVoucherHandler: () => { },
 
   totalDebit: 0,
   totalCredit: 0,
@@ -90,9 +85,11 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
-  const [companyId, setCompanyId] = useState<string>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
-  const [voucherId, setVoucherResultId] = useState<string>('');
-  const [ocrResultId, setOcrResultId] = useState<string>('');
+  const [companyId, setCompanyId] = useState<string | undefined>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
+  const [invoiceId, setInvoiceId] = useState<string | undefined>('');
+  const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
+  const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
+  const [voucherPreview, setVoucherPreview] = useState<IVoucher | undefined>(undefined);
 
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
     defaultAccountingVoucher,
@@ -192,6 +189,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
     changeVoucherStringHandler(0, '', VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
     changeVoucherStringHandler(0, '', VoucherString.PARTICULARS); // Info: (20240503 - Julian) 清空摘要 input
+    // Info: 清空欄位資料 @Julian 需要幫忙檢查 (20240515 - Tzuhan)
+    setInvoiceId('');
+    setVoucherId(undefined);
+    setVoucherStatus(undefined);
+    setVoucherPreview(undefined);
   }, []);
 
   // Info: (20240503 - Julian) 計算總借方/貸方
@@ -203,9 +205,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [accountingVoucher]);
 
   // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
-  const setCompanyIdHandler = useCallback((id: string) => setCompanyId(id), [companyId]);
-  const setOcrResultIdHandler = useCallback((id: string) => setOcrResultId(id), [ocrResultId]);
-  const setVoucherIdHandler = useCallback((id: string) => setVoucherResultId(id), [voucherId]);
+  const setCompanyIdHandler = useCallback((id: string | undefined) => setCompanyId(id), [companyId]);
+  const setInvoiceIdHandler = useCallback((id: string | undefined) => setInvoiceId(id), [invoiceId]);
+  const setVoucherIdHandler = useCallback((id: string | undefined) => setVoucherId(id), [voucherId]);
+  const setVoucherPreviewHandler = useCallback((voucher: IVoucher | undefined) => setVoucherPreview(voucher), [voucherPreview]);
 
   // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
@@ -254,10 +257,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
       companyId,
       setCompanyIdHandler,
-      ocrResultId,
-      setOcrResultIdHandler,
+      invoiceId,
+      setInvoiceIdHandler,
       voucherId,
       setVoucherIdHandler,
+      voucherPreview,
+      setVoucherPreviewHandler,
     }),
     [
       accountingVoucher,
@@ -269,8 +274,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       totalDebit,
       totalCredit,
       companyId,
-      ocrResultId,
+      invoiceId,
       voucherId,
+      voucherStatus,
+      voucherPreview,
     ]
   );
 

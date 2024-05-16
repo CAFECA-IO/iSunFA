@@ -1,12 +1,3 @@
-export type ProgressStatus = 'success' | 'inProgress' | 'error' | 'notFound';
-
-export function isProgressStatus(value: unknown): value is ProgressStatus {
-  if (typeof value !== 'string') {
-    return false;
-  }
-  return ['success', 'inProgress', 'error', 'notFound'].includes(value);
-}
-
 // Info Murky (20240505): type guards can input any type and return a boolean
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isStringNumber(value: any): value is string {

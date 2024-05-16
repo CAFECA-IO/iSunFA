@@ -36,14 +36,16 @@ export default async function handler(
     )) as IUserAuth;
     const { credential } = registrationParsed;
 
+    const newUser = {
+      name: registrationParsed.username,
+      kycStatus: false,
+      credentialId: credential.id,
+      publicKey: credential.publicKey,
+      algorithm: credential.algorithm,
+      imageId: '', // ToDo: check the interface (20240516 - Luphia)
+    };
     const createdUser: IUser = await prisma.user.create({
-      data: {
-        name: registrationParsed.username,
-        kycStatus: false,
-        credentialId: credential.id,
-        publicKey: credential.publicKey,
-        algorithm: credential.algorithm,
-      },
+      data: newUser,
     });
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
     res.status(httpCode).json(result);
