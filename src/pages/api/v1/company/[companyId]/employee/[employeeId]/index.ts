@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { EmployeeData, IEmployee } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 const ResponseDataEmployeeArray: EmployeeData[] = [
   {
@@ -22,77 +23,62 @@ const ResponseDataEmployeeArray: EmployeeData[] = [
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<EmployeeData>>
+  res: NextApiResponse<IResponseData<EmployeeData[] | EmployeeData>>
 ) {
-  if (req.method === 'GET') {
-    const { employeeId } = req.query;
-    if (employeeId) {
-      const apiResponse: IResponseData<EmployeeData> = {
-        powerby: 'iSunFA v' + version,
-        success: true,
-        code: '200',
-        message: 'request successful',
-        payload: ResponseDataEmployeeArray,
-      };
-      res.status(200).json(apiResponse);
+  try {
+    if (req.method === 'GET') {
+      const { employeeId } = req.query;
+      if (employeeId) {
+        const { httpCode, result } = formatApiResponse<EmployeeData[]>(
+          STATUS_MESSAGE.SUCCESS_GET,
+          ResponseDataEmployeeArray
+        );
+        res.status(httpCode).json(result);
+      }
     }
-  }
-  if (req.method === 'DELETE') {
-    const { employeeId } = req.query;
-    if (!employeeId) {
-      res.status(400).json({
-        powerby: 'iSunFA v' + version,
-        success: false,
-        code: '400',
-        message: 'delete employee failed',
-        payload: null,
-      });
-      return;
+    if (req.method === 'DELETE') {
+      const { employeeId } = req.query;
+      if (!employeeId) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const { httpCode, result } = formatApiResponse<EmployeeData>(
+        STATUS_MESSAGE.SUCCESS_DELETE,
+        null
+      );
+      res.status(httpCode).json(result);
     }
-    res.status(200).json({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'delete employee successful',
-      payload: null,
-    });
-  }
-  if (req.method === 'PUT') {
-    const { employeeId } = req.query;
-    const {
-      name,
-      salary,
-      department,
-      start_date: startDate,
-      bonus,
-      salary_payment_mode: salaryPaymentMode,
-      pay_frequency: payFrequency,
-    }: IEmployee = req.body;
-    if (
-      !employeeId ||
-      !name ||
-      !salary ||
-      !department ||
-      !startDate ||
-      !bonus ||
-      !salaryPaymentMode ||
-      !payFrequency
-    ) {
-      res.status(400).json({
-        powerby: 'iSunFA v' + version,
-        success: false,
-        code: '400',
-        message: 'update employee information failed',
-        payload: null,
-      });
-      return;
+    if (req.method === 'PUT') {
+      const { employeeId } = req.query;
+      const {
+        name,
+        salary,
+        department,
+        start_date: startDate,
+        bonus,
+        salary_payment_mode: salaryPaymentMode,
+        pay_frequency: payFrequency,
+      }: IEmployee = req.body;
+      if (
+        !employeeId ||
+        !name ||
+        !salary ||
+        !department ||
+        !startDate ||
+        !bonus ||
+        !salaryPaymentMode ||
+        !payFrequency
+      ) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const { httpCode, result } = formatApiResponse<EmployeeData>(
+        STATUS_MESSAGE.SUCCESS_UPDATE,
+        null
+      );
+      res.status(httpCode).json(result);
     }
-    res.status(200).json({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'update employee information successful',
-      payload: null,
-    });
+  } catch (_error) {
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<EmployeeData>(error.message, {} as EmployeeData);
+    res.status(httpCode).json(result);
   }
 }

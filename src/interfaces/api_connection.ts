@@ -1,43 +1,34 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
+import { IVoucher } from '@/interfaces/voucher';
 
 export type IAPIName =
   | 'SIGN_UP'
   | 'SIGN_IN'
   | 'SIGN_OUT'
   | 'EMAIL'
-  | 'LIST_AUDIT_REPORTS'
-  | 'LIST_ALL_PROJECTS'
-  | 'GET_PROJECTS_STATUS'
-  | 'GET_PROJECTS_VALUE'
-  | 'GET_PERIOD_PROFIT'
-  | 'GET_PROJECT_VOUCHERS'
-  | 'GET_INVOCIE'
-  | 'UPLOAD_INVOCIE'
-  | 'GET_AUDIT_REPORTS'
-  | 'GENERATE_FINANCIAL_REPORT'
-  | 'GET_FINANCIAL_REPORTS_PROGRESS'
-  | 'GET_FINANCIAL_REPORT'
-  | 'GENERATE_ANALYSIS_REPORT'
-  | 'OCR_UPLOAD_INVOICE_PICTURE'
-  | 'OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS'
-  | 'OCR_GET_ANALYZED_RESULT'
-  | 'LIST_ALL_VOUCHERS'
-  | 'VOUCHER_GET_BY_ID'
-  | 'VOUCHER_UPLOAD_INVOICES'
-  | 'VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID'
-  | 'VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID'
+  | 'USER_GET_BY_ID'
+  | 'INVOCIE_GET_BY_ID'
+  | 'INVOCIE_UPLOAD'
+  | 'FINANCIAL_REPORT_GENERATE'
+  | 'FINANCIAL_REPORT_GET_PROGRESS_STATUS'
+  | 'FINANCIAL_REPORT_GET_BY_ID'
+  | 'ANALYSIS_REPORT_GENERATE'
+  | 'ANALYSIS_REPORT_GET_PROGRESS_STATUS'
+  | 'ANALYSIS_REPORT_GET_BY_ID'
   | 'VOUCHER_GENERATE'
-  | 'LIST_ALL_JOURNALS'
-  | 'UPLOAD_JOURNAL'
-  | 'UPLOAD_JOURNAL_DOCUMENT_IMAGE'
-  | 'GET_JOURNAL_PROCESSING_STATUS'
-  | 'GET_PROCESSED_JOURNAL_DATA';
+  | 'VOUCHER_GET_PROGRESS_STATUS'
+  | 'VOUCHER_PREVIEW_GET_BY_ID'
+  | 'VOUCHER_LIST'
+  | 'JOURNAL_GENERATE'
+  | 'JOURNAL_GET_PROGRESS_STATUS'
+  | 'JOURNAL_LIST'
+  | 'JOURNAL_GET_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown } | FormData | IFinancialReportRequest;
+  body?: { [key: string]: unknown } | FormData | IVoucher | IFinancialReportRequest;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };

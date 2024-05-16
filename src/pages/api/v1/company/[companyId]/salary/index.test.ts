@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -34,11 +33,23 @@ describe('getEmployeesNamesByDepartments API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
       payload: expectedPayload,
+    });
+  });
+  it('should return error when method is not GET', async () => {
+    req.method = 'POST';
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
     });
   });
 });

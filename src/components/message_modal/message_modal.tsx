@@ -35,7 +35,6 @@ const MessageModal = ({
     modalVisibilityHandler();
   };
 
-  // ToDo: (20240507 - Julian) warning message (red color)
   const imgStr =
     messageType === MessageType.WARNING
       ? '/icons/warning.svg'
@@ -44,6 +43,7 @@ const MessageModal = ({
         : messageType === MessageType.ERROR
           ? '/icons/error.svg'
           : '/icons/info.svg';
+
   const imgAlt =
     messageType === MessageType.WARNING
       ? 'warning_icon'
@@ -71,7 +71,6 @@ const MessageModal = ({
           ? 'text-lightRed'
           : 'text-navyBlue2';
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isBackBtn = backBtnStr ? (
     <Button
       className="px-16px py-8px"
@@ -122,14 +121,7 @@ const MessageModal = ({
           <div className="text-lightGray5">{displayedContent}</div>
         </div>
         <div className="flex items-center justify-center gap-24px">
-          <Button
-            className="px-16px py-8px"
-            type="button"
-            onClick={modalVisibilityHandler}
-            variant={'tertiaryOutline'}
-          >
-            Cancel
-          </Button>
+          {isBackBtn}
           <Button
             className="px-16px py-8px"
             type="button"
