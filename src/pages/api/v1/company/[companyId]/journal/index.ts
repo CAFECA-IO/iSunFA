@@ -134,8 +134,6 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       const { voucher } = req.body;
-      // eslint-disable-next-line no-console
-      console.log('voucher', voucher, isIVoucher(voucher));
       if (!voucher || !isIVoucher(voucher)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
       }
