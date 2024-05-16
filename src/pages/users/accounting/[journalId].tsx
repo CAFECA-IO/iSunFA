@@ -44,7 +44,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     error,
     success,
     code,
-  } = APIHandler<IJournal>(APIName.GET_PROCESSED_JOURNAL_DATA, {
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
     params: { companyId, journalId },
   });
 

@@ -24,7 +24,7 @@ const FinancialReportSection = () => {
     // code: generatedCode,
     success: generatedSuccess,
   } = APIHandler<IAccountResultStatus>(
-    APIName.GENERATE_FINANCIAL_REPORT,
+    APIName.FINANCIAL_REPORT_GENERATE,
     {
       params: { companyId },
     },
@@ -39,7 +39,7 @@ const FinancialReportSection = () => {
     // code: progressCodee,
     // success: getProgressSuccess,
   } = APIHandler<IAccountResultStatus[]>(
-    APIName.GET_FINANCIAL_REPORTS_PROGRESS,
+    APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
     {
       params: { companyId },
     },
@@ -53,7 +53,7 @@ const FinancialReportSection = () => {
     // code: reportCodee,
     // success: getReportSuccess,
   } = APIHandler<IFinancialReport>(
-    APIName.GET_FINANCIAL_REPORT,
+    APIName.FINANCIAL_REPORT_GET_BY_ID,
     {
       params: { companyId, reportId: 'reportId' },
     },

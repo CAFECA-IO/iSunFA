@@ -1,4 +1,3 @@
-// Info (Murky - 20240514) To Emily, 這邊的payment有更動
 import {
   PaymentPeriodType,
   PaymentStatusType,

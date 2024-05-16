@@ -1,4 +1,3 @@
-// Info (Murky - 20240514) To Emily, IInvoice多了project 和 contract, 要填入project name 和 contract name
 import { EventType, isEventType } from '@/constants/account';
 import { IPayment, isIPayment } from '@/interfaces/payment';
 
@@ -9,10 +8,10 @@ export interface IInvoice {
   paymentReason: string;
   description: string;
   venderOrSupplyer: string;
-  projectId: string;
-  project: string; // Info (Murky - 20240514) To Emily, IInvoice多了project, 要填入project name
-  contractId: string;
-  contract: string; // Info (Murky - 20240514) To Emily, IInvoice多了contract, 要填入contract name
+  projectId: string | null; // Info: TO Murky project id is nullable (20240515 - tzuhan)
+  project: string; // Info: TO Murky if project is null then it will be string 'None' (20240515 - tzuhan)
+  contractId: string | null; // Info: TO Murky contract id is nullable (20240515 - tzuhan)
+  contract: string; // Info: TO Murky if contract is null then it will be string 'None' (20240515 - tzuhan)
   payment: IPayment;
 }
 // Info Murky (20240416): Type Guard
@@ -25,10 +24,10 @@ export function isIInvoice(data: IInvoice): data is IInvoice {
     typeof data.paymentReason === 'string' &&
     typeof data.description === 'string' &&
     typeof data.venderOrSupplyer === 'string' &&
-    typeof data.projectId === 'string' &&
+    (typeof data.projectId === 'string' || data.projectId === null) && // Info: TO Murky project id is nullable (20240515 - tzuhan)
     typeof data.project === 'string' &&
     typeof data.contract === 'string' &&
-    typeof data.contractId === 'string' &&
+    (typeof data.contractId === 'string' || data.projectId === null) && // Info: TO Murky contract id is nullable (20240515 - tzuhan)
     isIPayment(data.payment)
   );
 }

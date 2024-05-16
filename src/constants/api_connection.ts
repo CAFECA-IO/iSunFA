@@ -17,35 +17,23 @@ export enum APIName {
   SIGN_IN = 'SIGN_IN',
   SIGN_OUT = 'SIGN_OUT',
   EMAIL = 'EMAIL',
-  // GET_USER_BY_ID = 'GET_USER_BY_ID',
-  LIST_AUDIT_REPORTS = 'LIST_AUDIT_REPORTS',
-  LIST_ALL_PROJECTS = 'LIST_ALL_PROJECTS',
-  GET_PROJECTS_STATUS = 'GET_PROJECTS_STATUS',
-  GET_PROJECTS_VALUE = 'GET_PROJECTS_VALUE',
-  GET_PERIOD_PROFIT = 'GET_PERIOD_PROFIT',
-  GET_PROJECT_VOUCHERS = 'GET_PROJECT_VOUCHERS',
-  GET_INVOCIE = 'GET_INVOCIE',
-  UPLOAD_INVOCIE = 'UPLOAD_INVOCIE',
-  GET_AUDIT_REPORTS = 'GET_AUDIT_REPORTS',
-  GENERATE_FINANCIAL_REPORT = 'GENERATE_FINANCIAL_REPORT',
-  GET_FINANCIAL_REPORTS_PROGRESS = 'GET_FINANCIAL_REPORTS_PROGRESS',
-  GET_FINANCIAL_REPORT = 'GET_FINANCIAL_REPORT',
-  GENERATE_ANALYSIS_REPORT = 'GENERATE_ANALYSIS_REPORT',
-  OCR_UPLOAD_INVOICE_PICTURE = 'OCR_UPLOAD_INVOICE_PICTURE',
-  OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS = 'OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS',
-  OCR_GET_ANALYZED_RESULT = 'OCR_GET_ANALYZED_RESULT',
-  LIST_ALL_VOUCHERS = 'LIST_ALL_VOUCHERS',
-  VOUCHER_GET_BY_ID = 'VOUCHER_GET_BY_ID',
-  VOUCHER_UPLOAD_INVOICES = 'VOUCHER_UPLOAD_INVOICES',
-  VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID = 'VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID',
-  VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID = 'VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID',
+  USER_GET_BY_ID = 'USER_GET_BY_ID',
+  INVOCIE_GET_BY_ID = 'INVOCIE_GET_BY_ID',
+  INVOCIE_UPLOAD = 'INVOCIE_UPLOAD',
+  FINANCIAL_REPORT_GENERATE = 'FINANCIAL_REPORT_GENERATE',
+  FINANCIAL_REPORT_GET_PROGRESS_STATUS = 'FINANCIAL_REPORT_GET_PROGRESS_STATUS',
+  FINANCIAL_REPORT_GET_BY_ID = 'FINANCIAL_REPORT_GET_BY_ID',
+  ANALYSIS_REPORT_GENERATE = 'ANALYSIS_REPORT_GENERATE',
+  ANALYSIS_REPORT_GET_PROGRESS_STATUS = 'ANALYSIS_REPORT_GET_PROGRESS_STATUS',
+  ANALYSIS_REPORT_GET_BY_ID = 'ANALYSIS_REPORT_GET_BY_ID',
   VOUCHER_GENERATE = 'VOUCHER_GENERATE',
-  LIST_ALL_JOURNALS = 'LIST_ALL_JOURNALS',
-  UPLOAD_JOURNAL = 'UPLOAD_JOURNAL',
-  UPLOAD_JOURNAL_DOCUMENT_IMAGE = 'UPLOAD_JOURNAL_DOCUMENT_IMAGE',
-  GET_JOURNAL_PROCESSING_STATUS = 'GET_JOURNAL_PROCESSING_STATUS',
-  GET_PROCESSED_JOURNAL_DATA = 'GET_PROCESSED_JOURNAL_DATA',
-  // CREATE_INCOME_EXPENSE_JOURNAL = 'CREATE_INCOME_EXPENSE_JOURNAL',
+  VOUCHER_GET_PROGRESS_STATUS = 'VOUCHER_GET_PROGRESS_STATUS',
+  VOUCHER_PREVIEW_GET_BY_ID = 'VOUCHER_PREVIEW_GET_BY_ID',
+  VOUCHER_LIST = 'VOUCHER_LIST',
+  JOURNAL_GENERATE = 'JOURNAL_GENERATE',
+  JOURNAL_GET_PROGRESS_STATUS = 'JOURNAL_GET_PROGRESS_STATUS',
+  JOURNAL_LIST = 'JOURNAL_LIST',
+  JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
 }
 
 export enum APIPath {
@@ -53,36 +41,23 @@ export enum APIPath {
   SIGN_IN = `${apiPrefix}/sign-in`,
   SIGN_OUT = `${apiPrefix}/sign-out`,
   EMAIL = `${apiPrefix}/email`,
-  // GET_USER_BY_ID = `${apiPrefix}/toBeDefined`,
-  LIST_AUDIT_REPORTS = `${apiPrefix}/audit_report`,
-  LIST_ALL_PROJECTS = `${apiPrefix}/toBeDefined`,
-  GET_PROJECTS_STATUS = `${apiPrefix}/company/:companyId/project/:projectId/status`,
-  GET_PROJECTS_VALUE = `${apiPrefix}/toBeDefined`,
-  GET_PERIOD_PROFIT = `${apiPrefix}/toBeDefined`,
-  GET_PROJECT_VOUCHERS = `${apiPrefix}/toBeDefined`,
-  GET_INVOCIE = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
-  GET_INVOCIE_IMAGE = `${apiPrefix}/company/:companyId/invoice/:invoiceId/image`,
-  UPLOAD_INVOCIE = `${apiPrefix}/company/:companyId/invoice`,
-  GET_AUDIT_REPORTS = `${apiPrefix}/toBeDefined`,
-  GENERATE_FINANCIAL_REPORT = `${apiPrefix}/company/:companyId/report_financial`,
-  GET_FINANCIAL_REPORTS_PROGRESS = `${apiPrefix}/company/:companyId/report_financial/status`,
-  GET_FINANCIAL_REPORT = `${apiPrefix}/company/:companyId/report_financial/:reportId`,
-  GENERATE_ANALYSIS_REPORT = `${apiPrefix}/toBeDefined`,
-  OCR_UPLOAD_INVOICE_PICTURE = `${apiPrefix}/toBeDefined`,
-  OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS = `${apiPrefix}/toBeDefined`,
-  OCR_GET_ANALYZED_RESULT = `${apiPrefix}/toBeDefined`,
-  LIST_ALL_VOUCHERS = `${apiPrefix}/company/:companyId/voucher`,
-  VOUCHER_GET_BY_ID = `${apiPrefix}/toBeDefined`,
-  VOUCHER_UPLOAD_INVOICES = `${apiPrefix}/toBeDefined`,
-  VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID = `${apiPrefix}/company/:companyId/voucher/:voucherId/status`,
-  VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
+  USER_GET_BY_ID = `${apiPrefix}/toBeDefined`,
+  INVOCIE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  INVOCIE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
+  FINANCIAL_REPORT_GENERATE = `${apiPrefix}/company/:companyId/report_financial`,
+  FINANCIAL_REPORT_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/report_financial/status`,
+  FINANCIAL_REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report_financial/:reportId`,
+  ANALYSIS_REPORT_GENERATE = `${apiPrefix}/company/:companyId/report_analysis`,
+  ANALYSIS_REPORT_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/report_analysis/status`,
+  ANALYSIS_REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report_analysis/:reportId`,
   VOUCHER_GENERATE = `${apiPrefix}/company/:companyId/voucher`,
-  LIST_ALL_JOURNALS = `${apiPrefix}/company/:companyId/journal`,
-  UPLOAD_JOURNAL = `${apiPrefix}/company/:companyId/journal`,
-  UPLOAD_JOURNAL_DOCUMENT_IMAGE = `${apiPrefix}/toBeDefined`,
-  GET_JOURNAL_PROCESSING_STATUS = `${apiPrefix}/toBeDefined`,
-  GET_PROCESSED_JOURNAL_DATA = `${apiPrefix}/company/:companyId/journal/:journalId`,
-  // CREATE_INCOME_EXPENSE_JOURNAL = `${apiPrefix}/toBeDefined`,
+  VOUCHER_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/voucher/:voucherId/status`,
+  VOUCHER_PREVIEW_GET_BY_ID = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_LIST = `${apiPrefix}/company/:companyId/voucher`,
+  JOURNAL_GENERATE = `${apiPrefix}/company/:companyId/journal`,
+  JOURNAL_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/journal/:journalId/status`,
+  JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
+  JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
@@ -138,10 +113,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.LIST_AUDIT_REPORTS]: {
-    name: APIName.LIST_AUDIT_REPORTS,
+  [APIName.USER_GET_BY_ID]: {
+    name: APIName.USER_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.LIST_AUDIT_REPORTS,
+    path: APIPath.USER_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -149,12 +124,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: true,
+    useWorker: false
   },
-  [APIName.GET_PERIOD_PROFIT]: {
-    name: APIName.GET_PERIOD_PROFIT,
+  [APIName.INVOCIE_GET_BY_ID]: {
+    name: APIName.INVOCIE_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.GET_PERIOD_PROFIT,
+    path: APIPath.INVOCIE_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -162,38 +137,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GET_PROJECT_VOUCHERS]: {
-    name: APIName.GET_PROJECT_VOUCHERS,
-    method: HttpMethod.GET,
-    path: APIPath.GET_PROJECT_VOUCHERS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.GET_INVOCIE]: {
-    name: APIName.GET_INVOCIE,
-    method: HttpMethod.GET,
-    path: APIPath.GET_INVOCIE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.UPLOAD_INVOCIE]: {
-    name: APIName.UPLOAD_INVOCIE,
+  [APIName.INVOCIE_UPLOAD]: {
+    name: APIName.INVOCIE_UPLOAD,
     method: HttpMethod.POST,
-    path: APIPath.UPLOAD_INVOCIE,
+    path: APIPath.INVOCIE_UPLOAD,
     input: {
       header: {},
       body: {},
@@ -201,64 +150,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GET_AUDIT_REPORTS]: {
-    name: APIName.GET_AUDIT_REPORTS,
-    method: HttpMethod.GET,
-    path: APIPath.GET_AUDIT_REPORTS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.LIST_ALL_PROJECTS]: {
-    name: APIName.LIST_ALL_PROJECTS,
-    method: HttpMethod.GET,
-    path: APIPath.LIST_ALL_PROJECTS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.GET_PROJECTS_STATUS]: {
-    name: APIName.GET_PROJECTS_STATUS,
-    method: HttpMethod.GET,
-    path: APIPath.GET_PROJECTS_STATUS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.GET_PROJECTS_VALUE]: {
-    name: APIName.GET_PROJECTS_VALUE,
-    method: HttpMethod.GET,
-    path: APIPath.GET_PROJECTS_VALUE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.GENERATE_FINANCIAL_REPORT]: {
-    name: APIName.GENERATE_FINANCIAL_REPORT,
+  [APIName.FINANCIAL_REPORT_GENERATE]: {
+    name: APIName.FINANCIAL_REPORT_GENERATE,
     method: HttpMethod.POST,
-    path: APIPath.GENERATE_FINANCIAL_REPORT,
+    path: APIPath.FINANCIAL_REPORT_GENERATE,
     input: {
       header: {},
       body: {},
@@ -266,12 +163,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GET_FINANCIAL_REPORTS_PROGRESS]: {
-    name: APIName.GET_FINANCIAL_REPORTS_PROGRESS,
+  [APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS]: {
+    name: APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.GET_FINANCIAL_REPORTS_PROGRESS,
+    path: APIPath.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -279,12 +176,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GET_FINANCIAL_REPORT]: {
-    name: APIName.GENERATE_FINANCIAL_REPORT,
+  [APIName.FINANCIAL_REPORT_GET_BY_ID]: {
+    name: APIName.FINANCIAL_REPORT_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.GENERATE_FINANCIAL_REPORT,
+    path: APIPath.FINANCIAL_REPORT_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -292,12 +189,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GENERATE_ANALYSIS_REPORT]: {
-    name: APIName.GENERATE_ANALYSIS_REPORT,
+  [APIName.ANALYSIS_REPORT_GENERATE]: {
+    name: APIName.ANALYSIS_REPORT_GENERATE,
     method: HttpMethod.POST,
-    path: APIPath.GENERATE_ANALYSIS_REPORT,
+    path: APIPath.ANALYSIS_REPORT_GENERATE,
     input: {
       header: {},
       body: {},
@@ -305,12 +202,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.OCR_UPLOAD_INVOICE_PICTURE]: {
-    name: APIName.OCR_UPLOAD_INVOICE_PICTURE,
+  [APIName.ANALYSIS_REPORT_GET_PROGRESS_STATUS]: {
+    name: APIName.ANALYSIS_REPORT_GET_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.OCR_UPLOAD_INVOICE_PICTURE,
+    path: APIPath.ANALYSIS_REPORT_GET_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -318,12 +215,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS]: {
-    name: APIName.OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS,
+  [APIName.ANALYSIS_REPORT_GET_BY_ID]: {
+    name: APIName.ANALYSIS_REPORT_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.OCR_CHECK_CURRENT_ANALYZING_PROGRESS_STATUS,
+    path: APIPath.ANALYSIS_REPORT_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -331,85 +228,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
-  },
-  [APIName.OCR_GET_ANALYZED_RESULT]: {
-    name: APIName.OCR_GET_ANALYZED_RESULT,
-    method: HttpMethod.GET,
-    path: APIPath.OCR_GET_ANALYZED_RESULT,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.LIST_ALL_VOUCHERS]: {
-    name: APIName.LIST_ALL_VOUCHERS,
-    method: HttpMethod.GET,
-    path: APIPath.LIST_ALL_VOUCHERS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.VOUCHER_GET_BY_ID]: {
-    name: APIName.VOUCHER_GET_BY_ID,
-    method: HttpMethod.GET,
-    path: APIPath.VOUCHER_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.VOUCHER_UPLOAD_INVOICES]: {
-    name: APIName.VOUCHER_UPLOAD_INVOICES,
-    method: HttpMethod.GET,
-    path: APIPath.VOUCHER_UPLOAD_INVOICES,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID]: {
-    name: APIName.VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID,
-    method: HttpMethod.GET,
-    path: APIPath.VOUCHER_GET_PREVIEW_CREATING_PROCESS_STATE_BY_RESULT_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID]: {
-    name: APIName.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
-    method: HttpMethod.GET,
-    path: APIPath.VOUCHER_GET_PREVIEW_VOUCHER_BY_RESULT_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
+    useWorker: false
   },
   [APIName.VOUCHER_GENERATE]: {
     name: APIName.VOUCHER_GENERATE,
@@ -422,12 +241,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.LIST_ALL_JOURNALS]: {
-    name: APIName.LIST_ALL_JOURNALS,
+  [APIName.VOUCHER_GET_PROGRESS_STATUS]: {
+    name: APIName.VOUCHER_GET_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.LIST_ALL_JOURNALS,
+    path: APIPath.VOUCHER_GET_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -435,12 +254,38 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.UPLOAD_JOURNAL]: {
-    name: APIName.UPLOAD_JOURNAL,
+  [APIName.VOUCHER_PREVIEW_GET_BY_ID]: {
+    name: APIName.VOUCHER_PREVIEW_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_PREVIEW_GET_BY_ID,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  [APIName.VOUCHER_LIST]: {
+    name: APIName.VOUCHER_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_LIST,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  [APIName.JOURNAL_GENERATE]: {
+    name: APIName.JOURNAL_GENERATE,
     method: HttpMethod.POST,
-    path: APIPath.UPLOAD_JOURNAL,
+    path: APIPath.JOURNAL_GENERATE,
     input: {
       header: {},
       body: {},
@@ -448,12 +293,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.UPLOAD_JOURNAL_DOCUMENT_IMAGE]: {
-    name: APIName.UPLOAD_JOURNAL_DOCUMENT_IMAGE,
+  [APIName.JOURNAL_GET_PROGRESS_STATUS]: {
+    name: APIName.JOURNAL_GET_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.UPLOAD_JOURNAL_DOCUMENT_IMAGE,
+    path: APIPath.JOURNAL_GET_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -461,12 +306,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GET_JOURNAL_PROCESSING_STATUS]: {
-    name: APIName.GET_JOURNAL_PROCESSING_STATUS,
+  [APIName.JOURNAL_LIST]: {
+    name: APIName.JOURNAL_LIST,
     method: HttpMethod.GET,
-    path: APIPath.GET_JOURNAL_PROCESSING_STATUS,
+    path: APIPath.JOURNAL_LIST,
     input: {
       header: {},
       body: {},
@@ -474,12 +319,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
-  [APIName.GET_PROCESSED_JOURNAL_DATA]: {
-    name: APIName.GET_PROCESSED_JOURNAL_DATA,
+  [APIName.JOURNAL_GET_BY_ID]: {
+    name: APIName.JOURNAL_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.GET_PROCESSED_JOURNAL_DATA,
+    path: APIPath.JOURNAL_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -487,6 +332,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
       query: {},
     },
     output: {},
-    useWorker: false,
-  },
+    useWorker: false
+  }
 };

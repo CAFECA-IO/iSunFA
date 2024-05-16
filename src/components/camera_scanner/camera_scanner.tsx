@@ -36,7 +36,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     success: uploadSuccess,
     code: uploadCode,
   } = APIHandler<IAccountResultStatus[]>(
-    APIName.UPLOAD_INVOCIE,
+    APIName.INVOCIE_UPLOAD,
     {
       params: { companyId },
     },

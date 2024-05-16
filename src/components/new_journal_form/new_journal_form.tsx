@@ -9,25 +9,21 @@ import {
   PaymentPeriodType,
   PaymentStatusType,
   EventType,
-  // EventTypeEnum, Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
+  ProgressStatus,
 } from '@/constants/account';
-
 import { firstCharToUpperCase } from '@/lib/utils/common';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { useGlobalCtx } from '../../contexts/global_context';
-
-// Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
-// origin
-// import { useAccountingCtx, PaymentPeriod, PaymentState } from '../../contexts/accounting_context';
-import { useAccountingCtx } from '../../contexts/accounting_context';
-
-import { IDatePeriod } from '../../interfaces/date_period';
-import { default30DayPeriodInSec, radioButtonStyle } from '../../constants/display';
-import { Button } from '../button/button';
-import Toggle from '../toggle/toggle';
-import ProgressBar from '../progress_bar/progress_bar';
-import { MessageType } from '../../interfaces/message_modal';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import { MessageType } from '@/interfaces/message_modal';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import Toggle from '@/components/toggle/toggle';
+import ProgressBar from '@/components/progress_bar/progress_bar';
+import { Button } from '@/components/button/button';
+import { ToastType } from '@/interfaces/toastify';
+import { IVoucher } from '@/interfaces/voucher';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
 
@@ -39,34 +35,55 @@ const ficSelection: string[] = [
   '006 Taiwan Cooperative Bank',
   '007 First Commercial Bank',
 ];
-const projectSelection: string[] = ['None', 'Project A', 'Project B', 'Project C'];
-const contractSelection: string[] = ['None', 'Contract A', 'Contract B', 'Contract C'];
+// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
+const projectSelection: { id: string | null; name: string }[] = [
+  { id: null, name: 'None' },
+  { id: 'project_a', name: 'Project A' },
+  { id: 'project_b', name: 'Project B' },
+  { id: 'project_c', name: 'Project C' },
+];
+const contractSelection: { id: string | null; name: string }[] = [
+  { id: null, name: 'None' },
+  { id: 'contract_a', name: 'Contract A' },
+  { id: 'contract_b', name: 'Contract B' },
+  { id: 'contract_c', name: 'Contract C' },
+];
 
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
   const {
+    toastHandler,
     messageModalVisibilityHandler,
     messageModalDataHandler,
     confirmModalVisibilityHandler,
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { companyId, ocrResultId, setOcrResultIdHandler, setVoucherIdHandler } = useAccountingCtx();
+  const {
+    companyId,
+    ocrResultId,
+    voucherId,
+    setOcrResultIdHandler,
+    setVoucherIdHandler,
+    setVoucherStatusHandler,
+    setVoucherPreviewHandler
+  } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
     isLoading,
     trigger: getInvoice,
     data: invoiceData,
-  } = APIHandler<IInvoice[]>(APIName.GET_INVOCIE, {
+  } = APIHandler<IInvoice[]>(APIName.INVOCIE_GET_BY_ID, {
     params: { companyId, invoiceId: ocrResultId },
   });
 
   const {
-    trigger: voucherGenerate,
+    trigger: voucherUpload,
     data: result,
-    code: uploadCode,
     success: uploadSuccess,
+    code: uploadCode,
+    error: uploadError,
   } = APIHandler<IAccountResultStatus>(
     APIName.VOUCHER_GENERATE,
     {
@@ -76,6 +93,23 @@ const NewJournalForm = () => {
     false
   );
 
+  const {
+    isLoading: isStatusLoading,
+    trigger: getVoucherStatus,
+    data: status,
+    success: statusSuccess,
+    code: statusCode,
+    error: statusError,
+  } = APIHandler<ProgressStatus>(APIName.VOUCHER_GET_PROGRESS_STATUS, {}, false, false);
+
+  const {
+    trigger: getVoucherPreview,
+    data: preview,
+    success: previewSuccess,
+    code: previewCode,
+    error: previewError,
+  } = APIHandler<IVoucher>(APIName.VOUCHER_PREVIEW_GET_BY_ID, {}, false, false);
+
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
@@ -83,9 +117,6 @@ const NewJournalForm = () => {
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
-  // Origin:
-  // const [selectedEventType, setSelectedEventType] = useState<EventType>(EventTypeEnum.INCOME);
   const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.Income);
 
   const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
@@ -100,22 +131,18 @@ const NewJournalForm = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
-
-  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-  // Origin:
-  // const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriod.AT_ONCE);
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AtOnce);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
-
-  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-  // Origin:
-  // const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentState.UNPAID);
-  const [paymentState, setPaymentState] = useState<PaymentStatusType>(PaymentStatusType.Unpaid);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.Unpaid);
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
-  const [selectedProject, setSelectedProject] = useState<string>(projectSelection[0]);
-  const [selectedContract, setSelectedContract] = useState<string>(contractSelection[0]);
+  const [selectedProject, setSelectedProject] = useState<{ id: string | null; name: string }>(
+    projectSelection[0]
+  );
+  const [selectedContract, setSelectedContract] = useState<{ id: string | null; name: string }>(
+    contractSelection[0]
+  );
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
@@ -260,18 +287,11 @@ const NewJournalForm = () => {
   const feeToggleHandler = () => setFeeToggle(!feeToggle);
 
   // Info: (20240423 - Julian) 處理 radio button 選擇
-  // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType, PaymentPeriod的型別 新的放在account.ts, PaymentState的型別 新的放在account.ts
-  // origin:
-  // const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriod.AT_ONCE);
-  // const installmentClickHandler = () => setPaymentPeriod(PaymentPeriod.INSTALLMENT);
-  // const paidClickHandler = () => setPaymentState(PaymentState.PAID);
-  // const partialPaidClickHandler = () => setPaymentState(PaymentState.PARTIAL_PAID);
-  // const unpaidClickHandler = () => setPaymentState(PaymentState.UNPAID);
   const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriodType.AtOnce);
   const installmentClickHandler = () => setPaymentPeriod(PaymentPeriodType.Installment);
-  const paidClickHandler = () => setPaymentState(PaymentStatusType.Paid);
-  const partialPaidClickHandler = () => setPaymentState(PaymentStatusType.Partial);
-  const unpaidClickHandler = () => setPaymentState(PaymentStatusType.Unpaid);
+  const paidClickHandler = () => setPaymentStatus(PaymentStatusType.Paid);
+  const partialPaidClickHandler = () => setPaymentStatus(PaymentStatusType.Partial);
+  const unpaidClickHandler = () => setPaymentStatus(PaymentStatusType.Unpaid);
 
   //  Info: (20240425 - Julian) 檢查表單內容是否有變動
   const formChangedHandler = () => setFormHasChanged(true);
@@ -279,12 +299,7 @@ const NewJournalForm = () => {
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
-
-    // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
-    // origin:
-    // setSelectedEventType(EventTypeEnum.INCOME);
     setSelectedEventType(EventType.Income);
-
     setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
@@ -294,18 +309,9 @@ const NewJournalForm = () => {
     setSelectedMethod(paymentMethodSelection[0]);
     setSelectedFIC(ficSelection[0]);
     setInputAccountNumber('');
-
-    // Info (Murky - 20240514) To Emily, TO Julian, PaymentPeriod的型別 新的放在account.ts
-    // origin:
-    // setPaymentPeriod(PaymentPeriod.AT_ONCE);
     setPaymentPeriod(PaymentPeriodType.AtOnce);
-
     setInputInstallment(0);
-
-    // Info (Murky - 20240514) To Emily, TO Julian, PaymentState的型別 新的放在account.ts
-    // origin:
-    // setPaymentState(PaymentState.UNPAID);
-    setPaymentState(PaymentStatusType.Unpaid);
+    setPaymentStatus(PaymentStatusType.Unpaid);
     setInputPartialPaid(0);
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
@@ -331,20 +337,17 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    // Info (Murky - 20240514) To Emily, TO Julian, IInvoice 現在要多加 Project和Contract 要放名稱
-    // origin:
-    const invoiceWithPaymentMethod: IInvoice = {
-      invoiceId: ocrResultId,
+    const invoice: IInvoice = {
+      invoiceId: ocrResultId!,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
       description: inputDescription,
       venderOrSupplyer: inputVendor,
-      project: 'To Emily, TO Julian 請修改我', // Info (Murky - 20240514) To Emily, TO Julian, IInvoice 現在要多加 Project和Contract 要放名稱
-      projectId: selectedProject,
-      contract: 'To Emily, TO Julian 請修改我', // Info (Murky - 20240514) To Emily, TO Julian, IInvoice 現在要多加 Project和Contract 要放名稱
-      contractId: selectedContract,
+      project: selectedProject.name,
+      projectId: selectedProject.id,
+      contract: selectedContract.name,
+      contractId: selectedContract.id,
       payment: {
         price: inputTotalPrice,
         hasTax: taxToggle,
@@ -357,29 +360,94 @@ const NewJournalForm = () => {
         isRevenue: true,
         progress: 0,
         paymentPeriod,
-        paymentStatus: paymentState,
+        paymentStatus,
       },
     };
 
-    voucherGenerate({ body: { invoices: [invoiceWithPaymentMethod] } });
+    voucherUpload({ body: { invoices: [invoice] } });
   };
 
   useEffect(() => {
     if (uploadSuccess && result) {
-      // const voucherId = result.resultId;
-      // Info: (20240510 - Julian) 解析 voucherId
-      const results = result.resultId.split(' ');
-      const resultIdIndex = results.lastIndexOf('resultId:');
-      const voucherId = results[resultIdIndex + 1].trim();
-
-      setVoucherIdHandler(voucherId);
-      confirmModalVisibilityHandler();
-    } else {
+      const { resultId, status: s } = result;
+      setVoucherIdHandler(resultId);
+      setVoucherStatusHandler(s);
+    } else if (uploadSuccess === false) {
       // TODO: error handling @Julian (20240510 - tzuhan)
       // eslint-disable-next-line no-console
-      console.error(`Upload journal failed: ${uploadCode}`);
+      console.log(`uploadError: `, uploadError);
+      toastHandler({
+        id: `UploadJournalFailed_${uploadCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Upload journal failed: ${uploadCode}`,
+        closeable: true,
+      });
     }
   }, [uploadSuccess, result]);
+
+  useEffect(() => {
+    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.InProgress)) {
+      setTimeout(
+        () => {
+          getVoucherStatus({
+            params: {
+              companyId,
+              voucherId,
+            },
+          });
+        },
+        statusSuccess === undefined ? 0 : 2000
+      );
+    }
+    if (statusSuccess && status && status !== ProgressStatus.InProgress) {
+      if (voucherId && (status === ProgressStatus.Success || status === ProgressStatus.AlreadyUpload)) {
+        setVoucherStatusHandler(status);
+        getVoucherPreview({
+          params: {
+            companyId,
+            voucherId,
+          },
+        });
+      } else {
+        // TODO: Error handling @Julian (20240514 - Tzuhan)
+        toastHandler({
+          id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
+          type: ToastType.ERROR,
+          content: `ProgressStatus: ${ProgressStatus}`,
+          closeable: true,
+        });
+      }
+    } else if (statusSuccess === false) {
+      // TODO: Error handling @Julian (20240514 - Tzuhan)
+      // eslint-disable-next-line no-console
+      console.log(`status error: ${statusError}`);
+      toastHandler({
+        id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Get voucher status failed: ${statusCode}`,
+        closeable: true,
+      });
+    }
+  }, [voucherId, isStatusLoading, status, statusSuccess, statusCode, statusError]);
+
+  useEffect(() => {
+    if (
+      previewSuccess && preview
+    ) {
+      setVoucherPreviewHandler(preview);
+      confirmModalVisibilityHandler();
+    } else if (previewSuccess === false) {
+      // TODO: Error handling @Julian (20240514 - Tzuhan)
+      // eslint-disable-next-line no-console
+      console.log(`preview error: ${previewError}`);
+      toastHandler({
+        id: `GetVoucherPreviewFailed_${previewCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Get voucher preview failed: ${previewCode}`,
+        closeable: true,
+      });
+    }
+  }, [previewSuccess, preview]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';
@@ -398,20 +466,11 @@ const NewJournalForm = () => {
     // Info: (20240429 - Julian) 檢查手續費是否有填寫
     (!!feeToggle && inputFee === 0) ||
     // Info: (20240429 - Julian) 檢查總價是否有填寫
-    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-    // origin:
-    // (paymentPeriod === PaymentPeriod.INSTALLMENT && inputInstallment === 0) ||
     (paymentPeriod === PaymentPeriodType.Installment && inputInstallment === 0) ||
     // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-    // origin:
-    // (paymentState === PaymentState.PARTIAL_PAID && inputPartialPaid === 0);
-    (paymentState === PaymentStatusType.Partial && inputPartialPaid === 0);
+    (paymentStatus === PaymentStatusType.Partial && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
-  // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
-  // origin
-  // const displayEventDropmenu = Object.values(EventTypeEnum).map((type: EventType) => {
   const displayEventDropmenu = Object.values(EventType).map((type: EventType) => {
     const selectionClickHandler = () => {
       setSelectedEventType(type);
@@ -478,37 +537,41 @@ const NewJournalForm = () => {
     );
   });
 
-  const displayProjectDropmenu = projectSelection.map((project: string) => {
-    const selectionClickHandler = () => {
-      setSelectedProject(project);
-    };
+  const displayProjectDropmenu = projectSelection.map(
+    (project: { id: string | null; name: string }) => {
+      const selectionClickHandler = () => {
+        setSelectedProject(project);
+      };
 
-    return (
-      <li
-        key={project}
-        onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-      >
-        {project}
-      </li>
-    );
-  });
+      return (
+        <li
+          key={project.name}
+          onClick={selectionClickHandler}
+          className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+        >
+          {project.name}
+        </li>
+      );
+    }
+  );
 
-  const displayContractDropmenu = contractSelection.map((contract: string) => {
-    const selectionClickHandler = () => {
-      setSelectedContract(contract);
-    };
+  const displayContractDropmenu = contractSelection.map(
+    (contract: { id: string | null; name: string }) => {
+      const selectionClickHandler = () => {
+        setSelectedContract(contract);
+      };
 
-    return (
-      <li
-        key={contract}
-        onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-      >
-        {contract}
-      </li>
-    );
-  });
+      return (
+        <li
+          key={contract.name}
+          onClick={selectionClickHandler}
+          className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+        >
+          {contract.name}
+        </li>
+      );
+    }
+  );
 
   const displayedBasicInfo = (
     <>
@@ -834,10 +897,6 @@ const NewJournalForm = () => {
                   id="inputAtOnce"
                   name="paymentPeriod"
                   className={radioButtonStyle}
-                  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-                  // Origin:
-                  // checked={paymentPeriod === PaymentPeriod.AT_ONCE}
-                  // eslint-disable-next-line react/jsx-props-no-multi-spaces
                   checked={paymentPeriod === PaymentPeriodType.AtOnce}
                   onChange={atOnceClickHandler}
                 />
@@ -855,21 +914,13 @@ const NewJournalForm = () => {
                     id="inputInstallment"
                     name="paymentPeriod"
                     className={radioButtonStyle}
-                    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-                    // Origin:
-                    // checked={paymentPeriod === PaymentPeriod.INSTALLMENT}
-                    // eslint-disable-next-line react/jsx-props-no-multi-spaces
                     checked={paymentPeriod === PaymentPeriodType.Installment}
-                    // eslint-disable-next-line react/jsx-props-no-multi-spaces
                     onChange={installmentClickHandler}
                   />
                   Installment:
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-                  // Origin:
-                  // className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriod.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                   className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.Installment ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
@@ -878,9 +929,6 @@ const NewJournalForm = () => {
                     name="inputInstallmentTimes"
                     value={inputInstallment}
                     onChange={installmentChangeHandler}
-                    // Info (Murky - 20240514) To Emily, To Julian, PaymentPeriod的型別 新的放在account.ts
-                    // Origin:
-                    // disabled={paymentPeriod !== PaymentPeriod.INSTALLMENT}
                     disabled={paymentPeriod !== PaymentPeriodType.Installment}
                     className="flex-1 bg-transparent px-10px outline-none"
                   />
@@ -902,12 +950,9 @@ const NewJournalForm = () => {
                 <input
                   type="radio"
                   id="inputUnpaid"
-                  name="paymentState"
+                  name="paymentStatus"
                   className={radioButtonStyle}
-                  // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
-                  // Origin:
-                  // checked={paymentState === PaymentState.UNPAID}
-                  checked={paymentState === PaymentStatusType.Unpaid}
+                  checked={paymentStatus === PaymentStatusType.Unpaid}
                   onChange={unpaidClickHandler}
                 />
                 <p>Unpaid</p>
@@ -921,22 +966,16 @@ const NewJournalForm = () => {
                   <input
                     type="radio"
                     id="inputPartialPaid"
-                    name="paymentState"
+                    name="paymentStatus"
                     className={radioButtonStyle}
-                    // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
-                    // Origin:
-                    // checked={paymentState === PaymentState.PARTIAL_PAID}
-                    checked={paymentState === PaymentStatusType.Partial}
+                    checked={paymentStatus === PaymentStatusType.Partial}
                     onChange={partialPaidClickHandler}
                   />
                   <p>Partial Paid:</p>
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
-                  // Origin:
-                  // className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentState.PARTIAL_PAID ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
-                  className={`flex h-46px w-full items-center justify-between ${paymentState === PaymentStatusType.Partial ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.Partial ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputPartialPaidAmount"
@@ -944,10 +983,7 @@ const NewJournalForm = () => {
                     name="inputPartialPaidAmount"
                     value={inputPartialPaid}
                     onChange={partialPaidChangeHandler}
-                    // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
-                    // Origin:
-                    // disabled={paymentState !== PaymentState.PARTIAL_PAID}
-                    disabled={paymentState !== PaymentStatusType.Partial}
+                    disabled={paymentStatus !== PaymentStatusType.Partial}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -967,12 +1003,9 @@ const NewJournalForm = () => {
                 <input
                   type="radio"
                   id="inputPaid"
-                  name="paymentState"
+                  name="paymentStatus"
                   className={radioButtonStyle}
-                  // Info (Murky - 20240514) To Emily, To Julian, PaymentStatus的型別 新的放在account.ts
-                  // Origin:
-                  // checked={paymentState === PaymentState.PAID}
-                  checked={paymentState === PaymentStatusType.Paid}
+                  checked={paymentStatus === PaymentStatusType.Paid}
                   onChange={paidClickHandler}
                 />
                 <p>Paid</p>
@@ -985,9 +1018,6 @@ const NewJournalForm = () => {
   );
 
   const displayedProjectSecondLine =
-    // Info (Murky - 20240514) To Emily, TO Julian, EventTypeEnum已經被整合到EventType
-    // Origin
-    // selectedEventType === EventTypeEnum.INCOME ? (
     selectedEventType === EventType.Income ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
@@ -1050,7 +1080,7 @@ const NewJournalForm = () => {
               <p>Project</p>
             </div>
             <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedProject}</p>
+              <p className="flex-1">{selectedProject.name}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -1076,7 +1106,7 @@ const NewJournalForm = () => {
               <p>Contract</p>
             </div>
             <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedContract}</p>
+              <p className="flex-1">{selectedContract.name}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -1099,51 +1129,62 @@ const NewJournalForm = () => {
   );
 
   return (
-    <form
-      onSubmit={uploadJournalHandler}
-      onChange={formChangedHandler}
-      className="flex flex-col gap-8px"
-    >
-      {/* Info: (20240423 - Julian) Basic Info */}
-      {displayedBasicInfo}
-
-      {/* Info: (20240423 - Julian) Payment */}
-      {displayedPayment}
-
-      {/* Info: (20240423 - Julian) Project */}
-      {displayedProject}
-      {/* ToDo: (20240429 - Julian) Progress Bar */}
-
-      {/* Info: (20240423 - Julian) Buttons */}
-      <div className="ml-auto flex items-center gap-24px">
-        <button
-          id="clearJournalFormBtn"
-          type="button"
-          onClick={clearAllClickHandler}
-          className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+    <div>
+      {status && status === ProgressStatus.InProgress ? (
+        <p>Loading...</p>
+      ) : (
+        <form
+          onSubmit={uploadJournalHandler}
+          onChange={formChangedHandler}
+          className="flex flex-col gap-8px"
         >
-          Clear all
-        </button>
-        <Button id="uploadBtn" type="submit" className="px-16px py-8px" disabled={isUploadDisabled}>
-          <p>Upload</p>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              className="fill-current"
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
-              fill="#996301"
-            />
-          </svg>
-        </Button>
-      </div>
-    </form>
+          {/* Info: (20240423 - Julian) Basic Info */}
+          {displayedBasicInfo}
+
+          {/* Info: (20240423 - Julian) Payment */}
+          {displayedPayment}
+
+          {/* Info: (20240423 - Julian) Project */}
+          {displayedProject}
+          {/* ToDo: (20240429 - Julian) Progress Bar */}
+
+          {/* Info: (20240423 - Julian) Buttons */}
+          <div className="ml-auto flex items-center gap-24px">
+            <button
+              id="clearJournalFormBtn"
+              type="button"
+              onClick={clearAllClickHandler}
+              className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+            >
+              Clear all
+            </button>
+            <Button
+              id="uploadBtn"
+              type="submit"
+              className="px-16px py-8px"
+              disabled={isUploadDisabled}
+            >
+              <p>Upload</p>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  className="fill-current"
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
+                  fill="#996301"
+                />
+              </svg>
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 };
 
