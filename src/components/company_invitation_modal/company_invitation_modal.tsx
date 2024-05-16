@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
 import { IToastify, ToastType } from '@/interfaces/toastify';
@@ -18,17 +18,6 @@ const CompanyInvitationModal = ({
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
 
-  useEffect(() => {
-    // Info: (20240515 - Julian) Verify invitation code
-    const codeRegex = /^[A-Za-z0-9]{8}$/; // ToDo: (20240515 - Julian) code regex
-
-    if (codeInput !== '') {
-      setIsCodeValid(codeRegex.test(codeInput));
-    } else {
-      setIsCodeValid(true);
-    }
-  }, [codeInput]);
-
   const changeCodeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCodeInput(e.target.value);
   };
@@ -42,9 +31,13 @@ const CompanyInvitationModal = ({
   const submitBtnClickHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Info: (20240515 - Julian) Verify invitation code
+    const codeRegex = /^[A-Za-z0-9]{8}$/; // ToDo: (20240515 - Julian) code regex
+    setIsCodeValid(codeRegex.test(codeInput));
+
     // ToDo: (20240515 - Julian) Implement API call to verify invitation code
     // ToDo: (20240515 - Julian) Success handling
-    if (isCodeValid) {
+    if (codeRegex.test(codeInput)) {
       // Info: (20240515 - Julian) Close modal
       setCodeInput('');
       modalVisibilityHandler();
@@ -116,7 +109,7 @@ const CompanyInvitationModal = ({
           >
             Cancel
           </button>
-          <Button type="submit" variant={'tertiary'} disabled={!isCodeValid}>
+          <Button type="submit" variant={'tertiary'}>
             Submit
           </Button>
         </div>

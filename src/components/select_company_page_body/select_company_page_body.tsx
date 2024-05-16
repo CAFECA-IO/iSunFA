@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
@@ -12,7 +13,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 
 const SelectCompanyPageBody = () => {
-  const { signedIn, username, companyList } = useUserCtx();
+  const { signedIn, username, companyList, selectCompany, isSelectCompany } = useUserCtx();
   const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
     useGlobalCtx();
 
@@ -20,6 +21,8 @@ const SelectCompanyPageBody = () => {
   const [searchValue, setSearchValue] = useState<string>('');
   const [filteredCompanyList, setFilteredCompanyList] =
     useState<Record<string, ICompanyItem>>(companyList);
+
+  const router = useRouter();
 
   const {
     targetRef: companyMenuRef,
@@ -34,6 +37,14 @@ const SelectCompanyPageBody = () => {
 
   const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);
+  };
+
+  const selectCompanyClickHandler = () => {
+    selectCompany(selectedCompany);
+
+    if (isSelectCompany) {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    }
   };
 
   useEffect(() => {
@@ -176,6 +187,7 @@ const SelectCompanyPageBody = () => {
                 type="button"
                 disabled={selectedCompany === ''}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
+                onClick={selectCompanyClickHandler}
               >
                 <svg
                   width="20"

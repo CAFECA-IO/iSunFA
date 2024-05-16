@@ -377,12 +377,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [signOutSuccess]);
 
-  useEffect(() => {
-    if (selectedCompany) {
-      setIsSelectCompany(true);
-    }
-  }, [selectedCompany]);
-
   const value = useMemo(
     () => ({
       credential: credentialRef.current,

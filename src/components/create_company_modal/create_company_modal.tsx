@@ -98,7 +98,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       return;
     }
 
-    // ToDo: (20240514 - Julian) create success handler
+    // ToDo: (20240514 - Julian) create success handler: should push to dashboard page
   };
 
   const confirmClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
