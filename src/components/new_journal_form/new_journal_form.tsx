@@ -61,21 +61,27 @@ const NewJournalForm = () => {
 
   const {
     companyId,
-    ocrResultId,
+    invoiceId,
     voucherId,
-    setOcrResultIdHandler,
+    setInvoiceIdHandler,
     setVoucherIdHandler,
-    setVoucherPreviewHandler
+    setVoucherPreviewHandler,
   } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
     isLoading,
-    trigger: getInvoice,
-    data: invoiceData,
-  } = APIHandler<IInvoice[]>(APIName.INVOCIE_GET_BY_ID, {
-    params: { companyId, invoiceId: ocrResultId },
-  });
+    success: getInvoiceSuccess,
+    trigger: getInvoice, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
+    data: invoices,
+  } = APIHandler<IInvoice[]>(
+    APIName.INVOCIE_GET_BY_ID,
+    {
+      params: { companyId, invoiceId },
+    },
+    false,
+    false
+  );
 
   const {
     trigger: voucherUpload,
@@ -91,6 +97,21 @@ const NewJournalForm = () => {
     false,
     false
   );
+
+  useEffect(() => {
+    if (
+      invoiceId !== undefined &&
+      (!invoices || invoices.length === 0)
+      // || (invoiceId !== undefined && invoices && invoices.length > 0 && invoices[0].invoiceId !== invoiceId)
+    ) {
+      setTimeout(
+        () => {
+          getInvoice({ params: { companyId, invoiceId } });
+        },
+        getInvoiceSuccess ? 2000 : 0
+      );
+    }
+  }, [invoiceId, invoices]);
 
   const {
     isLoading: isStatusLoading,
@@ -145,31 +166,28 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
-  // ToDo: (20240508 - Julian) call post API to upload journal data (body: IInvoiceWithPaymentMethod)
-
   useEffect(() => {
-    if (invoiceData && invoiceData.length > 0) {
-      if (invoiceData[0]) {
+    if (invoices && invoices.length > 0) {
+      const invoice = invoices
+        // .filter((inv) => inv.invoiceId === invoiceId)
+        .pop();
+      if (invoice) {
         // Info: (20240506 - Julian) 設定表單的預設值
-        setDatePeriod({ startTimeStamp: invoiceData[0].date, endTimeStamp: invoiceData[0].date });
-        setSelectedEventType(invoiceData[0].eventType);
-        setInputPaymentReason(invoiceData[0].paymentReason);
-        setInputDescription(invoiceData[0].description);
-        setInputVendor(invoiceData[0].venderOrSupplyer);
-        setInputTotalPrice(invoiceData[0].payment.price);
-        setTaxToggle(invoiceData[0].payment.hasTax);
-        setTaxRate(invoiceData[0].payment.taxPercentage);
-        setFeeToggle(invoiceData[0].payment.hasFee);
-        setInputFee(invoiceData[0].payment.fee);
-        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 ocrResultId 重置
-        setOcrResultIdHandler('');
-      } else if (!isLoading) {
-        setTimeout(() => {
-          getInvoice();
-        }, 2000);
+        setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+        setSelectedEventType(invoice.eventType);
+        setInputPaymentReason(invoice.paymentReason);
+        setInputDescription(invoice.description);
+        setInputVendor(invoice.venderOrSupplyer);
+        setInputTotalPrice(invoice.payment.price);
+        setTaxToggle(invoice.payment.hasTax);
+        setTaxRate(invoice.payment.taxPercentage);
+        setFeeToggle(invoice.payment.hasFee);
+        setInputFee(invoice.payment.fee);
+        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
+        setInvoiceIdHandler('');
       }
     }
-  }, [isLoading, invoiceData]);
+  }, [isLoading, invoices]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -337,7 +355,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: ocrResultId!,
+      invoiceId: invoiceId!,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
@@ -398,7 +416,10 @@ const NewJournalForm = () => {
       );
     }
     if (statusSuccess && status && status !== ProgressStatus.InProgress) {
-      if (voucherId && (status === ProgressStatus.Success || status === ProgressStatus.AlreadyUpload)) {
+      if (
+        voucherId &&
+        (status === ProgressStatus.Success || status === ProgressStatus.AlreadyUpload)
+      ) {
         getVoucherPreview({
           params: {
             companyId,
@@ -428,9 +449,7 @@ const NewJournalForm = () => {
   }, [voucherId, isStatusLoading, status, statusSuccess, statusCode, statusError]);
 
   useEffect(() => {
-    if (
-      previewSuccess && preview
-    ) {
+    if (previewSuccess && preview) {
       setVoucherPreviewHandler(preview);
       confirmModalVisibilityHandler();
     } else if (previewSuccess === false) {

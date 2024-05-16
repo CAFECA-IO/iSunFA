@@ -8,7 +8,7 @@ import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { IVoucher } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { checkboxStyle } from '@/constants/display';
@@ -34,12 +34,12 @@ const ConfirmModal = ({
   const { companyId, voucherPreview } = useAccountingCtx();
 
   const {
-    trigger: uploadVoucher,
-    data: result,
+    trigger: uploadJournal,
+    data: journal,
     success: uploadSuccess,
     code: uploadCode,
     error: uploadError,
-  } = APIHandler<IAccountResultStatus>(
+  } = APIHandler<IJournal>(
     APIName.JOURNAL_GENERATE,
     {
       params: { companyId },
@@ -120,7 +120,7 @@ const ConfirmModal = ({
         ],
         lineItems: voucherPreview.lineItems, // TODO: replace with user Input @Julian (20240515 - tzuhan)
       };
-      uploadVoucher({ body: voucher });
+      uploadJournal({ body: { voucher } });
     }
     // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
   };
@@ -130,10 +130,10 @@ const ConfirmModal = ({
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
 
   useEffect(() => {
-    if (uploadSuccess && result) {
+    if (uploadSuccess && journal) {
       modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
       clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${result.resultId}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
     } else {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
       // eslint-disable-next-line no-console

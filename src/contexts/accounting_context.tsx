@@ -39,8 +39,8 @@ interface IAccountingContext {
   // removeTempJournal: (id: string) => void;
 
   companyId: string | undefined;
-  ocrResultId: string | undefined;
-  setOcrResultIdHandler: (id: string | undefined) => void;
+  invoiceId: string | undefined;
+  setInvoiceIdHandler: (id: string | undefined) => void;
   voucherId: string | undefined;
   setVoucherIdHandler: (id: string | undefined) => void;
   voucherPreview: IVoucher | undefined;
@@ -64,8 +64,8 @@ const initialAccountingContext: IAccountingContext = {
   // removeTempJournal: () => {},
 
   companyId: undefined,
-  ocrResultId: undefined,
-  setOcrResultIdHandler: () => { },
+  invoiceId: '1',
+  setInvoiceIdHandler: () => { },
   voucherId: undefined,
   setVoucherIdHandler: () => { },
   voucherPreview: undefined,
@@ -86,7 +86,7 @@ export const AccountingContext = createContext<IAccountingContext>(initialAccoun
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [companyId, setCompanyId] = useState<string | undefined>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
-  const [ocrResultId, setOcrResultId] = useState<string | undefined>('');
+  const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
   const [voucherPreview, setVoucherPreview] = useState<IVoucher | undefined>(undefined);
@@ -190,7 +190,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     changeVoucherStringHandler(0, '', VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
     changeVoucherStringHandler(0, '', VoucherString.PARTICULARS); // Info: (20240503 - Julian) 清空摘要 input
     // Info: 清空欄位資料 @Julian 需要幫忙檢查 (20240515 - Tzuhan)
-    setOcrResultId(undefined);
+    setInvoiceId('');
     setVoucherId(undefined);
     setVoucherStatus(undefined);
     setVoucherPreview(undefined);
@@ -206,7 +206,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
   const setCompanyIdHandler = useCallback((id: string | undefined) => setCompanyId(id), [companyId]);
-  const setOcrResultIdHandler = useCallback((id: string | undefined) => setOcrResultId(id), [ocrResultId]);
+  const setInvoiceIdHandler = useCallback((id: string | undefined) => setInvoiceId(id), [invoiceId]);
   const setVoucherIdHandler = useCallback((id: string | undefined) => setVoucherId(id), [voucherId]);
   const setVoucherPreviewHandler = useCallback((voucher: IVoucher | undefined) => setVoucherPreview(voucher), [voucherPreview]);
 
@@ -257,8 +257,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
       companyId,
       setCompanyIdHandler,
-      ocrResultId,
-      setOcrResultIdHandler,
+      invoiceId,
+      setInvoiceIdHandler,
       voucherId,
       setVoucherIdHandler,
       voucherPreview,
@@ -274,7 +274,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       totalDebit,
       totalCredit,
       companyId,
-      ocrResultId,
+      invoiceId,
       voucherId,
       voucherStatus,
       voucherPreview,
