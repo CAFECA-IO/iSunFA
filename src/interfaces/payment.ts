@@ -3,7 +3,7 @@ import {
   PaymentStatusType,
   isPaymentPeriodType,
   isPaymentStatusType,
-} from '../constants/account';
+} from '@/constants/account';
 
 export interface IPayment {
   isRevenue: boolean; // 是否會創造收入，true是錢會進來，false是錢會出去

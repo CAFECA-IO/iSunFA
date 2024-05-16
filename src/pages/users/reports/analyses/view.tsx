@@ -3,11 +3,11 @@ import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
-import NavBar from '../../../../components/nav_bar/nav_bar';
-import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '../../../../interfaces/report_type';
-import ViewAnalysisSection from '../../../../components/view_analysis_section/view_analysis_section';
-import { ReportLanguagesKey } from '../../../../interfaces/report_language';
+import NavBar from '@/components/nav_bar/nav_bar';
+import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
+import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '@/interfaces/report_type';
+import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;

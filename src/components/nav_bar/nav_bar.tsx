@@ -13,8 +13,11 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
+import { useRouter } from 'next/router';
 
 const NavBar = () => {
+  const router = useRouter();
+
   const { credential: credential, signedIn, signOut, username, isSelectCompany } = useUserCtx();
 
   const burgerButtonStyle =
@@ -55,6 +58,7 @@ const NavBar = () => {
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
     signOut();
+    router.push(ISUNFA_ROUTE.LOGIN);
   };
 
   const displayedAppMenuMobile = (

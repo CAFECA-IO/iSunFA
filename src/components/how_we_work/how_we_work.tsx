@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { TranslateFunction } from '../../interfaces/locale';
+import { TranslateFunction } from '@/interfaces/locale';
 
 const HowWeWork = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');

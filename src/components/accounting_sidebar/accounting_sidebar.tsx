@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FiBookOpen, FiPlusCircle } from 'react-icons/fi';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const AccountingSidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);

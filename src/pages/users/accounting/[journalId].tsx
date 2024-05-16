@@ -12,10 +12,10 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
-import NavBar from '../../../components/nav_bar/nav_bar';
-import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
-import { ISUNFA_ROUTE } from '../../../constants/url';
-import { timestampToString } from '../../../lib/utils/common';
+import NavBar from '@/components/nav_bar/nav_bar';
+import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { timestampToString } from '@/lib/utils/common';
 
 interface IJournalDetailPageProps {
   journalId: string;

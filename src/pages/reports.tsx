@@ -2,12 +2,12 @@ import Head from 'next/head';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '../interfaces/locale';
-import LandingNavBar from '../components/landing_nav_bar/landing_nav_bar';
-import ToggleButton from '../components/toggle_button/toggle_button';
-import DatePicker, { DatePickerType } from '../components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '../constants/display';
-import { IDatePeriod } from '../interfaces/date_period';
+import { ILocale } from '@/interfaces/locale';
+import LandingNavBar from '@/components/landing_nav_bar/landing_nav_bar';
+import ToggleButton from '@/components/toggle_button/toggle_button';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { default30DayPeriodInSec } from '@/constants/display';
+import { IDatePeriod } from '@/interfaces/date_period';
 
 // Info: (20240424 - Liz) Define table data interface
 interface ITableData {

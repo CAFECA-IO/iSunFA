@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { IJournal } from '@/interfaces/journal';
-import CalendarIcon from '../calendar_icon/calendar_icon';
+import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 
 interface IJournalItemProps {
   key: string;

@@ -1,5 +1,5 @@
-import { IFinancialReportRequest } from './report';
-import { IVoucher } from './voucher';
+import { IFinancialReportRequest } from '@/interfaces/report';
+import { IVoucher } from '@/interfaces/voucher';
 
 export type IAPIName =
   | 'SIGN_UP'

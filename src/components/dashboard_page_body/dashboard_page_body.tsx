@@ -1,8 +1,8 @@
 import React from 'react';
-import DashboardBookmark from '../dashboard_bookmark/dashboard_bookmark';
-import { NO_DATA_FOR_DEMO } from '../../constants/display';
-import DashboardWithoutData from '../dashboard_without_data/dashboard_without_data';
-import DashboardWithData from '../dashboard_with_data/dashboard_with_data';
+import DashboardBookmark from '@/components/dashboard_bookmark/dashboard_bookmark';
+import { NO_DATA_FOR_DEMO } from '@/constants/display';
+import DashboardWithoutData from '@/components/dashboard_without_data/dashboard_without_data';
+import DashboardWithData from '@/components/dashboard_with_data/dashboard_with_data';
 
 const DashboardPageBody = () => {
   const pageHeader = (

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IRole } from '@/interfaces/role';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -54,17 +54,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterRole = await prisma.role.findUnique({
-    where: {
-      id: role.id,
-    },
-  });
-  if (afterRole) {
+  try {
     await prisma.role.delete({
       where: {
         id: role.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 

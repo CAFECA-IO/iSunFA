@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ICard } from '@/interfaces/card';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -34,17 +34,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterCard = await prisma.card.findUnique({
-    where: {
-      id: card.id,
-    },
-  });
-  if (afterCard) {
+  try {
     await prisma.card.delete({
       where: {
         id: card.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 

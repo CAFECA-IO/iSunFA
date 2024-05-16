@@ -6,12 +6,12 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { IJournal } from '@/interfaces/journal';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-import JournalList from '../journal_list/journal_list';
-import Pagination from '../pagination/pagination';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { IDatePeriod } from '../../interfaces/date_period';
-import { default30DayPeriodInSec } from '../../constants/display';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import JournalList from '@/components/journal_list/journal_list';
+import Pagination from '@/components/pagination/pagination';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { default30DayPeriodInSec } from '@/constants/display';
 
 const JournalListTab = () => {
   const { companyId } = useAccountingCtx();

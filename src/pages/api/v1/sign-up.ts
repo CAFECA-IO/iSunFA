@@ -1,25 +1,22 @@
-import cookie from 'cookie';
-import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDomains } from '../../../lib/utils/common';
-import { ICredential, IUserAuth } from '../../../interfaces/webauthn';
-import { COOKIE_NAME, DUMMY_CHALLENGE } from '../../../constants/config';
 
-type Data = {
-  payload: null | IUserAuth;
-};
+import { server } from '@passwordless-id/webauthn';
+import prisma from '@/client';
+import { IUser } from '@/interfaces/user';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse, getDomains } from '@/lib/utils/common';
+import { IUserAuth } from '@/interfaces/webauthn';
+import { DUMMY_CHALLENGE } from '@/constants/config';
+import { IResponseData } from '@/interfaces/response_data';
 
-const USERINFO_ARRAY: IUserAuth[] = [];
-const CREDENTIALS_ARRAY: ICredential[] = [];
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IUser>>
+) {
   try {
     if (req.method !== 'POST') {
-      throw new Error('Only POST requests are allowed');
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
-
-    // // eslint-disable-next-line no-console
-    // console.log('req.body in signUp', req.body);
 
     const { registration } = req.body;
 
@@ -39,39 +36,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     )) as IUserAuth;
     const { credential } = registrationParsed;
 
-    USERINFO_ARRAY.push(registrationParsed);
-    CREDENTIALS_ARRAY.push(credential);
-
-    // eslint-disable-next-line no-console
-    console.log('registrationParsed', registrationParsed);
-
-    const expiration = new Date();
-
-    expiration.setHours(expiration.getHours() + 1);
-
-    // res.setHeader(
-    //   'Set-Cookie',
-    //   cookie.serialize(COOKIE_NAME.USER_INFO, JSON.stringify(USERINFO_ARRAY), {
-    //     // httpOnly: true,
-    //     expires: expiration,
-    //     path: '/',
-    //   })
-    // );
-
-    res.setHeader(
-      'Set-Cookie',
-      cookie.serialize(COOKIE_NAME.FIDO2, JSON.stringify(CREDENTIALS_ARRAY), {
-        // httpOnly: true,
-        expires: expiration,
-        path: '/',
-      })
-    );
-
-    res.status(200).json({ payload: registrationParsed });
-  } catch (error) {
-    // TODO: handle authentication error (20240403 - Shirley)
-    // eslint-disable-next-line no-console
-    console.log('error in sign-up', error);
-    res.status(400).json({ payload: null });
+    const createdUser: IUser = await prisma.user.create({
+      data: {
+        name: registrationParsed.username,
+        kycStatus: false,
+        credentialId: credential.id,
+        publicKey: credential.publicKey,
+        algorithm: credential.algorithm,
+      },
+    });
+    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
+    res.status(httpCode).json(result);
+  } catch (_error) {
+    // Handle errors
+    const error = _error as Error;
+    const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
+    res.status(httpCode).json(result);
   }
 }

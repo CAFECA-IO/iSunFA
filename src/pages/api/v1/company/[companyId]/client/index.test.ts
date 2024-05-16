@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import { IClient } from '@/interfaces/client';
 import handler from './index';
 
@@ -57,17 +57,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterClient = await prisma.client.findUnique({
-    where: {
-      id: client.id,
-    },
-  });
-  if (afterClient) {
+  try {
     await prisma.client.delete({
       where: {
         id: client.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 

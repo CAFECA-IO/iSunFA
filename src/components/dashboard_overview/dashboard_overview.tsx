@@ -1,6 +1,6 @@
 import React from 'react';
-import { cn } from '../../lib/utils/common';
-import { DUMMY_DASHBOARD_OVERVIEW } from '../../interfaces/dashboard_overview';
+import { cn } from '@/lib/utils/common';
+import { DUMMY_DASHBOARD_OVERVIEW } from '@/interfaces/dashboard_overview';
 
 const DashboardOverview = () => {
   const dashboardOverview = DUMMY_DASHBOARD_OVERVIEW;

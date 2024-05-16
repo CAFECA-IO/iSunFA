@@ -1,5 +1,5 @@
 import { utils } from '@passwordless-id/webauthn';
-import { ICredential } from '../../interfaces/webauthn';
+import { ICredential } from '@/interfaces/webauthn';
 
 export async function createChallenge(message: string) {
   const ArrayBuffer = utils.toBuffer(message);

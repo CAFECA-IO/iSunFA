@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import prisma from '@/../prisma/client';
+import prisma from '@/client';
 import { IRole } from '@/interfaces/role';
 
 export default async function handler(

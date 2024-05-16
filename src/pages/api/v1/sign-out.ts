@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { COOKIE_NAME } from '../../../constants/config';
+import { COOKIE_NAME } from '@/constants/config';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const cookieName = COOKIE_NAME.FIDO2;

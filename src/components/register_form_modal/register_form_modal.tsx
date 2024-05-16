@@ -1,9 +1,9 @@
 /* eslint-disable */
 import React, { useContext, useEffect, useRef } from 'react';
-import { RegisterFormModalProps } from '../../interfaces/modals';
-import { UserContext, useUserCtx } from '../../contexts/user_context';
-import { Button } from '../button/button';
-import { DEFAULT_DISPLAYED_USER_NAME } from '../../constants/display';
+import { RegisterFormModalProps } from '@/interfaces/modals';
+import { UserContext, useUserCtx } from '@/contexts/user_context';
+import { Button } from '@/components/button/button';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 
 interface IRegisterFormModal {
   isModalVisible: boolean;

@@ -1,22 +1,23 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
+import dynamic from 'next/dynamic';
+import { ApexOptions } from 'apexcharts';
+import { useTranslation } from 'react-i18next';
+
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import {
   MILLISECONDS_IN_A_SECOND,
   MONTH_ABR_LIST,
   default30DayPeriodInSec,
-} from '../../constants/display';
-import dynamic from 'next/dynamic';
-import { ApexOptions } from 'apexcharts';
-import { TranslateFunction } from '../../interfaces/locale';
-import { useTranslation } from 'react-i18next';
-import Tooltip from '../tooltip/tooltip';
-import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
+} from '@/constants/display';
+import { TranslateFunction } from '@/interfaces/locale';
+import Tooltip from '@/components/tooltip/tooltip';
+import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import {
   DUMMY_CATEGORIES,
   DUMMY_START_DATE,
   generateRandomData,
-} from '../../interfaces/project_progress_chart';
+} from '@/interfaces/project_progress_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 

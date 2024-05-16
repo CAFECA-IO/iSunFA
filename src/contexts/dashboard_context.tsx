@@ -1,7 +1,7 @@
 import useStateRef from 'react-usestateref';
 import React, { createContext } from 'react';
-import { BookmarkItem } from '../interfaces/modals';
-import { ISUNFA_ROUTE } from '../constants/url';
+import { BookmarkItem } from '@/interfaces/modals';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;

@@ -1,4 +1,4 @@
-import { Period } from './chart_unit';
+import { Period } from '@/interfaces/chart_unit';
 
 export interface IIncomeExpenseTrendChartData {
   categories: string[];

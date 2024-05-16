@@ -5,14 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 
-import useOuterClick from '../../lib/hooks/use_outer_click';
-
-import { TranslateFunction } from '../../interfaces/locale';
-import { Button } from '../button/button';
-import { cn } from '../../lib/utils/common';
-// import { IS_BUTTON_DISABLED_TEMP } from '../../constants/display';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import version from '../../lib/version';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { TranslateFunction } from '@/interfaces/locale';
+import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils/common';
+// import { IS_BUTTON_DISABLED_TEMP } from '@/constants/display';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import version from '@/lib/version';
 
 const languages = [
   { label: 'EN', code: 'en' },
