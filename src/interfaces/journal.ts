@@ -1,4 +1,4 @@
-import { IVoucher, isIVoucher } from './voucher';
+import { IVoucher, isIVoucher } from '@/interfaces/voucher';
 
 export interface IJournal extends IVoucher {
   id: string;

@@ -9,8 +9,8 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { Button } from '../button/button';
-// import { MessageType } from '../../interfaces/message_modal';
+import { Button } from '@/components/button/button';
+// import { MessageType } from '@/interfaces/message_modal';
 
 // Info: (20240506 - Julian) const
 const width = 320;

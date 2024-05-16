@@ -1,11 +1,11 @@
 /* eslint-disable */
 import Image from 'next/image';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { timestampToString } from '@/lib/utils/common';
 import { RxCross2 } from 'react-icons/rx';
 import { PiShareFat } from 'react-icons/pi';
+import { timestampToString } from '@/lib/utils/common';
 import { IPreviewInvoiceModal } from '@/interfaces/preview_invoice_modal';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 

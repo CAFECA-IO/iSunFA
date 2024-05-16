@@ -1,8 +1,8 @@
 /* eslint-disable */
 import React from 'react';
-import { Button } from '../button/button';
-import { useUserCtx } from '../../contexts/user_context';
-import { useGlobalCtx } from '../../contexts/global_context';
+import { Button } from '@/components/button/button';
+import { useUserCtx } from '@/contexts/user_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import Image from 'next/image';
 
 const LoginPageBody = () => {

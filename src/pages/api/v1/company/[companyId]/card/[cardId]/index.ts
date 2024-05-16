@@ -65,6 +65,9 @@ export default async function handler(
     // Info: (20240419 - Jacky) P010002 - GET /payment/:id
     if (method === 'GET') {
       const card: ICard = await getCardById(cardIdNum);
+      if (!card) {
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
       const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_GET, card);
       res.status(httpCode).json(result);
     } else if (method === 'PUT') {

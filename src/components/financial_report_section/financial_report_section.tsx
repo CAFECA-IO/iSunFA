@@ -7,14 +7,14 @@ import { APIName } from '@/constants/api_connection';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
-import { Button } from '../button/button';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { default30DayPeriodInSec } from '../../constants/display';
-import useOuterClick from '../../lib/hooks/use_outer_click';
-// import { ISUNFA_ROUTE } from '../../constants/url';
-import { FinancialReportTypesKey, FinancialReportTypesMap } from '../../interfaces/report_type';
-import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
-import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
+import { Button } from '@/components/button/button';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { default30DayPeriodInSec } from '@/constants/display';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+// import { ISUNFA_ROUTE } from '@/constants/url';
+import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
+import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
+import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 
 const FinancialReportSection = () => {
   const { companyId } = useAccountingCtx();

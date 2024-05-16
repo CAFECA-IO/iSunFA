@@ -1,7 +1,7 @@
-import { IBalanceSheet, isIBalanceSheet } from './balance_sheet';
-import { ICashFlow, isICashFlow } from './cash_flow';
-import { isStringNumberPair } from './common';
-import { IComprehensiveIncome, isIComprehensiveIncome } from './comprehensive_income';
+import { IBalanceSheet, isIBalanceSheet } from '@/interfaces/balance_sheet';
+import { ICashFlow, isICashFlow } from '@/interfaces/cash_flow';
+import { isStringNumberPair } from '@/interfaces/common';
+import { IComprehensiveIncome, isIComprehensiveIncome } from '@/interfaces/comprehensive_income';
 
 export enum ILifeCycleType {
   introduction = '初創期',

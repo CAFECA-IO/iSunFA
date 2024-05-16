@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { TranslateFunction } from '../../interfaces/locale';
-import { Button } from '../button/button';
-import { cn } from '../../lib/utils/common';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { TranslateFunction } from '@/interfaces/locale';
+import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils/common';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const CTASection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');

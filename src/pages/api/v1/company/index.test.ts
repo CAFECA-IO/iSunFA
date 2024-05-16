@@ -1,18 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import handler from '@/pages/api/v1/company/index';
+import { ICompany } from '@/interfaces/company';
 import prisma from '@/client';
-import { IClient } from '@/interfaces/client';
-import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let client: IClient;
+let company: ICompany;
 
 beforeEach(async () => {
   req = {
     headers: {},
     body: null,
     query: {},
-    method: '',
+    method: 'GET',
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -21,46 +21,21 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  const createdClient = await prisma.client.create({
+  company = await prisma.company.create({
     data: {
-      company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
-        },
-      },
-      favorite: false,
-    },
-    include: {
-      company: {
-        select: {
-          name: true,
-          code: true,
-        },
-      },
+      code: 'COMP123',
+      name: 'Company Name',
+      regional: 'Regional Name',
     },
   });
-  client = {
-    ...createdClient,
-    companyId: createdClient.companyId,
-    companyName: createdClient.company.name,
-    code: createdClient.company.code,
-  };
-  return client;
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.client.delete({
+    await prisma.company.delete({
       where: {
-        id: client.id,
+        id: company.id,
       },
     });
   } catch (error) {
@@ -68,11 +43,13 @@ afterEach(async () => {
   }
 });
 
-describe('Client API Handler Tests', () => {
-  it('should handle GET requests successfully', async () => {
+describe('Company API', () => {
+  it('should return a list of companies when method is GET', async () => {
     req.method = 'GET';
     req.headers.userid = '1';
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -83,24 +60,26 @@ describe('Client API Handler Tests', () => {
         payload: expect.arrayContaining([
           expect.objectContaining({
             id: expect.any(Number),
-            companyId: expect.any(Number),
-            companyName: expect.any(String),
             code: expect.any(String),
-            favorite: expect.any(Boolean),
+            name: expect.any(String),
+            regional: expect.any(String),
           }),
         ]),
       })
     );
   });
 
-  it('should handle POST requests successfully', async () => {
+  it('should create a new company when method is POST and valid data is provided', async () => {
     req.method = 'POST';
     req.headers.userid = '1';
     req.body = {
-      companyId: 1,
-      favorite: false,
+      code: 'COMP123',
+      name: 'Company Name',
+      regional: 'Regional Name',
     };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -110,43 +89,66 @@ describe('Client API Handler Tests', () => {
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
           code: expect.any(String),
-          favorite: expect.any(Boolean),
+          name: expect.any(String),
+          regional: expect.any(String),
         }),
       })
     );
   });
 
-  it('should handle requests without userid header', async () => {
-    req.method = 'GET';
-    delete req.headers.userid;
+  it('should return an error when method is POST and invalid data is provided', async () => {
+    req.method = 'POST';
+    req.headers.userid = '1';
+    req.body = {
+      // missing required fields
+    };
+
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+
+    expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        payload: {},
-        message: expect.stringContaining('Resource not found'),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
       })
     );
   });
 
-  it('should handle requests with unsupported methods', async () => {
+  it('should return an error when method is not allowed', async () => {
     req.method = 'PUT';
     req.headers.userid = '1';
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('405'),
-        payload: {},
-        message: expect.stringContaining('Method not allowed'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+
+  it('should return an error when user ID is not provided', async () => {
+    req.headers = {};
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('404'),
+        message: expect.any(String),
+        payload: expect.any(Object),
       })
     );
   });

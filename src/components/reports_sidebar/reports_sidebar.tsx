@@ -2,9 +2,9 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ISUNFA_ROUTE } from '../../constants/url';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { cn } from '../../lib/utils/common';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { cn } from '@/lib/utils/common';
 
 const ReportsSidebar = () => {
   const router = useRouter();

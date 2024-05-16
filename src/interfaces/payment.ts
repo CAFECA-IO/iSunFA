@@ -1,4 +1,4 @@
-import { PaymentPeriodType } from './account';
+import { PaymentPeriodType } from '@/interfaces/account';
 
 export interface IPayment {
   isRevenue: boolean; // 是否會創造收入，true是錢會進來，false是錢會出去

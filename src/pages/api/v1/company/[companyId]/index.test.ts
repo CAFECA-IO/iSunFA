@@ -1,18 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { IClient } from '@/interfaces/client';
+import { ICompany } from '@/interfaces/company';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let client: IClient;
+let company: ICompany;
 
 beforeEach(async () => {
   req = {
     headers: {},
     body: null,
     query: {},
-    method: '',
+    method: 'GET',
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -21,46 +21,21 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  const createdClient = await prisma.client.create({
+  company = await prisma.company.create({
     data: {
-      company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
-        },
-      },
-      favorite: false,
-    },
-    include: {
-      company: {
-        select: {
-          name: true,
-          code: true,
-        },
-      },
+      code: 'COMP123',
+      name: 'Company Name',
+      regional: 'Regional Name',
     },
   });
-  client = {
-    ...createdClient,
-    companyId: createdClient.companyId,
-    companyName: createdClient.company.name,
-    code: createdClient.company.code,
-  };
-  return client;
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.client.delete({
+    await prisma.company.delete({
       where: {
-        id: client.id,
+        id: company.id,
       },
     });
   } catch (error) {
@@ -68,12 +43,14 @@ afterEach(async () => {
   }
 });
 
-describe('Client API Handler Tests', () => {
-  it('should handle GET requests successfully', async () => {
+describe('handler', () => {
+  it('should handle GET method', async () => {
     req.method = 'GET';
-    req.headers.userid = '1';
-    req.query.clientId = client.id.toString();
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -83,23 +60,20 @@ describe('Client API Handler Tests', () => {
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
           code: expect.any(String),
-          favorite: expect.any(Boolean),
+          name: expect.any(String),
+          regional: expect.any(String),
         }),
       })
     );
   });
 
-  it('should handle PUT requests successfully', async () => {
+  it('should handle PUT method', async () => {
     req.method = 'PUT';
-    req.headers.userid = '1';
-    req.query.clientId = client.id.toString();
-    req.body = {
-      name: 'New Company Name',
-      code: '5678',
-    };
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+    req.body = { code: 'C001', name: 'Company B', regional: 'US' };
+
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -110,20 +84,21 @@ describe('Client API Handler Tests', () => {
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
           code: expect.any(String),
-          favorite: expect.any(Boolean),
+          name: expect.any(String),
+          regional: expect.any(String),
         }),
       })
     );
   });
 
-  it('should handle DELETE requests successfully', async () => {
+  it('should handle DELETE method', async () => {
     req.method = 'DELETE';
-    req.headers.userid = '1';
-    req.query.clientId = client.id.toString();
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -133,61 +108,85 @@ describe('Client API Handler Tests', () => {
         message: expect.any(String),
         payload: expect.objectContaining({
           id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
           code: expect.any(String),
-          favorite: expect.any(Boolean),
+          name: expect.any(String),
+          regional: expect.any(String),
         }),
       })
     );
   });
 
-  it('should handle requests without userid header', async () => {
-    req.method = 'GET';
-    delete req.headers.userid;
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        payload: expect.any(Object),
-        message: expect.any(String),
-      })
-    );
-  });
-
-  it('should handle requests with INVALID_INPUT_PARAMETER', async () => {
-    req.method = 'GET';
-    req.headers.userid = '1';
-    req.query.clientId = '';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        payload: expect.any(Object),
-        message: expect.any(String),
-      })
-    );
-  });
-
-  it('should handle requests with unsupported methods', async () => {
+  it('should handle invalid method', async () => {
     req.method = 'POST';
-    req.headers.userid = '1';
-    req.query.clientId = '1';
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+
     await handler(req, res);
+
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('405'),
-        payload: expect.any(Object),
         message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+
+  it('should handle missing userid header', async () => {
+    req.method = 'GET';
+    req.query = { companyId: '456' };
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('404'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+
+  it('should handle missing companyId query parameter', async () => {
+    req.method = 'GET';
+    req.headers = { userid: '123' };
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+
+  it('should handle invalid input parameters for PUT method', async () => {
+    req.method = 'PUT';
+    req.headers = { userid: '123' };
+    req.query = { companyId: company.id.toString() };
+    req.body = {};
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('422'),
+        message: expect.any(String),
+        payload: expect.any(Object),
       })
     );
   });

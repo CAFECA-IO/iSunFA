@@ -2,16 +2,16 @@
 import { client, utils } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
-import { ICredential, IUserAuth } from '../interfaces/webauthn';
-import { checkFIDO2Cookie, createChallenge } from '../lib/utils/authorization';
-import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '../constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME } from '../constants/display';
-import { ISUNFA_API } from '../constants/url';
-import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
+import { toast as toastify } from 'react-toastify';
+import { ICredential, IUserAuth } from '@/interfaces/webauthn';
+import { checkFIDO2Cookie, createChallenge } from '@/lib/utils/authorization';
+import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { ISUNFA_API } from '@/constants/url';
+import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { toast as toastify } from 'react-toastify';
 import { ICompanyItem } from '@/interfaces/company';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
@@ -353,7 +353,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       name: 'TideBit',
       role: 'Viewer',
       brn: '005',
-      icon: '/entities/tidebit.png',
+      icon: '/entities/tidebit.jpeg',
       isPassedKyc: false,
     },
   };

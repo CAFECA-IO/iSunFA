@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { AccountingStep } from '../../interfaces/stepper_string';
+import { AccountingStep } from '@/interfaces/stepper_string';
 
 interface IAccountingStepperProps {
   step: AccountingStep;

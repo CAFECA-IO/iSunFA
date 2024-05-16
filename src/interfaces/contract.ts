@@ -1,4 +1,4 @@
-import { IPayment } from './payment';
+import { IPayment } from '@/interfaces/payment';
 
 export interface IContract {
   contractId: string;

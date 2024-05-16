@@ -1,9 +1,9 @@
 // /* eslint-disable */
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '../../../interfaces/locale';
-import NavBar from '../../../components/nav_bar/nav_bar';
-import SalarySidebar from '../../../components/salary_sidebar/salary_sidebar';
+import { ILocale } from '@/interfaces/locale';
+import NavBar from '@/components/nav_bar/nav_bar';
+import SalarySidebar from '@/components/salary_sidebar/salary_sidebar';
 
 const SalaryPage = () => {
   return (
