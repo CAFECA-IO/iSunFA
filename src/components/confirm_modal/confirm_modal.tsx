@@ -91,8 +91,6 @@ const ConfirmModal = ({
 
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    // eslint-disable-next-line no-console
-    console.log('confirmHandler, voucherPreview: ', voucherPreview);
     if (voucherPreview) {
       const voucher: IVoucher = {
         voucherIndex: voucherPreview.voucherIndex,
