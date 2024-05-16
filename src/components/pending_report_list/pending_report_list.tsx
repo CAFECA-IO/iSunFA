@@ -67,8 +67,10 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
     }
 
     messageModalDataHandler({
-      title: 'Are you sure you want to delete the process?',
-      content: `It will take 30 - 40 minutes to apply the changes.\n You can apply it again after 30 - 40 minutes.`,
+      title: '',
+      subtitle: 'Are you sure\n you want to delete the process?',
+      content: `It will take 30 - 40 minutes\n 
+      if you want to apply it again.`,
       submitBtnStr: 'Yes, Delete it',
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,

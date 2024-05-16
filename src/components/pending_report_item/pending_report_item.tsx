@@ -92,7 +92,8 @@ const PendingReportItem = ({
     messageModalDataHandler({
       title: '',
       subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes to apply the changes.\n You can apply it again after 30 - 40 minutes.`,
+      content: `It will take 30 - 40 minutes\n 
+      if you want to apply it again.`,
       submitBtnStr: 'Yes, Delete it',
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,

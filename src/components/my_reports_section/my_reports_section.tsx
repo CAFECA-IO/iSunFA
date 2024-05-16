@@ -11,6 +11,7 @@ import {
 } from '@/interfaces/report_item';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
+import Pagination from '../pagination/pagination';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -25,6 +26,7 @@ const MyReportsSection = () => {
   // TODO: in dev (20240513 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pendingDatePickerType, setPendingDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
@@ -33,11 +35,14 @@ const MyReportsSection = () => {
   // TODO: in dev (20240513 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [historyDatePickerType, setHistoryDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
   const isPendingDataLoading = false;
   const isHistoryDataLoading = false;
   const pendingData: IPendingReportItem[] = FIXED_DUMMY_PENDING_REPORT_ITEMS;
   const historyData: IGeneratedReportItem[] = FIXED_DUMMY_GENERATED_REPORT_ITEMS;
+  const pendingTotalPages = 1;
+  const historyTotalPages = 1;
 
   const {
     targetRef: pendingSortMenuRef,
@@ -149,6 +154,14 @@ const MyReportsSection = () => {
     <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
       {' '}
       <PendingReportList reports={pendingData} />
+      <div className="mt-4 flex justify-center">
+        <Pagination
+          currentPage={pendingCurrentPage}
+          setCurrentPage={setPendingCurrentPage}
+          totalPages={pendingTotalPages}
+          pagePrefix="pending"
+        />
+      </div>
     </div>
   ) : (
     // Info: empty icon section (20240513 - Shirley)
@@ -293,6 +306,15 @@ const MyReportsSection = () => {
   ) : historyData.length !== 0 ? (
     <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-0">
       <ReportsHistoryList reports={historyData} />
+
+      <div className="mt-4 flex justify-center">
+        <Pagination
+          currentPage={historyCurrentPage}
+          setCurrentPage={setHistoryCurrentPage}
+          totalPages={historyTotalPages}
+          pagePrefix="history"
+        />
+      </div>
     </div>
   ) : (
     <div className="mt-20 flex w-full items-center justify-center">
