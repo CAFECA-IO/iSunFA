@@ -6,6 +6,7 @@ import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '../loading_svg/loading_svg';
+import { MILLISECONDS_IN_A_SECOND } from '../../constants/display';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;
@@ -85,20 +86,24 @@ const PendingReportItem = ({
   }, [report]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setRemainingTime((prevTime) => {
-        if (prevTime > 0) {
-          return prevTime - 1;
-        }
-        clearInterval(timer);
-        return 0;
-      });
-    }, 1000);
+    let timer: NodeJS.Timeout;
+
+    if (!isPaused) {
+      timer = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime > 0) {
+            return prevTime - 1;
+          }
+          clearInterval(timer);
+          return 0;
+        });
+      }, MILLISECONDS_IN_A_SECOND);
+    }
 
     return () => {
       clearInterval(timer);
     };
-  }, []);
+  }, [isPaused]);
 
   const displayedPauseOrResumeButton = !isPaused ? (
     <Button
@@ -148,7 +153,37 @@ const PendingReportItem = ({
 
   const displayedSpinner = !isPaused ? <LoadingSVG /> : null;
 
-  // if the remaining time has hours, display it
+  const displayedOperationsColumn =
+    remainingTime > 0 ? (
+      <>
+        {/* Info: Pause / Resume (20240514 - Shirley) */}
+        {displayedPauseOrResumeButton}
+        {/* Info: Delete (20240514 - Shirley) */}
+        <Button
+          onClick={deleteClickHandler}
+          variant={'tertiaryBorderless'}
+          className="mr-2 px-0 py-0"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M11.172 1.252h1.661c.534 0 .98 0 1.345.03.38.03.736.098 1.073.27a2.75 2.75 0 011.202 1.201c.172.338.24.694.27 1.074.03.365.03.81.03 1.345v.08h4.25a.75.75 0 010 1.5h-1.25v10.482c0 .813 0 1.468-.043 2-.045.546-.14 1.026-.366 1.47a3.75 3.75 0 01-1.639 1.64c-.444.226-.924.32-1.47.365-.531.043-1.187.043-2 .043H9.771c-.813 0-1.469 0-2-.043-.546-.045-1.026-.14-1.47-.366a3.75 3.75 0 01-1.64-1.639c-.226-.444-.32-.924-.365-1.47-.043-.532-.043-1.187-.043-2V6.752h-1.25a.75.75 0 110-1.5h4.25v-.08c0-.535 0-.98.03-1.345.03-.38.098-.736.27-1.074a2.75 2.75 0 011.201-1.201c.338-.172.694-.24 1.074-.27.365-.03.81-.03 1.345-.03zm-3.17 5.5h-2.25v10.45c0 .852.002 1.447.04 1.91.036.453.106.714.206.911.216.424.56.768.983.984.198.1.459.17.913.207.462.037 1.056.038 1.909.038h4.4c.852 0 1.447 0 1.91-.038.453-.037.714-.107.911-.207a2.25 2.25 0 00.984-.984c.1-.197.17-.458.207-.912.037-.462.038-1.057.038-1.909V6.752H8.003zm7.25-1.5h-6.5v-.05c0-.572.002-.957.026-1.253.023-.287.065-.424.111-.515a1.25 1.25 0 01.546-.546c.091-.046.228-.088.515-.111.296-.024.68-.025 1.253-.025h1.6c.572 0 .957 0 1.252.025.288.023.425.065.515.111.236.12.427.311.547.546.046.091.088.228.111.515.024.296.025.68.025 1.253v.05zm-5.25 5.5a.75.75 0 01.75.75v5a.75.75 0 01-1.5 0v-5a.75.75 0 01.75-.75zm4 0a.75.75 0 01.75.75v5a.75.75 0 01-1.5 0v-5a.75.75 0 01.75-.75z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+        {/* Info: Loading (20240514 - Shirley) */}
+        <div className="">{displayedSpinner}</div>
+      </>
+    ) : null;
+
   const displayedEstimatedTime =
     +remainingData.days > 0 ? (
       <>
@@ -209,34 +244,9 @@ const PendingReportItem = ({
           {displayedEstimatedTime}
         </div>
       </td>
+      {/* Info: Operations (20240514 - Shirley) */}
       <td className="px-16px">
-        <div className="flex items-center">
-          {/* Info: Pause / Resume (20240514 - Shirley) */}
-          {displayedPauseOrResumeButton}
-          {/* Info: Delete (20240514 - Shirley) */}{' '}
-          <Button
-            onClick={deleteClickHandler}
-            variant={'tertiaryBorderless'}
-            className="mr-2 px-0 py-0"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                d="M11.172 1.252h1.661c.534 0 .98 0 1.345.03.38.03.736.098 1.073.27a2.75 2.75 0 011.202 1.201c.172.338.24.694.27 1.074.03.365.03.81.03 1.345v.08h4.25a.75.75 0 010 1.5h-1.25v10.482c0 .813 0 1.468-.043 2-.045.546-.14 1.026-.366 1.47a3.75 3.75 0 01-1.639 1.64c-.444.226-.924.32-1.47.365-.531.043-1.187.043-2 .043H9.771c-.813 0-1.469 0-2-.043-.546-.045-1.026-.14-1.47-.366a3.75 3.75 0 01-1.64-1.639c-.226-.444-.32-.924-.365-1.47-.043-.532-.043-1.187-.043-2V6.752h-1.25a.75.75 0 110-1.5h4.25v-.08c0-.535 0-.98.03-1.345.03-.38.098-.736.27-1.074a2.75 2.75 0 011.201-1.201c.338-.172.694-.24 1.074-.27.365-.03.81-.03 1.345-.03zm-3.17 5.5h-2.25v10.45c0 .852.002 1.447.04 1.91.036.453.106.714.206.911.216.424.56.768.983.984.198.1.459.17.913.207.462.037 1.056.038 1.909.038h4.4c.852 0 1.447 0 1.91-.038.453-.037.714-.107.911-.207a2.25 2.25 0 00.984-.984c.1-.197.17-.458.207-.912.037-.462.038-1.057.038-1.909V6.752H8.003zm7.25-1.5h-6.5v-.05c0-.572.002-.957.026-1.253.023-.287.065-.424.111-.515a1.25 1.25 0 01.546-.546c.091-.046.228-.088.515-.111.296-.024.68-.025 1.253-.025h1.6c.572 0 .957 0 1.252.025.288.023.425.065.515.111.236.12.427.311.547.546.046.091.088.228.111.515.024.296.025.68.025 1.253v.05zm-5.25 5.5a.75.75 0 01.75.75v5a.75.75 0 01-1.5 0v-5a.75.75 0 01.75-.75zm4 0a.75.75 0 01.75.75v5a.75.75 0 01-1.5 0v-5a.75.75 0 01.75-.75z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-          </Button>
-          {/* Info: Loading (20240514 - Shirley) */}
-          <div className="">{displayedSpinner}</div>
-        </div>
+        <div className="flex items-center">{displayedOperationsColumn}</div>
       </td>
     </tr>
   );

@@ -73,7 +73,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713611226,
     period: { startTimestamp: 1683043200, endTimestamp: 1704067200 }, // 2023-05-02 to 2024-01-01
-    remainingSeconds: 25,
+    remainingSeconds: 10,
     paused: false,
     reportType: FinancialReportTypesKey.cash_flow_statement,
   },
@@ -109,7 +109,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Balance Sheet-20240501-1',
     createdTimestamp: 1714508675,
     period: { startTimestamp: 1698374400, endTimestamp: 1714022400 }, // 2023-11-01 to 2024-01-01
-    remainingSeconds: 380,
+    remainingSeconds: 30,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
   },
