@@ -84,8 +84,9 @@ model company {
   imvoices          invoice[]
   companyKYCs       companyKYC[]
   subscriptions     subscription[]
+  invitations       invitation[]
   usersCompanysRoles    userCompanyRole[]
-  companysToDepartments companyDepartment[]
+  companysDepartments companyDepartment[]
 }
 
 model companyKYC {
@@ -187,6 +188,29 @@ model invoice {
   company     company  @relation(fields: [companyId], references: [id])
 }
 
+model invitation {
+  id        Int    @id @default(autoincrement())
+  code      String
+  companyId Int    @map("company_id")
+  roleId    Int    @map("role_id")
+  createdUserId Int @map("created_user_id")
+  hasUsed   Boolean
+  expiredAt Int
+    
+  createdUser user @relation(fields: [createdUserId], references: [id])
+  role      role @relation(fields: [roleId], references: [id])
+  company   company @relation(fields: [companyId], references: [id])
+}
+
+// model invitationRole{
+//   id          Int      @id @default(autoincrement())
+//   invitationId Int
+//   roleId       Int
+
+//   invitation   invitation @relation(fields: [invitationId], references: [id])
+//   role         role @relation(fields: [roleId], references: [id])
+// }
+
 model lineItem {
   id          Int     @id @default(autoincrement())
   account     String
@@ -217,6 +241,7 @@ model role {
   permissions       String[]
 
   usersCompanysRoles    userCompanyRole[]
+  invitations       invitation[]
 
   company          company  @relation(fields: [companyId], references: [id])
 }
@@ -248,6 +273,7 @@ model user {
   algorithm       String
   imageId         String?
 
+  invitations       invitation[]
   userKYCs        userKYC[]
   usersCompanysRoles    userCompanyRole[]
 }
