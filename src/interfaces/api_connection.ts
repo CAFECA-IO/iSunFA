@@ -1,4 +1,4 @@
-import { IFinancialReportRequest } from './report';
+import { IFinancialReportRequest } from '@/interfaces/report';
 
 export type IAPIName =
   | 'SIGN_UP'

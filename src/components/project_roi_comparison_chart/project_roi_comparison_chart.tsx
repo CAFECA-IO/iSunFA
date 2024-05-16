@@ -2,15 +2,15 @@ import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import Tooltip from '../tooltip/tooltip';
-import { ITEMS_PER_PAGE_ON_DASHBOARD, MILLISECONDS_IN_A_SECOND } from '../../constants/display';
-import { getPeriodOfThisMonthInSec } from '../../lib/utils/common';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { Button } from '../button/button';
+import Tooltip from '@/components/tooltip/tooltip';
+import { ITEMS_PER_PAGE_ON_DASHBOARD, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { Button } from '@/components/button/button';
 import {
   DUMMY_START_DATE,
   generateRandomPaginatedData,
-} from '../../interfaces/project_roi_comparison_chart';
+} from '@/interfaces/project_roi_comparison_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -223,7 +223,7 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const displayedDateSection = (
-    <div className="text-neutral-primary my-auto text-xl font-bold leading-5 tracking-normal">
+    <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-neutral-primary">
       {displayedYear}{' '}
       <span className="text-sm font-semibold leading-5 tracking-normal">{displayedDate}</span>{' '}
     </div>

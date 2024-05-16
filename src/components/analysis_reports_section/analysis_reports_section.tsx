@@ -1,20 +1,20 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
-import { Button } from '../button/button';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { default30DayPeriodInSec } from '../../constants/display';
-import useOuterClick from '../../lib/hooks/use_outer_click';
+import { Button } from '@/components/button/button';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { default30DayPeriodInSec } from '@/constants/display';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ISUNFA_ROUTE } from '../../constants/url';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import {
   AnalysisReportTypesKey,
   AnalysisReportTypesMap,
   FinancialReportTypesKey,
   FinancialReportTypesMap,
-} from '../../interfaces/report_type';
-import { ReportLanguagesKey, ReportLanguagesMap } from '../../interfaces/report_language';
-import { DUMMY_PROJECTS_MAP } from '../../interfaces/report_project';
+} from '@/interfaces/report_type';
+import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
+import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 
 const AnalysisReportSection = () => {
   const [period, setPeriod] = useState(default30DayPeriodInSec);

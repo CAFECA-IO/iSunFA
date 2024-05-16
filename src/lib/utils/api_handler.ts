@@ -1,7 +1,7 @@
 import { APIName, APIConfig } from '@/constants/api_connection';
 import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
-import useAPIWorker from '../hooks/use_api_worker';
-import useAPI from '../hooks/use_api';
+import useAPIWorker from '@/lib/hooks/use_api_worker';
+import useAPI from '@/lib/hooks/use_api';
 
 function checkInput(apiConfig: IAPIConfig, input: IAPIInput) {
   // TODO: check if params match the input schema (20240504 - Luphia)

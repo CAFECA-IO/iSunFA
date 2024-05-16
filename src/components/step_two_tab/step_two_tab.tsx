@@ -1,4 +1,4 @@
-import NewJournalForm from '../new_journal_form/new_journal_form';
+import NewJournalForm from '@/components/new_journal_form/new_journal_form';
 
 const StepTwoTab = () => {
   return (

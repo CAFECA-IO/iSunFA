@@ -4,8 +4,8 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import SelectCompanyPageBody from '@/components/select_company_page_body/select_company_page_body';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ToastId } from '@/constants/toast_id';
-import NavBar from '../../components/nav_bar/nav_bar';
-import { ILocale } from '../../interfaces/locale';
+import NavBar from '@/components/nav_bar/nav_bar';
+import { ILocale } from '@/interfaces/locale';
 
 const SelectCompanyPage = () => {
   const { eliminateToast } = useGlobalCtx();

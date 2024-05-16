@@ -1,8 +1,8 @@
 /* eslint-disable */
 
 import React from 'react';
-import { Button } from '../button/button';
 import Image from 'next/image';
+import { Button } from '@/components/button/button';
 
 interface IPasskeySupportModal {
   isModalVisible: boolean;

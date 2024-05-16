@@ -1,5 +1,5 @@
 import { timestampToString } from '@/lib/utils/common';
-import { FinancialReportTypesKey } from './report_type';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
 export interface IBasicReportItem {
   id: string;

@@ -1,6 +1,6 @@
-import { IAccountResultStatus } from './accounting_account';
-import { ReportLanguagesKey } from './report_language';
-import { AnalysisReportTypesKey, FinancialReportTypesKey } from './report_type';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
+import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
 
 export interface IAnalysisReportRequest {
   project_id: string;

@@ -1,8 +1,7 @@
-/* eslint-disable */
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
-import { Button } from '../button/button';
-import { IMessageModal, MessageType } from '../../interfaces/message_modal';
+import { Button } from '@/components/button/button';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface IMessageModalProps {
   isModalVisible: boolean;
@@ -28,7 +27,7 @@ const MessageModal = ({
   } = messageModalData;
 
   // Info: (20240514 - Julian) 如果沒有 backBtnFunction，則預設為關閉 modal
-  const backBtnClickHandler = backBtnFunction ? backBtnFunction : modalVisibilityHandler;
+  const backBtnClickHandler = backBtnFunction || modalVisibilityHandler;
 
   // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {
@@ -72,6 +71,7 @@ const MessageModal = ({
           ? 'text-lightRed'
           : 'text-navyBlue2';
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isBackBtn = backBtnStr ? (
     <Button
       className="px-16px py-8px"
@@ -84,6 +84,7 @@ const MessageModal = ({
   ) : null;
 
   const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
+    // eslint-disable-next-line react/no-array-index-key
     <div key={index}>
       {line}
       {index < subtitle.split('\n').length - 1 && <br />}
@@ -92,6 +93,7 @@ const MessageModal = ({
 
   // Info: 換行處理 (20240515 - Shirley)
   const displayedContent = content.split('\n').map((line, index) => (
+    // eslint-disable-next-line react/no-array-index-key
     <div key={index} className="-mt-5 mb-5">
       {line}
       {index < content.split('\n').length - 1}
@@ -99,7 +101,7 @@ const MessageModal = ({
   ));
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div
         className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-white px-32px py-16px`}
       >

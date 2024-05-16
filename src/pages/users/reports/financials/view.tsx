@@ -4,14 +4,11 @@ import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React from 'react';
-import NavBar from '../../../../components/nav_bar/nav_bar';
-import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import ViewFinancialSection from '../../../../components/view_financial_section/view_financial_section';
-import {
-  FinancialReportTypesKey,
-  FinancialReportTypesMap,
-} from '../../../../interfaces/report_type';
-import { ReportLanguagesKey } from '../../../../interfaces/report_language';
+import NavBar from '@/components/nav_bar/nav_bar';
+import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
+import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
+import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 interface IServerSideProps {
   reportId: string;
