@@ -164,8 +164,4 @@ const Pagination = ({
   );
 };
 
-Pagination.defaultProps = {
-  pagePrefix: 'page',
-};
-
 export default Pagination;

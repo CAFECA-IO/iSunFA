@@ -34,26 +34,24 @@ model asset {
 }
 
 model auditReport {
-  id                Int      @id @default(autoincrement())
-  companyId         Int      @map("company_id")
-  informationYear   String
+  id                  Int     @id @default(autoincrement())
+  companyId           Int     @map("company_id")
+  informationYear     String
   detailedInformation String
-  creditRating      String
-  dateOfUpload      Int
-  link              String
-
-  company           company  @relation(fields: [companyId], references: [id])
+  creditRating        String
+  link                String
+  dateOfUpload        Int
+  company             company @relation(fields: [companyId], references: [id])
 }
 
 model card {
-  id          Int   @id @default(autoincrement())
-  type        String
-  no          String
-  expireYear  String
-  expireMonth String
-  cvc         String
-  name        String
-
+  id            Int            @id @default(autoincrement())
+  type          String
+  no            String
+  expireYear    String
+  expireMonth   String
+  cvc           String
+  name          String
   subscriptions subscription[]
 }
 
@@ -114,10 +112,9 @@ model companyKYC {
 }
 
 model companyDepartment {
-  id           Int      @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   companyId    Int
   departmentId Int
-
   company      company    @relation(fields: [companyId], references: [id])
   department   department @relation(fields: [departmentId], references: [id])
 
@@ -125,67 +122,61 @@ model companyDepartment {
 }
 
 model contract {
-  id          Int      @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   contractName String
-  projectId    Int      @map("project_id")
+  projectId    Int     @map("project_id")
   signatory    String
   status       String
   payment      String
+  progress     String
   startDate    Int
   endDate      Int
-  progress     String
-
-  project      project  @relation(fields: [projectId], references: [id])
+  project      project @relation(fields: [projectId], references: [id])
 }
 
 model department {
-  id         Int      @id @default(autoincrement())
-  name       String
-
-  employees  employee[]
+  id                  Int                 @id @default(autoincrement())
+  name                String
   companyToDepartment companyDepartment[]
+  employees           employee[]
 }
 
 model employee {
-  id                Int      @id @default(autoincrement())
-  name              String
-  departmentId      Int      @map("department_id")
-  companyId         Int      @map("company_id")
-  salary            Int
-  insurancePayment  String
-  bonus             String
-  salaryPayMode     String
-  payFrequency      String
-  startDate         Int
-  endDate           Int
-
+  id                 Int               @id @default(autoincrement())
+  name               String
+  departmentId       Int               @map("department_id")
+  companyId          Int               @map("company_id")
+  salary             Int
+  insurancePayment   String
+  bonus              String
+  salaryPayMode      String
+  payFrequency       String
+  startDate          Int
+  endDate            Int
+  company            company           @relation(fields: [companyId], references: [id])
+  department         department        @relation(fields: [departmentId], references: [id])
   employeeToProjects employeeProject[]
-
-  department        department @relation(fields: [departmentId], references: [id])
-  company           company    @relation(fields: [companyId], references: [id])
 }
 
 model employeeProject {
-  id          Int      @id @default(autoincrement())
-  employeeId  Int
-  projectId   Int
-
-  employee    employee @relation(fields: [employeeId], references: [id])
-  project     project  @relation(fields: [projectId], references: [id])
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  projectId  Int
+  employee   employee @relation(fields: [employeeId], references: [id])
+  project    project  @relation(fields: [projectId], references: [id])
 
   @@map("employee_project")
 }
 
 model invoice {
-  id          Int      @id @default(autoincrement())
-  companyId   Int      @map("company_id")
+  id          Int     @id @default(autoincrement())
+  companyId   Int     @map("company_id")
   invoiceNo   String
-  invoiceDate Int
-  dueDate     Int
   status      String
   totalAmount String
-
-  company     company  @relation(fields: [companyId], references: [id])
+  invoiceDate Int
+  dueDate     Int
+  company     company @relation(fields: [companyId], references: [id])
 }
 
 model invitation {
@@ -222,15 +213,14 @@ model lineItem {
 }
 
 model project {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  startDate   Int
-  endDate     Int
-  status      String
-
-  assets            asset[]
-  contracts   contract[]
+  id                  Int               @id @default(autoincrement())
+  name                String
+  description         String
+  status              String
+  startDate           Int
+  endDate             Int
+  assets              asset[]
+  contracts           contract[]
   employeesToProjects employeeProject[]
 }
 
@@ -247,18 +237,17 @@ model role {
 }
 
 model subscription {
-  id          Int   @id @default(autoincrement())
-  companyId   Int      @map("company_id")
-  plan        String
-  cardId      Int      @map("card_id")
-  price       String
-  autoRenew   Boolean
-  startDate   Int 
-  expireDate  Int 
-  status      String
-
-  company     company  @relation(fields: [companyId], references: [id])
-  card        card     @relation(fields: [cardId], references: [id])
+  id         Int     @id @default(autoincrement())
+  companyId  Int     @map("company_id")
+  plan       String
+  price      String
+  autoRenew  Boolean
+  status     String
+  cardId     Int     @map("card_id")
+  startDate  Int
+  expireDate Int
+  card       card    @relation(fields: [cardId], references: [id])
+  company    company @relation(fields: [companyId], references: [id])
 }
 
 model user {
@@ -302,15 +291,14 @@ model userKYC {
 }
 
 model userCompanyRole {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  companyId  Int
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  companyId Int
   roleId    Int
   startDate Int
-
-  user       user    @relation(fields: [userId], references: [id])
-  company    company @relation(fields: [companyId], references: [id])
-  role      role @relation(fields: [roleId], references: [id])
+  company   company @relation(fields: [companyId], references: [id])
+  role      role    @relation(fields: [roleId], references: [id])
+  user      user    @relation(fields: [userId], references: [id])
 
   @@map("user_company_role")
 }

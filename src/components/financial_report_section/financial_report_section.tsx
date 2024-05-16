@@ -1,7 +1,6 @@
 /* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-// import Link from 'next/link';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -11,17 +10,22 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-// import { ISUNFA_ROUTE } from '@/constants/url';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 
 const FinancialReportSection = () => {
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
     trigger: generateFinancialReport,
-    data: generatedResult,
-    // code: generatedCode,
+    // data: generatedResult,
+    // error: generatedError,
+    code: generatedCode,
+    isLoading: generatedLoading,
     success: generatedSuccess,
   } = APIHandler<IAccountResultStatus>(
     APIName.FINANCIAL_REPORT_GENERATE,
@@ -123,7 +127,7 @@ const FinancialReportSection = () => {
 
   // const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
-  const genereateReportHandler = () => {
+  const generateReportHandler = () => {
     const body: IFinancialReportRequest = {
       project_id: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
       type: selectedReportType,
@@ -131,6 +135,8 @@ const FinancialReportSection = () => {
       start_date: new Date(period.startTimeStamp),
       end_date: new Date(period.endTimeStamp),
     };
+
+    console.log('generateReportHandler called', body);
 
     generateFinancialReport({
       body,
@@ -153,6 +159,34 @@ const FinancialReportSection = () => {
       setSearchQuery('');
     }
   }, [isProjectMenuOpen]);
+
+  useEffect(() => {
+    if (generatedCode && !generatedLoading) {
+      if (generatedSuccess) {
+        messageModalDataHandler({
+          title: '',
+          subtitle: 'We received your application',
+          content: `It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later.`,
+          submitBtnStr: 'Close',
+          submitBtnFunction: () => {},
+          messageType: MessageType.SUCCESS,
+        });
+        messageModalVisibilityHandler();
+      } else {
+        console.log('failed result', generatedCode);
+
+        messageModalDataHandler({
+          title: '',
+          subtitle: 'Failed',
+          content: `We can’t generate the report you applied for, please change the selections and try again.`,
+          submitBtnStr: 'Try again',
+          submitBtnFunction: () => {},
+          messageType: MessageType.ERROR,
+        });
+        messageModalVisibilityHandler();
+      }
+    }
+  }, [generatedSuccess, generatedLoading]);
 
   const displayedProjectMenu = (
     <div ref={projectMenuRef} className="relative flex w-full">
@@ -389,18 +423,17 @@ const FinancialReportSection = () => {
     </div>
   );
 
-  useEffect(() => {
-    // TODO: 這邊要根據新的 UI 規格來設計，目前先用 console.log 來測試 @Shirley (20240513 - tzuhan)
-    console.log('generatedResult', generatedResult);
-  }, [generatedSuccess]);
-
-  const displayedButtonOrLink =
-    !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
-      <Button
-        className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
-        onClick={genereateReportHandler}
-      >
-        {/* <Link href={targetedReportViewLink}> */}
+  const displayedButtonOrLink = (
+    <Button
+      disabled={
+        generatedLoading || !period.endTimeStamp || !selectedLanguage.id || !selectedReportType
+      }
+      onClick={generateReportHandler}
+      className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+    >
+      {generatedLoading ? (
+        <LoadingSVG />
+      ) : (
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
           <div className="my-auto flex items-center justify-center">
@@ -423,38 +456,9 @@ const FinancialReportSection = () => {
             </svg>
           </div>
         </div>
-        {/* </Link> */}
-      </Button>
-    ) : (
-      <Button
-        // href={targetedReportViewLink}
-        onClick={genereateReportHandler}
-        className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
-      >
-        <div className="flex gap-1">
-          <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
-          <div className="my-auto flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="17"
-              height="16"
-              fill="none"
-              viewBox="0 0 17 16"
-            >
-              <g>
-                <path
-                  className="fill-current"
-                  fill="none"
-                  fillRule="evenodd"
-                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </g>
-            </svg>
-          </div>
-        </div>
-      </Button>
-    );
+      )}
+    </Button>
+  );
 
   return (
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">

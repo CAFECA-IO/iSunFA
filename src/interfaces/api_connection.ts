@@ -22,7 +22,8 @@ export type IAPIName =
   | 'JOURNAL_GENERATE'
   | 'JOURNAL_GET_PROGRESS_STATUS'
   | 'JOURNAL_LIST'
-  | 'JOURNAL_GET_BY_ID';
+  | 'JOURNAL_GET_BY_ID'
+  | 'GET_JOURNAL_PROCESSING_STATUS';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
