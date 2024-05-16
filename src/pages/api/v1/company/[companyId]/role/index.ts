@@ -44,7 +44,7 @@ export default async function handler(
           name,
           company: {
             connect: {
-              id: 1,
+              id: 3,
             },
           },
           permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
