@@ -1,4 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucher } from '@/interfaces/voucher';
@@ -15,7 +16,7 @@ export const journalArray: IJournal[] = [
     metadatas: [
       {
         date: 1713139200000,
-        voucherType: 'expense',
+        voucherType: VoucherType.Expense,
         companyId: '1',
         companyName: '文中資訊股份有限公司',
         description:
@@ -33,10 +34,10 @@ export const journalArray: IJournal[] = [
           hasFee: false,
           fee: 0,
           paymentMethod: 'transfer',
-          paymentPeriod: 'atOnce',
+          paymentPeriod: PaymentPeriodType.AtOnce,
           installmentPeriod: 0,
           paymentAlreadyDone: 0,
-          paymentStatus: 'unpaid',
+          paymentStatus: PaymentStatusType.Unpaid,
           progress: 0,
         },
       },
@@ -69,7 +70,7 @@ export const journalArray: IJournal[] = [
     metadatas: [
       {
         date: 1713139200000,
-        voucherType: 'expense',
+        voucherType: VoucherType.Expense,
         companyId: '1',
         companyName: '文中資訊股份有限公司',
         description:
@@ -87,10 +88,10 @@ export const journalArray: IJournal[] = [
           hasFee: false,
           fee: 0,
           paymentMethod: 'transfer',
-          paymentPeriod: 'atOnce',
+          paymentPeriod: PaymentPeriodType.AtOnce,
           installmentPeriod: 0,
           paymentAlreadyDone: 0,
-          paymentStatus: 'unpaid',
+          paymentStatus: PaymentStatusType.Unpaid,
           progress: 0,
         },
       },

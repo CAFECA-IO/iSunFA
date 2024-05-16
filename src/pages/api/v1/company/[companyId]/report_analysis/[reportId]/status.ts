@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AccountProgressStatus } from '@/interfaces/account';
+import { ProgressStatus } from '@/constants/account';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -8,7 +8,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<AccountProgressStatus>>
+  res: NextApiResponse<IResponseData<ProgressStatus>>
 ) {
   try {
     const { reportId } = req.query;
@@ -28,9 +28,9 @@ export default async function handler(
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
-        const resultJson: AccountProgressStatus = (await fetchResult.json()).payload;
+        const resultJson: ProgressStatus = (await fetchResult.json()).payload;
 
-        const { httpCode, result } = formatApiResponse<AccountProgressStatus>(
+        const { httpCode, result } = formatApiResponse<ProgressStatus>(
           STATUS_MESSAGE.SUCCESS_GET,
           resultJson
         );
@@ -43,9 +43,9 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<AccountProgressStatus>(
+    const { httpCode, result } = formatApiResponse<ProgressStatus>(
       error.message,
-      {} as AccountProgressStatus
+      {} as ProgressStatus
     );
     res.status(httpCode).json(result);
   }

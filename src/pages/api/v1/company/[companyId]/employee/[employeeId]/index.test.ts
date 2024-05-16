@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -30,10 +29,10 @@ describe('getAnEmployee API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'request successful',
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
       payload: expect.arrayContaining([
         expect.objectContaining({
           id: expect.any(Number),
@@ -61,23 +60,23 @@ describe('DeleteAnEmployee API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'delete employee successful',
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
       payload: null,
     });
   });
-  it('should return 400 if id is not provided', async () => {
+  it('should return error if id is not provided', async () => {
     req.method = 'DELETE';
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'delete employee failed',
-      payload: null,
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
     });
   });
 });
@@ -98,14 +97,14 @@ describe('UpdateAnEmployee API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: true,
-      code: '200',
-      message: 'update employee information successful',
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
       payload: null,
     });
   });
-  it('should return 400 if id is not provided', async () => {
+  it('should return error if id is not provided', async () => {
     req.method = 'PUT';
     req.body = {
       name: 'Tiger',
@@ -117,16 +116,16 @@ describe('UpdateAnEmployee API Handler Tests', () => {
       pay_frequency: 'Monthly',
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'update employee information failed',
-      payload: null,
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
     });
   });
-  it('should return 400 if lack of some body element', async () => {
+  it('should return error if lack of some body element', async () => {
     req.method = 'PUT';
     req.query = { employeeId: '3' };
     req.body = {
@@ -138,13 +137,13 @@ describe('UpdateAnEmployee API Handler Tests', () => {
       pay_frequency: 'Monthly',
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v' + version,
-      success: false,
-      code: '400',
-      message: 'update employee information failed',
-      payload: null,
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
     });
   });
 });

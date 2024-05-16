@@ -1,4 +1,4 @@
-import { ProgressStatus, isProgressStatus } from '@/interfaces/common';
+import { ProgressStatus, isProgressStatus } from '@/constants/account';
 
 export interface IAccountingAccount {
   id: number;
