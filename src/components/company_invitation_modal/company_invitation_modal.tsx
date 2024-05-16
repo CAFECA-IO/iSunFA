@@ -1,8 +1,11 @@
+/* eslint-disable */
 import React, { useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
 import { IToastify, ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface ICompanyInvitationModal {
   isModalVisible: boolean;
@@ -17,6 +20,8 @@ const CompanyInvitationModal = ({
 }: ICompanyInvitationModal) => {
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
+
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const changeCodeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCodeInput(e.target.value);
@@ -35,27 +40,39 @@ const CompanyInvitationModal = ({
     const codeRegex = /^[A-Za-z0-9]{8}$/; // ToDo: (20240515 - Julian) code regex
     setIsCodeValid(codeRegex.test(codeInput));
 
-    // ToDo: (20240515 - Julian) Implement API call to verify invitation code
-    // ToDo: (20240515 - Julian) Success handling
+    const apiResponse = false; // ToDo: (20240515 - Julian) Implement API call to verify invitation code
+
+    // Info: (20240515 - Julian) Check if the code is valid
     if (codeRegex.test(codeInput)) {
-      // Info: (20240515 - Julian) Close modal
-      setCodeInput('');
-      modalVisibilityHandler();
-      // Info: (20240515 - Julian) Toastify
-      const defaultCompanyName = 'ISUNONE';
-      toastHandler({
-        id: ToastId.INVITATION_SUCCESS,
-        type: ToastType.SUCCESS,
-        content: (
-          <p>
-            Congratulations! You&apos;ve successfully joined the{' '}
-            <span className="font-semibold">{defaultCompanyName}</span> team!
-          </p>
-        ),
-        closeable: true,
-      });
-    } else {
-      // ToDo: (20240515 - Julian) Error handling
+      if (apiResponse) {
+        // Info: (20240515 - Julian) Close modal
+        setCodeInput('');
+        modalVisibilityHandler();
+        // Info: (20240515 - Julian) Toastify
+        const defaultCompanyName = 'ISUNONE';
+        toastHandler({
+          id: ToastId.INVITATION_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: (
+            <p>
+              Congratulations! You&apos;ve successfully joined the{' '}
+              <span className="font-semibold">{defaultCompanyName}</span> team!
+            </p>
+          ),
+          closeable: true,
+        });
+      } else {
+        // Info: (20240516 - Julian) Error handling
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Invitation Code Expiry',
+          subMsg: 'Oops! This verification code has expired.',
+          content: 'Please verify again or contact the company administrator.',
+          submitBtnStr: 'Close',
+          submitBtnFunction: messageModalVisibilityHandler,
+        });
+        messageModalVisibilityHandler();
+      }
     }
   };
 

@@ -4,23 +4,20 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
-import { ICompanyItem } from '@/interfaces/company';
+import { ICompany } from '@/interfaces/company';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 const SelectCompanyPageBody = () => {
-  const { signedIn, username, companyList, selectCompany, isSelectCompany } = useUserCtx();
+  const { signedIn, username, selectCompany, isSelectCompany } = useUserCtx();
   const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
     useGlobalCtx();
-
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [searchValue, setSearchValue] = useState<string>('');
-  const [filteredCompanyList, setFilteredCompanyList] =
-    useState<Record<string, ICompanyItem>>(companyList);
 
   const router = useRouter();
 
@@ -29,6 +26,27 @@ const SelectCompanyPageBody = () => {
     componentVisible: isCompanyMenuOpen,
     setComponentVisible: setIsCompanyMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    data: companyData,
+    success: companyDataSuccess,
+    isLoading: isCompanyDataLoading,
+  } = APIHandler<ICompany[]>(
+    APIName.GET_JOURNAL_PROCESSING_STATUS, // ToDo: (20240516 - Julian) API name
+    {
+      header: {
+        'Content-Type': 'application/json',
+        userId: username ?? '',
+      },
+    },
+    false,
+    true
+  );
+
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [companyList, setCompanyList] = useState<ICompany[]>([]);
+  const [filteredCompanyList, setFilteredCompanyList] = useState<ICompany[]>([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
   const selectedCompanyName = selectedCompany || 'Select an Company';
@@ -48,25 +66,52 @@ const SelectCompanyPageBody = () => {
   };
 
   useEffect(() => {
+    if (companyDataSuccess && companyData) {
+      setCompanyList(companyData);
+      setFilteredCompanyList(companyData);
+    }
+  }, [companyDataSuccess, companyData]);
+
+  useEffect(() => {
     if (searchValue !== '') {
-      const filteredList = Object.entries(companyList).reduce(
-        (acc, [key, value]) => {
-          // Info: (20240514 - Julian) 搜尋 company 名稱或角色
-          if (
-            value.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-            value.role.toLowerCase().includes(searchValue.toLowerCase())
-          ) {
-            acc[key] = value;
-          }
-          return acc;
-        },
-        {} as Record<string, ICompanyItem>
+      const filteredList = companyList.filter(
+        (company) => company.name.toLowerCase().includes(searchValue.toLowerCase())
+        // ToDo: (20240516 - Julian) role
       );
       setFilteredCompanyList(filteredList);
     } else {
       setFilteredCompanyList(companyList);
     }
   }, [searchValue]);
+
+  const displayCompanyList = !isCompanyDataLoading ? (
+    filteredCompanyList.map((company) => {
+      const companyClickHandler = () => {
+        setSelectedCompany(company.name);
+        setIsCompanyMenuOpen(false);
+      };
+      return (
+        <button
+          key={company.id}
+          onClick={companyClickHandler}
+          type="button"
+          className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
+        >
+          <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
+            {/* ToDo: (20240516 - Julian) icon */}
+            <Image alt={company.name} src={'/entities/happy.png'} width={20} height={20} />
+          </div>
+          <p className="justify-center text-sm font-medium leading-5 tracking-normal">
+            {company.name}
+          </p>
+          {/* ToDo: (20240516 - Julian) role */}
+          <p className="text-xs text-lightGray5">{'my role'}</p>
+        </button>
+      );
+    })
+  ) : (
+    <div>Loading...</div>
+  );
 
   const displayCompanyMenu = (
     <div
@@ -90,28 +135,7 @@ const SelectCompanyPageBody = () => {
         </div>
         {/* Info: (20240514 - Julian) company list */}
         <div className="flex max-h-100px w-full flex-col items-start overflow-y-auto overflow-x-hidden">
-          {Object.entries(filteredCompanyList).map(([key, value]) => {
-            const companyClickHandler = () => {
-              setSelectedCompany(value.name);
-              setIsCompanyMenuOpen(false);
-            };
-            return (
-              <button
-                key={key}
-                onClick={companyClickHandler}
-                type="button"
-                className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
-              >
-                <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
-                  <Image alt={value.name} src={value.icon} width={20} height={20} />
-                </div>
-                <p className="justify-center text-sm font-medium leading-5 tracking-normal">
-                  {value.name}
-                </p>
-                <p className="text-xs text-lightGray5">{value.role}</p>
-              </button>
-            );
-          })}
+          {displayCompanyList}
         </div>
         {/* Info: (20240514 - Julian) enter invitation code */}
         <button

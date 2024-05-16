@@ -3,11 +3,12 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
+// import { useUserCtx } from '@/contexts/user_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
-import { MessageType } from '@/interfaces/message_modal';
+// import { MessageType } from '@/interfaces/message_modal';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -33,8 +34,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const { companyList } = useUserCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { username, selectCompany } = useUserCtx();
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
@@ -59,45 +60,62 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setIsMenuOpen(false);
   };
 
-  const createCompany = () => {
-    const isCompanyPassedKyc =
-      Object.values(companyList).find(
-        (company) => company.name === nameValue || company.brn === registrationNumberValue
-      )?.isPassedKyc ?? false;
+  const createCompany = async () => {
+    const response = await fetch('/api/v1/company', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        userid: username ?? '',
+      },
+      body: JSON.stringify({
+        name: nameValue,
+        code: registrationNumberValue,
+        regional: selectedCountry,
+      }),
+    });
 
-    const isRegistered = Object.values(companyList).some(
-      (company) => company.name === nameValue || company.brn === registrationNumberValue
-    );
-
-    // Info: (20240514 - Julian) If the company has passed KYC, show a error message
-    if (isCompanyPassedKyc) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'This Company is already exist',
-        subMsg: 'This company has already been registered.',
-        content: `Please review the entered information again, or you can contact the company administrator to join the company.`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-      return;
+    if (response.ok) {
+      const data = await response.json();
+      const { name } = data;
+      selectCompany(name);
     }
 
-    // Info: (20240514 - Julian) If the company has already been registered, show a warning message
-    if (isRegistered) {
-      messageModalDataHandler({
-        messageType: MessageType.WARNING,
-        title: 'Duplicate registration',
-        subMsg: 'This company has already been registered.',
-        content: `If you are the company's administrator, please complete KYC to regain access to the company account.`,
-        submitBtnStr: 'Go to KYC',
-        submitBtnFunction: () => {}, // ToDo: (20240514 - Julian) Add KYC page link
-        backBtnStr: 'Cancel',
-      });
-      messageModalVisibilityHandler();
-      return;
-    }
+    modalVisibilityHandler();
 
+    // const isCompanyPassedKyc =
+    //   Object.values(companyList).find(
+    //     (company) => company.name === nameValue || company.brn === registrationNumberValue
+    //   )?.isPassedKyc ?? false;
+    // const isRegistered = Object.values(companyList).some(
+    //   (company) => company.name === nameValue || company.brn === registrationNumberValue
+    // );
+    // // Info: (20240514 - Julian) If the company has passed KYC, show a error message
+    // if (isCompanyPassedKyc) {
+    //   messageModalDataHandler({
+    //     messageType: MessageType.ERROR,
+    //     title: 'This Company is already exist',
+    //     subMsg: 'This company has already been registered.',
+    //     content: `Please review the entered information again, or you can contact the company administrator to join the company.`,
+    //     submitBtnStr: 'Close',
+    //     submitBtnFunction: messageModalVisibilityHandler,
+    //   });
+    //   messageModalVisibilityHandler();
+    //   return;
+    // }
+    // // Info: (20240514 - Julian) If the company has already been registered, show a warning message
+    // if (isRegistered) {
+    //   messageModalDataHandler({
+    //     messageType: MessageType.WARNING,
+    //     title: 'Duplicate registration',
+    //     subMsg: 'This company has already been registered.',
+    //     content: `If you are the company's administrator, please complete KYC to regain access to the company account.`,
+    //     submitBtnStr: 'Go to KYC',
+    //     submitBtnFunction: () => {}, // ToDo: (20240514 - Julian) Add KYC page link
+    //     backBtnStr: 'Cancel',
+    //   });
+    //   messageModalVisibilityHandler();
+    //   return;
+    // }
     // ToDo: (20240514 - Julian) create success handler: should push to dashboard page
   };
 
