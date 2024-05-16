@@ -9,6 +9,7 @@ import { GlobalProvider } from '../contexts/global_context';
 import { DashboardProvider } from '../contexts/dashboard_context';
 import { AccountingProvider } from '../contexts/accounting_context';
 import { COOKIE_NAME } from '../constants/config';
+import { ISUNFA_ROUTE } from '../constants/url';
 
 function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -19,7 +20,7 @@ function App({ Component, pageProps }: AppProps) {
       .split(';')
       .find((item: string) => item.includes(COOKIE_NAME.FIDO2));
     if (router.pathname.startsWith('/users/') && !cookie) {
-      router.push('/users/login');
+      router.push(ISUNFA_ROUTE.LOGIN);
     }
   }, [router.pathname]);
 

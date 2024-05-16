@@ -15,7 +15,7 @@ interface IPendingReportItemProps {
   onReportItemDelete?: (id: string) => void;
 }
 
-export const AnimatedSVG = () => {
+export const AnimateLoadingSVG = () => {
   return (
     <div role="status">
       <svg
@@ -169,7 +169,7 @@ const PendingReportItem = ({
     </Button>
   );
 
-  const displayedSpinner = !isPaused ? <AnimatedSVG /> : null;
+  const displayedSpinner = !isPaused ? <AnimateLoadingSVG /> : null;
 
   // if the remaining time has hours, display it
   const displayedEstimatedTime =
