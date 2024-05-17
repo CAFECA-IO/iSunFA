@@ -6,6 +6,7 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let client: IClient;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -24,15 +25,10 @@ beforeEach(async () => {
   const createdClient = await prisma.client.create({
     data: {
       company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
         },
       },
       favorite: false,
@@ -46,6 +42,7 @@ beforeEach(async () => {
       },
     },
   });
+  companyId = createdClient.companyId;
   client = {
     ...createdClient,
     companyId: createdClient.companyId,
@@ -61,6 +58,15 @@ afterEach(async () => {
     await prisma.client.delete({
       where: {
         id: client.id,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
       },
     });
   } catch (error) {
