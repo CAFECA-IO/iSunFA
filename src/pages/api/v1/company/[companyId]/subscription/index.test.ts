@@ -29,7 +29,7 @@ beforeEach(async () => {
       company: {
         connectOrCreate: {
           where: {
-            id: 1,
+            id: 3,
           },
           create: {
             name: 'Test Company',
@@ -42,11 +42,11 @@ beforeEach(async () => {
       card: {
         connectOrCreate: {
           where: {
-            id: 1,
+            id: 3,
           },
           create: {
             no: '1234567890',
-            type: 'VISA',
+            type: 'VISA22',
             expireYear: '23',
             expireMonth: '12',
             cvc: '123',
@@ -90,7 +90,7 @@ afterEach(async () => {
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
     req.headers.userid = '1';
-    req.query.companyId = '1';
+    req.query.companyId = '3';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -120,11 +120,11 @@ describe('test subscription API', () => {
   it('should create a new subscription', async () => {
     req.headers.userid = '1';
     req.method = 'POST';
-    req.query.companyId = '1';
+    req.query.companyId = '3';
     req.body = {
       plan: 'pro',
       autoRenew: true,
-      cardId: 2,
+      cardId: 3,
       price: '100',
       period: SubscriptionPeriod.MONTHLY,
     };
