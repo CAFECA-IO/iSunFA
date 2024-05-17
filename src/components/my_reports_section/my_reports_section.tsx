@@ -12,6 +12,7 @@ import {
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
+import { useNotificationCtx } from '@/contexts/notification_context';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -19,22 +20,18 @@ enum SortingType {
 }
 
 const MyReportsSection = () => {
+  const { reportGeneratedStatusHandler, reportPendingStatusHandler } = useNotificationCtx();
+
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
-  // TODO: in dev (20240513 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pendingDatePickerType, setPendingDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortingType>(SortingType.NEWEST);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
-  // TODO: in dev (20240513 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [historyDatePickerType, setHistoryDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
   const isPendingDataLoading = false;
@@ -43,6 +40,14 @@ const MyReportsSection = () => {
   const historyData: IGeneratedReportItem[] = FIXED_DUMMY_GENERATED_REPORT_ITEMS;
   const pendingTotalPages = 1;
   const historyTotalPages = 1;
+
+  if (pendingData && pendingData.length > 0) {
+    reportPendingStatusHandler(true);
+  }
+
+  if (historyData && historyData.length > 0) {
+    reportGeneratedStatusHandler(true);
+  }
 
   const {
     targetRef: pendingSortMenuRef,
@@ -485,7 +490,7 @@ const MyReportsSection = () => {
           </div>
           {/* Info: date picker (20240513 - Shirley) */}
           <DatePicker
-            type={pendingDatePickerType}
+            type={DatePickerType.CHOOSE_PERIOD}
             period={pendingPeriod}
             setFilteredPeriod={setPendingPeriod}
             className="w-250px"
@@ -541,7 +546,7 @@ const MyReportsSection = () => {
           </div>
           {/* Info: date picker (20240513 - Shirley) */}
           <DatePicker
-            type={historyDatePickerType}
+            type={DatePickerType.CHOOSE_PERIOD}
             period={historyPeriod}
             setFilteredPeriod={setHistoryPeriod}
             className="w-250px"

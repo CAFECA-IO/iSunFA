@@ -8,56 +8,49 @@ export interface INotificationProvider {
 }
 
 interface INotificationContext {
-  pendingStatus: boolean;
-  generatedStatus: boolean;
-  pendingStatusHandler: (status: boolean) => void;
-  generatedStatusHandler: (status: boolean) => void;
+  reportPendingStatus: boolean;
+  reportGeneratedStatus: boolean;
+  reportPendingStatusHandler: (status: boolean) => void;
+  reportGeneratedStatusHandler: (status: boolean) => void;
 }
 
 const NotificationContext = createContext<INotificationContext | undefined>(undefined);
 
 // TODO: notification context (20240429 - Shirley)
 export const NotificationProvider = ({ children }: INotificationProvider) => {
-  // const [pendingReports, setPendingReports] = useState<IPendingReportItem[]>([]);
-  // const [generatedReports, setGeneratedReports] = useState<IGeneratedReportItem[]>([]);
-  const [pendingStatus, setPendingStatus, pendingStatusRef] = useStateRef<boolean>(true);
-  const [generatedStatus, setGeneratedStatus, generatedStatusRef] = useStateRef<boolean>(true);
+  const [reportPendingStatus, setReportPendingStatus, reportPendingStatusRef] =
+    useStateRef<boolean>(false);
+  const [reportGeneratedStatus, setReportGeneratedStatus, reportGeneratedStatusRef] =
+    useStateRef<boolean>(false);
 
-  const pendingStatusHandler = (status: boolean) => {
-    setPendingStatus(status);
+  const reportPendingStatusHandler = (status: boolean) => {
+    setReportPendingStatus(status);
   };
 
-  const generatedStatusHandler = (status: boolean) => {
-    setGeneratedStatus(status);
+  const reportGeneratedStatusHandler = (status: boolean) => {
+    setReportGeneratedStatus(status);
   };
 
   // Info: demo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPendingStatus((prev) => !prev);
-      setGeneratedStatus((prev) => !prev);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setPendingStatus((prev) => !prev);
+  //     setGeneratedStatus((prev) => !prev);
+  //   }, 10000);
 
-      console.log(
-        'pendingStatusRef',
-        pendingStatusRef.current,
-        'generatedStatusRef',
-        generatedStatusRef.current
-      );
-    }, 10000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, []);
 
   // TODO: websocket connection of pending report and generated report (20240517 - Shirley)
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
-    pendingStatus,
-    generatedStatus,
-    pendingStatusHandler,
-    generatedStatusHandler,
+    reportPendingStatus: reportPendingStatusRef.current,
+    reportGeneratedStatus: reportGeneratedStatusRef.current,
+    reportPendingStatusHandler,
+    reportGeneratedStatusHandler,
   };
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

@@ -92,7 +92,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const { pathname } = router;
 
   const { signedIn } = useUserCtx();
-  const { pendingStatus, generatedStatus } = useNotificationCtx();
+  const { reportPendingStatus: pendingStatus, reportGeneratedStatus: generatedStatus } =
+    useNotificationCtx();
 
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
@@ -277,8 +278,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   useEffect(() => {
     if (!signedIn) return;
-
-    console.log('pathname', pathname, pathname.includes('users'));
 
     if (!pathname.includes('users')) {
       eliminateToast();
