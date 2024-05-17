@@ -15,6 +15,10 @@ export const getDomains = () => {
   return ALLOWED_ORIGINS;
 };
 
+export const numberWithCommas = (x: number | string) => {
+  return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
+};
+
 // Info: truncate the string to the given length (20240416 - Shirley)
 export const truncateString = (str: string, length: number) => {
   const result = str.length > length ? str.slice(0, length) + '...' : str;

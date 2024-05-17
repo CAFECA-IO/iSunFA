@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
@@ -16,6 +17,7 @@ import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { timestampToString } from '@/lib/utils/common';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IJournalDetailPageProps {
   journalId: string;
@@ -37,11 +39,18 @@ enum VoucherItem {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
+  const router = useRouter();
   const { companyId } = useAccountingCtx();
-  const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
+  const {
+    previewInvoiceModalDataHandler,
+    previewInvoiceModalVisibilityHandler,
+    messageModalDataHandler,
+    messageModalVisibilityHandler,
+  } = useGlobalCtx();
   const {
     data: journalDetail,
-    error,
+    isLoading,
+    // error,
     success,
     code,
   } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
@@ -49,14 +58,28 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   });
 
   useEffect(() => {
-    if (success === false) {
+    if (success === false && isLoading === false) {
       // TODO: Error handling @Julian (20240509 - Tzuhan)
       // eslint-disable-next-line no-console
-      console.log('getJournalDetail error', error, 'code: ', code);
-    }
-  }, [success]);
+      // console.log('getJournalDetail error', error, 'code: ', code);
 
-  const tokenContract: string = journalDetail ? journalDetail.tokenContract : '';
+      // Info: (20240517 - Julian) If get journal detail failed, show error message modal
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Journal Detail Failed',
+        content: `Error code: ${code}`,
+        subMsg: 'Get journal detail failed',
+        submitBtnStr: 'Go back to journal list',
+        hideCloseBtn: true,
+        submitBtnFunction: () => {
+          router.push(ISUNFA_ROUTE.JOURNAL_LIST);
+        },
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [success, isLoading]);
+
+  const tokenContract = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
   const type: string = journalDetail ? journalDetail.metadatas[0].voucherType : '';
   const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date / 1000 : 0;

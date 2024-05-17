@@ -291,9 +291,7 @@ const ConfirmModal = ({
   );
 
   const isDisplayModal = isModalVisible ? (
-    // TODO: Eslint recommendation: Classname 'bg-opacity-50' should be replaced by an opacity suffix (eg. '/50') @Julian (20240513 - Tzuhan)
-    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
         {/* Info: (20240429 - Julian) title */}
         <div className="flex items-center gap-6px px-20px font-bold text-navyBlue2">
@@ -408,7 +406,6 @@ const ConfirmModal = ({
           >
             Cancel
           </button>
-          {/* ToDo: (20240429 - Julian) API */}
           <Button
             type="button"
             variant="tertiary"

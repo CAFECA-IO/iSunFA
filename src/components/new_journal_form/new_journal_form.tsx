@@ -36,6 +36,7 @@ const ficSelection: string[] = [
   '007 First Commercial Bank',
 ];
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
+
 const projectSelection: { id: string | null; name: string }[] = [
   { id: null, name: 'None' },
   { id: 'project_a', name: 'Project A' },
@@ -134,7 +135,6 @@ const NewJournalForm = () => {
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
-  // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
   const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.INCOME);
@@ -670,7 +670,6 @@ const NewJournalForm = () => {
                 </ul>
               </div>
             </div> */}
-            {/* ToDo: (20240423 - Julian) Add new asset */}
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}

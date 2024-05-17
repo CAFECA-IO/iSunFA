@@ -18,6 +18,7 @@ const MessageModal = ({
     title,
     subtitle,
     content,
+    hideCloseBtn,
     subMsg,
     submitBtnStr,
     submitBtnFunction,
@@ -99,18 +100,22 @@ const MessageModal = ({
     </div>
   ));
 
+  const isDisplayCross = !hideCloseBtn ? (
+    <button
+      type="button"
+      onClick={modalVisibilityHandler}
+      className="absolute right-12px top-12px text-lightGray5"
+    >
+      <RxCross2 size={20} />
+    </button>
+  ) : null;
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div
         className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-white px-32px py-16px`}
       >
-        <button
-          type="button"
-          onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
-        >
-          <RxCross2 size={20} />
-        </button>
+        {isDisplayCross}
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
           <h1 className={`text-xl font-bold ${titleColor}`}>{title}</h1>
           <h1 className={`text-base font-medium ${titleColor}`}>{displayedSubtitles}</h1>

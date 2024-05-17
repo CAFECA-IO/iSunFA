@@ -57,7 +57,7 @@ const JournalListTab = () => {
   const displayedTypeDropMenu = (
     <div
       onClick={toggleTypeMenu}
-      className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
         className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeSelected ? '' : 'text-lightGray3'}`}
@@ -67,7 +67,7 @@ const JournalListTab = () => {
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul ref={typeMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
           {['All', 'Payment', 'Receiving', 'Transfer'].map((type: string) => (
@@ -90,7 +90,7 @@ const JournalListTab = () => {
   const displayedSortByDropMenu = (
     <div
       onClick={toggleSortByMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-md border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? ' text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
@@ -100,7 +100,7 @@ const JournalListTab = () => {
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-md border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul ref={sortByMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
           {['Newest', 'Oldest', 'Payment Process', 'Project Process'].map((sorting: string) => (
@@ -122,11 +122,13 @@ const JournalListTab = () => {
 
   // ToDo: (20240419 - Julian) 邊框顏色與設計稿不一致，需要調整
   const displayedDatePicker = (
-    <DatePicker
-      type={DatePickerType.TEXT}
-      period={filteredPeriod}
-      setFilteredPeriod={setFilteredPeriod}
-    />
+    <div className="hidden md:flex">
+      <DatePicker
+        type={DatePickerType.TEXT}
+        period={filteredPeriod}
+        setFilteredPeriod={setFilteredPeriod}
+      />
+    </div>
   );
 
   const displayedSearchBar = (
@@ -134,7 +136,7 @@ const JournalListTab = () => {
       <input
         type="text"
         placeholder="Search"
-        className={`relative flex h-44px w-full items-center justify-between rounded-md border border-lightGray3 bg-white p-10px outline-none`}
+        className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
       <FiSearch size={20} className="absolute right-3 top-3 cursor-pointer" />
     </div>
@@ -240,23 +242,23 @@ const JournalListTab = () => {
     );
 
   return (
-    <div className="flex min-h-screen w-full flex-col p-10">
+    <div className="flex min-h-screen w-full flex-col px-16px py-32px">
       {/* Info: (20240417 - Julian) Title */}
-      <h1 className="text-4xl font-semibold text-lightGray5">View My Journal List</h1>
+      <h1 className="text-4xl font-semibold text-lightGray5">My Journal List</h1>
 
       {/* Info: (20240417 - Julian) Divider */}
       <hr className="my-20px w-full border-lightGray6" />
 
       {/* Info: (20240417 - Julian) Filter */}
-      <div className="my-10px flex items-end gap-24px text-sm">
+      <div className="my-10px flex items-center gap-24px text-sm md:items-end">
         {/* Info: (20240417 - Julian) Type */}
-        <div className="flex flex-col items-start gap-8px">
+        <div className="hidden flex-col items-start gap-8px md:flex">
           <p className="font-semibold text-navyBlue2">Type</p>
           {displayedTypeDropMenu}
         </div>
 
         {/* Info: (20240418 - Julian) Sort by */}
-        <div className="flex flex-col items-start gap-8px">
+        <div className="hidden flex-col items-start gap-8px md:flex">
           <p className="font-semibold text-navyBlue2">Sort by</p>
           {displayedSortByDropMenu}
         </div>
@@ -266,6 +268,28 @@ const JournalListTab = () => {
 
         {/* Info: (20240418 - Julian) Search bar */}
         {displayedSearchBar}
+
+        {/* Info: (20240517 - Julian) Filter button for mobile */}
+        <button
+          type="button"
+          className="block rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow md:hidden"
+        >
+          <svg
+            width="16"
+            height="17"
+            viewBox="0 0 16 17"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M3.33553 1.74677C3.74974 1.74677 4.08553 2.08255 4.08553 2.49677V5.16343C4.08553 5.57765 3.74974 5.91343 3.33553 5.91343C2.92132 5.91343 2.58553 5.57765 2.58553 5.16343V2.49677C2.58553 2.08255 2.92132 1.74677 3.33553 1.74677ZM8.0022 1.74677C8.41641 1.74677 8.7522 2.08255 8.7522 2.49677V4.55251C9.53221 4.8536 10.0855 5.61057 10.0855 6.49677C10.0855 7.64736 9.15279 8.5801 8.0022 8.5801C6.8516 8.5801 5.91886 7.64736 5.91886 6.49677C5.91886 5.61057 6.47219 4.8536 7.2522 4.55251V2.49677C7.2522 2.08255 7.58798 1.74677 8.0022 1.74677ZM12.6689 1.74677C13.0831 1.74677 13.4189 2.08255 13.4189 2.49677V6.49677C13.4189 6.91098 13.0831 7.24677 12.6689 7.24677C12.2547 7.24677 11.9189 6.91098 11.9189 6.49677V2.49677C11.9189 2.08255 12.2547 1.74677 12.6689 1.74677ZM8.0022 5.91343C7.68003 5.91343 7.41886 6.1746 7.41886 6.49677C7.41886 6.81893 7.68003 7.0801 8.0022 7.0801C8.32436 7.0801 8.58553 6.81893 8.58553 6.49677C8.58553 6.1746 8.32436 5.91343 8.0022 5.91343ZM3.33553 8.5801C3.01336 8.5801 2.7522 8.84127 2.7522 9.16343C2.7522 9.4856 3.01336 9.74677 3.33553 9.74677C3.6577 9.74677 3.91886 9.4856 3.91886 9.16343C3.91886 8.84127 3.6577 8.5801 3.33553 8.5801ZM1.2522 9.16343C1.2522 8.01284 2.18494 7.0801 3.33553 7.0801C4.48612 7.0801 5.41886 8.01284 5.41886 9.16343C5.41886 10.0496 4.86554 10.8066 4.08553 11.1077L4.08553 14.4968C4.08553 14.911 3.74974 15.2468 3.33553 15.2468C2.92132 15.2468 2.58553 14.911 2.58553 14.4968L2.58553 11.1077C1.80552 10.8066 1.2522 10.0496 1.2522 9.16343ZM12.6689 9.91343C12.3467 9.91343 12.0855 10.1746 12.0855 10.4968C12.0855 10.8189 12.3467 11.0801 12.6689 11.0801C12.991 11.0801 13.2522 10.8189 13.2522 10.4968C13.2522 10.1746 12.991 9.91343 12.6689 9.91343ZM10.5855 10.4968C10.5855 9.34617 11.5183 8.41343 12.6689 8.41343C13.8195 8.41343 14.7522 9.34617 14.7522 10.4968C14.7522 11.383 14.1989 12.1399 13.4189 12.441V14.4968C13.4189 14.911 13.0831 15.2468 12.6689 15.2468C12.2547 15.2468 11.9189 14.911 11.9189 14.4968V12.441C11.1389 12.1399 10.5855 11.383 10.5855 10.4968ZM8.0022 9.74677C8.41641 9.74677 8.7522 10.0826 8.7522 10.4968V14.4968C8.7522 14.911 8.41641 15.2468 8.0022 15.2468C7.58798 15.2468 7.2522 14.911 7.2522 14.4968V10.4968C7.2522 10.0826 7.58798 9.74677 8.0022 9.74677Z"
+              fill="#001840"
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Info: (20240418 - Julian) Divider */}

@@ -10,6 +10,7 @@ export interface IMessageModal {
   subtitle?: string;
   content: string;
   subMsg?: string;
+  hideCloseBtn?: boolean;
   submitBtnStr: string;
   submitBtnFunction: () => void;
   backBtnStr?: string;
