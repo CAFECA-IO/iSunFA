@@ -2,9 +2,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
-import { isIVoucher } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { isIVoucher } from '@/lib/utils/type_guard/voucher';
 
 export const journalArray: IJournal[] = [
   {

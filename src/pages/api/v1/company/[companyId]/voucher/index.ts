@@ -1,11 +1,11 @@
 import { AICH_URI } from '@/constants/config';
-import { isIInvoice } from '@/interfaces/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
+import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
 export default async function handler(
   req: NextApiRequest,
