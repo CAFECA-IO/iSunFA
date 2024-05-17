@@ -16,7 +16,7 @@ export const journalArray: IJournal[] = [
     metadatas: [
       {
         date: 1713139200000,
-        voucherType: VoucherType.Expense,
+        voucherType: VoucherType.EXPENSE,
         companyId: '1',
         companyName: '文中資訊股份有限公司',
         description:
@@ -34,10 +34,10 @@ export const journalArray: IJournal[] = [
           hasFee: false,
           fee: 0,
           paymentMethod: 'transfer',
-          paymentPeriod: PaymentPeriodType.AtOnce,
+          paymentPeriod: PaymentPeriodType.AT_ONCE,
           installmentPeriod: 0,
           paymentAlreadyDone: 0,
-          paymentStatus: PaymentStatusType.Unpaid,
+          paymentStatus: PaymentStatusType.UNPAID,
           progress: 0,
         },
       },
@@ -70,7 +70,7 @@ export const journalArray: IJournal[] = [
     metadatas: [
       {
         date: 1713139200000,
-        voucherType: VoucherType.Expense,
+        voucherType: VoucherType.EXPENSE,
         companyId: '1',
         companyName: '文中資訊股份有限公司',
         description:
@@ -88,10 +88,10 @@ export const journalArray: IJournal[] = [
           hasFee: false,
           fee: 0,
           paymentMethod: 'transfer',
-          paymentPeriod: PaymentPeriodType.AtOnce,
+          paymentPeriod: PaymentPeriodType.AT_ONCE,
           installmentPeriod: 0,
           paymentAlreadyDone: 0,
-          paymentStatus: PaymentStatusType.Unpaid,
+          paymentStatus: PaymentStatusType.UNPAID,
           progress: 0,
         },
       },

@@ -2,16 +2,9 @@ import { IBalanceSheet, isIBalanceSheet } from '@/interfaces/balance_sheet';
 import { ICashFlow, isICashFlow } from '@/interfaces/cash_flow';
 import { isStringNumberPair } from '@/interfaces/common';
 import { IComprehensiveIncome, isIComprehensiveIncome } from '@/interfaces/comprehensive_income';
+import { LifeCycleType } from '@/constants/financial_report';
 
 // Todo Murky (20240516): move to constants and change to SNAKE_CASE
-export enum ILifeCycleType {
-  introduction = '初創期',
-  growth = '成長期',
-  maturity = '成熟期',
-  decline = '衰退期',
-  renewal = '重生期',
-  unknown = '未知',
-}
 
 export interface IFinancialStatements {
   balanceSheet: IBalanceSheet;
@@ -35,7 +28,7 @@ export interface IFinancialReportJSON {
     cashFlowRatios: { [key: string]: number };
     cashFlowAnalysis: string;
   };
-  lifeCycle: ILifeCycleType;
+  lifeCycle: LifeCycleType;
   creditRating: string;
   financialStatementsAnalysis: string;
   summary: string;
