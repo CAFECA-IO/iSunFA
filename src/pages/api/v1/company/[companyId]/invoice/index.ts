@@ -93,7 +93,7 @@ export default async function handler(
         files = parsedForm.files;
         fields = parsedForm.fields;
       } catch (error) {
-        throw new Error(STATUS_MESSAGE.INVOICE_UPLOAD_FAILED_ERROR);
+        throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
       }
 
       // Info (20240504 - Murky): fields會長會這樣
