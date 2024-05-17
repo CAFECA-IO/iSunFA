@@ -3,9 +3,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 // import {  } from '@/constants/STATUS_MESSAGE';
-import { IInvoice, isIInvoice } from '@/interfaces/invoice';
+import { IInvoice } from '@/interfaces/invoice';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
 export default async function handler(
   req: NextApiRequest,

@@ -1,9 +1,10 @@
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IVoucher, isIVoucher } from '@/interfaces/voucher';
+import { IVoucher } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import { isIVoucher } from '@/lib/utils/type_guard/voucher';
 
 export default async function handler(
   req: NextApiRequest,

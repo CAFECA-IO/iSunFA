@@ -50,7 +50,7 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
-  const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.Expense);
+  const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
   const [date, setDate] = useState<number>(0);
   const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
@@ -59,8 +59,8 @@ const ConfirmModal = ({
   const [taxPercentage, setTaxPercentage] = useState<number>(0);
   const [fee, setFee] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AtOnce);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.Paid);
+  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
   // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
