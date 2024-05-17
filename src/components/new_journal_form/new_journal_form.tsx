@@ -90,7 +90,7 @@ const NewJournalForm = () => {
     code: uploadCode,
     error: uploadError,
   } = APIHandler<IAccountResultStatus>(
-    APIName.VOUCHER_GENERATE,
+    APIName.JOURNAL_GENERATE,
     {
       params: { companyId },
     },
@@ -120,7 +120,7 @@ const NewJournalForm = () => {
     success: statusSuccess,
     code: statusCode,
     error: statusError,
-  } = APIHandler<ProgressStatus>(APIName.VOUCHER_GET_PROGRESS_STATUS, {}, false, false);
+  } = APIHandler<ProgressStatus>(APIName.JOURNAL_GET_PROGRESS_STATUS, {}, false, false);
 
   const {
     trigger: getVoucherPreview,
@@ -128,7 +128,7 @@ const NewJournalForm = () => {
     success: previewSuccess,
     code: previewCode,
     error: previewError,
-  } = APIHandler<IVoucher>(APIName.VOUCHER_PREVIEW_GET_BY_ID, {}, false, false);
+  } = APIHandler<IVoucher>(APIName.JOURNAL_GET_PREVIEW_BY_ID, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);

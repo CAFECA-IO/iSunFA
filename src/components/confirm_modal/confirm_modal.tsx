@@ -40,7 +40,7 @@ const ConfirmModal = ({
     code: uploadCode,
     error: uploadError,
   } = APIHandler<IJournal>(
-    APIName.JOURNAL_GENERATE,
+    APIName.VOUCHER_GENERATE,
     {
       params: { companyId },
     },
