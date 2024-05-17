@@ -8,7 +8,7 @@ let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let companyKYC: ICompanyKYC;
 
-// Info Murky (20240424) 要使用formidable要先關掉bodyParsor
+// Info: (20240424 - Murky) 要使用formidable要先關掉bodyParsor
 export const config = {
   api: {
     bodyParser: false,
