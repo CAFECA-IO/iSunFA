@@ -14,9 +14,9 @@ export enum ProgressStatus {
 
 // ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum EventType {
-  Income = 'income',
-  Payment = 'payment',
-  Transfer = 'transfer',
+  INCOME = 'income',
+  PAYMENT = 'payment',
+  TRANSFER = 'transfer',
 }
 
 // ToDo: change to SNAKE_CASE (20240516 - Murky)

@@ -29,7 +29,7 @@ export default async function handler(
         {
           date: 21321321,
           invoiceId: '123123',
-          eventType: EventType.Payment,
+          eventType: EventType.PAYMENT,
           paymentReason: 'purchase',
           description: 'description',
           venderOrSupplyer: 'vender',
@@ -55,7 +55,7 @@ export default async function handler(
         {
           invoiceId: '2',
           date: 123123123,
-          eventType: EventType.Payment,
+          eventType: EventType.PAYMENT,
           paymentReason: 'sale',
           description: 'description',
           venderOrSupplyer: 'vender',

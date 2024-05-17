@@ -137,7 +137,7 @@ const NewJournalForm = () => {
   // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.Income);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.INCOME);
 
   const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
@@ -316,7 +316,7 @@ const NewJournalForm = () => {
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
-    setSelectedEventType(EventType.Income);
+    setSelectedEventType(EventType.INCOME);
     setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
@@ -1034,7 +1034,7 @@ const NewJournalForm = () => {
   );
 
   const displayedProjectSecondLine =
-    selectedEventType === EventType.Income ? (
+    selectedEventType === EventType.INCOME ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
         <ProgressBar
