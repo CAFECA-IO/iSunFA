@@ -9,6 +9,8 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let subscription: ISubscription;
+let companyId: number;
+let cardId: number;
 
 beforeEach(async () => {
   req = {
@@ -27,31 +29,21 @@ beforeEach(async () => {
   const createdSubscription = await prisma.subscription.create({
     data: {
       company: {
-        connectOrCreate: {
-          where: {
-            id: 3,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
         },
       },
       plan: 'pro',
       card: {
-        connectOrCreate: {
-          where: {
-            id: 3,
-          },
-          create: {
-            no: '1234567890',
-            type: 'VISA22',
-            expireYear: '23',
-            expireMonth: '12',
-            cvc: '123',
-            name: 'Test Card',
-          },
+        create: {
+          no: '1234567890',
+          type: 'VISA22',
+          expireYear: '23',
+          expireMonth: '12',
+          cvc: '123',
+          name: 'Test Card',
         },
       },
       price: '100',
@@ -68,6 +60,8 @@ beforeEach(async () => {
       },
     },
   });
+  companyId = createdSubscription.companyId;
+  cardId = createdSubscription.cardId;
   subscription = {
     ...createdSubscription,
     companyName: createdSubscription.company.name,
@@ -85,12 +79,30 @@ afterEach(async () => {
   } catch (error) {
     // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
+  }
+  try {
+    await prisma.card.delete({
+      where: {
+        id: cardId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
+  }
 });
 
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
     req.headers.userid = '1';
-    req.query.companyId = '3';
+    req.query.companyId = companyId.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -120,11 +132,11 @@ describe('test subscription API', () => {
   it('should create a new subscription', async () => {
     req.headers.userid = '1';
     req.method = 'POST';
-    req.query.companyId = '3';
+    req.query.companyId = companyId.toString();
     req.body = {
       plan: 'pro',
       autoRenew: true,
-      cardId: 3,
+      cardId,
       price: '100',
       period: SubscriptionPeriod.MONTHLY,
     };
@@ -159,7 +171,7 @@ describe('test subscription API', () => {
   it('should handle unsupported HTTP methods', async () => {
     req.headers.userid = '1';
     req.method = 'PUT';
-    req.query.companyId = '1';
+    req.query.companyId = companyId.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(

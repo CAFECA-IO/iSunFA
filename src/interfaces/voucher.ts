@@ -1,6 +1,6 @@
 import { VoucherType } from '@/constants/account';
-import { ILineItem, isILineItem } from '@/interfaces/line_item';
-import { IPayment, isIPayment } from '@/interfaces/payment';
+import { ILineItem } from '@/interfaces/line_item';
+import { IPayment } from '@/interfaces/payment';
 
 export interface IVoucherMetaData {
   date: number;
@@ -21,38 +21,4 @@ export interface IVoucher {
   invoiceIndex: string; // 改在這裡
   metadatas: IVoucherMetaData[];
   lineItems: ILineItem[];
-}
-
-function isIVoucherMetaData(arg: IVoucherMetaData): arg is IVoucherMetaData {
-  if (
-    typeof arg.date !== 'number' ||
-    typeof arg.voucherType !== 'string' ||
-    typeof arg.companyId !== 'string' ||
-    typeof arg.companyName !== 'string' ||
-    typeof arg.description !== 'string' ||
-    typeof arg.reason !== 'string' ||
-    typeof arg.projectId !== 'string' ||
-    typeof arg.project !== 'string' ||
-    typeof arg.contractId !== 'string' ||
-    typeof arg.contract !== 'string' ||
-    isIPayment(arg.payment)
-  ) {
-    return false;
-  }
-  return true;
-}
-
-export function isIVoucher(arg: IVoucher): arg is IVoucher {
-  if (arg.voucherIndex === undefined || arg.invoiceIndex === undefined) {
-    return false;
-  }
-  const isIVoucherMetaDataReturn = arg.metadatas.every(isIVoucherMetaData);
-  if (isIVoucherMetaDataReturn) {
-    return false;
-  }
-  const isILineItemReturn = arg.lineItems.every(isILineItem);
-  if (!isILineItemReturn) {
-    return false;
-  }
-  return true;
 }

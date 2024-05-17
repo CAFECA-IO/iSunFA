@@ -8,6 +8,8 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let subscription: ISubscription;
+let companyId: number;
+let cardId: number;
 
 beforeEach(async () => {
   req = {
@@ -26,31 +28,21 @@ beforeEach(async () => {
   const createdSubscription = await prisma.subscription.create({
     data: {
       company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
         },
       },
       plan: 'pro',
       card: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            no: '1234567890',
-            type: 'VISA',
-            expireYear: '23',
-            expireMonth: '12',
-            cvc: '123',
-            name: 'Test Card',
-          },
+        create: {
+          no: '1234567890',
+          type: 'VISA',
+          expireYear: '23',
+          expireMonth: '12',
+          cvc: '123',
+          name: 'Test Card',
         },
       },
       price: '100',
@@ -67,6 +59,8 @@ beforeEach(async () => {
       },
     },
   });
+  companyId = createdSubscription.companyId;
+  cardId = createdSubscription.cardId;
   subscription = {
     ...createdSubscription,
     companyName: createdSubscription.company.name,
@@ -84,6 +78,24 @@ afterEach(async () => {
   } catch (error) {
     // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
+  try {
+    await prisma.card.delete({
+      where: {
+        id: cardId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
 });
 
 describe('test subscription API by id', () => {
@@ -91,7 +103,7 @@ describe('test subscription API by id', () => {
     req.method = 'GET';
     req.headers.userid = '1';
     req.query = {
-      companyId: '1',
+      companyId: companyId.toString(),
       subscriptionId: subscription.id.toString(),
     };
     await handler(req, res);
@@ -121,12 +133,12 @@ describe('test subscription API by id', () => {
     req.method = 'PUT';
     req.headers.userid = '1';
     req.query = {
-      companyId: '1',
+      companyId: companyId.toString(),
       subscriptionId: subscription.id.toString(),
     };
     req.body = {
       plan: 'basic',
-      // cardId: 119,
+      cardId,
       autoRenew: false,
     };
     await handler(req, res);
@@ -156,7 +168,7 @@ describe('test subscription API by id', () => {
     req.method = 'DELETE';
     req.headers.userid = '1';
     req.query = {
-      companyId: '1',
+      companyId: companyId.toString(),
       subscriptionId: subscription.id.toString(),
     };
     await handler(req, res);

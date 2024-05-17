@@ -6,6 +6,7 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let role: IRole;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -24,15 +25,10 @@ beforeEach(async () => {
   const createdRole = await prisma.role.create({
     data: {
       company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
         },
       },
       name: 'KING',
@@ -46,6 +42,7 @@ beforeEach(async () => {
       },
     },
   });
+  companyId = createdRole.companyId;
   role = {
     ...createdRole,
     companyName: createdRole.company.name,
@@ -54,24 +51,30 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterRole = await prisma.role.findUnique({
-    where: {
-      id: role.id,
-    },
-  });
-  if (afterRole) {
+  try {
     await prisma.role.delete({
       where: {
         id: role.id,
       },
     });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
 });
 
-describe('test admin API', () => {
-  it('should get admin by id', async () => {
+describe('test role API', () => {
+  it('should get role by id', async () => {
     req.headers.userid = '1';
-    req.query = { roleId: '1' };
+    req.query = { roleId: role.id.toString() };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -91,10 +94,10 @@ describe('test admin API', () => {
     );
   });
 
-  it('should update admin successfully', async () => {
+  it('should update role successfully', async () => {
     req.method = 'PUT';
     req.headers.userid = '1';
-    req.query = { roleId: '1' };
+    req.query = { roleId: role.id.toString() };
     req.body = {
       name: 'John Doe',
       email: 'john@example.com',
@@ -120,10 +123,10 @@ describe('test admin API', () => {
     );
   });
 
-  it('should delete admin successfully', async () => {
+  it('should delete role successfully', async () => {
     req.method = 'DELETE';
     req.headers.userid = '1';
-    req.query = { roleId: '1' };
+    req.query = { roleId: role.id.toString() };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -140,7 +143,7 @@ describe('test admin API', () => {
   it('should return error for INVALID_INPUT_PARAMETER', async () => {
     req.method = 'PUT';
     req.headers.userid = '1';
-    req.query = { roleId: '1' };
+    req.query = { roleId: role.id.toString() };
     req.body = {
       name: 'John Doe',
       email: 'john@example.com',
@@ -163,7 +166,7 @@ describe('test admin API', () => {
 
   it('should return error for RESOURCE_NOT_FOUND', async () => {
     req.headers.userid = '1';
-    req.query = { roleId: '2' };
+    req.query = { roleId: '-1' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(

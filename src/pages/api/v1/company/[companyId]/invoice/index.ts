@@ -29,7 +29,7 @@ export default async function handler(
         {
           date: 21321321,
           invoiceId: '123123',
-          eventType: EventType.Payment,
+          eventType: EventType.PAYMENT,
           paymentReason: 'purchase',
           description: 'description',
           venderOrSupplyer: 'vender',
@@ -45,17 +45,17 @@ export default async function handler(
             hasFee: true,
             fee: 10,
             paymentMethod: 'transfer',
-            paymentPeriod: PaymentPeriodType.AtOnce,
+            paymentPeriod: PaymentPeriodType.AT_ONCE,
             installmentPeriod: 0,
             paymentAlreadyDone: 1500,
-            paymentStatus: PaymentStatusType.Paid,
+            paymentStatus: PaymentStatusType.PAID,
             progress: 0,
           },
         },
         {
           invoiceId: '2',
           date: 123123123,
-          eventType: EventType.Payment,
+          eventType: EventType.PAYMENT,
           paymentReason: 'sale',
           description: 'description',
           venderOrSupplyer: 'vender',
@@ -71,10 +71,10 @@ export default async function handler(
             hasFee: true,
             fee: 10,
             paymentMethod: 'transfer',
-            paymentPeriod: PaymentPeriodType.AtOnce,
+            paymentPeriod: PaymentPeriodType.AT_ONCE,
             installmentPeriod: 0,
             paymentAlreadyDone: 110,
-            paymentStatus: PaymentStatusType.Paid,
+            paymentStatus: PaymentStatusType.PAID,
             progress: 0,
           },
         },
@@ -93,7 +93,7 @@ export default async function handler(
         files = parsedForm.files;
         fields = parsedForm.fields;
       } catch (error) {
-        throw new Error(STATUS_MESSAGE.INVOICE_UPLOAD_FAILED_ERROR);
+        throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
       }
 
       // Info (20240504 - Murky): fields會長會這樣
