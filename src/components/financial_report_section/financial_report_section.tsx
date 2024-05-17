@@ -8,7 +8,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { MILLISECONDS_IN_A_SECOND, default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -132,15 +132,17 @@ const FinancialReportSection = () => {
       project_id: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
       type: selectedReportType,
       language: selectedReportLanguage,
-      start_date: new Date(period.startTimeStamp),
-      end_date: new Date(period.endTimeStamp),
+      start_date: new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND),
+      end_date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND),
     };
-
-    console.log('generateReportHandler called', body);
 
     generateFinancialReport({
       body,
     });
+  };
+
+  const tryAgainHandler = () => {
+    generateReportHandler();
   };
 
   useEffect(() => {
@@ -160,6 +162,7 @@ const FinancialReportSection = () => {
     }
   }, [isProjectMenuOpen]);
 
+  // Info: 點下 Generate 後，依照申請成功或申請失敗，顯示不同的 message (20240517 - Shirley)
   useEffect(() => {
     if (generatedCode && !generatedLoading) {
       if (generatedSuccess) {
@@ -175,14 +178,12 @@ const FinancialReportSection = () => {
         });
         messageModalVisibilityHandler();
       } else {
-        console.log('failed result', generatedCode);
-
         messageModalDataHandler({
           title: '',
           subtitle: 'Failed',
           content: `We can't generate the report you applied for, please change the selections and try again.`,
           submitBtnStr: 'Try again',
-          submitBtnFunction: () => {},
+          submitBtnFunction: tryAgainHandler,
           messageType: MessageType.ERROR,
           submitBtnVariant: 'tertiaryBorderless',
           submitBtnIcon: (
