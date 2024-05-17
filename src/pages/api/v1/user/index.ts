@@ -20,24 +20,14 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       // Handle POST request to create a new user
-      const {
-        name,
-        fullName,
-        email,
-        phone,
-        kycStatus,
-        credentialId,
-        publicKey,
-        algorithm,
-        imageId,
-      } = req.body;
+      const { name, fullName, email, phone, credentialId, publicKey, algorithm, imageId } =
+        req.body;
       const createdUser: IUser = await prisma.user.create({
         data: {
           name,
           fullName,
           email,
           phone,
-          kycStatus,
           credentialId,
           publicKey,
           algorithm,
