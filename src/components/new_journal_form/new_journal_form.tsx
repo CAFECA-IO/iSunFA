@@ -402,7 +402,7 @@ const NewJournalForm = () => {
   }, [uploadSuccess, result]);
 
   useEffect(() => {
-    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.InProgress)) {
+    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.IN_PROGRESS)) {
       setTimeout(
         () => {
           getVoucherStatus({
@@ -415,10 +415,10 @@ const NewJournalForm = () => {
         statusSuccess === undefined ? 0 : 2000
       );
     }
-    if (statusSuccess && status && status !== ProgressStatus.InProgress) {
+    if (statusSuccess && status && status !== ProgressStatus.IN_PROGRESS) {
       if (
         voucherId &&
-        (status === ProgressStatus.Success || status === ProgressStatus.AlreadyUpload)
+        (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)
       ) {
         getVoucherPreview({
           params: {
@@ -1146,7 +1146,7 @@ const NewJournalForm = () => {
 
   return (
     <div>
-      {status && status === ProgressStatus.InProgress ? (
+      {status && status === ProgressStatus.IN_PROGRESS ? (
         <p>Loading...</p>
       ) : (
         <form

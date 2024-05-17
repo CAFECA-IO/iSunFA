@@ -3,13 +3,13 @@
 // Info: type (20240416 - Murky)
 // ToDo: change to SNAKE_CASE (20240516 - Murky)
 export enum ProgressStatus {
-  Success = 'success',
-  InProgress = 'inProgress',
-  NotFound = 'notFound',
-  AlreadyUpload = 'alreadyUpload',
-  InvalidInput = 'invalidInput',
-  LlmError = 'llmError',
-  SystemError = 'systemError',
+  SUCCESS = 'success',
+  IN_PROGRESS = 'inProgress',
+  NOT_FOUND = 'notFound',
+  ALREADY_UPLOAD = 'alreadyUpload',
+  INVALID_INPUT = 'invalidInput',
+  LLM_ERROR = 'llmError',
+  SYSTEM_ERROR = 'systemError',
 }
 
 // ToDo: change to SNAKE_CASE (20240516 - Murky)
