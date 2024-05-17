@@ -97,7 +97,7 @@ describe('Client API Handler Tests', () => {
     req.method = 'POST';
     req.headers.userid = '1';
     req.body = {
-      companyId: 1,
+      companyId: 3,
       favorite: false,
     };
     await handler(req, res);
