@@ -11,10 +11,10 @@ export enum MessageType {
 export interface IMessageModal {
   title: string;
   content: string;
+  hideCloseBtn?: boolean;
   submitBtnStr: string;
   submitBtnFunction: () => void;
   messageType: MessageType;
-
   subtitle?: string;
   subMsg?: string;
   backBtnStr?: string;
