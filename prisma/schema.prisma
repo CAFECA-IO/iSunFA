@@ -108,7 +108,7 @@ model companyKYC {
   registerCountry           String
   structure                 String
   zipCode                   String
-  created_at                Int
+  createdAt                 Int     @map("created_at")
   company                   company @relation(fields: [companyId], references: [id])
 }
 
