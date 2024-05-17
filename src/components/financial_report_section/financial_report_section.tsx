@@ -16,6 +16,7 @@ import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
+import { useNotificationCtx } from '@/contexts/notification_context';
 
 const FinancialReportSection = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();

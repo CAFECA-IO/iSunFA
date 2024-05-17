@@ -344,4 +344,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
-export const useUserCtx = () => useContext(UserContext);
+export const useUserCtx = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUserCtx must be used within a UserProvider');
+  }
+  return context;
+};
