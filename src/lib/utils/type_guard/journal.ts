@@ -1,5 +1,5 @@
-import { IJournal } from "@/interfaces/journal";
-import { isIVoucher } from "@/lib/utils/type_guard/voucher";
+import { IJournal } from '@/interfaces/journal';
+import { isIVoucher } from '@/lib/utils/type_guard/voucher';
 
 export function isIJournal(arg: IJournal): arg is IJournal {
   if (arg.id === undefined || arg.tokenContract === undefined || arg.tokenId === undefined) {

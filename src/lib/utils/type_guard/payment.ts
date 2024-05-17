@@ -1,5 +1,5 @@
-import { IPayment } from "@/interfaces/payment";
-import { isPaymentPeriodType, isPaymentStatusType } from "@/lib/utils/type_guard/account";
+import { IPayment } from '@/interfaces/payment';
+import { isPaymentPeriodType, isPaymentStatusType } from '@/lib/utils/type_guard/account';
 
 export function isIPayment(arg: IPayment): arg is IPayment {
   if (

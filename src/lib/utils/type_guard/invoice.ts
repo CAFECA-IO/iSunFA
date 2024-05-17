@@ -1,8 +1,8 @@
 // Info Murky (20240416): Type Guard
 
-import { IInvoice } from "@/interfaces/invoice";
-import { isEventType } from "@/lib/utils/type_guard/account";
-import { isIPayment } from "@/lib/utils/type_guard/payment";
+import { IInvoice } from '@/interfaces/invoice';
+import { isEventType } from '@/lib/utils/type_guard/account';
+import { isIPayment } from '@/lib/utils/type_guard/payment';
 
 //  Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
 export function isIInvoice(data: IInvoice): data is IInvoice {

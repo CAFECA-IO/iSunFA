@@ -1,5 +1,12 @@
-import { IAssetDetails, IAssetType, IBalanceSheet, IEquityDetails, IFairValueContainer, ILiabilityDetails } from "@/interfaces/balance_sheet";
-import { isStringNumber } from "@/lib/utils/common";
+import {
+  IAssetDetails,
+  IAssetType,
+  IBalanceSheet,
+  IEquityDetails,
+  IFairValueContainer,
+  ILiabilityDetails,
+} from '@/interfaces/balance_sheet';
+import { isStringNumber } from '@/lib/utils/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isIBreakdown(obj: any): boolean {

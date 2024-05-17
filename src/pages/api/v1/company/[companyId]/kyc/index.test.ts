@@ -35,13 +35,10 @@ beforeEach(async () => {
   companyKYC = await prisma.companyKYC.create({
     data: {
       company: {
-        connectOrCreate: {
-          where: { id: 3 },
-          create: {
-            name: 'ABC Company',
-            code: '123',
-            regional: 'TW',
-          },
+        create: {
+          name: 'ABC Company',
+          code: '123',
+          regional: 'TW',
         },
       },
       legalName: 'ABC Company',
@@ -50,7 +47,6 @@ beforeEach(async () => {
       address: '123 Main Street',
       zipCode: '12345',
       representativeName: 'John Doe',
-      registerCountry: 'USA',
       structure: 'LLC',
       registrationNumber: '123456789',
       registrationDate: '2022-01-01',

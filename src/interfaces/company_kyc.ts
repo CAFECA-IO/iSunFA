@@ -7,7 +7,6 @@ export interface ICompanyKYC {
   address: string;
   zipCode: string;
   representativeName: string;
-  registerCountry: string;
   structure: string;
   registrationNumber: string;
   registrationDate: string;

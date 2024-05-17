@@ -73,8 +73,10 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010003 - POST /client
     } else if (req.method === 'POST') {
-      const { companyId, favorite } = req.body;
-      const newClient: IClient = await createClient(companyId, favorite);
+      const { favorite } = req.body;
+      const { companyId } = req.query;
+      const companyIdNumber = Number(companyId);
+      const newClient: IClient = await createClient(companyIdNumber, favorite);
       const { httpCode, result } = formatApiResponse<IClient>(STATUS_MESSAGE.CREATED, newClient);
       res.status(httpCode).json(result);
     } else {

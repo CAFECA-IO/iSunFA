@@ -98,7 +98,6 @@ export default async function handler(
           address: address[0],
           zipCode: zipCode[0],
           representativeName: representativeName[0],
-          registerCountry: registerCountry[0],
           structure: structure[0],
           registrationNumber: registrationNumber[0],
           registrationDate: registrationDate[0],

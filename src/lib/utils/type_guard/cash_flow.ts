@@ -1,5 +1,14 @@
-import { IBreakdownCost, ICashFlow, IFinancingActivities, IInvestingActivities, IOperatingActivities, IOtherSupplementaryItems, ISupplementalSchedule, IWeightedCost } from "@/interfaces/cash_flow";
-import { isStringNumber } from "@/lib/utils/common";
+import {
+  IBreakdownCost,
+  ICashFlow,
+  IFinancingActivities,
+  IInvestingActivities,
+  IOperatingActivities,
+  IOtherSupplementaryItems,
+  ISupplementalSchedule,
+  IWeightedCost,
+} from '@/interfaces/cash_flow';
+import { isStringNumber } from '@/lib/utils/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isIBreakdown(obj: any): boolean {

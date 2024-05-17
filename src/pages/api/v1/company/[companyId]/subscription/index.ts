@@ -46,7 +46,7 @@ export default async function handler(
       // Info: (20240419 - Jacky) S010002 - POST /subscription
     } else if (req.method === 'POST') {
       const { plan, cardId, autoRenew, price, period } = req.body;
-      if (!plan || !cardId || !autoRenew || !companyIdNum || !price || !period) {
+      if (!plan || !autoRenew || !companyIdNum || !price || !period) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const cardIdNum = Number(cardId);
@@ -69,19 +69,8 @@ export default async function handler(
         data: {
           plan,
           card: {
-            // Should be changed to connect
-            connectOrCreate: {
-              where: {
-                id: cardIdNum,
-              },
-              create: {
-                no: '1234567890',
-                type: 'VISA',
-                expireYear: '23',
-                expireMonth: '12',
-                cvc: '123',
-                name: 'Test Card',
-              },
+            connect: {
+              id: cardIdNum,
             },
           },
           autoRenew,

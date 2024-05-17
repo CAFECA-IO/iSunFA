@@ -1,5 +1,14 @@
-import { IComprehensiveIncome, ICosts, IFeeDetail, IFinancialCosts, IIncome, IOperatingExpenses, IOtherGainLosses, ISimpleCost } from "@/interfaces/comprehensive_income";
-import { isStringNumber } from "@/lib/utils/common";
+import {
+  IComprehensiveIncome,
+  ICosts,
+  IFeeDetail,
+  IFinancialCosts,
+  IIncome,
+  IOperatingExpenses,
+  IOtherGainLosses,
+  ISimpleCost,
+} from '@/interfaces/comprehensive_income';
+import { isStringNumber } from '@/lib/utils/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isISimpleCost(obj: any): obj is ISimpleCost {

@@ -1,6 +1,6 @@
-import { IVoucher, IVoucherMetaData } from "@/interfaces/voucher";
-import { isIPayment } from "@/lib/utils/type_guard/payment";
-import { isILineItem } from "@/lib/utils/type_guard/line_item";
+import { IVoucher, IVoucherMetaData } from '@/interfaces/voucher';
+import { isIPayment } from '@/lib/utils/type_guard/payment';
+import { isILineItem } from '@/lib/utils/type_guard/line_item';
 
 function isIVoucherMetaData(arg: IVoucherMetaData): arg is IVoucherMetaData {
   if (

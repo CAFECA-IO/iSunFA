@@ -39,8 +39,8 @@ model auditReport {
   informationYear     String
   detailedInformation String
   creditRating        String
-  link                String
   dateOfUpload        Int
+  link                String
   company             company @relation(fields: [companyId], references: [id])
 }
 
@@ -70,37 +70,30 @@ model client {
 }
 
 model company {
-  id                Int      @id @default(autoincrement())
-  name              String
-  code              String
-  regional          String
-
-  roles            role[]
-  auditReports      auditReport[]
-  clients           client[]
-  employees         employee[]
-  imvoices          invoice[]
-  companyKYCs       companyKYC[]
-  subscriptions     subscription[]
-  invitations       invitation[]
-  usersCompanysRoles    userCompanyRole[]
+  id                  Int                 @id @default(autoincrement())
+  name                String
+  code                String
+  regional            String
+  auditReports        auditReport[]
+  clients             client[]
+  companyKYCs         companyKYC[]
   companysDepartments companyDepartment[]
+  employees           employee[]
+  invitations         invitation[]
+  imvoices            invoice[]
+  roles               role[]
+  subscriptions       subscription[]
+  usersCompanysRoles  userCompanyRole[]
 }
 
 model companyKYC {
   id                        Int     @id @default(autoincrement())
   companyId                 Int
-  legalName                 String
-  country                   String
-  city                      String
   address                   String
-  zipCode                   String
   representativeName        String
-  registerCountry           String
-  structure                 String
+  country                   String
   registrationNumber        String
   registrationDate          String
-  industry                  String
   contactPerson             String
   contactPhone              String
   contactEmail              String
@@ -109,8 +102,12 @@ model companyKYC {
   taxCertificateId          String
   representativeIdType      String
   representativeIdCardId    String
-  createdAt                 Int    @map("created_at")
-
+  city                      String
+  industry                  String
+  legalName                 String
+  structure                 String
+  zipCode                   String
+  createdAt                 Int     @map("created_at")
   company                   company @relation(fields: [companyId], references: [id])
 }
 
@@ -131,9 +128,9 @@ model contract {
   signatory    String
   status       String
   payment      String
-  progress     String
   startDate    Int
   endDate      Int
+  progress     String
   project      project @relation(fields: [projectId], references: [id])
 }
 
@@ -175,25 +172,24 @@ model invoice {
   id          Int     @id @default(autoincrement())
   companyId   Int     @map("company_id")
   invoiceNo   String
-  status      String
-  totalAmount String
   invoiceDate Int
   dueDate     Int
+  status      String
+  totalAmount String
   company     company @relation(fields: [companyId], references: [id])
 }
 
 model invitation {
-  id        Int    @id @default(autoincrement())
-  code      String
-  companyId Int    @map("company_id")
-  roleId    Int    @map("role_id")
-  createdUserId Int @map("created_user_id")
-  hasUsed   Boolean
-  expiredAt Int
-    
-  createdUser user @relation(fields: [createdUserId], references: [id])
-  role      role @relation(fields: [roleId], references: [id])
-  company   company @relation(fields: [companyId], references: [id])
+  id            Int     @id @default(autoincrement())
+  code          String
+  companyId     Int     @map("company_id")
+  roleId        Int     @map("role_id")
+  createdUserId Int     @map("created_user_id")
+  hasUsed       Boolean
+  expiredAt     Int
+  company       company @relation(fields: [companyId], references: [id])
+  createdUser   user    @relation(fields: [createdUserId], references: [id])
+  role          role    @relation(fields: [roleId], references: [id])
 }
 
 model lineItem {
@@ -210,53 +206,50 @@ model project {
   id                  Int               @id @default(autoincrement())
   name                String
   description         String
-  status              String
   startDate           Int
   endDate             Int
+  status              String
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
 }
 
 model role {
-  id               Int      @id @default(autoincrement())
-  companyId        Int      @map("company_id")
-  name             String   
-  permissions       String[]
-
-  usersCompanysRoles    userCompanyRole[]
-  invitations       invitation[]
-
-  company          company  @relation(fields: [companyId], references: [id])
+  id                 Int               @id @default(autoincrement())
+  companyId          Int               @map("company_id")
+  name               String
+  permissions        String[]
+  invitations        invitation[]
+  company            company           @relation(fields: [companyId], references: [id])
+  usersCompanysRoles userCompanyRole[]
 }
 
 model subscription {
   id         Int     @id @default(autoincrement())
   companyId  Int     @map("company_id")
   plan       String
+  cardId     Int     @map("card_id")
   price      String
   autoRenew  Boolean
-  status     String
-  cardId     Int     @map("card_id")
   startDate  Int
   expireDate Int
+  status     String
   card       card    @relation(fields: [cardId], references: [id])
   company    company @relation(fields: [companyId], references: [id])
 }
 
 model user {
-  id              Int      @id @default(autoincrement())
-  name            String
-  fullName        String?
-  email           String?
-  phone           String?
-  credentialId    String
-  publicKey       String
-  algorithm       String
-  imageId         String?
-
-  invitations       invitation[]
-  usersCompanysRoles    userCompanyRole[]
+  id                 Int               @id @default(autoincrement())
+  name               String
+  fullName           String?
+  email              String?
+  phone              String?
+  credentialId       String
+  publicKey          String
+  algorithm          String
+  imageId            String?
+  invitations        invitation[]
+  usersCompanysRoles userCompanyRole[]
 }
 
 model userCompanyRole {

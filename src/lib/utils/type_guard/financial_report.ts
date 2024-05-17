@@ -1,8 +1,8 @@
-import { IFinancialReportJSON, IFinancialStatements } from "@/interfaces/financial_report";
-import { isIBalanceSheet } from "@/lib/utils/type_guard/balance_sheet";
-import { isIComprehensiveIncome } from "@/lib/utils/type_guard/comprehensive_income";
-import { isICashFlow } from "@/lib/utils/type_guard/cash_flow";
-import { isStringNumberPair } from "@/lib/utils/common";
+import { IFinancialReportJSON, IFinancialStatements } from '@/interfaces/financial_report';
+import { isIBalanceSheet } from '@/lib/utils/type_guard/balance_sheet';
+import { isIComprehensiveIncome } from '@/lib/utils/type_guard/comprehensive_income';
+import { isICashFlow } from '@/lib/utils/type_guard/cash_flow';
+import { isStringNumberPair } from '@/lib/utils/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isIFinancialStatements(obj: any): obj is IFinancialStatements {

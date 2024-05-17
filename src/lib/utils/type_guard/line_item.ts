@@ -1,4 +1,4 @@
-import { ILineItem } from "@/interfaces/line_item";
+import { ILineItem } from '@/interfaces/line_item';
 
 export function isILineItem(obj: ILineItem): obj is ILineItem {
   if (

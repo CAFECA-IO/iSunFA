@@ -1,4 +1,10 @@
-import { EventType, PaymentPeriodType, PaymentStatusType, ProgressStatus, VoucherType } from '@/constants/account';
+import {
+  EventType,
+  PaymentPeriodType,
+  PaymentStatusType,
+  ProgressStatus,
+  VoucherType,
+} from '@/constants/account';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
