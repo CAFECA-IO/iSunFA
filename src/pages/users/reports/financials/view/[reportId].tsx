@@ -47,14 +47,7 @@ const DUMMY_DATA_FOR_REPORT = {
 };
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-  // eslint-disable-next-line no-console
-  console.log(
-    'ViewFinancialReportPage',
-    reportId,
-    reportType,
-    BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-  );
-
+// TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>
