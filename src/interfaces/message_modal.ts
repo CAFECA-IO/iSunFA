@@ -11,7 +11,6 @@ export enum MessageType {
 export interface IMessageModal {
   title: string;
   content: string;
-  subMsg?: string;
   hideCloseBtn?: boolean;
   submitBtnStr: string;
   submitBtnFunction: () => void;
