@@ -1,4 +1,3 @@
-/* eslint-disable */
 import Link from 'next/link';
 import React from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
@@ -13,12 +12,9 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
-import { useRouter } from 'next/router';
 
 const NavBar = () => {
-  const router = useRouter();
-
-  const { credential: credential, signedIn, signOut, username, isSelectCompany } = useUserCtx();
+  const { signedIn, signOut, username, isSelectCompany } = useUserCtx();
 
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
@@ -58,7 +54,6 @@ const NavBar = () => {
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
     signOut();
-    router.push(ISUNFA_ROUTE.LOGIN);
   };
 
   const displayedAppMenuMobile = (
@@ -73,8 +68,10 @@ const NavBar = () => {
       >
         <FaChevronLeft />
       </button>
-      {/* TODO: temp disabled (20240507 - Shirley) */}
       <button
+        type="button"
+        // TODO: temp disabled (20240507 - Shirley)
+        // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
@@ -82,14 +79,16 @@ const NavBar = () => {
         <p>Project</p>
       </button>
       <Link
-        href={ISUNFA_ROUTE.ACCOUNTING}
+        href={`${signedIn ? ISUNFA_ROUTE.ACCOUNTING : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
         <p>Account</p>
       </Link>
-      {/* TODO: temp disabled (20240507 - Shirley) */}
       <button
+        type="button"
+        // TODO: temp disabled (20240517 - Shirley)
+        // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
@@ -97,14 +96,14 @@ const NavBar = () => {
         <p>Contract</p>
       </button>
       <Link
-        href={ISUNFA_ROUTE.SALARY}
+        href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
         <p>Salary</p>
       </Link>
       <Link
-        href={ISUNFA_ROUTE.USERS_MY_REPORTS}
+        href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
@@ -134,6 +133,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <FiLayout size={20} />
+
         <p>Dashboard</p>
       </Link>
       <Link
@@ -144,6 +144,8 @@ const NavBar = () => {
         <p>Contact us</p>
       </Link>
       <button
+        // TODO: temp disabled (20240517 - Shirley)
+        // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         type="button"
         className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50"
@@ -155,6 +157,8 @@ const NavBar = () => {
         <FaChevronRight />
       </button>
       <button
+        // TODO: temp disabled (20240517 - Shirley)
+        // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         type="button"
         className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50"
@@ -177,6 +181,9 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Project button */}
       {/* TODO: temp disabled (20240507 - Shirley) */}
       <button
+        type="button"
+        // TODO: temp disabled (20240517 - Shirley)
+        // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex flex-col items-center gap-8px px-20px disabled:opacity-50"
       >
@@ -184,28 +191,36 @@ const NavBar = () => {
         <p>Project</p>
       </button>
       {/* Info: (20240416 - Julian) Account button */}
-      <Link href={ISUNFA_ROUTE.ACCOUNTING} className="mx-auto">
-        <button className="flex flex-col items-center gap-8px">
+      <Link href={`${signedIn ? ISUNFA_ROUTE.ACCOUNTING : ISUNFA_ROUTE.LOGIN}`} className="mx-auto">
+        <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
           <p>Account</p>
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Contract button */}
-      {/* TODO: temp disabled (20240507 - Shirley) */}
-      <button disabled={true} className="flex flex-col items-center gap-8px disabled:opacity-50">
+      <button
+        type="button"
+        // TODO: temp disabled (20240517 - Shirley)
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="flex flex-col items-center gap-8px disabled:opacity-50"
+      >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
         <p>Contract</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
-      <Link href={ISUNFA_ROUTE.SALARY} className="mx-auto">
-        <button className="flex flex-col items-center gap-8px">
+      <Link href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`} className="mx-auto">
+        <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
           <p>Salary</p>
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Report button */}
-      <Link href={ISUNFA_ROUTE.USERS_MY_REPORTS} className="mx-auto">
-        <button className="flex flex-col items-center gap-8px">
+      <Link
+        href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
+        className="mx-auto"
+      >
+        <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
           <p>Report</p>
         </button>
@@ -226,9 +241,12 @@ const NavBar = () => {
 
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? (!!username ? username : DEFAULT_DISPLAYED_USER_NAME) : ''}
+            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
           </div>
           <button
+            type="button"
+            // TODO: temp disabled (20240517 - Shirley)
+            // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
             className="flex shrink-0 flex-col justify-center rounded-xs px-2.5 disabled:opacity-50"
           >
@@ -287,6 +305,9 @@ const NavBar = () => {
           </div>
         </Link>
         <button
+          type="button"
+          // TODO: temp disabled (20240517 - Shirley)
+          // eslint-disable-next-line react/jsx-boolean-value
           disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
@@ -311,6 +332,7 @@ const NavBar = () => {
           </div>
         </button>
         <button
+          type="button"
           disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
@@ -370,7 +392,7 @@ const NavBar = () => {
 
   const displayedLogInBtn = signedIn ? (
     <div ref={userMenuRef}>
-      <button onClick={avatarClickHandler}>
+      <button type="button" onClick={avatarClickHandler}>
         {/* Info: avatar svg (20240408 - Shirley) */}
 
         <Image alt="avatar" src="/elements/avatar.png" width={40} height={40} className="my-auto" />
@@ -506,7 +528,13 @@ const NavBar = () => {
         </div>
         {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
-          <button disabled={true} className="disabled:opacity-50">
+          <button
+            type="button"
+            // TODO: temp disabled (20240517 - Shirley)
+            // eslint-disable-next-line react/jsx-boolean-value
+            disabled={true}
+            className="disabled:opacity-50"
+          >
             <svg
               width="22"
               height="22"
@@ -523,7 +551,13 @@ const NavBar = () => {
               />
             </svg>
           </button>
-          <button disabled={true} className="disabled:opacity-50">
+          <button
+            type="button"
+            // TODO: temp disabled (20240517 - Shirley)
+            // eslint-disable-next-line react/jsx-boolean-value
+            disabled={true}
+            className="disabled:opacity-50"
+          >
             <svg
               width="22"
               height="22"
@@ -540,7 +574,7 @@ const NavBar = () => {
               />
             </svg>
           </button>
-          <button onClick={appMenuClickHandler}>
+          <button type="button" onClick={appMenuClickHandler}>
             <svg
               width="22"
               height="22"
