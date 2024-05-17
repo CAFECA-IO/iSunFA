@@ -12,7 +12,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 interface IViewReportSectionProps {
-  reportTypesName: { id: string; name: string };
+  reportTypesName: { id: FinancialReportTypesKey; name: string };
 
   tokenContract: string;
   tokenId: string;
@@ -514,7 +514,7 @@ const ViewFinancialSection = ({
           </div>
         </Button>
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
-          {reportTypesName.name}
+          {reportTypesName?.name}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
