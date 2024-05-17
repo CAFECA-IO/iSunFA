@@ -92,7 +92,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const { pathname } = router;
 
   const { signedIn } = useUserCtx();
-  const { reportPendingStatus: pendingStatus, reportGeneratedStatus: generatedStatus } =
+  const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
   const windowSize = useWindowSize();
@@ -192,7 +192,16 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
-    const { id, type, content, closeable, autoClose: isAutoClose, position: toastPosition } = props;
+    const {
+      id,
+      type,
+      content,
+      closeable,
+      autoClose: isAutoClose,
+      position: toastPosition,
+      onClose,
+      onOpen,
+    } = props;
 
     const bodyStyle =
       'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75';
@@ -224,6 +233,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       case ToastType.ERROR:
@@ -236,6 +247,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       case ToastType.WARNING:
@@ -248,6 +261,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       case ToastType.INFO:
@@ -260,6 +275,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       default:
@@ -284,7 +301,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       return;
     }
 
-    if (generatedStatus) {
+    if (reportGeneratedStatus) {
       toastHandler({
         type: ToastType.SUCCESS,
         id: 'latest-report-generated',
@@ -299,10 +316,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         ),
         position: ToastPosition.BOTTOM_RIGHT,
         autoClose: false,
+        onClose: () => {
+          reportGeneratedStatusHandler(false);
+        },
       });
     }
 
-    if (pendingStatus) {
+    if (reportPendingStatus) {
       toastHandler({
         type: ToastType.INFO,
         id: 'report-generating',
@@ -317,7 +337,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         autoClose: false,
       });
     }
-  }, [pendingStatus, generatedStatus, signedIn, pathname]);
+  }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {

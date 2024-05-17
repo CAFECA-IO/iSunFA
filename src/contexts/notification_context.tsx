@@ -1,6 +1,4 @@
-/* eslint-disable */
-
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext } from 'react';
 import useStateRef from 'react-usestateref';
 
 export interface INotificationProvider {
@@ -18,10 +16,12 @@ const NotificationContext = createContext<INotificationContext | undefined>(unde
 
 // TODO: notification context (20240429 - Shirley)
 export const NotificationProvider = ({ children }: INotificationProvider) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportPendingStatus, setReportPendingStatus, reportPendingStatusRef] =
-    useStateRef<boolean>(false);
+    useStateRef<boolean>(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportGeneratedStatus, setReportGeneratedStatus, reportGeneratedStatusRef] =
-    useStateRef<boolean>(false);
+    useStateRef<boolean>(true);
 
   const reportPendingStatusHandler = (status: boolean) => {
     setReportPendingStatus(status);
@@ -31,11 +31,11 @@ export const NotificationProvider = ({ children }: INotificationProvider) => {
     setReportGeneratedStatus(status);
   };
 
-  // Info: demo
+  // Deprecated: demo (20240527 - Shirley)
   // useEffect(() => {
   //   const interval = setInterval(() => {
-  //     setPendingStatus((prev) => !prev);
-  //     setGeneratedStatus((prev) => !prev);
+  //     setReportPendingStatus((prev) => !prev);
+  //     setReportGeneratedStatus((prev) => !prev);
   //   }, 10000);
 
   //   return () => {
