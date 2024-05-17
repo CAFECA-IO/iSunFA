@@ -39,8 +39,8 @@ model auditReport {
   informationYear     String
   detailedInformation String
   creditRating        String
-  link                String
   dateOfUpload        Int
+  link                String
   company             company @relation(fields: [companyId], references: [id])
 }
 
@@ -105,7 +105,6 @@ model companyKYC {
   city                      String
   industry                  String
   legalName                 String
-  registerCountry           String
   structure                 String
   zipCode                   String
   createdAt                 Int     @map("created_at")
@@ -129,9 +128,9 @@ model contract {
   signatory    String
   status       String
   payment      String
-  progress     String
   startDate    Int
   endDate      Int
+  progress     String
   project      project @relation(fields: [projectId], references: [id])
 }
 
@@ -173,10 +172,10 @@ model invoice {
   id          Int     @id @default(autoincrement())
   companyId   Int     @map("company_id")
   invoiceNo   String
-  status      String
-  totalAmount String
   invoiceDate Int
   dueDate     Int
+  status      String
+  totalAmount String
   company     company @relation(fields: [companyId], references: [id])
 }
 
@@ -207,9 +206,9 @@ model project {
   id                  Int               @id @default(autoincrement())
   name                String
   description         String
-  status              String
   startDate           Int
   endDate             Int
+  status              String
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
@@ -229,12 +228,12 @@ model subscription {
   id         Int     @id @default(autoincrement())
   companyId  Int     @map("company_id")
   plan       String
+  cardId     Int     @map("card_id")
   price      String
   autoRenew  Boolean
-  status     String
-  cardId     Int     @map("card_id")
   startDate  Int
   expireDate Int
+  status     String
   card       card    @relation(fields: [cardId], references: [id])
   company    company @relation(fields: [companyId], references: [id])
 }

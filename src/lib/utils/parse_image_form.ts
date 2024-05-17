@@ -39,7 +39,6 @@ export const parseForm = (
       // Info: (20240329) Murky: Do nothing if /tmp already exist
     }
     const form = new IncomingForm(options);
-
     form.parse(req, (err, fields, files) => {
       if (err) {
         return reject(err);
