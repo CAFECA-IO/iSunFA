@@ -21,4 +21,6 @@ export interface IToastify {
   closeable: boolean;
   position?: ToastPosition;
   autoClose?: false | number;
+  onClose?: () => void;
+  onOpen?: () => void;
 }

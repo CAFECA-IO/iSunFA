@@ -65,7 +65,7 @@ const ReportsHistoryItem = ({
       </td>
       <td className="pl-5 text-start text-base text-text-neutral-primary">
         <Link
-          href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/?report_id=${reportLinkId}&report_type=${ReportTypeToBaifaReportType[reportType]}`}
+          href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
         >
           {name}
         </Link>

@@ -24,8 +24,9 @@ export interface IGeneratedReportItem extends IBasicReportItem {
     code: string;
   } | null;
   reportLinkId: string;
-  blockchainExplorerLink: string;
   downloadLink: string;
+  blockchainExplorerLink: string;
+  evidenceId: string;
 }
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
@@ -140,7 +141,7 @@ export const generateRandomGeneratedReportItem = (daysAgo: number): IGeneratedRe
       startTimestamp,
       endTimestamp,
     },
-    blockchainExplorerLink: 'https://explorer.example.com/tx/123',
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: {
       id: Math.random().toString(36).substring(7),
       name: 'Example Project',
@@ -149,7 +150,8 @@ export const generateRandomGeneratedReportItem = (daysAgo: number): IGeneratedRe
     downloadLink: 'https://example.com/download/report.pdf',
     reportType: FinancialReportTypesKey.balance_sheet,
     reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c10900000000000000000000000000000000000000007',
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   };
 };
 
@@ -171,6 +173,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportType: FinancialReportTypesKey.balance_sheet,
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   },
   {
     id: 'y11ggs',
@@ -183,6 +186,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   },
   {
     id: 'uiz7oa',
@@ -195,6 +199,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   },
   {
     id: '6pa0sq',
@@ -207,6 +212,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   },
   {
     id: 'c353qc',
@@ -219,5 +225,6 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   },
 ];
