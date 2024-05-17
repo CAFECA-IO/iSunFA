@@ -34,9 +34,10 @@ export enum PaymentPeriodType {
   INSTALLMENT = 'installment',
 }
 
-// ToDo: change to SNAKE_CASE (20240516 - Murky)
-export const eventTypeToVoucherType = {
-  income: 'receive' as VoucherType,
-  payment: 'expense' as VoucherType,
-  transfer: 'transfer' as VoucherType,
+export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
+  [key in EventType]: VoucherType;
+} = {
+  [EventType.INCOME]: VoucherType.RECEIVE,
+  [EventType.PAYMENT]: VoucherType.EXPENSE,
+  [EventType.TRANSFER]: VoucherType.TRANSFER,
 };

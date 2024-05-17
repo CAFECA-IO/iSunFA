@@ -5,6 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { ALLOWED_ORIGINS } from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
+import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -276,3 +277,7 @@ export const countdown = (remainingSeconds: number) => {
     remainingTimeStr,
   };
 };
+
+export function eventTypeToVoucherType(eventType: EventType): VoucherType {
+  return EVENT_TYPE_TO_VOUCHER_TYPE_MAP[eventType];
+}

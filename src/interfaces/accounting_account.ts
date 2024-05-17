@@ -1,4 +1,5 @@
-import { ProgressStatus, isProgressStatus } from '@/constants/account';
+import { ProgressStatus } from '@/constants/account';
+import { isProgressStatus } from '@/lib/utils/type_guard/account';
 
 export interface IAccountingAccount {
   id: number;

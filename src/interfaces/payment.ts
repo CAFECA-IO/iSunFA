@@ -3,7 +3,7 @@ import {
   PaymentStatusType,
 } from '@/constants/account';
 
-import { isPaymentPeriodType, isPaymentStatusType } from '@/lib/utils/type_guard/constants/account';
+import { isPaymentPeriodType, isPaymentStatusType } from '@/lib/utils/type_guard/account';
 
 export interface IPayment {
   isRevenue: boolean; // 是否會創造收入，true是錢會進來，false是錢會出去
