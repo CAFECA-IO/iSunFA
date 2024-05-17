@@ -1,13 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAnalysisReport, isIAnalysisReportRequest } from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
-import { isIFinancialStatements } from '@/interfaces/financial_report';
 import { AICH_URI } from '@/constants/config';
 
-// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { isIFinancialStatements } from '@/lib/utils/type_guard/financial_report';
 
 const mockAnalysisReportUrl: IAnalysisReport = 'http://www.google.com.br';
 

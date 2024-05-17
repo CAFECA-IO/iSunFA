@@ -1,9 +1,10 @@
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IFinancialReportJSON, isIFinancialReportJSON } from '@/interfaces/financial_report';
+import { IFinancialReportJSON } from '@/interfaces/financial_report';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { isIFinancialReportJSON } from '@/lib/utils/type_guard/financial_report';
 
 export default async function handler(
   req: NextApiRequest,

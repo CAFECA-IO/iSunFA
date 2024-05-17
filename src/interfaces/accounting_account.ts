@@ -1,4 +1,4 @@
-import { ProgressStatus, isProgressStatus } from '@/constants/account';
+import { ProgressStatus } from '@/constants/account';
 
 export interface IAccountingAccount {
   id: number;
@@ -20,14 +20,6 @@ export interface IDetailAccountingAccount {
 export interface IAccountResultStatus {
   resultId: string;
   status: ProgressStatus;
-}
-
-export function isIAccountResultStatus(value: unknown): value is IAccountResultStatus {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const { resultId, status } = value as IAccountResultStatus;
-  return typeof resultId === 'string' && isProgressStatus(status);
 }
 
 export type DetailAccountingAccountOrEmpty = IDetailAccountingAccount | null;
