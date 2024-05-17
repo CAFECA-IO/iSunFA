@@ -170,6 +170,8 @@ const FinancialReportSection = () => {
           submitBtnStr: 'Close',
           submitBtnFunction: () => {},
           messageType: MessageType.SUCCESS,
+          submitBtnVariant: 'secondaryBorderless',
+          submitBtnClassName: 'text-link-text-success hover:text-link-text-success-hover',
         });
         messageModalVisibilityHandler();
       } else {
@@ -178,10 +180,27 @@ const FinancialReportSection = () => {
         messageModalDataHandler({
           title: '',
           subtitle: 'Failed',
-          content: `We can’t generate the report you applied for, please change the selections and try again.`,
+          content: `We can't generate the report you applied for, please change the selections and try again.`,
           submitBtnStr: 'Try again',
           submitBtnFunction: () => {},
           messageType: MessageType.ERROR,
+          submitBtnVariant: 'tertiaryBorderless',
+          submitBtnIcon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 16 16"
+            >
+              <path
+                className="fill-current"
+                fillRule="evenodd"
+                d="M1.252 8.002a6.75 6.75 0 0111.525-4.771c.377.377.777.832 1.142 1.27V2.668a.75.75 0 011.5 0v4a.75.75 0 01-.75.75h-4a.75.75 0 010-1.5h2.473c-.44-.548-.963-1.165-1.426-1.628a5.25 5.25 0 101.331 5.17.75.75 0 111.441.416A6.75 6.75 0 011.252 8.002z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          ),
         });
         messageModalVisibilityHandler();
       }
