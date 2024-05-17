@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import { cn } from '@/lib/utils/common';
 
 interface IMessageModalProps {
   isModalVisible: boolean;
@@ -25,6 +26,9 @@ const MessageModal = ({
     backBtnStr,
     backBtnFunction,
     messageType,
+    submitBtnClassName,
+    submitBtnVariant,
+    submitBtnIcon,
   } = messageModalData;
 
   // Info: (20240514 - Julian) 如果沒有 backBtnFunction，則預設為關閉 modal
@@ -83,6 +87,7 @@ const MessageModal = ({
     </Button>
   ) : null;
 
+  // Info: 換行處理 (20240515 - Shirley)
   const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
     // eslint-disable-next-line react/no-array-index-key
     <div key={index}>
@@ -94,7 +99,7 @@ const MessageModal = ({
   // Info: 換行處理 (20240515 - Shirley)
   const displayedContent = content.split('\n').map((line, index) => (
     // eslint-disable-next-line react/no-array-index-key
-    <div key={index} className="-mt-5 mb-5">
+    <div key={index} className="-mt-2">
       {line}
       {index < content.split('\n').length - 1}
     </div>
@@ -121,19 +126,22 @@ const MessageModal = ({
           <h1 className={`text-base font-medium ${titleColor}`}>{displayedSubtitles}</h1>
           <Image src={imgStr} width={48} height={48} alt={imgAlt} />
           {/* Info: (20240507 - Julian) sub message (red color) */}
-          <p className="text-lightRed">{subMsg}</p>
+          <p className="text-base text-lightRed">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <div className="text-lightGray5">{displayedContent}</div>
+          <div className="text-sm text-lightGray5">{displayedContent}</div>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}
           <Button
-            className="px-16px py-8px"
+            className={cn('px-16px py-8px', submitBtnClassName)}
             type="button"
             onClick={submitClickHandler}
-            variant="tertiary"
+            variant={submitBtnVariant ?? 'tertiary'}
           >
-            {submitBtnStr}
+            <div className="flex items-center space-x-2">
+              <span>{submitBtnStr}</span>
+              {submitBtnIcon}
+            </div>
           </Button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { NotificationProvider } from '@/contexts/notification_context';
 import 'react-toastify/dist/ReactToastify.css';
 import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
@@ -26,15 +27,17 @@ function App({ Component, pageProps }: AppProps) {
 
   return (
     <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
-      <UserProvider>
-        <DashboardProvider>
-          <AccountingProvider>
-            <GlobalProvider>
-              <Component {...pageProps} />
-            </GlobalProvider>
-          </AccountingProvider>
-        </DashboardProvider>
-      </UserProvider>{' '}
+      <NotificationProvider>
+        <UserProvider>
+          <DashboardProvider>
+            <AccountingProvider>
+              <GlobalProvider>
+                <Component {...pageProps} />
+              </GlobalProvider>
+            </AccountingProvider>
+          </DashboardProvider>
+        </UserProvider>
+      </NotificationProvider>
     </div>
   );
 }
