@@ -6,9 +6,9 @@ import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 import { ICredential, IUserAuth } from '@/interfaces/webauthn';
 import { checkFIDO2Cookie, createChallenge } from '@/lib/utils/authorization';
-import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
+import { COOKIE_NAME, DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
-import { ISUNFA_API } from '@/constants/url';
+import { ISUNFA_API, ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -58,15 +58,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   );
   const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
 
-  const {
-    trigger: signOut,
-    error: signOutError,
-    code: signOutCode,
-    success: signOutSuccess,
-  } = APIHandler<void>(
+  const { trigger: signOutAPI } = APIHandler<void>(
     APIName.SIGN_OUT,
     {
-      body: { credential },
+      body: { credential: credentialRef.current },
     },
     false,
     false
@@ -295,8 +290,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     expiration.setHours(expiration.getHours() + 1);
 
     const credential = await readCookie();
-    // console.log('credential:', credential);
-
     document.cookie = `FIDO2=${encodeURIComponent(JSON.stringify(credentialRef.current))}; expires=${expiration.toUTCString()}; path=/`;
   };
 
@@ -314,6 +307,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signOut = async () => {
+    signOutAPI(); // Deprecated: 登出只需要在前端刪掉 cookie 就好 (20240517 - Shirley)
+    clearState();
+    router.push(ISUNFA_ROUTE.LOGIN);
+    const cookieName = COOKIE_NAME.FIDO2;
+    document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  };
+
   useEffect(() => {
     (async () => {
       await init();
@@ -324,21 +325,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     checkCookieAndSignOut();
   }, [router.pathname]);
 
-  useEffect(() => {
-    if (signOutSuccess) {
-      clearState();
-    } else {
-      // eslint-disable-next-line no-console
-      console.log(`signOutError(${signOutCode}): `, signOutError);
-    }
-  }, [signOutSuccess]);
-
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
       signUp,
       signIn,
-      signOut,
+      signOut: signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
@@ -352,4 +344,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
-export const useUserCtx = () => useContext(UserContext);
+export const useUserCtx = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUserCtx must be used within a UserProvider');
+  }
+  return context;
+};

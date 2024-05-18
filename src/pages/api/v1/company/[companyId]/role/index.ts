@@ -35,7 +35,8 @@ export default async function handler(
       // Info: (20240419 - Jacky) A010003 - POST /role
     } else if (req.method === 'POST') {
       const { name } = req.body;
-      // console.log('name:', name);
+      const { companyId } = req.query;
+      const companyIdNum = Number(companyId);
       if (!name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
@@ -44,7 +45,7 @@ export default async function handler(
           name,
           company: {
             connect: {
-              id: 3,
+              id: companyIdNum,
             },
           },
           permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],

@@ -6,6 +6,7 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let role: IRole;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -24,15 +25,10 @@ beforeEach(async () => {
   const createdRole = await prisma.role.create({
     data: {
       company: {
-        connectOrCreate: {
-          where: {
-            id: 1,
-          },
-          create: {
-            name: 'Test Company',
-            code: 'TST',
-            regional: 'TW',
-          },
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
         },
       },
       name: 'KING',
@@ -46,6 +42,7 @@ beforeEach(async () => {
       },
     },
   });
+  companyId = createdRole.companyId;
   role = {
     ...createdRole,
     companyName: createdRole.company.name,
@@ -58,6 +55,15 @@ afterEach(async () => {
     await prisma.role.delete({
       where: {
         id: role.id,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
       },
     });
   } catch (error) {
@@ -93,6 +99,9 @@ describe('test role API handler', () => {
     req.method = 'POST';
     req.body = {
       name: 'queen',
+    };
+    req.query = {
+      companyId: companyId.toString(),
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(201);

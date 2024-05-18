@@ -70,21 +70,20 @@ model client {
 }
 
 model company {
-  id                Int      @id @default(autoincrement())
-  name              String
-  code              String
-  regional          String
-
-  roles            role[]
-  auditReports      auditReport[]
-  clients           client[]
-  employees         employee[]
-  imvoices          invoice[]
-  companyKYCs       companyKYC[]
-  subscriptions     subscription[]
-  invitations       invitation[]
-  usersCompanysRoles    userCompanyRole[]
+  id                  Int                 @id @default(autoincrement())
+  name                String
+  code                String
+  regional            String
+  auditReports        auditReport[]
+  clients             client[]
+  companyKYCs         companyKYC[]
   companysDepartments companyDepartment[]
+  employees           employee[]
+  invitations         invitation[]
+  imvoices            invoice[]
+  roles               role[]
+  subscriptions       subscription[]
+  usersCompanysRoles  userCompanyRole[]
 }
 
 model companyKYC {
@@ -93,21 +92,22 @@ model companyKYC {
   address                   String
   representativeName        String
   country                   String
-  legalForm                 String
   registrationNumber        String
   registrationDate          String
-  registrationIndustry      String
   contactPerson             String
   contactPhone              String
   contactEmail              String
   website                   String
   registrationCertificateId String
-  registrationCertificate   String
   taxCertificateId          String
-  taxCertificate            String
   representativeIdType      String
   representativeIdCardId    String
-  representativeIdcard      String
+  city                      String
+  industry                  String
+  legalName                 String
+  structure                 String
+  zipCode                   String
+  createdAt                 Int     @map("created_at")
   company                   company @relation(fields: [companyId], references: [id])
 }
 
@@ -180,27 +180,17 @@ model invoice {
 }
 
 model invitation {
-  id        Int    @id @default(autoincrement())
-  code      String
-  companyId Int    @map("company_id")
-  roleId    Int    @map("role_id")
-  createdUserId Int @map("created_user_id")
-  hasUsed   Boolean
-  expiredAt Int
-    
-  createdUser user @relation(fields: [createdUserId], references: [id])
-  role      role @relation(fields: [roleId], references: [id])
-  company   company @relation(fields: [companyId], references: [id])
+  id            Int     @id @default(autoincrement())
+  code          String
+  companyId     Int     @map("company_id")
+  roleId        Int     @map("role_id")
+  createdUserId Int     @map("created_user_id")
+  hasUsed       Boolean
+  expiredAt     Int
+  company       company @relation(fields: [companyId], references: [id])
+  createdUser   user    @relation(fields: [createdUserId], references: [id])
+  role          role    @relation(fields: [roleId], references: [id])
 }
-
-// model invitationRole{
-//   id          Int      @id @default(autoincrement())
-//   invitationId Int
-//   roleId       Int
-
-//   invitation   invitation @relation(fields: [invitationId], references: [id])
-//   role         role @relation(fields: [roleId], references: [id])
-// }
 
 model lineItem {
   id          Int     @id @default(autoincrement())
@@ -225,15 +215,13 @@ model project {
 }
 
 model role {
-  id               Int      @id @default(autoincrement())
-  companyId        Int      @map("company_id")
-  name             String   
-  permissions       String[]
-
-  usersCompanysRoles    userCompanyRole[]
-  invitations       invitation[]
-
-  company          company  @relation(fields: [companyId], references: [id])
+  id                 Int               @id @default(autoincrement())
+  companyId          Int               @map("company_id")
+  name               String
+  permissions        String[]
+  invitations        invitation[]
+  company            company           @relation(fields: [companyId], references: [id])
+  usersCompanysRoles userCompanyRole[]
 }
 
 model subscription {
@@ -251,43 +239,17 @@ model subscription {
 }
 
 model user {
-  id              Int      @id @default(autoincrement())
-  name            String
-  fullName        String?
-  email           String?
-  phone           String?
-  kycStatus       Boolean   @default(false)
-  credentialId    String
-  publicKey       String
-  algorithm       String
-  imageId         String?
-
-  invitations       invitation[]
-  userKYCs        userKYC[]
-  usersCompanysRoles    userCompanyRole[]
-}
-
-model userKYC {
-  id                      Int    @id @default(autoincrement())
-  userId                  Int
-  country                 String
-  idType                  String
-  idNumber                String
-  idImageId               String
-  idImage                 String
-  occupation              String
-  certificateFrontImageId String
-  certificateFrontImage   String
-  certificateBackImageId  String
-  certificateBackImage    String
-  selfieImageId           String
-  selfieImage             String
-  facialIdentifyFileId    String
-  facialIdentifyFile      String
-  status                  String
-  user                    user   @relation(fields: [userId], references: [id])
-
-  @@map("user_kyc")
+  id                 Int               @id @default(autoincrement())
+  name               String
+  fullName           String?
+  email              String?
+  phone              String?
+  credentialId       String
+  publicKey          String
+  algorithm          String
+  imageId            String?
+  invitations        invitation[]
+  usersCompanysRoles userCompanyRole[]
 }
 
 model userCompanyRole {

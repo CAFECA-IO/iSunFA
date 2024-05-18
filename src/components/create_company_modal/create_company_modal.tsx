@@ -8,6 +8,7 @@ import { RxCross2 } from 'react-icons/rx';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 // import { MessageType } from '@/interfaces/message_modal';
 
 interface ICreateCompanyModal {
@@ -61,11 +62,12 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   };
 
   const createCompany = async () => {
+    // ToDo: (20240514 - Julian) @Tzuhan Add API call
     const response = await fetch('/api/v1/company', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        userid: username ?? '',
+        userid: username ?? DEFAULT_DISPLAYED_USER_NAME,
       },
       body: JSON.stringify({
         name: nameValue,
@@ -78,9 +80,12 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       const data = await response.json();
       const { name } = data;
       selectCompany(name);
-    }
 
-    modalVisibilityHandler();
+      // Info: (20240517 - Julian) Close modal
+      setNameValue('');
+      setRegistrationNumberValue('');
+      modalVisibilityHandler();
+    }
 
     // const isCompanyPassedKyc =
     //   Object.values(companyList).find(

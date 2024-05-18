@@ -4,7 +4,6 @@ export interface IUser {
   fullName: string | null;
   email: string | null;
   phone: string | null;
-  kycStatus: boolean;
   credentialId: string;
   publicKey: string;
   algorithm: string;

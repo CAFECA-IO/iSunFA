@@ -36,6 +36,7 @@ const ficSelection: string[] = [
   '007 First Commercial Bank',
 ];
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
+
 const projectSelection: { id: string | null; name: string }[] = [
   { id: null, name: 'None' },
   { id: 'project_a', name: 'Project A' },
@@ -134,10 +135,9 @@ const NewJournalForm = () => {
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
-  // ToDo: (20240430 - Julian) Should select one single date
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.Income);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.INCOME);
 
   const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
@@ -151,9 +151,9 @@ const NewJournalForm = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AtOnce);
+  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.Unpaid);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.UNPAID);
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
@@ -304,11 +304,11 @@ const NewJournalForm = () => {
   const feeToggleHandler = () => setFeeToggle(!feeToggle);
 
   // Info: (20240423 - Julian) 處理 radio button 選擇
-  const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriodType.AtOnce);
-  const installmentClickHandler = () => setPaymentPeriod(PaymentPeriodType.Installment);
-  const paidClickHandler = () => setPaymentStatus(PaymentStatusType.Paid);
-  const partialPaidClickHandler = () => setPaymentStatus(PaymentStatusType.Partial);
-  const unpaidClickHandler = () => setPaymentStatus(PaymentStatusType.Unpaid);
+  const atOnceClickHandler = () => setPaymentPeriod(PaymentPeriodType.AT_ONCE);
+  const installmentClickHandler = () => setPaymentPeriod(PaymentPeriodType.INSTALLMENT);
+  const paidClickHandler = () => setPaymentStatus(PaymentStatusType.PAID);
+  const partialPaidClickHandler = () => setPaymentStatus(PaymentStatusType.PARTIAL);
+  const unpaidClickHandler = () => setPaymentStatus(PaymentStatusType.UNPAID);
 
   //  Info: (20240425 - Julian) 檢查表單內容是否有變動
   const formChangedHandler = () => setFormHasChanged(true);
@@ -316,7 +316,7 @@ const NewJournalForm = () => {
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
-    setSelectedEventType(EventType.Income);
+    setSelectedEventType(EventType.INCOME);
     setInputPaymentReason('');
     setInputDescription('');
     setInputVendor('');
@@ -326,9 +326,9 @@ const NewJournalForm = () => {
     setSelectedMethod(paymentMethodSelection[0]);
     setSelectedFIC(ficSelection[0]);
     setInputAccountNumber('');
-    setPaymentPeriod(PaymentPeriodType.AtOnce);
+    setPaymentPeriod(PaymentPeriodType.AT_ONCE);
     setInputInstallment(0);
-    setPaymentStatus(PaymentStatusType.Unpaid);
+    setPaymentStatus(PaymentStatusType.UNPAID);
     setInputPartialPaid(0);
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
@@ -402,7 +402,7 @@ const NewJournalForm = () => {
   }, [uploadSuccess, result]);
 
   useEffect(() => {
-    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.InProgress)) {
+    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.IN_PROGRESS)) {
       setTimeout(
         () => {
           getVoucherStatus({
@@ -415,10 +415,10 @@ const NewJournalForm = () => {
         statusSuccess === undefined ? 0 : 2000
       );
     }
-    if (statusSuccess && status && status !== ProgressStatus.InProgress) {
+    if (statusSuccess && status && status !== ProgressStatus.IN_PROGRESS) {
       if (
         voucherId &&
-        (status === ProgressStatus.Success || status === ProgressStatus.AlreadyUpload)
+        (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)
       ) {
         getVoucherPreview({
           params: {
@@ -482,9 +482,9 @@ const NewJournalForm = () => {
     // Info: (20240429 - Julian) 檢查手續費是否有填寫
     (!!feeToggle && inputFee === 0) ||
     // Info: (20240429 - Julian) 檢查總價是否有填寫
-    (paymentPeriod === PaymentPeriodType.Installment && inputInstallment === 0) ||
+    (paymentPeriod === PaymentPeriodType.INSTALLMENT && inputInstallment === 0) ||
     // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-    (paymentStatus === PaymentStatusType.Partial && inputPartialPaid === 0);
+    (paymentStatus === PaymentStatusType.PARTIAL && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = Object.values(EventType).map((type: EventType) => {
@@ -670,7 +670,6 @@ const NewJournalForm = () => {
                 </ul>
               </div>
             </div> */}
-            {/* ToDo: (20240423 - Julian) Add new asset */}
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}
@@ -913,7 +912,7 @@ const NewJournalForm = () => {
                   id="inputAtOnce"
                   name="paymentPeriod"
                   className={radioButtonStyle}
-                  checked={paymentPeriod === PaymentPeriodType.AtOnce}
+                  checked={paymentPeriod === PaymentPeriodType.AT_ONCE}
                   onChange={atOnceClickHandler}
                 />
                 <p>At Once</p>
@@ -930,14 +929,14 @@ const NewJournalForm = () => {
                     id="inputInstallment"
                     name="paymentPeriod"
                     className={radioButtonStyle}
-                    checked={paymentPeriod === PaymentPeriodType.Installment}
+                    checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
                     onChange={installmentClickHandler}
                   />
                   Installment:
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.Installment ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputInstallmentTimes"
@@ -945,7 +944,7 @@ const NewJournalForm = () => {
                     name="inputInstallmentTimes"
                     value={inputInstallment}
                     onChange={installmentChangeHandler}
-                    disabled={paymentPeriod !== PaymentPeriodType.Installment}
+                    disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
                     className="flex-1 bg-transparent px-10px outline-none"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -968,7 +967,7 @@ const NewJournalForm = () => {
                   id="inputUnpaid"
                   name="paymentStatus"
                   className={radioButtonStyle}
-                  checked={paymentStatus === PaymentStatusType.Unpaid}
+                  checked={paymentStatus === PaymentStatusType.UNPAID}
                   onChange={unpaidClickHandler}
                 />
                 <p>Unpaid</p>
@@ -984,14 +983,14 @@ const NewJournalForm = () => {
                     id="inputPartialPaid"
                     name="paymentStatus"
                     className={radioButtonStyle}
-                    checked={paymentStatus === PaymentStatusType.Partial}
+                    checked={paymentStatus === PaymentStatusType.PARTIAL}
                     onChange={partialPaidClickHandler}
                   />
                   <p>Partial Paid:</p>
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.Partial ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
                   <input
                     id="inputPartialPaidAmount"
@@ -999,7 +998,7 @@ const NewJournalForm = () => {
                     name="inputPartialPaidAmount"
                     value={inputPartialPaid}
                     onChange={partialPaidChangeHandler}
-                    disabled={paymentStatus !== PaymentStatusType.Partial}
+                    disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1021,7 +1020,7 @@ const NewJournalForm = () => {
                   id="inputPaid"
                   name="paymentStatus"
                   className={radioButtonStyle}
-                  checked={paymentStatus === PaymentStatusType.Paid}
+                  checked={paymentStatus === PaymentStatusType.PAID}
                   onChange={paidClickHandler}
                 />
                 <p>Paid</p>
@@ -1034,7 +1033,7 @@ const NewJournalForm = () => {
   );
 
   const displayedProjectSecondLine =
-    selectedEventType === EventType.Income ? (
+    selectedEventType === EventType.INCOME ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
         <ProgressBar
@@ -1146,7 +1145,7 @@ const NewJournalForm = () => {
 
   return (
     <div>
-      {status && status === ProgressStatus.InProgress ? (
+      {status && status === ProgressStatus.IN_PROGRESS ? (
         <p>Loading...</p>
       ) : (
         <form

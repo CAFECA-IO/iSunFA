@@ -10,6 +10,12 @@ export enum ReportTypeToBaifaReportType {
   cash_flow_statement = 'cash-flow',
 }
 
+export enum BaifaReportTypeToReportType {
+  balance = 'balance_sheet',
+  'comprehensive-income' = 'comprehensive_income_statement',
+  'cash-flow' = 'cash_flow_statement',
+}
+
 // TODO: i18n (20240430 - Shirley)
 export const FinancialReportTypesMap: Record<
   FinancialReportTypesKey,

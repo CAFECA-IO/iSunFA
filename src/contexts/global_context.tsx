@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useContext, createContext, useMemo, useCallback } from 'react';
+import React, { useState, useContext, createContext, useMemo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
@@ -26,6 +26,12 @@ import Toast from '@/components/toast/toast';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
+import { useNotificationCtx } from './notification_context';
+import { LoadingSVG } from '@/components/loading_svg/loading_svg';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useUserCtx } from './user_context';
+import { useRouter } from 'next/router';
 
 interface IGlobalContext {
   width: number;
@@ -82,6 +88,13 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
+  const router = useRouter();
+  const { pathname } = router;
+
+  const { signedIn } = useUserCtx();
+  const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
+    useNotificationCtx();
+
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
@@ -179,7 +192,16 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
-    const { id, type, content, closeable, autoClose: isAutoClose, position: toastPosition } = props;
+    const {
+      id,
+      type,
+      content,
+      closeable,
+      autoClose: isAutoClose,
+      position: toastPosition,
+      onClose,
+      onOpen,
+    } = props;
 
     const bodyStyle =
       'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75';
@@ -211,6 +233,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       case ToastType.ERROR:
@@ -223,6 +247,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       case ToastType.WARNING:
@@ -235,6 +261,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       case ToastType.INFO:
@@ -247,6 +275,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           closeOnClick,
           draggable,
           closeButton,
+          onClose,
+          onOpen,
         });
         break;
       default:
@@ -262,6 +292,52 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       toastify.dismiss(); // Info:(20240513 - Julian) dismiss all toasts
     }
   };
+
+  useEffect(() => {
+    if (!signedIn) return;
+
+    if (!pathname.includes('users')) {
+      eliminateToast();
+      return;
+    }
+
+    if (reportGeneratedStatus) {
+      toastHandler({
+        type: ToastType.SUCCESS,
+        id: 'latest-report-generated',
+        closeable: true,
+        content: (
+          <div className="flex items-center space-x-10">
+            <p>Your report is done</p>
+            <Link href={ISUNFA_ROUTE.USERS_MY_REPORTS} className="text-link-text-success">
+              Go check it !
+            </Link>
+          </div>
+        ),
+        position: ToastPosition.BOTTOM_RIGHT,
+        autoClose: false,
+        onClose: () => {
+          reportGeneratedStatusHandler(false);
+        },
+      });
+    }
+
+    if (reportPendingStatus) {
+      toastHandler({
+        type: ToastType.INFO,
+        id: 'report-generating',
+        closeable: false,
+        content: (
+          <div className="flex items-center space-x-2">
+            <span>Generating the report</span>
+            <LoadingSVG />
+          </div>
+        ),
+        position: ToastPosition.BOTTOM_RIGHT,
+        autoClose: false,
+      });
+    }
+  }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
