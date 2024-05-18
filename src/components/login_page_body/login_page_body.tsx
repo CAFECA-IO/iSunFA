@@ -1,8 +1,8 @@
 /* eslint-disable */
 import React from 'react';
-import { Button } from '../button/button';
-import { useUserCtx } from '../../contexts/user_context';
-import { useGlobalCtx } from '../../contexts/global_context';
+import { Button } from '@/components/button/button';
+import { useUserCtx } from '@/contexts/user_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import Image from 'next/image';
 
 const LoginPageBody = () => {
@@ -28,7 +28,8 @@ const LoginPageBody = () => {
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
-      console.error('signIn error:', error);
+      console.error('signIn error in loginClickHandler:', error);
+      registerClickHandler();
     }
   };
   return (

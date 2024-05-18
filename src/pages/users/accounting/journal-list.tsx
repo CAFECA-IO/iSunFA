@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '../../../interfaces/locale';
-import NavBar from '../../../components/nav_bar/nav_bar';
-import AccountingSidebar from '../../../components/accounting_sidebar/accounting_sidebar';
-import JournalListTab from '../../../components/journal_list_body/journal_list_body';
+import { ILocale } from '@/interfaces/locale';
+import NavBar from '@/components/nav_bar/nav_bar';
+import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
+import JournalListTab from '@/components/journal_list_body/journal_list_body';
 
 const JournalListPage = () => {
   return (
@@ -26,7 +26,7 @@ const JournalListPage = () => {
           <AccountingSidebar />
           {/* ToDo: (20240419 - Julian) Overview */}
           <div className="flex h-full w-full bg-gray-100">
-            <div className="ml-80px mt-100px flex-1">
+            <div className="mt-100px flex-1 md:ml-80px">
               <JournalListTab />
             </div>
           </div>

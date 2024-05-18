@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import useOuterClick from '../../lib/hooks/use_outer_click';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 function I18n() {
   const { asPath } = useRouter();

@@ -51,3 +51,13 @@ export const default30DayPeriodInSec = {
 };
 
 export const MILLISECONDS_IN_A_SECOND = 1000;
+
+// Info: (20240429 - Julian) checkbox CSS style
+export const checkboxStyle =
+  'relative h-16px w-16px appearance-none rounded-xxs border border-navyBlue2 bg-white outline-none after:absolute after:top-0 after:-mt-3px after:ml-px after:hidden after:text-sm after:text-white after:content-checked checked:bg-navyBlue2 checked:after:block';
+
+// Info: (20240425 - Julian) radio button CSS style
+export const radioButtonStyle =
+  'relative h-16px w-16px appearance-none outline-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
+
+export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;

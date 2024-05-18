@@ -1,8 +1,8 @@
 /* eslint-disable */
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
-import { TranslateFunction } from '../../interfaces/locale';
 import { useTranslation } from 'next-i18next';
+import { TranslateFunction } from '@/interfaces/locale';
 
 interface CarouselProps {
   children: JSX.Element[];
@@ -21,8 +21,8 @@ export default function Carousel({
   const [isInView, setIsInView] = useState(false);
   const carouselRef = useRef(null);
 
-  const prev = () => setCurr(curr => (curr === 0 ? children.length - 1 : curr - 1));
-  const next = () => setCurr(curr => (curr === children.length - 1 ? 0 : curr + 1));
+  const prev = () => setCurr((curr) => (curr === 0 ? children.length - 1 : curr - 1));
+  const next = () => setCurr((curr) => (curr === children.length - 1 ? 0 : curr + 1));
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -55,7 +55,7 @@ export default function Carousel({
 
   return (
     <div className="mt-10 flex flex-col" ref={carouselRef}>
-      <p className="ml-16 text-h6 leading-h6 md:ml-24 md:text-h2 md:leading-h2">
+      <p className="ml-16 text-h6 leading-h6 md:ml-7rem md:text-h2 md:leading-h2 xl:ml-24">
         {t('LANDING_PAGE.CAROUSEL_SECTION_TITLE')}
       </p>
       <div
@@ -102,7 +102,7 @@ export default function Carousel({
         </div>
 
         {/* Info: 點點點 (20240315 - Shirley)*/}
-        <div className="absolute bottom-4 left-1/2 -translate-x-2/3 transform lg:-translate-x-4/5">
+        <div className="absolute bottom-4 left-1/2 -translate-x-2/3 transform lg:left-1/3 lg:-translate-x-0">
           <div className="flex items-center justify-center gap-2">
             {children.map((_, i) => (
               <div

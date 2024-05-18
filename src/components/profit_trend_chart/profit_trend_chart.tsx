@@ -1,12 +1,12 @@
-/* eslint-disable */
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import React, { useEffect } from 'react';
-import Tooltip from '../tooltip/tooltip';
-import { Button } from '../button/button';
-import { cn } from '../../lib/utils/common';
-import { useGlobalCtx } from '../../contexts/global_context';
-import { LayoutAssertion } from '../../interfaces/layout_assertion';
+import Tooltip from '@/components/tooltip/tooltip';
+import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils/common';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { Period } from '@/interfaces/chart_unit';
+import { DUMMY_PROFIT_TREND_CHART_DATA } from '@/interfaces/profit_trend_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -31,22 +31,37 @@ const LineChart = ({ data }: LineChartProps) => {
     const handleResize = () => {
       const windowWidth = globalCtx.width;
       const windowHeight = window.innerHeight;
+      const DESKTOP_WIDTH = 1024;
+      const TABLET_WIDTH = 768;
+      const MOBILE_WIDTH = 450;
 
-      if (windowWidth <= 768) {
-        const presentWidth = windowWidth / 1.45;
-        const presentHeight = windowHeight / 3.5;
+      if (windowWidth <= MOBILE_WIDTH) {
+        const presentWidth = 250;
+        const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (window.innerWidth >= 1440) {
+      } else if (windowWidth <= TABLET_WIDTH) {
+        const presentWidth = 370;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth > DESKTOP_WIDTH) {
+        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 10;
+        const presentHeight = 250;
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
         const presentWidth = 580;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else {
-        const presentWidth = windowWidth / 1.25;
-        const presentHeight = 250;
+        const presentWidth = windowWidth / 12;
+        const presentHeight = windowHeight / 3.5;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
@@ -146,7 +161,7 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`,
       },
       y: {
-        formatter: value => `${value}%`,
+        formatter: (value) => `${value}%`,
       },
       marker: {
         show: false,
@@ -169,121 +184,13 @@ const LineChart = ({ data }: LineChartProps) => {
   );
 };
 
-enum Period {
-  WEEK = 'week',
-  MONTH = 'month',
-  YEAR = 'year',
-}
-
-// Dummy data definitions
-const dataMap = {
-  week: {
-    categories: ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'],
-    series: [
-      {
-        name: 'Profit Status',
-        data: [-10, -5, 40, 35, 0, 49, 60],
-      },
-    ],
-  },
-  month: {
-    categories: [
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-    ],
-    series: [
-      {
-        name: 'Profit Status',
-        data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
-      },
-    ],
-  },
-  year: {
-    categories: ['2020', '2021', '2022', '2023', '2024'],
-    series: [
-      {
-        name: 'Profit Status',
-        data: [-10, -5, 40, 35, 20],
-      },
-    ],
-  },
-};
-
 const ProfitTrendChart = () => {
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
-  const [data, setData] = React.useState(dataMap[selectedPeriod]);
+  const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 
   const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
-    setData(dataMap[period]);
-  };
-
-  const WEEKDAYS = ['4/1', '4/2', '4/3', '4/4', '4/5', '4/6', '4/7'];
-
-  const dummyWeekData = {
-    // categories: Array.from({ length: 7 }, (_, i) => `Day ${i + 1}`),
-    categories: WEEKDAYS,
-    series: [
-      {
-        name: 'Profit Status',
-        data: [-10, -5, 40, 35, 0, 49, 60],
-      },
-    ],
-  };
-
-  const MONTHS = [
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-  ];
-
-  const dummyMonthData = {
-    // categories: Array.from({ length: 12 }, (_, i) => MONTHS[i]),
-    categories: MONTHS,
-    series: [
-      {
-        name: 'Profit Status',
-        data: [10, 5, -10, 15, 5, 19, 8, 10, 5, 40, 35, 60],
-      },
-    ],
-  };
-
-  const YEARS = ['2020', '2021', '2022', '2023', '2024'];
-
-  const dummyYearData = {
-    // categories: Array.from({ length: 5 }, (_, i) => YEARS[i]),
-    categories: YEARS,
-    series: [
-      {
-        name: 'Profit Status',
-        data: [-10, -5, 40, 35, 20],
-        type: 'line',
-      },
-      // {
-      //   name: 'Profit Status 2',
-      //   data: [10, 5, -10, 15, 5],
-      //   type: 'line',
-      // },
-    ],
+    setData(DUMMY_PROFIT_TREND_CHART_DATA[period]);
   };
 
   const displayedDataSection = (

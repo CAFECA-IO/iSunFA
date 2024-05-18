@@ -1,9 +1,9 @@
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import React from 'react';
-import Carousel from '../carousel/carousel';
-import Card from '../card/card';
-import { TranslateFunction } from '../../interfaces/locale';
+import Carousel from '@/components/carousel/carousel';
+import Card from '@/components/card/card';
+import { TranslateFunction } from '@/interfaces/locale';
 
 const CarouselSection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -17,16 +17,15 @@ const CarouselSection = () => {
 
   return (
     <div className="z-10 flex w-full flex-col items-center justify-center space-x-5 md:mt-20 lg:flex-row">
-      <div className="relative mt-20 aspect-0.87 w-4/5 md:h-400px md:w-400px">
+      <div className="relative mt-20 h-200px w-200px md:h-300px md:w-300px xl:h-400px xl:w-400px">
         <Image
           src="/elements/contract_blue.svg"
           alt="contract_blue"
           fill
           style={{ objectFit: 'contain' }}
-          loading="lazy"
         />
       </div>{' '}
-      <div className="max-w-350px md:max-w-700px">
+      <div className="max-w-350px md:max-w-600px xl:max-w-650px">
         {' '}
         <Carousel autoSlide>
           {carouselItems.map(({ title, content }) => (

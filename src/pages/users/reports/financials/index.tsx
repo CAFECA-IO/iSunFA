@@ -1,12 +1,12 @@
 import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import NavBar from '../../../../components/nav_bar/nav_bar';
-import ReportsSidebar from '../../../../components/reports_sidebar/reports_sidebar';
-import FinancialReportSection from '../../../../components/financial_report_section/financial_report_section';
-import { ILocale } from '../../../../interfaces/locale';
+import NavBar from '@/components/nav_bar/nav_bar';
+import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
+import FinancialReportSection from '@/components/financial_report_section/financial_report_section';
+import { ILocale } from '@/interfaces/locale';
 
-const ReportPage = () => {
+const FinancialsReportsPage = () => {
   return (
     <>
       <Head>
@@ -29,7 +29,7 @@ const ReportPage = () => {
         />
       </Head>
 
-      <div className="font-barlow">
+      <div className="-mt-4 font-barlow">
         <div className="">
           <NavBar />
         </div>
@@ -38,7 +38,7 @@ const ReportPage = () => {
           <ReportsSidebar />
         </div>
 
-        <div className="h-800px bg-surface-neutral-main-background md:h-1100px">
+        <div className="h-1300px overflow-x-hidden bg-surface-neutral-main-background md:h-1300px">
           <FinancialReportSection />
         </div>
       </div>
@@ -54,4 +54,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default ReportPage;
+export default FinancialsReportsPage;

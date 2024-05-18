@@ -1,13 +1,16 @@
-import '../styles/globals.css';
+import { NotificationProvider } from '@/contexts/notification_context';
+import 'react-toastify/dist/ReactToastify.css';
 import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { UserProvider } from '../contexts/user_context';
-import { GlobalProvider } from '../contexts/global_context';
-import { DashboardProvider } from '../contexts/dashboard_context';
-import { AccountingProvider } from '../contexts/accounting_context';
-import { COOKIE_NAME } from '../constants/config';
+import { UserProvider } from '@/contexts/user_context';
+import { GlobalProvider } from '@/contexts/global_context';
+import { DashboardProvider } from '@/contexts/dashboard_context';
+import { AccountingProvider } from '@/contexts/accounting_context';
+import { COOKIE_NAME } from '@/constants/config';
+import { ISUNFA_ROUTE } from '../constants/url';
+import '@/styles/globals.css';
 
 function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -18,21 +21,23 @@ function App({ Component, pageProps }: AppProps) {
       .split(';')
       .find((item: string) => item.includes(COOKIE_NAME.FIDO2));
     if (router.pathname.startsWith('/users/') && !cookie) {
-      router.push('/users/login');
+      router.push(ISUNFA_ROUTE.LOGIN);
     }
   }, [router.pathname]);
 
   return (
-    <div className="selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
-      <UserProvider>
-        <DashboardProvider>
-          <AccountingProvider>
-            <GlobalProvider>
-              <Component {...pageProps} />
-            </GlobalProvider>
-          </AccountingProvider>
-        </DashboardProvider>
-      </UserProvider>{' '}
+    <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
+      <NotificationProvider>
+        <UserProvider>
+          <DashboardProvider>
+            <AccountingProvider>
+              <GlobalProvider>
+                <Component {...pageProps} />
+              </GlobalProvider>
+            </AccountingProvider>
+          </DashboardProvider>
+        </UserProvider>
+      </NotificationProvider>
     </div>
   );
 }

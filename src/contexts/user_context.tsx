@@ -2,13 +2,16 @@
 import { client, utils } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
-import { ICredential, IUserAuth } from '../interfaces/webauthn';
-import { checkFIDO2Cookie, createChallenge } from '../lib/utils/authorization';
-import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '../constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME } from '../constants/display';
-import { ISUNFA_API } from '../constants/url';
-import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { useRouter } from 'next/router';
+import { toast as toastify } from 'react-toastify';
+import { ICredential, IUserAuth } from '@/interfaces/webauthn';
+import { checkFIDO2Cookie, createChallenge } from '@/lib/utils/authorization';
+import { COOKIE_NAME, DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { ISUNFA_API, ISUNFA_ROUTE } from '@/constants/url';
+import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -19,20 +22,28 @@ interface UserContextType {
   credential: ICredential | null;
   signUp: ({ username }: SignUpProps) => Promise<void>;
   signIn: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => void;
   userAuth: IUserAuth | null;
   username: string | null;
   signedIn: boolean;
+  isSignInError: boolean;
+  selectedCompany: string | null;
+  selectCompany: (company: string) => void;
+  isSelectCompany: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
   credential: {} as ICredential,
   signUp: async () => {},
   signIn: async () => {},
-  signOut: async () => {},
+  signOut: () => {},
   userAuth: {} as IUserAuth,
   username: '',
   signedIn: false,
+  isSignInError: false,
+  selectedCompany: null,
+  selectCompany: () => {},
+  isSelectCompany: false,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -42,6 +53,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
+  const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<string | null>(
+    null
+  );
+  const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
+
+  const { trigger: signOutAPI } = APIHandler<void>(
+    APIName.SIGN_OUT,
+    {
+      body: { credential: credentialRef.current },
+    },
+    false,
+    false
+  );
+
+  const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
 
   const signUp = async ({ username }: SignUpProps) => {
     const name = username || DEFAULT_DISPLAYED_USER_NAME;
@@ -78,6 +104,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setUserAuth(data);
       setCredential(credential);
       setSignedIn(true);
+      setIsSignInError(false);
 
       // TODO: workaround for demo for registration (20240409 - Shirley)
       if (data) {
@@ -162,6 +189,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         writeCookie();
       }
 
+      // eslint-disable-next-line no-console
+      console.log('in signIn, authentication:', authentication);
+
       // const registration = await client.register(DEFAULT_USER_NAME, newChallenge, {
       //   authenticatorType: 'both',
       //   userVerification: 'required',
@@ -188,25 +218,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
-      console.error('signUp error:', error);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      await fetch(ISUNFA_API.SIGN_OUT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ credential }),
-      });
-
-      clearState();
-    } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signOut error:', error);
+      console.error('signIn error and try to call singUp function:', error);
+      // signUp({ username: '' });
+      setIsSignInError(true);
+      if (!(error instanceof DOMException)) {
+        throw new Error('signIn error thrown in userCtx');
+      }
     }
   };
 
@@ -237,11 +254,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20240513 - Julian) 選擇公司的功能
+  const selectCompany = (company: string) => {
+    setSelectedCompany(company);
+  };
+
   const clearState = () => {
     setUserAuth(null);
     setUsername(null);
     setCredential(null);
     setSignedIn(false);
+    setIsSignInError(false);
+    setSelectedCompany(null);
+    setIsSelectCompany(false);
+
+    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
   };
 
   const readCookie = async () => {
@@ -263,8 +290,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     expiration.setHours(expiration.getHours() + 1);
 
     const credential = await readCookie();
-    // console.log('credential:', credential);
-
     document.cookie = `FIDO2=${encodeURIComponent(JSON.stringify(credentialRef.current))}; expires=${expiration.toUTCString()}; path=/`;
   };
 
@@ -282,6 +307,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signOut = async () => {
+    signOutAPI(); // Deprecated: 登出只需要在前端刪掉 cookie 就好 (20240517 - Shirley)
+    clearState();
+    router.push(ISUNFA_ROUTE.LOGIN);
+    const cookieName = COOKIE_NAME.FIDO2;
+    document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  };
+
   useEffect(() => {
     (async () => {
       await init();
@@ -297,14 +330,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       credential: credentialRef.current,
       signUp,
       signIn,
-      signOut,
+      signOut: signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
+      isSignInError: isSignInErrorRef.current,
+      selectedCompany: selectedCompanyRef.current,
+      selectCompany,
+      isSelectCompany: isSelectCompanyRef.current,
     }),
     [credentialRef.current]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
-export const useUserCtx = () => useContext(UserContext);
+export const useUserCtx = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUserCtx must be used within a UserProvider');
+  }
+  return context;
+};

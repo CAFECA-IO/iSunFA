@@ -1,12 +1,12 @@
-import LandingFooter from '../landing_footer/landing_footer';
-import HowWeWork from '../how_we_work/how_we_work';
-import CTASection from '../cta_section/cta_section';
-import NumberAnimationSection from '../number_animation_section/number_animation_section';
-import FeatureSection from '../feature_section/feature_section';
-import CarouselSection from '../carousel_section/carousel_section';
-import WhyISunFASection from '../why_isunfa_section/why_isunfa_section';
-import PartnersSection from '../partners_section/partners_section';
-import ContactFormSection from '../contact_form_section/contact_form_section';
+import LandingFooter from '@/components/landing_footer/landing_footer';
+import HowWeWork from '@/components/how_we_work/how_we_work';
+import CTASection from '@/components/cta_section/cta_section';
+import NumberAnimationSection from '@/components/number_animation_section/number_animation_section';
+import FeatureSection from '@/components/feature_section/feature_section';
+import CarouselSection from '@/components/carousel_section/carousel_section';
+import WhyISunFASection from '@/components/why_isunfa_section/why_isunfa_section';
+// import PartnersSection from '@/components/partners_section/partners_section';
+import ContactFormSection from '@/components/contact_form_section/contact_form_section';
 
 function LandingPageBody() {
   return (
@@ -90,14 +90,16 @@ function LandingPageBody() {
           </div>
 
           {/* Info: ----- Partners section (20240318 - Shirley) ----- */}
-          <PartnersSection />
+          {/* <PartnersSection /> */}
 
           {/* Info: ----- Carousel section (20240318 - Shirley) ----- */}
           <CarouselSection />
         </div>
 
         {/* Info: ----- why iSunFA section (20240318 - Shirley) ----- */}
-        <WhyISunFASection />
+        <div className="md:h-1200px lg:h-1000px">
+          <WhyISunFASection />
+        </div>
 
         {/* Info: ----- light_04 svg ----- (20240318 - Shirley) */}
         {/* Info: 光線 svg 只在桌面版顯示 (20240326 - Shirley) */}

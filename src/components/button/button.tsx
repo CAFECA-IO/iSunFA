@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/utils/common';
+import { cn } from '@/lib/utils/common';
 
 // Info: 用 cva 來定義 button 的樣式 (20240319 - Shirley)
 const buttonVariants = cva(
@@ -10,20 +10,22 @@ const buttonVariants = cva(
       variant: {
         default:
           'bg-primaryYellow text-primary-foreground hover:bg-primaryYellow/70 disabled:bg-lightGray disabled:cursor-default',
-        // TODO: add more variants (20240319 - Shirley)
-        // outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        // secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         tertiary:
-          'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover',
+          'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable',
         tertiaryOutline:
           'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
-        // outline:
-        //   'border border-navyBlue2 text-navyBlue2 hover:border-primaryYellow group-hover:border-primaryYellow group-hover:text-primaryYellow',
+        secondaryOutline:
+          'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+        tertiaryBorderless:
+          'border-none border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+        secondaryBorderless:
+          'border-none border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
       },
       size: {
         default: 'px-6 py-3',
         medium: 'px-5 py-2',
         small: 'px-4 py-1',
+        extraSmall: 'px-2 py-1',
       },
     },
     defaultVariants: {

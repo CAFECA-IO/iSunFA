@@ -11,7 +11,9 @@ module.exports = {
         '4/3': '4 / 3',
         '16/9': '16 / 9',
         '21/9': '21 / 9',
+        0.95: '95 / 100',
         0.87: '87 / 100',
+        0.75: '75 / 100',
         0.56: '56 / 100',
         1.18: '118 / 100',
       },
@@ -712,6 +714,7 @@ module.exports = {
         lightGray4: '#7F8A9D',
         lightGray5: '#58667F',
         lightGray6: '#CDD1D9',
+        lightGray7: '#F4F5F7',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
@@ -720,9 +723,11 @@ module.exports = {
 
         errorRed: '#963737',
         errorRed2: '#FED7D7',
+        errorRed3: '#FB5C5C',
 
         successGreen: '#1E543B',
         successGreen2: '#D3F4E5',
+        successGreen3: '#4BD394',
 
         warningYellow: '#FFCF24',
 
@@ -777,6 +782,7 @@ module.exports = {
         80: '80',
         90: '90',
         100: '100',
+        10000: '10000',
       },
       fontSize: {
         xxs: ['10px', '12px'],
@@ -820,17 +826,23 @@ module.exports = {
       screens: {
         /* Info: (20240315 - Shirley) 等同於 @media (min-width: ...px) */
 
-        sm: '320px', // mobile
-        md: '744px', // tablet
-        lg: '1440px', // desktop
+        iphonese: '376px',
+        iphone12pro: '391px',
+        iphonexr: '415px',
+        iphone12promax: '431px',
+
+        sm: '500px', // mobile
+        md: '768px', // tablet
+        lg: '1024px', // desktop
+        xl: '1440px',
       },
       container: {
         center: true,
         padding: '1rem',
         screens: {
           sm: '320px',
-          md: '744px',
-          lg: '1440px',
+          md: '768px',
+          lg: '1024px',
         },
       },
 
@@ -1004,6 +1016,8 @@ module.exports = {
         '254px': '254px',
         '255px': '255px',
         '256px': '256px',
+        '260px': '260px',
+        '270px': '270px',
         '271px': '271px',
         '278px': '278px',
         '280px': '280px',
@@ -1021,6 +1035,7 @@ module.exports = {
         '360px': '360px',
         '370px': '370px',
         '372px': '372px',
+        '376px': '376px',
         '380px': '380px',
         '388px': '388px',
         '390px': '390px',
@@ -1070,6 +1085,7 @@ module.exports = {
         '1000px': '1000px',
         '1100px': '1100px',
         '1200px': '1200px',
+        '1300px': '1300px',
         '1400px': '1400px',
         '1440px': '1440px',
         '1500px': '1500px',
@@ -1100,6 +1116,7 @@ module.exports = {
         '11rem': '11rem',
         '12rem': '12rem',
         '13rem': '13rem',
+        '14rem': '14rem',
         '15rem': '15rem',
         '16rem': '16rem',
         '17rem': '17rem',
@@ -1321,12 +1338,16 @@ module.exports = {
         '140px': '140px',
         '248px': '248px',
         '250px': '250px',
+        '260px': '260px',
+        '280px': '280px',
+        '300px': '300px',
       },
       minWidth: {
         '200px': '200px',
       },
       maxHeight: {
         '230px': '230px',
+        '500px': '500px',
       },
       minHeight: {
         fit: 'fit-content',
@@ -1381,6 +1402,11 @@ module.exports = {
         slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
         slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
         slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
+        spinFast: 'spin 1s linear infinite',
+      },
+
+      content: {
+        checked: '"✔"',
       },
     },
   },

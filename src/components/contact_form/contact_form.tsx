@@ -1,10 +1,11 @@
-/* eslint-disable */
 import React, { useEffect, useRef, useState } from 'react';
-import { TranslateFunction } from '../../interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { FormAnimation } from '../../constants/form_animation';
 import Image from 'next/image';
-import { Button } from '../button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { Button } from '@/components/button/button';
+import { FormAnimation } from '@/constants/form_animation';
+import { TranslateFunction } from '@/interfaces/locale';
 
 function ContactForm() {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -22,7 +23,7 @@ function ContactForm() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const emailRule = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+  const emailRule = /^\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
   const emailIsValid = emailRule.test(inputEmail);
 
   const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,8 +33,23 @@ function ContactForm() {
     setInputPhone(event.target.value);
   };
   const emailChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmailValid(emailRule.test(event.target.value));
     setInputEmail(event.target.value);
   };
+
+  const {
+    trigger: email,
+    error: enmailError,
+    code: emailCode,
+    success: enmailSuccess,
+  } = APIHandler<void>(
+    APIName.EMAIL,
+    {
+      header: { 'Content-Type': 'application/json; charset=UTF-8' },
+    },
+    false,
+    false
+  );
 
   // Info: (20230731 - Shirley) 送出失敗事件處理
   const failedProcess = async () => {
@@ -48,7 +64,7 @@ function ContactForm() {
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     // Info: (20230731 - Shirley) 清空表單
     setInputName('');
     setInputPhone('');
@@ -67,25 +83,39 @@ function ContactForm() {
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Info: (20230731 - Shirley) call API
-    const res = await fetch('/api/v1/email', {
-      method: 'POST',
-      body: JSON.stringify(emailData),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    });
-    const result = await res.json();
+    // const res = await fetch('/api/v1/email', {
+    //   method: 'POST',
+    //   body: JSON.stringify(emailData),
+    //   headers: {
+    //     'Content-Type': 'application/json; charset=UTF-8',
+    //   },
+    // });
 
-    const { success } = result;
-    if (success) {
-      await successProcess();
-    } else {
-      await failedProcess();
-    }
+    email({ body: emailData });
+    // const result = await res.json();
+
+    // const { success } = result;
+    // if (success) {
+    //   await successProcess();
+    // } else {
+    //   await failedProcess();
+    // }
   };
+
+  useEffect(() => {
+    if (enmailSuccess) {
+      successProcess();
+    }
+    if (enmailError) {
+      failedProcess();
+      // Info: TODO error handling @Shirley (20240513 - tzuhan)
+      // eslint-disable-next-line no-console
+      console.log(`enmailError(${emailCode}): `, enmailError);
+    }
+  }, [enmailSuccess, enmailError]);
 
   // Info: (20230731 - Shirley) 點擊送出按鈕
   const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -117,6 +147,8 @@ function ContactForm() {
     }
   };
 
+  // Info: Remove unuse function @Shirley (20240513 - tzuhan)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const autoResize = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -180,6 +212,8 @@ function ContactForm() {
       } mt-20 flex w-330px max-w-full flex-col rounded-2xl bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5 md:w-620px lg:w-800px`}
     >
       <div className="flex flex-col">
+        {/* Info: remove arbitrary value? @Shirley (tzuhan - 20240513) */}
+        {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
         <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">
           {t('CONTACT_US.TITLE')}
         </h1>
@@ -189,6 +223,8 @@ function ContactForm() {
       </div>
       <div className="mt-12">
         <div className="flex flex-col pb-4">
+          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.NAME')}
             <span className="text-red-400">*</span>
@@ -203,6 +239,8 @@ function ContactForm() {
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
+          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
           </label>
@@ -219,6 +257,8 @@ function ContactForm() {
           )}
         </div>
         <div className="mt-4 flex flex-col pb-4">
+          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.PHONE')}
           </label>
@@ -231,6 +271,8 @@ function ContactForm() {
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
+          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>
           </label>

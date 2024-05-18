@@ -1,21 +1,29 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { ALLOWED_ORIGINS } from '../../constants/config';
-import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '../../constants/display';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
+import { ALLOWED_ORIGINS } from '@/constants/config';
+import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
+import version from '@/lib/version';
+import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 
-export function cn(...inputs: ClassValue[]) {
+export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
-}
+};
 
-export function getDomains() {
+export const getDomains = () => {
   return ALLOWED_ORIGINS;
-}
+};
+
+export const numberWithCommas = (x: number | string) => {
+  return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
+};
 
 // Info: truncate the string to the given length (20240416 - Shirley)
-export function truncateString(str: string, length: number) {
+export const truncateString = (str: string, length: number) => {
   const result = str.length > length ? str.slice(0, length) + '...' : str;
   return result;
-}
+};
 
 export const timestampToString = (timestamp: number | undefined) => {
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
@@ -93,7 +101,8 @@ export const timestampToString = (timestamp: number | undefined) => {
     tomorrow: `${year}-${month.toString().padStart(2, '0')}-${(day + 1)
       .toString()
       .padStart(2, '0')}`, // e.g. 2021-01-02
-    month: `${monthString}`, // e.g. January (with i18n)
+    month: `${month}`.padStart(2, '0'), // e.g. 01
+    monthString: `${monthString}`, // e.g. January (with i18n)
     monthFullName: `${monthName}`, // e.g. January
     monthAndDay: `${monthNameShort} ${day}`, // e.g. Jan. 01
     year: `${year}`, // e.g. 2021
@@ -127,3 +136,166 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
     endTimeStamp,
   };
 };
+
+// Info Murky (20240425) - Helper function to convert date strings to timestamps
+// will return timestamp of current if input is not valid
+export const convertDateToTimestamp = (dateStr: string | number): number => {
+  // 檢查是否為有效的日期字串
+  const defaultDateTimestamp = new Date().getTime();
+  if (!dateStr) {
+    return defaultDateTimestamp;
+  }
+
+  if (typeof dateStr === 'number') {
+    return dateStr as number;
+  }
+
+  function rocYearToAD(rocYear: string, sperator: string): string {
+    let modifiedRocYear = rocYear;
+    if (rocYear.split(sperator)[0].length < 4) {
+      // Info 民國年
+      const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
+      modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
+    }
+    return modifiedRocYear;
+  }
+
+  let modifiedDateStr = dateStr;
+  if (dateStr.includes('/')) {
+    modifiedDateStr = rocYearToAD(dateStr, '/');
+  } else if (dateStr.includes('-')) {
+    modifiedDateStr = rocYearToAD(dateStr, '-');
+  }
+
+  const date = new Date(modifiedDateStr);
+  const timestamp = date.getTime();
+
+  // 檢查生成的日期是否有效
+  if (Number.isNaN(timestamp)) {
+    return defaultDateTimestamp;
+  }
+
+  return timestamp;
+};
+
+// Info Murky (20240425) - Helper function to remove special char from numbers and convert to number type
+export const cleanNumber = (numberStr: unknown): number => {
+  if (!numberStr) {
+    return 0;
+  }
+
+  if (typeof numberStr === 'number') {
+    return numberStr;
+  }
+
+  if (typeof numberStr !== 'string') {
+    return 0;
+  }
+
+  return parseFloat(numberStr.replace(/[^\w\s]/gi, ''));
+};
+
+export const cleanBoolean = (booleanStr: unknown): boolean => {
+  if (!booleanStr || ['string', 'number'].includes(typeof booleanStr)) {
+    return false;
+  }
+
+  if (typeof booleanStr === 'boolean') {
+    return booleanStr;
+  }
+
+  if (booleanStr === 'true') {
+    return true;
+  }
+
+  if (booleanStr === 'false') {
+    return false;
+  }
+
+  return false;
+};
+
+const getCodeByMessage = (statusMessage: string) => {
+  let code: string;
+  let message: string;
+  if (statusMessage in STATUS_CODE) {
+    code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
+    message = statusMessage;
+  } else if (/prisma/i.test(statusMessage)) {
+    code = STATUS_CODE[STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR];
+    message = STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR;
+  } else {
+    code = STATUS_CODE[STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR];
+    message = STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR;
+  }
+  return { code, message };
+};
+
+export const formatApiResponse = <T>(
+  statusMessage: string,
+  payload: T
+): { httpCode: number; result: IResponseData<T> } => {
+  const { code, message } = getCodeByMessage(statusMessage);
+  const success = !!code.startsWith('2');
+  const httpCodeStr = code.slice(0, 3);
+  const httpCode = Number(httpCodeStr);
+  const result: IResponseData<T> = {
+    powerby: 'iSunFA v' + version,
+    success,
+    code,
+    message,
+    payload,
+  };
+
+  return { httpCode, result };
+};
+
+export const getValueByKey = <T extends string>(
+  obj: Record<string, T>,
+  key: keyof typeof obj
+): T | null => {
+  return obj[key] || null;
+};
+
+export const firstCharToUpperCase = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const timestampInSeconds = (timestamp: number): number => {
+  return Math.floor(timestamp / 1000);
+};
+
+export const countdown = (remainingSeconds: number) => {
+  const days = Math.floor(remainingSeconds / 86400);
+  const hours = Math.floor((remainingSeconds % 86400) / 3600);
+  const minutes = Math.floor((remainingSeconds % 3600) / 60);
+  const seconds = remainingSeconds % 60;
+
+  const remainingTimeStr = `${days ? `${days} D` : ''} ${hours ? `${hours} H` : ''} ${minutes ? `${minutes} M` : ''} ${seconds ? `${seconds}S` : ''}`;
+
+  return {
+    days: `${days}`,
+    hours: `${hours}`,
+    minutes: `${minutes}`,
+    seconds: `${seconds}`,
+    remainingTimeStr,
+  };
+};
+
+export function eventTypeToVoucherType(eventType: EventType): VoucherType {
+  return EVENT_TYPE_TO_VOUCHER_TYPE_MAP[eventType];
+}
+
+// Info Murky (20240505): type guards can input any type and return a boolean
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isStringNumber(value: any): value is string {
+  return typeof value === 'string' && !Number.isNaN(Number(value));
+}
+
+// is {[key: string]: number}
+export function isStringNumberPair(value: unknown): value is { [key: string]: string } {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return Object.values(value).every((v) => typeof v === 'number');
+}

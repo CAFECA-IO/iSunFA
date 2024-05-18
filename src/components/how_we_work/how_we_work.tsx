@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { TranslateFunction } from '../../interfaces/locale';
+import { TranslateFunction } from '@/interfaces/locale';
 
 const HowWeWork = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -97,22 +97,22 @@ const HowWeWork = () => {
         <div
           key={title}
           ref={ref}
-          className={`overflow-x-hidden ${isVisible ? `translate-x-0` : `md:translate-x-140%`} -mt-14 flex h-900px w-full flex-col items-center justify-center pl-10 pt-10 duration-1000 md:mt-20 md:h-fit md:flex-row md:justify-start md:space-x-2 lg:mr-10 lg:mt-28 lg:pl-0`}
+          className={`-mb-16 overflow-x-hidden ${isVisible ? `translate-x-0` : `md:translate-x-140%`} -mt-14 flex h-900px w-full flex-col items-center justify-center pl-10 pt-10 duration-1000 md:mt-20 md:h-fit md:flex-row md:justify-start md:space-x-2 lg:mr-10 lg:mt-28 lg:pl-0`}
         >
-          <div className={`relative mt-0 h-300px w-full md:w-full lg:mt-0 lg:w-600px`}>
+          <div className={`relative mt-0 h-300px w-full md:w-full lg:mt-0 lg:w-500px`}>
             <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
           </div>
 
-          {/* Info: ----- 1440 px and above ----- (20240321 - Shirley) */}
+          {/* Info: ----- `lg` and above ----- (20240321 - Shirley) */}
           <div className="mt-20 hidden flex-col space-y-5 text-start lg:mt-0 lg:flex lg:max-w-lg lg:space-y-8">
             {' '}
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
               {t(title)}
             </p>
-            <p className="text-white md:text-base">{t(content)}</p>
+            <p className="w-full text-white md:text-base">{t(content)}</p>
           </div>
 
-          {/* Info: ----- below 1440 px ----- (20240321 - Shirley) */}
+          {/* Info: ----- below `lg` ----- (20240321 - Shirley) */}
           <div className="-mt-16 flex w-full flex-col space-y-5 text-wrap text-center md:-mt-0 md:text-start lg:hidden">
             {' '}
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
@@ -132,7 +132,7 @@ const HowWeWork = () => {
       </h1>
 
       <div className="flex">
-        <div className="absolute left-1/15 top-71rem md:left-1/10 md:top-78rem lg:relative lg:left-auto lg:top-auto lg:ml-1/8 lg:pt-40">
+        <div className="absolute left-1/15 top-71rem md:left-1/10 md:top-78rem lg:relative lg:left-auto lg:top-auto lg:ml-1/20 lg:pt-40">
           {' '}
           <div className="flex flex-col justify-center">{verticalDotLine}</div>{' '}
           <div className="mt-18rem flex flex-col justify-center md:-mt-6.2rem">
