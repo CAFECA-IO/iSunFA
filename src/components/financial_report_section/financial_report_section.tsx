@@ -37,13 +37,13 @@ const FinancialReportSection = () => {
   );
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trigger: getFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
+    trigger: listFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: progress, // Info: 這邊預計得到 IFinancialReportsProgreseStatusResponse[] (20240513 - Tzuahan)
     // code: progressCodee,
     // success: getProgressSuccess,
   } = APIHandler<IAccountResultStatus[]>(
-    APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
+    APIName.FINANCIAL_REPORT_LIST_PROGRESS_STATUS,
     {
       params: { companyId },
     },

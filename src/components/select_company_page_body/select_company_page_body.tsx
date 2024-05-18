@@ -31,17 +31,7 @@ const SelectCompanyPageBody = () => {
     data: companyData,
     success: companyDataSuccess,
     isLoading: isCompanyDataLoading,
-  } = APIHandler<ICompany[]>(
-    APIName.GET_JOURNAL_PROCESSING_STATUS, // ToDo: (20240516 - Julian) API name
-    {
-      header: {
-        'Content-Type': 'application/json',
-        userId: username ?? '',
-      },
-    },
-    false,
-    true
-  );
+  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {});
 
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [searchValue, setSearchValue] = useState<string>('');

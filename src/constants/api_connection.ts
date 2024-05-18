@@ -18,23 +18,40 @@ export enum APIName {
   SIGN_OUT = 'SIGN_OUT',
   EMAIL = 'EMAIL',
   USER_GET_BY_ID = 'USER_GET_BY_ID',
-  INVOCIE_GET_BY_ID = 'INVOCIE_GET_BY_ID',
+  USER_UPDATE = 'USER_UPDATE',
+  COMPANY_LIST = 'COMPANY_LIST',
+  COMPANY_ADD = "COMPANY_ADD",
+  COMPANY_ADD_BY_INVITATION_CODE = 'COMPANY_ADD_BY_INVITATION_CODE',
+  PROFIT_GET_INSIGHT = 'PROFIT_GET_INSIGHT',
+  PROFIT_GET_TREND_IN_PERIOD = 'PROFIT_GET_TREND_IN_PERIOD',
+  PROFIT_GET_MARGIN_TREND_IN_PERIOD = 'PROFIT_GET_MARGIN_TREND_IN_PERIOD',
+  PROJECT_LIST_PROGRESS = 'PROJECT_LIST_PROGRESS',
+  PROJECT_LIST_PROFIT_COMPARISON = 'PROJECT_LIST_PROFIT_COMPARISON',
   INVOCIE_UPLOAD = 'INVOCIE_UPLOAD',
-  FINANCIAL_REPORT_GENERATE = 'FINANCIAL_REPORT_GENERATE',
-  FINANCIAL_REPORT_GET_PROGRESS_STATUS = 'FINANCIAL_REPORT_GET_PROGRESS_STATUS',
-  FINANCIAL_REPORT_GET_BY_ID = 'FINANCIAL_REPORT_GET_BY_ID',
-  ANALYSIS_REPORT_GENERATE = 'ANALYSIS_REPORT_GENERATE',
-  ANALYSIS_REPORT_GET_PROGRESS_STATUS = 'ANALYSIS_REPORT_GET_PROGRESS_STATUS',
-  ANALYSIS_REPORT_GET_BY_ID = 'ANALYSIS_REPORT_GET_BY_ID',
-  VOUCHER_GENERATE = 'VOUCHER_GENERATE',
-  VOUCHER_GET_PROGRESS_STATUS = 'VOUCHER_GET_PROGRESS_STATUS',
-  VOUCHER_PREVIEW_GET_BY_ID = 'VOUCHER_PREVIEW_GET_BY_ID',
-  VOUCHER_LIST = 'VOUCHER_LIST',
+  INVOCIE_LIST_UNBOUNDED = 'INVOCIE_LIST_UNBOUNDED',
+  INVOCIE_GET_BY_ID = 'INVOCIE_GET_BY_ID',
+  ASSET_MANAGEMENT_LIST = 'ASSET_MANAGEMENT_LIST',
+  ASSET_MANAGEMENT_ADD = 'ASSET_MANAGEMENT_ADD',
+  ASSET_MANAGEMENT_GET_BY_ID = 'ASSET_MANAGEMENT_GET_BY_ID',
+  ASSET_MANAGEMENT_UPDATE = 'ASSET_MANAGEMENT_UPDATE',
   JOURNAL_GENERATE = 'JOURNAL_GENERATE',
   JOURNAL_GET_PROGRESS_STATUS = 'JOURNAL_GET_PROGRESS_STATUS',
+  JOURNAL_GET_PREVIEW_BY_ID = 'JOURNAL_GET_PREVIEW_BY_ID',
+  JOURNAL_UPDATE = 'JOURNAL_UPDATE',
+  JOURNAL_DELETE = 'JOURNAL_DELETE',
+  JOURNAL_LIST_PROGRESS_STATUS = 'JOURNAL_LIST_PROGRESS_STATUS',
   JOURNAL_LIST = 'JOURNAL_LIST',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
-  GET_JOURNAL_PROCESSING_STATUS = 'GET_JOURNAL_PROCESSING_STATUS',
+  VOUCHER_GENERATE = 'VOUCHER_GENERATE',
+  VOUCHER_LIST = 'VOUCHER_LIST',
+  FINANCIAL_REPORT_LIST_PROGRESS_STATUS = 'FINANCIAL_REPORT_LIST_PROGRESS_STATUS',
+  FINANCIAL_REPORT_LIST = 'FINANCIAL_REPORT_LIST',
+  FINANCIAL_REPORT_GENERATE = 'FINANCIAL_REPORT_GENERATE',
+  FINANCIAL_REPORT_GET_BY_ID = 'FINANCIAL_REPORT_GET_BY_ID',
+  ANALYSIS_REPORT_LIST_PROGRESS_STATUS = 'ANALYSIS_REPORT_LIST_PROGRESS_STATUS',
+  ANALYSIS_REPORT_LIST = 'ANALYSIS_REPORT_LIST',
+  ANALYSIS_REPORT_GENERATE = 'ANALYSIS_REPORT_GENERATE',
+  ANALYSIS_REPORT_GET_BY_ID = 'ANALYSIS_REPORT_GET_BY_ID',
 }
 
 export enum APIPath {
@@ -42,23 +59,41 @@ export enum APIPath {
   SIGN_IN = `${apiPrefix}/sign-in`,
   SIGN_OUT = `${apiPrefix}/sign-out`,
   EMAIL = `${apiPrefix}/email`,
-  USER_GET_BY_ID = `${apiPrefix}/toBeDefined`,
-  INVOCIE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  USER_GET_BY_ID = `${apiPrefix}/user/:userId`,
+  USER_UPDATE = `${apiPrefix}/user/:userId`,
+  COMPANY_LIST = `${apiPrefix}/company`,
+  COMPANY_ADD = `${apiPrefix}/company`,
+  COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/company/invitation_code`,
+  PROFIT_GET_INSIGHT = `${apiPrefix}/company/:companyId/profit_insight`,
+  PROFIT_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/profit_trend`,
+  PROFIT_GET_MARGIN_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/profit_margin_trend`,
+  PROJECT_LIST_PROGRESS = `${apiPrefix}/company/:companyId/project_progress`,
+  PROJECT_LIST_PROFIT_COMPARISON = `${apiPrefix}/company/:companyId/project_profit_comparison`,
   INVOCIE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
-  FINANCIAL_REPORT_GENERATE = `${apiPrefix}/company/:companyId/report_financial`,
-  FINANCIAL_REPORT_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/report_financial/status`,
-  FINANCIAL_REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report_financial/:reportId`,
-  ANALYSIS_REPORT_GENERATE = `${apiPrefix}/company/:companyId/report_analysis`,
-  ANALYSIS_REPORT_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/report_analysis/status`,
-  ANALYSIS_REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report_analysis/:reportId`,
-  VOUCHER_GENERATE = `${apiPrefix}/company/:companyId/voucher`,
-  VOUCHER_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/voucher/:voucherId/status`,
-  VOUCHER_PREVIEW_GET_BY_ID = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_LIST = `${apiPrefix}/company/:companyId/voucher`,
-  JOURNAL_GENERATE = `${apiPrefix}/company/:companyId/journal`,
-  JOURNAL_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/journal/:journalId/status`,
-  JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
+  INVOCIE_LIST_UNBOUNDED = `${apiPrefix}/company/:companyId/invoice_unbounded`,
+  INVOCIE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  ASSET_MANAGEMENT_LIST = `${apiPrefix}/company/:companyId/asset_management`,
+  ASSET_MANAGEMENT_ADD = `${apiPrefix}/company/:companyId/asset_management`,
+  ASSET_MANAGEMENT_GET_BY_ID = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
+  ASSET_MANAGEMENT_UPDATE = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
+  JOURNAL_GENERATE = `${apiPrefix}/company/:companyId/voucher`,
+  JOURNAL_GET_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/voucher/:voucherId/status`,
+  JOURNAL_GET_PREVIEW_BY_ID = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
+  JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
+  JOURNAL_DELETE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
+  JOURNAL_LIST_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/voucher_status`,
+  JOURNAL_LIST = `${apiPrefix}/company/:companyId/voucher`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
+  VOUCHER_GENERATE = `${apiPrefix}/company/:companyId/journal`,
+  VOUCHER_LIST = `${apiPrefix}/company/:companyId/journal`,
+  FINANCIAL_REPORT_LIST_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/report_financial_status`,
+  FINANCIAL_REPORT_LIST = `${apiPrefix}/company/:companyId/report_financial`,
+  FINANCIAL_REPORT_GENERATE = `${apiPrefix}/company/:companyId/report_financial`,
+  FINANCIAL_REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report_financial/:reportId`,
+  ANALYSIS_REPORT_LIST_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/report_analysis_status`,
+  ANALYSIS_REPORT_LIST = `${apiPrefix}/company/:companyId/report_analysis`,
+  ANALYSIS_REPORT_GENERATE = `${apiPrefix}/company/:companyId/report_analysis`,
+  ANALYSIS_REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report_analysis/:reportId`,
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
@@ -166,10 +201,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS]: {
-    name: APIName.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
+  [APIName.FINANCIAL_REPORT_LIST_PROGRESS_STATUS]: {
+    name: APIName.FINANCIAL_REPORT_LIST_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.FINANCIAL_REPORT_GET_PROGRESS_STATUS,
+    path: APIPath.FINANCIAL_REPORT_LIST_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -205,10 +240,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.ANALYSIS_REPORT_GET_PROGRESS_STATUS]: {
-    name: APIName.ANALYSIS_REPORT_GET_PROGRESS_STATUS,
+  [APIName.ANALYSIS_REPORT_LIST_PROGRESS_STATUS]: {
+    name: APIName.ANALYSIS_REPORT_LIST_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.ANALYSIS_REPORT_GET_PROGRESS_STATUS,
+    path: APIPath.ANALYSIS_REPORT_LIST_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -244,10 +279,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.VOUCHER_GET_PROGRESS_STATUS]: {
-    name: APIName.VOUCHER_GET_PROGRESS_STATUS,
+  [APIName.JOURNAL_GET_PROGRESS_STATUS]: {
+    name: APIName.JOURNAL_GET_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.VOUCHER_GET_PROGRESS_STATUS,
+    path: APIPath.JOURNAL_GET_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -257,10 +292,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.VOUCHER_PREVIEW_GET_BY_ID]: {
-    name: APIName.VOUCHER_PREVIEW_GET_BY_ID,
+  [APIName.JOURNAL_GET_PREVIEW_BY_ID]: {
+    name: APIName.JOURNAL_GET_PREVIEW_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.VOUCHER_PREVIEW_GET_BY_ID,
+    path: APIPath.JOURNAL_GET_PREVIEW_BY_ID,
     input: {
       header: {},
       body: {},
@@ -296,19 +331,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.JOURNAL_GET_PROGRESS_STATUS]: {
-    name: APIName.JOURNAL_GET_PROGRESS_STATUS,
-    method: HttpMethod.GET,
-    path: APIPath.JOURNAL_GET_PROGRESS_STATUS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
   [APIName.JOURNAL_LIST]: {
     name: APIName.JOURNAL_LIST,
     method: HttpMethod.GET,
@@ -335,17 +357,251 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  GET_JOURNAL_PROCESSING_STATUS: {
-    name: 'SIGN_UP',
-    method: 'POST',
+  USER_UPDATE: {
+    name: APIName.USER_UPDATE,
+    method: HttpMethod.PUT,
     path: '',
     input: {
-      header: undefined,
-      body: undefined,
-      params: undefined,
-      query: undefined,
+       header: {},
+      body: {},
+      params: {},
+      query: {},
     },
     output: {},
-    useWorker: false,
+    useWorker: false
   },
+  COMPANY_LIST: {
+    name: APIName.COMPANY_LIST,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  COMPANY_ADD: {
+    name: APIName.COMPANY_ADD,
+    method: HttpMethod.POST,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  COMPANY_ADD_BY_INVITATION_CODE: {
+    name: APIName.COMPANY_ADD_BY_INVITATION_CODE,
+    method: HttpMethod.POST,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  PROFIT_GET_INSIGHT: {
+    name: APIName.PROFIT_GET_INSIGHT,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  PROFIT_GET_TREND_IN_PERIOD: {
+    name: APIName.PROFIT_GET_TREND_IN_PERIOD,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  PROFIT_GET_MARGIN_TREND_IN_PERIOD: {
+    name: APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  PROJECT_LIST_PROGRESS: {
+    name: APIName.PROJECT_LIST_PROGRESS,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  PROJECT_LIST_PROFIT_COMPARISON: {
+    name: APIName.PROJECT_LIST_PROFIT_COMPARISON,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  INVOCIE_LIST_UNBOUNDED: {
+    name: APIName.INVOCIE_LIST_UNBOUNDED,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  ASSET_MANAGEMENT_LIST: {
+    name: APIName.ASSET_MANAGEMENT_LIST,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  ASSET_MANAGEMENT_ADD: {
+    name: APIName.ASSET_MANAGEMENT_ADD,
+    method: HttpMethod.POST,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  ASSET_MANAGEMENT_GET_BY_ID: {
+    name: APIName.ASSET_MANAGEMENT_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  ASSET_MANAGEMENT_UPDATE: {
+    name: APIName.ASSET_MANAGEMENT_UPDATE,
+    method: HttpMethod.PUT,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  JOURNAL_UPDATE: {
+    name: APIName.JOURNAL_UPDATE,
+    method: HttpMethod.PUT,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  JOURNAL_DELETE: {
+    name: APIName.JOURNAL_DELETE,
+    method: HttpMethod.DELETE,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  JOURNAL_LIST_PROGRESS_STATUS: {
+    name: APIName.JOURNAL_LIST_PROGRESS_STATUS,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  FINANCIAL_REPORT_LIST: {
+    name: APIName.FINANCIAL_REPORT_LIST,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  },
+  ANALYSIS_REPORT_LIST: {
+    name: APIName.ANALYSIS_REPORT_LIST,
+    method: HttpMethod.GET,
+    path: '',
+    input: {
+       header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false
+  }
 };
