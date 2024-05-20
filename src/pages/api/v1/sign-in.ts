@@ -6,6 +6,7 @@ import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getDomains } from '@/lib/utils/common';
+import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,7 +17,7 @@ export default async function handler(
       throw new Error('Only POST requests are allowed');
     }
 
-    const { authentication, registeredCredential, challenge } = req.body;
+    const { authentication, challenge } = req.body;
 
     const origins = getDomains();
 
@@ -26,23 +27,38 @@ export default async function handler(
       userVerified: true,
     };
 
+    const getUser = await prisma.user.findFirstOrThrow({
+      where: {
+        credentialId: authentication.credentialId,
+        // credentialId: authenticationParsed.credentialId,
+      },
+    });
+
+    const typeOfAlgorithm = getUser.algorithm === 'ES256' ? 'ES256' : 'RS256';
+
+    const registeredCredential = {
+      id: getUser.credentialId,
+      publicKey: getUser.publicKey,
+      algorithm: typeOfAlgorithm,
+    } as CredentialKey;
+
     const authenticationParsed = await server.verifyAuthentication(
       authentication,
       registeredCredential,
       expected
     );
 
-    const getUser = await prisma.user.findFirstOrThrow({
-      where: {
-        credentialId: authenticationParsed.credentialId,
-      },
-    });
+    if (!authenticationParsed) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    }
 
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
     res.status(httpCode).json(result);
   } catch (_error) {
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
+
+    // console.log('error in signIn API', error.message, httpCode, result);
     res.status(httpCode).json(result);
   }
 }

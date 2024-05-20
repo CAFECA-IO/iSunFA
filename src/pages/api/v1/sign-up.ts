@@ -27,9 +27,6 @@ export default async function handler(
       origin: (target: string) => origins.includes(target), // Info: Any origin in the list of allowed origins is valid (20240408 - Shirley)
     };
 
-    // eslint-disable-next-line no-console
-    console.log('registration as param in signUp API', registration);
-
     const registrationParsed = (await server.verifyRegistration(
       registration,
       expected
@@ -38,7 +35,7 @@ export default async function handler(
 
     const newUser = {
       name: registrationParsed.username,
-      kycStatus: false,
+      // kycStatus: false,
       credentialId: credential.id,
       publicKey: credential.publicKey,
       algorithm: credential.algorithm,
@@ -53,6 +50,8 @@ export default async function handler(
     // Handle errors
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
+    // eslint-disable-next-line no-console
+    console.log('error in signUp API', error.message, httpCode, result);
     res.status(httpCode).json(result);
   }
 }
