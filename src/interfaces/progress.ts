@@ -5,5 +5,5 @@ export interface IProjectProgress {
 
 interface IProgress {
   progress: string;
-  project: string[];
+  projectNum: number;
 }
