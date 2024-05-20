@@ -7,7 +7,7 @@ import { ICredential } from '@/interfaces/webauthn';
 import { createChallenge } from '@/lib/utils/authorization';
 import { COOKIE_NAME, DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
-import { ISUNFA_API, ISUNFA_ROUTE } from '@/constants/url';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -64,11 +64,42 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
+  // const [registration, setRegistration, registrationRef] = useStateRef<Registration | null>(null);
 
   const { trigger: signOutAPI } = APIHandler<void>(
     APIName.SIGN_OUT,
     {
       body: { credential: credentialRef.current },
+    },
+    false,
+    false
+  );
+
+  const {
+    trigger: signInAPI,
+    data: signInData,
+    error: signInError,
+    success: signInSuccess,
+    isLoading: isSignInLoading,
+  } = APIHandler<IUser>(
+    APIName.SIGN_IN,
+    {
+      header: { 'Content-Type': 'application/json' },
+    },
+    false,
+    false
+  );
+
+  const {
+    trigger: signUpAPI,
+    data: signUpData,
+    error: signUpError,
+    success: signUpSuccess,
+    isLoading: isSignUpLoading,
+  } = APIHandler<IUser>(
+    APIName.SIGN_UP,
+    {
+      header: { 'Content-Type': 'application/json' },
     },
     false,
     false
@@ -110,34 +141,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         userVerification: 'required',
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
         attestation: true,
-        userHandle: FIDO2_USER_HANDLE, // TODO: optional userId less than 64 bytes (20240403 - Shirley)
+        userHandle: FIDO2_USER_HANDLE, // Info: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
         discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
 
-      const rs = await fetch(ISUNFA_API.SIGN_UP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ registration }),
-      });
-
-      const data = (await rs.json()).payload as IUser;
-      const newCredentialId = data.credentialId;
-
-      setUsername(data.name);
-      setUserAuth(data);
-      setCredential(newCredentialId);
-      setSignedIn(true);
-      setIsSignInError(false);
-
-      if (data) {
-        writeFIDO2Cookie();
-      }
-
-      // eslint-disable-next-line no-console
-      console.log('in userCtx, signUp, data:', data, 'registration:', registration);
+      signUpAPI({ body: { registration } });
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -163,36 +172,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
         debug: false,
       });
-      /*
-    const { authentication, registeredCredential, challenge } = req.body;
 
-*/
-
-      const rs = await fetch(ISUNFA_API.SIGN_IN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ authentication, challenge: newChallenge }),
-      });
-
-      const data = (await rs.json()).payload as IUser;
-
-      // eslint-disable-next-line no-console
-      console.log('in userCtx, in signIn, rs:', rs, 'data:', data);
-
-      // TODO: uncomment
-      if (authentication) {
-        // const { credential } = user;
-        // setUsername(user.username);
-        setUsername(data.name);
-        setCredential(data.credentialId);
-        setSignedIn(true);
-        writeFIDO2Cookie();
-      }
-
-      // eslint-disable-next-line no-console
-      console.log('in userCtx, in signIn, authentication:', authentication);
+      signInAPI({ body: { authentication, challenge: newChallenge } });
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -265,6 +246,44 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     checkCookieAndSignOut();
   }, [router.pathname]);
+
+  useEffect(() => {
+    if (isSignUpLoading) return;
+
+    if (signUpSuccess) {
+      if (signUpData) {
+        setUsername(signUpData.name);
+        setUserAuth(signUpData);
+        setCredential(signUpData.credentialId);
+        setSignedIn(true);
+        setIsSignInError(false);
+        writeFIDO2Cookie();
+      }
+    } else {
+      setIsSignInError(true);
+      // eslint-disable-next-line no-console
+      console.log('signUpError:', signUpError);
+    }
+  }, [signUpData, isSignUpLoading, signUpSuccess]);
+
+  useEffect(() => {
+    if (isSignInLoading) return;
+
+    if (signInSuccess) {
+      if (signInData) {
+        setUsername(signInData.name);
+        setUserAuth(signInData);
+        setCredential(signInData.credentialId);
+        setSignedIn(true);
+        setIsSignInError(false);
+        writeFIDO2Cookie();
+      }
+    } else {
+      setIsSignInError(true);
+      // eslint-disable-next-line no-console
+      console.log('signInError:', signInError);
+    }
+  }, [signInData, isSignInLoading, signInSuccess]);
 
   const value = useMemo(
     () => ({

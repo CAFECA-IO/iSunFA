@@ -30,7 +30,6 @@ export default async function handler(
     const getUser = await prisma.user.findFirstOrThrow({
       where: {
         credentialId: authentication.credentialId,
-        // credentialId: authenticationParsed.credentialId,
       },
     });
 
@@ -42,15 +41,7 @@ export default async function handler(
       algorithm: typeOfAlgorithm,
     } as CredentialKey;
 
-    const authenticationParsed = await server.verifyAuthentication(
-      authentication,
-      registeredCredential,
-      expected
-    );
-
-    if (!authenticationParsed) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
+    await server.verifyAuthentication(authentication, registeredCredential, expected);
 
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
     res.status(httpCode).json(result);
