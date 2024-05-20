@@ -1,8 +1,32 @@
 import React from 'react';
 import { cn } from '@/lib/utils/common';
 import { DUMMY_DASHBOARD_OVERVIEW } from '@/interfaces/dashboard_overview';
+/** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+ import { useAccountingCtx } from '@/contexts/accounting_context';
+ import { APIName } from '@/constants/api_connection';
+ import APIHandler from '@/lib/utils/api_handler';
+*/
 
 const DashboardOverview = () => {
+  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+  const { companyId } = useAccountingCtx();
+  const {
+      trigger: getProfitInsight,
+      data: profitInsight,
+      success: getSuccess,
+      code: getCode,
+      error: getError,
+    } = APIHandler<IDashboardOverview>(
+      APIName.PROFIT_GET_INSIGHT,
+      {
+        params: {
+          companyId,
+        },
+      },
+      false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+      false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+    );
+    */
   const dashboardOverview = DUMMY_DASHBOARD_OVERVIEW;
 
   const displayedAssetsGrowthRate = `${dashboardOverview.profitGrowthRate ?? `-`} %`;

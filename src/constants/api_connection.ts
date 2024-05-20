@@ -360,7 +360,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   USER_UPDATE: {
     name: APIName.USER_UPDATE,
     method: HttpMethod.PUT,
-    path: '',
+    path: APIPath.USER_UPDATE,
     input: {
       header: {},
       body: {},
@@ -373,7 +373,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   COMPANY_LIST: {
     name: APIName.COMPANY_LIST,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.COMPANY_LIST,
     input: {
       header: {},
       body: {},
@@ -386,7 +386,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   COMPANY_ADD: {
     name: APIName.COMPANY_ADD,
     method: HttpMethod.POST,
-    path: '',
+    path: APIPath.COMPANY_ADD,
     input: {
       header: {},
       body: {},
@@ -399,7 +399,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   COMPANY_ADD_BY_INVITATION_CODE: {
     name: APIName.COMPANY_ADD_BY_INVITATION_CODE,
     method: HttpMethod.POST,
-    path: '',
+    path: APIPath.COMPANY_ADD_BY_INVITATION_CODE,
     input: {
       header: {},
       body: {},
@@ -412,7 +412,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   PROFIT_GET_INSIGHT: {
     name: APIName.PROFIT_GET_INSIGHT,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.PROFIT_GET_INSIGHT,
     input: {
       header: {},
       body: {},
@@ -425,7 +425,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   PROFIT_GET_TREND_IN_PERIOD: {
     name: APIName.PROFIT_GET_TREND_IN_PERIOD,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.PROFIT_GET_TREND_IN_PERIOD,
     input: {
       header: {},
       body: {},
@@ -438,7 +438,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   PROFIT_GET_MARGIN_TREND_IN_PERIOD: {
     name: APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
     input: {
       header: {},
       body: {},
@@ -451,7 +451,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   PROJECT_LIST_PROGRESS: {
     name: APIName.PROJECT_LIST_PROGRESS,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.PROJECT_LIST_PROGRESS,
     input: {
       header: {},
       body: {},
@@ -464,7 +464,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   PROJECT_LIST_PROFIT_COMPARISON: {
     name: APIName.PROJECT_LIST_PROFIT_COMPARISON,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.PROJECT_LIST_PROFIT_COMPARISON,
     input: {
       header: {},
       body: {},
@@ -477,7 +477,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   INVOCIE_LIST_UNBOUNDED: {
     name: APIName.INVOCIE_LIST_UNBOUNDED,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.INVOCIE_LIST_UNBOUNDED,
     input: {
       header: {},
       body: {},
@@ -490,7 +490,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   ASSET_MANAGEMENT_LIST: {
     name: APIName.ASSET_MANAGEMENT_LIST,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.ASSET_MANAGEMENT_LIST,
     input: {
       header: {},
       body: {},
@@ -503,7 +503,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   ASSET_MANAGEMENT_ADD: {
     name: APIName.ASSET_MANAGEMENT_ADD,
     method: HttpMethod.POST,
-    path: '',
+    path: APIPath.ASSET_MANAGEMENT_ADD,
     input: {
       header: {},
       body: {},
@@ -516,7 +516,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   ASSET_MANAGEMENT_GET_BY_ID: {
     name: APIName.ASSET_MANAGEMENT_GET_BY_ID,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.ASSET_MANAGEMENT_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -529,7 +529,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   ASSET_MANAGEMENT_UPDATE: {
     name: APIName.ASSET_MANAGEMENT_UPDATE,
     method: HttpMethod.PUT,
-    path: '',
+    path: APIPath.ASSET_MANAGEMENT_UPDATE,
     input: {
       header: {},
       body: {},
@@ -542,7 +542,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   JOURNAL_UPDATE: {
     name: APIName.JOURNAL_UPDATE,
     method: HttpMethod.PUT,
-    path: '',
+    path: APIPath.JOURNAL_UPDATE,
     input: {
       header: {},
       body: {},
@@ -555,7 +555,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   JOURNAL_DELETE: {
     name: APIName.JOURNAL_DELETE,
     method: HttpMethod.DELETE,
-    path: '',
+    path: APIPath.JOURNAL_DELETE,
     input: {
       header: {},
       body: {},
@@ -568,7 +568,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   JOURNAL_LIST_PROGRESS_STATUS: {
     name: APIName.JOURNAL_LIST_PROGRESS_STATUS,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.JOURNAL_LIST_PROGRESS_STATUS,
     input: {
       header: {},
       body: {},
@@ -581,7 +581,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   FINANCIAL_REPORT_LIST: {
     name: APIName.FINANCIAL_REPORT_LIST,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.FINANCIAL_REPORT_LIST,
     input: {
       header: {},
       body: {},
@@ -594,7 +594,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   ANALYSIS_REPORT_LIST: {
     name: APIName.ANALYSIS_REPORT_LIST,
     method: HttpMethod.GET,
-    path: '',
+    path: APIPath.ANALYSIS_REPORT_LIST,
     input: {
       header: {},
       body: {},
