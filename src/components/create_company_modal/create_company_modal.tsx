@@ -49,16 +49,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     success: createCompanySuccess,
     error: createCompanyError,
     code: createCompanyCode,
-  } = APIHandler<ICompany>(
-    APIName.COMPANY_ADD,
-    {
-      header: {
-        userid: username ?? DEFAULT_DISPLAYED_USER_NAME,
-      },
-    },
-    false,
-    false
-  );
+  } = APIHandler<ICompany>(APIName.COMPANY_ADD, {}, false, false);
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
@@ -178,6 +169,9 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     event.preventDefault();
 
     createCompany({
+      header: {
+        userid: username ?? DEFAULT_DISPLAYED_USER_NAME,
+      },
       body: {
         name: nameValue,
         code: registrationNumberValue,
