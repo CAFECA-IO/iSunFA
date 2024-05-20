@@ -4,160 +4,41 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
-const responseDataArray: IProfitComparison[] = [
-  {
-    name: 'iSunFA',
-    profit: [
-      {
-        income: 70000,
-        expenses: 50000,
-        date: new Date('2024-03-01'),
-        profit: 20000,
-      },
-      {
-        income: 200000,
-        expenses: 130000,
-        date: new Date('2024-03-02'),
-        profit: 70000,
-      },
-      {
-        income: 30000,
-        expenses: 20000,
-        date: new Date('2024-03-03'),
-        profit: 10000,
-      },
-      {
-        income: 10000,
-        expenses: 5000,
-        date: new Date('2024-03-04'),
-        profit: 5000,
-      },
-      {
-        income: 5000,
-        expenses: 3000,
-        date: new Date('2024-03-05'),
-        profit: 2000,
-      },
-      {
-        income: 10000,
-        expenses: 8000,
-        date: new Date('2024-03-06'),
-        profit: 2000,
-      },
-      {
-        income: 20000,
-        expenses: 15000,
-        date: new Date('2024-03-07'),
-        profit: 5000,
-      },
-    ],
-  },
-  {
-    name: 'BAIFA',
-    profit: [
-      {
-        income: 70000,
-        expenses: 40000,
-        date: new Date('2024-03-01'),
-        profit: 30000,
-      },
-      {
-        income: 200000,
-        expenses: 150000,
-        date: new Date('2024-03-02'),
-        profit: 50000,
-      },
-      {
-        income: 30000,
-        expenses: 10000,
-        date: new Date('2024-03-03'),
-        profit: 20000,
-      },
-      {
-        income: 10000,
-        expenses: 8000,
-        date: new Date('2024-03-04'),
-        profit: 2000,
-      },
-      {
-        income: 5000,
-        expenses: 4000,
-        date: new Date('2024-03-05'),
-        profit: 1000,
-      },
-      {
-        income: 10000,
-        expenses: 7000,
-        date: new Date('2024-03-06'),
-        profit: 3000,
-      },
-      {
-        income: 21000,
-        expenses: 15000,
-        date: new Date('2024-03-07'),
-        profit: 6000,
-      },
-    ],
-  },
-  {
-    name: 'iSunOne',
-    profit: [
-      {
-        income: 71000,
-        expenses: 50000,
-        date: new Date('2024-03-01'),
-        profit: 21000,
-      },
-      {
-        income: 250000,
-        expenses: 130000,
-        date: new Date('2024-03-02'),
-        profit: 120000,
-      },
-      {
-        income: 40000,
-        expenses: 20000,
-        date: new Date('2024-03-03'),
-        profit: 20000,
-      },
-      {
-        income: 20000,
-        expenses: 5000,
-        date: new Date('2024-03-04'),
-        profit: 15000,
-      },
-      {
-        income: 6000,
-        expenses: 3000,
-        date: new Date('2024-03-05'),
-        profit: 3000,
-      },
-      {
-        income: 10000,
-        expenses: 9000,
-        date: new Date('2024-03-06'),
-        profit: 1000,
-      },
-      {
-        income: 30000,
-        expenses: 15000,
-        date: new Date('2024-03-07'),
-        profit: 15000,
-      },
-    ],
-  },
-];
+const responseData: IProfitComparison = {
+  startDate: new Date('2024-04-01'),
+  endDate: new Date('2024-05-01'),
+  comparisons: [
+    {
+      projectName: 'iSunFA',
+      income: 170000,
+      expenses: 150000,
+      profit: 20000,
+    },
+    {
+      projectName: 'BAIFA',
+      income: 2000000,
+      expenses: 1500000,
+      profit: 500000,
+    },
+    {
+      projectName: 'iSunOne',
+      income: 250000,
+      expenses: 80000,
+      profit: 170000,
+    },
+  ],
+};
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProfitComparison[] | IProfitComparison>>
+  res: NextApiResponse<IResponseData<IProfitComparison>>
 ) {
   const { startDate, endDate, page = 1, limit = 10 } = req.query;
   try {
     if (startDate && endDate && page && limit) {
-      const { httpCode, result } = formatApiResponse<IProfitComparison[]>(
+      const { httpCode, result } = formatApiResponse<IProfitComparison>(
         STATUS_MESSAGE.SUCCESS_GET,
-        responseDataArray
+        responseData
       );
       res.status(httpCode).json(result);
     }
