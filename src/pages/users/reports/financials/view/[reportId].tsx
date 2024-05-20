@@ -47,7 +47,7 @@ const DUMMY_DATA_FOR_REPORT = {
 };
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-// TODO: replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>
