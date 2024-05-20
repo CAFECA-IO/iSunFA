@@ -59,7 +59,7 @@ const NavBar = () => {
   const displayedAppMenuMobile = (
     <div
       ref={appMenuMobileRef}
-      className={`absolute left-0 top-0 z-10000 flex gap-16px overflow-hidden lg:hidden ${isAppMenuMobileOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-32px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-0 flex gap-16px overflow-hidden lg:hidden ${isAppMenuMobileOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-32px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
     >
       <button
         onClick={appMenuMobileClickHandler}
@@ -115,7 +115,7 @@ const NavBar = () => {
   const displayedBurgerMenu = (
     <div
       ref={burgerMenuRef}
-      className={`absolute left-0 top-75px z-10000 flex gap-16px lg:hidden ${isBurgerMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-16px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-75px flex gap-16px lg:hidden ${isBurgerMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-16px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
     >
       <button
         type="button"
