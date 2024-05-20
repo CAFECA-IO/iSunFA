@@ -65,18 +65,18 @@ const initialAccountingContext: IAccountingContext = {
 
   companyId: undefined,
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   accountingVoucher: [defaultAccountingVoucher],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  clearVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  clearVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
@@ -205,10 +205,22 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [accountingVoucher]);
 
   // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
-  const setCompanyIdHandler = useCallback((id: string | undefined) => setCompanyId(id), [companyId]);
-  const setInvoiceIdHandler = useCallback((id: string | undefined) => setInvoiceId(id), [invoiceId]);
-  const setVoucherIdHandler = useCallback((id: string | undefined) => setVoucherId(id), [voucherId]);
-  const setVoucherPreviewHandler = useCallback((voucher: IVoucher | undefined) => setVoucherPreview(voucher), [voucherPreview]);
+  const setCompanyIdHandler = useCallback(
+    (id: string | undefined) => setCompanyId(id),
+    [companyId]
+  );
+  const setInvoiceIdHandler = useCallback(
+    (id: string | undefined) => setInvoiceId(id),
+    [invoiceId]
+  );
+  const setVoucherIdHandler = useCallback(
+    (id: string | undefined) => setVoucherId(id),
+    [voucherId]
+  );
+  const setVoucherPreviewHandler = useCallback(
+    (voucher: IVoucher | undefined) => setVoucherPreview(voucher),
+    [voucherPreview]
+  );
 
   // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
