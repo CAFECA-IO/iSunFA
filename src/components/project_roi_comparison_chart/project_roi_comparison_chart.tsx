@@ -9,8 +9,14 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { Button } from '@/components/button/button';
 import {
   DUMMY_START_DATE,
+  IProjectROIComparisonChartDataWithPagination,
   generateRandomPaginatedData,
 } from '@/interfaces/project_roi_comparison_chart';
+import { APIName } from '@/constants/api_connection';
+/** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+import { useAccountingCtx } from '@/contexts/accounting_context';
+*/
+import APIHandler from '@/lib/utils/api_handler';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -150,6 +156,25 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
+  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+    const { companyId } = useAccountingCtx();
+  */
+  const {
+    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+        trigger: listProjectProfitComparison,
+    */
+    data: profitComparison,
+    success: listSuccess,
+    code: listCode,
+    error: listError,
+  } = APIHandler<IProjectROIComparisonChartDataWithPagination>(
+    APIName.PROJECT_LIST_PROFIT_COMPARISON,
+    {},
+    false,
+    false
+  );
+  const [reload, setReload] = useState(false);
+
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 
@@ -177,9 +202,34 @@ const ProjectRoiComparisonChart = () => {
   })();
 
   useEffect(() => {
+    if (reload && listSuccess && profitComparison) {
+      setReload(false);
+      const { series: newSerices, categories: newCategories, totalPages: newTotalPages } = profitComparison;
+      setSeries(newSerices);
+      setCategories(newCategories);
+      setTotalPages(newTotalPages);
+    }
+  }, [reload, listSuccess, listCode, listError, profitComparison]);
+
+  useEffect(() => {
     if (period.endTimeStamp !== 0) {
       // Info: pagination implemented in backend (20240419 - Shirley)
       const data = generateRandomPaginatedData(currentPage, ITEMS_PER_PAGE_ON_DASHBOARD);
+      /**
+       * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
+          listProjectProfitComparison({
+            params: {
+              companyId,
+            },
+            query: {
+              page: currentPage,
+              perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+              startDate: period.startTimeStamp,
+              endDate: period.endTimeStamp,
+            },
+          });
+       */
+      setReload(true);
       const newSeries = data.series;
       const newCategories = data.categories;
       setTotalPages(data.totalPages);
@@ -199,6 +249,21 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage + 1);
 
       const newData = generateRandomPaginatedData(currentPage + 1, ITEMS_PER_PAGE_ON_DASHBOARD);
+      /**
+      * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
+         listProjectProfitComparison({
+           params: {
+             companyId,
+           },
+           query: {
+             page: currentPage + 1,
+             perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+             startDate: period.startTimeStamp,
+             endDate: period.endTimeStamp,
+           },
+         });
+      */
+      setReload(true);
       const newSeries = newData.series;
       const newCategories = newData.categories;
       const newTotalPages = newData.totalPages;
@@ -213,6 +278,21 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage - 1);
 
       const newData = generateRandomPaginatedData(currentPage - 1, ITEMS_PER_PAGE_ON_DASHBOARD);
+      /**
+       * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
+          listProjectProfitComparison({
+            params: {
+              companyId,
+            },
+            query: {
+              page: currentPage - 1,
+              perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+              startDate: period.startTimeStamp,
+              endDate: period.endTimeStamp,
+            },
+          });
+       */
+      setReload(true);
       const newSeries = newData.series;
       const newCategories = newData.categories;
       const newTotalPages = newData.totalPages;

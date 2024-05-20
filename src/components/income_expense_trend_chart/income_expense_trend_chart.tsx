@@ -12,6 +12,8 @@ import {
   DUMMY_INCOME_EXPENSE_TREND_CHART_DATA,
   IIncomeExpenseTrendChartData,
 } from '@/interfaces/income_expense_trend_chart';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -197,14 +199,58 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
+  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+const { companyId } = useAccountingCtx();
+*/
+  const {
+    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+      trigger: getProfitMarginTrendInPeriod,
+  */
+    data: profitMarginTrendInPeriodData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<IIncomeExpenseTrendChartData>(
+    APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
+    {
+      params: {
+        companyId: '1',
+      },
+      query: {
+        period: Period.WEEK,
+      },
+    },
+    false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+    false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+  );
+  const [reload, setReload] = React.useState(true);
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
 
   const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
+    /**
+     * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
+    getProfitMarginTrendInPeriod({
+      params: {
+        companyId,
+      },
+      query: {
+        period,
+      },
+    });
+     */
+    setReload(true);
     setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[period]);
   };
+
+  useEffect(() => {
+    if (reload && getSuccess && profitMarginTrendInPeriodData) {
+      setReload(false);
+      setData(profitMarginTrendInPeriodData);
+    }
+  }, [getSuccess, getCode, getError, profitMarginTrendInPeriodData]);
 
   const displayedDataSection = (
     <div
