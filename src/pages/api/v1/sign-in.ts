@@ -48,8 +48,6 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
-
-    // console.log('error in signIn API', error.message, httpCode, result);
     res.status(httpCode).json(result);
   }
 }
