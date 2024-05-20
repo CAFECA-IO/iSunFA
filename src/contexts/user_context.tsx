@@ -105,6 +105,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
+  // TODO: @Tzuahan 請協助確認在 `user_get_by_id` 路徑要怎麼給 userId 參數 (20240520 - Shirley)
+  const {
+    trigger: getUserByIdAPI,
+    data: getUserByIdData,
+    error: getUserByIdError,
+    success: getUserByIdSuccess,
+    isLoading: isGetUserByIdLoading,
+  } = APIHandler<IUser>(
+    APIName.USER_GET_BY_ID,
+    {
+      header: {
+        userId: credentialRef.current || '',
+      },
+    },
+    false,
+    false
+  );
+
   const readFIDO2Cookie = async () => {
     const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
 
@@ -112,6 +130,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (FIDO2) {
       const decoded = decodeURIComponent(FIDO2);
+      if (
+        !decoded ||
+        decoded === undefined ||
+        decoded === 'undefined' ||
+        decoded === 'null' ||
+        decoded === null
+      ) {
+        return null;
+      }
       const credentialData = JSON.parse(decoded) as ICredential;
       return credentialData;
     }
@@ -126,6 +153,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // TODO: read cookie first (20240520 - Shirley)
     // const credentialData = await readFIDO2Cookie();
     document.cookie = `FIDO2=${encodeURIComponent(JSON.stringify(credentialRef.current))}; expires=${expiration.toUTCString()}; path=/`;
+  };
+
+  const deleteCookie = (name: string) => {
+    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   };
 
   const signUp = async ({ username: usernameForSignUp }: SignUpProps) => {
@@ -186,13 +217,28 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const getUserById = async ({ credentialId }: { credentialId: string }) => {
+    try {
+      getUserByIdAPI({ header: { userId: credentialId }, body: { credential: credentialId } });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('getUserById error:', error);
+    }
+  };
+
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
+    // TODO: @Tzuahan 請協助確認在 `user_get_by_id` 路徑要怎麼給 userId 參數 (20240520 - Shirley)
+    getUserById({ credentialId: credentialRef.current || '' });
+
     const credentialFromCookie = await readFIDO2Cookie();
 
-    if (credentialFromCookie) {
+    if (credentialFromCookie !== null) {
       setCredential(credentialFromCookie.id);
       setSignedIn(true);
+    } else {
+      setSignedIn(false);
+      deleteCookie(COOKIE_NAME.FIDO2);
     }
   };
 
@@ -234,7 +280,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
     const cookieName = COOKIE_NAME.FIDO2;
-    document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    // document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    deleteCookie(cookieName);
   };
 
   useEffect(() => {
@@ -284,6 +331,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('signInError:', signInError);
     }
   }, [signInData, isSignInLoading, signInSuccess]);
+
+  useEffect(() => {
+    if (isGetUserByIdLoading) return;
+
+    if (getUserByIdSuccess) {
+      if (getUserByIdData) {
+        setUsername(getUserByIdData.name);
+        setUserAuth(getUserByIdData);
+        setCredential(getUserByIdData.credentialId);
+        setSignedIn(true);
+        setIsSignInError(false);
+        writeFIDO2Cookie();
+      }
+    } else {
+      setIsSignInError(true);
+      // eslint-disable-next-line no-console
+      console.log('getUserByIdError:', getUserByIdError);
+    }
+  }, [getUserByIdData, isGetUserByIdLoading, getUserByIdSuccess]);
 
   const value = useMemo(
     () => ({
