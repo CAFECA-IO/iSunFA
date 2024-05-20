@@ -1,63 +1,63 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IProfit } from '@/interfaces/profit';
+import { IProfitPercent } from '@/interfaces/profit';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { Period } from '@/interfaces/chart_unit';
 
-const responseDataArray: IProfit[] = [
+const responseDataArray: IProfitPercent[] = [
   {
-    income: 70000,
-    expenses: 50000,
+    income: 0.7,
+    expenses: 0.5,
     date: new Date('2024-03-01'),
-    profit: 20000,
+    profit: 0.2,
   },
   {
-    income: 200000,
-    expenses: 130000,
+    income: 0.2,
+    expenses: 0.13,
     date: new Date('2024-03-02'),
-    profit: 70000,
+    profit: 0.07,
   },
   {
-    income: 30000,
-    expenses: 20000,
+    income: 0.3,
+    expenses: 0.2,
     date: new Date('2024-03-03'),
-    profit: 10000,
+    profit: 0.1,
   },
   {
-    income: 10000,
-    expenses: 5000,
+    income: 0.1,
+    expenses: 0.05,
     date: new Date('2024-03-04'),
-    profit: 5000,
+    profit: 0.05,
   },
   {
-    income: 5000,
-    expenses: 3000,
+    income: 0.05,
+    expenses: 0.03,
     date: new Date('2024-03-05'),
-    profit: 2000,
+    profit: 0.02,
   },
   {
-    income: 10000,
-    expenses: 8000,
+    income: 0.1,
+    expenses: 0.08,
     date: new Date('2024-03-06'),
-    profit: 2000,
+    profit: 0.02,
   },
   {
-    income: 20000,
-    expenses: 15000,
+    income: 0.2,
+    expenses: 0.15,
     date: new Date('2024-03-07'),
-    profit: 5000,
+    profit: 0.05,
   },
 ];
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProfit[] | IProfit>>
+  res: NextApiResponse<IResponseData<IProfitPercent[] | IProfitPercent>>
 ) {
   const { period = Period.WEEK } = req.query;
   try {
     if (period === Period.WEEK) {
-      const { httpCode, result } = formatApiResponse<IProfit[]>(
+      const { httpCode, result } = formatApiResponse<IProfitPercent[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         responseDataArray
       );
@@ -66,7 +66,10 @@ export default function handler(
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IProfit>(error.message, {} as IProfit);
+    const { httpCode, result } = formatApiResponse<IProfitPercent>(
+      error.message,
+      {} as IProfitPercent
+    );
     res.status(httpCode).json(result);
   }
 }
