@@ -40,7 +40,7 @@ export async function fetchData<Data>(
 
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console
-  console.log(`fetchData(${apiConfig.name}), path:`, path, `options:`, options, apiConfig);
+  console.log(`fetchData(${apiConfig.name}), path:`, path, `options:`, options, `apiConfig:`, apiConfig);
 
   if (apiConfig.method !== HttpMethod.GET && options.body) {
     if (options.body instanceof FormData) {
@@ -89,6 +89,7 @@ const useAPI = <Data>(
           apiConfig,
           {
             ...options,
+            header: input?.header || options.header,
             params: input?.params || options.params,
             query: input?.query || options.query,
             body: input?.body || options.body,
