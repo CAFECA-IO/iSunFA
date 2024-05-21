@@ -57,6 +57,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(
     null
   );
