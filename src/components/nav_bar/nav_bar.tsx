@@ -4,6 +4,7 @@ import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { PiGlobe } from 'react-icons/pi';
+import { GoArrowSwitch } from 'react-icons/go';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
@@ -14,7 +15,7 @@ import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
 
 const NavBar = () => {
-  const { signedIn, signOut, username, isSelectCompany } = useUserCtx();
+  const { signedIn, signOut, username, isSelectCompany, selectedCompany } = useUserCtx();
 
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
@@ -306,8 +307,6 @@ const NavBar = () => {
         </Link>
         <button
           type="button"
-          // TODO: temp disabled (20240517 - Shirley)
-          // eslint-disable-next-line react/jsx-boolean-value
           disabled={!isSelectCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex gap-2 rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
@@ -388,6 +387,25 @@ const NavBar = () => {
         </button>
       </div>
     </div>
+  ) : null;
+
+  const displayedCompanyChangeBtn = isSelectCompany ? (
+    <Link
+      href={ISUNFA_ROUTE.SELECT_COMPANY}
+      className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
+    >
+      {/* ToDo: (20240516 - Julian) icon */}
+      <Image
+        alt={`${selectedCompany?.name}_icon`}
+        src={'/entities/happy.png'}
+        width={16}
+        height={16}
+        className="rounded-full"
+      />
+      {/* ToDo: (20240521 - Julian) company name abbreviation */}
+      <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
+      <GoArrowSwitch size={14} />
+    </Link>
   ) : null;
 
   const displayedLogInBtn = signedIn ? (
@@ -597,6 +615,9 @@ const NavBar = () => {
         <div className="hidden flex-col items-start justify-center lg:flex">
           <div className="h-40px w-px shrink-0 bg-lightGray6" />
         </div>
+
+        {/* Info: (20240521 - Julian) Company change button */}
+        {displayedCompanyChangeBtn}
 
         <div className="my-auto">{displayedLogInBtn}</div>
       </div>
