@@ -81,6 +81,7 @@ model company {
   employees           employee[]
   invitations         invitation[]
   invoices            invoice[]
+  journals            journal[]
   roles               role[]
   subscriptions       subscription[]
   usersCompanysRoles  userCompanyRole[]
@@ -197,20 +198,22 @@ model invitation {
 }
 
 model journal {
-  id            Int      @id @default(autoincrement())
-  tokenContract String?  @map("token_contract")
-  tokenId       String?  @map("token_id")
-  ocrId         Int      @unique @map("ocr_id")
-  ocr           ocr      @relation(fields: [ocrId], references: [id])
-  aichResultId  String?  @map("aich_result_id")
-  invoiceId     Int      @unique @map("invoice_id")
-  invoice       invoice  @relation(fields: [invoiceId], references: [id])
-  vocherId      Int      @unique @map("vocher_id")
-  vocher        voucher  @relation(fields: [vocherId], references: [id])
-  projectId     Int      @unique @map("project_id")
-  project       project  @relation(fields: [projectId], references: [id])
-  contractId    Int      @unique @map("contract_id")
-  contract      contract @relation(fields: [contractId], references: [id])
+  id            Int       @id @default(autoincrement())
+  tokenContract String?   @map("token_contract")
+  tokenId       String?   @map("token_id")
+  ocrId         Int       @unique @map("ocr_id")
+  ocr           ocr       @relation(fields: [ocrId], references: [id])
+  aichResultId  String?   @map("aich_result_id")
+  invoiceId     Int?      @unique @map("invoice_id")
+  invoice       invoice?  @relation(fields: [invoiceId], references: [id])
+  vocherId      Int?      @unique @map("vocher_id")
+  vocher        voucher?  @relation(fields: [vocherId], references: [id])
+  projectId     Int?      @unique @map("project_id")
+  project       project?  @relation(fields: [projectId], references: [id])
+  contractId    Int?      @unique @map("contract_id")
+  contract      contract? @relation(fields: [contractId], references: [id])
+  company       company?  @relation(fields: [companyId], references: [id])
+  companyId     Int?      @map("company_id")
 }
 
 model lineItem {
