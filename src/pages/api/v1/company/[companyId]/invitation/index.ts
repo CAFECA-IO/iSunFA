@@ -11,9 +11,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { SendMailOptions } from 'nodemailer';
 
 function generateCode() {
-  // Implement your logic to generate a unique invitation code here
-  // You can use any algorithm or library of your choice
-  // For example, you can generate a random alphanumeric code
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const codeLength = 8;
   let invitationCode = '';
@@ -85,8 +82,7 @@ export default async function handler(
       if (!company) {
         throw new Error(ErrorMessage.RESOURCE_NOT_FOUND);
       }
-      // Make sure the user has the necessary permissions to create an invitation code
-      // For example, you can check if the user is an admin of the company
+      // Todo: (20240520 - Jacky) Check the user has the necessary permissions to create an invitation code
       // If the user does not have the necessary permissions, return a 403 Forbidden response
       if (!emails) {
         throw new Error(ErrorMessage.INVALID_INPUT_PARAMETER);

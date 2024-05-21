@@ -204,7 +204,11 @@ const ProjectRoiComparisonChart = () => {
   useEffect(() => {
     if (reload && listSuccess && profitComparison) {
       setReload(false);
-      const { series: newSerices, categories: newCategories, totalPages: newTotalPages } = profitComparison;
+      const {
+        series: newSerices,
+        categories: newCategories,
+        totalPages: newTotalPages,
+      } = profitComparison;
       setSeries(newSerices);
       setCategories(newCategories);
       setTotalPages(newTotalPages);

@@ -23,7 +23,7 @@ beforeEach(async () => {
   user = await prisma.user.create({
     data: {
       name: 'John',
-      credentialId: '129999',
+      credentialId: '123456',
       publicKey: 'publicKey',
       algorithm: 'ES256',
       imageId: 'imageId',
@@ -77,7 +77,7 @@ describe('test user API', () => {
       fullName: 'John Doe',
       email: 'john@mermer.cc',
       phone: '1234567890',
-      credentialId: '123456',
+      credentialId: '1000456',
       publicKey: 'publicKey',
       algorithm: 'ES256',
       imageId: 'imageId',

@@ -219,7 +219,7 @@ const ProjectProgressChart = () => {
       */
       setSeries(newData.series);
       setCategories(newData.categories);
-      setReload(true)
+      setReload(true);
     }
   }, [period.endTimeStamp, period.startTimeStamp]);
 

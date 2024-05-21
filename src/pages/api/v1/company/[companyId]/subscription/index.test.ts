@@ -19,6 +19,7 @@ beforeEach(async () => {
     query: {},
     method: 'GET',
     json: jest.fn(),
+    session: { userId: '1' },
   } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
@@ -101,7 +102,6 @@ afterEach(async () => {
 
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
-    req.headers.userid = '1';
     req.query.companyId = companyId.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -179,6 +179,29 @@ describe('test subscription API', () => {
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('405'),
+        message: expect.any(String),
+        payload: expect.any(Object),
+      })
+    );
+  });
+  it('should handle unauthorized access', async () => {
+    req = {
+      headers: {},
+      body: null,
+      query: {
+        companyId: companyId.toString(),
+      },
+      method: 'GET',
+      json: jest.fn(),
+      session: {},
+    } as unknown as jest.Mocked<NextApiRequest>;
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('401'),
         message: expect.any(String),
         payload: expect.any(Object),
       })
