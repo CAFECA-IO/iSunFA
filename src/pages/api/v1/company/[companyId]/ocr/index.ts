@@ -77,7 +77,7 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
     }
   const ocrData = await prisma.ocr.create({
     data: {
-      imageName,
+      imageName: aichResult.imageName,
       imageUrl: aichResult.imageUrl,
     }
   });
