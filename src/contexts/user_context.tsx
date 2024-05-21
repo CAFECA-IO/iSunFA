@@ -28,7 +28,7 @@ interface UserContextType {
   signedIn: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
-  selectCompany: (company: ICompany) => void;
+  selectCompany: (company: ICompany | null) => void;
   isSelectCompany: boolean;
 }
 
@@ -244,8 +244,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ToDo: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = (company: ICompany) => {
-    setSelectedCompany(company);
+  const selectCompany = (company: ICompany | null) => {
+    if (company) {
+      setSelectedCompany(company);
+    } else {
+      setSelectedCompany(null);
+    }
   };
 
   const clearState = () => {
@@ -352,6 +356,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [getUserByIdData, isGetUserByIdLoading, getUserByIdSuccess]);
 
+  useEffect(() => {
+    if (selectedCompany) {
+      setIsSelectCompany(true);
+    } else {
+      setIsSelectCompany(false);
+    }
+  }, [selectedCompany]);
+
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
@@ -366,7 +378,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectCompany,
       isSelectCompany: isSelectCompanyRef.current,
     }),
-    [credentialRef.current]
+    [credentialRef.current, selectedCompanyRef.current, isSelectCompanyRef.current]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
