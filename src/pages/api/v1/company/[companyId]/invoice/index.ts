@@ -32,7 +32,7 @@ export default async function handler(
           eventType: EventType.PAYMENT,
           paymentReason: 'purchase',
           description: 'description',
-          venderOrSupplyer: 'vender',
+          venderOrSupplier: 'vender',
           project: 'ISunFa',
           contract: 'ISunFa buy',
           projectId: '123',
@@ -58,7 +58,7 @@ export default async function handler(
           eventType: EventType.PAYMENT,
           paymentReason: 'sale',
           description: 'description',
-          venderOrSupplyer: 'vender',
+          venderOrSupplier: 'vender',
           project: 'ISunFa',
           contract: 'ISunFa buy',
           projectId: '123',
@@ -136,7 +136,13 @@ export default async function handler(
       const formData = new FormData();
       formData.append('image', imageBlob);
       formData.append('imageName', imageName);
-        // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
+      // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
+      // formData.append('project', fields.project[0]);
+      // formData.append('projectId', fields.projectId[0]);
+      // formData.append('contract', fields.contract[0]);
+      // formData.append('contractId', fields.contractId[0]);
+
+      // Deprecated (20240504 - Murky): 這邊不寫內容也可以
       // formData.append('project', fields.project[0]);
       // formData.append('projectId', fields.projectId[0]);
       // formData.append('contract', fields.contract[0]);

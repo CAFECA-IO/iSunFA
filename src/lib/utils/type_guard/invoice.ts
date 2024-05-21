@@ -12,7 +12,7 @@ export function isIInvoice(data: IInvoice): data is IInvoice {
     isEventType(data.eventType) &&
     typeof data.paymentReason === 'string' &&
     typeof data.description === 'string' &&
-    typeof data.venderOrSupplyer === 'string' &&
+    typeof data.venderOrSupplier === 'string' &&
     (typeof data.projectId === 'string' || data.projectId === null) && // Info: TO Murky project id is nullable (20240515 - tzuhan)
     typeof data.project === 'string' &&
     typeof data.contract === 'string' &&
