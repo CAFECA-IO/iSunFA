@@ -9,7 +9,7 @@ export default async function handler(
   res: NextApiResponse<IResponseData<string>>
 ) {
   try {
-    if (req.method === 'GET') {
+    if (req.method === 'PUT') {
       if (!req.query.companyId) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
