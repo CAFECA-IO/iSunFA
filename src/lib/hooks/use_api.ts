@@ -40,18 +40,32 @@ export async function fetchData<Data>(
 
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console
-  console.log(`fetchData(${apiConfig.name}), path:`, path, `options:`, options, `apiConfig:`, apiConfig);
+  console.log(
+    `fetchData(${apiConfig.name}), path:`,
+    path,
+    `options:`,
+    options,
+    `apiConfig:`,
+    apiConfig
+  );
 
-  if (apiConfig.method !== HttpMethod.GET && options.body) {
-    if (options.body instanceof FormData) {
-      fetchOptions.body = options.body;
-    } else {
-      fetchOptions.body = JSON.stringify(options.body);
-      fetchOptions.headers = {
-        ...DEFAULT_HEADERS,
-        ...(options.header || {}),
-      };
+  if (apiConfig.method !== HttpMethod.GET) {
+    if (options.body) {
+      if (options.body instanceof FormData) {
+        fetchOptions.body = options.body;
+      } else {
+        fetchOptions.body = JSON.stringify(options.body);
+        fetchOptions.headers = {
+          ...DEFAULT_HEADERS,
+          ...(options.header || {}),
+        };
+      }
     }
+  } else {
+    fetchOptions.headers = {
+      ...DEFAULT_HEADERS,
+      ...(options.header || {}),
+    };
   }
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console

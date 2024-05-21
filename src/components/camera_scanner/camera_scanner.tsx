@@ -35,14 +35,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     error: uploadError,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus[]>(
-    APIName.INVOCIE_UPLOAD,
-    {
-      params: { companyId },
-    },
-    false,
-    false
-  );
+  } = APIHandler<IAccountResultStatus[]>(APIName.INVOCIE_UPLOAD, {}, false, false);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -149,7 +142,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
-    uploadInvoice({ body: formData });
+    uploadInvoice({ params: { companyId }, body: formData });
 
     // Info: (20240506 - Julian) 關閉攝影機
     handleCloseCamera();

@@ -12,6 +12,7 @@ import { ISUNFA_API, ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { ICompany } from '@/interfaces/company';
 
 // TODO: complete the sign-in, sign-out, and sign-up functions (20240425 - Shirley)
 interface SignUpProps {
@@ -27,8 +28,8 @@ interface UserContextType {
   username: string | null;
   signedIn: boolean;
   isSignInError: boolean;
-  selectedCompany: string | null;
-  selectCompany: (company: string) => void;
+  selectedCompany: ICompany | null;
+  selectCompany: (company: ICompany) => void;
   isSelectCompany: boolean;
 }
 
@@ -53,7 +54,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [credential, setCredential, credentialRef] = useStateRef<ICredential | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUserAuth | null>(null);
   const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
-  const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<string | null>(
+  const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(
     null
   );
   const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
@@ -255,7 +256,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ToDo: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = (company: string) => {
+  const selectCompany = (company: ICompany) => {
     setSelectedCompany(company);
   };
 
