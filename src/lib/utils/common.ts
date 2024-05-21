@@ -261,6 +261,11 @@ export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+/** Info: (20240521 - Shirley)
+ * Convert timestamp in milliseconds to timestamp in seconds
+ * @param timestamp in milliseconds
+ * @returns timestamp in seconds
+ */
 export const timestampInSeconds = (timestamp: number): number => {
   return Math.floor(timestamp / 1000);
 };
