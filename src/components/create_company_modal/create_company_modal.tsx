@@ -45,7 +45,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
 
   const {
     trigger: createCompany,
-    data: results,
+    data: company,
     success: createCompanySuccess,
     error: createCompanyError,
     code: createCompanyCode,
@@ -146,9 +146,9 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   };
 
   useEffect(() => {
-    if (createCompanySuccess && results) {
+    if (createCompanySuccess && company) {
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
-      selectCompany(results.name);
+      selectCompany(company);
       modalVisibilityHandler();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
@@ -170,7 +170,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
 
     createCompany({
       header: {
-        userid: username ?? DEFAULT_DISPLAYED_USER_NAME,
+        userid: username ?? DEFAULT_DISPLAYED_USER_NAME, // ToDo: should remove when backend updated (shoud using session) @Julian (20240521 - tzuhan)
       },
       body: {
         name: nameValue,
