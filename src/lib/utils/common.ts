@@ -299,3 +299,11 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
   }
   return Object.values(value).every((v) => typeof v === 'number');
 }
+
+export function transformOCRImageIDToURL(documentType: string, imageID: string): string {
+  return `/api/v1/company/${documentType}/${imageID}/image`;
+}
+
+export function bytesToKb(bytes: number): number {
+  return bytes / 1024;
+}
