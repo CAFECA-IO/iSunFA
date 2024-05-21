@@ -175,14 +175,11 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`,
       },
       y: {
-        // formatter: (value) => `${value}%`,
         formatter: (value, { series, seriesIndex, dataPointIndex }) => {
-          console.log('in y formatter', value, series, seriesIndex, dataPointIndex);
-          // const absoluteValue = series[seriesIndex][dataPointIndex];
           const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
           const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
 
-          return `${value}%, ${formattedAbsoluteValue}`;
+          return `${formattedAbsoluteValue}　(${value}%)`;
         },
       },
       marker: {
