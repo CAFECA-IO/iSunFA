@@ -80,7 +80,7 @@ model company {
   companysDepartments companyDepartment[]
   employees           employee[]
   invitations         invitation[]
-  invoices            invoice[]
+  invoice             invoice[]
   roles               role[]
   subscriptions       subscription[]
   usersCompanysRoles  userCompanyRole[]
@@ -122,18 +122,16 @@ model companyDepartment {
 }
 
 model contract {
-  id           Int      @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   contractName String
-  projectId    Int      @map("project_id")
+  projectId    Int     @map("project_id")
   signatory    String
   status       String
   payment      String
   progress     String
   startDate    Int
   endDate      Int
-  project      project  @relation(fields: [projectId], references: [id])
-  // invoice      invoice?
-  journal      journal?
+  project      project @relation(fields: [projectId], references: [id])
 }
 
 model department {
@@ -170,17 +168,15 @@ model employeeProject {
   @@map("employee_project")
 }
 
-// Info (20240521-Murky) EventType以後可以改成enum
 model invoice {
-  id               Int      @id @default(autoincrement())
-  date             Int
-  eventType        String   @map("event_type")
-  paymentReason    String   @map("payment_reason")
-  description      String
-  vendorOrSupplier String   @map("vendor_or_supplier")
-  company          company? @relation(fields: [companyId], references: [id])
-  companyId        Int?
-  journal          journal?
+  id          Int     @id @default(autoincrement())
+  company_id  Int
+  invoiceNo   String
+  status      String
+  totalAmount String
+  invoiceDate Int
+  dueDate     Int
+  company     company @relation(fields: [company_id], references: [id])
 }
 
 model invitation {
@@ -196,39 +192,14 @@ model invitation {
   role          role    @relation(fields: [roleId], references: [id])
 }
 
-model journal {
-  id            Int      @id @default(autoincrement())
-  tokenContract String?  @map("token_contract")
-  tokenId       String?  @map("token_id")
-  ocrId         Int      @unique @map("ocr_id")
-  ocr           ocr      @relation(fields: [ocrId], references: [id])
-  aichResultId  String?  @map("aich_result_id")
-  invoiceId     Int      @unique @map("invoice_id")
-  invoice       invoice  @relation(fields: [invoiceId], references: [id])
-  vocherId      Int      @unique @map("vocher_id")
-  vocher        voucher  @relation(fields: [vocherId], references: [id])
-  projectId     Int      @unique @map("project_id")
-  project       project  @relation(fields: [projectId], references: [id])
-  contractId    Int      @unique @map("contract_id")
-  contract      contract @relation(fields: [contractId], references: [id])
-}
-
 model lineItem {
   id          Int     @id @default(autoincrement())
   account     String
   description String
   debit       Boolean
   amount      Int
-  voucherId   Int     @unique
-  voucher     voucher @relation(fields: [voucherId], references: [id])
 
   @@map("line_item")
-}
-
-model ocr {
-  id       Int      @id @default(autoincrement())
-  imageUrl String   @map("image_url")
-  journal  journal?
 }
 
 model project {
@@ -241,7 +212,6 @@ model project {
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
-  journal             journal?
 }
 
 model role {
@@ -274,7 +244,7 @@ model user {
   fullName           String?
   email              String?
   phone              String?
-  credentialId       String
+  credentialId       String            @unique
   publicKey          String
   algorithm          String
   imageId            String?
@@ -293,10 +263,4 @@ model userCompanyRole {
   user      user    @relation(fields: [userId], references: [id])
 
   @@map("user_company_role")
-}
-
-model voucher {
-  id        Int        @id @default(autoincrement())
-  lineItems lineItem[]
-  journal   journal?
 }
