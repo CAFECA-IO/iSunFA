@@ -89,6 +89,7 @@ const useAPI = <Data>(
           apiConfig,
           {
             ...options,
+            header: input?.header || options.header,
             params: input?.params || options.params,
             query: input?.query || options.query,
             body: input?.body || options.body,

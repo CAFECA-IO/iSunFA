@@ -6,6 +6,7 @@ import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getDomains, timestampInSeconds } from '@/lib/utils/common';
+import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
 import { IInvitation } from '@/interfaces/invitation';
 
 export default async function handler(
@@ -17,7 +18,7 @@ export default async function handler(
       throw new Error('Only POST requests are allowed');
     }
 
-    const { authentication, registeredCredential, challenge } = req.body;
+    const { authentication, challenge } = req.body;
 
     const origins = getDomains();
 
@@ -27,17 +28,21 @@ export default async function handler(
       userVerified: true,
     };
 
-    const authenticationParsed = await server.verifyAuthentication(
-      authentication,
-      registeredCredential,
-      expected
-    );
-
     const getUser = (await prisma.user.findUnique({
       where: {
-        credentialId: authenticationParsed.credentialId,
+        credentialId: authentication.credentialId,
       },
     })) as IUser;
+
+    const typeOfAlgorithm = getUser.algorithm === 'ES256' ? 'ES256' : 'RS256';
+
+    const registeredCredential = {
+      id: getUser.credentialId,
+      publicKey: getUser.publicKey,
+      algorithm: typeOfAlgorithm,
+    } as CredentialKey;
+
+    await server.verifyAuthentication(authentication, registeredCredential, expected);
 
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
     res.status(httpCode).json(result);

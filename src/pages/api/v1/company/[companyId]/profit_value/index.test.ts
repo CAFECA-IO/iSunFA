@@ -26,18 +26,16 @@ afterEach(() => {
 describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.query = { date: '2024-03-07' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    const expectedPayload = expect.objectContaining({
-      date: expect.any(Date),
-      progress: expect.arrayContaining([
-        expect.objectContaining({
-          progress: expect.any(String),
-          projectNum: expect.any(Number),
-        }),
-      ]),
-    });
+    const expectedPayload = expect.arrayContaining([
+      expect.objectContaining({
+        income: expect.any(Number),
+        expenses: expect.any(Number),
+        date: expect.any(Date),
+        profit: expect.any(Number),
+      }),
+    ]);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
@@ -45,20 +43,6 @@ describe('Result API Handler Tests', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expectedPayload,
-      })
-    );
-  });
-  it('should return error if some query element is missing', async () => {
-    req.method = 'GET';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
       })
     );
   });
