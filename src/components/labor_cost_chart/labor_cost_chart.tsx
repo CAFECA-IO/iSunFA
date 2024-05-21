@@ -2,6 +2,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
+import { generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -26,7 +27,7 @@ const PieChart = ({ data }: PieChartProps) => {
     labels: data.categories,
     legend: {
       position: 'left',
-      offsetY: 50,
+      offsetY: 80,
       markers: {
         width: 20, // 標記的寬度
         height: 12, // 標記的高度
@@ -54,40 +55,7 @@ const PieChart = ({ data }: PieChartProps) => {
 };
 
 const LaborCostChart = () => {
-  const data = {
-    categories: [
-      'Team A',
-      'Team B',
-      'Team C',
-      'Team D',
-      'Team E',
-      'Team F',
-      'Team G',
-      'Team H',
-      'Team I',
-      'Team J',
-      'Team K',
-      'Team L',
-      'Team M',
-      'Team N',
-      'Team O',
-      'Team P',
-      'Team Q',
-      'Team R',
-      'Team S',
-      'Team T',
-      'Team U',
-      'Team V',
-      'Team W',
-      'Team X',
-      'Team Y',
-      'Team Z',
-    ],
-    series: [
-      10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200,
-      210, 220, 230, 240, 250, 260,
-    ], // 210
-  };
+  const data = generateRandomLaborCostData(6);
 
   const displayedDataSection = (
     <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
@@ -133,7 +101,7 @@ const LaborCostChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
+        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-0 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             2024
           </div>
