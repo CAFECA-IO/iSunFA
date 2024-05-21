@@ -3,7 +3,7 @@ import formidable from 'formidable';
 import { promises as fs } from 'fs';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, transformOCRImageIDToURL } from '@/lib/utils/common';
+import { bytesToKb, formatApiResponse, transformOCRImageIDToURL } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import prisma from '@/client';
 
@@ -25,6 +25,7 @@ async function postImageToAICH(files: formidable.Files): Promise<{
   resultStatus: IAccountResultStatus;
   imageName: string;
   imageUrl: string;
+  imageSize: number;
 }[]> {
         if (!files || !files.image || !files.image.length) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
@@ -57,7 +58,8 @@ async function postImageToAICH(files: formidable.Files): Promise<{
           return {
             resultStatus,
             imageUrl: transformOCRImageIDToURL("invoice", imageName),
-            imageName
+            imageName,
+            imageSize: bytesToKb(image.size),
           };
 }));
 
@@ -68,6 +70,7 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
   resultStatus: IAccountResultStatus;
   imageUrl: string;
   imageName: string;
+  imageSize: number;
 }): Promise<void> {
   // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
   try {
@@ -79,6 +82,7 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
     data: {
       imageName: aichResult.imageName,
       imageUrl: aichResult.imageUrl,
+      imageSize: aichResult.imageSize,
     }
   });
   await prisma.journal.create({

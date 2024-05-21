@@ -236,6 +236,7 @@ model ocr {
   id        Int      @id @default(autoincrement())
   imageName String   @map("image_name")
   imageUrl  String   @map("image_url")
+  imageSize Float    @map("image_size")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   journal   journal?
