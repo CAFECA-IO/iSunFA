@@ -261,6 +261,11 @@ export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+/** Info: (20240521 - Shirley)
+ * Convert timestamp in milliseconds to timestamp in seconds
+ * @param timestamp in milliseconds
+ * @returns timestamp in seconds
+ */
 export const timestampInSeconds = (timestamp: number): number => {
   return Math.floor(timestamp / 1000);
 };
@@ -298,4 +303,12 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
     return false;
   }
   return Object.values(value).every((v) => typeof v === 'number');
+}
+
+export function transformOCRImageIDToURL(documentType: string, imageID: string): string {
+  return `/api/v1/company/${documentType}/${imageID}/image`;
+}
+
+export function bytesToKb(bytes: number): number {
+  return bytes / 1024;
 }

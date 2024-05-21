@@ -4,13 +4,17 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import SelectCompanyPageBody from '@/components/select_company_page_body/select_company_page_body';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ToastId } from '@/constants/toast_id';
+import { useUserCtx } from '@/contexts/user_context';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { ILocale } from '@/interfaces/locale';
 
 const SelectCompanyPage = () => {
+  const { selectCompany } = useUserCtx();
   const { eliminateToast } = useGlobalCtx();
 
   useEffect(() => {
+    // Info: (20240521 - Julian) 清除選擇的公司
+    selectCompany(null);
     // Info: (20240513 - Julian) 回到選擇公司頁面時，要把提醒試用版的 Toast 關掉
     eliminateToast(ToastId.TRIAL);
   }, []);

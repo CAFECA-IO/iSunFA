@@ -92,8 +92,8 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     name: 'Comprehensive Income Statement-20240412-1',
     createdTimestamp: 1712863312,
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
-    remainingSeconds: 380000,
-    paused: true,
+    remainingSeconds: 1615,
+    paused: false,
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
   },
   {
