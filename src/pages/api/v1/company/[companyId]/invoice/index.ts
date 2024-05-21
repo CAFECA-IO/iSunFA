@@ -87,11 +87,9 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       let files: formidable.Files;
-      let fields: formidable.Fields;
       try {
         const parsedForm = await parseForm(req);
         files = parsedForm.files;
-        fields = parsedForm.fields;
       } catch (error) {
         throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
       }
@@ -103,27 +101,29 @@ export default async function handler(
       //   contract: [ '我的contract' ],
       //   contractId: [ 'contractId' ]
       // }
+
       if (
         !files ||
         !files.image ||
-        !files.image.length ||
-        !fields ||
-        !fields.project ||
-        !fields.projectId ||
-        !fields.contract ||
-        !fields.contractId ||
-        !Array.isArray(fields.project) ||
-        !Array.isArray(fields.projectId) ||
-        !Array.isArray(fields.contract) ||
-        !Array.isArray(fields.contractId) ||
-        !fields.project.length ||
-        !fields.projectId.length ||
-        !fields.contract.length ||
-        !fields.contractId.length ||
-        !(typeof fields.project[0] === 'string') ||
-        !(typeof fields.projectId[0] === 'string') ||
-        !(typeof fields.contract[0] === 'string') ||
-        !(typeof fields.contractId[0] === 'string')
+        !files.image.length
+        // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
+        // !fields ||
+        // !fields.project ||
+        // !fields.projectId ||
+        // !fields.contract ||
+        // !fields.contractId ||
+        // !Array.isArray(fields.project) ||
+        // !Array.isArray(fields.projectId) ||
+        // !Array.isArray(fields.contract) ||
+        // !Array.isArray(fields.contractId) ||
+        // !fields.project.length ||
+        // !fields.projectId.length ||
+        // !fields.contract.length ||
+        // !fields.contractId.length ||
+        // !(typeof fields.project[0] === 'string') ||
+        // !(typeof fields.projectId[0] === 'string') ||
+        // !(typeof fields.contract[0] === 'string') ||
+        // !(typeof fields.contractId[0] === 'string')
       ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
       }
@@ -136,10 +136,11 @@ export default async function handler(
       const formData = new FormData();
       formData.append('image', imageBlob);
       formData.append('imageName', imageName);
-      formData.append('project', fields.project[0]);
-      formData.append('projectId', fields.projectId[0]);
-      formData.append('contract', fields.contract[0]);
-      formData.append('contractId', fields.contractId[0]);
+        // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
+      // formData.append('project', fields.project[0]);
+      // formData.append('projectId', fields.projectId[0]);
+      // formData.append('contract', fields.contract[0]);
+      // formData.append('contractId', fields.contractId[0]);
 
       let fetchResult: Response;
       try {

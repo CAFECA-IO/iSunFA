@@ -1,15 +1,19 @@
 /* eslint-disable */
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
-// import { useUserCtx } from '@/contexts/user_context';
-// import { useGlobalCtx } from '@/contexts/global_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
-// import { MessageType } from '@/interfaces/message_modal';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ICompany } from '@/interfaces/company';
+import { useRouter } from 'next/router';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -29,14 +33,23 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
+  const router = useRouter();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { username, selectCompany } = useUserCtx();
+
   const {
     targetRef: menuRef,
     componentVisible: isMenuOpen,
     setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { username, selectCompany } = useUserCtx();
+  const {
+    trigger: createCompany,
+    data: company,
+    success: createCompanySuccess,
+    error: createCompanyError,
+    code: createCompanyCode,
+  } = APIHandler<ICompany>(APIName.COMPANY_ADD, {}, false, false);
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
@@ -61,7 +74,15 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setIsMenuOpen(false);
   };
 
-  const createCompany = async () => {
+  const createCompanyHandler = async () => {
+    // createCompany({
+    //   body: {
+    //     name: nameValue,
+    //     code: registrationNumberValue,
+    //     regional: selectedCountry,
+    //   },
+    // });
+
     // ToDo: (20240514 - Julian) @Tzuhan Add API call
     const response = await fetch('/api/v1/company', {
       method: 'POST',
@@ -124,9 +145,39 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     // ToDo: (20240514 - Julian) create success handler: should push to dashboard page
   };
 
+  useEffect(() => {
+    if (createCompanySuccess && company) {
+      // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
+      selectCompany(company);
+      modalVisibilityHandler();
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    } else if (createCompanyError) {
+      // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Create Company Failed',
+        subMsg: 'Please try again later',
+        content: `Error code: ${createCompanyCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [createCompanySuccess, createCompanyError, createCompanyCode]);
+
   const confirmClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    createCompany();
+
+    createCompany({
+      header: {
+        userid: username ?? DEFAULT_DISPLAYED_USER_NAME, // ToDo: should remove when backend updated (shoud using session) @Julian (20240521 - tzuhan)
+      },
+      body: {
+        name: nameValue,
+        code: registrationNumberValue,
+        regional: selectedCountry,
+      },
+    });
   };
 
   const displayCountryMenu = countryList.map((country) => {
