@@ -16,8 +16,14 @@ import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import {
   DUMMY_CATEGORIES,
   DUMMY_START_DATE,
+  IProjectProgressChartData,
   generateRandomData,
 } from '@/interfaces/project_progress_chart';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+/** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+import { useAccountingCtx } from '@/contexts/accounting_context';
+*/
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -145,6 +151,20 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectProgressChart = () => {
+  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+  const { companyId } = useAccountingCtx();
+*/
+  const {
+    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+      trigger: listProjectProgress,
+  */
+    data: projectProgress,
+    success: listSuccess,
+    code: listCode,
+    error: listError,
+  } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {}, false, false);
+  const [reload, setReload] = useState(false);
+
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const minDate = new Date(DUMMY_START_DATE);
@@ -177,11 +197,29 @@ const ProjectProgressChart = () => {
   })();
 
   useEffect(() => {
+    if (reload && listSuccess && projectProgress) {
+      setReload(false);
+      const { series, categories } = projectProgress;
+      setSeries(series);
+      setCategories(categories);
+    }
+  }, [listSuccess, listCode, listError, projectProgress]);
+
+  useEffect(() => {
     // Info: generate series when period change is done (20240418 - Shirley)
     if (period.endTimeStamp !== 0) {
       const newData = generateRandomData();
+      /**
+       * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
+          listProjectProgress({
+            params: {
+              companyId,
+            },
+          });
+      */
       setSeries(newData.series);
       setCategories(newData.categories);
+      setReload(true)
     }
   }, [period.endTimeStamp, period.startTimeStamp]);
 

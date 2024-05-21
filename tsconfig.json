@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,13 +15,8 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*",
-        "prisma/*",
-      ],
-      "@package": [
-        "package.json"
-      ],
+      "@/*": ["src/*", "prisma/*"],
+      "@package": ["package.json"]
     }
   },
   "include": [
@@ -35,7 +26,5 @@
     "tailwind.config.ts",
     "src/lib/utils/email.js"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

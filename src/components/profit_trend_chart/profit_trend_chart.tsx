@@ -6,7 +6,10 @@ import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { Period } from '@/interfaces/chart_unit';
-import { DUMMY_PROFIT_TREND_CHART_DATA } from '@/interfaces/profit_trend_chart';
+import { DUMMY_PROFIT_TREND_CHART_DATA, IProfitTrendChartData } from '@/interfaces/profit_trend_chart';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -185,13 +188,57 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const ProfitTrendChart = () => {
+  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+   * */
+  const { companyId } = useAccountingCtx();
+  const {
+    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+      trigger: getProfitTrendInPeriod,
+  */
+    data: profitTrendInPeriodData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<IProfitTrendChartData>(
+    APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
+    {
+      params: {
+        companyId
+      },
+      query: {
+        period: Period.WEEK
+      }
+    },
+    false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+    false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+  );
+  const [reload, setReload] = React.useState(true);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 
   const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
+    /**
+    * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
+   profitTrendInPeriodData({
+     params: {
+       companyId,
+     },
+     query: {
+       period,
+     },
+   });
+    */
+    setReload(true);
     setData(DUMMY_PROFIT_TREND_CHART_DATA[period]);
   };
+
+  useEffect(() => {
+    if (reload && getSuccess && profitTrendInPeriodData) {
+      setReload(false);
+      setData(profitTrendInPeriodData);
+    }
+  }, [getSuccess, getCode, getError, profitTrendInPeriodData]);
 
   const displayedDataSection = (
     <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">

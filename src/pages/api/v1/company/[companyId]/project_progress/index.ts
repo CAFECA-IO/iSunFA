@@ -9,27 +9,27 @@ const responseDataArray: IProjectProgress = {
   progress: [
     {
       progress: 'Designing',
-      project: ['Project1', 'Project2'],
+      projectNum: 2,
     },
     {
       progress: 'Beta Testing',
-      project: ['Project3', 'Project14', 'Project5'],
+      projectNum: 3,
     },
     {
       progress: 'Develop',
-      project: ['Project6', 'Project7'],
+      projectNum: 2,
     },
     {
       progress: 'Sold',
-      project: ['Project8', 'Project9', 'Project10'],
+      projectNum: 3,
     },
     {
       progress: 'Selling',
-      project: ['Project11', 'Project12'],
+      projectNum: 2,
     },
     {
       progress: 'Archived',
-      project: ['Project13'],
+      projectNum: 1,
     },
   ],
 };
