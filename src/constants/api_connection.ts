@@ -82,7 +82,7 @@ export enum APIPath {
   JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   JOURNAL_LIST_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/voucher_status`,
-  JOURNAL_LIST = `${apiPrefix}/company/:companyId/voucher`,
+  JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   VOUCHER_GENERATE = `${apiPrefix}/company/:companyId/journal`,
   VOUCHER_LIST = `${apiPrefix}/company/:companyId/journal`,

@@ -87,11 +87,9 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       let files: formidable.Files;
-      // let fields: formidable.Fields;
       try {
         const parsedForm = await parseForm(req);
         files = parsedForm.files;
-        // fields = parsedForm.fields;
       } catch (error) {
         throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
       }
@@ -103,11 +101,12 @@ export default async function handler(
       //   contract: [ '我的contract' ],
       //   contractId: [ 'contractId' ]
       // }
+
       if (
         !files ||
         !files.image ||
         !files.image.length
-        // Deprecated (20240504 - Murky): 這邊不寫內容也可以
+        // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
         // !fields ||
         // !fields.project ||
         // !fields.projectId ||
@@ -137,6 +136,11 @@ export default async function handler(
       const formData = new FormData();
       formData.append('image', imageBlob);
       formData.append('imageName', imageName);
+      // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
+      // formData.append('project', fields.project[0]);
+      // formData.append('projectId', fields.projectId[0]);
+      // formData.append('contract', fields.contract[0]);
+      // formData.append('contractId', fields.contractId[0]);
 
       // Deprecated (20240504 - Murky): 這邊不寫內容也可以
       // formData.append('project', fields.project[0]);
