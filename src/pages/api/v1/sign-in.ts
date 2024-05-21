@@ -8,6 +8,8 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getDomains, timestampInSeconds } from '@/lib/utils/common';
 import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
 import { IInvitation } from '@/interfaces/invitation';
+import { getSession } from '@/lib/utils/get_session';
+// import MemoryStore from '@/lib/utils/get_session';
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,7 +45,10 @@ export default async function handler(
     } as CredentialKey;
 
     await server.verifyAuthentication(authentication, registeredCredential, expected);
-
+    const session = await getSession(req, res);
+    // const memoryStore = new MemoryStore();
+    session.userId = getUser.id;
+    // memoryStore.set(session.id, session);
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
     res.status(httpCode).json(result);
     if (req.query.invitation) {

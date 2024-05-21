@@ -15,7 +15,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 
 const SelectCompanyPageBody = () => {
-  const { signedIn, username, selectCompany, isSelectCompany } = useUserCtx();
+  const { signedIn, username, selectCompany } = useUserCtx();
   const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
     useGlobalCtx();
 
@@ -31,15 +31,19 @@ const SelectCompanyPageBody = () => {
     data: companyData,
     success: companyDataSuccess,
     isLoading: isCompanyDataLoading,
-  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {});
+  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {
+    header: {
+      userid: username ?? DEFAULT_DISPLAYED_USER_NAME, // ToDo: should remove when backend updated (shoud using session) @Julian (20240521 - tzuhan)
+    },
+  });
 
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
   const [companyList, setCompanyList] = useState<ICompany[]>([]);
   const [filteredCompanyList, setFilteredCompanyList] = useState<ICompany[]>([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedCompanyName = selectedCompany || 'Select an Company';
+  const selectedCompanyName = selectedCompany?.name ?? 'Select an Company';
 
   const menuOpenHandler = () => setIsCompanyMenuOpen(!isCompanyMenuOpen);
 
@@ -48,11 +52,10 @@ const SelectCompanyPageBody = () => {
   };
 
   const selectCompanyClickHandler = () => {
+    if (selectedCompany === null) return;
     selectCompany(selectedCompany);
-
-    if (isSelectCompany) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-    }
+    // ToDo: (20240521 - tzuhan) 需確認是不是需要一隻 api: SelectCompany 把 company id 傳給後端寫進 session
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   useEffect(() => {
@@ -77,7 +80,7 @@ const SelectCompanyPageBody = () => {
   const displayCompanyList = !isCompanyDataLoading ? (
     filteredCompanyList.map((company) => {
       const companyClickHandler = () => {
-        setSelectedCompany(company.name);
+        setSelectedCompany(company);
         setIsCompanyMenuOpen(false);
       };
       return (
@@ -199,7 +202,7 @@ const SelectCompanyPageBody = () => {
               <button
                 // ToDo: (20240514 - Julian) select company function
                 type="button"
-                disabled={selectedCompany === ''}
+                disabled={selectedCompany === null}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
                 onClick={selectCompanyClickHandler}
               >

@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.4+3",
+  "version": "0.1.4+8",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -28,6 +28,7 @@
     "i18next": "^23.7.16",
     "next": "^14.2.3",
     "next-i18next": "^15.2.0",
+    "next-session": "^4.0.5",
     "nodemailer": "^6.9.8",
     "prettier": "^3.1.1",
     "react": "^18",

@@ -23,7 +23,7 @@ beforeEach(async () => {
   user = await prisma.user.create({
     data: {
       name: 'John',
-      credentialId: '1456',
+      credentialId: '123456',
       publicKey: 'publicKey',
       algorithm: 'ES256',
       imageId: 'imageId',
