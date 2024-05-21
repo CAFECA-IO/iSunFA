@@ -177,7 +177,7 @@ const NewJournalForm = () => {
         setSelectedEventType(invoice.eventType);
         setInputPaymentReason(invoice.paymentReason);
         setInputDescription(invoice.description);
-        setInputVendor(invoice.venderOrSupplyer);
+        setInputVendor(invoice.venderOrSupplier);
         setInputTotalPrice(invoice.payment.price);
         setTaxToggle(invoice.payment.hasTax);
         setTaxRate(invoice.payment.taxPercentage);
@@ -360,7 +360,7 @@ const NewJournalForm = () => {
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
       description: inputDescription,
-      venderOrSupplyer: inputVendor,
+      venderOrSupplier: inputVendor,
       project: selectedProject.name,
       projectId: selectedProject.id,
       contract: selectedContract.name,
