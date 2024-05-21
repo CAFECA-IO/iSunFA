@@ -23,6 +23,7 @@ export const config = {
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
 async function postImageToAICH(files: formidable.Files): Promise<{
   resultStatus: IAccountResultStatus;
+  imageName: string;
   imageUrl: string;
 }[]> {
         if (!files || !files.image || !files.image.length) {
@@ -55,7 +56,8 @@ async function postImageToAICH(files: formidable.Files): Promise<{
           const resultStatus: IAccountResultStatus = (await fetchResult.json()).payload;
           return {
             resultStatus,
-            imageUrl: transformOCRImageIDToURL("invoice", imageName)
+            imageUrl: transformOCRImageIDToURL("invoice", imageName),
+            imageName
           };
 }));
 
@@ -65,6 +67,7 @@ async function postImageToAICH(files: formidable.Files): Promise<{
 async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
   resultStatus: IAccountResultStatus;
   imageUrl: string;
+  imageName: string;
 }): Promise<void> {
   // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
   try {
@@ -74,6 +77,7 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
     }
   const ocrData = await prisma.ocr.create({
     data: {
+      imageName,
       imageUrl: aichResult.imageUrl,
     }
   });
