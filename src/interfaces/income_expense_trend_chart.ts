@@ -20,6 +20,10 @@ export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpens
         name: 'Expense',
         data: [20, 15, 30, 25, 10, 35, 50],
       },
+      {
+        name: 'Profit Status',
+        data: [10, 55, 66, 2, 33, 31, 9],
+      },
     ],
   },
   month: {
@@ -46,6 +50,10 @@ export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpens
         name: 'Expense',
         data: [15, 10, 20, 25, 15, 30, 20, 25, 15, 35, 30, 45],
       },
+      {
+        name: 'Profit Status',
+        data: [10, 55, 25, 2, 33, 31, 9, 15, 47, 5, 10, 15],
+      },
     ],
   },
   year: {
@@ -58,6 +66,10 @@ export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpens
       {
         name: 'Expense',
         data: [15, 10, 30, 25, 35],
+      },
+      {
+        name: 'Profit Status',
+        data: [5, 5, 10, 10, 15],
       },
     ],
   },
