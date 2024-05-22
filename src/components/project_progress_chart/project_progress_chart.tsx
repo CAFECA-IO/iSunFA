@@ -21,9 +21,9 @@ import {
 } from '@/interfaces/project_progress_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-/** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
 import { useAccountingCtx } from '@/contexts/accounting_context';
-*/
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -151,19 +151,8 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectProgressChart = () => {
-  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+  const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
-*/
-  const {
-    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
-      trigger: listProjectProgress,
-  */
-    data: projectProgress,
-    success: listSuccess,
-    code: listCode,
-    error: listError,
-  } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {}, false, false);
-  const [reload, setReload] = useState(false);
 
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -181,6 +170,21 @@ const ProjectProgressChart = () => {
 
   const displayedYear = maxDate.getFullYear();
 
+  const {
+    trigger: listProjectProgress,
+    data: projectProgress,
+    success: listSuccess,
+    code: listCode,
+    error: listError,
+  } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {
+    params: {
+      companyId,
+    },
+    query: {
+      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString(),
+    },
+  });
+
   const displayedDate = (() => {
     const startDate = period.startTimeStamp
       ? new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
@@ -197,31 +201,22 @@ const ProjectProgressChart = () => {
   })();
 
   useEffect(() => {
-    if (reload && listSuccess && projectProgress) {
-      setReload(false);
+    if (listSuccess && projectProgress) {
+      console.log(`create dummy data`);
       const { series, categories } = projectProgress;
-      setSeries(series);
-      setCategories(categories);
+      // Deprecated: (20240524 - tzuhan) API implementation when backend is ready
+      const dummyData = generateRandomData();
+      setCategories(dummyData.categories);
+      setSeries(dummyData.series);
+    } else if (listSuccess === false) {
+      toastHandler({
+        id: `project-progress-chart-${listCode}`,
+        content: `Failed to get project progress data. Error code: ${listCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
     }
   }, [listSuccess, listCode, listError, projectProgress]);
-
-  useEffect(() => {
-    // Info: generate series when period change is done (20240418 - Shirley)
-    if (period.endTimeStamp !== 0) {
-      const newData = generateRandomData();
-      /**
-       * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
-          listProjectProgress({
-            params: {
-              companyId,
-            },
-          });
-      */
-      setSeries(newData.series);
-      setCategories(newData.categories);
-      setReload(true);
-    }
-  }, [period.endTimeStamp, period.startTimeStamp]);
 
   const data = {
     categories,

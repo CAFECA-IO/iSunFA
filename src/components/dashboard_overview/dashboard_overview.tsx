@@ -1,37 +1,49 @@
 import React from 'react';
 import { cn } from '@/lib/utils/common';
-import { DUMMY_DASHBOARD_OVERVIEW } from '@/interfaces/dashboard_overview';
-/** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
- import { useAccountingCtx } from '@/contexts/accounting_context';
- import { APIName } from '@/constants/api_connection';
- import APIHandler from '@/lib/utils/api_handler';
-*/
+import { DUMMY_DASHBOARD_OVERVIEW, IDashboardOverview } from '@/interfaces/dashboard_overview';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
+import { IProfitInsight } from '@/interfaces/project_insight';
 
 const DashboardOverview = () => {
-  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+  const [dashboardOverview, setDashboardOverview] =
+    React.useState<IDashboardOverview>(DUMMY_DASHBOARD_OVERVIEW);
+  const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
-      trigger: getProfitInsight,
-      data: profitInsight,
-      success: getSuccess,
-      code: getCode,
-      error: getError,
-    } = APIHandler<IDashboardOverview>(
-      APIName.PROFIT_GET_INSIGHT,
-      {
-        params: {
-          companyId,
-        },
-      },
-      false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
-      false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
-    );
-    */
-  const dashboardOverview = DUMMY_DASHBOARD_OVERVIEW;
+    data: profitInsight,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<IProfitInsight>(APIName.PROFIT_GET_INSIGHT, {
+    params: {
+      companyId,
+    },
+  });
 
   const displayedAssetsGrowthRate = `${dashboardOverview.profitGrowthRate ?? `-`} %`;
   const displayedProjectROI = dashboardOverview.projectROI ?? `-`;
   const displayedPreLaunchProjects = dashboardOverview.preLaunchProjects ?? `-`;
+
+  React.useEffect(() => {
+    if (getSuccess && profitInsight) {
+      setDashboardOverview({
+        profitGrowthRate: profitInsight.profitGrowthRate * 100,
+        projectROI: (profitInsight.topProjectRoi * 100).toString(),
+        preLaunchProjects: profitInsight.preLaunchProject,
+      });
+    } else if (getSuccess === false) {
+      toastHandler({
+        id: `profit_insight-${getCode}`,
+        content: `Failed to get profit inside. Error code: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [getSuccess, getCode, getError, profitInsight]);
 
   return (
     <div>

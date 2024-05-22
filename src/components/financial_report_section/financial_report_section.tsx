@@ -28,38 +28,9 @@ const FinancialReportSection = () => {
     isLoading: generatedLoading,
     success: generatedSuccess,
   } = APIHandler<IAccountResultStatus>(
-    APIName.FINANCIAL_REPORT_GENERATE,
+    APIName.REPORT_GENERATE_FINANCIAL,
     {
       params: { companyId },
-    },
-    false,
-    false
-  );
-  const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trigger: listFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    data: progress, // Info: 這邊預計得到 IFinancialReportsProgreseStatusResponse[] (20240513 - Tzuahan)
-    // code: progressCodee,
-    // success: getProgressSuccess,
-  } = APIHandler<IAccountResultStatus[]>(
-    APIName.FINANCIAL_REPORT_LIST_PROGRESS_STATUS,
-    {
-      params: { companyId },
-    },
-    false,
-    false
-  );
-  const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trigger: getFinancialReport, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
-    // data: report,
-    // code: reportCodee,
-    // success: getReportSuccess,
-  } = APIHandler<IFinancialReport>(
-    APIName.FINANCIAL_REPORT_GET_BY_ID,
-    {
-      params: { companyId, reportId: 'reportId' },
     },
     false,
     false
