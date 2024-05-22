@@ -26,38 +26,47 @@ afterEach(() => {
 describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.query = { date: '2024-03-07' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    const expectedPayload = expect.objectContaining({
-      date: expect.any(Number),
-      categories: expect.arrayContaining([expect.any(String)]),
-      series: expect.arrayContaining([
+    const expectedStructure = {
+      id: expect.any(String),
+      name: expect.any(String),
+      createdTimestamp: expect.any(Number),
+      period: expect.objectContaining({
+        startTimestamp: expect.any(Number),
+        endTimestamp: expect.any(Number),
+      }),
+      reportType: expect.any(String),
+      project:
         expect.objectContaining({
+          id: expect.any(String),
           name: expect.any(String),
-          data: expect.arrayContaining([expect.any(Number)]),
-        }),
-      ]),
-    });
+          code: expect.any(String),
+        }) || null,
+      reportLinkId: expect.any(String),
+      downloadLink: expect.any(String),
+      blockchainExplorerLink: expect.any(String),
+      evidenceId: expect.any(String),
+    };
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('200'),
         message: expect.any(String),
-        payload: expectedPayload,
+        payload: expect.arrayContaining([expect.objectContaining(expectedStructure)]),
       })
     );
   });
-  it('should return error if some query element is missing', async () => {
-    req.method = 'GET';
+  it('should return error if not GET', async () => {
+    req.method = 'POST';
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
+        code: expect.stringContaining('405'),
         message: expect.any(String),
         payload: expect.any(Object),
       })

@@ -70,21 +70,22 @@ model client {
 }
 
 model company {
-  id                  Int                 @id @default(autoincrement())
-  name                String
-  code                String
-  regional            String
-  auditReports        auditReport[]
-  clients             client[]
-  companyKYCs         companyKYC[]
-  companysDepartments companyDepartment[]
-  employees           employee[]
-  invitations         invitation[]
-  invoices            invoice[]
-  journals            journal[]
-  roles               role[]
-  subscriptions       subscription[]
-  usersCompanysRoles  userCompanyRole[]
+  id                 Int               @id @default(autoincrement())
+  name               String
+  code               String
+  regional           String
+  auditReports       auditReport[]
+  clients            client[]
+  companyKYCs        companyKYC[]
+  department         department[]
+  employees          employee[]
+  invitations        invitation[]
+  invoice            invoice[]
+  journal            journal[]
+  project            project[]
+  roles              role[]
+  subscriptions      subscription[]
+  usersCompanysRoles userCompanyRole[]
 }
 
 model companyKYC {
@@ -112,16 +113,6 @@ model companyKYC {
   company                   company @relation(fields: [companyId], references: [id])
 }
 
-model companyDepartment {
-  id           Int        @id @default(autoincrement())
-  companyId    Int
-  departmentId Int
-  company      company    @relation(fields: [companyId], references: [id])
-  department   department @relation(fields: [departmentId], references: [id])
-
-  @@map("company_department")
-}
-
 model contract {
   id           Int      @id @default(autoincrement())
   contractName String
@@ -137,15 +128,17 @@ model contract {
 }
 
 model department {
-  id                  Int                 @id @default(autoincrement())
-  name                String
-  companyToDepartment companyDepartment[]
-  employees           employee[]
+  id         Int        @id @default(autoincrement())
+  company_id Int
+  name       String
+  company    company    @relation(fields: [company_id], references: [id])
+  employees  employee[]
 }
 
 model employee {
   id                 Int               @id @default(autoincrement())
   name               String
+  imageId            String?
   departmentId       Int               @map("department_id")
   companyId          Int               @map("company_id")
   salary             Int
@@ -171,21 +164,21 @@ model employeeProject {
 }
 
 model invoice {
-  id               Int      @id @default(autoincrement())
-  invoiceNo        String
-  status           String
-  totalAmount      String
-  invoiceDate      Int
-  dueDate          Int
-  eventType        String   @map("event_type")
-  paymentReason    String   @map("payment_reason")
-  description      String
-  vendorOrSupplier String   @map("vendor_or_supplier")
-  company          company? @relation(fields: [companyId], references: [id])
-  companyId        Int?
-  journal          journal?
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id                 Int      @id @default(autoincrement())
+  invoiceNo          String
+  status             String
+  totalAmount        String
+  invoiceDate        Int
+  dueDate            Int
+  event_type         String
+  payment_reason     String
+  description        String
+  vendor_or_supplier String
+  companyId          Int?
+  created_at         DateTime @default(now())
+  updated_at         DateTime
+  company            company? @relation(fields: [companyId], references: [id])
+  journal            journal?
 }
 
 model invitation {
@@ -201,60 +194,33 @@ model invitation {
   role          role    @relation(fields: [roleId], references: [id])
 }
 
-model journal {
-  id            Int       @id @default(autoincrement())
-  tokenContract String?   @map("token_contract")
-  tokenId       String?   @map("token_id")
-  ocrId         Int       @unique @map("ocr_id")
-  ocr           ocr       @relation(fields: [ocrId], references: [id])
-  aichResultId  String?   @map("aich_result_id")
-  invoiceId     Int?      @unique @map("invoice_id")
-  invoice       invoice?  @relation(fields: [invoiceId], references: [id])
-  voucherId     Int?      @unique @map("voucher_id")
-  voucher       voucher?  @relation(fields: [voucherId], references: [id])
-  projectId     Int?      @unique @map("project_id")
-  project       project?  @relation(fields: [projectId], references: [id])
-  contractId    Int?      @unique @map("contract_id")
-  contract      contract? @relation(fields: [contractId], references: [id])
-  company       company?  @relation(fields: [companyId], references: [id])
-  companyId     Int?      @map("company_id")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-}
-
 model lineItem {
   id          Int      @id @default(autoincrement())
   account     String
   description String
   debit       Boolean
   amount      Int
-  voucher     voucher? @relation(fields: [voucherId], references: [id])
   voucherId   Int?
+  voucher     voucher? @relation(fields: [voucherId], references: [id])
 
   @@map("line_item")
 }
 
-model ocr {
-  id        Int      @id @default(autoincrement())
-  imageName String   @map("image_name")
-  imageUrl  String   @map("image_url")
-  imageSize Float    @map("image_size")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  journal   journal?
-}
-
 model project {
   id                  Int               @id @default(autoincrement())
+  company_id          Int
   name                String
-  description         String
-  status              String
-  startDate           Int
-  endDate             Int
+  completed_percent   Int
+  stage               String
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
   journal             journal?
+  milestone           milestone[]
+  company             company           @relation(fields: [company_id], references: [id])
+  sale                sale[]
+  value               value[]
+  work_rate           work_rate[]
 }
 
 model role {
@@ -308,10 +274,81 @@ model userCompanyRole {
   @@map("user_company_role")
 }
 
+model journal {
+  id             Int       @id @default(autoincrement())
+  token_contract String?
+  token_id       String?
+  ocr_id         Int       @unique
+  aich_result_id String?
+  invoice_id     Int?      @unique
+  voucher_id     Int?      @unique
+  project_id     Int?      @unique
+  contract_id    Int?      @unique
+  company_id     Int?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime
+  company        company?  @relation(fields: [company_id], references: [id])
+  contract       contract? @relation(fields: [contract_id], references: [id])
+  invoice        invoice?  @relation(fields: [invoice_id], references: [id])
+  ocr            ocr       @relation(fields: [ocr_id], references: [id])
+  project        project?  @relation(fields: [project_id], references: [id])
+  voucher        voucher?  @relation(fields: [voucher_id], references: [id])
+}
+
+model milestone {
+  id         Int     @id @default(autoincrement())
+  projectId  Int
+  start_date Int
+  end_date   Int
+  status     String
+  project    project @relation(fields: [projectId], references: [id])
+}
+
+model ocr {
+  id         Int      @id @default(autoincrement())
+  image_name String
+  image_url  String
+  image_size Float
+  created_at DateTime @default(now())
+  updated_at DateTime
+  journal    journal?
+}
+
+model sale {
+  id         Int     @id @default(autoincrement())
+  projectId  Int
+  date       String
+  totalSales Int
+  comparison Int
+  project    project @relation(fields: [projectId], references: [id])
+}
+
+model value {
+  id                      Int     @id @default(autoincrement())
+  projectId               Int
+  totalRevenue            Int
+  totalRevenueGrowthIn30d Int
+  totalExpense            Int
+  netProfit               Int
+  netProfitGrowthIn30d    Int
+  netProfitGrowthInYear   Int
+  project                 project @relation(fields: [projectId], references: [id])
+}
+
 model voucher {
-  id        Int        @id @default(autoincrement())
-  lineItems lineItem[]
-  journal   journal?
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
+  id         Int        @id @default(autoincrement())
+  created_at DateTime   @default(now())
+  updated_at DateTime
+  journal    journal?
+  line_item  lineItem[]
+}
+
+model work_rate {
+  id              Int     @id @default(autoincrement())
+  projectId       Int
+  name            String
+  avatar          String
+  involvementRate Int
+  hours           Int
+  project         project @relation(fields: [projectId], references: [id])
 }
