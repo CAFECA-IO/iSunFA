@@ -73,6 +73,7 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
   imageSize: number;
 }): Promise<void> {
   // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
+  // ToDo: (20240521 - Murky) 重複的圖片一直post貌似會越來越多Journal? 目前沒有檢查重複post的狀況
   try {
     // 如果是AICH已經重複的就不建立了
     if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
@@ -92,9 +93,9 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
       company = await prisma.company.create({
         data: {
           id: companyId,
-          name: 'ISunCloud',
-          code: 'ISunCloud',
-          regional: 'ISunCloud',
+          code: 'COMP123',
+          name: 'Company Name',
+          regional: 'Regional Name',
         },
         select: {
           id: true,
@@ -109,11 +110,17 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
         imageSize: aichResult.imageSize,
       }
     });
-    await prisma.journal.create({
-      data: {
+    await prisma.journal.upsert({
+      where: {
+        aichResultId: aichResult.resultStatus.resultId,
+      },
+      create: {
         companyId: company.id,
         ocrId: ocrData.id,
         aichResultId: aichResult.resultStatus.resultId,
+      },
+      update: {
+        ocrId: ocrData.id,
       }
     });
     } catch (error) {

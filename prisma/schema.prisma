@@ -171,23 +171,20 @@ model employeeProject {
 }
 
 model invoice {
-  id               Int      @id @default(autoincrement())
-  invoiceNo        String
-  status           String
-  totalAmount      String
-  invoiceDate      Int
-  dueDate          Int
-  eventType        String   @map("event_type")
-  paymentReason    String   @map("payment_reason")
+  id               Int       @id @default(autoincrement())
+  date             Int //發票上的日期，timestamp
+  eventType        String    @map("event_type")
+  paymentReason    String    @map("payment_reason")
   description      String
-  vendorOrSupplier String   @map("vendor_or_supplier")
-  company          company? @relation(fields: [companyId], references: [id])
-  companyId        Int?
+  vendorOrSupplier String    @map("vendor_or_supplier")
   journal          journal?
-  paymentId        Int      @unique @map("payment_id")
-  payment          payment  @relation(fields: [paymentId], references: [id])
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  paymentId        Int       @unique @map("payment_id")
+  payment          payment   @relation(fields: [paymentId], references: [id])
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  company          company?  @relation(fields: [companyId], references: [id])
+  companyId        Int?
+  project          project[]
 }
 
 model invitation {
@@ -207,9 +204,9 @@ model journal {
   id            Int       @id @default(autoincrement())
   tokenContract String?   @map("token_contract")
   tokenId       String?   @map("token_id")
-  ocrId         Int       @unique @map("ocr_id")
-  ocr           ocr       @relation(fields: [ocrId], references: [id])
-  aichResultId  String    @map("aich_result_id")
+  ocrId         Int?      @unique @map("ocr_id")
+  ocr           ocr?      @relation(fields: [ocrId], references: [id])
+  aichResultId  String    @unique @map("aich_result_id")
   invoiceId     Int?      @unique @map("invoice_id")
   invoice       invoice?  @relation(fields: [invoiceId], references: [id])
   voucherId     Int?      @unique @map("voucher_id")
@@ -275,7 +272,9 @@ model project {
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
-  journal             journal?
+  journal             journal[]
+  invoice             invoice?          @relation(fields: [invoiceId], references: [id])
+  invoiceId           Int?
 }
 
 model role {
