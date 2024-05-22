@@ -80,8 +80,7 @@ model company {
   companysDepartments companyDepartment[]
   employees           employee[]
   invitations         invitation[]
-  invoices            invoice[]
-  journals            journal[]
+  invoice             invoice[]
   roles               role[]
   subscriptions       subscription[]
   usersCompanysRoles  userCompanyRole[]
@@ -123,17 +122,16 @@ model companyDepartment {
 }
 
 model contract {
-  id           Int      @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   contractName String
-  projectId    Int      @map("project_id")
+  projectId    Int     @map("project_id")
   signatory    String
   status       String
   payment      String
   progress     String
   startDate    Int
   endDate      Int
-  project      project  @relation(fields: [projectId], references: [id])
-  journal      journal?
+  project      project @relation(fields: [projectId], references: [id])
 }
 
 model department {
@@ -171,21 +169,14 @@ model employeeProject {
 }
 
 model invoice {
-  id               Int      @id @default(autoincrement())
-  invoiceNo        String
-  status           String
-  totalAmount      String
-  invoiceDate      Int
-  dueDate          Int
-  eventType        String   @map("event_type")
-  paymentReason    String   @map("payment_reason")
-  description      String
-  vendorOrSupplier String   @map("vendor_or_supplier")
-  company          company? @relation(fields: [companyId], references: [id])
-  companyId        Int?
-  journal          journal?
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id          Int     @id @default(autoincrement())
+  company_id  Int
+  invoiceNo   String
+  status      String
+  totalAmount String
+  invoiceDate Int
+  dueDate     Int
+  company     company @relation(fields: [company_id], references: [id])
 }
 
 model invitation {
@@ -201,47 +192,14 @@ model invitation {
   role          role    @relation(fields: [roleId], references: [id])
 }
 
-model journal {
-  id            Int       @id @default(autoincrement())
-  tokenContract String?   @map("token_contract")
-  tokenId       String?   @map("token_id")
-  ocrId         Int       @unique @map("ocr_id")
-  ocr           ocr       @relation(fields: [ocrId], references: [id])
-  aichResultId  String?   @map("aich_result_id")
-  invoiceId     Int?      @unique @map("invoice_id")
-  invoice       invoice?  @relation(fields: [invoiceId], references: [id])
-  voucherId     Int?      @unique @map("voucher_id")
-  voucher       voucher?  @relation(fields: [voucherId], references: [id])
-  projectId     Int?      @unique @map("project_id")
-  project       project?  @relation(fields: [projectId], references: [id])
-  contractId    Int?      @unique @map("contract_id")
-  contract      contract? @relation(fields: [contractId], references: [id])
-  company       company?  @relation(fields: [companyId], references: [id])
-  companyId     Int?      @map("company_id")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-}
-
 model lineItem {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   account     String
   description String
   debit       Boolean
   amount      Int
-  voucher     voucher? @relation(fields: [voucherId], references: [id])
-  voucherId   Int?
 
   @@map("line_item")
-}
-
-model ocr {
-  id        Int      @id @default(autoincrement())
-  imageName String   @map("image_name")
-  imageUrl  String   @map("image_url")
-  imageSize Float    @map("image_size")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  journal   journal?
 }
 
 model project {
@@ -254,7 +212,6 @@ model project {
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
-  journal             journal?
 }
 
 model role {
@@ -306,12 +263,4 @@ model userCompanyRole {
   user      user    @relation(fields: [userId], references: [id])
 
   @@map("user_company_role")
-}
-
-model voucher {
-  id        Int        @id @default(autoincrement())
-  lineItems lineItem[]
-  journal   journal?
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
 }
