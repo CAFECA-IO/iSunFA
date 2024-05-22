@@ -205,7 +205,7 @@ model journal {
   tokenId       String?   @map("token_id")
   ocrId         Int       @unique @map("ocr_id")
   ocr           ocr       @relation(fields: [ocrId], references: [id])
-  aichResultId  String?   @map("aich_result_id")
+  aichResultId  String    @map("aich_result_id")
   invoiceId     Int?      @unique @map("invoice_id")
   invoice       invoice?  @relation(fields: [invoiceId], references: [id])
   voucherId     Int?      @unique @map("voucher_id")

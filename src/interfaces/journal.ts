@@ -8,7 +8,7 @@ export interface IJournal extends IVoucher {
 }
 
 export interface IUnprocessedJournal {
-  id: string;
+  id: number;
   imageName: string;
   imageUrl: string;
   imageSize: number;
