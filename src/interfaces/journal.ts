@@ -9,9 +9,11 @@ export interface IJournal extends IVoucher {
 
 export interface IUnprocessedJournal {
   id: number;
+  aichResultId: string;
   imageName: string;
   imageUrl: string;
   imageSize: number;
-  progress: number; // 0 ~ 100 Float
+  progress: number; // 0 ~ 100 Int
   status: ProgressStatus;
+  createdAt: number;
 }

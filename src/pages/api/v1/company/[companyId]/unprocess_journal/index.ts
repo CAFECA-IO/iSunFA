@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -22,6 +22,7 @@ async function getUnprocessJournal(companyId: number) {
       select: {
         id: true,
         aichResultId: true,
+        createdAt: true,
         ocr: {
           select: {
             imageName: true,
@@ -92,11 +93,13 @@ export default async function handler(
           const progress = calculateProgress(journalData.ocr.createdAt, status);
           return {
             id: journalData.id,
+            aichResultId: journalData.aichResultId,
             imageName: journalData.ocr.imageName,
             imageUrl: journalData.ocr.imageUrl,
             imageSize: journalData.ocr.imageSize,
             progress,
-            status
+            status,
+            createdAt: timestampInSeconds(journalData.createdAt.getTime()),
           };
         }));
 
