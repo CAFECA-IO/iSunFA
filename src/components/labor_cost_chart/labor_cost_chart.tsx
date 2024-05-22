@@ -212,7 +212,7 @@ const LaborCostChart = () => {
         </div>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-5">
         <div className="flex flex-col justify-start max-md:space-y-2 md:mx-0 md:flex-row md:space-x-5">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             {displayedDateSection}
