@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
 import { generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
+import { useGlobalCtx } from '@/contexts/global_context';
+import useStateRef from 'react-usestateref';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -16,49 +18,107 @@ interface PieChartProps {
 }
 
 const PieChart = ({ data }: PieChartProps) => {
+  const globalCtx = useGlobalCtx();
+  const [chartWidth, setChartWidth] = useStateRef(580);
+  const [chartHeight, setChartHeight] = useStateRef(250);
+  const [space, setSpace] = useStateRef<number | undefined>(200);
+  const [legendPosition, setLegendPosition] = useStateRef<'left' | 'bottom' | 'right'>('left');
+  const [offsetY, setOffsetY] = useStateRef<number | undefined>(60);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = globalCtx.width;
+      const windowHeight = window.innerHeight;
+      const DESKTOP_WIDTH = 1024;
+      const TABLET_WIDTH = 768;
+      const MOBILE_WIDTH = 450;
+
+      if (windowWidth <= MOBILE_WIDTH) {
+        const presentWidth = 260;
+        const presentHeight = 350;
+
+        setLegendPosition('bottom');
+        setSpace(130);
+        setOffsetY(0);
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= TABLET_WIDTH) {
+        const presentWidth = 450;
+        const presentHeight = 350;
+
+        setLegendPosition('left');
+        setSpace(150);
+        setOffsetY(60);
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth > DESKTOP_WIDTH) {
+        const presentWidth = 400;
+        const presentHeight = 250;
+
+        setSpace(130);
+        setOffsetY(60);
+
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
+        const presentWidth = 400;
+        const presentHeight = 250;
+
+        setSpace(130);
+        setOffsetY(60);
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      } else {
+        const presentWidth = windowWidth / 12;
+        const presentHeight = windowHeight / 3.5;
+
+        setOffsetY(60);
+        setChartWidth(presentWidth);
+        setChartHeight(presentHeight);
+      }
+    };
+    handleResize();
+  }, [globalCtx.width]);
+
   const options: ApexOptions = {
-    series: data.series, // 210
+    series: data.series,
     chart: {
       id: 'labor-cost-chart',
-      width: 500,
       type: 'pie',
     },
     colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
+
     labels: data.categories,
     legend: {
-      position: 'left',
-      offsetY: 80,
+      position: legendPosition,
+      offsetY,
+      offsetX: -30,
       markers: {
         width: 20, // 標記的寬度
         height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
       },
-      // width: 200,
+      width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
+      height: 140,
     },
-
-    // responsive: [
-    //   {
-    //     breakpoint: 480,
-    //     options: {
-    //       chart: {
-    //         width: 200,
-    //       },
-    //       legend: {
-    //         position: 'bottom',
-    //       },
-    //     },
-    //   },
-    // ],
   };
 
-  return <Chart options={options} series={options.series} type="pie" width={400} />;
+  return (
+    <Chart
+      options={options}
+      series={options.series}
+      type="pie"
+      width={chartWidth}
+      height={chartHeight}
+    />
+  );
 };
 
 const LaborCostChart = () => {
   const data = generateRandomLaborCostData(6);
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+    <div className="flex h-500px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">
@@ -116,7 +176,7 @@ const LaborCostChart = () => {
           <div className="absolute top-5 font-semibold text-text-brand-secondary-lv1">
             Onboarding Projects
           </div>
-          <div className="flex max-md:-ml-3">
+          <div className="ml-0 flex pt-14 max-md:ml-0 md:pt-5">
             <PieChart data={data} />
           </div>
         </div>

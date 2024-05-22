@@ -53,7 +53,7 @@ const LineChart = ({ data }: LineChartProps) => {
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 580;
+        const presentWidth = 400;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
