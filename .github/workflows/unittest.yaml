@@ -37,6 +37,8 @@ jobs:
           - 5432:5432
 
     steps:
+      - name: Set up openssl
+        run: sudo apt-get update -y && apt-get install -y openssl
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v4
