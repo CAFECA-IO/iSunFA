@@ -170,7 +170,7 @@ const LaborCostChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="flex h-500px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+    <div className="flex h-550px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">
@@ -217,7 +217,7 @@ const LaborCostChart = () => {
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             {displayedDateSection}
           </div>
-          <div>
+          <div className="w-10">
             <DatePicker
               type={DatePickerType.ICON}
               minDate={minDate}
