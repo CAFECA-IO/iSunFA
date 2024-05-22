@@ -94,8 +94,8 @@ const LineChart = ({ data }: LineChartProps) => {
       },
     },
     yaxis: {
-      min: -15, // Adjust according to your data range
-      max: 65, // Adjust according to your data range
+      // min: -15, // Adjust according to your data range
+      // max: 65, // Adjust according to your data range
       forceNiceScale: false, // Turn off nice scale to use exact min/max values
       labels: {
         style: {
@@ -114,7 +114,7 @@ const LineChart = ({ data }: LineChartProps) => {
       fontFamily: 'Barlow',
       fontWeight: 500,
       markers: {
-        fillColors: ['#6DDBA8', '#FB7A7A'],
+        fillColors: ['#4BD394', '#FB5C5C', '#FFA502'],
         width: 20, // 標記的寬度
         height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
@@ -141,7 +141,7 @@ const LineChart = ({ data }: LineChartProps) => {
     },
     stroke: {
       curve: 'straight',
-      colors: ['#6DDBA8', '#FB7A7A'],
+      colors: ['#4BD394', '#FB5C5C', '#FFA502'],
       width: 2,
     },
     grid: {
@@ -175,7 +175,12 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`,
       },
       y: {
-        formatter: (value) => `${value}%`,
+        formatter: (value, { series, seriesIndex, dataPointIndex }) => {
+          const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
+          const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
+
+          return `${formattedAbsoluteValue}　(${value}%)`;
+        },
       },
       marker: {
         show: false,
@@ -190,7 +195,11 @@ const LineChart = ({ data }: LineChartProps) => {
   return (
     <Chart
       options={options}
-      series={data.series}
+      // series={data.series}
+      series={data.annotations.map((item) => ({
+        name: item.name,
+        data: item.data.map((point) => point.percentage),
+      }))}
       type="line"
       width={chartWidth}
       height={chartHeight}
@@ -258,8 +267,38 @@ const { companyId } = useAccountingCtx();
       className="dashboardCardShadow flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
     >
       <div>
-        <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">Income vs. Expense Trend Chart</div>
+        <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="#002462"
+                  fillRule="evenodd"
+                  d="M9.568 10.293a1.286 1.286 0 011.817-.064l2.786 2.599a1.286 1.286 0 01-1.754 1.88L9.631 12.11a1.286 1.286 0 01-.063-1.817zM19.413 6.265c.667.243 1.01.98.768 1.648l-2.01 5.518a1.286 1.286 0 11-2.415-.88l2.009-5.518a1.286 1.286 0 011.648-.768z"
+                  clipRule="evenodd"
+                ></path>
+                <path
+                  fill="#002462"
+                  fillRule="evenodd"
+                  d="M2.571 1.286a1.286 1.286 0 00-2.571 0v21.428C0 23.424.576 24 1.286 24h21.428a1.286 1.286 0 000-2.571H2.571v-4.95l3.998-4.268a1.286 1.286 0 10-1.877-1.758l-2.12 2.264V1.287z"
+                  clipRule="evenodd"
+                ></path>
+                <path
+                  fill="#FFA502"
+                  fillRule="evenodd"
+                  d="M4.429 9.652a3.424 3.424 0 106.848 0 3.424 3.424 0 00-6.848 0zM16.427 4.563a3.426 3.426 0 106.852 0 3.426 3.426 0 00-6.852 0zM12.192 15.74a3.429 3.429 0 106.857 0 3.429 3.429 0 00-6.857 0z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+              <p>Financial Overview (Income vs. Expenditure)</p>
+            </div>
+          </div>
 
           <div className="justify-end">
             <Tooltip>
@@ -274,7 +313,9 @@ const { companyId } = useAccountingCtx();
 
       <div className="mt-2">
         <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
-          <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
+          <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
+            2024
+          </div>
           <div className="flex space-x-2 md:space-x-5">
             <div className="">
               <Button

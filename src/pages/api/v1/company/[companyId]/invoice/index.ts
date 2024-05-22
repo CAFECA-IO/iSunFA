@@ -142,12 +142,6 @@ export default async function handler(
       // formData.append('contract', fields.contract[0]);
       // formData.append('contractId', fields.contractId[0]);
 
-      // Deprecated (20240504 - Murky): 這邊不寫內容也可以
-      // formData.append('project', fields.project[0]);
-      // formData.append('projectId', fields.projectId[0]);
-      // formData.append('contract', fields.contract[0]);
-      // formData.append('contractId', fields.contractId[0]);
-
       let fetchResult: Response;
       try {
         fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {

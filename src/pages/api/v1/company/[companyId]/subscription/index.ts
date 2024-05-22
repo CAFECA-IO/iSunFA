@@ -6,6 +6,7 @@ import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { SubscriptionPeriod, SubscriptionStatus } from '@/constants/subscription';
 import { ONE_MONTH_IN_MS, ONE_YEAR_IN_MS } from '@/constants/time';
+import { getSession } from '@/lib/utils/get_session';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,8 +17,9 @@ export default async function handler(
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
     const companyIdNum = Number(req.query.companyId);
-    if (!req.headers.userid) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    const session = await getSession(req, res);
+    if (!session.userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {

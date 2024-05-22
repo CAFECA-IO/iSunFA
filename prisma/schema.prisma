@@ -133,7 +133,6 @@ model contract {
   startDate    Int
   endDate      Int
   project      project  @relation(fields: [projectId], references: [id])
-  // invoice      invoice?
   journal      journal?
 }
 
@@ -171,10 +170,13 @@ model employeeProject {
   @@map("employee_project")
 }
 
-// Info (20240521-Murky) EventType以後可以改成enum
 model invoice {
   id               Int      @id @default(autoincrement())
-  date             Int
+  invoiceNo        String
+  status           String
+  totalAmount      String
+  invoiceDate      Int
+  dueDate          Int
   eventType        String   @map("event_type")
   paymentReason    String   @map("payment_reason")
   description      String
@@ -221,13 +223,13 @@ model journal {
 }
 
 model lineItem {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   account     String
   description String
   debit       Boolean
   amount      Int
-  voucherId   Int     @unique
-  voucher     voucher @relation(fields: [voucherId], references: [id])
+  voucher     voucher? @relation(fields: [voucherId], references: [id])
+  voucherId   Int?
 
   @@map("line_item")
 }
@@ -285,7 +287,7 @@ model user {
   fullName           String?
   email              String?
   phone              String?
-  credentialId       String
+  credentialId       String            @unique
   publicKey          String
   algorithm          String
   imageId            String?

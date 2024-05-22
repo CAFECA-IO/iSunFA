@@ -6,7 +6,10 @@ import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { Period } from '@/interfaces/chart_unit';
-import { DUMMY_PROFIT_TREND_CHART_DATA, IProfitTrendChartData } from '@/interfaces/profit_trend_chart';
+import {
+  DUMMY_PROFIT_TREND_CHART_DATA,
+  IProfitTrendChartData,
+} from '@/interfaces/profit_trend_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -203,11 +206,11 @@ const ProfitTrendChart = () => {
     APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
     {
       params: {
-        companyId
+        companyId,
       },
       query: {
-        period: Period.WEEK
-      }
+        period: Period.WEEK,
+      },
     },
     false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
     false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)

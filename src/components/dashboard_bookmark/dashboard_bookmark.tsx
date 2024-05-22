@@ -67,7 +67,7 @@ const DashboardBookmark = () => {
           key={key}
           onClick={() => buttonSelectedHandler(bookmarkList[key].name)}
           type="button"
-          className={`${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-sm border px-8 py-3.5 max-md:px-5`}
+          className={`${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-full border px-8 py-3.5 max-md:px-5`}
         >
           <div className="my-auto flex items-center justify-center">{bookmarkList[key].icon}</div>
           <div className="text-lg font-medium leading-7 tracking-normal">
@@ -83,7 +83,7 @@ const DashboardBookmark = () => {
         size={'medium'}
         variant={'tertiaryOutline'}
         onClick={editBtnClickHandler}
-        className="my-auto flex flex-col justify-center rounded-xs p-4"
+        className="my-auto flex flex-col justify-center rounded-full p-4"
       >
         {' '}
         <svg
@@ -108,7 +108,7 @@ const DashboardBookmark = () => {
       <Button
         size={'medium'}
         onClick={removeBtnClickHandler}
-        className={`my-auto flex flex-col justify-center rounded-xs border border-solid border-tertiaryBlue bg-tertiaryBlue p-4 text-tertiaryBlue hover:bg-tertiaryBlue/80`}
+        className={`my-auto flex flex-col justify-center rounded-full border border-solid border-tertiaryBlue bg-tertiaryBlue p-4 text-tertiaryBlue hover:bg-tertiaryBlue/80`}
       >
         <div className="flex items-center justify-center">
           <svg
@@ -136,7 +136,7 @@ const DashboardBookmark = () => {
       </Button>
       <Button
         onClick={cancelEditBtnClickHandler}
-        className="absolute -right-2 -top-2 rounded-sm bg-white px-1 py-1 text-icon-surface-single-color-primary shadow-revertBtn hover:bg-white hover:text-icon-surface-single-color-primary"
+        className="absolute -right-2 -top-2 rounded-full bg-white px-1 py-1 text-icon-surface-single-color-primary shadow-revertBtn hover:bg-white hover:text-icon-surface-single-color-primary"
       >
         {' '}
         <svg
@@ -162,7 +162,7 @@ const DashboardBookmark = () => {
       <Button
         size={'medium'}
         onClick={addBtnClickHandler}
-        className={`my-auto flex flex-col justify-center rounded-xs border border-solid border-tertiaryBlue bg-tertiaryBlue p-4 text-white hover:bg-tertiaryBlue/80`}
+        className={`my-auto flex flex-col justify-center rounded-full border border-solid border-tertiaryBlue bg-tertiaryBlue p-4 text-white hover:bg-tertiaryBlue/80`}
       >
         <div className="flex items-center justify-center">
           {tempSelectedList.length > 0 ? (
@@ -196,18 +196,19 @@ const DashboardBookmark = () => {
               fill="none"
             >
               <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M10.0025 3.16776C10.5548 3.16776 11.0025 3.61547 11.0025 4.16776V9.00109H15.8359C16.3881 9.00109 16.8359 9.4488 16.8359 10.0011C16.8359 10.5534 16.3881 11.0011 15.8359 11.0011H11.0025V15.8344C11.0025 16.3867 10.5548 16.8344 10.0025 16.8344C9.45024 16.8344 9.00252 16.3867 9.00252 15.8344V11.0011H4.16919C3.6169 11.0011 3.16919 10.5534 3.16919 10.0011C3.16919 9.4488 3.6169 9.00109 4.16919 9.00109H9.00252V4.16776C9.00252 3.61547 9.45024 3.16776 10.0025 3.16776Z"
                 className="fill-current"
-              />
+                fill="none"
+                fillRule="evenodd"
+                d="M14.889 1.554a2.518 2.518 0 113.56 3.56l-7.968 7.97-.047.046c-.242.243-.447.448-.692.598-.217.133-.452.23-.699.29-.28.067-.57.067-.912.066H6.669a.75.75 0 01-.75-.75V11.94v-.066c0-.343 0-.632.067-.912.06-.247.157-.483.29-.699.15-.246.355-.45.597-.692l.047-.047 7.969-7.969zm2.5 1.06a1.018 1.018 0 00-1.44 0l-7.968 7.97c-.314.313-.38.387-.427.462a.917.917 0 00-.11.265c-.02.085-.025.185-.025.628v.645h.646c.443 0 .542-.004.628-.025a.917.917 0 00.265-.11c.075-.046.148-.113.462-.426l7.969-7.969a1.018 1.018 0 000-1.44zm-11.751-.03h3.531a.75.75 0 110 1.5h-3.5c-.712 0-1.201.001-1.58.032-.371.03-.57.086-.714.16a1.75 1.75 0 00-.765.764c-.073.144-.129.343-.16.713-.03.38-.03.869-.03 1.581v7c0 .713 0 1.202.03 1.581.031.37.087.57.16.714.168.33.435.597.765.765.144.073.343.129.713.159.38.03.869.031 1.581.031h7c.713 0 1.202 0 1.581-.031.37-.03.57-.086.714-.16a1.75 1.75 0 00.764-.764c.074-.144.13-.343.16-.714.03-.379.031-.868.031-1.58v-3.5a.75.75 0 011.5 0v3.53c0 .674 0 1.225-.036 1.673-.038.463-.119.881-.318 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.447.036-.998.036-1.671.036H5.638c-.674 0-1.224 0-1.672-.036-.463-.038-.882-.119-1.272-.318a3.25 3.25 0 01-1.42-1.42c-.2-.39-.28-.81-.318-1.272-.037-.448-.037-.999-.037-1.672V7.303c0-.673 0-1.224.037-1.672.038-.463.118-.881.317-1.272a3.25 3.25 0 011.42-1.42c.391-.2.81-.28 1.273-.318.448-.037.998-.037 1.672-.037z"
+                clipRule="evenodd"
+              ></path>
             </svg>
           )}
         </div>
       </Button>
       <Button
         onClick={cancelEditBtnClickHandler}
-        className="absolute -right-2 -top-2 rounded-sm bg-white px-1 py-1 text-icon-surface-single-color-primary shadow-revertBtn hover:bg-white hover:text-icon-surface-single-color-primary"
+        className="absolute -right-2 -top-2 rounded-full bg-white px-1 py-1 text-icon-surface-single-color-primary shadow-revertBtn hover:bg-white hover:text-icon-surface-single-color-primary"
       >
         {' '}
         <svg
@@ -230,11 +231,15 @@ const DashboardBookmark = () => {
   );
 
   return (
-    <div>
-      <div className="dashboardCardShadow mt-12 flex w-full gap-5 rounded-3xl bg-white px-6 py-6 max-lg:flex-wrap max-md:mt-10 max-md:max-w-full max-md:px-5">
-        <div className="flex flex-1 flex-wrap gap-5">{displayedBookmarkList}</div>
+    <div className="w-full gap-5 rounded-full bg-white max-md:mt-10 max-md:max-w-full max-md:px-5">
+      <div className="inline-flex w-full flex-wrap items-center overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
+        <div className="inline-flex flex-1 items-center gap-5 overflow-x-auto px-20px py-14px">
+          {displayedBookmarkList}
+        </div>
         {/* Info: remove or add button (20240411 - Shirley) */}
-        {displayedRemoveOrAddButton}
+        <div className="rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px">
+          {displayedRemoveOrAddButton}
+        </div>
       </div>
     </div>
   );

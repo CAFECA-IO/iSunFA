@@ -4,10 +4,12 @@ import { server } from '@passwordless-id/webauthn';
 import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse, getDomains } from '@/lib/utils/common';
+import { formatApiResponse, getDomains, timestampInSeconds } from '@/lib/utils/common';
 import { IUserAuth } from '@/interfaces/webauthn';
 import { DUMMY_CHALLENGE } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
+import { IInvitation } from '@/interfaces/invitation';
+import { getSession } from '@/lib/utils/get_session';
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,8 +46,55 @@ export default async function handler(
     const createdUser: IUser = await prisma.user.create({
       data: newUser,
     });
+    const session = await getSession(req, res);
+    session.userId = createdUser.id;
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
     res.status(httpCode).json(result);
+    if (req.query.invitation) {
+      // update user
+      const invitation = (await prisma.invitation.findUnique({
+        where: {
+          code: req.query.invitation as string,
+        },
+      })) as IInvitation;
+      if (!invitation) {
+        return;
+      }
+      if (invitation.hasUsed) {
+        return;
+      }
+      if (invitation.expiredAt < timestampInSeconds(Date.now())) {
+        return;
+      }
+      await prisma.userCompanyRole.create({
+        data: {
+          user: {
+            connect: {
+              id: createdUser.id,
+            },
+          },
+          company: {
+            connect: {
+              id: invitation.companyId,
+            },
+          },
+          role: {
+            connect: {
+              id: invitation.roleId,
+            },
+          },
+          startDate: timestampInSeconds(Date.now()),
+        },
+      });
+    }
+    await prisma.invitation.update({
+      where: {
+        code: req.query.invitation as string,
+      },
+      data: {
+        hasUsed: true,
+      },
+    });
   } catch (_error) {
     // Handle errors
     const error = _error as Error;
