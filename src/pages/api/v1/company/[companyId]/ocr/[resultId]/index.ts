@@ -8,22 +8,21 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
-// use
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IInvoice[]>>
 ) {
   try {
-    const { invoiceId } = req.query;
-    // Info Murky (20240416): Check if invoiceId is string
-    if (Array.isArray(invoiceId) || !invoiceId || typeof invoiceId !== 'string') {
+    const { resultId } = req.query;
+    // Info Murky (20240416): Check if resultId is string
+    if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
     switch (req.method) {
       case 'GET': {
-        const fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/result`);
+        const fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
 
         if (!fetchResult.ok) {
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
