@@ -203,7 +203,7 @@ const ProfitTrendChart = () => {
     code: getCode,
     error: getError,
   } = APIHandler<IProfitTrendChartData>(
-    APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
+    APIName.PROFIT_GET_TREND_IN_PERIOD,
     {
       params: {
         companyId,
