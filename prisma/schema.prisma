@@ -74,16 +74,18 @@ model company {
   name                String
   code                String
   regional            String
+
   auditReports        auditReport[]
   clients             client[]
   companyKYCs         companyKYC[]
-  companysDepartments companyDepartment[]
+  departments         department[]
   employees           employee[]
   invitations         invitation[]
   invoices            invoice[]
   journals            journal[]
   roles               role[]
   subscriptions       subscription[]
+  projects            project[]
   usersCompanysRoles  userCompanyRole[]
 }
 
@@ -112,16 +114,6 @@ model companyKYC {
   company                   company @relation(fields: [companyId], references: [id])
 }
 
-model companyDepartment {
-  id           Int        @id @default(autoincrement())
-  companyId    Int
-  departmentId Int
-  company      company    @relation(fields: [companyId], references: [id])
-  department   department @relation(fields: [departmentId], references: [id])
-
-  @@map("company_department")
-}
-
 model contract {
   id           Int      @id @default(autoincrement())
   contractName String
@@ -138,14 +130,17 @@ model contract {
 
 model department {
   id                  Int                 @id @default(autoincrement())
+  companyId           Int                 @map("company_id")
   name                String
-  companyToDepartment companyDepartment[]
   employees           employee[]
+
+  company             company             @relation(fields: [companyId], references: [id])
 }
 
 model employee {
   id                 Int               @id @default(autoincrement())
   name               String
+  imageId            String?
   departmentId       Int               @map("department_id")
   companyId          Int               @map("company_id")
   salary             Int
@@ -234,6 +229,16 @@ model lineItem {
   @@map("line_item")
 }
 
+model milestone {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  startDate Int      @map("start_date") 
+  endDate   Int      @map("end_date")
+  status    String
+  project   project  @relation(fields: [projectId], references: [id])
+}
+
+
 model ocr {
   id        Int      @id @default(autoincrement())
   imageName String   @map("image_name")
@@ -246,15 +251,21 @@ model ocr {
 
 model project {
   id                  Int               @id @default(autoincrement())
+  companyId           Int               @map("company_id")
   name                String
-  description         String
-  status              String
-  startDate           Int
-  endDate             Int
+  completedPercent    Int               @map("completed_percent")
+  stage               String
+
   assets              asset[]
   contracts           contract[]
   employeesToProjects employeeProject[]
-  journal             journal?
+  sales               sale[]
+  values              value[]
+  workRates           workRate[]
+  milestones          milestone[]
+  journal             journal[]
+
+  company                   company @relation(fields: [companyId], references: [id])
 }
 
 model role {
@@ -281,6 +292,14 @@ model subscription {
   company    company @relation(fields: [companyId], references: [id])
 }
 
+model sale {
+  id           Int      @id @default(autoincrement())
+  projectId    Int
+  date         String
+  totalSales   Int
+  comparison   Int
+  project      project  @relation(fields: [projectId], references: [id])
+}
 model user {
   id                 Int               @id @default(autoincrement())
   name               String
@@ -314,4 +333,30 @@ model voucher {
   journal   journal?
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
+}
+
+model value {
+  id                 Int      @id @default(autoincrement())
+  projectId          Int
+  totalRevenue       Int
+  totalRevenueGrowthIn30d Int
+  totalExpense       Int
+  netProfit          Int
+  netProfitGrowthIn30d Int
+  netProfitGrowthInYear Int
+
+  project            project @relation(fields: [projectId], references: [id])
+}
+
+model workRate {
+  id               Int      @id @default(autoincrement())
+  projectId        Int
+  name             String
+  avatar           String
+  involvementRate  Int
+  hours            Int
+
+  project          project @relation(fields: [projectId], references: [id])
+
+  @@map("work_rate")
 }
