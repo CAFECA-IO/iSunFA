@@ -1,9 +1,11 @@
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import useStateRef from 'react-usestateref';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
+import { BOOKMARK_SCROLL_STEP } from '@/constants/config';
 
 const DashboardBookmark = () => {
   const router = useRouter();
@@ -12,6 +14,49 @@ const DashboardBookmark = () => {
   const { bookmarkList, removeBookmark } = useDashboardCtx();
   const [tempSelectedList, setTempSelectedList] = useStateRef<string[]>([]);
   const [isEditing, setIsEditing] = useStateRef<boolean>(false);
+  const [isAtScrollStart, setIsAtScrollStart] = useState(true);
+  const [isAtScrollEnd, setIsAtScrollEnd] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const checkScrollPosition = () => {
+    if (!containerRef.current) return;
+
+    /* Info: (20240522 - Julian)
+    `scroll.current.scrollWidth` 是整個 scroll bar 的寬度，元素的總滾動寬度，包括看不見的部分。
+    `scroll.current.scrollLeft` 是目前捲軸的位置，當前元素的水平滾動偏移量，表示元素滾動條的左邊距離元素左邊的距離。改變這個值可以使元素水平滾動。
+    `scroll.current.clientWidth` 個屬性表示元素內部可視區域的寬度，不包括滾動條、邊框和外邊距的寬度。
+    */
+
+    const isAtEnd =
+      containerRef.current.scrollWidth - containerRef.current.scrollLeft <=
+      containerRef.current.clientWidth;
+    const isAtStart = containerRef.current.scrollLeft === 0;
+    setIsAtScrollEnd(isAtEnd);
+    setIsAtScrollStart(isAtStart);
+  };
+
+  const slide = (shift: number) => {
+    if (containerRef.current) {
+      containerRef.current.scrollLeft += shift;
+      checkScrollPosition();
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      checkScrollPosition();
+    };
+
+    // Info: (20240522 - Julian) 複製一份當前的 containerRef.current，避免在 useEffect 的 cleanup function 執行後，containerRef.current 變成 null
+    const currentContainerRef = containerRef.current;
+    currentContainerRef?.addEventListener('scroll', handleScroll);
+
+    return () => currentContainerRef?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const slideLeft = () => slide(-BOOKMARK_SCROLL_STEP);
+  const slideRight = () => slide(BOOKMARK_SCROLL_STEP);
 
   const buttonSelectedHandler = (name: string) => {
     if (!isEditing) {
@@ -231,10 +276,32 @@ const DashboardBookmark = () => {
   );
 
   return (
-    <div className="w-full gap-5 rounded-full bg-white max-md:mt-10 max-md:max-w-full max-md:px-5">
-      <div className="inline-flex w-full flex-wrap items-center overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
-        <div className="inline-flex flex-1 items-center gap-5 overflow-x-auto px-20px py-14px">
-          {displayedBookmarkList}
+    <div className="rounded-full bg-white">
+      <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
+        <div className="relative inline-flex w-300px flex-1 items-center overflow-hidden max-md:w-500px">
+          <div
+            ref={containerRef}
+            className="inline-flex items-center gap-5 overflow-x-auto scroll-smooth px-20px py-14px"
+          >
+            {displayedBookmarkList}
+          </div>
+          {/* Info: (20240522 - Julian) scroll button */}
+          <button
+            type="button"
+            onClick={slideLeft}
+            disabled={isAtScrollStart}
+            className="absolute left-20px rounded-full bg-surface-neutral-solid-light p-10px shadow-scrollBtn hover:text-primaryYellow disabled:hidden"
+          >
+            <FaChevronLeft size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={slideRight}
+            disabled={isAtScrollEnd}
+            className="absolute right-20px rounded-full bg-surface-neutral-solid-light p-10px shadow-scrollBtn hover:text-primaryYellow disabled:hidden"
+          >
+            <FaChevronRight size={16} />
+          </button>
         </div>
         {/* Info: remove or add button (20240411 - Shirley) */}
         <div className="rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px">
