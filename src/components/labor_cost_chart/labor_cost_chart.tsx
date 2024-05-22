@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
 import { generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
+import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
+import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
+import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -114,8 +118,56 @@ const PieChart = ({ data }: PieChartProps) => {
   );
 };
 
+const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
+
 const LaborCostChart = () => {
-  const data = generateRandomLaborCostData(6);
+  // TODO: 串上 API (20240522 - Shirley)
+  const minDate = new Date(DUMMY_START_DATE);
+  const maxDate = new Date();
+  const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
+  const [series, setSeries] = useState<number[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  const displayedYear = maxDate.getFullYear();
+
+  const displayedDate = (() => {
+    const startDate = period.startTimeStamp
+      ? new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND)
+      : new Date();
+
+    const endDate = period.endTimeStamp
+      ? new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND)
+      : new Date();
+
+    const startDateStr = `${(startDate.getMonth() + 1).toString().padStart(2, '0')}/${startDate.getDate().toString().padStart(2, '0')}`;
+    const endDateStr = `${(endDate.getMonth() + 1).toString().padStart(2, '0')}/${endDate.getDate().toString().padStart(2, '0')}`;
+
+    return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
+  })();
+
+  useEffect(() => {
+    // Info: generate series when period change is done (20240418 - Shirley)
+    if (period.endTimeStamp !== 0) {
+      const randomNum = Math.floor(Math.random() * 10);
+      const newData = generateRandomLaborCostData(randomNum);
+      setSeries(newData.series);
+      setCategories(newData.categories);
+    }
+  }, [period.endTimeStamp, period.startTimeStamp]);
+
+  const data = {
+    categories,
+    series,
+  };
+
+  const displayedDateSection = (
+    <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-brand-primary-lv2">
+      {displayedYear}{' '}
+      <span className="text-sm font-semibold leading-5 tracking-normal text-text-brand-secondary-lv1">
+        {displayedDate}
+      </span>{' '}
+    </div>
+  );
 
   const displayedDataSection = (
     <div className="flex h-500px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
@@ -161,9 +213,18 @@ const LaborCostChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-0 md:flex-row">
+        <div className="flex flex-col justify-start max-md:space-y-2 md:mx-0 md:flex-row md:space-x-5">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
-            2024
+            {displayedDateSection}
+          </div>
+          <div>
+            <DatePicker
+              type={DatePickerType.ICON}
+              minDate={minDate}
+              maxDate={maxDate}
+              period={period}
+              setFilteredPeriod={setPeriod}
+            />
           </div>
           <div className="flex space-x-2 md:space-x-5">
             <div className=""></div>
