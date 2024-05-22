@@ -23,7 +23,7 @@ jobs:
     # Service containers to run with `container-job`
     services:
       # Label used to access the service container
-      postgres:
+      hihi:
         # Docker Hub image
         image: postgres
         # Provide the password for postgres
@@ -54,7 +54,7 @@ jobs:
         run: npx prisma db push && npx prisma generate
         env:
           # The database URL to connect to the PostgreSQL database
-          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+          DATABASE_URL: postgres://postgres:postgres@hihi:5432/postgres
 
       - name: Build next.js service
         run: npm run build
