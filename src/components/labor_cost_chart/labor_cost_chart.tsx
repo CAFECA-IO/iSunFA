@@ -93,117 +93,78 @@ const PieChart = ({ data }: PieChartProps) => {
     chart: {
       id: 'labor-cost-chart',
       type: 'pie',
-      foreColor: '#000',
-      events: {
-        dataPointMouseEnter: function (event, chartContext, config) {
-          const seriesIndex = config.seriesIndex;
-          chartContext.addPointAnnotation({
-            x: config.w.globals.dom.baseEl
-              .querySelectorAll('.apexcharts-pie-area path')
-              [seriesIndex].getAttribute('d')
-              .split('M')[1]
-              .split('A')[0],
-            y: config.w.globals.dom.baseEl
-              .querySelectorAll('.apexcharts-pie-area path')
-              [seriesIndex].getAttribute('d')
-              .split('M')[1]
-              .split('A')[1],
-            label: {
-              borderColor: 'transparent',
-              text: 'Hovered',
-              textAnchor: 'middle',
-              style: {
-                fontSize: '10px',
-                color: hoverColors[seriesIndex],
-              },
-            },
-            marker: {
-              size: 0,
-            },
-          });
-        },
-        dataPointMouseLeave: function (event, chartContext, config) {
-          chartContext.clearAnnotations();
-        },
-      },
     },
-    dataLabels: {
-      enabled: true,
-    },
-    // colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
-    colors: ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'],
-
+    colors: originalColors,
     labels: data.categories,
     legend: {
       position: legendPosition,
       offsetY,
       offsetX: -30,
       markers: {
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        width: 20,
+        height: 12,
+        radius: 0,
       },
       width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
       height: 140,
     },
     tooltip: {
       enabled: true,
-      // y: {
-      //   formatter: (value: number) => {
-      //     return `${value} %`;
-      //   },
-      // },
-
       y: {
-        formatter: undefined,
-        title: {
-          formatter: function x() {
-            return '';
-          },
+        formatter: (value: number) => {
+          return `${value.toString()}`;
         },
+        // Info: 自己去算百分比然後顯示在 tooltip 上 (20240523 - Shirley)
+        // formatter: (value: number, { seriesIndex, w }: { seriesIndex: number; w: any }) => {
+        //   const total = data.series.reduce((a: number, b: number) => a + b, 0);
+        //   const percent = Math.round((value / total) * 100);
+        //   return `${percent.toFixed(2)}%`;
+        // },
+        // title: {
+        //   formatter: function () {
+        //     return '';
+        //   },
+        // },
       },
-
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
+      },
+      fillSeriesColor: false,
       fixed: {
         enabled: true,
         position: 'topRight',
       },
-
-      fillSeriesColor: false,
+      theme: 'dark',
+    },
+    dataLabels: {
+      enabled: true,
+      style: {
+        colors: ['#001840'],
+      },
+      dropShadow: {
+        enabled: false,
+      },
     },
     fill: {
-      // colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
-      colors: ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'],
+      colors: originalColors,
     },
-    // states: {
-    //   hover: {
-    //     filter: {
-    //       // type: 'none',
-    //       type: 'darken',
-    //       value: 0.9,
-    //     },
-    //   },
-    // },
-
     states: {
       hover: {
         filter: {
-          type: 'none',
-        },
-      },
-      active: {
-        filter: {
-          type: 'none',
+          type: 'darken',
+          value: 0.8,
         },
       },
     },
-    // theme: {
-    //   monochrome: {
-    //     enabled: true,
-    //     color: '#000',
-    //     shadeTo: 'light',
-    //     shadeIntensity: 0.65,
-    //   },
-    // },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '70%',
+        },
+        expandOnClick: true,
+      },
+    },
   };
 
   return (
