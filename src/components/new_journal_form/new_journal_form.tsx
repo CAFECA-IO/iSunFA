@@ -351,7 +351,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: '', // TODO: update with formData
+      invoiceId: '', // TODO: update with formData (20240523 - tzuhan)
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
