@@ -2,16 +2,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IInvoice } from '@/interfaces/invoice';
+import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { isIInvoice } from '@/lib/utils/type_guard/invoice';
+import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice[]>>
+  res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>
 ) {
   try {
     const { resultId } = req.query;
@@ -28,15 +28,22 @@ export default async function handler(
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
-        const ocrResultData: IInvoice = (await fetchResult.json()).payload;
+        const ocrResultData: IInvoiceDataForSavingToDB = (await fetchResult.json()).payload;
 
-        if (!ocrResultData || !isIInvoice(ocrResultData)) {
+        if (!ocrResultData) {
+          throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
+        }
+
+        ocrResultData.journalId = null;
+
+        if (!isIInvoiceDataForSavingToDB(ocrResultData)) {
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
         }
 
-        const { httpCode, result } = formatApiResponse<IInvoice[]>(STATUS_MESSAGE.SUCCESS, [
+        const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(
+STATUS_MESSAGE.SUCCESS,
           ocrResultData,
-        ]);
+        );
 
         res.status(httpCode).json(result);
         break;
@@ -47,7 +54,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IInvoice[]>(error.message, {} as IInvoice[]);
+    const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(error.message, {} as IInvoiceDataForSavingToDB);
     res.status(httpCode).json(result);
   }
 }

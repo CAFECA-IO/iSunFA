@@ -24,13 +24,10 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
       }
 
-      const financialReportJSON = (await fetchResult.json()).payload;
-
-      if (!isIFinancialReportJSON(financialReportJSON)) {
+      const resultJson: IFinancialReportJSON = (await fetchResult.json()).payload;
+      if (!isIFinancialReportJSON(resultJson)) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
-
-      const resultJson: IFinancialReportJSON = (await fetchResult.json()).payload;
       const { httpCode, result } = formatApiResponse<IFinancialReportJSON>(
         STATUS_MESSAGE.SUCCESS_GET,
         resultJson
