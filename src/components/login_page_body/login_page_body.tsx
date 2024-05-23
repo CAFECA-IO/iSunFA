@@ -1,18 +1,16 @@
 /* eslint-disable */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
-import Image from 'next/image';
+import { ToastType } from '@/interfaces/toastify';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import Link from 'next/link';
 
 const LoginPageBody = () => {
-  const { signUp, signIn } = useUserCtx();
-  const {
-    registerModalData,
-    registerModalVisibilityHandler,
-    registerModalDataHandler,
-    passKeySupportModalVisibilityHandler,
-  } = useGlobalCtx();
+  const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
+  const { registerModalVisibilityHandler, passKeySupportModalVisibilityHandler, toastHandler } =
+    useGlobalCtx();
 
   const registerClickHandler = async () => {
     registerModalVisibilityHandler();
@@ -29,9 +27,57 @@ const LoginPageBody = () => {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
       console.error('signIn error in loginClickHandler:', error);
-      registerClickHandler();
+      // registerClickHandler();
     }
   };
+
+  useEffect(() => {
+    // TODO: possible error code when login & register (20240522 - Shirley)
+    // 沒有註冊資料: 511ISF0001
+    // 伺服器錯誤: 500ISF0000
+
+    if (!signedIn && isSignInError) {
+      const toastType = errorCode === `511ISF0001` ? ToastType.WARNING : ToastType.ERROR;
+      const toastContent =
+        errorCode === `511ISF0001` ? (
+          <div>
+            <div>
+              Please{' '}
+              <button
+                onClick={registerClickHandler}
+                type="button"
+                className="text-base text-link-text-primary hover:opacity-70"
+              >
+                <div className="justify-center rounded-sm">register your device.</div>
+              </button>
+              <span className="pl-3">({errorCode})</span>
+            </div>
+          </div>
+        ) : (
+          <div className="">
+            <p className="">
+              Oops! Something went wrong. Please try again or contact customer support. ({errorCode}
+              )
+              <span className="pl-3">
+                <Link href={ISUNFA_ROUTE.CONTACT_US} className="font-bold text-link-text-warning">
+                  Help
+                </Link>
+              </span>
+            </p>
+          </div>
+        );
+
+      toastHandler({
+        id: `${errorCode}`,
+        type: toastType,
+        content: toastContent,
+        closeable: true,
+        onClose: toggleIsSignInError,
+        autoClose: false,
+      });
+    }
+  }, [errorCode, signedIn, isSignInError]);
+
   return (
     <div>
       <div className="bg-surface-neutral-main-background">
@@ -121,7 +167,7 @@ const LoginPageBody = () => {
                   <button
                     onClick={registerClickHandler}
                     type="button"
-                    className="mt-10 flex max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-darkBlue hover:opacity-70"
+                    className="mt-10 flex max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-link-text-primary hover:opacity-70"
                   >
                     <div className="justify-center rounded-sm">Register my Device</div>
                   </button>

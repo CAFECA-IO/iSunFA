@@ -134,7 +134,8 @@ const ConfirmModal = ({
       modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
       clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
       router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
-    } else {
+    }
+    if (uploadSuccess === false) {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
       // eslint-disable-next-line no-console
       console.log(`Failed to generate voucher: `, uploadCode, `error: `, uploadError);
