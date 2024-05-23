@@ -175,10 +175,12 @@ model invoice {
   description      String
   vendorOrSupplier String   @map("vendor_or_supplier")
   companyId        Int?
+  journal          journal?
+  paymentId        Int      @unique @map("payment_id")
+  payment          payment  @relation(fields: [paymentId], references: [id])
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
   company          company? @relation(fields: [companyId], references: [id])
-  journal          journal?
 }
 
 model invitation {
@@ -235,6 +237,25 @@ model ocr {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   journal   journal?
+}
+
+model payment {
+  id                 Int      @id @default(autoincrement())
+  isRevenue          Boolean
+  price              Int
+  hasTax             Boolean
+  taxPercentage      Int
+  hasFee             Boolean
+  fee                Int
+  paymentMethod      String
+  paymentPeriod      String
+  installmentPeriod  Int
+  paymentAlreadyDone Int
+  paymentStatus      String
+  progress           Int
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  invoice            invoice?
 }
 
 model project {
