@@ -66,35 +66,37 @@ export default async function handler(
       if (invitation.expiredAt < timestampInSeconds(Date.now())) {
         return;
       }
-      await prisma.userCompanyRole.create({
-        data: {
-          user: {
-            connect: {
-              id: createdUser.id,
+      await prisma.$transaction(async (tx) => {
+        await tx.userCompanyRole.create({
+          data: {
+            user: {
+              connect: {
+                id: createdUser.id,
+              },
             },
-          },
-          company: {
-            connect: {
-              id: invitation.companyId,
+            company: {
+              connect: {
+                id: invitation.companyId,
+              },
             },
-          },
-          role: {
-            connect: {
-              id: invitation.roleId,
+            role: {
+              connect: {
+                id: invitation.roleId,
+              },
             },
+            startDate: timestampInSeconds(Date.now()),
           },
-          startDate: timestampInSeconds(Date.now()),
-        },
+        });
+        await tx.invitation.update({
+          where: {
+            code: req.query.invitation as string,
+          },
+          data: {
+            hasUsed: true,
+          },
+        });
       });
     }
-    await prisma.invitation.update({
-      where: {
-        code: req.query.invitation as string,
-      },
-      data: {
-        hasUsed: true,
-      },
-    });
   } catch (_error) {
     // Handle errors
     const error = _error as Error;
