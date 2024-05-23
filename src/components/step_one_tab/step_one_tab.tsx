@@ -1,62 +1,108 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { IUploadedItem } from '@/interfaces/uploaded_item';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IUnprocessedJournal } from '@/interfaces/journal';
+import { ToastType } from '@/interfaces/toastify';
+import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '../uploaded_file_item/uploaded_file_item';
 import Pagination from '../pagination/pagination';
 
 // ToDo: (20240523 - Julian) replace dummyFileList with real data
-const dummyFileList: IUploadedItem[] = [
+const dummyFileList: IUnprocessedJournal[] = [
   {
     id: 'invoiceId-0001',
-    fileName: 'invoice_0001.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '100 KB',
-    progressPercentage: 100,
-    isPaused: false,
-    isError: false,
+    imageName: 'invoice_0001.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '100 KB',
+    progress: 100,
+    status: ProgressStatus.SUCCESS,
   },
   {
     id: 'invoiceId-0002',
-    fileName: 'invoice_0002.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '150 KB',
-    progressPercentage: 82,
-    isPaused: false,
-    isError: false,
+    imageName: 'invoice_0002.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '150 KB',
+    progress: 82,
+    status: ProgressStatus.IN_PROGRESS,
   },
   {
     id: 'invoiceId-0003',
-    fileName: 'invoice_0003.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '175 KB',
-    progressPercentage: 40,
-    isPaused: true,
-    isError: false,
+    imageName: 'invoice_0003.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '175 KB',
+    progress: 40,
+    status: ProgressStatus.PAUSED,
   },
   {
     id: 'invoiceId-0004',
-    fileName: 'invoice_0004.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '200 KB',
-    progressPercentage: 30,
-    isPaused: true,
-    isError: true,
+    imageName: 'invoice_0004.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '200 KB',
+    progress: 30,
+    status: ProgressStatus.LLM_ERROR,
   },
 ];
 const totalPages = 10;
 
 const StepOneTab = () => {
-  const { cameraScannerVisibilityHandler } = useGlobalCtx();
+  const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { companyId, selectUnprocessedJournalHandler } = useAccountingCtx();
+  const [load, setLoad] = useState(true);
+
+  const {
+    trigger: listUnprocessedJournal,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: unprocessJournals,
+    error: listError,
+    success: listSuccess,
+    code: listCode,
+  } = APIHandler<IUnprocessedJournal[]>(APIName.JOURNAL_LIST_UNPROCESSED, {
+    params: { companyId },
+  });
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (load) {
+      interval = setInterval(() => {
+        listUnprocessedJournal();
+      }, 2000);
+      if (listSuccess === false) {
+        toastHandler({
+          id: `listUnprocessedJournal-${listCode}`,
+          content: `Failed to list unprocessed journals: ${listCode}`,
+          type: ToastType.ERROR,
+          closeable: true,
+        });
+        setLoad(false);
+      }
+    }
+
+    return () => clearInterval(interval);
+  }, [listError, listSuccess, listCode]);
+
+  const handleJournalClick = (unprocessJournal: IUnprocessedJournal) => {
+    if (unprocessJournal.status === ProgressStatus.SUCCESS) {
+      selectUnprocessedJournalHandler(unprocessJournal);
+    }
+  };
 
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUploadedItem[]>(dummyFileList);
+  const [fileList, setFileList] = useState<IUnprocessedJournal[]>(dummyFileList);
 
   const fileItemPauseHandler = (id: string) => {
     const newList = fileList.map((data) => {
       if (data.id === id) {
-        return { ...data, isPaused: !data.isPaused };
+        return {
+          ...data,
+          status:
+            data.status === ProgressStatus.PAUSED
+              ? ProgressStatus.IN_PROGRESS
+              : ProgressStatus.PAUSED,
+        };
       }
       return data;
     });
@@ -74,6 +120,7 @@ const StepOneTab = () => {
       itemData={data}
       pauseHandler={fileItemPauseHandler}
       deleteHandler={fileItemDeleteHandler}
+      clickHandler={handleJournalClick}
     />
   ));
 
