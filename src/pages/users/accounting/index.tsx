@@ -57,10 +57,6 @@ const AccountingPage = () => {
         <p>Skip</p>
         <FaArrowRight />
       </button>
-      {/* Info: (20240422 - Julian) Next button */}
-      <Button disabled className="px-16px py-8px">
-        Next
-      </Button>
     </div>
   ) : null;
 

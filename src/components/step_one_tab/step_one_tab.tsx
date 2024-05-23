@@ -1,12 +1,119 @@
+import { useState } from 'react';
 import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { IUploadedItem } from '@/interfaces/uploaded_item';
+import UploadedFileItem from '../uploaded_file_item/uploaded_file_item';
+import Pagination from '../pagination/pagination';
+
+// ToDo: (20240523 - Julian) replace dummyFileList with real data
+const dummyFileList: IUploadedItem[] = [
+  {
+    id: 'invoiceId-0001',
+    fileName: 'invoice_0001.pdf',
+    thumbnailSrc: '/elements/anonymous_avatar.svg',
+    fileSize: '100 KB',
+    progressPercentage: 100,
+    isPaused: false,
+    isError: false,
+  },
+  {
+    id: 'invoiceId-0002',
+    fileName: 'invoice_0002.pdf',
+    thumbnailSrc: '/elements/anonymous_avatar.svg',
+    fileSize: '150 KB',
+    progressPercentage: 82,
+    isPaused: false,
+    isError: false,
+  },
+  {
+    id: 'invoiceId-0003',
+    fileName: 'invoice_0003.pdf',
+    thumbnailSrc: '/elements/anonymous_avatar.svg',
+    fileSize: '175 KB',
+    progressPercentage: 40,
+    isPaused: true,
+    isError: false,
+  },
+  {
+    id: 'invoiceId-0004',
+    fileName: 'invoice_0004.pdf',
+    thumbnailSrc: '/elements/anonymous_avatar.svg',
+    fileSize: '200 KB',
+    progressPercentage: 30,
+    isPaused: true,
+    isError: true,
+  },
+];
+const totalPages = 10;
 
 const StepOneTab = () => {
   const { cameraScannerVisibilityHandler } = useGlobalCtx();
 
+  const [currentFilePage, setCurrentFilePage] = useState<number>(1);
+  const [fileList, setFileList] = useState<IUploadedItem[]>(dummyFileList);
+
+  const fileItemPauseHandler = (id: string) => {
+    const newList = fileList.map((data) => {
+      if (data.id === id) {
+        return { ...data, isPaused: !data.isPaused };
+      }
+      return data;
+    });
+    setFileList(newList);
+  };
+
+  const fileItemDeleteHandler = (id: string) => {
+    const newList = fileList.filter((data) => data.id !== id);
+    setFileList(newList);
+  };
+
+  const displayedFileList = fileList.map((data) => (
+    <UploadedFileItem
+      key={data.id}
+      itemData={data}
+      pauseHandler={fileItemPauseHandler}
+      deleteHandler={fileItemDeleteHandler}
+    />
+  ));
+
+  const uploadedFileSection =
+    fileList.length > 0 ? (
+      <>
+        <div className="my-5 flex items-center gap-4">
+          <hr className="block flex-1 border-lightGray4 md:hidden" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image
+              src="/icons/upload_file_list.svg"
+              width={16}
+              height={16}
+              alt="upload_file_icon"
+            />
+            <p>Uploaded File</p>
+          </div>
+          <hr className="flex-1 border-lightGray4" />
+        </div>
+        {/* Info: (20240523 - Julian) Uploaded File List */}
+        <div className="mb-50px flex flex-col items-center gap-y-50px">
+          <div className="flex w-full flex-col items-center gap-y-12px">{displayedFileList}</div>
+          {/* Info: (20240523 - Julian) Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentFilePage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentFilePage}
+              pagePrefix="filePage"
+            />
+          )}
+        </div>
+      </>
+    ) : null;
+
   return (
     <div className="flex flex-col gap-8px">
+      {/* Info: (20240523 - Julian) Uploaded File Section */}
+      {uploadedFileSection}
+
       {/* Info: (20240422 - Julian) label */}
       <p className="text-sm font-semibold text-navyBlue2">Description of events</p>
 
