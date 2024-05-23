@@ -27,9 +27,9 @@ export enum APIName {
   PROFIT_GET_TREND_IN_PERIOD = 'PROFIT_GET_TREND_IN_PERIOD',
   PROJECT_LIST_PROGRESS = 'PROJECT_LIST_PROGRESS',
   PROJECT_LIST_PROFIT_COMPARISON = 'PROJECT_LIST_PROFIT_COMPARISON',
-  INVOCIE_UPLOAD = 'INVOCIE_UPLOAD',
-  INVOCIE_LIST_UNBOUNDED = 'INVOCIE_LIST_UNBOUNDED',
-  INVOCIE_GET_BY_ID = 'INVOCIE_GET_BY_ID',
+  INVOICE_UPLOAD = 'INVOICE_UPLOAD',
+  INVOICE_LIST_UNBOUNDED = 'INVOICE_LIST_UNBOUNDED',
+  INVOICE_GET_BY_ID = 'INVOICE_GET_BY_ID',
   ASSET_MANAGEMENT_LIST = 'ASSET_MANAGEMENT_LIST',
   ASSET_MANAGEMENT_ADD = 'ASSET_MANAGEMENT_ADD',
   ASSET_MANAGEMENT_GET_BY_ID = 'ASSET_MANAGEMENT_GET_BY_ID',
@@ -67,9 +67,9 @@ export enum APIPath {
   PROFIT_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend_value`,
   PROJECT_LIST_PROGRESS = `${apiPrefix}/company/:companyId/project_progress`,
   PROJECT_LIST_PROFIT_COMPARISON = `${apiPrefix}/company/:companyId/profit_comparison`,
-  INVOCIE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
-  INVOCIE_LIST_UNBOUNDED = `${apiPrefix}/company/:companyId/invoice_unbounded`,
-  INVOCIE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  INVOICE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
+  INVOICE_LIST_UNBOUNDED = `${apiPrefix}/company/:companyId/invoice_unbounded`,
+  INVOICE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
   ASSET_MANAGEMENT_LIST = `${apiPrefix}/company/:companyId/asset_management`,
   ASSET_MANAGEMENT_ADD = `${apiPrefix}/company/:companyId/asset_management`,
   ASSET_MANAGEMENT_GET_BY_ID = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
@@ -158,10 +158,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.INVOCIE_GET_BY_ID]: {
-    name: APIName.INVOCIE_GET_BY_ID,
+  [APIName.INVOICE_GET_BY_ID]: {
+    name: APIName.INVOICE_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.INVOCIE_GET_BY_ID,
+    path: APIPath.INVOICE_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -171,10 +171,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.INVOCIE_UPLOAD]: {
-    name: APIName.INVOCIE_UPLOAD,
+  [APIName.INVOICE_UPLOAD]: {
+    name: APIName.INVOICE_UPLOAD,
     method: HttpMethod.POST,
-    path: APIPath.INVOCIE_UPLOAD,
+    path: APIPath.INVOICE_UPLOAD,
     input: {
       header: {},
       body: {},
@@ -379,10 +379,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  INVOCIE_LIST_UNBOUNDED: {
-    name: APIName.INVOCIE_LIST_UNBOUNDED,
+  INVOICE_LIST_UNBOUNDED: {
+    name: APIName.INVOICE_LIST_UNBOUNDED,
     method: HttpMethod.GET,
-    path: APIPath.INVOCIE_LIST_UNBOUNDED,
+    path: APIPath.INVOICE_LIST_UNBOUNDED,
     input: {
       header: {},
       body: {},
