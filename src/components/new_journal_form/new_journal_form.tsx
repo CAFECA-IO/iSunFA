@@ -75,7 +75,7 @@ const NewJournalForm = () => {
     data: invoices,
     code: invoiceCode,
   } = APIHandler<IInvoice[]>(
-    APIName.INVOCIE_GET_BY_ID,
+    APIName.INVOICE_GET_BY_ID,
     {
       params: { companyId, invoiceId },
     },
@@ -121,7 +121,7 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [invoiceId, invoices]);
+  }, [getInvoiceSuccess, invoiceId, invoices]);
 
   const {
     isLoading: isStatusLoading,

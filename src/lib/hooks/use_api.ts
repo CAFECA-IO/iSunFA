@@ -72,10 +72,12 @@ export async function fetchData<Data>(
   console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
   const result = (await response.json()) as IResponseData<Data>;
+
+  // Deprecated: debug log (20240523 - Tzuahan)
+  // eslint-disable-next-line no-console
+  console.log(`fetchData response: `, response, `result: `, result);
+
   return result;
 }
 
@@ -111,14 +113,13 @@ const useAPI = <Data>(
           signal
         );
         setCode(response.code);
-        if (!response.success) {
-          throw new Error(response.message ?? 'Unknown error');
-        }
         setData(response.payload as Data);
-        setSuccess(true);
+        setSuccess(response.success);
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
+        // eslint-disable-next-line no-console
+        console.log(`setCode: ${setCode}`, e);
         setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       } finally {
         setIsLoading(false);

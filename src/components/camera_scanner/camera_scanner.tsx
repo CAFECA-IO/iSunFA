@@ -36,7 +36,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     error: uploadError,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus>(APIName.INVOCIE_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_UPLOAD, {}, false, false);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -177,7 +177,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
       messageModalDataHandler({
         title: 'Upload Successful',
-        content: '',
+        content: results.status,
         messageType: MessageType.SUCCESS,
         submitBtnStr: 'Done',
         submitBtnFunction: () => {
