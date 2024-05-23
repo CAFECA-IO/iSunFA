@@ -5,7 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
 const responseData: IProfitInsight = {
-  profitGrowthRate: -0.1,
+  profitChange: -0.1,
   topProjectRoi: 0.3,
   preLaunchProject: 5,
 };

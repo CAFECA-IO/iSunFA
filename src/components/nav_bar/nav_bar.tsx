@@ -80,7 +80,7 @@ const NavBar = () => {
         <p>Project</p>
       </button>
       <Link
-        href={`${signedIn ? ISUNFA_ROUTE.ACCOUNTING : ISUNFA_ROUTE.LOGIN}`}
+        href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
@@ -192,7 +192,10 @@ const NavBar = () => {
         <p>Project</p>
       </button>
       {/* Info: (20240416 - Julian) Account button */}
-      <Link href={`${signedIn ? ISUNFA_ROUTE.ACCOUNTING : ISUNFA_ROUTE.LOGIN}`} className="mx-auto">
+      <Link
+        href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
+        className="mx-auto"
+      >
         <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
           <p>Account</p>

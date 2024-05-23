@@ -1,12 +1,174 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IUnprocessedJournal } from '@/interfaces/journal';
+import { ToastType } from '@/interfaces/toastify';
+import { ProgressStatus } from '@/constants/account';
+import UploadedFileItem from '../uploaded_file_item/uploaded_file_item';
+import Pagination from '../pagination/pagination';
+
+// ToDo: (20240523 - Julian) replace dummyFileList with real data
+const dummyFileList: IUnprocessedJournal[] = [
+  {
+    id: 1,
+    aichResultId: 'invoiceId-0001',
+    imageName: 'invoice_0001.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '100 KB',
+    progress: 100,
+    status: ProgressStatus.SUCCESS,
+    createdAt: Date.now(),
+  },
+  {
+    id: 2,
+    aichResultId: 'invoiceId-0002',
+    imageName: 'invoice_0002.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '150 KB',
+    progress: 82,
+    status: ProgressStatus.IN_PROGRESS,
+    createdAt: Date.now(),
+  },
+  {
+    id: 3,
+    aichResultId: 'invoiceId-0003',
+    imageName: 'invoice_0003.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '175 KB',
+    progress: 40,
+    status: ProgressStatus.PAUSED,
+    createdAt: Date.now(),
+  },
+  {
+    id: 4,
+    aichResultId: 'invoiceId-0004',
+    imageName: 'invoice_0004.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '200 KB',
+    progress: 30,
+    status: ProgressStatus.LLM_ERROR,
+    createdAt: Date.now(),
+  },
+];
+const totalPages = 10;
 
 const StepOneTab = () => {
-  const { cameraScannerVisibilityHandler } = useGlobalCtx();
+  const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { companyId, selectUnprocessedJournalHandler } = useAccountingCtx();
+  const [load, setLoad] = useState(true);
+
+  const {
+    trigger: listUnprocessedJournal,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: unprocessJournals,
+    error: listError,
+    success: listSuccess,
+    code: listCode,
+  } = APIHandler<IUnprocessedJournal[]>(APIName.JOURNAL_LIST_UNPROCESSED, {
+    params: { companyId },
+  });
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (load) {
+      interval = setInterval(() => {
+        listUnprocessedJournal();
+      }, 2000);
+      if (listSuccess === false) {
+        toastHandler({
+          id: `listUnprocessedJournal-${listCode}`,
+          content: `Failed to list unprocessed journals: ${listCode}`,
+          type: ToastType.ERROR,
+          closeable: true,
+        });
+        setLoad(false);
+      }
+    }
+
+    return () => clearInterval(interval);
+  }, [listError, listSuccess, listCode]);
+
+  const handleJournalClick = (unprocessJournal: IUnprocessedJournal) => {
+    if (unprocessJournal.status === ProgressStatus.SUCCESS) {
+      selectUnprocessedJournalHandler(unprocessJournal);
+    }
+  };
+
+  const [currentFilePage, setCurrentFilePage] = useState<number>(1);
+  const [fileList, setFileList] = useState<IUnprocessedJournal[]>(dummyFileList);
+
+  const fileItemPauseHandler = (id: number) => {
+    const newList = fileList.map((data) => {
+      if (data.id === id) {
+        return {
+          ...data,
+          status:
+            data.status === ProgressStatus.PAUSED
+              ? ProgressStatus.IN_PROGRESS
+              : ProgressStatus.PAUSED,
+        };
+      }
+      return data;
+    });
+    setFileList(newList);
+  };
+
+  const fileItemDeleteHandler = (id: number) => {
+    const newList = fileList.filter((data) => data.id !== id);
+    setFileList(newList);
+  };
+
+  const displayedFileList = fileList.map((data) => (
+    <UploadedFileItem
+      key={data.id}
+      itemData={data}
+      pauseHandler={fileItemPauseHandler}
+      deleteHandler={fileItemDeleteHandler}
+      clickHandler={handleJournalClick}
+    />
+  ));
+
+  const uploadedFileSection =
+    fileList.length > 0 ? (
+      <>
+        <div className="my-5 flex items-center gap-4">
+          <hr className="block flex-1 border-lightGray4 md:hidden" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image
+              src="/icons/upload_file_list.svg"
+              width={16}
+              height={16}
+              alt="upload_file_icon"
+            />
+            <p>Uploaded File</p>
+          </div>
+          <hr className="flex-1 border-lightGray4" />
+        </div>
+        {/* Info: (20240523 - Julian) Uploaded File List */}
+        <div className="mb-50px flex flex-col items-center gap-y-50px">
+          <div className="flex w-full flex-col items-center gap-y-12px">{displayedFileList}</div>
+          {/* Info: (20240523 - Julian) Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentFilePage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentFilePage}
+              pagePrefix="filePage"
+            />
+          )}
+        </div>
+      </>
+    ) : null;
 
   return (
     <div className="flex flex-col gap-8px">
+      {/* Info: (20240523 - Julian) Uploaded File Section */}
+      {uploadedFileSection}
+
       {/* Info: (20240422 - Julian) label */}
       <p className="text-sm font-semibold text-navyBlue2">Description of events</p>
 

@@ -3,6 +3,8 @@ export const copyright = 'iSunFA @ 2024. All rights reserved.';
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
 export const SCROLL_END = 530;
 
+export const BOOKMARK_SCROLL_STEP = 200;
+
 export const massiveDataContent = [
   {
     icon: '/icons/wallet.svg',

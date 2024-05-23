@@ -13,11 +13,15 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
 
 const SelectCompanyPageBody = () => {
   const { signedIn, username, selectCompany } = useUserCtx();
-  const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
-    useGlobalCtx();
+  const {
+    toastHandler,
+    companyInvitationModalVisibilityHandler,
+    createCompanyModalVisibilityHandler,
+  } = useGlobalCtx();
 
   const router = useRouter();
 
@@ -37,6 +41,13 @@ const SelectCompanyPageBody = () => {
     },
   });
 
+  const {
+    trigger: selectCompanyTrigger,
+    data: companySelectedId,
+    success: companySelectSuccess,
+    code: companySelectCode,
+  } = APIHandler<string>(APIName.COMPANY_SELECT, {}, false, false);
+
   const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
   const [companyList, setCompanyList] = useState<ICompany[]>([]);
@@ -54,9 +65,25 @@ const SelectCompanyPageBody = () => {
   const selectCompanyClickHandler = () => {
     if (selectedCompany === null) return;
     selectCompany(selectedCompany);
-    // ToDo: (20240521 - tzuhan) 需確認是不是需要一隻 api: SelectCompany 把 company id 傳給後端寫進 session
-    router.push(ISUNFA_ROUTE.DASHBOARD);
+    selectCompanyTrigger({
+      params: {
+        companyId: selectedCompany.id,
+      },
+    });
   };
+
+  useEffect(() => {
+    if (companySelectSuccess && companySelectedId) {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    } else if (companySelectSuccess === false) {
+      toastHandler({
+        id: `companySelectError_${companySelectCode}`,
+        type: ToastType.ERROR,
+        content: `Failed to select company: ${companySelectCode}`,
+        closeable: true,
+      });
+    }
+  }, [companySelectSuccess, companySelectedId]);
 
   useEffect(() => {
     if (companyDataSuccess && companyData) {

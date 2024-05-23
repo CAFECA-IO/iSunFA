@@ -162,7 +162,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 
       {/* Info: (20240418 - Julian) Link */}
       <Link
-        href={`${ISUNFA_ROUTE.ACCOUNTING}/${journal.voucherIndex}`}
+        href={`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`}
         className="absolute left-46px h-80px w-95%"
       ></Link>
     </tr>
