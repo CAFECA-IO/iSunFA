@@ -23,9 +23,6 @@ export default async function handler(
             id: session.userId,
           },
         })) as IUser;
-
-        // eslint-disable-next-line no-console
-        console.log('user in session API', user);
       }
       if (session.companyId) {
         company = (await prisma.company.findUnique({
@@ -33,17 +30,11 @@ export default async function handler(
             id: session.companyId,
           },
         })) as ICompany;
-
-        // eslint-disable-next-line no-console
-        console.log('company in session API', company);
       }
       const sessionData: ISessionData = {
         user,
         company,
       };
-
-      // eslint-disable-next-line no-console
-      console.log('sessionData in session API', sessionData);
       const { httpCode, result } = formatApiResponse<ISessionData>(
         STATUS_MESSAGE.SUCCESS_GET,
         sessionData
