@@ -12,57 +12,58 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 
-// Info: Murky (20240522) 以下db操作沒有考慮原子性
 async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavingToDB, companyId: number) {
   const { payment: paymentDate, project, projectId, contract, contractId, journalId, ...invoiceData } = invoiceDataForSavingToDB;
 
   // Depreciate ( 20240522 - Murky ) For demo purpose, create company if not exist
   try {
-  let company = await prisma.company.findUnique({
-    where: {
-      id: companyId,
-    },
-    select: {
-      id: true,
-    }
-  });
+    const result = await prisma.$transaction(async () => {
+      let company = await prisma.company.findUnique({
+        where: {
+          id: companyId,
+        },
+        select: {
+          id: true,
+        }
+      });
 
-  if (!company) {
-    company = await prisma.company.create({
-      data: {
-        id: companyId,
-        code: 'COMP123',
-        name: 'Company Name',
-        regional: 'Regional Name',
-      },
-      select: {
-        id: true,
+      if (!company) {
+        company = await prisma.company.create({
+          data: {
+            id: companyId,
+            code: 'COMP123',
+            name: 'Company Name',
+            regional: 'Regional Name',
+          },
+          select: {
+            id: true,
+          }
+        });
       }
+
+      const payment = await prisma.payment.create({
+        data: paymentDate,
+        select: {
+          id: true,
+        }
+      });
+
+      const invoice = await prisma.invoice.create({
+        data: {
+          date: timestampInSeconds(invoiceData.date),
+          eventType: invoiceData.eventType,
+          paymentReason: invoiceData.paymentReason,
+          description: invoiceData.description,
+          vendorOrSupplier: invoiceData.vendorOrSupplier,
+          companyId: company.id,
+          paymentId: payment.id,
+        }
+      });
+
+      return { invoiceId: invoice.id, companyIdNumber: company.id };
     });
-  }
-
-  const payment = await prisma.payment.create({
-    data: paymentDate,
-    select: {
-      id: true,
-    }
-  });
-
-  const invoice = await prisma.invoice.create({
-    data: {
-      date: timestampInSeconds(invoiceData.date),
-      eventType: invoiceData.eventType,
-      paymentReason: invoiceData.paymentReason,
-      description: invoiceData.description,
-      vendorOrSupplier: invoiceData.vendorOrSupplier,
-      companyId: company.id,
-      paymentId: payment.id,
-    }
-  });
-
-  return { invoiceId: invoice.id, companyIdNumber: company.id };
+    return result;
   } catch (error) {
-    // console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -70,36 +71,38 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
 async function safeToJournal(journalId:number | null, invoiceId: number, aichResultId: string, projectId: number | null, contractId: number | null, companyId: number) {
   // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
   try {
-    if (!journalId) {
-      await prisma.journal.create({
-        data: {
-          invoiceId,
-          aichResultId,
-          projectId,
-          contractId,
-          companyId,
-        },
-      });
-    } else {
-      await prisma.journal.upsert({
-        where: {
-          id: journalId,
-        },
-        update: {
-          invoiceId,
-          aichResultId,
-          projectId,
-          contractId,
-        },
-        create: {
-          invoiceId,
-          aichResultId,
-          projectId,
-          contractId,
-          companyId,
-        },
-      });
-    }
+    await prisma.$transaction(async () => {
+      if (!journalId) {
+        await prisma.journal.create({
+          data: {
+            invoiceId,
+            aichResultId,
+            projectId,
+            contractId,
+            companyId,
+          },
+        });
+      } else {
+        await prisma.journal.upsert({
+          where: {
+            id: journalId,
+          },
+          update: {
+            invoiceId,
+            aichResultId,
+            projectId,
+            contractId,
+          },
+          create: {
+            invoiceId,
+            aichResultId,
+            projectId,
+            contractId,
+            companyId,
+          },
+        });
+      }
+    });
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
