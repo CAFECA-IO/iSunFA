@@ -31,7 +31,7 @@ const DashboardOverview = () => {
   React.useEffect(() => {
     if (getSuccess && profitInsight) {
       setDashboardOverview({
-        profitGrowthRate: profitInsight.profitGrowthRate * 100,
+        profitGrowthRate: profitInsight.profitChange * 100,
         projectROI: (profitInsight.topProjectRoi * 100).toString(),
         preLaunchProjects: profitInsight.preLaunchProject,
       });

@@ -1,11 +1,14 @@
-/* eslint-disable */
 import { useRef, useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { FiRotateCw, FiCrop } from 'react-icons/fi';
 import { PiCameraLight } from 'react-icons/pi';
 import { GrLinkNext } from 'react-icons/gr';
 import { TbArrowBackUp } from 'react-icons/tb';
+
+// ToDo: (20240523 - Luphia) fix loop import issue
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
+
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -173,7 +176,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       // const resultIdIndex = result.resultId.lastIndexOf(':');
       // const resultId = result.resultId.substring(resultIdIndex + 1).trim();
       // Info: (20240522 - Julian) 因 API response 格式改變，所以修改取得 resultId 的方式
-      const resultId = results.resultId;
+      const { resultId } = results;
 
       messageModalDataHandler({
         title: 'Upload Successful',

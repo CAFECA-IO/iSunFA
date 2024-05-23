@@ -28,14 +28,12 @@ describe('Result API Handler Tests', () => {
     req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    const expectedPayload = expect.arrayContaining([
-      expect.objectContaining({
-        income: expect.any(Number),
-        expenses: expect.any(Number),
-        date: expect.any(Date),
-        profit: expect.any(Number),
-      }),
-    ]);
+    const expectedPayload = {
+      startDate: expect.any(Number),
+      endDate: expect.any(Number),
+      categories: expect.arrayContaining([expect.any(String)]),
+      series: expect.arrayContaining([expect.any(Number)]),
+    };
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
@@ -43,6 +41,20 @@ describe('Result API Handler Tests', () => {
         code: expect.stringContaining('200'),
         message: expect.any(String),
         payload: expectedPayload,
+      })
+    );
+  });
+  it('should return error if not GET', async () => {
+    req.method = 'POST';
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(405);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        powerby: expect.any(String),
+        success: expect.any(Boolean),
+        code: expect.stringContaining('405'),
+        message: expect.any(String),
+        payload: expect.any(Object),
       })
     );
   });
