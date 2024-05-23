@@ -222,7 +222,7 @@ const IncomeExpenseTrendChart = () => {
     success: getSuccess,
     code: getCode,
     error: getError,
-  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.PROFIT_GET_TREND_IN_PERIOD, {
+  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD, {
     params: {
       companyId,
     },
@@ -241,6 +241,8 @@ const IncomeExpenseTrendChart = () => {
         period,
       },
     });
+
+    // ToDo: remove dummy data (20240523 - Luphia)
     setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[period]);
   };
 
@@ -255,6 +257,9 @@ const IncomeExpenseTrendChart = () => {
         type: ToastType.ERROR,
         closeable: true,
       });
+
+      // ToDo: remove dummy data (20240523 - Luphia)
+      setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[selectedPeriod]);
     }
   }, [getSuccess, getCode, getError, profitMarginTrendInPeriodData]);
 

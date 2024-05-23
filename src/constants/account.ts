@@ -9,6 +9,7 @@ export enum ProgressStatus {
   INVALID_INPUT = 'invalidInput',
   LLM_ERROR = 'llmError',
   SYSTEM_ERROR = 'systemError',
+  PAUSED = 'paused',
 }
 
 export enum EventType {

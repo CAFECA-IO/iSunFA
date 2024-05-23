@@ -33,8 +33,17 @@ async function getUnprocessJournal(companyId: number) {
         },
       },
     });
-
-    const journals = journalDatas.filter((journalData): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } => journalData.ocr !== null);
+    // Info: update by tzuhan for npm run build checked 需要 Murky 協助更新 (20240523 - Tzuhan)
+    const journals = journalDatas.filter(
+      (journalData: {
+        id: number;
+        aichResultId: string;
+        createdAt: Date;
+        ocr: { createdAt: Date; imageName: string; imageUrl: string; imageSize: number } | null;
+      }): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } =>
+        // eslint-disable-next-line implicit-arrow-linebreak
+        journalData.ocr !== null
+    );
     return journals;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASRE_READ_FAILED_ERROR);
@@ -95,22 +104,30 @@ export default async function handler(
         const journalDatas = await getUnprocessJournal(companyIdNumber);
 
         const unprocessJournals: IUnprocessedJournal[] = await Promise.all(
-          journalDatas.map(async (journalData) => {
-            const aichResultId = journalData.aichResultId as string;
-            const status = await fetchStatus(aichResultId);
-            const progress = calculateProgress(journalData.ocr.createdAt, status);
-            const result = {
-              id: journalData.id,
-              aichResultId: journalData.aichResultId,
-              imageName: journalData.ocr.imageName,
-              imageUrl: journalData.ocr.imageUrl,
-              imageSize: journalData.ocr.imageSize,
-              progress,
-              status,
-              createdAt: timestampInSeconds(journalData.createdAt.getTime()),
-            } as IUnprocessedJournal;
-            return result;
-          })
+          // Info: update by tzuhan for npm run build checked 需要 Murky 協助更新 (20240523 - Tzuhan)
+          journalDatas.map(
+            async (journalData: {
+              aichResultId: string;
+              ocr: { createdAt: Date; imageName: string; imageUrl: string; imageSize: number };
+              id: number;
+              createdAt: { getTime: () => number };
+            }) => {
+              const aichResultId = journalData.aichResultId as string;
+              const status = await fetchStatus(aichResultId);
+              const progress = calculateProgress(journalData.ocr.createdAt, status);
+              const result = {
+                id: journalData.id,
+                aichResultId: journalData.aichResultId,
+                imageName: journalData.ocr.imageName,
+                imageUrl: journalData.ocr.imageUrl,
+                imageSize: `${journalData.ocr.imageSize} KB`,
+                progress,
+                status,
+                createdAt: timestampInSeconds(journalData.createdAt.getTime()),
+              } as IUnprocessedJournal;
+              return result;
+            }
+          )
         );
 
         const { httpCode, result } = formatApiResponse<IUnprocessedJournal[]>(
