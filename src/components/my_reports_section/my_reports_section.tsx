@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -12,6 +12,11 @@ import {
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { ToastType } from '@/interfaces/toastify';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -19,11 +24,25 @@ enum SortingType {
 }
 
 const MyReportsSection = () => {
+  const { toastHandler } = useGlobalCtx();
+  const { companyId } = useAccountingCtx();
+  const {
+    data: pendingReports,
+    code: listPendingCode,
+    success: listPendingSuccess,
+  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, { params: { companyId } });
+  const {
+    data: generatedReports,
+    code: listGeneratedCode,
+    success: listGeneratedSuccess,
+  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, { params: { companyId } });
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
@@ -33,10 +52,37 @@ const MyReportsSection = () => {
 
   const isPendingDataLoading = false;
   const isHistoryDataLoading = false;
-  const pendingData: IPendingReportItem[] = FIXED_DUMMY_PENDING_REPORT_ITEMS;
-  const historyData: IGeneratedReportItem[] = FIXED_DUMMY_GENERATED_REPORT_ITEMS;
+
   const pendingTotalPages = 1;
   const historyTotalPages = 1;
+
+  useEffect(() => {
+    if (listPendingSuccess && pendingReports) {
+      setPendingData(pendingReports);
+    } else if (listPendingSuccess === false) {
+      toastHandler({
+        id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
+        closeable: true,
+      });
+      setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
+    }
+  }, [listPendingSuccess, listPendingCode, pendingReports]);
+
+  useEffect(() => {
+    if (listGeneratedSuccess && generatedReports) {
+      setHistoryData(generatedReports);
+    } else if (listGeneratedSuccess === false) {
+      toastHandler({
+        id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
+        closeable: true,
+      });
+      setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
+    }
+  }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
   const {
     targetRef: pendingSortMenuRef,
