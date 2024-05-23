@@ -29,7 +29,7 @@ describe('Result API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = expect.objectContaining({
-      profitGrowthRate: expect.any(Number),
+      profitChange: expect.any(Number),
       topProjectRoi: expect.any(Number),
       preLaunchProject: expect.any(Number),
     });

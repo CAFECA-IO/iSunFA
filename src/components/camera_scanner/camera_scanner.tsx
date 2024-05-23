@@ -4,17 +4,21 @@ import { FiRotateCw, FiCrop } from 'react-icons/fi';
 import { PiCameraLight } from 'react-icons/pi';
 import { GrLinkNext } from 'react-icons/gr';
 import { TbArrowBackUp } from 'react-icons/tb';
-// import { useGlobalCtx } from '@/contexts/global_context';
+
+// ToDo: (20240523 - Luphia) fix loop import issue
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { Button } from '@/components/button/button';
-// import { MessageType } from '@/interfaces/message_modal';
+import { MessageType } from '@/interfaces/message_modal';
 
 // Info: (20240506 - Julian) const
-const width = 320;
-const height = 356;
+const PHOTO_WIDTH = 320;
+const PHOTO_HEIGHT = 356;
 interface ICameraScannerProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
@@ -27,7 +31,7 @@ enum ScannerStep {
 }
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
-  // const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { companyId, setInvoiceIdHandler } = useAccountingCtx();
   const {
     trigger: uploadInvoice,
@@ -35,7 +39,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     error: uploadError,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus[]>(APIName.INVOCIE_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus>(APIName.INVOCIE_UPLOAD, {}, false, false);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -58,7 +62,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
     const ctx = photo?.getContext('2d');
     if (!ctx || !camera) return;
-    ctx.drawImage(camera, 0, 0, width, height);
+    ctx.drawImage(camera, 0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
 
     setCurrentStep(ScannerStep.Preview); // Info: (20240507 - Julian) 轉成預覽模式
   };
@@ -83,8 +87,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     navigator.mediaDevices
       .getUserMedia({
         video: {
-          width,
-          height,
+          width: PHOTO_WIDTH,
+          height: PHOTO_HEIGHT,
           deviceId: 'default',
           facingMode: 'environment', // Info: (20240507 - Julian) 使用後置鏡頭
         },
@@ -115,17 +119,6 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
     // Info: (20240506 - Julian) 關閉面板
     modalVisibilityHandler();
-
-    // Info: (20240507 - Julian) 叫出成功訊息
-    /*     messageModalDataHandler({
-      title: 'Upload Successful',
-      content: '',
-      messageType: MessageType.SUCCESS,
-      submitBtnStr: 'Done',
-      submitBtnFunction: () => setInvoiceIdHandler(resultId),
-      backBtnStr: 'Back',
-    });
-    messageModalVisibilityHandler(); */
   };
 
   // Info: (20240506 - Julian) 上傳照片
@@ -157,14 +150,19 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   useEffect(() => {
     if (!isModalVisible) return; // Info: 在 modal 隱藏時，不做任何事情 (20240523 - Shirley)
+
+    // Info: (20240522 - Julian) 清空 invoiceId
+    setInvoiceIdHandler(undefined);
+
     if (isModalVisible) {
       // Info: (20240506 - Julian) 版面重啟時，將步驟設定為相機模式，並開啟攝影機
       setCurrentStep(ScannerStep.Camera);
       getCameraVideo();
     }
-    if (uploadSuccess && results && results.length > 0) {
-      // eslint-disable-next-line no-console
-      console.log('results: ', results);
+  }, [isModalVisible]);
+
+  useEffect(() => {
+    if (uploadSuccess && results) {
       /**   TODO: 可能需要調整 resultId 的解析 (20240508 - tzuhan)
        * 目前的回傳格式
         {
@@ -177,16 +175,39 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
             "status": "inProgress"
         }
        */
-      const result = results[0];
-      const resultIdIndex = result.resultId.lastIndexOf(':');
-      const resultId = result.resultId.substring(resultIdIndex + 1).trim();
-      setInvoiceIdHandler(resultId);
-    } else {
+      // const result = results[0];
+      // const resultIdIndex = result.resultId.lastIndexOf(':');
+      // const resultId = result.resultId.substring(resultIdIndex + 1).trim();
+      // Info: (20240522 - Julian) 因 API response 格式改變，所以修改取得 resultId 的方式
+      const { resultId } = results;
+
+      messageModalDataHandler({
+        title: 'Upload Successful',
+        content: '',
+        messageType: MessageType.SUCCESS,
+        submitBtnStr: 'Done',
+        submitBtnFunction: () => {
+          setInvoiceIdHandler(resultId);
+          messageModalVisibilityHandler();
+        },
+      });
+      messageModalVisibilityHandler();
+    } else if (uploadError && uploadCode) {
+      // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
+      messageModalDataHandler({
+        title: 'Upload Invoice Failed',
+        content: `Upload invoice failed: ${uploadCode}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+
       // Info: TODO error handling @Julian (20240513 - tzuhan)
       // eslint-disable-next-line no-console
       console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }
-  }, [uploadSuccess, results, isModalVisible]);
+  }, [uploadSuccess, results, isModalVisible, uploadError, uploadCode]);
 
   useEffect(() => {
     // Info: (20240507 - Julian) 如果從相簿選擇照片，則將照片顯示在 canvas 上，並轉為預覽模式
@@ -199,7 +220,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         img.onload = () => {
           const ctx = photo?.getContext('2d');
           if (!ctx) return;
-          ctx.drawImage(img, 0, 0, width, height);
+          ctx.drawImage(img, 0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
         };
       };
       reader.readAsDataURL(uploadImage);
@@ -218,8 +239,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       {/* Info: (20240506 - Julian) 顯示拍照後的畫面 */}
       <canvas
         ref={photoRef}
-        width={width}
-        height={height}
+        width={PHOTO_WIDTH}
+        height={PHOTO_HEIGHT}
         className={isCameraMode ? 'hidden' : 'block'}
       ></canvas>
 
@@ -227,8 +248,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       <video
         ref={cameraRef}
         id="user-camera"
-        width={width}
-        height={height}
+        width={PHOTO_WIDTH}
+        height={PHOTO_HEIGHT}
         className={`relative ${isCameraMode ? 'block' : 'hidden'}`}
         playsInline
         muted

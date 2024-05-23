@@ -1,11 +1,12 @@
 import prisma from '@/client';
-import { ErrorMessage, SuccessMessage } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ONE_DAY_IN_MS } from '@/constants/time';
 import { ICompany } from '@/interfaces/company';
 import { IInvitation } from '@/interfaces/invitation';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { getSession } from '@/lib/utils/get_session';
 import MailService from '@/lib/utils/mail_service';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { SendMailOptions } from 'nodemailer';
@@ -59,10 +60,11 @@ export default async function handler(
     if (req.method === 'POST') {
       // Extract the necessary data from the request body
       const { roleId, emails } = req.body;
-      const { companyId } = req.query;
-      const { userid } = req.headers;
+      const session = await getSession(req, res);
+      const { companyId } = session;
+      const { userId } = session;
 
-      const userIdNum = Number(userid);
+      const userIdNum = Number(userId);
       const companyIdNum = Number(companyId);
       const roleIdNum = Number(roleId);
       // Perform any necessary validation on the data
@@ -72,7 +74,7 @@ export default async function handler(
         },
       })) as IUser;
       if (!user) {
-        throw new Error(ErrorMessage.RESOURCE_NOT_FOUND);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
       const company: ICompany = (await prisma.company.findUnique({
         where: {
@@ -80,12 +82,12 @@ export default async function handler(
         },
       })) as ICompany;
       if (!company) {
-        throw new Error(ErrorMessage.RESOURCE_NOT_FOUND);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
       // Todo: (20240520 - Jacky) Check the user has the necessary permissions to create an invitation code
       // If the user does not have the necessary permissions, return a 403 Forbidden response
       if (!emails) {
-        throw new Error(ErrorMessage.INVALID_INPUT_PARAMETER);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const errors: string[] = [];
       const InvitationPromises: Promise<IInvitation>[] = [];
@@ -115,15 +117,15 @@ export default async function handler(
         }
       }
       if (errors.length > 0) {
-        throw new Error(ErrorMessage.INTERNAL_SERVICE_ERROR);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
       const { httpCode, result } = formatApiResponse<IInvitation[]>(
-        SuccessMessage.CREATED,
+        STATUS_MESSAGE.CREATED,
         invitations
       );
       res.status(httpCode).json(result);
     } else {
-      throw new Error(ErrorMessage.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

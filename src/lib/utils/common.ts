@@ -267,7 +267,10 @@ export const firstCharToUpperCase = (str: string): string => {
  * @returns timestamp in seconds
  */
 export const timestampInSeconds = (timestamp: number): number => {
-  return Math.floor(timestamp / 1000);
+  if (timestamp > 10000000000) {
+    return Math.floor(timestamp / 1000);
+  }
+  return timestamp;
 };
 
 export const countdown = (remainingSeconds: number) => {
