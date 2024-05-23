@@ -177,7 +177,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
       messageModalDataHandler({
         title: 'Upload Successful',
-        content: '',
+        content: results.status,
         messageType: MessageType.SUCCESS,
         submitBtnStr: 'Done',
         submitBtnFunction: () => {

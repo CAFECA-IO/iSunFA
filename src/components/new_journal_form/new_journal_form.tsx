@@ -121,7 +121,7 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [invoiceId, invoices]);
+  }, [getInvoiceSuccess, invoiceId, invoices]);
 
   const {
     isLoading: isStatusLoading,
