@@ -185,6 +185,31 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const ProfitTrendChart = () => {
+  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+   * */
+  const { companyId } = useAccountingCtx();
+  const {
+    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
+      trigger: getProfitTrendInPeriod,
+  */
+    data: profitTrendInPeriodData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<IProfitTrendChartData>(
+    APIName.PROFIT_GET_TREND_IN_PERIOD,
+    {
+      params: {
+        companyId,
+      },
+      query: {
+        period: Period.WEEK,
+      },
+    },
+    false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+    false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
+  );
+  const [reload, setReload] = React.useState(true);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 

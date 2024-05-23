@@ -1,22 +1,23 @@
 export interface IProject {
-  id: string;
+  id: number;
+  companyId: number;
   name: string;
-  value: IProjectValue;
-  completionPercent: number;
-  milestones: IMilestone[];
-  salesData: ISalesData[];
-  workerRate: IWorkerRate[];
-  members: string[];
+  completedPercent: number;
+  stage: string;
+  members: IMember[];
 }
 
-interface IMilestone {
-  id: string;
+export interface IMilestone {
+  id: number;
+  projectId: number;
   startDate: number; // timestamp
   endDate: number;
   status: string;
 }
 
-interface IProjectValue {
+export interface IValue {
+  id: number;
+  projectId: number;
   totalRevenue: number;
   totalRevenueGrowthIn30d: number;
   totalExpense: number;
@@ -25,16 +26,24 @@ interface IProjectValue {
   netProfitGrowthInYear: number;
 }
 
-interface ISalesData {
+export interface ISale {
+  id: number;
+  projectId: number;
   date: string;
   totalSales: number;
   comparison: number;
 }
 
-interface IWorkerRate {
-  id: string;
+export interface IWorkRate {
+  id: number;
+  projectId: number;
   name: string;
   avatar: string;
   involvementRate: number;
   hours: number;
+}
+
+interface IMember {
+  name: string;
+  imageId: string;
 }

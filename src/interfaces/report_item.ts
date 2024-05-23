@@ -176,8 +176,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     createdTimestamp: 1713815673,
     period: { startTimestamp: 1715616000, endTimestamp: 1718208000 },
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportType: FinancialReportTypesKey.balance_sheet,
@@ -192,8 +191,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: 'hnhirr', name: 'TideBit', code: 'TB' },
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     type: 'financial',
@@ -206,8 +204,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: '25ptrg', name: 'iSunFA', code: 'IS' },
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     type: 'financial',
@@ -220,8 +217,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     type: 'financial',
@@ -234,8 +230,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: '3xza6b', name: 'BAIFA', code: 'BF' },
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     type: 'financial',

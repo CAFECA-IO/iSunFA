@@ -5,7 +5,11 @@ import { FiRotateCw, FiCrop } from 'react-icons/fi';
 import { PiCameraLight } from 'react-icons/pi';
 import { GrLinkNext } from 'react-icons/gr';
 import { TbArrowBackUp } from 'react-icons/tb';
+
+// ToDo: (20240523 - Luphia) fix loop import issue
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
+
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -36,7 +40,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     error: uploadError,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus>(APIName.INVOCIE_UPLOAD, {}, false, false);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -146,8 +150,11 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   };
 
   useEffect(() => {
+    if (!isModalVisible) return; // Info: 在 modal 隱藏時，不做任何事情 (20240523 - Shirley)
+
     // Info: (20240522 - Julian) 清空 invoiceId
     setInvoiceIdHandler(undefined);
+
     if (isModalVisible) {
       // Info: (20240506 - Julian) 版面重啟時，將步驟設定為相機模式，並開啟攝影機
       setCurrentStep(ScannerStep.Camera);
@@ -173,7 +180,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       // const resultIdIndex = result.resultId.lastIndexOf(':');
       // const resultId = result.resultId.substring(resultIdIndex + 1).trim();
       // Info: (20240522 - Julian) 因 API response 格式改變，所以修改取得 resultId 的方式
-      const resultId = results.resultId;
+      const { resultId } = results;
 
       messageModalDataHandler({
         title: 'Upload Successful',
@@ -196,6 +203,10 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
+
+      // Info: TODO error handling @Julian (20240513 - tzuhan)
+      // eslint-disable-next-line no-console
+      console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }
   }, [uploadSuccess, results, isModalVisible, uploadError, uploadCode]);
 
