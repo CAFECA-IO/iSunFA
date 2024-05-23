@@ -248,6 +248,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       getUserByIdAPI({ header: { userId: credentialId }, body: { credential: credentialId } });
     } catch (error) {
+      // Deprecated: remove console.log (20240523 - Luphia)
       // eslint-disable-next-line no-console
       console.error('getUserById error:', error);
     }
@@ -339,6 +340,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     if (signUpSuccess === false) {
       setIsSignInError(true);
+      // Deprecated: remove console.log (20240523 - Luphia)
       // eslint-disable-next-line no-console
       console.log('signUpError:', signUpError);
 
@@ -361,6 +363,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     if (signInSuccess === false) {
       setIsSignInError(true);
+      // Deprecated: remove console.log (20240523 - Luphia)
       // eslint-disable-next-line no-console
       console.log('signInError:', signInError, `signInCode:`, signInCode);
       setErrorCode(signInCode ?? '');
