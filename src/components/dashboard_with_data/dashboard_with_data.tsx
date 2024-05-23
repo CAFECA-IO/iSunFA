@@ -21,13 +21,13 @@ const DashboardWithData = () => {
           </div>
 
           <div className="mt-10">
-            <IncomeExpenseTrendChart />
+            <ProjectProgressChart />
           </div>
         </div>
 
         <div>
           <div className="">
-            <ProjectProgressChart />
+            <IncomeExpenseTrendChart />
           </div>
           <div className="mt-10">
             <ProjectRoiComparisonChart />
