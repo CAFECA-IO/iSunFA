@@ -122,7 +122,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // TODO: 調整呼叫 getUser API (20240522 - Shirley)
   const {
-    trigger: getUserByIdAPI,
     data: getUserByIdData,
     error: getUserByIdError,
     success: getUserByIdSuccess,
