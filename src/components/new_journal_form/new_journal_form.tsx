@@ -348,12 +348,12 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: selectedUnprocessedJournal!.id,
+      invoiceId: `${selectedUnprocessedJournal!.id}`,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
       description: inputDescription,
-      venderOrSupplier: inputVendor,
+      vendorOrSupplier: inputVendor,
       project: selectedProject.name,
       projectId: selectedProject.id,
       contract: selectedContract.name,

@@ -1,26 +1,134 @@
-import { IInvoice } from '@/interfaces/invoice';
-import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
-import formidable from 'formidable';
-import { parseForm } from '@/lib/utils/parse_image_form';
-import { promises as fs } from 'fs';
-import { AICH_URI } from '@/constants/config';
-// import { RESPONSE_STATUS_MESSAGE } from '@/constants/STATUS_MESSAGE';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 
-// Info Murky (20240424) 要使用formidable要先關掉bodyParsor
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
+import { IInvoice, IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
+import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
+import { IResponseData } from '@/interfaces/response_data';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import prisma from '@/client';
+
+import { AICH_URI } from '@/constants/config';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
+
+async function invoiceSaveToPrisma(
+  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB,
+  companyId: number
+) {
+  const {
+    payment: paymentDate,
+    project,
+    projectId,
+    contract,
+    contractId,
+    journalId,
+    ...invoiceData
+  } = invoiceDataForSavingToDB;
+
+  // Depreciate ( 20240522 - Murky ) For demo purpose, create company if not exist
+  try {
+    const result = await prisma.$transaction(async () => {
+      let company = await prisma.company.findUnique({
+        where: {
+          id: companyId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!company) {
+        company = await prisma.company.create({
+          data: {
+            id: companyId,
+            code: 'COMP123',
+            name: 'Company Name',
+            regional: 'Regional Name',
+          },
+          select: {
+            id: true,
+          },
+        });
+      }
+
+      const payment = await prisma.payment.create({
+        data: paymentDate,
+        select: {
+          id: true,
+        },
+      });
+
+      const invoice = await prisma.invoice.create({
+        data: {
+          date: timestampInSeconds(invoiceData.date),
+          eventType: invoiceData.eventType,
+          paymentReason: invoiceData.paymentReason,
+          description: invoiceData.description,
+          vendorOrSupplier: invoiceData.vendorOrSupplier,
+          companyId: company.id,
+          paymentId: payment.id,
+        },
+      });
+
+      return { invoiceId: invoice.id, companyIdNumber: company.id };
+    });
+    return result;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+async function safeToJournal(
+  journalId: number | null,
+  invoiceId: number,
+  aichResultId: string,
+  projectId: number | null,
+  contractId: number | null,
+  companyId: number
+) {
+  // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
+  try {
+    await prisma.$transaction(async () => {
+      if (!journalId) {
+        await prisma.journal.create({
+          data: {
+            invoiceId,
+            aichResultId,
+            projectId,
+            contractId,
+            companyId,
+          },
+        });
+      } else {
+        await prisma.journal.upsert({
+          where: {
+            id: journalId,
+          },
+          update: {
+            invoiceId,
+            aichResultId,
+            projectId,
+            contractId,
+          },
+          create: {
+            invoiceId,
+            aichResultId,
+            projectId,
+            contractId,
+            companyId,
+          },
+        });
+      }
+    });
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice[] | IAccountResultStatus[]>>
+  res: NextApiResponse<IResponseData<IInvoice[] | IAccountResultStatus>>
 ) {
   try {
     if (req.method === 'GET') {
@@ -32,7 +140,7 @@ export default async function handler(
           eventType: EventType.PAYMENT,
           paymentReason: 'purchase',
           description: 'description',
-          venderOrSupplier: 'vender',
+          vendorOrSupplier: 'vender',
           project: 'ISunFa',
           contract: 'ISunFa buy',
           projectId: '123',
@@ -58,7 +166,7 @@ export default async function handler(
           eventType: EventType.PAYMENT,
           paymentReason: 'sale',
           description: 'description',
-          venderOrSupplier: 'vender',
+          vendorOrSupplier: 'vender',
           project: 'ISunFa',
           contract: 'ISunFa buy',
           projectId: '123',
@@ -86,67 +194,43 @@ export default async function handler(
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
-      let files: formidable.Files;
-      try {
-        const parsedForm = await parseForm(req);
-        files = parsedForm.files;
-      } catch (error) {
-        throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
-      }
-
-      // Info (20240504 - Murky): fields會長會這樣
-      // fields {
-      //   project: [ '我的project' ],
-      //   projectId: [ 'project001' ],
-      //   contract: [ '我的contract' ],
-      //   contractId: [ 'contractId' ]
-      // }
-
+      const { companyId } = req.query;
       if (
-        !files ||
-        !files.image ||
-        !files.image.length
-        // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
-        // !fields ||
-        // !fields.project ||
-        // !fields.projectId ||
-        // !fields.contract ||
-        // !fields.contractId ||
-        // !Array.isArray(fields.project) ||
-        // !Array.isArray(fields.projectId) ||
-        // !Array.isArray(fields.contract) ||
-        // !Array.isArray(fields.contractId) ||
-        // !fields.project.length ||
-        // !fields.projectId.length ||
-        // !fields.contract.length ||
-        // !fields.contractId.length ||
-        // !(typeof fields.project[0] === 'string') ||
-        // !(typeof fields.projectId[0] === 'string') ||
-        // !(typeof fields.contract[0] === 'string') ||
-        // !(typeof fields.contractId[0] === 'string')
+        Array.isArray(companyId) ||
+        !companyId ||
+        typeof companyId !== 'string' ||
+        !Number.isInteger(Number(companyId))
       ) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
-      // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
-      const imageContent = await fs.readFile(files.image[0].filepath);
-      const imageBlob = new Blob([imageContent], { type: files.image[0].mimetype || undefined });
-      const imageName = files.image[0].filepath.split('/').pop() || 'unknown';
+      const invoice = req.body;
+      // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+      invoice.projectId = invoice.projectId ? invoice.projectId : 'None';
+      invoice.contractId = invoice.contractId ? invoice.contractId : 'None';
+      invoice.project = invoice.project ? invoice.project : 'None';
+      invoice.contract = invoice.contract ? invoice.contract : 'None';
 
-      const formData = new FormData();
-      formData.append('image', imageBlob);
-      formData.append('imageName', imageName);
-      // Info: (20240521 - Tzuahan) 跟 Murky 討論後，決定不需要檢查這些
-      // formData.append('project', fields.project[0]);
-      // formData.append('projectId', fields.projectId[0]);
-      // formData.append('contract', fields.contract[0]);
-      // formData.append('contractId', fields.contractId[0]);
+      // Info Murky (20240416): Check if invoices is array and is Invoice type
+      if (Array.isArray(invoice) || !isIInvoiceDataForSavingToDB(invoice)) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+      }
 
+      // ToDo: save to prisma
+      const { invoiceId, companyIdNumber } = await invoiceSaveToPrisma(invoice, Number(companyId));
+
+      // Post to AICH
       let fetchResult: Response;
+
       try {
-        fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
+        const { journalId, ...invoiceData } = invoice;
+
+        fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
           method: 'POST',
-          body: formData,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
         });
       } catch (error) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
@@ -156,13 +240,31 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
       }
 
-      const resultJson: IAccountResultStatus[] = (await fetchResult.json()).payload;
+      const resultStatus: IAccountResultStatus = (await fetchResult.json()).payload;
 
-      const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
-        STATUS_MESSAGE.CREATED,
-        resultJson
+      if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+      }
+
+      // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+      const projectId = !Number.isNaN(Number(invoice.projectId)) ? Number(invoice.projectId) : null;
+      const contractId = !Number.isNaN(Number(invoice.contractId))
+        ? Number(invoice.contractId)
+        : null;
+
+      await safeToJournal(
+        invoiceId,
+        invoiceId,
+        resultStatus.resultId,
+        projectId,
+        contractId,
+        companyIdNumber
       );
 
+      const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
+        STATUS_MESSAGE.CREATED,
+        resultStatus
+      );
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
