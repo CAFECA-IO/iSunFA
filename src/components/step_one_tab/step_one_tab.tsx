@@ -15,35 +15,43 @@ import Pagination from '../pagination/pagination';
 const dummyFileList: IUnprocessedJournal[] = [
   {
     id: 'invoiceId-0001',
+    aichResultId: 'invoiceId-0001',
     imageName: 'invoice_0001.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '100 KB',
     progress: 100,
     status: ProgressStatus.SUCCESS,
+    createdAt: Date.now(),
   },
   {
     id: 'invoiceId-0002',
+    aichResultId: 'invoiceId-0002',
     imageName: 'invoice_0002.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '150 KB',
     progress: 82,
     status: ProgressStatus.IN_PROGRESS,
+    createdAt: Date.now(),
   },
   {
     id: 'invoiceId-0003',
+    aichResultId: 'invoiceId-0003',
     imageName: 'invoice_0003.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '175 KB',
     progress: 40,
     status: ProgressStatus.PAUSED,
+    createdAt: Date.now(),
   },
   {
     id: 'invoiceId-0004',
+    aichResultId: 'invoiceId-0004',
     imageName: 'invoice_0004.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '200 KB',
     progress: 30,
     status: ProgressStatus.LLM_ERROR,
+    createdAt: Date.now(),
   },
 ];
 const totalPages = 10;

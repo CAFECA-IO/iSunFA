@@ -149,8 +149,11 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   };
 
   useEffect(() => {
+    if (!isModalVisible) return; // Info: 在 modal 隱藏時，不做任何事情 (20240523 - Shirley)
+
     // Info: (20240522 - Julian) 清空 invoiceId
     setInvoiceIdHandler(undefined);
+
     if (isModalVisible) {
       // Info: (20240506 - Julian) 版面重啟時，將步驟設定為相機模式，並開啟攝影機
       setCurrentStep(ScannerStep.Camera);

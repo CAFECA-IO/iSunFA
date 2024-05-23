@@ -25,6 +25,9 @@ interface PieChartProps {
   data: PieChartData;
 }
 
+const originalColors = ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'];
+// const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7']; // TODO: implement hover colors (20240523 - Shirley)
+
 const PieChart = ({ data }: PieChartProps) => {
   const globalCtx = useGlobalCtx();
   const [chartWidth, setChartWidth] = useStateRef(580);
@@ -94,20 +97,84 @@ const PieChart = ({ data }: PieChartProps) => {
       id: 'labor-cost-chart',
       type: 'pie',
     },
-    colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
-
+    colors: originalColors,
     labels: data.categories,
     legend: {
       position: legendPosition,
       offsetY,
       offsetX: -30,
       markers: {
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        width: 20,
+        height: 12,
+        radius: 0,
       },
       width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
       height: 140,
+    },
+    tooltip: {
+      enabled: true,
+      y: {
+        formatter: (value: number) => {
+          return `${value.toString()}`;
+        },
+
+        // Info: 自己去算百分比然後顯示在 tooltip 上 (20240523 - Shirley)
+        // formatter: (value: number, { seriesIndex, w }: { seriesIndex: number; w: any }) => {
+        //   const total = data.series.reduce((a: number, b: number) => a + b, 0);
+        //   const percent = Math.round((value / total) * 100);
+        //   return `${percent.toFixed(2)}%`;
+        // },
+        // title: {
+        //   formatter: function () {
+        //     return '';
+        //   },
+        // },
+      },
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
+      },
+      fillSeriesColor: false,
+      fixed: {
+        enabled: true,
+        position: 'topRight',
+      },
+      theme: 'dark',
+    },
+    dataLabels: {
+      enabled: true,
+      style: {
+        colors: ['#001840'],
+      },
+      dropShadow: {
+        enabled: false,
+      },
+    },
+    fill: {
+      colors: originalColors,
+    },
+    states: {
+      hover: {
+        filter: {
+          type: 'darken',
+          value: 0.85,
+        },
+      },
+      active: {
+        allowMultipleDataPointsSelection: false,
+        filter: {
+          type: 'darken',
+          value: 0.85,
+        },
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '70%',
+        },
+        expandOnClick: true,
+      },
     },
   };
 

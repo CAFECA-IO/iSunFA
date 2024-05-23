@@ -14,8 +14,6 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
-import { getSession } from '@/lib/utils/get_session';
-import { GetServerSideProps } from 'next';
 
 export const getServerSideProps: GetServerSideProps<{ userId: string | null }> = async ({
   req,

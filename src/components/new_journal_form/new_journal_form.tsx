@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice } from '@/interfaces/invoice';
+import { IInvoice, IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
   PaymentPeriodType,
@@ -67,15 +67,23 @@ const NewJournalForm = () => {
     setVoucherPreviewHandler,
   } = useAccountingCtx();
 
+  const aichResultId = selectedUnprocessedJournal?.aichResultId;
+
   // Info: (20240508 - Julian) call API to get invoice data
   const {
-    data: OCRResult,
     success: getSuccess,
+    trigger: getOCRResult, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
+    data: OCRResult,
     code: getCode,
-  } = APIHandler<{ [key: string]: unknown }>(APIName.OCR_RESULT_GET_BY_ID, {
-    // TODO: update with IInvoiceDataForSavingToDB
-    params: { resultId: selectedUnprocessedJournal?.id },
-  });
+  } = APIHandler<IInvoiceDataForSavingToDB>(
+    APIName.OCR_RESULT_GET_BY_ID,
+    {
+      // TODO: update with IInvoiceDataForSavingToDB
+      params: { resultId: selectedUnprocessedJournal?.id },
+    },
+    false,
+    false
+  );
 
   const {
     trigger: voucherUpload,
@@ -93,6 +101,9 @@ const NewJournalForm = () => {
   );
 
   useEffect(() => {
+    if (aichResultId !== undefined && getSuccess === undefined) {
+      getOCRResult({ params: { resultId: aichResultId } });
+    }
     if (getSuccess === false) {
       // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
       messageModalDataHandler({
@@ -181,6 +192,22 @@ const NewJournalForm = () => {
   //     }
   //   }
   // }, [isLoading, invoices]);
+
+  useEffect(() => {
+    if (OCRResult) {
+      // Info: (20240506 - Julian) 設定表單的預設值
+      setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
+      setSelectedEventType(OCRResult.eventType);
+      setInputPaymentReason(OCRResult.paymentReason);
+      setInputDescription(OCRResult.description);
+      setInputVendor(OCRResult.vendorOrSupplier);
+      setInputTotalPrice(OCRResult.payment.price);
+      setTaxToggle(OCRResult.payment.hasTax);
+      setTaxRate(OCRResult.payment.taxPercentage);
+      setFeeToggle(OCRResult.payment.hasFee);
+      setInputFee(OCRResult.payment.fee);
+    }
+  }, [OCRResult]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {

@@ -23,7 +23,7 @@ export function generateDashboardOverview(): IDashboardOverview {
 }
 
 export const DUMMY_DASHBOARD_OVERVIEW: IDashboardOverview = {
-  profitGrowthRate: 22,
-  projectROI: '495 K',
+  profitGrowthRate: -8,
+  projectROI: '22',
   preLaunchProjects: 10,
 };
