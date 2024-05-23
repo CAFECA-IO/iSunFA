@@ -24,7 +24,8 @@ export enum APIName {
   COMPANY_ADD_BY_INVITATION_CODE = 'COMPANY_ADD_BY_INVITATION_CODE',
   COMPANY_SELECT = 'COMPANY_SELECT',
   PROFIT_GET_INSIGHT = 'PROFIT_GET_INSIGHT',
-  PROFIT_GET_TREND_IN_PERIOD = 'PROFIT_GET_TREND_IN_PERIOD',
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD = 'INCOME_EXPENSE_GET_TREND_IN_PERIOD',
+  LABOR_COST_CHART = 'LABOR_COST_CHART',
   PROJECT_LIST_PROGRESS = 'PROJECT_LIST_PROGRESS',
   PROJECT_LIST_PROFIT_COMPARISON = 'PROJECT_LIST_PROFIT_COMPARISON',
   INVOICE_UPLOAD = 'INVOICE_UPLOAD',
@@ -64,7 +65,8 @@ export enum APIPath {
   COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/company/invitation_code`,
   COMPANY_SELECT = `${apiPrefix}/company/:companyId/select`,
   PROFIT_GET_INSIGHT = `${apiPrefix}/company/:companyId/profit_insight`,
-  PROFIT_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend_value`,
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend`,
+  LABOR_COST_CHART = `${apiPrefix}/company/:companyId/labor_cost_chart`,
   PROJECT_LIST_PROGRESS = `${apiPrefix}/company/:companyId/project_progress`,
   PROJECT_LIST_PROFIT_COMPARISON = `${apiPrefix}/company/:companyId/profit_comparison`,
   INVOICE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
@@ -340,10 +342,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  PROFIT_GET_TREND_IN_PERIOD: {
-    name: APIName.PROFIT_GET_TREND_IN_PERIOD,
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD: {
+    name: APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
     method: HttpMethod.GET,
-    path: APIPath.PROFIT_GET_TREND_IN_PERIOD,
+    path: APIPath.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
     input: {
       header: {},
       body: {},
@@ -566,6 +568,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REPORT_GENERATE_ANALYSIS,
     method: HttpMethod.POST,
     path: APIPath.REPORT_GENERATE_ANALYSIS,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.LABOR_COST_CHART]: {
+    name: APIName.LABOR_COST_CHART,
+    method: HttpMethod.GET,
+    path: APIPath.LABOR_COST_CHART,
     input: {
       header: {},
       body: {},

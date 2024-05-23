@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
-import { generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
+import { ILaborCostChartData, generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
 import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -121,12 +125,24 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const LaborCostChart = () => {
-  // TODO: 串上 API (20240522 - Shirley)
+  // TODO: 串上 API (20240522 - Shirley) -> done by tzuhan (20240523)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const { toastHandler } = useGlobalCtx();
+  const { companyId } = useAccountingCtx();
+  const {
+    data: laborCostData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<ILaborCostChartData>(APIName.LABOR_COST_CHART, {
+    params: {
+      companyId,
+    },
+  });
 
   const displayedYear = maxDate.getFullYear();
 
@@ -146,14 +162,25 @@ const LaborCostChart = () => {
   })();
 
   useEffect(() => {
-    // Info: generate series when period change is done (20240418 - Shirley)
-    if (period.endTimeStamp !== 0) {
+    if (getSuccess && laborCostData) {
+      const { series: newSeries, categories: newCategories } = laborCostData;
+      setSeries(newSeries);
+      setCategories(newCategories);
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `labor-cost-chart-${getCode}`,
+        content: `Failed to get labor cost chart data. Error code: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+      // Todo: remove dummy data when api is ready (20240523 - tzuhan)
       const randomNum = Math.floor(Math.random() * 10);
       const newData = generateRandomLaborCostData(randomNum);
       setSeries(newData.series);
       setCategories(newData.categories);
     }
-  }, [period.endTimeStamp, period.startTimeStamp]);
+  }, [getSuccess, getCode, getError]);
 
   const data = {
     categories,

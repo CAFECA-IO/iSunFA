@@ -222,7 +222,7 @@ const IncomeExpenseTrendChart = () => {
     success: getSuccess,
     code: getCode,
     error: getError,
-  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.PROFIT_GET_TREND_IN_PERIOD, {
+  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD, {
     params: {
       companyId,
     },
@@ -241,7 +241,6 @@ const IncomeExpenseTrendChart = () => {
         period,
       },
     });
-    setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[period]);
   };
 
   useEffect(() => {
@@ -250,11 +249,12 @@ const IncomeExpenseTrendChart = () => {
     }
     if (getSuccess === false) {
       toastHandler({
-        id: `profit_margin_trend-${getCode}`,
-        content: `Failed to get profit margin trend. Error code: ${getCode}`,
+        id: `income_expense_trend-${getCode}`,
+        content: `Failed to get income/expense trend. Error code: ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
+      setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[selectedPeriod]);
     }
   }, [getSuccess, getCode, getError, profitMarginTrendInPeriodData]);
 
