@@ -16,9 +16,16 @@ export interface IVoucherMetaData {
   payment: IPayment;
 }
 
+// Depreciate: (20240524 - Murky) To Emily, To Julian IVoucher only contains lineItems
+// I use IVoucherDataForSavingToDB
 export interface IVoucher {
   voucherIndex: string;
   invoiceIndex: string; // 改在這裡
   metadatas: IVoucherMetaData[];
+  lineItems: ILineItem[];
+}
+
+export interface IVoucherDataForSavingToDB {
+  journalId?: number;
   lineItems: ILineItem[];
 }
