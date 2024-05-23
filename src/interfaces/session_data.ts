@@ -1,5 +1,5 @@
-import { ICompany } from './company';
-import { IUser } from './user';
+import { ICompany } from '@/interfaces/company';
+import { IUser } from '@/interfaces/user';
 
 export interface ISessionData {
   user: IUser;
