@@ -118,6 +118,7 @@ const useAPI = <Data>(
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
+        // Deprecated: debug log (20240523 - Tzuahan)
         // eslint-disable-next-line no-console
         console.log(`setCode: ${setCode}`, e);
         setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);

@@ -1,5 +1,5 @@
 export interface IProfitInsight {
-  profitGrowthRate: number;
+  profitChange: number;
   topProjectRoi: number;
   preLaunchProject: number;
 }
