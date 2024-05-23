@@ -165,6 +165,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await fetch('/api/v1/session');
       const data = (await response.json()) as IResponseData<{ user: IUser; company: ICompany }>;
+      // Deprecated: dev (20240607 - Shirley)
       // eslint-disable-next-line no-console
       console.log('userSession in refreshUserFromSession', data);
 
@@ -193,38 +194,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
+      // Deprecated: dev (20240607 - Shirley)
       // eslint-disable-next-line no-console
       console.log('data.payload.user in refreshUserFromSession', data.payload.user);
-
-      // setUserAuth(data.payload.user);
-      // setUsername(data.payload.user.name);
-      // setCredential(data.user.credentialId);
-      // setSignedIn(true);
-      // setIsSignInError(false);
-      // setIsSelectCompany(false);
-      // setSelectedCompany(null);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('userSession in refreshUserFromSession error:', error);
     }
-
-    // setUser(data.user);
-    // eslint-disable-next-line
-
-    // const session = getSession; // 假設 getSession 是異步並返回當前 session 對象
-    // console.log('refreshUserFromSession', session);
-    // // if (session && session.userId) {
-    // //   // const rs =
-    // //   // const { data: userData } = await APIHandler<IUser>({
-    // //   //   method: 'GET',
-    // //   //   url: `/api/user/${session.userId}`,
-    // //   // });
-    // //   // if (userData) {
-    // //   //   setUser(userData);
-    // //   // }
-    // // } else {
-    // //   // setUser(null);
-    // // }
   };
 
   const signUp = async ({ username: usernameForSignUp }: SignUpProps) => {
@@ -285,19 +261,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // const getUserById = async ({ credentialId }: { credentialId: string }) => {
-  //   try {
-  //     getUserByIdAPI({ header: { userId: credentialId }, body: { credential: credentialId } });
-  //   } catch (error) {
-  //     // eslint-disable-next-line no-console
-  //     console.error('getUserById error:', error);
-  //   }
-  // };
-
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
     refreshUserFromSession();
-    // getUserById({ credentialId: credentialRef.current || '' });
 
     const credentialFromCookie = await readFIDO2Cookie();
 
@@ -403,25 +369,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('signInError:', signInError);
     }
   }, [signInData, isSignInLoading, signInSuccess]);
-
-  // useEffect(() => {
-  //   if (isGetUserByIdLoading) return;
-
-  //   if (getUserByIdSuccess) {
-  //     if (getUserByIdData) {
-  //       setUsername(getUserByIdData.name);
-  //       setUserAuth(getUserByIdData);
-  //       setCredential(getUserByIdData.credentialId);
-  //       setSignedIn(true);
-  //       setIsSignInError(false);
-  //       writeFIDO2Cookie();
-  //     }
-  //   } else {
-  //     setIsSignInError(true);
-  //     // eslint-disable-next-line no-console
-  //     console.log('getUserByIdError:', getUserByIdError);
-  //   }
-  // }, [getUserByIdData, isGetUserByIdLoading, getUserByIdSuccess]);
 
   useEffect(() => {
     if (selectedCompany) {

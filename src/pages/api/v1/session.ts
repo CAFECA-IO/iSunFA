@@ -1,22 +1,3 @@
-// import { NextApiRequest, NextApiResponse } from 'next';
-// import { getSession } from '@/lib/utils/get_session';
-// import prisma from '@/client';
-
-// export default async function sessionHandler(req: NextApiRequest, res: NextApiResponse) {
-//   const session = await getSession(req, res);
-
-//   // eslint-disable-next-line no-console
-//   console.log('session in session API', session);
-//   if (session && session.userId) {
-//     const user = await prisma.user.findUnique({
-//       where: { id: session.userId },
-//     });
-//     res.status(200).json({ user });
-//   } else {
-//     res.status(200).json({ user: null });
-//   }
-// }
-
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
