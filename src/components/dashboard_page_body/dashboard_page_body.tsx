@@ -20,7 +20,7 @@ const DashboardPageBody = () => {
 
   return (
     <div className="bg-surface-neutral-main-background px-10 pb-20 pt-5 max-md:pt-10">
-      <div className="mt-10 flex w-full items-center justify-between gap-x-40px px-3 max-md:max-w-full max-md:px-5">
+      <div className="mt-10 flex w-full flex-col items-center justify-between gap-x-40px gap-y-20px max-md:max-w-full max-md:px-5 md:flex-row">
         {pageHeader} <DashboardBookmark />
       </div>
       <div className="">{displayedPageBody}</div>
