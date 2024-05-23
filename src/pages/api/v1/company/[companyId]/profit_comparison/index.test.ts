@@ -26,20 +26,21 @@ afterEach(() => {
 describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.query = { page: '1', limit: '10', startDate: '2024-04-01', endDate: '2024-05-01' };
+    req.query = {
+      currentPage: '1',
+      itemsPerPage: '10',
+      startDate: '2024-04-01',
+      endDate: '2024-05-01',
+    };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = expect.objectContaining({
-      startDate: expect.any(Date),
-      endDate: expect.any(Date),
-      comparisons: expect.arrayContaining([
-        expect.objectContaining({
-          projectName: expect.any(String),
-          income: expect.any(Number),
-          expenses: expect.any(Number),
-          profit: expect.any(Number),
-        }),
-      ]),
+      startDate: expect.any(Number),
+      endDate: expect.any(Number),
+      currentPage: expect.any(Number),
+      totalPages: expect.any(Number),
+      categories: expect.arrayContaining([expect.any(String)]),
+      series: expect.arrayContaining([expect.arrayContaining([expect.any(Number)])]),
     });
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({

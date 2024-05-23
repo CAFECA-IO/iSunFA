@@ -1,4 +1,7 @@
+import { timestampInSeconds } from '@/lib/utils/common';
+
 export interface IProjectProgressChartData {
+  date: number;
   categories: string[];
   series: {
     name: string;
@@ -17,6 +20,7 @@ export const DUMMY_CATEGORIES = [
 
 export function generateRandomData(): IProjectProgressChartData {
   return {
+    date: timestampInSeconds(new Date('2024-04-01').getTime()),
     categories: DUMMY_CATEGORIES,
     series: [
       {

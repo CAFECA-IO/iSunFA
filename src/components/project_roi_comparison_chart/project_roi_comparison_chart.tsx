@@ -12,11 +12,11 @@ import {
   IProjectROIComparisonChartDataWithPagination,
   generateRandomPaginatedData,
 } from '@/interfaces/project_roi_comparison_chart';
-import { APIName } from '@/constants/api_connection';
-/** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
-import { useAccountingCtx } from '@/contexts/accounting_context';
-*/
 import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -156,24 +156,8 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
-    const { companyId } = useAccountingCtx();
-  */
-  const {
-    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
-        trigger: listProjectProfitComparison,
-    */
-    data: profitComparison,
-    success: listSuccess,
-    code: listCode,
-    error: listError,
-  } = APIHandler<IProjectROIComparisonChartDataWithPagination>(
-    APIName.PROJECT_LIST_PROFIT_COMPARISON,
-    {},
-    false,
-    false
-  );
-  const [reload, setReload] = useState(false);
+  const { companyId } = useAccountingCtx();
+  const { toastHandler } = useGlobalCtx();
 
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
@@ -201,47 +185,54 @@ const ProjectRoiComparisonChart = () => {
     return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
   })();
 
+  const {
+    trigger: listProjectProfitComparison,
+    data: profitComparison,
+    success: listSuccess,
+    code: listCode,
+    error: listError,
+  } = APIHandler<IProjectROIComparisonChartDataWithPagination>(
+    APIName.PROJECT_LIST_PROFIT_COMPARISON,
+    {
+      params: {
+        companyId,
+      },
+      query: {
+        page: currentPage,
+        perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+        startDate: period.startTimeStamp,
+        endDate: period.endTimeStamp,
+      },
+    }
+  );
+
   useEffect(() => {
-    if (reload && listSuccess && profitComparison) {
-      setReload(false);
-      const {
-        series: newSerices,
-        categories: newCategories,
-        totalPages: newTotalPages,
-      } = profitComparison;
-      setSeries(newSerices);
+    if (listSuccess && profitComparison) {
+      // const {
+      //   series: newSerices,
+      //   categories: newCategories,
+      //   totalPages: newTotalPages,
+      // } = profitComparison;
+      // setSeries(newSerices);
+      // setCategories(newCategories);
+      // setTotalPages(newTotalPages);
+      const newData = generateRandomPaginatedData(currentPage, ITEMS_PER_PAGE_ON_DASHBOARD);
+      const newSeries = newData.series;
+      const newCategories = newData.categories;
+      const newTotalPages = newData.totalPages;
+      setSeries(newSeries);
       setCategories(newCategories);
       setTotalPages(newTotalPages);
     }
-  }, [reload, listSuccess, listCode, listError, profitComparison]);
-
-  useEffect(() => {
-    if (period.endTimeStamp !== 0) {
-      // Info: pagination implemented in backend (20240419 - Shirley)
-      const data = generateRandomPaginatedData(currentPage, ITEMS_PER_PAGE_ON_DASHBOARD);
-      /**
-       * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
-          listProjectProfitComparison({
-            params: {
-              companyId,
-            },
-            query: {
-              page: currentPage,
-              perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
-              startDate: period.startTimeStamp,
-              endDate: period.endTimeStamp,
-            },
-          });
-       */
-      setReload(true);
-      const newSeries = data.series;
-      const newCategories = data.categories;
-      setTotalPages(data.totalPages);
-
-      setSeries(newSeries);
-      setCategories(newCategories);
+    if (listSuccess === false) {
+      toastHandler({
+        id: `profit_comparison-${listCode}`,
+        content: `Failed to get profit comparison. Error code: ${listCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
     }
-  }, [period.endTimeStamp, period.startTimeStamp]);
+  }, [listSuccess, listCode, listError, profitComparison, currentPage]);
 
   const data = {
     categories,
@@ -251,58 +242,34 @@ const ProjectRoiComparisonChart = () => {
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
-
-      const newData = generateRandomPaginatedData(currentPage + 1, ITEMS_PER_PAGE_ON_DASHBOARD);
-      /**
-      * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
-         listProjectProfitComparison({
-           params: {
-             companyId,
-           },
-           query: {
-             page: currentPage + 1,
-             perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
-             startDate: period.startTimeStamp,
-             endDate: period.endTimeStamp,
-           },
-         });
-      */
-      setReload(true);
-      const newSeries = newData.series;
-      const newCategories = newData.categories;
-      const newTotalPages = newData.totalPages;
-      setSeries(newSeries);
-      setCategories(newCategories);
-      setTotalPages(newTotalPages);
+      listProjectProfitComparison({
+        params: {
+          companyId,
+        },
+        query: {
+          page: currentPage + 1,
+          perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+          startDate: period.startTimeStamp,
+          endDate: period.endTimeStamp,
+        },
+      });
     }
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-
-      const newData = generateRandomPaginatedData(currentPage - 1, ITEMS_PER_PAGE_ON_DASHBOARD);
-      /**
-       * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
-          listProjectProfitComparison({
-            params: {
-              companyId,
-            },
-            query: {
-              page: currentPage - 1,
-              perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
-              startDate: period.startTimeStamp,
-              endDate: period.endTimeStamp,
-            },
-          });
-       */
-      setReload(true);
-      const newSeries = newData.series;
-      const newCategories = newData.categories;
-      const newTotalPages = newData.totalPages;
-      setSeries(newSeries);
-      setCategories(newCategories);
-      setTotalPages(newTotalPages);
+      listProjectProfitComparison({
+        params: {
+          companyId,
+        },
+        query: {
+          page: currentPage - 1,
+          perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+          startDate: period.startTimeStamp,
+          endDate: period.endTimeStamp,
+        },
+      });
     }
   };
 

@@ -73,25 +73,58 @@ async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
   imageSize: number;
 }): Promise<void> {
   // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
+  // ToDo: (20240521 - Murky) 重複的圖片一直post貌似會越來越多Journal? 目前沒有檢查重複post的狀況
   try {
     // 如果是AICH已經重複的就不建立了
     if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
       return;
     }
-  const ocrData = await prisma.ocr.create({
-    data: {
-      imageName: aichResult.imageName,
-      imageUrl: aichResult.imageUrl,
-      imageSize: aichResult.imageSize,
-    }
-  });
-  await prisma.journal.create({
-    data: {
-      companyId,
-      ocrId: ocrData.id,
-      aichResultId: aichResult.resultStatus.resultId,
-    }
-  });
+    await prisma.$transaction(async () => {
+      let company = await prisma.company.findUnique({
+        where: {
+          id: companyId,
+        },
+        select: {
+          id: true,
+        }
+      });
+
+      // Depreciate (20240521 - Murky) This is for demo purpose
+      if (!company) {
+        company = await prisma.company.create({
+          data: {
+            id: companyId,
+            code: 'COMP123',
+            name: 'Company Name',
+            regional: 'Regional Name',
+          },
+          select: {
+            id: true,
+          }
+        });
+      }
+
+      const ocrData = await prisma.ocr.create({
+        data: {
+          imageName: aichResult.imageName,
+          imageUrl: aichResult.imageUrl,
+          imageSize: aichResult.imageSize,
+        }
+      });
+      await prisma.journal.upsert({
+        where: {
+          aichResultId: aichResult.resultStatus.resultId,
+        },
+        create: {
+          companyId: company.id,
+          ocrId: ocrData.id,
+          aichResultId: aichResult.resultStatus.resultId,
+        },
+        update: {
+          ocrId: ocrData.id,
+        }
+      });
+    });
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
