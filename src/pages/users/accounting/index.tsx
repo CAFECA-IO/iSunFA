@@ -13,13 +13,16 @@ import { AccountingStep } from '@/interfaces/stepper_string';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const AccountingPage = () => {
-  const { selectedUnprocessedJournal } = useAccountingCtx();
+  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler } = useAccountingCtx();
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
 
   // ToDo: (20240422 - Julian) Back button -> 回到上一步
-  const backClickHandler = () => setCurrentStep(AccountingStep.STEP_ONE);
+  const backClickHandler = () => {
+    setCurrentStep(AccountingStep.STEP_ONE);
+    selectUnprocessedJournalHandler(undefined);
+  };
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
   const skipClickHandler = () => setCurrentStep(AccountingStep.STEP_TWO);
   // ToDo: (20240422 - Julian) Submit -> 提交 description of events

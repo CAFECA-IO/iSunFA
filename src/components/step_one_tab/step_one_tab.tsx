@@ -158,15 +158,6 @@ const StepOneTab = () => {
 
   return (
     <div className="flex flex-col gap-8px">
-      <div className="my-5 flex items-center gap-4">
-        <hr className="block flex-1 border-lightGray4 md:hidden" />
-        <div className="flex items-center gap-2 text-sm">
-          <Image src="/icons/upload.svg" width={16} height={16} alt="bill_icon" />
-          <p>Uploaded File</p>
-        </div>
-        <hr className="flex-1 border-lightGray4" />
-      </div>
-
       {/* Info: (20240523 - Julian) Uploaded File Section */}
       {uploadedFileSection}
 
