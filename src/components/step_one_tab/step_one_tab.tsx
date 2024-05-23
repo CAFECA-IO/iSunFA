@@ -8,74 +8,42 @@ import { APIName } from '@/constants/api_connection';
 import { IUnprocessedJournal } from '@/interfaces/journal';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
-import { IUploadedItem } from '@/interfaces/uploaded_item';
 import UploadedFileItem from '../uploaded_file_item/uploaded_file_item';
 import Pagination from '../pagination/pagination';
 
-const DUMMY_UNPROCESSED_JOURNALS: IUnprocessedJournal[] = [
+// ToDo: (20240523 - Julian) replace dummyFileList with real data
+const dummyFileList: IUnprocessedJournal[] = [
   {
-    id: '1',
-    imageName: 'test.jpg',
-    imageUrl: '',
-    imageSize: 80,
+    id: 'invoiceId-0001',
+    imageName: 'invoice_0001.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '100 KB',
     progress: 100,
     status: ProgressStatus.SUCCESS,
   },
   {
-    id: '2',
-    imageName: 'test2.jpg',
-    imageUrl: '',
-    imageSize: 50,
-    progress: 50,
+    id: 'invoiceId-0002',
+    imageName: 'invoice_0002.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '150 KB',
+    progress: 82,
     status: ProgressStatus.IN_PROGRESS,
   },
   {
-    id: '3',
-    imageName: 'test3.jpg',
-    imageUrl: '',
-    imageSize: 100,
-    progress: 0,
-    status: ProgressStatus.LLM_ERROR,
-  },
-];
-
-// ToDo: (20240523 - Julian) replace dummyFileList with real data
-const dummyFileList: IUploadedItem[] = [
-  {
-    id: 'invoiceId-0001',
-    fileName: 'invoice_0001.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '100 KB',
-    progressPercentage: 100,
-    isPaused: false,
-    isError: false,
-  },
-  {
-    id: 'invoiceId-0002',
-    fileName: 'invoice_0002.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '150 KB',
-    progressPercentage: 82,
-    isPaused: false,
-    isError: false,
-  },
-  {
     id: 'invoiceId-0003',
-    fileName: 'invoice_0003.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '175 KB',
-    progressPercentage: 40,
-    isPaused: true,
-    isError: false,
+    imageName: 'invoice_0003.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '175 KB',
+    progress: 40,
+    status: ProgressStatus.PAUSED,
   },
   {
     id: 'invoiceId-0004',
-    fileName: 'invoice_0004.pdf',
-    thumbnailSrc: '/elements/anonymous_avatar.svg',
-    fileSize: '200 KB',
-    progressPercentage: 30,
-    isPaused: true,
-    isError: true,
+    imageName: 'invoice_0004.pdf',
+    imageUrl: '/elements/anonymous_avatar.svg',
+    imageSize: '200 KB',
+    progress: 30,
+    status: ProgressStatus.LLM_ERROR,
   },
 ];
 const totalPages = 10;
@@ -123,12 +91,18 @@ const StepOneTab = () => {
   };
 
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUploadedItem[]>(dummyFileList);
+  const [fileList, setFileList] = useState<IUnprocessedJournal[]>(dummyFileList);
 
   const fileItemPauseHandler = (id: string) => {
     const newList = fileList.map((data) => {
       if (data.id === id) {
-        return { ...data, isPaused: !data.isPaused };
+        return {
+          ...data,
+          status:
+            data.status === ProgressStatus.PAUSED
+              ? ProgressStatus.IN_PROGRESS
+              : ProgressStatus.PAUSED,
+        };
       }
       return data;
     });
@@ -146,6 +120,7 @@ const StepOneTab = () => {
       itemData={data}
       pauseHandler={fileItemPauseHandler}
       deleteHandler={fileItemDeleteHandler}
+      clickHandler={handleJournalClick}
     />
   ));
 
@@ -191,33 +166,7 @@ const StepOneTab = () => {
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>
-      {/* Todo: (20240524 - tzuhan) Add list of unprocessed journals @Julian  */}
-      <ul
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          marginBottom: '1rem',
-        }}
-      >
-        {DUMMY_UNPROCESSED_JOURNALS.map((journal) => (
-          // eslint-disable-next-line react/style-prop-object
-          <li
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              border: '1px solid #eee',
-              padding: '0.5rem 1rem',
-            }}
-            onClick={() => handleJournalClick(journal)}
-          >
-            <div>{journal.imageName}</div>
-            <div>{journal.progress}%</div>
-            <div>{journal.status}</div>
-          </li>
-        ))}
-      </ul>
+
       {/* Info: (20240523 - Julian) Uploaded File Section */}
       {uploadedFileSection}
 
