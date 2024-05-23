@@ -181,7 +181,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   [APIName.INVOICE_UPLOAD]: {
     name: APIName.INVOICE_UPLOAD,
     method: HttpMethod.POST,
-    path: APIPath.INVOCIE_UPLOAD,
+    path: APIPath.INVOICE_UPLOAD,
     input: {
       header: {},
       body: {},

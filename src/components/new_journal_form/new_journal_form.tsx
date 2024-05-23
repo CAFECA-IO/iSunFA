@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice } from '@/interfaces/invoice';
+import { IInvoice, IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
   PaymentPeriodType,
@@ -67,14 +67,15 @@ const NewJournalForm = () => {
     setVoucherPreviewHandler,
   } = useAccountingCtx();
 
+  const aichResultId = selectedUnprocessedJournal?.aichResultId;
+
   // Info: (20240508 - Julian) call API to get invoice data
   const {
-    isLoading,
     success: getSuccess,
-    trigger: getInvoice, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
+    trigger: getOCRResult, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice[]>(
+  } = APIHandler<IInvoiceDataForSavingToDB>(
     APIName.OCR_RESULT_GET_BY_ID,
     {
       // TODO: update with IInvoiceDataForSavingToDB
@@ -100,18 +101,10 @@ const NewJournalForm = () => {
   );
 
   useEffect(() => {
-    if (
-      invoiceId !== undefined &&
-      (!invoices || invoices.length === 0)
-      // || (invoiceId !== undefined && invoices && invoices.length > 0 && invoices[0].invoiceId !== invoiceId)
-    ) {
-      setTimeout(
-        () => {
-          getInvoice({ params: { companyId, invoiceId } });
-        },
-        getInvoiceSuccess ? 2000 : 0
-      );
-    } else if (!isLoading && !getInvoiceSuccess && invoiceId) {
+    if (aichResultId !== undefined && getSuccess === undefined) {
+      getOCRResult({ params: { resultId: aichResultId } });
+    }
+    if (getSuccess === false) {
       // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -177,27 +170,20 @@ const NewJournalForm = () => {
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
   useEffect(() => {
-    if (invoices && invoices.length > 0) {
-      const invoice = invoices
-        // .filter((inv) => inv.invoiceId === invoiceId)
-        .pop();
-      if (invoice) {
-        // Info: (20240506 - Julian) 設定表單的預設值
-        setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
-        setSelectedEventType(invoice.eventType);
-        setInputPaymentReason(invoice.paymentReason);
-        setInputDescription(invoice.description);
-        setInputVendor(invoice.vendorOrSupplier);
-        setInputTotalPrice(invoice.payment.price);
-        setTaxToggle(invoice.payment.hasTax);
-        setTaxRate(invoice.payment.taxPercentage);
-        setFeeToggle(invoice.payment.hasFee);
-        setInputFee(invoice.payment.fee);
-        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
-        setInvoiceIdHandler(undefined);
-      }
+    if (OCRResult) {
+      // Info: (20240506 - Julian) 設定表單的預設值
+      setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
+      setSelectedEventType(OCRResult.eventType);
+      setInputPaymentReason(OCRResult.paymentReason);
+      setInputDescription(OCRResult.description);
+      setInputVendor(OCRResult.vendorOrSupplier);
+      setInputTotalPrice(OCRResult.payment.price);
+      setTaxToggle(OCRResult.payment.hasTax);
+      setTaxRate(OCRResult.payment.taxPercentage);
+      setFeeToggle(OCRResult.payment.hasFee);
+      setInputFee(OCRResult.payment.fee);
     }
-  }, [isLoading, invoices]);
+  }, [OCRResult]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -365,7 +351,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: selectedUnprocessedJournal!.id,
+      invoiceId: '', // TODO: update with formData
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,

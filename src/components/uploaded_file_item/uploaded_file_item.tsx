@@ -5,8 +5,8 @@ import { ProgressStatus } from '@/constants/account';
 
 interface IUploadedFileItemProps {
   itemData: IUnprocessedJournal;
-  pauseHandler: (id: string) => void;
-  deleteHandler: (id: string) => void;
+  pauseHandler: (id: number) => void;
+  deleteHandler: (id: number) => void;
   clickHandler: (unprocessedJournal: IUnprocessedJournal) => void;
 }
 

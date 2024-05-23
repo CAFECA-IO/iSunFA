@@ -14,36 +14,44 @@ import Pagination from '../pagination/pagination';
 // ToDo: (20240523 - Julian) replace dummyFileList with real data
 const dummyFileList: IUnprocessedJournal[] = [
   {
-    id: 'invoiceId-0001',
+    id: 1,
+    aichResultId: 'invoiceId-0001',
     imageName: 'invoice_0001.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '100 KB',
     progress: 100,
     status: ProgressStatus.SUCCESS,
+    createdAt: Date.now(),
   },
   {
-    id: 'invoiceId-0002',
+    id: 2,
+    aichResultId: 'invoiceId-0002',
     imageName: 'invoice_0002.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '150 KB',
     progress: 82,
     status: ProgressStatus.IN_PROGRESS,
+    createdAt: Date.now(),
   },
   {
-    id: 'invoiceId-0003',
+    id: 3,
+    aichResultId: 'invoiceId-0003',
     imageName: 'invoice_0003.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '175 KB',
     progress: 40,
     status: ProgressStatus.PAUSED,
+    createdAt: Date.now(),
   },
   {
-    id: 'invoiceId-0004',
+    id: 4,
+    aichResultId: 'invoiceId-0004',
     imageName: 'invoice_0004.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '200 KB',
     progress: 30,
     status: ProgressStatus.LLM_ERROR,
+    createdAt: Date.now(),
   },
 ];
 const totalPages = 10;
@@ -93,7 +101,7 @@ const StepOneTab = () => {
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IUnprocessedJournal[]>(dummyFileList);
 
-  const fileItemPauseHandler = (id: string) => {
+  const fileItemPauseHandler = (id: number) => {
     const newList = fileList.map((data) => {
       if (data.id === id) {
         return {
@@ -109,7 +117,7 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = (id: string) => {
+  const fileItemDeleteHandler = (id: number) => {
     const newList = fileList.filter((data) => data.id !== id);
     setFileList(newList);
   };
