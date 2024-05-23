@@ -372,34 +372,6 @@ model workRate {
   avatar           String
   involvementRate  Int
   hours            Int
-
   project          project @relation(fields: [projectId], references: [id])
-
-  @@map("work_rate")
-}
-
-model value {
-  id                 Int      @id @default(autoincrement())
-  projectId          Int
-  totalRevenue       Int
-  totalRevenueGrowthIn30d Int
-  totalExpense       Int
-  netProfit          Int
-  netProfitGrowthIn30d Int
-  netProfitGrowthInYear Int
-
-  project            project @relation(fields: [projectId], references: [id])
-}
-
-model workRate {
-  id               Int      @id @default(autoincrement())
-  projectId        Int
-  name             String
-  avatar           String
-  involvementRate  Int
-  hours            Int
-
-  project          project @relation(fields: [projectId], references: [id])
-
   @@map("work_rate")
 }
