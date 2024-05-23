@@ -180,7 +180,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       const resultIdIndex = result.resultId.lastIndexOf(':');
       const resultId = result.resultId.substring(resultIdIndex + 1).trim();
       setInvoiceIdHandler(resultId);
-    } else {
+    }
+    if (uploadError && uploadCode) {
       // Info: TODO error handling @Julian (20240513 - tzuhan)
       // eslint-disable-next-line no-console
       console.error('Error: ', uploadError, 'Code: ', uploadCode);
