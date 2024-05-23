@@ -14,6 +14,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 import { IResponseData } from '@/interfaces/response_data';
+import { ISessionData } from '@/interfaces/session_data';
 
 interface SignUpProps {
   username?: string;
@@ -164,7 +165,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshUserFromSession = async () => {
     try {
       const response = await fetch('/api/v1/session');
-      const data = (await response.json()) as IResponseData<{ user: IUser; company: ICompany }>;
+      const data = (await response.json()) as IResponseData<ISessionData>;
       // Deprecated: dev (20240607 - Shirley)
       // eslint-disable-next-line no-console
       console.log('userSession in refreshUserFromSession', data);
