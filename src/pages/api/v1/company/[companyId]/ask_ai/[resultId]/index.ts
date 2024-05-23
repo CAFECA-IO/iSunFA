@@ -22,6 +22,10 @@ export default async function handler(
 
       const fetchResult = await fetch(`${AICH_URI}/api/v1/${aiApi}/${resultId}/result`);
 
+      if (fetchResult.status === 404) {
+          throw new Error(STATUS_MESSAGE.AICH_API_NOT_FOUND);
+      }
+
       if (!fetchResult.ok) {
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
       }

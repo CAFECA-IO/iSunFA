@@ -26,5 +26,6 @@ export interface IVoucher {
 }
 
 export interface IVoucherDataForSavingToDB {
+  journalId?: number;
   lineItems: ILineItem[];
 }
