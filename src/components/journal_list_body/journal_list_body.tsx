@@ -57,8 +57,10 @@ const JournalListTab = () => {
 
   // ToDo: (20240418 - Julian) Replace with real data
   const totalPages = 100;
+  const uploadedEventsCount = 999;
+  const upcomingEventsCount = 9;
   // const isShowJournalList = false;
-  const companyName = selectedCompany?.name;
+  const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
   // Info: (20240418 - Julian) for css
   const isTypeSelected = filteredJournalType !== 'All';
@@ -159,7 +161,7 @@ const JournalListTab = () => {
   );
 
   const displayedToolbar = (
-    <div className="flex w-full items-center justify-end gap-16px">
+    <div className="flex w-full items-center justify-center gap-16px md:justify-end">
       {/* Info: (20240418 - Julian) Print button */}
       <button
         type="button"
@@ -265,12 +267,12 @@ const JournalListTab = () => {
         className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
       >
         <p
-          className={`text-base leading-normal ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
-          Uploaded Events
+          Uploaded <span className="hidden md:block">Events</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-          999+
+          {uploadedEventsCount}
         </div>
       </button>
       <button
@@ -279,12 +281,12 @@ const JournalListTab = () => {
         className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
       >
         <p
-          className={`text-base leading-normal ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
-          Upcoming Events
+          Upcoming <span className="hidden md:block">Events</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-          9
+          {upcomingEventsCount}
         </div>
       </button>
     </div>
@@ -295,7 +297,7 @@ const JournalListTab = () => {
       {/* Info: (20240417 - Julian) Title */}
       <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
         <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-          {companyName} - Journal List
+          {companyName} Journal List
         </h1>
         <Link href={ISUNFA_ROUTE.ACCOUNTING}>
           <Button type="button" variant="tertiary" className="text-sm md:text-base">
