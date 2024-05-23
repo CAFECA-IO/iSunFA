@@ -50,6 +50,8 @@ export default async function handler(
     session.userId = getUser.id;
     // memoryStore.set(session.id, session);
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
+    // eslint-disable-next-line no-console
+    console.log('session in sign-in API', session, 'getUser in sign-in API', getUser);
     res.status(httpCode).json(result);
     if (req.query.invitation) {
       // update user

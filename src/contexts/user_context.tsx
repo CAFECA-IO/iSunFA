@@ -13,6 +13,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
+import { IResponseData } from '@/interfaces/response_data';
 
 interface SignUpProps {
   username?: string;
@@ -106,23 +107,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  // TODO: @Tzuahan 請協助確認在 `user_get_by_id` 路徑要怎麼給 userId 參數 (20240520 - Shirley)
-  const {
-    trigger: getUserByIdAPI,
-    data: getUserByIdData,
-    error: getUserByIdError,
-    success: getUserByIdSuccess,
-    isLoading: isGetUserByIdLoading,
-  } = APIHandler<IUser>(
-    APIName.USER_GET_BY_ID,
-    {
-      header: {
-        userId: credentialRef.current || '',
-      },
-    },
-    false,
-    false
-  );
+  // TODO: getUser (20240520 - Shirley)
+  // const {
+  //   trigger: getUserByIdAPI,
+  //   data: getUserByIdData,
+  //   error: getUserByIdError,
+  //   success: getUserByIdSuccess,
+  //   isLoading: isGetUserByIdLoading,
+  // } = APIHandler<IUser>(
+  //   APIName.USER_GET_BY_ID,
+  //   {
+  //     header: {
+  //       userId: credentialRef.current || '',
+  //     },
+  //   },
+  //   false,
+  //   false
+  // );
 
   const readFIDO2Cookie = async () => {
     const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
@@ -158,6 +159,72 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const deleteCookie = (name: string) => {
     document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+  };
+
+  const refreshUserFromSession = async () => {
+    try {
+      const response = await fetch('/api/v1/session');
+      const data = (await response.json()) as IResponseData<{ user: IUser; company: ICompany }>;
+      // eslint-disable-next-line no-console
+      console.log('userSession in refreshUserFromSession', data);
+
+      if (
+        !data.payload ||
+        (typeof data.payload === 'object' && !('user' in data.payload)) ||
+        !data.payload.user ||
+        !Object.keys(data.payload.user).length
+      ) {
+        return;
+      }
+
+      if (data.payload) {
+        if (
+          'user' in data.payload &&
+          data.payload.user &&
+          Object.keys(data.payload.user).length > 0
+        ) {
+          setUserAuth(data.payload.user);
+          setUsername(data.payload.user.name);
+          setCredential(data.payload.user.credentialId);
+          setSignedIn(true);
+          setIsSignInError(false);
+          setIsSelectCompany(false);
+          setSelectedCompany(null);
+        }
+      }
+
+      // eslint-disable-next-line no-console
+      console.log('data.payload.user in refreshUserFromSession', data.payload.user);
+
+      // setUserAuth(data.payload.user);
+      // setUsername(data.payload.user.name);
+      // setCredential(data.user.credentialId);
+      // setSignedIn(true);
+      // setIsSignInError(false);
+      // setIsSelectCompany(false);
+      // setSelectedCompany(null);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('userSession in refreshUserFromSession error:', error);
+    }
+
+    // setUser(data.user);
+    // eslint-disable-next-line
+
+    // const session = getSession; // 假設 getSession 是異步並返回當前 session 對象
+    // console.log('refreshUserFromSession', session);
+    // // if (session && session.userId) {
+    // //   // const rs =
+    // //   // const { data: userData } = await APIHandler<IUser>({
+    // //   //   method: 'GET',
+    // //   //   url: `/api/user/${session.userId}`,
+    // //   // });
+    // //   // if (userData) {
+    // //   //   setUser(userData);
+    // //   // }
+    // // } else {
+    // //   // setUser(null);
+    // // }
   };
 
   const signUp = async ({ username: usernameForSignUp }: SignUpProps) => {
@@ -218,19 +285,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const getUserById = async ({ credentialId }: { credentialId: string }) => {
-    try {
-      getUserByIdAPI({ header: { userId: credentialId }, body: { credential: credentialId } });
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('getUserById error:', error);
-    }
-  };
+  // const getUserById = async ({ credentialId }: { credentialId: string }) => {
+  //   try {
+  //     getUserByIdAPI({ header: { userId: credentialId }, body: { credential: credentialId } });
+  //   } catch (error) {
+  //     // eslint-disable-next-line no-console
+  //     console.error('getUserById error:', error);
+  //   }
+  // };
 
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
-    // TODO: @Tzuahan 請協助確認在 `user_get_by_id` 路徑要怎麼給 userId 參數 (20240520 - Shirley)
-    getUserById({ credentialId: credentialRef.current || '' });
+    refreshUserFromSession();
+    // getUserById({ credentialId: credentialRef.current || '' });
 
     const credentialFromCookie = await readFIDO2Cookie();
 
@@ -337,24 +404,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [signInData, isSignInLoading, signInSuccess]);
 
-  useEffect(() => {
-    if (isGetUserByIdLoading) return;
+  // useEffect(() => {
+  //   if (isGetUserByIdLoading) return;
 
-    if (getUserByIdSuccess) {
-      if (getUserByIdData) {
-        setUsername(getUserByIdData.name);
-        setUserAuth(getUserByIdData);
-        setCredential(getUserByIdData.credentialId);
-        setSignedIn(true);
-        setIsSignInError(false);
-        writeFIDO2Cookie();
-      }
-    } else {
-      setIsSignInError(true);
-      // eslint-disable-next-line no-console
-      console.log('getUserByIdError:', getUserByIdError);
-    }
-  }, [getUserByIdData, isGetUserByIdLoading, getUserByIdSuccess]);
+  //   if (getUserByIdSuccess) {
+  //     if (getUserByIdData) {
+  //       setUsername(getUserByIdData.name);
+  //       setUserAuth(getUserByIdData);
+  //       setCredential(getUserByIdData.credentialId);
+  //       setSignedIn(true);
+  //       setIsSignInError(false);
+  //       writeFIDO2Cookie();
+  //     }
+  //   } else {
+  //     setIsSignInError(true);
+  //     // eslint-disable-next-line no-console
+  //     console.log('getUserByIdError:', getUserByIdError);
+  //   }
+  // }, [getUserByIdData, isGetUserByIdLoading, getUserByIdSuccess]);
 
   useEffect(() => {
     if (selectedCompany) {
