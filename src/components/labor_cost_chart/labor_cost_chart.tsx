@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
@@ -20,6 +21,9 @@ interface PieChartData {
 interface PieChartProps {
   data: PieChartData;
 }
+
+const originalColors = ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'];
+const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'];
 
 const PieChart = ({ data }: PieChartProps) => {
   const globalCtx = useGlobalCtx();
@@ -89,23 +93,189 @@ const PieChart = ({ data }: PieChartProps) => {
     chart: {
       id: 'labor-cost-chart',
       type: 'pie',
+      foreColor: '#000',
+      events: {
+        dataPointMouseEnter: (event, chartContext, config) => {
+          const { seriesIndex } = config;
+          const newColors = [...originalColors];
+          newColors[seriesIndex] = hoverColors[seriesIndex];
+          chartContext.updateOptions({
+            fill: {
+              colors: newColors,
+            },
+          });
+        },
+        dataPointMouseLeave: (event, chartContext, config) => {
+          chartContext.updateOptions({
+            fill: {
+              colors: originalColors,
+            },
+          });
+        },
+      },
     },
-    colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
-
+    dataLabels: {
+      enabled: true,
+    },
+    colors: originalColors,
     labels: data.categories,
     legend: {
       position: legendPosition,
       offsetY,
       offsetX: -30,
       markers: {
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        width: 20,
+        height: 12,
+        radius: 0,
       },
-      width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
+      width: space,
       height: 140,
     },
+    tooltip: {
+      enabled: true,
+      y: {
+        formatter: undefined,
+        title: {
+          formatter: function () {
+            return '';
+          },
+        },
+      },
+      fixed: {
+        enabled: true,
+        position: 'topRight',
+      },
+      fillSeriesColor: false,
+    },
+    fill: {
+      colors: originalColors,
+    },
+    states: {
+      hover: {
+        filter: {
+          type: 'none',
+        },
+      },
+    },
   };
+
+  // const options: ApexOptions = {
+  //   series: data.series,
+  //   chart: {
+  //     id: 'labor-cost-chart',
+  //     type: 'pie',
+  //     foreColor: '#000',
+  //     events: {
+  //       dataPointMouseEnter: function (event, chartContext, config) {
+  //         const seriesIndex = config.seriesIndex;
+  //         chartContext.addPointAnnotation({
+  //           x: config.w.globals.dom.baseEl
+  //             .querySelectorAll('.apexcharts-pie-area path')
+  //             [seriesIndex].getAttribute('d')
+  //             .split('M')[1]
+  //             .split('A')[0],
+  //           y: config.w.globals.dom.baseEl
+  //             .querySelectorAll('.apexcharts-pie-area path')
+  //             [seriesIndex].getAttribute('d')
+  //             .split('M')[1]
+  //             .split('A')[1],
+  //           label: {
+  //             borderColor: 'transparent',
+  //             text: 'Hovered',
+  //             textAnchor: 'middle',
+  //             style: {
+  //               fontSize: '10px',
+  //               color: hoverColors[seriesIndex],
+  //             },
+  //           },
+  //           marker: {
+  //             size: 0,
+  //           },
+  //         });
+  //       },
+  //       dataPointMouseLeave: function (event, chartContext, config) {
+  //         chartContext.clearAnnotations();
+  //       },
+  //     },
+  //   },
+  //   dataLabels: {
+  //     enabled: true,
+  //   },
+  //   // colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
+  //   colors: ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'],
+
+  //   labels: data.categories,
+  //   legend: {
+  //     position: legendPosition,
+  //     offsetY,
+  //     offsetX: -30,
+  //     markers: {
+  //       width: 20, // 標記的寬度
+  //       height: 12, // 標記的高度
+  //       radius: 0, // 標記的半徑（如果是圓形）
+  //     },
+  //     width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
+  //     height: 140,
+  //   },
+  //   tooltip: {
+  //     enabled: true,
+  //     // y: {
+  //     //   formatter: (value: number) => {
+  //     //     return `${value} %`;
+  //     //   },
+  //     // },
+
+  //     y: {
+  //       formatter: undefined,
+  //       title: {
+  //         formatter: function x() {
+  //           return '';
+  //         },
+  //       },
+  //     },
+
+  //     fixed: {
+  //       enabled: true,
+  //       position: 'topRight',
+  //     },
+
+  //     fillSeriesColor: false,
+  //   },
+  //   fill: {
+  //     // colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
+  //     colors: ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'],
+  //   },
+  //   // states: {
+  //   //   hover: {
+  //   //     filter: {
+  //   //       // type: 'none',
+  //   //       type: 'darken',
+  //   //       value: 0.9,
+  //   //     },
+  //   //   },
+  //   // },
+
+  //   states: {
+  //     hover: {
+  //       filter: {
+  //         type: 'none',
+  //       },
+  //     },
+  //     active: {
+  //       filter: {
+  //         type: 'none',
+  //       },
+  //     },
+  //   },
+  //   theme: {
+  //     monochrome: {
+  //       enabled: true,
+  //       color: '#000',
+  //       shadeTo: 'light',
+  //       shadeIntensity: 0.65,
+  //     },
+  //   },
+  // };
 
   return (
     <Chart
