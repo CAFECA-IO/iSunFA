@@ -74,6 +74,7 @@ model company {
   name                String
   code                String
   regional            String
+
   auditReports        auditReport[]
   clients             client[]
   companyKYCs         companyKYC[]
@@ -371,8 +372,6 @@ model workRate {
   avatar           String
   involvementRate  Int
   hours            Int
-
   project          project @relation(fields: [projectId], references: [id])
-
   @@map("work_rate")
 }

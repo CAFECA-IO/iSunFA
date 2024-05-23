@@ -1,42 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IProfitComparison } from '@/interfaces/profit';
+import {
+  IProjectROIComparisonChartDataWithPagination,
+  generateRandomPaginatedData,
+} from '@/interfaces/project_roi_comparison_chart';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
-const responseData: IProfitComparison = {
-  startDate: new Date('2024-04-01'),
-  endDate: new Date('2024-05-01'),
-  comparisons: [
-    {
-      projectName: 'iSunFA',
-      income: 170000,
-      expenses: 150000,
-      profit: 20000,
-    },
-    {
-      projectName: 'BAIFA',
-      income: 2000000,
-      expenses: 1500000,
-      profit: 500000,
-    },
-    {
-      projectName: 'iSunOne',
-      income: 250000,
-      expenses: 80000,
-      profit: 170000,
-    },
-  ],
-};
+const responseData: IProjectROIComparisonChartDataWithPagination = generateRandomPaginatedData(
+  1,
+  10
+);
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProfitComparison>>
+  res: NextApiResponse<IResponseData<IProjectROIComparisonChartDataWithPagination>>
 ) {
-  const { startDate, endDate, page = 1, limit = 10 } = req.query;
+  const { startDate, endDate, currentPage = 1, itemsPerPage = 10 } = req.query;
   try {
-    if (startDate && endDate && page && limit) {
-      const { httpCode, result } = formatApiResponse<IProfitComparison>(
+    if (startDate && endDate && currentPage && itemsPerPage) {
+      const { httpCode, result } = formatApiResponse<IProjectROIComparisonChartDataWithPagination>(
         STATUS_MESSAGE.SUCCESS_GET,
         responseData
       );
@@ -45,9 +28,9 @@ export default function handler(
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IProfitComparison>(
+    const { httpCode, result } = formatApiResponse<IProjectROIComparisonChartDataWithPagination>(
       error.message,
-      {} as IProfitComparison
+      {} as IProjectROIComparisonChartDataWithPagination
     );
     res.status(httpCode).json(result);
   }
