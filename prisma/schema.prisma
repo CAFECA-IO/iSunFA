@@ -238,20 +238,23 @@ model ocr {
 }
 
 model project {
-  id                  Int               @id @default(autoincrement())
-  company_id          Int
-  name                String
-  completed_percent   Int
-  stage               String
-  assets              asset[]
-  contracts           contract[]
-  employeesToProjects employeeProject[]
-  journal             journal?
-  milestone           milestone[]
-  company             company           @relation(fields: [company_id], references: [id])
-  sale                sale[]
-  value               value[]
-  work_rate           work_rate[]
+  id                   Int                    @id @default(autoincrement())
+  company_id           Int
+  name                 String
+  completed_percent    Int
+  stage                String
+  totalExpense         Int
+  totalIncome          Int
+  assets               asset[]
+  contracts            contract[]
+  employeesToProjects  employeeProject[]
+  journal              journal?
+  milestone            milestone[]
+  company              company                @relation(fields: [company_id], references: [id])
+  projectIncomeExpense projectIncomeExpense[]
+  sale                 sale[]
+  value                value[]
+  work_rate            work_rate[]
 }
 
 model role {
@@ -351,4 +354,13 @@ model work_rate {
   involvementRate Int
   hours           Int
   project         project @relation(fields: [projectId], references: [id])
+}
+
+model projectIncomeExpense {
+  id        Int     @id @default(autoincrement())
+  createdAt Int
+  income    Int
+  expense   Int
+  projectId Int
+  project   project @relation(fields: [projectId], references: [id])
 }
