@@ -46,7 +46,7 @@ const SelectCompanyPage = () => {
           <NavBar />
         </div>
         <div className="bg-surface-neutral-main-background pt-16">
-          <SelectCompanyPageBody userId={'1'} />{' '}
+          <SelectCompanyPageBody />
           {/** ToDo: fixed with acture userId (20240522 - tzuhan) */}
         </div>
       </div>
