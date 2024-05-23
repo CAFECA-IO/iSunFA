@@ -1,4 +1,4 @@
-import { IVoucher, IVoucherMetaData } from '@/interfaces/voucher';
+import { IVoucher, IVoucherDataForSavingToDB, IVoucherMetaData } from '@/interfaces/voucher';
 import { isIPayment } from '@/lib/utils/type_guard/payment';
 import { isILineItem } from '@/lib/utils/type_guard/line_item';
 
@@ -29,6 +29,14 @@ export function isIVoucher(arg: IVoucher): arg is IVoucher {
   if (isIVoucherMetaDataReturn) {
     return false;
   }
+  const isILineItemReturn = arg.lineItems.every(isILineItem);
+  if (!isILineItemReturn) {
+    return false;
+  }
+  return true;
+}
+
+export function isIVoucherDataForSavingToDB(arg: IVoucherDataForSavingToDB): arg is IVoucherDataForSavingToDB {
   const isILineItemReturn = arg.lineItems.every(isILineItem);
   if (!isILineItemReturn) {
     return false;
