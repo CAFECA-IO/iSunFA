@@ -14,7 +14,7 @@ import Pagination from '../pagination/pagination';
 // ToDo: (20240523 - Julian) replace dummyFileList with real data
 const dummyFileList: IUnprocessedJournal[] = [
   {
-    id: 'invoiceId-0001',
+    id: 1,
     aichResultId: 'invoiceId-0001',
     imageName: 'invoice_0001.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
@@ -24,7 +24,7 @@ const dummyFileList: IUnprocessedJournal[] = [
     createdAt: Date.now(),
   },
   {
-    id: 'invoiceId-0002',
+    id: 2,
     aichResultId: 'invoiceId-0002',
     imageName: 'invoice_0002.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
@@ -34,7 +34,7 @@ const dummyFileList: IUnprocessedJournal[] = [
     createdAt: Date.now(),
   },
   {
-    id: 'invoiceId-0003',
+    id: 3,
     aichResultId: 'invoiceId-0003',
     imageName: 'invoice_0003.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
@@ -44,7 +44,7 @@ const dummyFileList: IUnprocessedJournal[] = [
     createdAt: Date.now(),
   },
   {
-    id: 'invoiceId-0004',
+    id: 4,
     aichResultId: 'invoiceId-0004',
     imageName: 'invoice_0004.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
@@ -103,7 +103,8 @@ const StepOneTab = () => {
 
   const fileItemPauseHandler = (id: string) => {
     const newList = fileList.map((data) => {
-      if (data.id === id) {
+      if (data.id === Number(id)) {
+        // Convert id to number before comparing
         return {
           ...data,
           status:
@@ -118,7 +119,7 @@ const StepOneTab = () => {
   };
 
   const fileItemDeleteHandler = (id: string) => {
-    const newList = fileList.filter((data) => data.id !== id);
+    const newList = fileList.filter((data) => data.id !== Number(id));
     setFileList(newList);
   };
 

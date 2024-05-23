@@ -1,3 +1,4 @@
+import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -14,6 +15,7 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
+import { getSession } from '@/lib/utils/get_session';
 
 export const getServerSideProps: GetServerSideProps<{ userId: string | null }> = async ({
   req,
@@ -30,10 +32,7 @@ export const getServerSideProps: GetServerSideProps<{ userId: string | null }> =
   };
 };
 
-const SelectCompanyPageBody: React.FC<{ userId: string | null }> = ({ userId }) => {
-  // TODO: get user id from session (20240522 - tzuhan)
-  // eslint-disable-next-line no-console
-  console.log(`SelectCompanyPageBody userId: ${userId}`);
+const SelectCompanyPageBody: React.FC = () => {
   const { signedIn, username, selectCompany } = useUserCtx();
   const {
     toastHandler,

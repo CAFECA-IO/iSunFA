@@ -22,8 +22,9 @@ const UploadedFileItem = ({
     status === ProgressStatus.LLM_ERROR ||
     status === ProgressStatus.SYSTEM_ERROR;
 
-  const pauseClickHandler = () => pauseHandler(id);
-  const deleteClickHandler = () => deleteHandler(id);
+  const idString = id.toString();
+  const pauseClickHandler = () => pauseHandler(idString);
+  const deleteClickHandler = () => deleteHandler(idString);
 
   const displayedPauseButton =
     status === ProgressStatus.PAUSED ? <FiPlay size={20} /> : <FiPauseCircle size={20} />;
