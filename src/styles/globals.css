@@ -1268,3 +1268,9 @@ input[type='checkbox']:checked::before {
     background: #c0a0b9;
   }
 } */
+
+.apexcharts-tooltip {
+  background: transparent;
+  color: #27354e;
+  border: 0;
+}

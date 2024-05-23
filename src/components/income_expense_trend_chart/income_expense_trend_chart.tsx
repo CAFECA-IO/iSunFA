@@ -55,7 +55,7 @@ const LineChart = ({ data }: LineChartProps) => {
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 580;
+        const presentWidth = 400;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
@@ -261,7 +261,7 @@ const IncomeExpenseTrendChart = () => {
   const displayedDataSection = (
     <div
       id="displayedDataSection"
-      className="dashboardCardShadow flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
+      className="flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
     >
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
