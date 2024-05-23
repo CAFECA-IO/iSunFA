@@ -1,4 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
+import { IUnprocessedJournal } from '@/interfaces/journal';
 import { IVoucher } from '@/interfaces/voucher';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
@@ -38,6 +39,8 @@ interface IAccountingContext {
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
 
+  selectedUnprocessedJournal: IUnprocessedJournal | undefined;
+  selectUnprocessedJournalHandler: (journal: IUnprocessedJournal | undefined) => void;
   companyId: string | undefined;
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
@@ -63,6 +66,8 @@ const initialAccountingContext: IAccountingContext = {
   // duplicateTempJournal: () => {},
   // removeTempJournal: () => {},
 
+  selectedUnprocessedJournal: undefined,
+  selectUnprocessedJournalHandler: () => {},
   companyId: undefined,
   invoiceId: '1',
   setInvoiceIdHandler: () => {},
@@ -85,6 +90,9 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
+  const [selectedUnprocessedJournal, setEditingJournal] = useState<IUnprocessedJournal | undefined>(
+    undefined
+  );
   const [companyId, setCompanyId] = useState<string | undefined>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
@@ -256,6 +264,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   //   [tempJournalList]
   // );
 
+  const selectUnprocessedJournalHandler = useCallback(
+    (journal: IUnprocessedJournal | undefined) => setEditingJournal(journal),
+    [selectedUnprocessedJournal]
+  );
+
   const value = useMemo(
     () => ({
       accountingVoucher,
@@ -275,6 +288,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       setVoucherIdHandler,
       voucherPreview,
       setVoucherPreviewHandler,
+      selectedUnprocessedJournal,
+      selectUnprocessedJournalHandler,
     }),
     [
       accountingVoucher,
@@ -290,6 +305,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       voucherId,
       voucherStatus,
       voucherPreview,
+      selectedUnprocessedJournal,
+      selectUnprocessedJournalHandler,
     ]
   );
 

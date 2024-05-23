@@ -11,7 +11,7 @@ export interface IUnprocessedJournal {
   id: string;
   imageName: string;
   imageUrl: string;
-  imageSize: number;
+  imageSize: string; // info: To Murky frontend need string like 100 KB (20240523 - Tzuhan)
   progress: number; // 0 ~ 100 Float
   status: ProgressStatus;
 }

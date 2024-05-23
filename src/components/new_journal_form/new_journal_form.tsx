@@ -60,28 +60,22 @@ const NewJournalForm = () => {
 
   const {
     companyId,
-    invoiceId,
+    selectedUnprocessedJournal,
     voucherId,
-    setInvoiceIdHandler,
+    // setInvoiceIdHandler,
     setVoucherIdHandler,
     setVoucherPreviewHandler,
   } = useAccountingCtx();
 
   // Info: (20240508 - Julian) call API to get invoice data
   const {
-    isLoading,
-    success: getInvoiceSuccess,
-    trigger: getInvoice, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
-    data: invoices,
-    code: invoiceCode,
-  } = APIHandler<IInvoice[]>(
-    APIName.INVOICE_GET_BY_ID,
-    {
-      params: { companyId, invoiceId },
-    },
-    false,
-    false
-  );
+    data: OCRResult,
+    success: getSuccess,
+    code: getCode,
+  } = APIHandler<{ [key: string]: unknown }>(APIName.OCR_RESULT_GET_BY_ID, {
+    // TODO: update with IInvoiceDataForSavingToDB
+    params: { resultId: selectedUnprocessedJournal?.id },
+  });
 
   const {
     trigger: voucherUpload,
@@ -99,29 +93,18 @@ const NewJournalForm = () => {
   );
 
   useEffect(() => {
-    if (
-      invoiceId !== undefined &&
-      (!invoices || invoices.length === 0)
-      // || (invoiceId !== undefined && invoices && invoices.length > 0 && invoices[0].invoiceId !== invoiceId)
-    ) {
-      setTimeout(
-        () => {
-          getInvoice({ params: { companyId, invoiceId } });
-        },
-        getInvoiceSuccess ? 2000 : 0
-      );
-    } else if (!isLoading && !getInvoiceSuccess && invoiceId) {
+    if (getSuccess === false) {
       // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Get Invoice Failed',
-        content: `Get invoice failed: ${invoiceCode}`,
+        title: 'Get OCR result Failed',
+        content: `Get OCR result failed: ${getCode}`,
         submitBtnStr: 'Close',
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
     }
-  }, [getInvoiceSuccess, invoiceId, invoices]);
+  }, [getSuccess, getCode, OCRResult]);
 
   const {
     isLoading: isStatusLoading,
@@ -175,28 +158,29 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
-  useEffect(() => {
-    if (invoices && invoices.length > 0) {
-      const invoice = invoices
-        // .filter((inv) => inv.invoiceId === invoiceId)
-        .pop();
-      if (invoice) {
-        // Info: (20240506 - Julian) 設定表單的預設值
-        setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
-        setSelectedEventType(invoice.eventType);
-        setInputPaymentReason(invoice.paymentReason);
-        setInputDescription(invoice.description);
-        setInputVendor(invoice.venderOrSupplier);
-        setInputTotalPrice(invoice.payment.price);
-        setTaxToggle(invoice.payment.hasTax);
-        setTaxRate(invoice.payment.taxPercentage);
-        setFeeToggle(invoice.payment.hasFee);
-        setInputFee(invoice.payment.fee);
-        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
-        setInvoiceIdHandler(undefined);
-      }
-    }
-  }, [isLoading, invoices]);
+  // TODO: update with backend data (20240523 - tzuhan)
+  // useEffect(() => {
+  //   if (invoices && invoices.length > 0) {
+  //     const invoice = invoices
+  //       // .filter((inv) => inv.invoiceId === invoiceId)
+  //       .pop();
+  //     if (invoice) {
+  //       // Info: (20240506 - Julian) 設定表單的預設值
+  //       setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+  //       setSelectedEventType(invoice.eventType);
+  //       setInputPaymentReason(invoice.paymentReason);
+  //       setInputDescription(invoice.description);
+  //       setInputVendor(invoice.venderOrSupplier);
+  //       setInputTotalPrice(invoice.payment.price);
+  //       setTaxToggle(invoice.payment.hasTax);
+  //       setTaxRate(invoice.payment.taxPercentage);
+  //       setFeeToggle(invoice.payment.hasFee);
+  //       setInputFee(invoice.payment.fee);
+  //       // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
+  //       setInvoiceIdHandler(undefined);
+  //     }
+  //   }
+  // }, [isLoading, invoices]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -364,7 +348,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: invoiceId!,
+      invoiceId: selectedUnprocessedJournal!.id,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
