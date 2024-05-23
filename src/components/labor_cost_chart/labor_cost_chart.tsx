@@ -114,6 +114,7 @@ const PieChart = ({ data }: PieChartProps) => {
         formatter: (value: number) => {
           return `${value.toString()}`;
         },
+
         // Info: 自己去算百分比然後顯示在 tooltip 上 (20240523 - Shirley)
         // formatter: (value: number, { seriesIndex, w }: { seriesIndex: number; w: any }) => {
         //   const total = data.series.reduce((a: number, b: number) => a + b, 0);
@@ -153,7 +154,14 @@ const PieChart = ({ data }: PieChartProps) => {
       hover: {
         filter: {
           type: 'darken',
-          value: 0.8,
+          value: 0.85,
+        },
+      },
+      active: {
+        allowMultipleDataPointsSelection: false,
+        filter: {
+          type: 'darken',
+          value: 0.85,
         },
       },
     },
