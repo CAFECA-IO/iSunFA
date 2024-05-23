@@ -184,6 +184,8 @@ model invoice {
   company          company? @relation(fields: [companyId], references: [id])
   companyId        Int?
   journal          journal?
+  paymentId        Int      @unique @map("payment_id")
+  payment          payment  @relation(fields: [paymentId], references: [id])
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 }
@@ -207,7 +209,7 @@ model journal {
   tokenId       String?   @map("token_id")
   ocrId         Int       @unique @map("ocr_id")
   ocr           ocr       @relation(fields: [ocrId], references: [id])
-  aichResultId  String?   @map("aich_result_id")
+  aichResultId  String    @map("aich_result_id")
   invoiceId     Int?      @unique @map("invoice_id")
   invoice       invoice?  @relation(fields: [invoiceId], references: [id])
   voucherId     Int?      @unique @map("voucher_id")
@@ -242,6 +244,25 @@ model ocr {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   journal   journal?
+}
+
+model payment {
+  id                 Int      @id @default(autoincrement())
+  isRevenue          Boolean
+  price              Int
+  hasTax             Boolean
+  taxPercentage      Int
+  hasFee             Boolean
+  fee                Int
+  paymentMethod      String
+  paymentPeriod      String
+  installmentPeriod  Int
+  paymentAlreadyDone Int
+  paymentStatus      String
+  progress           Int
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  invoice            invoice?
 }
 
 model project {
