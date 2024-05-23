@@ -62,11 +62,13 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
 
   return { invoiceId: invoice.id, companyIdNumber: company.id };
   } catch (error) {
+    // console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
 
 async function safeToJournal(journalId:number | null, invoiceId: number, aichResultId: string, projectId: number | null, contractId: number | null, companyId: number) {
+  // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
   try {
     if (!journalId) {
       await prisma.journal.create({

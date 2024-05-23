@@ -33,7 +33,9 @@ async function getUnprocessJournal(companyId: number) {
         },
       },
     });
-    return journalDatas;
+
+    const journals = journalDatas.filter((journalData): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } => journalData.ocr !== null);
+    return journals;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASRE_READ_FAILED_ERROR);
   }
