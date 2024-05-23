@@ -29,7 +29,7 @@ async function getUnprocessJournal(companyId: number) {
             imageUrl: true,
             imageSize: true,
             createdAt: true,
-          }
+          },
         },
       },
     });
@@ -70,7 +70,6 @@ async function fetchStatus(aichResultId: string) {
 }
 
 export default async function handler(
-
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUnprocessedJournal[]>>
 ) {
@@ -80,7 +79,12 @@ export default async function handler(
         const { companyId } = req.query;
 
         // Info Murky (20240416): Check if companyId is string
-        if (Array.isArray(companyId) || !companyId || typeof companyId !== 'string' || !Number.isInteger(Number(companyId))) {
+        if (
+          Array.isArray(companyId) ||
+          !companyId ||
+          typeof companyId !== 'string' ||
+          !Number.isInteger(Number(companyId))
+        ) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
 
@@ -88,26 +92,34 @@ export default async function handler(
 
         const journalDatas = await getUnprocessJournal(companyIdNumber);
 
-        const unprocessJournals: IUnprocessedJournal[] = await Promise.all(journalDatas.map(async (journalData) => {
-          const status = await fetchStatus(journalData.aichResultId);
-          const progress = calculateProgress(journalData.ocr.createdAt, status);
-          return {
-            id: journalData.id,
-            aichResultId: journalData.aichResultId,
-            imageName: journalData.ocr.imageName,
-            imageUrl: journalData.ocr.imageUrl,
-            imageSize: journalData.ocr.imageSize,
-            progress,
-            status,
-            createdAt: timestampInSeconds(journalData.createdAt.getTime()),
-          };
-        }));
+        const unprocessJournals: IUnprocessedJournal[] = await Promise.all(
+          journalDatas.map(async (journalData) => {
+            const aichResultId = journalData.aichResultId as string;
+            const status = await fetchStatus(aichResultId);
+            const progress = calculateProgress(journalData.ocr.createdAt, status);
+            const result = {
+              id: journalData.id,
+              aichResultId: journalData.aichResultId,
+              imageName: journalData.ocr.imageName,
+              imageUrl: journalData.ocr.imageUrl,
+              imageSize: journalData.ocr.imageSize,
+              progress,
+              status,
+              createdAt: timestampInSeconds(journalData.createdAt.getTime()),
+            } as IUnprocessedJournal;
+            return result;
+          })
+        );
 
-        const { httpCode, result } = formatApiResponse<IUnprocessedJournal[]>(STATUS_MESSAGE.SUCCESS_GET, unprocessJournals);
+        const { httpCode, result } = formatApiResponse<IUnprocessedJournal[]>(
+          STATUS_MESSAGE.SUCCESS_GET,
+          unprocessJournals
+        );
         res.status(httpCode).json(result);
 
         break;
-      } default: {
+      }
+      default: {
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     }
