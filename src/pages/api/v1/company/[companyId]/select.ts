@@ -19,7 +19,7 @@ export default async function handler(
       }
       session.selectedCompanyId = req.query.companyId;
       const { httpCode, result } = formatApiResponse<string>(
-        STATUS_MESSAGE.SUCCESS_GET,
+        STATUS_MESSAGE.SUCCESS_UPDATE,
         session.selectedCompanyId
       );
       res.status(httpCode).json(result);
