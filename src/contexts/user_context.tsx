@@ -30,6 +30,8 @@ interface UserContextType {
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null) => void;
   isSelectCompany: boolean;
+  errorCode: string | null;
+  toggleIsSignInError: () => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -44,6 +46,8 @@ export const UserContext = createContext<UserContextType>({
   selectedCompany: null,
   selectCompany: () => {},
   isSelectCompany: false,
+  errorCode: null,
+  toggleIsSignInError: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -65,7 +69,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
-  // const [registration, setRegistration, registrationRef] = useStateRef<Registration | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
+
+  // const [errorCode, setErrorCode, errorCodeRef] = useStateRef<{
+  //   httpCode: number;
+  //   customCode: string;
+  // } | null>(null);
 
   const { trigger: signOutAPI } = APIHandler<void>(
     APIName.SIGN_OUT,
@@ -82,6 +92,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     error: signInError,
     success: signInSuccess,
     isLoading: isSignInLoading,
+    code: signInCode,
   } = APIHandler<IUser>(
     APIName.SIGN_IN,
     {
@@ -97,6 +108,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     error: signUpError,
     success: signUpSuccess,
     isLoading: isSignUpLoading,
+    code: signUpCode,
   } = APIHandler<IUser>(
     APIName.SIGN_UP,
     {
@@ -106,7 +118,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  // TODO: @Tzuahan 請協助確認在 `user_get_by_id` 路徑要怎麼給 userId 參數 (20240520 - Shirley)
+  // TODO: 調整呼叫 getUser API (20240522 - Shirley)
   const {
     trigger: getUserByIdAPI,
     data: getUserByIdData,
@@ -160,10 +172,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   };
 
+  const toggleIsSignInError = () => {
+    setIsSignInError(!isSignInErrorRef.current);
+  };
+
   const signUp = async ({ username: usernameForSignUp }: SignUpProps) => {
     const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
 
     try {
+      setIsSignInError(false);
+
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
       );
@@ -194,6 +212,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   */
   const signIn = async () => {
     try {
+      setIsSignInError(false);
+
       const newChallenge = await createChallenge(
         'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
       );
@@ -211,13 +231,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // eslint-disable-next-line no-console
       console.error('signIn error and try to call singUp function:', error);
       // signUp({ username: '' });
-      setIsSignInError(true);
+
       if (!(error instanceof DOMException)) {
+        setIsSignInError(true);
+
         throw new Error('signIn error thrown in userCtx');
+      } else {
+        throw new Error(`signIn error thrown in userCtx: ${error.message}`);
       }
     }
   };
 
+  // TODO: 調整呼叫 getUser API (20240522 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getUserById = async ({ credentialId }: { credentialId: string }) => {
     try {
       getUserByIdAPI({ header: { userId: credentialId }, body: { credential: credentialId } });
@@ -229,8 +255,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
-    // TODO: @Tzuahan 請協助確認在 `user_get_by_id` 路徑要怎麼給 userId 參數 (20240520 - Shirley)
-    getUserById({ credentialId: credentialRef.current || '' });
+    // TODO: 調整呼叫 getUser API (20240522 - Shirley)
+    // getUserById({ credentialId: credentialRef.current || '' });
 
     const credentialFromCookie = await readFIDO2Cookie();
 
@@ -285,7 +311,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
     const cookieName = COOKIE_NAME.FIDO2;
-    // document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     deleteCookie(cookieName);
   };
 
@@ -311,12 +336,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setIsSignInError(false);
         writeFIDO2Cookie();
       }
-    } else {
+    }
+    if (signUpSuccess === false) {
       setIsSignInError(true);
       // eslint-disable-next-line no-console
       console.log('signUpError:', signUpError);
+
+      setErrorCode(signUpCode ?? '');
     }
-  }, [signUpData, isSignUpLoading, signUpSuccess]);
+  }, [signUpData, isSignUpLoading, signUpSuccess, signUpCode]);
 
   useEffect(() => {
     if (isSignInLoading) return;
@@ -330,12 +358,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setIsSignInError(false);
         writeFIDO2Cookie();
       }
-    } else {
+    }
+    if (signInSuccess === false) {
       setIsSignInError(true);
       // eslint-disable-next-line no-console
-      console.log('signInError:', signInError);
+      console.log('signInError:', signInError, `signInCode:`, signInCode);
+      setErrorCode(signInCode ?? '');
     }
-  }, [signInData, isSignInLoading, signInSuccess]);
+  }, [signInData, isSignInLoading, signInSuccess, signInCode]);
 
   useEffect(() => {
     if (isGetUserByIdLoading) return;
@@ -349,7 +379,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setIsSignInError(false);
         writeFIDO2Cookie();
       }
-    } else {
+    }
+    if (getUserByIdSuccess === false) {
       setIsSignInError(true);
       // eslint-disable-next-line no-console
       console.log('getUserByIdError:', getUserByIdError);
@@ -364,6 +395,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [selectedCompany]);
 
+  // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
@@ -377,8 +409,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       isSelectCompany: isSelectCompanyRef.current,
+      errorCode: errorCodeRef.current,
+      toggleIsSignInError,
     }),
-    [credentialRef.current, selectedCompanyRef.current, isSelectCompanyRef.current]
+    [
+      credentialRef.current,
+      selectedCompanyRef.current,
+      isSelectCompanyRef.current,
+      errorCodeRef.current,
+      isSignInErrorRef.current,
+    ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };

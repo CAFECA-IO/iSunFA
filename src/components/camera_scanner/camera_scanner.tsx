@@ -196,6 +196,10 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
+
+      // Info: TODO error handling @Julian (20240513 - tzuhan)
+      // eslint-disable-next-line no-console
+      console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }
   }, [uploadSuccess, results, isModalVisible, uploadError, uploadCode]);
 
