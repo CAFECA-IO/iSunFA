@@ -37,8 +37,7 @@ async function getUnprocessJournal(companyId: number) {
     const journals = journalDatas.filter(
       (
         journalData
-      ): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } =>
-        journalData.ocr !== null
+      ): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } => journalData.ocr !== null
     );
     return journals;
   } catch (error) {
