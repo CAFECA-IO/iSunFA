@@ -1,10 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
+let departmentsId: number[];
 
-beforeEach(() => {
+beforeEach(async () => {
   req = {
     headers: {},
     query: {},
@@ -16,14 +18,37 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  await prisma.department.createMany({
+    data: [
+      { name: 'HR', companyId: 14 },
+      { name: 'Finance', companyId: 14 },
+      { name: 'IT', companyId: 14 },
+      { name: 'Marketing', companyId: 14 },
+    ],
+  });
+  const departments = await prisma.department.findMany({
+    where: {
+      companyId: 14,
+    },
+  });
+  departmentsId = departments.map((department) => department.id);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await prisma.department.deleteMany({
+    where: {
+      id: {
+        in: departmentsId,
+      },
+    },
+  });
   jest.clearAllMocks();
 });
 
 describe('getAllDepartments API Handler Tests', () => {
   it('should return all departments information', async () => {
+    req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = expect.arrayContaining([expect.any(String)]);

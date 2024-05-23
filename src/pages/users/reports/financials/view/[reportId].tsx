@@ -1,18 +1,22 @@
-/* eslint-disable */
 import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
-import { FinancialReportType } from '@/interfaces/report';
+// import { FinancialReportType } from '@/interfaces/report';
 import {
   BaifaReportTypeToReportType,
   FinancialReportTypesKey,
   FinancialReportTypesMap,
-  ReportTypeToBaifaReportType,
+  // ReportTypeToBaifaReportType,
 } from '@/interfaces/report_type';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
-import React from 'react';
+import React, { useEffect } from 'react';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IServerSideProps {
   reportId: string;
@@ -47,6 +51,52 @@ const DUMMY_DATA_FOR_REPORT = {
 };
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
+  const { toastHandler } = useGlobalCtx();
+  const { companyId } = useAccountingCtx();
+  const [reportData, setReportData] = React.useState<{
+    reportTypesName: {
+      name: string;
+      id: string;
+    };
+    tokenContract: string;
+    tokenId: string;
+    reportLink: string;
+  }>({
+    reportTypesName: FinancialReportTypesMap[
+      BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
+    ] as { id: FinancialReportTypesKey; name: string },
+    tokenContract: DUMMY_DATA_FOR_REPORT.tokenContract,
+    tokenId: DUMMY_DATA_FOR_REPORT.tokenId,
+    reportLink: ReportLink[BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]],
+  });
+  const {
+    data: reportFinancial,
+    code: getFRCode,
+    success: getFRSuccess,
+  } = APIHandler<{
+    reportTypesName: {
+      name: string;
+      id: string;
+    };
+    tokenContract: string;
+    tokenId: string;
+    reportLink: string;
+  }>(APIName.REPORT_FINANCIAL_GET_BY_ID, { params: { companyId, reportId } });
+
+  useEffect(() => {
+    if (getFRSuccess === false) {
+      toastHandler({
+        id: `getFR-${getFRCode}_${reportId}`,
+        content: `Failed to get ${reportType} report: ${getFRCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+    if (getFRSuccess && reportFinancial) {
+      setReportData(reportFinancial);
+    }
+  }, [getFRSuccess, getFRCode, reportFinancial]);
+
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
@@ -91,19 +141,13 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <div className="h-screen bg-surface-neutral-main-background">
           <ViewFinancialSection
             reportTypesName={
-              FinancialReportTypesMap[
-                BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-              ] as { id: FinancialReportTypesKey; name: string }
+              reportData.reportTypesName as { id: keyof typeof FinancialReportTypesMap; name: string }
             }
             // reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
-            tokenContract={DUMMY_DATA_FOR_REPORT.tokenContract}
-            tokenId={DUMMY_DATA_FOR_REPORT.tokenId}
+            tokenContract={reportData.tokenContract}
+            tokenId={reportData.tokenId}
             // reportLink={DUMMY_DATA_FOR_REPORT.reportLink}
-            reportLink={
-              ReportLink[
-                BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-              ]
-            }
+            reportLink={reportData.reportLink}
           />
         </div>
       </div>
