@@ -67,7 +67,10 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     ] as { id: FinancialReportTypesKey; name: string },
     tokenContract: DUMMY_DATA_FOR_REPORT.tokenContract,
     tokenId: DUMMY_DATA_FOR_REPORT.tokenId,
-    reportLink: ReportLink[BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]],
+    reportLink:
+      ReportLink[
+        BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
+      ],
   });
   const {
     data: reportFinancial,
@@ -141,7 +144,10 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <div className="h-screen bg-surface-neutral-main-background">
           <ViewFinancialSection
             reportTypesName={
-              reportData.reportTypesName as { id: keyof typeof FinancialReportTypesMap; name: string }
+              reportData.reportTypesName as {
+                id: keyof typeof FinancialReportTypesMap;
+                name: string;
+              }
             }
             // reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
             tokenContract={reportData.tokenContract}

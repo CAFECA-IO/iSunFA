@@ -988,6 +988,7 @@ module.exports = {
         '81px': '81px',
         '82px': '82px',
         '83px': '83px',
+        '84px': '84px',
         '85px': '85px',
         '88px': '88px',
         '90px': '90px',
@@ -1310,6 +1311,8 @@ module.exports = {
 
         revertBtn:
           '0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+        scrollBtn:
+          '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -1317,7 +1320,6 @@ module.exports = {
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
         xlSide: '4px 0px 24px rgba(0, 0, 0, 0.40)',
         purple: '0 2px 10px #AB50FF',
-        101: '0px 4px 70px rgba(0, 0, 0, 0.40)',
 
         custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
         custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',

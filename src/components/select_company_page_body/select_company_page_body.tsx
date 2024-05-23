@@ -14,28 +14,8 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
-import { getSession } from '@/lib/utils/get_session';
-import { GetServerSideProps } from 'next';
 
-export const getServerSideProps: GetServerSideProps<{ userId: string | null }> = async ({
-  req,
-  res,
-}) => {
-  const session = await getSession(req, res);
-    // Decrepted: Debug (20240522 - tzuhan)
-    // eslint-disable-next-line no-console
-  console.log(`getServerSideProps session: `, session);
-  const userId = session.userId || null;
-
-  return {
-    props: { userId },
-  };
-};
-
-const SelectCompanyPageBody: React.FC<{ userId: string | null }> = ({ userId }) => {
-  // TODO: get user id from session (20240522 - tzuhan)
-  // eslint-disable-next-line no-console
-  console.log(`SelectCompanyPageBody userId: ${userId}`);
+const SelectCompanyPageBody = () => {
   const { signedIn, username, selectCompany } = useUserCtx();
   const {
     toastHandler,
