@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { IJournal } from '@/interfaces/journal';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -12,9 +14,18 @@ import Pagination from '@/components/pagination/pagination';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec } from '@/constants/display';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { Button } from '../button/button';
+
+enum JournalListSubTab {
+  UPLOADED_EVENTS = 'Uploaded Events',
+  UPCOMING_EVENTS = 'Upcoming Events',
+}
 
 const JournalListTab = () => {
   const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     isLoading,
     success,
@@ -42,10 +53,14 @@ const JournalListTab = () => {
   const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<string>('Newest');
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentTab, setCurrentTab] = useState<string>(JournalListSubTab.UPLOADED_EVENTS);
 
   // ToDo: (20240418 - Julian) Replace with real data
   const totalPages = 100;
+  const uploadedEventsCount = 999;
+  const upcomingEventsCount = 9;
   // const isShowJournalList = false;
+  const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
   // Info: (20240418 - Julian) for css
   const isTypeSelected = filteredJournalType !== 'All';
@@ -53,6 +68,9 @@ const JournalListTab = () => {
 
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
+
+  const uploadTabClickHandler = () => setCurrentTab(JournalListSubTab.UPLOADED_EVENTS);
+  const upcomingTabClickHandler = () => setCurrentTab(JournalListSubTab.UPCOMING_EVENTS);
 
   const displayedTypeDropMenu = (
     <div
@@ -143,7 +161,7 @@ const JournalListTab = () => {
   );
 
   const displayedToolbar = (
-    <div className="flex w-full items-center justify-end gap-16px">
+    <div className="flex w-full items-center justify-center gap-16px md:justify-end">
       {/* Info: (20240418 - Julian) Print button */}
       <button
         type="button"
@@ -241,13 +259,59 @@ const JournalListTab = () => {
       </div>
     );
 
+  const displayedTabs = (
+    <div className="my-20px inline-flex w-full items-center justify-center">
+      <button
+        type="button"
+        onClick={uploadTabClickHandler}
+        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
+      >
+        <p
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+        >
+          Uploaded <span className="hidden md:block">Events</span>
+        </p>
+        <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
+          {uploadedEventsCount}
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={upcomingTabClickHandler}
+        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
+      >
+        <p
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+        >
+          Upcoming <span className="hidden md:block">Events</span>
+        </p>
+        <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
+          {upcomingEventsCount}
+        </div>
+      </button>
+    </div>
+  );
+
   return (
-    <div className="flex min-h-screen w-full flex-col px-16px py-32px">
+    <div className="flex min-h-screen w-full flex-col px-16px py-32px font-barlow">
       {/* Info: (20240417 - Julian) Title */}
-      <h1 className="text-4xl font-semibold text-lightGray5">My Journal List</h1>
+      <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
+        <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
+          {companyName} Journal List
+        </h1>
+        <Link href={ISUNFA_ROUTE.ACCOUNTING}>
+          <Button type="button" variant="tertiary" className="text-sm md:text-base">
+            <FaPlus />
+            <p>Add new journal</p>
+          </Button>
+        </Link>
+      </div>
 
       {/* Info: (20240417 - Julian) Divider */}
       <hr className="my-20px w-full border-lightGray6" />
+
+      {/* Info: (20240523 - Julian) Tabs */}
+      {displayedTabs}
 
       {/* Info: (20240417 - Julian) Filter */}
       <div className="my-10px flex items-center gap-24px text-sm md:items-end">

@@ -269,7 +269,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20240513 - Julian) 選擇公司的功能
+  // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = (company: ICompany | null) => {
     if (company) {
       setSelectedCompany(company);

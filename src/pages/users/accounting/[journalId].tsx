@@ -59,10 +59,6 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   useEffect(() => {
     if (success === false && isLoading === false) {
-      // TODO: Error handling @Julian (20240509 - Tzuhan)
-      // eslint-disable-next-line no-console
-      // console.log('getJournalDetail error', error, 'code: ', code);
-
       // Info: (20240517 - Julian) If get journal detail failed, show error message modal
       messageModalDataHandler({
         messageType: MessageType.ERROR,
