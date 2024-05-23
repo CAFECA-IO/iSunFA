@@ -21,15 +21,15 @@ beforeEach(async () => {
 
   await prisma.department.createMany({
     data: [
-      { name: 'HR', company_id: 14 },
-      { name: 'Finance', company_id: 14 },
-      { name: 'IT', company_id: 14 },
-      { name: 'Marketing', company_id: 14 },
+      { name: 'HR', companyId: 14 },
+      { name: 'Finance', companyId: 14 },
+      { name: 'IT', companyId: 14 },
+      { name: 'Marketing', companyId: 14 },
     ],
   });
   const departments = await prisma.department.findMany({
     where: {
-      company_id: 14,
+      companyId: 14,
     },
   });
   departmentsId = departments.map((department) => department.id);
