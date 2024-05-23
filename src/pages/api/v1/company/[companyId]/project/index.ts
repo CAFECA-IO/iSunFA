@@ -3,226 +3,99 @@ import version from '@/lib/version';
 import { IProject } from '@/interfaces/project';
 import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
+import prisma from '@/client';
+import { getSession } from '@/lib/utils/get_session';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProject>>
+  res: NextApiResponse<IResponseData<IProject | IProject[]>>
 ) {
-  const millisecondsPerDay = 24 * 60 * 60 * 1000;
   try {
-    if (!req.headers.userid) {
-      throw new Error('Resource not found');
+    const session = await getSession(req, res);
+    if (!session.userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
-    // Info: (20240419 - Jacky) S010001 - GET /project
+    if (!session.selectedCompanyId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+    const companyIdNum = Number(session.selectedCompanyId);
     if (req.method === 'GET') {
-      const projectList: IProject[] = [
-        {
-          id: '1',
-          name: 'Project 1',
-          value: {
-            totalRevenue: 1000,
-            totalRevenueGrowthIn30d: 10,
-            totalExpense: 500,
-            netProfit: 500,
-            netProfitGrowthIn30d: 10,
-            netProfitGrowthInYear: 3,
-          },
-          completionPercent: 50,
-          milestones: [
-            {
-              id: '1',
-              status: 'Milestone 1',
-              startDate: new Date().getTime() - 150 * millisecondsPerDay,
-              endDate: new Date().getTime() - 100 * millisecondsPerDay,
-            },
-            {
-              id: '2',
-              status: 'Milestone 2',
-              startDate: new Date().getTime() - 50 * millisecondsPerDay,
-              endDate: new Date().getTime() - 100 * millisecondsPerDay,
-            },
-            {
-              id: '3',
-              status: 'Milestone 3',
-              startDate: new Date().getTime() - 50 * millisecondsPerDay,
-              endDate: new Date().getTime() - 5 * millisecondsPerDay,
-            },
-          ],
-          salesData: [
-            {
-              date: '2024-01-01',
-              totalSales: 1000,
-              comparison: 10,
-            },
-            {
-              date: '2024-02-06',
-              totalSales: 1000,
-              comparison: 10,
-            },
-          ],
-          workerRate: [
-            {
-              id: '1',
-              name: 'Worker 1',
-              avatar: 'avatar1',
-              involvementRate: 50,
-              hours: 10,
-            },
-            {
-              id: '2',
-              name: 'Worker 2',
-              avatar: 'avatar2',
-              involvementRate: 50,
-              hours: 10,
-            },
-          ],
-          members: ['1', '2'],
+      const projectList = await prisma.project.findMany({
+        where: {
+          companyId: companyIdNum,
         },
-        {
-          id: '2',
-          name: 'Project 2',
-          value: {
-            totalRevenue: 1000,
-            totalRevenueGrowthIn30d: 10,
-            totalExpense: 500,
-            netProfit: 500,
-            netProfitGrowthIn30d: 10,
-            netProfitGrowthInYear: 3,
+        include: {
+          employeesToProjects: {
+            include: {
+              employee: {
+                select: {
+                  name: true,
+                  imageId: true,
+                },
+              },
+            },
           },
-          completionPercent: 75,
-          milestones: [
-            {
-              id: '1',
-              status: 'Milestone 1',
-              startDate: new Date().getTime() - 150 * millisecondsPerDay,
-              endDate: new Date().getTime() - 100 * millisecondsPerDay,
-            },
-            {
-              id: '2',
-              status: 'Milestone 2',
-              startDate: new Date().getTime() - 50 * millisecondsPerDay,
-              endDate: new Date().getTime() - 100 * millisecondsPerDay,
-            },
-            {
-              id: '3',
-              status: 'Milestone 3',
-              startDate: new Date().getTime() - 50 * millisecondsPerDay,
-              endDate: new Date().getTime() - 5 * millisecondsPerDay,
-            },
-          ],
-          salesData: [
-            {
-              date: '2024-01-01',
-              totalSales: 1000,
-              comparison: 10,
-            },
-            {
-              date: '2024-02-06',
-              totalSales: 1000,
-              comparison: 10,
-            },
-          ],
-          workerRate: [
-            {
-              id: '1',
-              name: 'Worker 1',
-              avatar: 'avatar1',
-              involvementRate: 50,
-              hours: 10,
-            },
-            {
-              id: '3',
-              name: 'Worker 2',
-              avatar: 'avatar2',
-              involvementRate: 50,
-              hours: 10,
-            },
-          ],
-          members: ['1', '3'],
         },
-      ];
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'list all projects',
-        payload: projectList,
       });
+      const projectListWithMembers: IProject[] = projectList.map((project) => {
+        const members = project.employeesToProjects.map((employeeToProject) => ({
+          name: employeeToProject.employee.name,
+          imageId: employeeToProject.employee.imageId as string,
+        }));
+        const { employeesToProjects, ...projectData } = project;
+        return {
+          ...projectData,
+          members,
+        };
+      });
+      const { httpCode, result } = formatApiResponse<IProject[]>(
+        STATUS_MESSAGE.SUCCESS_GET,
+        projectListWithMembers
+      );
+      res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010002 - POST /project
     } else if (req.method === 'POST') {
-      const { plan, paymentId, autoRenew } = req.body;
-      if (!plan || !paymentId || !autoRenew) {
+      const { name, stage, members } = req.body;
+      if (!name || !stage || !members) {
         throw new Error('Invalid input parameter');
       }
-      const newProject: IProject = {
-        id: '3',
-        name: 'Project 3',
-        value: {
-          totalRevenue: 1000,
-          totalRevenueGrowthIn30d: 10,
-          totalExpense: 500,
-          netProfit: 500,
-          netProfitGrowthIn30d: 10,
-          netProfitGrowthInYear: 3,
+      const newProject = await prisma.project.create({
+        data: {
+          companyId: companyIdNum,
+          name,
+          stage,
+          employeesToProjects: {
+            create: members.map((memberId: number) => ({
+              employeeId: memberId,
+            })),
+          },
+          completedPercent: 0,
         },
-        completionPercent: 75,
-        milestones: [
-          {
-            id: '1',
-            status: 'Milestone 1',
-            startDate: new Date().getTime() - 150 * millisecondsPerDay,
-            endDate: new Date().getTime() - 100 * millisecondsPerDay,
+        include: {
+          employeesToProjects: {
+            include: {
+              employee: {
+                select: {
+                  name: true,
+                  imageId: true,
+                },
+              },
+            },
           },
-          {
-            id: '2',
-            status: 'Milestone 2',
-            startDate: new Date().getTime() - 50 * millisecondsPerDay,
-            endDate: new Date().getTime() - 100 * millisecondsPerDay,
-          },
-          {
-            id: '3',
-            status: 'Milestone 3',
-            startDate: new Date().getTime() - 50 * millisecondsPerDay,
-            endDate: new Date().getTime() - 5 * millisecondsPerDay,
-          },
-        ],
-        salesData: [
-          {
-            date: '2024-01-01',
-            totalSales: 1000,
-            comparison: 10,
-          },
-          {
-            date: '2024-02-06',
-            totalSales: 1000,
-            comparison: 10,
-          },
-        ],
-        workerRate: [
-          {
-            id: '1',
-            name: 'Worker 1',
-            avatar: 'avatar1',
-            involvementRate: 50,
-            hours: 10,
-          },
-          {
-            id: '3',
-            name: 'Worker 2',
-            avatar: 'avatar2',
-            involvementRate: 50,
-            hours: 10,
-          },
-        ],
-        members: ['1', '3'],
-      };
-      res.status(200).json({
-        powerby: 'ISunFa api ' + version,
-        success: true,
-        code: '200',
-        message: 'create project',
-        payload: newProject,
+        },
       });
+      const newProjectWithMembers = {
+        ...newProject,
+        members: newProject.employeesToProjects.map((employeeToProject) => ({
+          name: employeeToProject.employee.name,
+          imageId: employeeToProject.employee.imageId as string,
+        })),
+      };
+      const { employeesToProjects, ...project } = newProjectWithMembers;
+      const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
+      res.status(httpCode).json(result);
     } else {
       throw new Error('Method Not Allowed');
     }

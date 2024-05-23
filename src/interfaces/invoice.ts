@@ -1,5 +1,6 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
+// import { invoice } from '@prisma/client';
 
 export interface IInvoice {
   invoiceId: string;
@@ -14,3 +15,5 @@ export interface IInvoice {
   contract: string; // Info: TO Murky if contract is null then it will be string 'None' (20240515 - tzuhan)
   payment: IPayment;
 }
+
+// export interface IInvoice extends invoice {}

@@ -33,6 +33,7 @@ export enum DatePickerType {
   TEXT = 'TEXT',
   CHOOSE_DATE = 'CHOOSE_DATE',
   CHOOSE_PERIOD = 'CHOOSE_PERIOD',
+  ICON_CHOOSE_DATE = 'ICON_CHOOSE_DATE',
 }
 
 interface IDatePickerProps {
@@ -120,7 +121,7 @@ const PopulateDates = ({
         // Info: (20240417 - Shirley) elTemp 是點擊的日期
         const elTime = new Date(`${selectedYear}/${selectedMonth}/${el.date} 00:00:00`).getTime();
         // If DatePickerType is CHOOSE_PERIOD, select the date and close the component
-        if (type === DatePickerType.CHOOSE_DATE) {
+        if (type === DatePickerType.CHOOSE_DATE || type === DatePickerType.ICON_CHOOSE_DATE) {
           selectDateOne({ date: el.date, time: elTime, disable: el.disable });
           selectDateTwo({ date: el.date, time: elTime, disable: el.disable });
           setComponentVisible(false);
@@ -344,7 +345,7 @@ const DatePicker = ({
     //     : defaultPeriodText
     //   : defaultPeriodText;
     period.startTimeStamp !== 0 && period.endTimeStamp !== 0 // Info: (20240510 - Julian) edited
-      ? type === DatePickerType.CHOOSE_DATE
+      ? type === DatePickerType.CHOOSE_DATE || type === DatePickerType.ICON_CHOOSE_DATE
         ? `${timestampToString(period.startTimeStamp).date}`
         : `${timestampToString(period.startTimeStamp).date} ${t(
             'DATE_PICKER.TO'
@@ -356,7 +357,7 @@ const DatePicker = ({
   const displayedMonth = `${t(MONTH_ABR_LIST[selectedMonth - 1])}`;
 
   const displayedButtonContent =
-    type === DatePickerType.ICON ? (
+    type === DatePickerType.ICON || type === DatePickerType.ICON_CHOOSE_DATE ? (
       <Button
         type="button"
         variant={'tertiaryOutline'}
