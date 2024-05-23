@@ -1,62 +1,107 @@
-import { AICH_URI } from '@/constants/config';
-import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { formatApiResponse } from '@/lib/utils/common';
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
-import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
+import { IResponseData } from '@/interfaces/response_data';
+import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { formatApiResponse } from '@/lib/utils/common';
+import prisma from '@/client';
+
+import { STATUS_MESSAGE } from '@/constants/status_code';
+
+async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
+  try {
+    const result = await prisma.$transaction(async () => {
+      const journal = await prisma.journal.findUniqueOrThrow({
+        where: {
+          id: voucher.journalId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const lineItems = await Promise.all(voucher.lineItems.map(async (lineItem) => {
+        return prisma.lineItem.create({
+          data: {
+            account: lineItem.account,
+            description: lineItem.description,
+            debit: lineItem.debit,
+            amount: lineItem.amount,
+          },
+          select: {
+            id: true,
+          }
+        });
+      }));
+
+      const voucherData = await prisma.voucher.create({
+        data: {
+          journal: {
+            connect: {
+              id: journal.id,
+            },
+          },
+          lineItems: {
+            connect: lineItems.map((lineItem) => ({
+              id: lineItem.id,
+            })),
+          },
+        },
+        select: {
+          id: true,
+          lineItems: true
+        }
+      });
+
+      return voucherData;
+    });
+    return result;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+type ApiResponseType = {
+    id: number;
+    lineItems: {
+        id: number;
+        account: string;
+        description: string;
+        debit: boolean;
+        amount: number;
+        voucherId: number | null;
+    }[];
+};
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountResultStatus>>
+  res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
   try {
     if (req.method === 'POST') {
-      const { invoices } = req.body;
-      // Info Murky (20240416): Check if invoices is array and is Invoice type
-      if (!Array.isArray(invoices) || !invoices.every(isIInvoice)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+      const voucher = req.body;
+
+      // Info: （ 20240522 - Murkky）body need to provide LineItems and journalId
+      if (!voucher || !isIVoucherDataForSavingToDB(voucher) || !(voucher.journalId)) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
-      let fetchResult: Response;
+      const result = await saveVoucherToDB(voucher);
 
-      try {
-        fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/upload_invoice`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(invoices),
-        });
-      } catch (error) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
-      }
-
-      if (!fetchResult.ok) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
-      }
-
-      const resultStatus: IAccountResultStatus = (await fetchResult.json()).payload;
-
-      if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
-      }
-
-      const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
+      const { httpCode, result: response } = formatApiResponse<ApiResponseType>(
         STATUS_MESSAGE.CREATED,
-        resultStatus
+        result
       );
-      res.status(httpCode).json(result);
+
+      res.status(httpCode).json(response);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
 
-    const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
+    const { httpCode, result } = formatApiResponse<ApiResponseType>(
       error.message,
-      {} as IAccountResultStatus
+      {} as ApiResponseType
     );
     res.status(httpCode).json(result);
   }
