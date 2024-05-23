@@ -14,6 +14,8 @@ import {
 } from '@/interfaces/income_expense_trend_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -208,39 +210,29 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
-  /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
-const { companyId } = useAccountingCtx();
-*/
-  const {
-    /** Todo: (20240520 - tzuhan) API implementation when backend is ready (20240520 - tzuhan)
-      trigger: getProfitMarginTrendInPeriod,
-  */
-    data: profitMarginTrendInPeriodData,
-    success: getSuccess,
-    code: getCode,
-    error: getError,
-  } = APIHandler<IIncomeExpenseTrendChartData>(
-    APIName.PROFIT_GET_MARGIN_TREND_IN_PERIOD,
-    {
-      params: {
-        companyId: '1',
-      },
-      query: {
-        period: Period.WEEK,
-      },
-    },
-    false, // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
-    false // ToDo: (20240520 - tzuhan) remove false when backend is ready (20240520 - tzuhan)
-  );
-  const [reload, setReload] = React.useState(true);
+  const { toastHandler } = useGlobalCtx();
+  const { companyId } = useAccountingCtx();
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
 
+  const {
+    trigger: getProfitMarginTrendInPeriod,
+    data: profitMarginTrendInPeriodData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.PROFIT_GET_TREND_IN_PERIOD, {
+    params: {
+      companyId,
+    },
+    query: {
+      period: Period.WEEK,
+    },
+  });
+
   const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
-    /**
-     * Todo:  (20240520 - tzuhan)API implementation when backend is ready (20240520 - tzuhan)
     getProfitMarginTrendInPeriod({
       params: {
         companyId,
@@ -249,15 +241,20 @@ const { companyId } = useAccountingCtx();
         period,
       },
     });
-     */
-    setReload(true);
     setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[period]);
   };
 
   useEffect(() => {
-    if (reload && getSuccess && profitMarginTrendInPeriodData) {
-      setReload(false);
+    if (getSuccess && profitMarginTrendInPeriodData) {
       setData(profitMarginTrendInPeriodData);
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `profit_margin_trend-${getCode}`,
+        content: `Failed to get profit margin trend. Error code: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
     }
   }, [getSuccess, getCode, getError, profitMarginTrendInPeriodData]);
 
