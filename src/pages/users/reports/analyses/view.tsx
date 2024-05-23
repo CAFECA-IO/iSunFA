@@ -1,13 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
-import React from 'react';
+import React, { useEffect } from 'react';
 import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '@/interfaces/report_type';
 import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -30,13 +34,54 @@ const AnalysisReportViewPage = ({
   startTimestamp,
   endTimestamp,
 }: IServerSideProps) => {
-  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
-
-  const dummyReportData = {
+  const { toastHandler } = useGlobalCtx();
+  const { companyId } = useAccountingCtx();
+  const [reportData, setReportData] = React.useState<{
+    reportTypesName: {
+      name: string;
+      id: string;
+    };
+    tokenContract: string;
+    tokenId: string;
+    reportLink: string;
+  }>({
+    reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
     reportLink: ReportLink[reportType],
-  };
+  });
+
+  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+  const {
+    data: reportAnalysis,
+    code: getARCode,
+    success: getARSuccess,
+  } = APIHandler<{
+    reportTypesName: {
+      name: string;
+      id: string;
+    };
+    tokenContract: string;
+    tokenId: string;
+    reportLink: string;
+  }>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
+    params: { params: { companyId, reportId: '1' } },
+    query: { reportType, reportLanguage, startTimestamp, endTimestamp },
+  });
+
+  useEffect(() => {
+    if (getARSuccess === false) {
+      toastHandler({
+        id: `getAR-${getARCode}}`,
+        content: `Aailed to get ${reportType} report: ${getARCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+    if (getARSuccess && reportAnalysis) {
+      setReportData(reportAnalysis);
+    }
+  }, [getARSuccess, getARCode, reportAnalysis]);
 
   return (
     <div>
@@ -73,10 +118,10 @@ const AnalysisReportViewPage = ({
         <div className="h-screen bg-surface-neutral-main-background">
           {/* <p className="pl-40 pt-32 text-3xl">{AnalysisReportTypesMap[reportType].name}</p> */}
           <ViewAnalysisSection
-            reportTypesName={AnalysisReportTypesMap[reportType]}
-            tokenContract={dummyReportData.tokenContract}
-            tokenId={dummyReportData.tokenId}
-            reportLink={dummyReportData.reportLink}
+            reportTypesName={reportData.reportTypesName}
+            tokenContract={reportData.tokenContract}
+            tokenId={reportData.tokenId}
+            reportLink={reportData.reportLink}
           />
         </div>
       </div>

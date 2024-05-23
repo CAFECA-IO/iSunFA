@@ -22,7 +22,6 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
-import { ToastType } from '@/interfaces/toastify';
 import { IVoucher } from '@/interfaces/voucher';
 
 // Info: (20240425 - Julian) dummy data, will be replaced by API data
@@ -53,7 +52,6 @@ const contractSelection: { id: string | null; name: string }[] = [
 const NewJournalForm = () => {
   // Info: (20240428 - Julian) get values from context
   const {
-    toastHandler,
     messageModalVisibilityHandler,
     messageModalDataHandler,
     confirmModalVisibilityHandler,
@@ -75,6 +73,7 @@ const NewJournalForm = () => {
     success: getInvoiceSuccess,
     trigger: getInvoice, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
     data: invoices,
+    code: invoiceCode,
   } = APIHandler<IInvoice[]>(
     APIName.INVOCIE_GET_BY_ID,
     {
@@ -111,6 +110,16 @@ const NewJournalForm = () => {
         },
         getInvoiceSuccess ? 2000 : 0
       );
+    } else if (!isLoading && !getInvoiceSuccess && invoiceId) {
+      // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Invoice Failed',
+        content: `Get invoice failed: ${invoiceCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
     }
   }, [invoiceId, invoices]);
 
@@ -184,7 +193,7 @@ const NewJournalForm = () => {
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
         // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
-        setInvoiceIdHandler('');
+        setInvoiceIdHandler(undefined);
       }
     }
   }, [isLoading, invoices]);
@@ -388,18 +397,28 @@ const NewJournalForm = () => {
     if (uploadSuccess && result) {
       const { resultId } = result;
       setVoucherIdHandler(resultId);
+      confirmModalVisibilityHandler();
     } else if (uploadSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal failed: ${uploadCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+
       // TODO: error handling @Julian (20240510 - tzuhan)
       // eslint-disable-next-line no-console
-      console.log(`uploadError: `, uploadError);
-      toastHandler({
-        id: `UploadJournalFailed_${uploadCode}_${(Math.random() * 100000).toFixed(5)}`,
-        type: ToastType.ERROR,
-        content: `Upload journal failed: ${uploadCode}`,
-        closeable: true,
-      });
+      // console.log(`uploadError: `, uploadError);
+      // toastHandler({
+      //   id: `UploadJournalFailed_${uploadCode}_${(Math.random() * 100000).toFixed(5)}`,
+      //   type: ToastType.ERROR,
+      //   content: `Upload journal failed: ${uploadCode}`,
+      //   closeable: true,
+      // });
     }
-  }, [uploadSuccess, result]);
+  }, [uploadSuccess, result, uploadCode, uploadError]);
 
   useEffect(() => {
     if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.IN_PROGRESS)) {
@@ -427,24 +446,41 @@ const NewJournalForm = () => {
           },
         });
       } else {
-        // TODO: Error handling @Julian (20240514 - Tzuhan)
-        toastHandler({
-          id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
-          type: ToastType.ERROR,
-          content: `ProgressStatus: ${ProgressStatus}`,
-          closeable: true,
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Upload Journal Failed',
+          content: `Upload journal failed: ${statusCode}`,
+          submitBtnStr: 'Close',
+          submitBtnFunction: messageModalVisibilityHandler,
         });
+        messageModalVisibilityHandler();
+        // TODO: Error handling @Julian (20240514 - Tzuhan)
+        // toastHandler({
+        //   id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
+        //   type: ToastType.ERROR,
+        //   content: `ProgressStatus: ${ProgressStatus}`,
+        //   closeable: true,
+        // });
       }
     } else if (statusSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Voucher Status Failed',
+        content: `Get voucher status failed: ${statusCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+
       // TODO: Error handling @Julian (20240514 - Tzuhan)
       // eslint-disable-next-line no-console
-      console.log(`status error: ${statusError}`);
-      toastHandler({
-        id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
-        type: ToastType.ERROR,
-        content: `Get voucher status failed: ${statusCode}`,
-        closeable: true,
-      });
+      // console.log(`status error: ${statusError}`);
+      // toastHandler({
+      //   id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
+      //   type: ToastType.ERROR,
+      //   content: `Get voucher status failed: ${statusCode}`,
+      //   closeable: true,
+      // });
     }
   }, [voucherId, isStatusLoading, status, statusSuccess, statusCode, statusError]);
 
@@ -452,18 +488,26 @@ const NewJournalForm = () => {
     if (previewSuccess && preview) {
       setVoucherPreviewHandler(preview);
       confirmModalVisibilityHandler();
-    } else if (previewSuccess === false) {
+    } else if (previewError && previewCode) {
       // TODO: Error handling @Julian (20240514 - Tzuhan)
       // eslint-disable-next-line no-console
-      console.log(`preview error: ${previewError}`);
-      toastHandler({
-        id: `GetVoucherPreviewFailed_${previewCode}_${(Math.random() * 100000).toFixed(5)}`,
-        type: ToastType.ERROR,
+      // console.log(`preview error: ${previewError}`);
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Voucher Preview Failed',
         content: `Get voucher preview failed: ${previewCode}`,
-        closeable: true,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
       });
+      messageModalVisibilityHandler();
+      // toastHandler({
+      //   id: `GetVoucherPreviewFailed_${previewCode}_${(Math.random() * 100000).toFixed(5)}`,
+      //   type: ToastType.ERROR,
+      //   content: `Get voucher preview failed: ${previewCode}`,
+      //   closeable: true,
+      // });
     }
-  }, [previewSuccess, preview]);
+  }, [previewSuccess, preview, previewError, previewCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';

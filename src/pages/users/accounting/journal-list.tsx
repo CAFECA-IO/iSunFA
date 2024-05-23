@@ -24,7 +24,7 @@ const JournalListPage = () => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           {/* Info: (20240419 - Julian) Sidebar */}
           <AccountingSidebar />
-          {/* ToDo: (20240419 - Julian) Overview */}
+          {/* Info: (20240419 - Julian) Overview */}
           <div className="flex h-full w-full bg-gray-100">
             <div className="mt-100px flex-1 md:ml-80px">
               <JournalListTab />

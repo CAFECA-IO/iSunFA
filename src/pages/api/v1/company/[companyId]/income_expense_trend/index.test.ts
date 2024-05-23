@@ -26,11 +26,9 @@ afterEach(() => {
 describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
-    req.query = { date: '2024-03-07' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    const expectedPayload = expect.objectContaining({
-      date: expect.any(Number),
+    const expectedPayload = {
       categories: expect.arrayContaining([expect.any(String)]),
       series: expect.arrayContaining([
         expect.objectContaining({
@@ -38,7 +36,18 @@ describe('Result API Handler Tests', () => {
           data: expect.arrayContaining([expect.any(Number)]),
         }),
       ]),
-    });
+      annotations: expect.arrayContaining([
+        expect.objectContaining({
+          name: expect.any(String),
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              percentage: expect.any(Number),
+              absolute: expect.any(Number),
+            }),
+          ]),
+        }),
+      ]),
+    };
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
@@ -49,15 +58,15 @@ describe('Result API Handler Tests', () => {
       })
     );
   });
-  it('should return error if some query element is missing', async () => {
-    req.method = 'GET';
+  it('should return error if not GET', async () => {
+    req.method = 'POST';
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
+        code: expect.stringContaining('405'),
         message: expect.any(String),
         payload: expect.any(Object),
       })
