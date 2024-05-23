@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { useRef, useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { FiRotateCw, FiCrop } from 'react-icons/fi';
