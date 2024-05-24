@@ -3,11 +3,25 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { FiBookOpen, FiPlusCircle } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useUserCtx } from '@/contexts/user_context';
 
 const AccountingSidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
+
+  const { selectedCompany } = useUserCtx();
+  const companyName = selectedCompany?.name;
+
+  const displayedCompanyName = companyName ? (
+    <Link
+      href={ISUNFA_ROUTE.SELECT_COMPANY}
+      className={`my-20px flex ${isExpanded ? 'h-60px w-60px text-3xl' : 'h-40px w-40px text-2xl'} items-center justify-center rounded-full bg-avatar-surface-background-indigo font-bold text-avatar-text-in-dark-background transition-all duration-300 ease-in-out`}
+    >
+      {/* Info: (20240423 - Julian) Display company name's first letter */}
+      {companyName.charAt(0)}
+    </Link>
+  ) : null;
 
   return (
     <>
@@ -31,6 +45,8 @@ const AccountingSidebar = () => {
           >
             Accounting
           </p>
+
+          {displayedCompanyName}
         </div>
 
         {/* Info: (20240423 - Julian) Menu */}

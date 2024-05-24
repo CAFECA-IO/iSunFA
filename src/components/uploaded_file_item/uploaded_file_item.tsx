@@ -39,10 +39,7 @@ const UploadedFileItem = ({
   );
 
   return (
-    <div
-      className="relative inline-flex w-full flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 shadow"
-      onClick={() => clickHandler(itemData)}
-    >
+    <div className="relative inline-flex w-full flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 shadow">
       <div className="inline-flex items-center gap-20px">
         <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="upload_cloud_icon" />
         {/* Info: (20240523 - Julian) File Thumbnail */}
@@ -88,8 +85,8 @@ const UploadedFileItem = ({
       <button
         type="button"
         disabled={progress !== 100}
-        // ToDo: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
-        // onClick={() => {}}
+        // Info: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
+        onClick={() => clickHandler(itemData)}
         className="absolute left-0 top-0 h-full w-full disabled:hidden"
       ></button>
     </div>
