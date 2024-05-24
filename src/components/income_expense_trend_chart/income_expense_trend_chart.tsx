@@ -38,24 +38,24 @@ const LineChart = ({ data }: LineChartProps) => {
 
       if (windowWidth <= MOBILE_WIDTH) {
         const presentWidth = 250;
-        const presentHeight = 250;
+        const presentHeight = 300;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (windowWidth <= TABLET_WIDTH) {
+      } else if (windowWidth < TABLET_WIDTH) {
         const presentWidth = 370;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth > DESKTOP_WIDTH) {
-        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 10;
+        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 2.5;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 400;
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth >= TABLET_WIDTH) {
+        const presentWidth = 650 + (windowWidth - TABLET_WIDTH) / 1.05;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
@@ -197,7 +197,6 @@ const LineChart = ({ data }: LineChartProps) => {
   return (
     <Chart
       options={options}
-      // series={data.series}
       series={data.annotations.map((item) => ({
         name: item.name,
         data: item.data.map((point) => point.percentage),
@@ -213,7 +212,7 @@ const IncomeExpenseTrendChart = () => {
   const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
-  const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
+  const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.MONTH);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
 
   const {
@@ -227,7 +226,7 @@ const IncomeExpenseTrendChart = () => {
       companyId,
     },
     query: {
-      period: Period.WEEK,
+      period: selectedPeriod,
     },
   });
 
@@ -260,7 +259,7 @@ const IncomeExpenseTrendChart = () => {
   const displayedDataSection = (
     <div
       id="displayedDataSection"
-      className="flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
+      className="flex h-500px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
     >
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
@@ -308,12 +307,12 @@ const IncomeExpenseTrendChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
+        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-0 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             2024
           </div>
           <div className="flex space-x-2 md:space-x-5">
-            <div className="">
+            {/* <div className="">
               <Button
                 variant={'tertiaryOutline'}
                 className={cn(
@@ -326,7 +325,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 Week
               </Button>
-            </div>
+            </div> */}
             <div className="">
               <Button
                 variant={'tertiaryOutline'}

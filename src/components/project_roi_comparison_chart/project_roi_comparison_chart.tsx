@@ -149,7 +149,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
   ];
 
-  return <Chart options={options} series={series} type="bar" height={350} />;
+  return <Chart options={options} series={series} type="bar" height={400} />;
 };
 
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
@@ -280,17 +280,45 @@ const ProjectRoiComparisonChart = () => {
   }, [period]);
 
   const displayedDateSection = (
-    <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-neutral-primary">
+    <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-brand-primary-lv2">
       {displayedYear}{' '}
-      <span className="text-sm font-semibold leading-5 tracking-normal">{displayedDate}</span>{' '}
+      <span className="text-sm font-semibold leading-5 tracking-normal text-text-brand-secondary-lv1">
+        {displayedDate}
+      </span>{' '}
     </div>
   );
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-600px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-550px">
+    <div className="flex h-630px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
       <div>
-        <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">Project ROI Comparison Graph</div>
+        <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="#FFA502"
+                  fillRule="evenodd"
+                  d="M17.138.378c.368-.369.922-.48 1.404-.28l3.647 1.513c.653.27.965 1.018.698 1.673l-1.488 3.647a1.286 1.286 0 01-2.377.01l-.589-1.407-14.807 6.33a1.286 1.286 0 11-1.01-2.365L17.44 3.162l-.578-1.38a1.286 1.286 0 01.275-1.404z"
+                  clipRule="evenodd"
+                ></path>
+                <path
+                  fill="#002462"
+                  fillRule="evenodd"
+                  d="M21.857 9.393a1.714 1.714 0 011.715 1.715v12a.857.857 0 01-.858.857H18.43a.857.857 0 01-.857-.857v-12a1.715 1.715 0 011.714-1.715h2.571zm-8.571 2.572A1.714 1.714 0 0115 13.679v9.429a.857.857 0 01-.857.857H9.857A.857.857 0 019 23.108v-9.429a1.714 1.714 0 011.714-1.714h2.572zm-7.36 3.073a1.714 1.714 0 00-1.212-.502H2.143a1.714 1.714 0 00-1.714 1.715v6.857c0 .473.383.857.857.857h4.286a.857.857 0 00.857-.857V16.25c0-.455-.18-.891-.502-1.213z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+              <p className="text-base lg:text-sm xl:text-base">
+                Project-wise Income vs. Expense Comparison Graph
+              </p>
+            </div>
+          </div>
 
           <div className="justify-end">
             <Tooltip>
@@ -303,12 +331,13 @@ const ProjectRoiComparisonChart = () => {
         </div>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-5">
         <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
-          <div className="my-3 flex w-200px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-2 md:my-auto lg:w-fit">
+          <div className="my-3 flex w-200px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-0 md:my-auto lg:w-fit">
             {displayedDateSection}
           </div>
 
+          {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
           <div className="hidden lg:block">
             <DatePicker
               type={DatePickerType.ICON}
@@ -320,13 +349,12 @@ const ProjectRoiComparisonChart = () => {
           </div>
 
           {/* Info: prev and next button (20240419 - Shirley) */}
-          {/* Info: desktop version (20240419 - Shirley) */}
           <div className="hidden flex-1 justify-end space-x-2 lg:flex">
             <Button
               disabled={currentPage === 1}
               onClick={goToPrevPage}
               variant={'tertiaryOutline'}
-              className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+              className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
             >
               <AiOutlineLeft size={15} />
             </Button>
@@ -335,13 +363,13 @@ const ProjectRoiComparisonChart = () => {
               disabled={currentPage === totalPages}
               onClick={goToNextPage}
               variant={'tertiaryOutline'}
-              className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+              className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
             >
               <AiOutlineRight size={15} />
             </Button>
           </div>
 
-          {/* Info: mobile version (20240419 - Shirley) */}
+          {/* Info: ----- mobile version (20240419 - Shirley) ----- */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
             <div>
               <DatePicker
@@ -359,7 +387,7 @@ const ProjectRoiComparisonChart = () => {
                 disabled={currentPage === 1}
                 onClick={goToPrevPage}
                 variant={'tertiaryOutline'}
-                className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+                className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
               >
                 <AiOutlineLeft size={15} />
               </Button>
@@ -368,7 +396,7 @@ const ProjectRoiComparisonChart = () => {
                 disabled={currentPage === totalPages}
                 onClick={goToNextPage}
                 variant={'tertiaryOutline'}
-                className="rounded-sm border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+                className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
               >
                 <AiOutlineRight size={15} />
               </Button>
@@ -377,7 +405,7 @@ const ProjectRoiComparisonChart = () => {
         </div>
       </div>
 
-      <div className="mt-5 max-md:-ml-3 md:mt-10">
+      <div className="mt-5 max-md:-ml-3 md:mt-5">
         <ColumnChart data={data} />
       </div>
     </div>

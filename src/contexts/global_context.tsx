@@ -311,7 +311,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
             <p>Your report is done</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
-              className="font-semibold text-link-text-success"
+              className="font-semibold text-link-text-success hover:opacity-70"
             >
               Go check it !
             </Link>
