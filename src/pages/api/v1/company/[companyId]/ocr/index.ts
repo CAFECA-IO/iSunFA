@@ -3,7 +3,7 @@ import formidable from 'formidable';
 import { promises as fs } from 'fs';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { bytesToKb, formatApiResponse, transformOCRImageIDToURL } from '@/lib/utils/common';
+import { formatApiResponse, transformOCRImageIDToURL } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import prisma from '@/client';
 
@@ -62,7 +62,7 @@ async function postImageToAICH(files: formidable.Files): Promise<
         resultStatus,
         imageUrl: transformOCRImageIDToURL('invoice', imageName),
         imageName,
-        imageSize: bytesToKb(image.size),
+        imageSize: image.size,
       };
     })
   );

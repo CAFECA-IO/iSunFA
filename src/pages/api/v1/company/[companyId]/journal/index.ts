@@ -1,121 +1,112 @@
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
+import { NextApiRequest, NextApiResponse } from 'next';
+
 import { IJournal } from '@/interfaces/journal';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { isIVoucher } from '@/lib/utils/type_guard/voucher';
+import { formatApiResponse, pageToOffset, timestampInMilliSeconds } from '@/lib/utils/common';
 
-export const journalArray: IJournal[] = [
-  {
-    id: '1',
-    tokenContract: '0xd38E5c25935291fFD51C9d66C3B7384494bb099A',
-    tokenId: '8978922',
-    voucherIndex: '20240402299',
-    invoiceIndex: '20240402299',
-    metadatas: [
-      {
-        date: 1713139200000,
-        voucherType: VoucherType.EXPENSE,
-        companyId: '1',
-        companyName: '文中資訊股份有限公司',
-        description:
-          'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-        reason: '記帳系統',
-        projectId: '0',
-        project: 'baifa',
-        contractId: '3',
-        contract: 'asus',
-        payment: {
-          isRevenue: false,
-          price: 109725,
-          hasTax: true,
-          taxPercentage: 5,
-          hasFee: false,
-          fee: 0,
-          paymentMethod: 'transfer',
-          paymentPeriod: PaymentPeriodType.AT_ONCE,
-          installmentPeriod: 0,
-          paymentAlreadyDone: 0,
-          paymentStatus: PaymentStatusType.UNPAID,
-          progress: 0,
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import prisma from '@/client';
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import { EventType } from '@/constants/account';
+
+async function getJournal(
+  companyId: number,
+  page: number = DEFAULT_PAGE_START_AT,
+  limit: number = DEFAULT_PAGE_LIMIT,
+  eventType: EventType | undefined = undefined,
+  startDate: number | undefined = undefined,
+  endDate: number | undefined = undefined,
+  search: string | undefined = undefined,
+  sort: string | undefined = undefined
+) {
+  const startDateInMilliSecond = startDate ? new Date(timestampInMilliSeconds(startDate)) : undefined;
+  const endDateInMilliSecond = endDate ? new Date(timestampInMilliSeconds(endDate)) : undefined;
+  const eventTypeInString = eventType ? EventType[eventType] : undefined;
+
+  const offset = pageToOffset(page, limit);
+  try {
+    const journalData = await prisma.journal.findMany({
+      skip: offset,
+      take: limit,
+      where: {
+        companyId,
+        createdAt: {
+          gte: startDateInMilliSecond,
+          lte: endDateInMilliSecond
         },
-      },
-    ],
-    lineItems: [
-      {
-        lineItemIndex: '20240402001',
-        account: '購買軟體',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: true,
-        amount: 10450,
-      },
-      {
-        lineItemIndex: '20240402002',
-        account: '銀行存款',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: false,
-        amount: 10450,
-      },
-    ],
-  },
-  {
-    id: '2',
-    tokenContract: '0xd38E5c25935291fFD51C9d66C3B7384494bb099A',
-    tokenId: '8978922',
-    voucherIndex: '20240402299',
-    invoiceIndex: '20240402299',
-    metadatas: [
-      {
-        date: 1713139200000,
-        voucherType: VoucherType.EXPENSE,
-        companyId: '1',
-        companyName: '文中資訊股份有限公司',
-        description:
-          'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-        reason: '記帳系統',
-        projectId: '0',
-        project: 'baifa',
-        contractId: '3',
-        contract: 'asus',
-        payment: {
-          isRevenue: false,
-          price: 109725,
-          hasTax: true,
-          taxPercentage: 5,
-          hasFee: false,
-          fee: 0,
-          paymentMethod: 'transfer',
-          paymentPeriod: PaymentPeriodType.AT_ONCE,
-          installmentPeriod: 0,
-          paymentAlreadyDone: 0,
-          paymentStatus: PaymentStatusType.UNPAID,
-          progress: 0,
+        invoice: {
+          eventType: eventTypeInString,
         },
+        OR: [
+          {
+            invoice: {
+              vendorOrSupplier: {
+                contains: search
+              }
+            }
+          },
+          {
+            invoice: {
+              description: {
+                contains: search
+              }
+            }
+          },
+          {
+            voucher: {
+              no: {
+                contains: search
+              }
+            }
+          }
+        ]
       },
-    ],
-    lineItems: [
-      {
-        lineItemIndex: '20240402001',
-        account: '購買軟體',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: true,
-        amount: 10450,
+      select: {
+        id: true,
+        createdAt: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        invoice: {
+          select: {
+            eventType: true,
+            description: true,
+            vendorOrSupplier: true,
+          }
+        },
+        voucher: {
+          select: {
+            id: true,
+            no: true,
+            lineItems: {
+              select: {
+                id: true,
+                amount: true,
+                debit: true,
+                account: {
+                  select: {
+                    name: true,
+                  }
+                }
+            }
+          }
+        }
+
       },
-      {
-        lineItemIndex: '20240402002',
-        account: '銀行存款',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: false,
-        amount: 10450,
-      },
-    ],
-  },
-];
+    } });
+    return journalData;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+}
+
+function formatJournal(journalData: ) {
+
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IJournal | IJournal[]>>
@@ -130,24 +121,6 @@ export default async function handler(
         STATUS_MESSAGE.SUCCESS_LIST,
         journalArray
       );
-
-      res.status(httpCode).json(result);
-    } else if (req.method === 'POST') {
-      const { voucher } = req.body;
-      if (!voucher || !isIVoucher(voucher)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
-      }
-
-      // combine voucher to journal
-      const journal: IJournal = {
-        id: '3',
-        tokenContract: '0xd38E5c25935291fFD51C9d66C3B7384494bb099A',
-        tokenId: '8978922',
-        ...voucher,
-      };
-      journalArray.push(journal);
-
-      const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.CREATED, journal);
 
       res.status(httpCode).json(result);
     } else {

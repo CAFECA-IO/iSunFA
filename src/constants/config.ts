@@ -141,3 +141,6 @@ export const FORMIDABLE_CONFIG = {
 };
 
 export const AICH_URI = process.env.AICH_URI as string;
+
+export const DEFAULT_PAGE_START_AT = 1;
+export const DEFAULT_PAGE_LIMIT = 10;
