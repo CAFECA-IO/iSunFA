@@ -160,20 +160,10 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         offsetX: 0,
         offsetY: 0,
       },
-
-      // theme: 'light', // Change this to 'light' if needed
-      // custom: function ({ series, seriesIndex, dataPointIndex, w }) {
-      //   return (
-      //     '<div style="background-color: rgba(0, 0, 0, 0.0); border: none; padding: 5px;">' +
-      //     '' +
-      //     series[seriesIndex][dataPointIndex] +
-      //     '</div>'
-      //   );
-      // },
     },
   };
 
-  return <Chart options={options} series={data.series} type="bar" height={200} />;
+  return <Chart options={options} series={data.series} type="bar" height={230} />;
 };
 
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
@@ -261,15 +251,15 @@ const ProjectProgressChart = () => {
 
   const displayedDateSection = (
     <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-brand-primary-lv2">
-      {displayedYear}
+      {displayedYear}{' '}
       <span className="text-sm font-semibold leading-5 tracking-normal text-text-brand-secondary-lv1">
         {displayedDate}
-      </span>
+      </span>{' '}
     </div>
   );
 
   const displayedDataSection = (
-    <div className="flex h-430px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+    <div className="flex h-430px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full lg:h-360px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
           <div className="flex-1">
@@ -314,7 +304,7 @@ const ProjectProgressChart = () => {
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             {displayedDateSection}
           </div>
-          <div>
+          <div className="mt-3 lg:mt-0">
             <DatePicker
               type={DatePickerType.ICON_CHOOSE_DATE}
               minDate={minDate}
@@ -326,7 +316,7 @@ const ProjectProgressChart = () => {
         </div>
       </div>
 
-      <div className="-ml-3 mt-5 md:mt-5">
+      <div className="-ml-3 mt-5 md:mt-5 lg:mt-0">
         <ColumnChart data={data} />
       </div>
     </div>

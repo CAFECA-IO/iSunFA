@@ -19,7 +19,7 @@ const DashboardPageBody = () => {
   const displayedPageBody = NO_DATA_FOR_DEMO ? <DashboardWithoutData /> : <DashboardWithData />;
 
   return (
-    <div className="bg-surface-neutral-main-background px-10 pb-20 pt-5 max-md:pt-10">
+    <div className="bg-surface-neutral-main-background px-10 pb-32 pt-5 max-md:pt-10">
       <div className="mt-10 flex w-full flex-col items-center justify-between gap-x-40px gap-y-20px max-md:max-w-full max-md:px-5 md:flex-row">
         {pageHeader} <DashboardBookmark />
       </div>
