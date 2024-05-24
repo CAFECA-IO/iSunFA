@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ALLOWED_ORIGINS } from '@/constants/config';
+import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
@@ -273,6 +273,13 @@ export const timestampInSeconds = (timestamp: number): number => {
   return timestamp;
 };
 
+export const timestampInMilliSeconds = (timestamp: number): number => {
+  if (timestamp < 10000000000) {
+    return Math.floor(timestamp * 1000);
+  }
+  return timestamp;
+};
+
 export const countdown = (remainingSeconds: number) => {
   const days = Math.floor(remainingSeconds / 86400);
   const hours = Math.floor((remainingSeconds % 86400) / 3600);
@@ -312,6 +319,16 @@ export function transformOCRImageIDToURL(documentType: string, imageID: string):
   return `/api/v1/company/${documentType}/${imageID}/image`;
 }
 
-export function bytesToKb(bytes: number): number {
-  return bytes / 1024;
+export function transformBytesToFileSizeString(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const size = parseFloat((bytes / k ** i).toFixed(2));
+  return `${size} ${sizes[i]}`;
+}
+
+// page, limit to offset
+export function pageToOffset(page: number = DEFAULT_PAGE_START_AT, limit: number = DEFAULT_PAGE_LIMIT): number {
+  return (page - 1) * limit;
 }

@@ -247,8 +247,8 @@ model lineItem {
   description String
   debit       Boolean
   accountId   Int      @map("account_id") // 新增
-  account     account  @relation(fields: [accountId], references: [id]) // 修改
   voucherId   Int?
+  account     account  @relation(fields: [accountId], references: [id])
   voucher     voucher? @relation(fields: [voucherId], references: [id])
 
   @@map("line_item")
@@ -417,6 +417,4 @@ model workRate {
   hours           Int
   month           String // Info: (20240524 - Jacky) like 2024-05
   project         project @relation(fields: [projectId], references: [id])
-
-  @@map("work_rate")
 }

@@ -1,7 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import {
+  formatApiResponse,
+  timestampInSeconds,
+  transformBytesToFileSizeString,
+} from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -35,13 +39,12 @@ async function getUnprocessJournal(companyId: number) {
     });
 
     const journals = journalDatas.filter(
-
       // prettier-ignore
       (journalData):journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } => journalData.ocr !== null
-);
+    );
     return journals;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASRE_READ_FAILED_ERROR);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
 
@@ -109,7 +112,7 @@ export default async function handler(
               aichResultId: journalData.aichResultId,
               imageName: journalData.ocr.imageName,
               imageUrl: journalData.ocr.imageUrl,
-              imageSize: `${journalData.ocr.imageSize} KB`,
+              imageSize: transformBytesToFileSizeString(journalData.ocr.imageSize),
               progress,
               status,
               createdAt: timestampInSeconds(journalData.createdAt.getTime()),
