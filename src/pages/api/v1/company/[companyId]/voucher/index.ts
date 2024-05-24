@@ -19,11 +19,23 @@ async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
           id: true,
         },
       });
+      const fakeAccount = await prisma.account.create({
+        data: {
+          type: 'FAKE',
+          liquidity: 'FAKE',
+          account: 'FAKE',
+          code: 'FAKE',
+          name: 'FAKE',
+        },
+        select: {
+          id: true,
+        },
+      });
 
       const lineItems = await Promise.all(voucher.lineItems.map(async (lineItem) => {
         return prisma.lineItem.create({
           data: {
-            account: lineItem.account,
+            accountId: fakeAccount.id,
             description: lineItem.description,
             debit: lineItem.debit,
             amount: lineItem.amount,
@@ -36,6 +48,7 @@ async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
 
       const voucherData = await prisma.voucher.create({
         data: {
+          no: "Fake",
           journal: {
             connect: {
               id: journal.id,
@@ -62,15 +75,15 @@ async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
 }
 
 type ApiResponseType = {
-    id: number;
-    lineItems: {
-        id: number;
-        account: string;
-        description: string;
-        debit: boolean;
-        amount: number;
-        voucherId: number | null;
-    }[];
+  id: number;
+  lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number | null;
+  }[];
 };
 export default async function handler(
   req: NextApiRequest,
