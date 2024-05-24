@@ -6,14 +6,14 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let card: ICard;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
-    headers: {},
-    body: null,
-    query: {},
-    method: '',
+    body: {},
+    method: 'POST',
     json: jest.fn(),
+    session: { companyId, userId: 1 },
   } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
@@ -28,8 +28,16 @@ beforeEach(async () => {
       expireMonth: '01',
       cvc: '330',
       name: 'Taiwan Bank',
+      company: {
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
+        },
+      },
     },
   });
+  companyId = card.companyId;
 });
 
 afterEach(async () => {
@@ -43,12 +51,20 @@ afterEach(async () => {
   } catch (error) {
     // Info: (20240515 - Jacky) If already deleted, ignore the error.
   }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
 });
 
 describe('Payment API Handler Tests', () => {
   it('should handle LIST requests successfully', async () => {
     req.method = 'GET';
-    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -65,28 +81,33 @@ describe('Payment API Handler Tests', () => {
           expireMonth: expect.any(String),
           cvc: expect.any(String),
           name: expect.any(String),
+          companyId: expect.any(Number),
         }),
       ]),
     });
   });
 
   it('should handle POST requests successfully', async () => {
-    req.method = 'POST';
-    req.headers.userid = '1';
-    req.body = {
-      type: 'VISA',
-      no: '1234-1234-1234-1234',
-      expireYear: '29',
-      expireMonth: '01',
-      cvc: '330',
-      name: 'Taiwan Bank',
-    };
-    await handler(req, res);
-    await prisma.card.delete({
-      where: {
-        id: res.json.mock.calls[0][0].payload.id,
+    req = {
+      body: {
+        type: 'VISA',
+        no: '1234-1234-1234-1234',
+        expireYear: '29',
+        expireMonth: '01',
+        cvc: '330',
+        name: 'Taiwan Bank',
       },
-    });
+      method: 'POST',
+      json: jest.fn(),
+      session: { companyId, userId: 1 },
+    } as unknown as jest.Mocked<NextApiRequest>;
+
+    await handler(req, res);
+    // await prisma.card.delete({
+    //   where: {
+    //     id: res.json.mock.calls[0][0].payload.id,
+    //   },
+    // });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -102,6 +123,7 @@ describe('Payment API Handler Tests', () => {
           expireMonth: expect.any(String),
           cvc: expect.any(String),
           name: expect.any(String),
+          companyId: expect.any(Number),
         }),
       })
     );
@@ -109,7 +131,6 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle INVALID_INPUT_PARAMETERs for POST requests', async () => {
     req.method = 'POST';
-    req.headers.userid = '1';
     req.body = {
       type: 'VISA',
       no: '1234-1234-1234-1234',
@@ -133,7 +154,6 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'PUT';
-    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
@@ -141,21 +161,6 @@ describe('Payment API Handler Tests', () => {
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('405'),
-        payload: expect.any(Object),
-        message: expect.any(String),
-      })
-    );
-  });
-
-  it('should handle missing userid in headers', async () => {
-    req.method = 'GET';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
         payload: expect.any(Object),
         message: expect.any(String),
       })

@@ -19,23 +19,38 @@ async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
           id: true,
         },
       });
+      const fakeAccount = await prisma.account.create({
+        data: {
+          type: 'FAKE',
+          liquidity: 'FAKE',
+          account: 'FAKE',
+          code: 'FAKE',
+          name: 'FAKE',
+        },
+        select: {
+          id: true,
+        },
+      });
 
-      const lineItems = await Promise.all(voucher.lineItems.map(async (lineItem) => {
-        return prisma.lineItem.create({
-          data: {
-            account: lineItem.account,
-            description: lineItem.description,
-            debit: lineItem.debit,
-            amount: lineItem.amount,
-          },
-          select: {
-            id: true,
-          }
-        });
-      }));
+      const lineItems = await Promise.all(
+        voucher.lineItems.map(async (lineItem) => {
+          return prisma.lineItem.create({
+            data: {
+              accountId: fakeAccount.id,
+              description: lineItem.description,
+              debit: lineItem.debit,
+              amount: lineItem.amount,
+            },
+            select: {
+              id: true,
+            },
+          });
+        })
+      );
 
       const voucherData = await prisma.voucher.create({
         data: {
+          no: 'Fake',
           journal: {
             connect: {
               id: journal.id,
@@ -49,8 +64,8 @@ async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
         },
         select: {
           id: true,
-          lineItems: true
-        }
+          lineItems: true,
+        },
       });
 
       return voucherData;
@@ -62,15 +77,15 @@ async function saveVoucherToDB(voucher: IVoucherDataForSavingToDB) {
 }
 
 type ApiResponseType = {
+  id: number;
+  lineItems: {
     id: number;
-    lineItems: {
-        id: number;
-        account: string;
-        description: string;
-        debit: boolean;
-        amount: number;
-        voucherId: number | null;
-    }[];
+    amount: number;
+    description: string;
+    debit: boolean;
+    accountId: number;
+    voucherId: number | null;
+  }[];
 };
 export default async function handler(
   req: NextApiRequest,
@@ -81,7 +96,7 @@ export default async function handler(
       const voucher = req.body;
 
       // Info: （ 20240522 - Murkky）body need to provide LineItems and journalId
-      if (!voucher || !isIVoucherDataForSavingToDB(voucher) || !(voucher.journalId)) {
+      if (!voucher || !isIVoucherDataForSavingToDB(voucher) || !voucher.journalId) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
