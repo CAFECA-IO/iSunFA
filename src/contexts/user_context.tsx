@@ -13,7 +13,6 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
-import { IResponseData } from '@/interfaces/response_data';
 import { ISessionData } from '@/interfaces/session_data';
 
 interface SignUpProps {
@@ -74,11 +73,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
 
-  // const [errorCode, setErrorCode, errorCodeRef] = useStateRef<{
-  //   httpCode: number;
-  //   customCode: string;
-  // } | null>(null);
-
   const { trigger: signOutAPI } = APIHandler<void>(
     APIName.SIGN_OUT,
     {
@@ -91,7 +85,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const {
     trigger: signInAPI,
     data: signInData,
-    error: signInError,
     success: signInSuccess,
     isLoading: isSignInLoading,
     code: signInCode,
@@ -107,7 +100,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const {
     trigger: signUpAPI,
     data: signUpData,
-    error: signUpError,
     success: signUpSuccess,
     isLoading: isSignUpLoading,
     code: signUpCode,
@@ -120,22 +112,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  // TODO: 調整呼叫 getUser API (20240522 - Shirley)
   const {
-    data: getUserByIdData,
-    error: getUserByIdError,
-    success: getUserByIdSuccess,
-    isLoading: isGetUserByIdLoading,
-  } = APIHandler<IUser>(
-    APIName.USER_GET_BY_ID,
-    {
-      header: {
-        userId: credentialRef.current || '',
-      },
-    },
-    false,
-    false
-  );
+    trigger: getUserSessionData,
+    data: userSessionData,
+    error: getUserSessionError,
+    success: getUserSessionSuccess,
+    isLoading: isGetUserSessionLoading,
+    code: getUserSessionCode,
+  } = APIHandler<ISessionData>(APIName.SESSION_GET, {}, false, false);
 
   const readFIDO2Cookie = async () => {
     const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
@@ -171,48 +155,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const deleteCookie = (name: string) => {
     document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-  };
-
-  const refreshUserFromSession = async () => {
-    try {
-      const response = await fetch('/api/v1/session');
-      const data = (await response.json()) as IResponseData<ISessionData>;
-      // Deprecated: dev (20240607 - Shirley)
-      // eslint-disable-next-line no-console
-      console.log('userSession in refreshUserFromSession', data);
-
-      if (
-        !data.payload ||
-        (typeof data.payload === 'object' && !('user' in data.payload)) ||
-        !data.payload.user ||
-        !Object.keys(data.payload.user).length
-      ) {
-        return;
-      }
-
-      if (data.payload) {
-        if (
-          'user' in data.payload &&
-          data.payload.user &&
-          Object.keys(data.payload.user).length > 0
-        ) {
-          setUserAuth(data.payload.user);
-          setUsername(data.payload.user.name);
-          setCredential(data.payload.user.credentialId);
-          setSignedIn(true);
-          setIsSignInError(false);
-          setIsSelectCompany(false);
-          setSelectedCompany(null);
-        }
-      }
-
-      // Deprecated: dev (20240607 - Shirley)
-      // eslint-disable-next-line no-console
-      console.log('data.payload.user in refreshUserFromSession', data.payload.user);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('userSession in refreshUserFromSession error:', error);
-    }
   };
 
   const toggleIsSignInError = () => {
@@ -287,8 +229,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
-    refreshUserFromSession();
-
+    getUserSessionData();
     const credentialFromCookie = await readFIDO2Cookie();
 
     if (credentialFromCookie !== null) {
@@ -338,7 +279,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    signOutAPI(); // Deprecated: 登出只需要在前端刪掉 cookie 就好 (20240517 - Shirley)
+    signOutAPI(); // TODO: signOutAPI to delete the session (20240524 - Shirley)
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
     const cookieName = COOKIE_NAME.FIDO2;
@@ -370,10 +311,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     if (signUpSuccess === false) {
       setIsSignInError(true);
-      // Deprecated: remove console.log (20240523 - Luphia)
-      // eslint-disable-next-line no-console
-      console.log('signUpError:', signUpError);
-
       setErrorCode(signUpCode ?? '');
     }
   }, [signUpData, isSignUpLoading, signUpSuccess, signUpCode]);
@@ -393,32 +330,42 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     if (signInSuccess === false) {
       setIsSignInError(true);
-      // Deprecated: remove console.log (20240523 - Luphia)
-      // eslint-disable-next-line no-console
-      console.log('signInError:', signInError, `signInCode:`, signInCode);
       setErrorCode(signInCode ?? '');
     }
   }, [signInData, isSignInLoading, signInSuccess, signInCode]);
 
   useEffect(() => {
-    if (isGetUserByIdLoading) return;
+    if (isGetUserSessionLoading) return;
 
-    if (getUserByIdSuccess) {
-      if (getUserByIdData) {
-        setUsername(getUserByIdData.name);
-        setUserAuth(getUserByIdData);
-        setCredential(getUserByIdData.credentialId);
-        setSignedIn(true);
-        setIsSignInError(false);
-        writeFIDO2Cookie();
+    // Deprecated: dev (20240601 - Shirley)
+    // eslint-disable-next-line no-console
+    console.log('userSessionData:', userSessionData);
+
+    if (getUserSessionSuccess) {
+      if (userSessionData) {
+        if (
+          'user' in userSessionData &&
+          userSessionData.user &&
+          Object.keys(userSessionData.user).length > 0
+        ) {
+          setUserAuth(userSessionData.user);
+          setUsername(userSessionData.user.name);
+          setCredential(userSessionData.user.credentialId);
+          setSignedIn(true);
+          setIsSignInError(false);
+          setIsSelectCompany(false);
+          setSelectedCompany(null);
+        }
       }
     }
-    if (getUserByIdSuccess === false) {
+    if (getUserSessionSuccess === false) {
       setIsSignInError(true);
+      // Deprecated: dev (20240601 - Shirley)
       // eslint-disable-next-line no-console
-      console.log('getUserByIdError:', getUserByIdError);
+      console.log('getUserSessionError:', getUserSessionError);
+      setErrorCode(getUserSessionCode ?? '');
     }
-  }, [getUserByIdData, isGetUserByIdLoading, getUserByIdSuccess]);
+  }, [userSessionData, isGetUserSessionLoading, getUserSessionSuccess, getUserSessionCode]);
 
   useEffect(() => {
     if (selectedCompany) {
