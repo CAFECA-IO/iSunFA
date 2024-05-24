@@ -21,104 +21,120 @@ export const config = {
 
 // Info (20240521-Murky) 回傳目前還是array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-async function postImageToAICH(files: formidable.Files): Promise<{
-  resultStatus: IAccountResultStatus;
-  imageName: string;
-  imageUrl: string;
-  imageSize: number;
-}[]> {
-        if (!files || !files.image || !files.image.length) {
-          throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
-        }
-       // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
-        const resultJson = await Promise.all(files.image.map(async (image) => {
-          const imageContent = await fs.readFile(image.filepath);
-          const imageBlob = new Blob([imageContent], { type: image.mimetype || undefined });
-          const imageName = image.filepath.split('/').pop() || 'unknown';
+async function postImageToAICH(files: formidable.Files): Promise<
+  {
+    resultStatus: IAccountResultStatus;
+    imageName: string;
+    imageUrl: string;
+    imageSize: number;
+  }[]
+> {
+  if (!files || !files.image || !files.image.length) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORMDATA_IMAGE);
+  }
+  // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
+  const resultJson = await Promise.all(
+    files.image.map(async (image) => {
+      const imageContent = await fs.readFile(image.filepath);
+      const imageBlob = new Blob([imageContent], { type: image.mimetype || undefined });
+      const imageName = image.filepath.split('/').pop() || 'unknown';
 
-          const formData = new FormData();
-          formData.append('image', imageBlob);
-          formData.append('imageName', imageName);
+      const formData = new FormData();
+      formData.append('image', imageBlob);
+      formData.append('imageName', imageName);
 
-          let fetchResult: Response;
-          try {
-            fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
-              method: 'POST',
-              body: formData,
-            });
-          } catch (error) {
-            throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
-          }
+      let fetchResult: Response;
+      try {
+        fetchResult = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (error) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+      }
 
-          if (!fetchResult.ok) {
-            throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
-          }
+      if (!fetchResult.ok) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+      }
 
-          const resultStatus: IAccountResultStatus = (await fetchResult.json()).payload;
-          return {
-            resultStatus,
-            imageUrl: transformOCRImageIDToURL("invoice", imageName),
-            imageName,
-            imageSize: bytesToKb(image.size),
-          };
-}));
+      const resultStatus: IAccountResultStatus = (await fetchResult.json()).payload;
+      return {
+        resultStatus,
+        imageUrl: transformOCRImageIDToURL('invoice', imageName),
+        imageName,
+        imageSize: bytesToKb(image.size),
+      };
+    })
+  );
 
-        return resultJson;
+  return resultJson;
 }
 
-async function createJournalAndOcrInPrisma(companyId: number, aichResult: {
-  resultStatus: IAccountResultStatus;
-  imageUrl: string;
-  imageName: string;
-  imageSize: number;
-}): Promise<void> {
+async function createJournalAndOcrInPrisma(
+  companyId: number,
+  aichResult: {
+    resultStatus: IAccountResultStatus;
+    imageUrl: string;
+    imageName: string;
+    imageSize: number;
+  }
+): Promise<void> {
   // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
+  // ToDo: (20240521 - Murky) 重複的圖片一直post貌似會越來越多Journal? 目前沒有檢查重複post的狀況
   try {
     // 如果是AICH已經重複的就不建立了
     if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
       return;
     }
-    let company = await prisma.company.findUnique({
-      where: {
-        id: companyId,
-      },
-      select: {
-        id: true,
-      }
-    });
-
-    // Depreciate (20240521 - Murky) This is for demo purpose
-    if (!company) {
-      company = await prisma.company.create({
-        data: {
+    await prisma.$transaction(async () => {
+      let company = await prisma.company.findUnique({
+        where: {
           id: companyId,
-          name: 'ISunCloud',
-          code: 'ISunCloud',
-          regional: 'ISunCloud',
         },
         select: {
           id: true,
-        }
+        },
       });
-    }
 
-    const ocrData = await prisma.ocr.create({
-      data: {
-        imageName: aichResult.imageName,
-        imageUrl: aichResult.imageUrl,
-        imageSize: aichResult.imageSize,
+      // Depreciate (20240521 - Murky) This is for demo purpose
+      if (!company) {
+        company = await prisma.company.create({
+          data: {
+            id: companyId,
+            code: 'COMP123',
+            name: 'Company Name',
+            regional: 'Regional Name',
+          },
+          select: {
+            id: true,
+          },
+        });
       }
+
+      const ocrData = await prisma.ocr.create({
+        data: {
+          imageName: aichResult.imageName,
+          imageUrl: aichResult.imageUrl,
+          imageSize: aichResult.imageSize,
+        },
+      });
+      await prisma.journal.upsert({
+        where: {
+          aichResultId: aichResult.resultStatus.resultId,
+        },
+        create: {
+          companyId: company.id,
+          ocrId: ocrData.id,
+          aichResultId: aichResult.resultStatus.resultId,
+        },
+        update: {
+          ocrId: ocrData.id,
+        },
+      });
     });
-    await prisma.journal.create({
-      data: {
-        companyId: company.id,
-        ocrId: ocrData.id,
-        aichResultId: aichResult.resultStatus.resultId,
-      }
-    });
-    } catch (error) {
-      throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-    }
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
 }
 
 export default async function handler(
@@ -131,7 +147,12 @@ export default async function handler(
         const { companyId } = req.query;
 
         // Info Murky (20240416): Check if companyId is string
-        if (Array.isArray(companyId) || !companyId || typeof companyId !== 'string' || !Number.isInteger(Number(companyId))) {
+        if (
+          Array.isArray(companyId) ||
+          !companyId ||
+          typeof companyId !== 'string' ||
+          !Number.isInteger(Number(companyId))
+        ) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
 
@@ -150,10 +171,12 @@ export default async function handler(
 
         const resultJson: IAccountResultStatus[] = [];
 
-        await Promise.all(aichReturn.map(async (aichResult) => {
-          await createJournalAndOcrInPrisma(companyIdNumber, aichResult);
-          resultJson.push(aichResult.resultStatus);
-        }));
+        await Promise.all(
+          aichReturn.map(async (aichResult) => {
+            await createJournalAndOcrInPrisma(companyIdNumber, aichResult);
+            resultJson.push(aichResult.resultStatus);
+          })
+        );
 
         const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
           STATUS_MESSAGE.CREATED,
@@ -163,7 +186,8 @@ export default async function handler(
         res.status(httpCode).json(result);
 
         break;
-      } default: {
+      }
+      default: {
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     }

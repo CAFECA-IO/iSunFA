@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
-import { generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
+import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
 import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -20,6 +24,9 @@ interface PieChartData {
 interface PieChartProps {
   data: PieChartData;
 }
+
+const originalColors = ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'];
+// const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7']; // TODO: implement hover colors (20240523 - Shirley)
 
 const PieChart = ({ data }: PieChartProps) => {
   const globalCtx = useGlobalCtx();
@@ -90,20 +97,84 @@ const PieChart = ({ data }: PieChartProps) => {
       id: 'labor-cost-chart',
       type: 'pie',
     },
-    colors: ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'],
-
+    colors: originalColors,
     labels: data.categories,
     legend: {
       position: legendPosition,
       offsetY,
       offsetX: -30,
       markers: {
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        width: 20,
+        height: 12,
+        radius: 0,
       },
       width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
       height: 140,
+    },
+    tooltip: {
+      enabled: true,
+      y: {
+        formatter: (value: number) => {
+          return `${value.toString()}`;
+        },
+
+        // Info: 自己去算百分比然後顯示在 tooltip 上 (20240523 - Shirley)
+        // formatter: (value: number, { seriesIndex, w }: { seriesIndex: number; w: any }) => {
+        //   const total = data.series.reduce((a: number, b: number) => a + b, 0);
+        //   const percent = Math.round((value / total) * 100);
+        //   return `${percent.toFixed(2)}%`;
+        // },
+        // title: {
+        //   formatter: function () {
+        //     return '';
+        //   },
+        // },
+      },
+      style: {
+        fontFamily: 'Barlow',
+        fontSize: '12px',
+      },
+      fillSeriesColor: false,
+      fixed: {
+        enabled: true,
+        position: 'topRight',
+      },
+      theme: 'dark',
+    },
+    dataLabels: {
+      enabled: true,
+      style: {
+        colors: ['#001840'],
+      },
+      dropShadow: {
+        enabled: false,
+      },
+    },
+    fill: {
+      colors: originalColors,
+    },
+    states: {
+      hover: {
+        filter: {
+          type: 'darken',
+          value: 0.85,
+        },
+      },
+      active: {
+        allowMultipleDataPointsSelection: false,
+        filter: {
+          type: 'darken',
+          value: 0.85,
+        },
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '70%',
+        },
+        expandOnClick: true,
+      },
     },
   };
 
@@ -121,12 +192,28 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const LaborCostChart = () => {
-  // TODO: 串上 API (20240522 - Shirley)
+  // TODO: 串上 API (20240522 - Shirley) -> done by tzuhan (20240523)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const { toastHandler } = useGlobalCtx();
+  const { companyId } = useAccountingCtx();
+  const {
+    trigger: getLaborCostChartData,
+    data: laborCostData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<ILaborCostChartData>(APIName.LABOR_COST_CHART, {
+    params: {
+      companyId,
+    },
+    query: {
+      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+    },
+  });
 
   const displayedYear = maxDate.getFullYear();
 
@@ -146,14 +233,35 @@ const LaborCostChart = () => {
   })();
 
   useEffect(() => {
-    // Info: generate series when period change is done (20240418 - Shirley)
-    if (period.endTimeStamp !== 0) {
-      const randomNum = Math.floor(Math.random() * 10);
-      const newData = generateRandomLaborCostData(randomNum);
-      setSeries(newData.series);
-      setCategories(newData.categories);
+    if (getSuccess && laborCostData) {
+      const { series: newSeries, categories: newCategories, startDate, endDate } = laborCostData;
+      setPeriod({
+        startTimeStamp: startDate,
+        endTimeStamp: endDate,
+      });
+      setSeries(newSeries);
+      setCategories(newCategories);
     }
-  }, [period.endTimeStamp, period.startTimeStamp]);
+    if (getSuccess === false) {
+      toastHandler({
+        id: `labor-cost-chart-${getCode}`,
+        content: `Failed to get labor cost chart data. Error code: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [getSuccess, getCode, getError]);
+
+  useEffect(() => {
+    getLaborCostChartData({
+      params: {
+        companyId,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
+    });
+  }, [period]);
 
   const data = {
     categories,

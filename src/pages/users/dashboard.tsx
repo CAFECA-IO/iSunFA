@@ -18,8 +18,6 @@ const DashboardPage = () => {
   const { signedIn, isSelectCompany } = useUserCtx();
   const { toastHandler, eliminateToast } = useGlobalCtx();
 
-  // ToDo: (20240513 - Julian) If the user is not select any company, show a toast to remind the user that this is a trial mode
-
   useEffect(() => {
     if (!signedIn) {
       router.push(ISUNFA_ROUTE.LOGIN);

@@ -24,12 +24,15 @@ export enum APIName {
   COMPANY_ADD_BY_INVITATION_CODE = 'COMPANY_ADD_BY_INVITATION_CODE',
   COMPANY_SELECT = 'COMPANY_SELECT',
   PROFIT_GET_INSIGHT = 'PROFIT_GET_INSIGHT',
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD = 'INCOME_EXPENSE_GET_TREND_IN_PERIOD',
+  LABOR_COST_CHART = 'LABOR_COST_CHART',
   PROFIT_GET_TREND_IN_PERIOD = 'PROFIT_GET_TREND_IN_PERIOD',
   PROJECT_LIST_PROGRESS = 'PROJECT_LIST_PROGRESS',
   PROJECT_LIST_PROFIT_COMPARISON = 'PROJECT_LIST_PROFIT_COMPARISON',
-  INVOCIE_UPLOAD = 'INVOCIE_UPLOAD',
-  INVOCIE_LIST_UNBOUNDED = 'INVOCIE_LIST_UNBOUNDED',
-  INVOCIE_GET_BY_ID = 'INVOCIE_GET_BY_ID',
+  INVOICE_UPLOAD = 'INVOICE_UPLOAD',
+  INVOICE_LIST_UNBOUNDED = 'INVOICE_LIST_UNBOUNDED',
+  INVOICE_GET_BY_ID = 'INVOICE_GET_BY_ID',
+  OCR_RESULT_GET_BY_ID = 'OCR_RESULT_GET_BY_ID',
   ASSET_MANAGEMENT_LIST = 'ASSET_MANAGEMENT_LIST',
   ASSET_MANAGEMENT_ADD = 'ASSET_MANAGEMENT_ADD',
   ASSET_MANAGEMENT_GET_BY_ID = 'ASSET_MANAGEMENT_GET_BY_ID',
@@ -41,6 +44,7 @@ export enum APIName {
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   JOURNAL_LIST_PROGRESS_STATUS = 'JOURNAL_LIST_PROGRESS_STATUS',
   JOURNAL_LIST = 'JOURNAL_LIST',
+  JOURNAL_LIST_UNPROCESSED = 'JOURNAL_LIST_UNPROCESSED',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   VOUCHER_GENERATE = 'VOUCHER_GENERATE',
   VOUCHER_LIST = 'VOUCHER_LIST',
@@ -50,6 +54,7 @@ export enum APIName {
   REPORT_ANALYSIS_GET_BY_ID = 'REPORT_ANALYSIS_GET_BY_ID',
   REPORT_GENERATE_FINANCIAL = 'REPORT_GENERATE_FINANCIAL',
   REPORT_GENERATE_ANALYSIS = 'REPORT_GENERATE_ANALYSIS',
+  SESSION_GET = 'SESSION_GET',
 }
 
 export enum APIPath {
@@ -61,15 +66,17 @@ export enum APIPath {
   USER_UPDATE = `${apiPrefix}/user/:userId`,
   COMPANY_LIST = `${apiPrefix}/company`,
   COMPANY_ADD = `${apiPrefix}/company`,
-  COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/company/invitation_code`,
+  COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
   COMPANY_SELECT = `${apiPrefix}/company/:companyId/select`,
   PROFIT_GET_INSIGHT = `${apiPrefix}/company/:companyId/profit_insight`,
-  PROFIT_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend_value`,
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend`,
+  LABOR_COST_CHART = `${apiPrefix}/company/:companyId/labor_cost_chart`,
   PROJECT_LIST_PROGRESS = `${apiPrefix}/company/:companyId/project_progress`,
   PROJECT_LIST_PROFIT_COMPARISON = `${apiPrefix}/company/:companyId/profit_comparison`,
-  INVOCIE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
-  INVOCIE_LIST_UNBOUNDED = `${apiPrefix}/company/:companyId/invoice_unbounded`,
-  INVOCIE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  INVOICE_UPLOAD = `${apiPrefix}/company/:companyId/invoice`,
+  INVOICE_LIST_UNBOUNDED = `${apiPrefix}/company/:companyId/invoice_unbounded`,
+  INVOICE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  OCR_RESULT_GET_BY_ID = `${apiPrefix}/company/:companyId/OCR/:ocrResultId`,
   ASSET_MANAGEMENT_LIST = `${apiPrefix}/company/:companyId/asset_management`,
   ASSET_MANAGEMENT_ADD = `${apiPrefix}/company/:companyId/asset_management`,
   ASSET_MANAGEMENT_GET_BY_ID = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
@@ -81,6 +88,7 @@ export enum APIPath {
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   JOURNAL_LIST_PROGRESS_STATUS = `${apiPrefix}/company/:companyId/voucher_status`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
+  JOURNAL_LIST_UNPROCESSED = `${apiPrefix}/company/:companyId/unprocess_journal`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   VOUCHER_GENERATE = `${apiPrefix}/company/:companyId/journal`,
   VOUCHER_LIST = `${apiPrefix}/company/:companyId/journal`,
@@ -90,6 +98,7 @@ export enum APIPath {
   REPORT_ANALYSIS_GET_BY_ID = `${apiPrefix}/company/:companyId/report_analysis/:reportId`,
   REPORT_GENERATE_FINANCIAL = `${apiPrefix}/company/:companyId/report_financial`,
   REPORT_GENERATE_ANALYSIS = `${apiPrefix}/company/:companyId/report_analysis`,
+  SESSION_GET = `${apiPrefix}/session`,
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
@@ -158,10 +167,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.INVOCIE_GET_BY_ID]: {
-    name: APIName.INVOCIE_GET_BY_ID,
+  [APIName.INVOICE_GET_BY_ID]: {
+    name: APIName.INVOICE_GET_BY_ID,
     method: HttpMethod.GET,
-    path: APIPath.INVOCIE_GET_BY_ID,
+    path: APIPath.INVOICE_GET_BY_ID,
     input: {
       header: {},
       body: {},
@@ -171,10 +180,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.INVOCIE_UPLOAD]: {
-    name: APIName.INVOCIE_UPLOAD,
+  [APIName.INVOICE_UPLOAD]: {
+    name: APIName.INVOICE_UPLOAD,
     method: HttpMethod.POST,
-    path: APIPath.INVOCIE_UPLOAD,
+    path: APIPath.INVOICE_UPLOAD,
     input: {
       header: {},
       body: {},
@@ -316,7 +325,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   },
   COMPANY_ADD_BY_INVITATION_CODE: {
     name: APIName.COMPANY_ADD_BY_INVITATION_CODE,
-    method: HttpMethod.POST,
+    method: HttpMethod.PUT,
     path: APIPath.COMPANY_ADD_BY_INVITATION_CODE,
     input: {
       header: {},
@@ -340,10 +349,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  PROFIT_GET_TREND_IN_PERIOD: {
-    name: APIName.PROFIT_GET_TREND_IN_PERIOD,
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD: {
+    name: APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
     method: HttpMethod.GET,
-    path: APIPath.PROFIT_GET_TREND_IN_PERIOD,
+    path: APIPath.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
     input: {
       header: {},
       body: {},
@@ -379,10 +388,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  INVOCIE_LIST_UNBOUNDED: {
-    name: APIName.INVOCIE_LIST_UNBOUNDED,
+  INVOICE_LIST_UNBOUNDED: {
+    name: APIName.INVOICE_LIST_UNBOUNDED,
     method: HttpMethod.GET,
-    path: APIPath.INVOCIE_LIST_UNBOUNDED,
+    path: APIPath.INVOICE_LIST_UNBOUNDED,
     input: {
       header: {},
       body: {},
@@ -566,6 +575,58 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REPORT_GENERATE_ANALYSIS,
     method: HttpMethod.POST,
     path: APIPath.REPORT_GENERATE_ANALYSIS,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.LABOR_COST_CHART]: {
+    name: APIName.LABOR_COST_CHART,
+    method: HttpMethod.GET,
+    path: APIPath.LABOR_COST_CHART,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.JOURNAL_LIST_UNPROCESSED]: {
+    name: APIName.JOURNAL_LIST_UNPROCESSED,
+    method: HttpMethod.GET,
+    path: APIPath.JOURNAL_LIST_UNPROCESSED,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.OCR_RESULT_GET_BY_ID]: {
+    name: APIName.OCR_RESULT_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.OCR_RESULT_GET_BY_ID,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.SESSION_GET]: {
+    name: APIName.SESSION_GET,
+    method: HttpMethod.GET,
+    path: APIPath.SESSION_GET,
     input: {
       header: {},
       body: {},

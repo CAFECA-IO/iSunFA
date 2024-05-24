@@ -9,7 +9,7 @@ export interface IBasicReportItem {
     startTimestamp: number;
     endTimestamp: number;
   };
-  type: 'analysis' | 'financial' // ToDo: 需要調整成 enum (20240522 - Tzuhan)
+  type: 'analysis' | 'financial'; // ToDo: 需要調整成 enum (20240522 - Tzuhan)
   reportType: FinancialReportTypesKey;
 }
 
@@ -60,7 +60,7 @@ export const generateRandomPendingReportItem = (daysAgo: number): IPendingReport
     remainingSeconds: remainingSec,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
-    type: 'financial'
+    type: 'financial',
   };
 };
 
@@ -79,7 +79,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 10,
     paused: false,
     reportType: FinancialReportTypesKey.cash_flow_statement,
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: 'sclika',
@@ -89,7 +89,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 250,
     paused: true,
     reportType: FinancialReportTypesKey.cash_flow_statement,
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: 'qxh66j',
@@ -99,7 +99,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 1615,
     paused: false,
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: '4ruh5k',
@@ -109,7 +109,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 3680,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: 'wyt0mi',
@@ -119,7 +119,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 30,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
-    type: 'financial'
+    type: 'financial',
   },
 ];
 
@@ -159,7 +159,7 @@ export const generateRandomGeneratedReportItem = (daysAgo: number): IGeneratedRe
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c10900000000000000000000000000000000000000007',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: 'financial'
+    type: 'financial',
   };
 };
 
@@ -176,12 +176,13 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     createdTimestamp: 1713815673,
     period: { startTimestamp: 1715616000, endTimestamp: 1718208000 },
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
-    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId:
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: 'y11ggs',
@@ -191,10 +192,11 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: 'hnhirr', name: 'TideBit', code: 'TB' },
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId:
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: 'uiz7oa',
@@ -204,10 +206,11 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: '25ptrg', name: 'iSunFA', code: 'IS' },
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId:
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: '6pa0sq',
@@ -217,10 +220,11 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId:
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: 'financial'
+    type: 'financial',
   },
   {
     id: 'c353qc',
@@ -230,9 +234,10 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
     project: { id: '3xza6b', name: 'BAIFA', code: 'BF' },
     downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportLinkId:
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: 'financial'
+    type: 'financial',
   },
 ];

@@ -1,13 +1,13 @@
 {
   "name": "iSunFA",
-  "version": "0.1.4+15",
+  "version": "0.1.4+",
   "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
     "generate": "prisma generate",
     "start": "next start",
-    "lint": "next lint && eslint --fix --ext .js,.jsx,.tx,.tsx .",
+    "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "jest",
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",

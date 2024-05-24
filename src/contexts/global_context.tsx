@@ -204,7 +204,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     } = props;
 
     const bodyStyle =
-      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75';
+      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75 font-barlow';
 
     const toastId = id;
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
@@ -309,7 +309,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         content: (
           <div className="flex items-center space-x-10">
             <p>Your report is done</p>
-            <Link href={ISUNFA_ROUTE.USERS_MY_REPORTS} className="text-link-text-success">
+            <Link
+              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
+              className="font-semibold text-link-text-success"
+            >
               Go check it !
             </Link>
           </div>
