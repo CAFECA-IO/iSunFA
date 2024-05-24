@@ -38,24 +38,24 @@ const LineChart = ({ data }: LineChartProps) => {
 
       if (windowWidth <= MOBILE_WIDTH) {
         const presentWidth = 250;
-        const presentHeight = 250;
+        const presentHeight = 300;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (windowWidth <= TABLET_WIDTH) {
+      } else if (windowWidth < TABLET_WIDTH) {
         const presentWidth = 370;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth > DESKTOP_WIDTH) {
-        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 10;
+        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 2.5;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 400;
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth >= TABLET_WIDTH) {
+        const presentWidth = 650 + (windowWidth - TABLET_WIDTH) / 1.05;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
@@ -197,7 +197,6 @@ const LineChart = ({ data }: LineChartProps) => {
   return (
     <Chart
       options={options}
-      // series={data.series}
       series={data.annotations.map((item) => ({
         name: item.name,
         data: item.data.map((point) => point.percentage),
@@ -260,7 +259,7 @@ const IncomeExpenseTrendChart = () => {
   const displayedDataSection = (
     <div
       id="displayedDataSection"
-      className="flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
+      className="flex h-500px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
     >
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
