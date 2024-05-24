@@ -5,6 +5,7 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let departmentsId: number[];
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -19,12 +20,20 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
+  const createdCompany = await prisma.company.create({
+    data: {
+      name: 'Test Company',
+      code: 'TST',
+      regional: 'TW',
+    },
+  });
+  companyId = createdCompany.id;
   await prisma.department.createMany({
     data: [
-      { name: 'HR', companyId: 14 },
-      { name: 'Finance', companyId: 14 },
-      { name: 'IT', companyId: 14 },
-      { name: 'Marketing', companyId: 14 },
+      { name: 'HR', companyId },
+      { name: 'Finance', companyId },
+      { name: 'IT', companyId },
+      { name: 'Marketing', companyId },
     ],
   });
   const departments = await prisma.department.findMany({

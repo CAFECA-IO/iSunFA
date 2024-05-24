@@ -6,6 +6,7 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let card: ICard;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -28,8 +29,16 @@ beforeEach(async () => {
       expireMonth: '01',
       cvc: '330',
       name: 'Taiwan Bank',
+      company: {
+        create: {
+          name: 'Test Company',
+          code: 'TST',
+          regional: 'TW',
+        },
+      },
     },
   });
+  companyId = card.companyId;
 });
 
 afterEach(async () => {
@@ -38,6 +47,15 @@ afterEach(async () => {
     await prisma.card.delete({
       where: {
         id: card.id,
+      },
+    });
+  } catch (error) {
+    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: companyId,
       },
     });
   } catch (error) {

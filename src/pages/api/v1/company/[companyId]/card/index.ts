@@ -4,6 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import prisma from '@/client';
+import { getSession } from '@/lib/utils/get_session';
 
 async function getCardList() {
   const cardList = await prisma.card.findMany();
@@ -16,7 +17,8 @@ async function createCard(
   expireYear: string,
   expireMonth: string,
   cvc: string,
-  name: string
+  name: string,
+  companyId: number
 ): Promise<ICard> {
   const createdCard = await prisma.card.create({
     data: {
@@ -26,6 +28,11 @@ async function createCard(
       expireMonth,
       cvc,
       name,
+      company: {
+        connect: {
+          id: companyId,
+        },
+      },
     },
   });
   return createdCard;
@@ -37,8 +44,9 @@ export default async function handler(
 ) {
   try {
     // Info: (20240419 - Jacky) P010001 - GET /payment
-    if (!req.headers.userid) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    const session = await getSession(req, res);
+    if (!session.userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
     if (req.method === 'GET') {
       const cardList = await getCardList();
@@ -53,7 +61,19 @@ export default async function handler(
       if (!type || !no || !expireYear || !expireMonth || !cvc || !name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const createdCard: ICard = await createCard(type, no, expireYear, expireMonth, cvc, name);
+      const { companyId } = session;
+      if (!companyId) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const createdCard: ICard = await createCard(
+        type,
+        no,
+        expireYear,
+        expireMonth,
+        cvc,
+        name,
+        companyId
+      );
       const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.CREATED, createdCard);
       res.status(httpCode).json(result);
     } else {
