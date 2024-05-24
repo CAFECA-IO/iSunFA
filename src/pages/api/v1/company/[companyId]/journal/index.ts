@@ -52,7 +52,7 @@ type PrismaReturnType = {
   } | null
 }[];
 
-async function getJournal(
+async function getJournals(
   companyId: number,
   page: number = DEFAULT_PAGE_START_AT,
   limit: number = DEFAULT_PAGE_LIMIT,
@@ -149,7 +149,7 @@ async function getJournal(
   }
 }
 
-function formatJournal(journalData: PrismaReturnType) {
+function formatJournals(journalData: PrismaReturnType) {
   const journals = journalData.map((journal) => {
     return {
       id: journal.id,
@@ -213,8 +213,8 @@ export default async function handler(
       const startDateInt = startDate ? Number(startDate) : undefined;
       const endDateInt = endDate ? Number(endDate) : undefined;
 
-      const journalData = await getJournal(companyIdNumber, pageInt, limitInt, eventType, startDateInt, endDateInt, search, sort);
-      const journals = formatJournal(journalData);
+      const journalData = await getJournals(companyIdNumber, pageInt, limitInt, eventType, startDateInt, endDateInt, search, sort);
+      const journals = formatJournals(journalData);
 
       const { httpCode, result } = formatApiResponse<ApiResponseType>(
         STATUS_MESSAGE.SUCCESS_LIST,
