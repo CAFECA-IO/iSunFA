@@ -40,6 +40,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     success: uploadSuccess,
     code: uploadCode,
   } = APIHandler<IAccountResultStatus>(APIName.INVOICE_UPLOAD, {}, false, false);
+
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
   // Info: (20240507 - Julian) 檢查步驟
@@ -201,10 +202,6 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
-
-      // Info: TODO error handling @Julian (20240513 - tzuhan)
-      // eslint-disable-next-line no-console
-      console.error('Error: ', uploadError, 'Code: ', uploadCode);
     }
   }, [uploadSuccess, results, isModalVisible, uploadError, uploadCode]);
 

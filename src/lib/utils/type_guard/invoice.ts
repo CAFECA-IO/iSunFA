@@ -7,7 +7,7 @@ import { isIPayment } from '@/lib/utils/type_guard/payment';
 //  Check if data 本來進來就可能是any形式的data，然後我們chec他他有沒有以下屬性
 export function isIInvoice(data: IInvoice): data is IInvoice {
   return (
-    (typeof data.invoiceId === 'number') &&
+    typeof data.invoiceId === 'number' &&
     typeof data.date === 'number' &&
     isEventType(data.eventType) &&
     typeof data.paymentReason === 'string' &&
@@ -20,7 +20,9 @@ export function isIInvoice(data: IInvoice): data is IInvoice {
     isIPayment(data.payment)
   );
 }
-export function isIInvoiceDataForSavingToDB(data: IInvoiceDataForSavingToDB): data is IInvoiceDataForSavingToDB {
+export function isIInvoiceDataForSavingToDB(
+  data: IInvoiceDataForSavingToDB
+): data is IInvoiceDataForSavingToDB {
   return (
     (typeof data.journalId === 'number' || data.journalId === null) &&
     typeof data.date === 'number' &&

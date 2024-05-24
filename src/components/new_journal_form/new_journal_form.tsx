@@ -169,6 +169,30 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
+  // TODO: update with backend data (20240523 - tzuhan)
+  // useEffect(() => {
+  //   if (invoices && invoices.length > 0) {
+  //     const invoice = invoices
+  //       // .filter((inv) => inv.invoiceId === invoiceId)
+  //       .pop();
+  //     if (invoice) {
+  //       // Info: (20240506 - Julian) 設定表單的預設值
+  //       setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+  //       setSelectedEventType(invoice.eventType);
+  //       setInputPaymentReason(invoice.paymentReason);
+  //       setInputDescription(invoice.description);
+  //       setInputVendor(invoice.venderOrSupplier);
+  //       setInputTotalPrice(invoice.payment.price);
+  //       setTaxToggle(invoice.payment.hasTax);
+  //       setTaxRate(invoice.payment.taxPercentage);
+  //       setFeeToggle(invoice.payment.hasFee);
+  //       setInputFee(invoice.payment.fee);
+  //       // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
+  //       setInvoiceIdHandler(undefined);
+  //     }
+  //   }
+  // }, [isLoading, invoices]);
+
   useEffect(() => {
     if (OCRResult) {
       // Info: (20240506 - Julian) 設定表單的預設值
@@ -351,7 +375,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: '', // TODO: update with formData (20240523 - tzuhan)
+      invoiceId: `${selectedUnprocessedJournal!.id}`,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,

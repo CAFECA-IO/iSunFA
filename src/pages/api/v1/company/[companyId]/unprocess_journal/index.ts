@@ -33,16 +33,11 @@ async function getUnprocessJournal(companyId: number) {
         },
       },
     });
-    // Info: update by tzuhan for npm run build checked 需要 Murky 協助更新 (20240523 - Tzuhan)
+
     const journals = journalDatas.filter(
-      (journalData: {
-        id: number;
-        aichResultId: string;
-        createdAt: Date;
-        ocr: { createdAt: Date; imageName: string; imageUrl: string; imageSize: number } | null;
-      }): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } =>
-        // eslint-disable-next-line implicit-arrow-linebreak
-        journalData.ocr !== null
+      (
+        journalData
+      ): journalData is typeof journalData & { ocr: NonNullable<typeof journalData.ocr> } => journalData.ocr !== null
     );
     return journals;
   } catch (error) {

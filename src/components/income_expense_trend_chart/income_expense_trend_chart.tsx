@@ -249,8 +249,8 @@ const IncomeExpenseTrendChart = () => {
     }
     if (getSuccess === false) {
       toastHandler({
-        id: `profit_margin_trend-${getCode}`,
-        content: `Failed to get profit margin trend. Error code: ${getCode}`,
+        id: `income_expense_trend-${getCode}`,
+        content: `Failed to get income/expense trend. Error code: ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

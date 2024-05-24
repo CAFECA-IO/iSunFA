@@ -12,8 +12,19 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 
-async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavingToDB, companyId: number) {
-  const { payment: paymentDate, project, projectId, contract, contractId, journalId, ...invoiceData } = invoiceDataForSavingToDB;
+async function invoiceSaveToPrisma(
+  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB,
+  companyId: number
+) {
+  const {
+    payment: paymentDate,
+    project,
+    projectId,
+    contract,
+    contractId,
+    journalId,
+    ...invoiceData
+  } = invoiceDataForSavingToDB;
 
   // Depreciate ( 20240522 - Murky ) For demo purpose, create company if not exist
   try {
@@ -24,7 +35,7 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
         },
         select: {
           id: true,
-        }
+        },
       });
 
       if (!company) {
@@ -37,7 +48,7 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
           },
           select: {
             id: true,
-          }
+          },
         });
       }
 
@@ -45,7 +56,7 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
         data: paymentDate,
         select: {
           id: true,
-        }
+        },
       });
 
       const invoice = await prisma.invoice.create({
@@ -57,7 +68,7 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
           vendorOrSupplier: invoiceData.vendorOrSupplier,
           companyId: company.id,
           paymentId: payment.id,
-        }
+        },
       });
 
       return { invoiceId: invoice.id, companyIdNumber: company.id };
@@ -68,7 +79,14 @@ async function invoiceSaveToPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavi
   }
 }
 
-async function safeToJournal(journalId:number | null, invoiceId: number, aichResultId: string, projectId: number | null, contractId: number | null, companyId: number) {
+async function safeToJournal(
+  journalId: number | null,
+  invoiceId: number,
+  aichResultId: string,
+  projectId: number | null,
+  contractId: number | null,
+  companyId: number
+) {
   // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
   try {
     await prisma.$transaction(async () => {
@@ -122,7 +140,7 @@ export default async function handler(
           eventType: EventType.PAYMENT,
           paymentReason: 'purchase',
           description: 'description',
-         vendorOrSupplier: 'vender',
+          vendorOrSupplier: 'vender',
           project: 'ISunFa',
           contract: 'ISunFa buy',
           projectId: '123',
@@ -148,7 +166,7 @@ export default async function handler(
           eventType: EventType.PAYMENT,
           paymentReason: 'sale',
           description: 'description',
-         vendorOrSupplier: 'vender',
+          vendorOrSupplier: 'vender',
           project: 'ISunFa',
           contract: 'ISunFa buy',
           projectId: '123',
@@ -177,16 +195,21 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       const { companyId } = req.query;
-      if (Array.isArray(companyId) || !companyId || typeof companyId !== 'string' || !Number.isInteger(Number(companyId))) {
+      if (
+        Array.isArray(companyId) ||
+        !companyId ||
+        typeof companyId !== 'string' ||
+        !Number.isInteger(Number(companyId))
+      ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
       const invoice = req.body;
       // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-      invoice.projectId = invoice.projectId ? invoice.projectId : "None";
-      invoice.contractId = invoice.contractId ? invoice.contractId : "None";
-      invoice.project = invoice.project ? invoice.project : "None";
-      invoice.contract = invoice.contract ? invoice.contract : "None";
+      invoice.projectId = invoice.projectId ? invoice.projectId : 'None';
+      invoice.contractId = invoice.contractId ? invoice.contractId : 'None';
+      invoice.project = invoice.project ? invoice.project : 'None';
+      invoice.contract = invoice.contract ? invoice.contract : 'None';
 
       // Info Murky (20240416): Check if invoices is array and is Invoice type
       if (Array.isArray(invoice) || !isIInvoiceDataForSavingToDB(invoice)) {
@@ -225,9 +248,18 @@ export default async function handler(
 
       // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
       const projectId = !Number.isNaN(Number(invoice.projectId)) ? Number(invoice.projectId) : null;
-      const contractId = !Number.isNaN(Number(invoice.contractId)) ? Number(invoice.contractId) : null;
+      const contractId = !Number.isNaN(Number(invoice.contractId))
+        ? Number(invoice.contractId)
+        : null;
 
-      await safeToJournal(invoiceId, invoiceId, resultStatus.resultId, projectId, contractId, companyIdNumber);
+      await safeToJournal(
+        invoiceId,
+        invoiceId,
+        resultStatus.resultId,
+        projectId,
+        contractId,
+        companyIdNumber
+      );
 
       const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
         STATUS_MESSAGE.CREATED,

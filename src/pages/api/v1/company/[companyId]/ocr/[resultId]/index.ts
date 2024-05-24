@@ -41,8 +41,8 @@ export default async function handler(
         }
 
         const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(
-STATUS_MESSAGE.SUCCESS,
-          ocrResultData,
+          STATUS_MESSAGE.SUCCESS,
+          ocrResultData
         );
 
         res.status(httpCode).json(result);
@@ -54,7 +54,10 @@ STATUS_MESSAGE.SUCCESS,
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(error.message, {} as IInvoiceDataForSavingToDB);
+    const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(
+      error.message,
+      {} as IInvoiceDataForSavingToDB
+    );
     res.status(httpCode).json(result);
   }
 }
