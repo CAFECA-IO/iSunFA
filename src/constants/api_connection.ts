@@ -66,7 +66,7 @@ export enum APIPath {
   USER_UPDATE = `${apiPrefix}/user/:userId`,
   COMPANY_LIST = `${apiPrefix}/company`,
   COMPANY_ADD = `${apiPrefix}/company`,
-  COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/company/invitation_code`,
+  COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
   COMPANY_SELECT = `${apiPrefix}/company/:companyId/select`,
   PROFIT_GET_INSIGHT = `${apiPrefix}/company/:companyId/profit_insight`,
   INCOME_EXPENSE_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend`,
@@ -325,7 +325,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   },
   COMPANY_ADD_BY_INVITATION_CODE: {
     name: APIName.COMPANY_ADD_BY_INVITATION_CODE,
-    method: HttpMethod.POST,
+    method: HttpMethod.PUT,
     path: APIPath.COMPANY_ADD_BY_INVITATION_CODE,
     input: {
       header: {},
