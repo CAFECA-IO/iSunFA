@@ -1,4 +1,4 @@
-import nextSession from "next-session";
+import nextSession from 'next-session';
 
 const options = {
   cookie: {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
-import { ILaborCostChartData, generateRandomLaborCostData } from '@/interfaces/labor_cost_chart';
+import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
@@ -201,6 +201,7 @@ const LaborCostChart = () => {
   const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
+    trigger: getLaborCostChartData,
     data: laborCostData,
     success: getSuccess,
     code: getCode,
@@ -208,6 +209,9 @@ const LaborCostChart = () => {
   } = APIHandler<ILaborCostChartData>(APIName.LABOR_COST_CHART, {
     params: {
       companyId,
+    },
+    query: {
+      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
     },
   });
 
@@ -230,7 +234,11 @@ const LaborCostChart = () => {
 
   useEffect(() => {
     if (getSuccess && laborCostData) {
-      const { series: newSeries, categories: newCategories } = laborCostData;
+      const { series: newSeries, categories: newCategories, startDate, endDate } = laborCostData;
+      setPeriod({
+        startTimeStamp: startDate,
+        endTimeStamp: endDate,
+      });
       setSeries(newSeries);
       setCategories(newCategories);
     }
@@ -241,13 +249,19 @@ const LaborCostChart = () => {
         type: ToastType.ERROR,
         closeable: true,
       });
-      // Todo: remove dummy data when api is ready (20240523 - tzuhan)
-      const randomNum = Math.floor(Math.random() * 10);
-      const newData = generateRandomLaborCostData(randomNum);
-      setSeries(newData.series);
-      setCategories(newData.categories);
     }
   }, [getSuccess, getCode, getError]);
+
+  useEffect(() => {
+    getLaborCostChartData({
+      params: {
+        companyId,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
+    });
+  }, [period]);
 
   const data = {
     categories,

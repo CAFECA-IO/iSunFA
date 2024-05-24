@@ -61,6 +61,7 @@ const NewJournalForm = () => {
   const {
     companyId,
     selectedUnprocessedJournal,
+    selectUnprocessedJournalHandler,
     voucherId,
     // setInvoiceIdHandler,
     setVoucherIdHandler,
@@ -168,6 +169,23 @@ const NewJournalForm = () => {
   );
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+
+  // TODO: update with backend data (20240523 - tzuhan)
+  useEffect(() => {
+    if (getSuccess && OCRResult) {
+      // Info: (20240506 - Julian) 設定表單的預設值
+      setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
+      setSelectedEventType(OCRResult.eventType);
+      setInputPaymentReason(OCRResult.paymentReason);
+      setInputDescription(OCRResult.description);
+      setInputVendor(OCRResult.vendorOrSupplier);
+      setInputTotalPrice(OCRResult.payment.price);
+      setTaxToggle(OCRResult.payment.hasTax);
+      setTaxRate(OCRResult.payment.taxPercentage);
+      setFeeToggle(OCRResult.payment.hasFee);
+      setInputFee(OCRResult.payment.fee);
+    }
+  }, [getSuccess, OCRResult]);
 
   useEffect(() => {
     if (OCRResult) {
@@ -330,6 +348,8 @@ const NewJournalForm = () => {
     setSelectedContract(contractSelection[0]);
     setProgressRate(0);
     setInputEstimatedCost(0);
+    // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
+    selectUnprocessedJournalHandler(undefined);
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -351,7 +371,7 @@ const NewJournalForm = () => {
   const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoice: IInvoice = {
-      invoiceId: '', // TODO: update with formData (20240523 - tzuhan)
+      invoiceId: selectedUnprocessedJournal ? selectedUnprocessedJournal.aichResultId : '',
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,

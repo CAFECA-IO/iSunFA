@@ -47,7 +47,6 @@ const SelectCompanyPage = () => {
         </div>
         <div className="bg-surface-neutral-main-background pt-16">
           <SelectCompanyPageBody />
-          {/** ToDo: fixed with acture userId (20240522 - tzuhan) */}
         </div>
       </div>
     </>

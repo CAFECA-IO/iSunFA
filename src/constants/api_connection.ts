@@ -54,6 +54,7 @@ export enum APIName {
   REPORT_ANALYSIS_GET_BY_ID = 'REPORT_ANALYSIS_GET_BY_ID',
   REPORT_GENERATE_FINANCIAL = 'REPORT_GENERATE_FINANCIAL',
   REPORT_GENERATE_ANALYSIS = 'REPORT_GENERATE_ANALYSIS',
+  SESSION_GET = 'SESSION_GET',
 }
 
 export enum APIPath {
@@ -97,6 +98,7 @@ export enum APIPath {
   REPORT_ANALYSIS_GET_BY_ID = `${apiPrefix}/company/:companyId/report_analysis/:reportId`,
   REPORT_GENERATE_FINANCIAL = `${apiPrefix}/company/:companyId/report_financial`,
   REPORT_GENERATE_ANALYSIS = `${apiPrefix}/company/:companyId/report_analysis`,
+  SESSION_GET = `${apiPrefix}/session`,
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
@@ -612,6 +614,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.OCR_RESULT_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.OCR_RESULT_GET_BY_ID,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.SESSION_GET]: {
+    name: APIName.SESSION_GET,
+    method: HttpMethod.GET,
+    path: APIPath.SESSION_GET,
     input: {
       header: {},
       body: {},
