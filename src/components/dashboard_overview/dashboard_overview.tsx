@@ -37,7 +37,7 @@ const DashboardOverview = () => {
     if (getSuccess && profitInsight) {
       setDashboardOverview({
         profitGrowthRate: profitInsight.profitChange * 100,
-        projectROI: (profitInsight.topProjectRoi * 100).toString(),
+        projectROI: (profitInsight.topProjectRoi * 100).toString(), // TODO: (20240524 - tzuhan) ask backend to return string instead of number
         preLaunchProjects: profitInsight.preLaunchProject,
       });
     } else if (getSuccess === false) {
