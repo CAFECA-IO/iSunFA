@@ -88,7 +88,7 @@ export default async function handler(
       });
       const newProjectWithMembers = {
         ...newProject,
-        members: newProject.employeesToProjects.map((employeeToProject) => ({
+        members: newProject.employeesProjects.map((employeeToProject) => ({
           name: employeeToProject.employee.name,
           imageId: employeeToProject.employee.imageId as string,
         })),
