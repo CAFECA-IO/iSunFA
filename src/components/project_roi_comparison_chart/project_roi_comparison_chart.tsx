@@ -10,7 +10,6 @@ import { Button } from '@/components/button/button';
 import {
   DUMMY_START_DATE,
   IProjectROIComparisonChartDataWithPagination,
-  generateRandomPaginatedData,
 } from '@/interfaces/project_roi_comparison_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -208,19 +207,12 @@ const ProjectRoiComparisonChart = () => {
 
   useEffect(() => {
     if (listSuccess && profitComparison) {
-      // const {
-      //   series: newSerices,
-      //   categories: newCategories,
-      //   totalPages: newTotalPages,
-      // } = profitComparison;
-      // setSeries(newSerices);
-      // setCategories(newCategories);
-      // setTotalPages(newTotalPages);
-      const newData = generateRandomPaginatedData(currentPage, ITEMS_PER_PAGE_ON_DASHBOARD);
-      const newSeries = newData.series;
-      const newCategories = newData.categories;
-      const newTotalPages = newData.totalPages;
-      setSeries(newSeries);
+      const {
+        series: newSerices,
+        categories: newCategories,
+        totalPages: newTotalPages,
+      } = profitComparison;
+      setSeries(newSerices);
       setCategories(newCategories);
       setTotalPages(newTotalPages);
     }
@@ -272,6 +264,20 @@ const ProjectRoiComparisonChart = () => {
       });
     }
   };
+
+  useEffect(() => {
+    listProjectProfitComparison({
+      params: {
+        companyId,
+      },
+      query: {
+        page: currentPage - 1,
+        perPage: ITEMS_PER_PAGE_ON_DASHBOARD,
+        startDate: period.startTimeStamp,
+        endDate: period.endTimeStamp,
+      },
+    });
+  }, [period]);
 
   const displayedDateSection = (
     <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-neutral-primary">

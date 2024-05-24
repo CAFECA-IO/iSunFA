@@ -1,23 +1,21 @@
-/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next';
 
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import {
   MILLISECONDS_IN_A_SECOND,
-  MONTH_ABR_LIST,
-  default30DayPeriodInSec,
+  // MONTH_ABR_LIST,
+  // default30DayPeriodInSec,
 } from '@/constants/display';
-import { TranslateFunction } from '@/interfaces/locale';
+// import { TranslateFunction } from '@/interfaces/locale';
 import Tooltip from '@/components/tooltip/tooltip';
 import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import {
   DUMMY_CATEGORIES,
   DUMMY_START_DATE,
   IProjectProgressChartData,
-  generateRandomData,
 } from '@/interfaces/project_progress_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -139,12 +137,12 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       //   },
       // },
       y: {
-        formatter: function (val: number) {
+        formatter(val: number) {
           return val.toString();
         },
 
         title: {
-          formatter: function () {
+          formatter() {
             return '';
           },
         },
@@ -184,7 +182,7 @@ const ProjectProgressChart = () => {
   const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
 
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  // const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
@@ -211,7 +209,7 @@ const ProjectProgressChart = () => {
       companyId,
     },
     query: {
-      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString(),
+      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
     },
   });
 
@@ -232,12 +230,9 @@ const ProjectProgressChart = () => {
 
   useEffect(() => {
     if (listSuccess && projectProgress) {
-      console.log(`create dummy data`);
-      const { series, categories } = projectProgress;
-      // Deprecated: (20240524 - tzuhan) API implementation when backend is ready
-      const dummyData = generateRandomData();
-      setCategories(dummyData.categories);
-      setSeries(dummyData.series);
+      const { series: s, categories: c } = projectProgress;
+      setCategories(c);
+      setSeries(s);
     } else if (listSuccess === false) {
       toastHandler({
         id: `project-progress-chart-${listCode}`,
@@ -248,17 +243,28 @@ const ProjectProgressChart = () => {
     }
   }, [listSuccess, listCode, listError, projectProgress]);
 
+  useEffect(() => {
+    listProjectProgress({
+      params: {
+        companyId,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
+    });
+  }, [period]);
+
   const data = {
     categories,
-    series: series,
+    series,
   };
 
   const displayedDateSection = (
     <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-brand-primary-lv2">
-      {displayedYear}{' '}
+      {displayedYear}
       <span className="text-sm font-semibold leading-5 tracking-normal text-text-brand-secondary-lv1">
         {displayedDate}
-      </span>{' '}
+      </span>
     </div>
   );
 
