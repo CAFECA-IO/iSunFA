@@ -101,10 +101,9 @@ const StepOneTab = () => {
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IUnprocessedJournal[]>(dummyFileList);
 
-  const fileItemPauseHandler = (id: string) => {
+  const fileItemPauseHandler = (id: number) => {
     const newList = fileList.map((data) => {
-      if (data.id === Number(id)) {
-        // Convert id to number before comparing
+      if (data.id === id) {
         return {
           ...data,
           status:
@@ -118,8 +117,8 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = (id: string) => {
-    const newList = fileList.filter((data) => data.id !== Number(id));
+  const fileItemDeleteHandler = (id: number) => {
+    const newList = fileList.filter((data) => data.id !== id);
     setFileList(newList);
   };
 

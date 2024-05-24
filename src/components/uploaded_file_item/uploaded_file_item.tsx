@@ -5,8 +5,8 @@ import { ProgressStatus } from '@/constants/account';
 
 interface IUploadedFileItemProps {
   itemData: IUnprocessedJournal;
-  pauseHandler: (id: string) => void;
-  deleteHandler: (id: string) => void;
+  pauseHandler: (id: number) => void;
+  deleteHandler: (id: number) => void;
   clickHandler: (unprocessedJournal: IUnprocessedJournal) => void;
 }
 
@@ -22,9 +22,8 @@ const UploadedFileItem = ({
     status === ProgressStatus.LLM_ERROR ||
     status === ProgressStatus.SYSTEM_ERROR;
 
-  const idString = id.toString();
-  const pauseClickHandler = () => pauseHandler(idString);
-  const deleteClickHandler = () => deleteHandler(idString);
+  const pauseClickHandler = () => pauseHandler(id);
+  const deleteClickHandler = () => deleteHandler(id);
 
   const displayedPauseButton =
     status === ProgressStatus.PAUSED ? <FiPlay size={20} /> : <FiPauseCircle size={20} />;
