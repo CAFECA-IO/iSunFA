@@ -212,7 +212,7 @@ const IncomeExpenseTrendChart = () => {
   const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
-  const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
+  const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.MONTH);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
 
   const {
@@ -226,7 +226,7 @@ const IncomeExpenseTrendChart = () => {
       companyId,
     },
     query: {
-      period: Period.WEEK,
+      period: selectedPeriod,
     },
   });
 
@@ -307,12 +307,12 @@ const IncomeExpenseTrendChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
+        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-0 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             2024
           </div>
           <div className="flex space-x-2 md:space-x-5">
-            <div className="">
+            {/* <div className="">
               <Button
                 variant={'tertiaryOutline'}
                 className={cn(
@@ -325,7 +325,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 Week
               </Button>
-            </div>
+            </div> */}
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
