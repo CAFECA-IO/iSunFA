@@ -17,6 +17,7 @@ import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -188,6 +189,56 @@ const MyReportsSection = () => {
     </div>
   );
 
+  const displayedPendingFilterOptionsSection = (
+    <div>
+      {/* Info: 電腦版排版 (20240527 - Shirley) */}
+      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:flex lg:space-x-5">
+        <div className="flex flex-col space-y-2 self-stretch">
+          <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+            Sort by
+          </div>
+          {/* Info: sort menu (20240513 - Shirley) */}
+          {displayedPendingSortMenu}
+        </div>
+        {/* Info: date picker (20240513 - Shirley) */}
+        <DatePicker
+          type={DatePickerType.CHOOSE_PERIOD}
+          period={pendingPeriod}
+          setFilteredPeriod={setPendingPeriod}
+          className="w-250px"
+        />{' '}
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedPendingSearchBar}
+        </div>
+      </div>
+
+      {/* Info: 手機版排版 (20240527 - Shirley) */}
+      <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedPendingSearchBar}
+        </div>
+        <Button className="px-3 py-3" variant={'secondaryOutline'}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            viewBox="0 0 16 16"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M3.335 1.251a.75.75 0 01.75.75v2.667a.75.75 0 01-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v2.056a2.084 2.084 0 11-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75zM8.002 5.418a.583.583 0 100 1.166.583.583 0 000-1.166zM3.335 8.084a.583.583 0 100 1.167.583.583 0 000-1.167zm-2.083.584a2.083 2.083 0 112.833 1.944v3.39a.75.75 0 01-1.5 0v-3.39a2.084 2.084 0 01-1.333-1.944zm11.417.75a.583.583 0 100 1.166.583.583 0 000-1.166zM10.585 10a2.083 2.083 0 112.834 1.944v2.056a.75.75 0 01-1.5 0v-2.056a2.084 2.084 0 01-1.334-1.944zm-2.583-.75a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+      </div>
+    </div>
+  );
+
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
@@ -341,6 +392,56 @@ const MyReportsSection = () => {
     </div>
   );
 
+  const displayedHistoryFilterOptionsSection = (
+    <div>
+      {/* Info: 電腦版排版 (20240527 - Shirley) */}
+      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:flex lg:space-x-5">
+        <div className="flex flex-col space-y-2 self-stretch">
+          <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+            Sort by
+          </div>
+          {/* Info: sort menu (20240513 - Shirley) */}
+          {displayedHistorySortMenu}
+        </div>
+        {/* Info: date picker (20240513 - Shirley) */}
+        <DatePicker
+          type={DatePickerType.CHOOSE_PERIOD}
+          period={historyPeriod}
+          setFilteredPeriod={setHistoryPeriod}
+          className="w-250px"
+        />{' '}
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedHistorySearchBar}
+        </div>
+      </div>
+
+      {/* Info: 手機版排版 (20240527 - Shirley) */}
+      <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedHistorySearchBar}
+        </div>
+        <Button className="px-3 py-3" variant={'secondaryOutline'}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            viewBox="0 0 16 16"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M3.335 1.251a.75.75 0 01.75.75v2.667a.75.75 0 01-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v2.056a2.084 2.084 0 11-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75zM8.002 5.418a.583.583 0 100 1.166.583.583 0 000-1.166zM3.335 8.084a.583.583 0 100 1.167.583.583 0 000-1.167zm-2.083.584a2.083 2.083 0 112.833 1.944v3.39a.75.75 0 01-1.5 0v-3.39a2.084 2.084 0 01-1.333-1.944zm11.417.75a.583.583 0 100 1.166.583.583 0 000-1.166zM10.585 10a2.083 2.083 0 112.834 1.944v2.056a.75.75 0 01-1.5 0v-2.056a2.084 2.084 0 01-1.334-1.944zm-2.583-.75a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+      </div>
+    </div>
+  );
+
   const displayedHistoryDataSection = isHistoryDataLoading ? (
     <div>Loading...</div>
   ) : historyData.length !== 0 ? (
@@ -452,27 +553,8 @@ const MyReportsSection = () => {
       </div>
 
       {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
-      <div className="mx-10 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5">
-        <div className="flex flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:space-x-5">
-          <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
-              Sort by
-            </div>
-            {/* Info: sort menu (20240513 - Shirley) */}
-            {displayedPendingSortMenu}
-          </div>
-          {/* Info: date picker (20240513 - Shirley) */}
-          <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
-            period={pendingPeriod}
-            setFilteredPeriod={setPendingPeriod}
-            className="w-250px"
-          />{' '}
-          {/* Info: Search bar (20240513 - Shirley) */}
-          <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
-            {displayedPendingSearchBar}
-          </div>
-        </div>
+      <div className="mx-2 mt-5 flex flex-col pl-20 pr-5 max-md:mt-0 max-md:max-w-full max-md:pl-5 lg:mx-10">
+        {displayedPendingFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
           <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">
@@ -502,33 +584,12 @@ const MyReportsSection = () => {
             <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
-
         {displayedPendingDataSection}
       </div>
 
       {/* Info: ----- reports history (20240513 - Shirley) ----- */}
-      <div className="mx-10 mt-20 flex flex-col pl-20 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-20">
-        {/* <div className="mx-10 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5"> */}
-        <div className="flex flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:space-x-5">
-          <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
-              Sort by
-            </div>
-            {/* Info: sort menu (20240513 - Shirley) */}
-            {displayedHistorySortMenu}
-          </div>
-          {/* Info: date picker (20240513 - Shirley) */}
-          <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
-            period={historyPeriod}
-            setFilteredPeriod={setHistoryPeriod}
-            className="w-250px"
-          />{' '}
-          {/* Info: Search bar (20240513 - Shirley) */}
-          <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
-            {displayedHistorySearchBar}
-          </div>
-        </div>
+      <div className="mx-2 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5 lg:mx-10">
+        {displayedHistoryFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
           <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">

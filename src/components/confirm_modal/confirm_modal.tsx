@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -7,9 +6,8 @@ import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucher, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { checkboxStyle } from '@/constants/display';
@@ -61,8 +59,11 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [date, setDate] = useState<number>(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -72,7 +73,9 @@ const ConfirmModal = ({
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [project, setProject] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
@@ -129,7 +132,7 @@ const ConfirmModal = ({
     if (createSuccess === false) {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
     }
-  }, [createSuccess]);
+  }, [createSuccess, createCode]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 

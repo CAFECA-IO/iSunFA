@@ -181,7 +181,7 @@ const LineChart = ({ data }: LineChartProps) => {
           const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
           const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
 
-          return `${formattedAbsoluteValue}　(${value}%)`;
+          return `${formattedAbsoluteValue}`;
         },
       },
       marker: {
@@ -199,7 +199,7 @@ const LineChart = ({ data }: LineChartProps) => {
       options={options}
       series={data.annotations.map((item) => ({
         name: item.name,
-        data: item.data.map((point) => point.percentage),
+        data: item.data.map((point) => point.absolute),
       }))}
       type="line"
       width={chartWidth}
