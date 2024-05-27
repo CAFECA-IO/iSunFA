@@ -1,4 +1,4 @@
-import { LoadingSVG } from '../loading_svg/loading_svg';
+import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 
 interface ILoadingModalProps {
   isModalVisible: boolean;
