@@ -199,7 +199,6 @@ const ConfirmModal = ({
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
   ));
 
-  // ToDo: (20240429 - Julian) mobile version
   const displayAccountingVoucher = (
     <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
       {/* Info: (20240429 - Julian) Divider */}

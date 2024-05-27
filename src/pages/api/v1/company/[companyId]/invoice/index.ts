@@ -66,7 +66,6 @@ async function invoiceSaveToPrisma(
           paymentReason: invoiceData.paymentReason,
           description: invoiceData.description,
           vendorOrSupplier: invoiceData.vendorOrSupplier,
-          companyId: company.id,
           paymentId: payment.id,
         },
       });

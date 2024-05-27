@@ -1,17 +1,17 @@
+import NavBar from '@/components/nav_bar/nav_bar';
+import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
+import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '@/interfaces/report_type';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import React, { useEffect } from 'react';
-import NavBar from '@/components/nav_bar/nav_bar';
-import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
-import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '@/interfaces/report_type';
-import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
-import { ReportLanguagesKey } from '@/interfaces/report_language';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
+import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -28,7 +28,7 @@ const ReportLink = {
   [AnalysisReportTypesKey.forecast_report]: ``,
 } as const;
 
-const AnalysisReportViewPage = ({
+const ViewAnalysisReportPage = ({
   reportType,
   reportLanguage,
   startTimestamp,
@@ -73,7 +73,7 @@ const AnalysisReportViewPage = ({
     if (getARSuccess === false) {
       toastHandler({
         id: `getAR-${getARCode}}`,
-        content: `Aailed to get ${reportType} report: ${getARCode}`,
+        content: `Failed to get ${reportType} report: ${getARCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -83,6 +83,7 @@ const AnalysisReportViewPage = ({
     }
   }, [getARSuccess, getARCode, reportAnalysis]);
 
+  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>
@@ -90,7 +91,8 @@ const AnalysisReportViewPage = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{AnalysisReportTypesMap[reportType].name} - iSunFA</title>
+        <title>{AnalysisReportTypesMap[reportType].name}- iSunFA</title>
+
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -116,7 +118,6 @@ const AnalysisReportViewPage = ({
 
         {/* TODO: Analysis Report View section (20240508 - Shirley) */}
         <div className="h-screen bg-surface-neutral-main-background">
-          {/* <p className="pl-40 pt-32 text-3xl">{AnalysisReportTypesMap[reportType].name}</p> */}
           <ViewAnalysisSection
             reportTypesName={reportData.reportTypesName}
             tokenContract={reportData.tokenContract}
@@ -129,25 +130,35 @@ const AnalysisReportViewPage = ({
   );
 };
 
-export default AnalysisReportViewPage;
+export default ViewAnalysisReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
   // Info: variable from URL query (20240429 - Shirley)
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { report_type, report_language, start_timestamp, end_timestamp } = query;
+  // const { report_type, report_language, start_timestamp, end_timestamp } = query;
 
-  if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
-    return {
-      notFound: true,
-    };
-  }
+  // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
+  //   return {
+  //     notFound: true,
+  //   };
+  // }
+
+  // Info: variable from URL query (20240429 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { reportId = '', report_type = '' } = query;
+  // if (!reportId || !report_type) {
+  //   return {
+  //     notFound: true,
+  //   };
+  // }
 
   return {
     props: {
+      reportId: reportId as string,
       reportType: report_type as string,
-      reportLanguage: report_language as string,
-      startTimestamp: start_timestamp as string,
-      endTimestamp: end_timestamp as string,
+      // reportLanguage: report_language as string,
+      // startTimestamp: start_timestamp as string,
+      // endTimestamp: end_timestamp as string,
       ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };
