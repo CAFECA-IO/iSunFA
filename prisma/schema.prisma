@@ -54,8 +54,8 @@ model card {
   expireMonth   String
   cvc           String
   name          String
-  subscriptions subscription[]
   company       company        @relation(fields: [companyId], references: [id])
+  subscriptions subscription[]
 }
 
 model cashflow {
@@ -89,8 +89,8 @@ model company {
   invitations        invitation[]
   journals           journal[]
   projects           project[]
-  subscriptions      subscription[]
   roles              role[]
+  subscriptions      subscription[]
   usersCompanysRoles userCompanyRole[]
 }
 
@@ -122,15 +122,15 @@ model companyKYC {
 model contract {
   id                Int              @id @default(autoincrement())
   aichResultId      String           @unique @map("aich_result_id")
-  ocrId             Int              @unique @map("ocr_id") // 目前似乎沒有可以skip上傳contract的步驟，所以是必填
-  ocr               ocr              @relation(fields: [ocrId], references: [id])
+  ocrId             Int              @unique @map("ocr_id")
   contractContentId Int?             @unique @map("contract_content_id")
-  contractContent   contractContent? @relation(fields: [contractContentId], references: [id])
-  projectId         Int?             @map("project_id") // 會在ocr 結束之後才補上
-  project           project?         @relation(fields: [projectId], references: [id])
+  projectId         Int?             @map("project_id")
   companyId         Int              @map("company_id")
   company           company          @relation(fields: [companyId], references: [id])
-  journal           journal[]
+  contractContent   contractContent? @relation(fields: [contractContentId], references: [id])
+  ocr               ocr              @relation(fields: [ocrId], references: [id])
+  project           project?         @relation(fields: [projectId], references: [id])
+  journal           journal?
 }
 
 model contractContent {
@@ -140,7 +140,6 @@ model contractContent {
   signatoryDate     Int       @map("signatory_date")
   status            String
   paymentId         Int       @unique @map("payment_id")
-  payment           payment   @relation(fields: [paymentId], references: [id])
   hasContractDate   Boolean   @map("has_contract_date")
   contractStartDate Int?      @map("contract_start_date")
   contractEndDate   Int?      @map("contract_end_date")
@@ -149,9 +148,10 @@ model contractContent {
   hasWarrantyDate   Boolean   @map("has_warranty_date")
   warrantyStartDate Int?      @map("warranty_start_date")
   warrantyEndDate   Int?      @map("warranty_end_date")
-  serviceType       String    @map("service_type") // will be enum in code
+  serviceType       String    @map("service_type")
   estimatedCost     Int?      @map("estimated_cost")
   contract          contract?
+  payment           payment   @relation(fields: [paymentId], references: [id])
 }
 
 model department {
@@ -193,18 +193,18 @@ model employeeProject {
 
 model invoice {
   id               Int      @id @default(autoincrement())
-  date             Int //發票上的日期，timestamp
+  date             Int
   eventType        String   @map("event_type")
   paymentReason    String   @map("payment_reason")
   description      String
   vendorOrSupplier String   @map("vendor_or_supplier")
-  journal          journal?
   paymentId        Int      @unique @map("payment_id")
-  payment          payment  @relation(fields: [paymentId], references: [id])
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
   projectId        Int?     @map("project_id")
+  payment          payment  @relation(fields: [paymentId], references: [id])
   project          project? @relation(fields: [projectId], references: [id])
+  journal          journal?
 }
 
 model invitation {
@@ -246,7 +246,7 @@ model lineItem {
   amount      Int
   description String
   debit       Boolean
-  accountId   Int      @map("account_id") // 新增
+  accountId   Int      @map("account_id")
   voucherId   Int?
   account     account  @relation(fields: [accountId], references: [id])
   voucher     voucher? @relation(fields: [voucherId], references: [id])
@@ -270,8 +270,8 @@ model ocr {
   imageSize Float     @map("image_size")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
-  journal   journal?
   contract  contract?
+  journal   journal?
 }
 
 model project {
@@ -287,13 +287,13 @@ model project {
   cashflow         cashflow[]
   contracts        contract[]
   employeeProjects employeeProject[]
+  invoices         invoice[]
   journals         journal?
   milestones       milestone[]
   company          company           @relation(fields: [companyId], references: [id])
   sales            sale[]
   values           value[]
   workRates        workRate[]
-  invoices         invoice[]
 }
 
 model payment {
@@ -312,8 +312,8 @@ model payment {
   progress           Int
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
-  invoice            invoice?
   contractContent    contractContent?
+  invoice            invoice?
 }
 
 model role {
@@ -333,9 +333,9 @@ model subscription {
   autoRenew  Boolean
   status     String
   cardId     Int     @map("card_id")
-  companyId  Int     @map("company_id")
   startDate  Int
   expireDate Int
+  companyId  Int     @map("company_id")
   card       card    @relation(fields: [cardId], references: [id])
   company    company @relation(fields: [companyId], references: [id])
 }
@@ -350,15 +350,14 @@ model sale {
 }
 
 model salary {
-  id               Int    @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   employeeId       Int
   salary           Int
   insurancePayment String
   bonus            String
   description      String
-  month            String // Info: (20240524 - Jacky) like 2024-05
-
-  employee employee @relation(fields: [employeeId], references: [id])
+  month            String
+  employee         employee @relation(fields: [employeeId], references: [id])
 }
 
 model user {
@@ -415,6 +414,6 @@ model workRate {
   employeeId      Int
   involvementRate Int
   hours           Int
-  month           String // Info: (20240524 - Jacky) like 2024-05
+  month           String
   project         project @relation(fields: [projectId], references: [id])
 }
