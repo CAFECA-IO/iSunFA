@@ -66,7 +66,9 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
   const router = useRouter();
 
   // ToDo: (20240527 - Julian) 串接 API
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [askAIResult, setAskAIResult] = useState<string[]>([]);
 
   // const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
@@ -82,6 +84,7 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
   // const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
   // const [project, setProject] = useState<string>('');
   // const [contract, setContract] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   // useEffect(() => {
