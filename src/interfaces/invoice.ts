@@ -16,7 +16,7 @@ export interface IInvoice {
   payment: IPayment;
 }
 
-// Info: （ 20240522 - Murkky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
+// Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
 export interface IInvoiceDataForSavingToDB {
   journalId: number | null;
   date: number; // timestamp
@@ -24,9 +24,9 @@ export interface IInvoiceDataForSavingToDB {
   paymentReason: string;
   description: string;
   vendorOrSupplier: string;
-  projectId: string | null;
+  projectId: number | null;
   project: string | null;
-  contractId: string | null;
+  contractId: number | null;
   contract: string | null;
   payment: IPayment;
 }

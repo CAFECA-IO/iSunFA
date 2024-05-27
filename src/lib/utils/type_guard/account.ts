@@ -5,6 +5,7 @@ import {
   ProgressStatus,
   VoucherType,
 } from '@/constants/account';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,4 +39,33 @@ export function isIAccountResultStatus(value: unknown): value is IAccountResultS
   }
   const { resultId, status } = value as IAccountResultStatus;
   return typeof resultId === 'string' && isProgressStatus(status);
+}
+
+// Info: (20240527 - Murky) convert string to EventType:
+export function convertStringToEventType(data: string) {
+  if (!isEventType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as EventType;
+}
+
+export function convertStringToVoucherType(data: string) {
+  if (!isVoucherType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as VoucherType;
+}
+
+export function convertStringToPaymentStatusType(data: string) {
+  if (!isPaymentStatusType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as PaymentStatusType;
+}
+
+export function convertStringToPaymentPeriodType(data: string) {
+  if (!isPaymentPeriodType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as PaymentPeriodType;
 }

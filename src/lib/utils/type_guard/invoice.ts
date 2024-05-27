@@ -15,8 +15,8 @@ export function isIInvoice(data: IInvoice): data is IInvoice {
     typeof data.vendorOrSupplier === 'string' &&
     (typeof data.projectId === 'string' || data.projectId === null) &&
     (typeof data.project === 'string' || data.projectId === null) &&
-    (typeof data.contract === 'string' || data.projectId === null) &&
-    (typeof data.contractId === 'string' || data.projectId === null) &&
+    (typeof data.contract === 'string' || data.contract === null) &&
+    (typeof data.contractId === 'string' || data.contractId === null) &&
     isIPayment(data.payment)
   );
 }
@@ -30,10 +30,10 @@ export function isIInvoiceDataForSavingToDB(
     typeof data.paymentReason === 'string' &&
     typeof data.description === 'string' &&
     typeof data.vendorOrSupplier === 'string' &&
-    (typeof data.projectId === 'string' || data.projectId === null) &&
+    (typeof data.projectId === 'number' || data.projectId === null) &&
     (typeof data.project === 'string' || data.projectId === null) &&
-    (typeof data.contract === 'string' || data.projectId === null) &&
-    (typeof data.contractId === 'string' || data.projectId === null) &&
+    (typeof data.contractId === 'number' || data.contractId === null) &&
+    (typeof data.contract === 'string' || data.contract === null) &&
     isIPayment(data.payment)
   );
 }
