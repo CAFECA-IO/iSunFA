@@ -40,7 +40,17 @@ const ConfirmModal = ({
     data: result,
     success: createSuccess,
     code: createCode,
-  } = APIHandler<IJournal>(
+  } = APIHandler<{
+    id: number;
+    lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number | null;
+    }[];
+  }>(
     APIName.VOUCHER_CREATE,
     {
       params: { companyId },
@@ -111,10 +121,10 @@ const ConfirmModal = ({
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
 
   useEffect(() => {
-    if (createSuccess && result) {
+    if (createSuccess && result && selectedJournal) {
       modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
       clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-      // router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${selectedJournal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
     }
     if (createSuccess === false) {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
