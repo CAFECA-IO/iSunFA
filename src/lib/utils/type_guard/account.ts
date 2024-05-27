@@ -10,22 +10,22 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
-  return Object.values(EventType).includes(data);
+  return Object.values(EventType).includes(data as EventType);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isVoucherType(data: any): data is VoucherType {
-  return Object.values(VoucherType).includes(data);
+  return Object.values(VoucherType).includes(data as VoucherType);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPaymentStatusType(data: any): data is PaymentStatusType {
-  return Object.values(PaymentStatusType).includes(data);
+  return Object.values(PaymentStatusType).includes(data as PaymentStatusType);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPaymentPeriodType(data: any): data is PaymentPeriodType {
-  return Object.values(PaymentPeriodType).includes(data);
+  return Object.values(PaymentPeriodType).includes(data as PaymentPeriodType);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -89,6 +89,8 @@ async function safeToJournal(
   // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
   try {
     await prisma.$transaction(async () => {
+      // Check if contractId exists if it's not null
+
       if (!journalId) {
         await prisma.journal.create({
           data: {
@@ -107,20 +109,17 @@ async function safeToJournal(
           update: {
             invoiceId,
             aichResultId,
-            projectId,
-            contractId,
           },
           create: {
             invoiceId,
             aichResultId,
-            projectId,
-            contractId,
             companyId,
           },
         });
       }
     });
   } catch (error) {
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -203,16 +202,19 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
-      const invoice = req.body;
+      const { invoice } = req.body;
+
+      // eslint-disable-next-line no-console
+      console.log('invoice', invoice);
       // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-      invoice.projectId = invoice.projectId ? invoice.projectId : 'None';
-      invoice.contractId = invoice.contractId ? invoice.contractId : 'None';
-      invoice.project = invoice.project ? invoice.project : 'None';
-      invoice.contract = invoice.contract ? invoice.contract : 'None';
+      invoice.projectId = invoice.projectId ? invoice.projectId : null;
+      invoice.contractId = invoice.contractId ? invoice.contractId : null;
+      invoice.project = invoice.project ? invoice.project : null;
+      invoice.contract = invoice.contract ? invoice.contract : null;
 
       // Info Murky (20240416): Check if invoices is array and is Invoice type
       if (Array.isArray(invoice) || !isIInvoiceDataForSavingToDB(invoice)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
       }
 
       // ToDo: save to prisma

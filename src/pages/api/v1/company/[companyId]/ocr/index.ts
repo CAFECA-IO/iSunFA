@@ -97,7 +97,7 @@ async function postImageToAICH(files: formidable.Files): Promise<
       const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
       return {
         resultStatus,
-        imageUrl: transformOCRImageIDToURL('invoice', imageName),
+        imageUrl: transformOCRImageIDToURL('invoice', 0, imageName),
         imageName,
         imageSize: image.size,
       };

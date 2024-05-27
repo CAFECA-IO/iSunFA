@@ -315,8 +315,8 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
   return Object.values(value).every((v) => typeof v === 'number');
 }
 
-export function transformOCRImageIDToURL(documentType: string, imageID: string): string {
-  return `/api/v1/company/${documentType}/${imageID}/image`;
+export function transformOCRImageIDToURL(documentType: string, companyId: number, imageID: string): string {
+  return `/api/v1/company/${companyId}/${documentType}/${imageID}/image`;
 }
 
 export function transformBytesToFileSizeString(bytes: number): string {
