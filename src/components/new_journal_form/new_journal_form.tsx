@@ -511,12 +511,9 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId: journal?.id } });
+      getJournalById({ params: { companyId, journalId: AIResult.journalId } });
     }
     if (AIResultSuccess === false) {
-      // TODO: Error handling @Julian (20240514 - Tzuhan)
-      // eslint-disable-next-line no-console
-      // console.log(`preview error: ${previewError}`);
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Get Voucher Preview Failed',
@@ -525,12 +522,6 @@ const NewJournalForm = () => {
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
-      // toastHandler({
-      //   id: `GetVoucherPreviewFailed_${AIResultCode}_${(Math.random() * 100000).toFixed(5)}`,
-      //   type: ToastType.ERROR,
-      //   content: `Get voucher preview failed: ${AIResultCode}`,
-      //   closeable: true,
-      // });
     }
   }, [AIResultSuccess, AIResult, AIResultCode]);
 
