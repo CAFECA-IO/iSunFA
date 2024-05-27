@@ -93,12 +93,10 @@ const NewJournalForm = () => {
   } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
 
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trigger: getAIResult,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: AIResult,
-    success: previewSuccess,
-    code: previewCode,
+    success: AIResultSuccess,
+    code: AIResultCode,
   } = APIHandler<{ journalId: string; lineItem: ILineItem[] }>(
     APIName.AI_ASK_RESULT,
     {},
@@ -497,38 +495,44 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-    if (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD) {
-      // Info: update selectedJournal with getJournalById result (20240524 - tzuhan)
-      // Info: journal maybe is undefined, journal id is from ai result
-      getJournalById({ params: { companyId, journalId: journal?.id } });
+    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
+      if (journal?.id) {
+        getJournalById({ params: { companyId, journalId: journal?.id } });
+      } else {
+        getAIResult({
+          params: {
+            companyId,
+            resultId: result.resultId,
+          },
+        });
+      }
     }
   }, [result, statusSuccess, status]);
 
   useEffect(() => {
-    if (previewSuccess && AIResult) {
-      // setVoucherPreviewHandler(preview);
-      confirmModalVisibilityHandler();
+    if (AIResultSuccess && AIResult) {
+      getJournalById({ params: { companyId, journalId: journal?.id } });
     }
-    if (previewSuccess === false) {
+    if (AIResultSuccess === false) {
       // TODO: Error handling @Julian (20240514 - Tzuhan)
       // eslint-disable-next-line no-console
       // console.log(`preview error: ${previewError}`);
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Get Voucher Preview Failed',
-        content: `Get voucher preview failed: ${previewCode}`,
+        content: `Get voucher preview failed: ${AIResultCode}`,
         submitBtnStr: 'Close',
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
       // toastHandler({
-      //   id: `GetVoucherPreviewFailed_${previewCode}_${(Math.random() * 100000).toFixed(5)}`,
+      //   id: `GetVoucherPreviewFailed_${AIResultCode}_${(Math.random() * 100000).toFixed(5)}`,
       //   type: ToastType.ERROR,
-      //   content: `Get voucher preview failed: ${previewCode}`,
+      //   content: `Get voucher preview failed: ${AIResultCode}`,
       //   closeable: true,
       // });
     }
-  }, [previewSuccess, AIResult, previewCode]);
+  }, [AIResultSuccess, AIResult, AIResultCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';
