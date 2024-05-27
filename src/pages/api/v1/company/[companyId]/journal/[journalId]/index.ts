@@ -1,19 +1,25 @@
 import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { convertStringToEventType, convertStringToPaymentPeriodType, convertStringToPaymentStatusType } from '@/lib/utils/type_guard/account';
+import { IJournalData } from '@/interfaces/journal';
 
-type ApiResponseType = {
+type IJournalResponseFromPrisma = {
     id: number;
     tokenContract: string | null;
     tokenId: string | null;
     aichResultId: string | null;
     projectId: number | null;
+    project: { name: string | null } | null;
     contractId: number | null;
+    contract: { contractContent: { name: string | null } | null } | null;
     ocr: { id: number; imageName: string; imageUrl: string; imageSize: number; createdAt: Date; updatedAt: Date; } | null,
     invoice: {
         id: number;
+        date: number;
+        paymentReason: string;
         eventType: string;
         description: string;
         vendorOrSupplier: string;
@@ -40,6 +46,7 @@ type ApiResponseType = {
             id: number;
             amount: number;
             debit: boolean;
+            description: string;
             account: {
                 name: string;
             }
@@ -62,7 +69,9 @@ async function getJournal(journalId: number) {
         invoice: {
           select: {
             id: true,
+            date: true,
             eventType: true,
+            paymentReason: true,
             description: true,
             vendorOrSupplier: true,
             payment: {
@@ -93,6 +102,7 @@ async function getJournal(journalId: number) {
                 id: true,
                 amount: true,
                 debit: true,
+                description: true,
                 account: {
                   select: {
                     name: true,
@@ -103,8 +113,18 @@ async function getJournal(journalId: number) {
           }
         },
         projectId: true,
+        project: {
+          select: { name: true },
+        },
         contractId: true,
-        }
+        contract: {
+          select: {
+            contractContent: {
+              select: { name: true }
+            },
+          },
+        },
+      }
     });
 
     if (!journal) {
@@ -117,26 +137,104 @@ async function getJournal(journalId: number) {
   }
 }
 
+function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
+  const projectName = journalData?.project?.name;
+  const { projectId } = journalData;
+  const contractName = journalData?.contract?.contractContent?.name;
+  const { contractId } = journalData;
+
+  return {
+    id: journalData.id,
+    tokenContract: journalData.tokenContract,
+    tokenId: journalData.tokenId,
+    aichResultId: journalData.aichResultId,
+    projectId,
+    contractId,
+    OCR: journalData.ocr && {
+      id: journalData.ocr.id,
+      imageName: journalData.ocr.imageName,
+      imageUrl: journalData.ocr.imageUrl,
+      imageSize: journalData.ocr.imageSize,
+      createdAt: timestampInSeconds(journalData.ocr.createdAt.getTime()),
+      updatedAt: timestampInSeconds(journalData.ocr.updatedAt.getTime())
+    },
+    invoice: journalData.invoice && {
+      journalId: journalData.id,
+      date: journalData.invoice.date,
+      eventType: convertStringToEventType(journalData.invoice.eventType),
+      paymentReason: journalData.invoice.paymentReason,
+      description: journalData.invoice.description,
+      vendorOrSupplier: journalData.invoice.vendorOrSupplier,
+      projectId,
+      project: projectName || null,
+      contractId,
+      contract: contractName || null,
+      payment: {
+        isRevenue: journalData.invoice.payment.isRevenue,
+        price: journalData.invoice.payment.price,
+        hasTax: journalData.invoice.payment.hasTax,
+        taxPercentage: journalData.invoice.payment.taxPercentage,
+        hasFee: journalData.invoice.payment.hasFee,
+        fee: journalData.invoice.payment.fee,
+        paymentMethod: journalData.invoice.payment.paymentMethod,
+        paymentPeriod: convertStringToPaymentPeriodType(journalData.invoice.payment.paymentPeriod),
+        installmentPeriod: journalData.invoice.payment.installmentPeriod,
+        paymentAlreadyDone: journalData.invoice.payment.paymentAlreadyDone,
+        paymentStatus: convertStringToPaymentStatusType(journalData.invoice.payment.paymentStatus),
+        progress: journalData.invoice.payment.progress
+      }
+    },
+    voucher: journalData.voucher && {
+      journalId: journalData.id,
+      lineItems: journalData.voucher.lineItems.map((lineItem) => {
+        return {
+          lineItemIndex: lineItem.id.toString(),
+          amount: lineItem.amount,
+          debit: lineItem.debit,
+          account: lineItem.account.name,
+          description: lineItem.description
+        };
+      }),
+    }
+  };
+}
+
+function isJournalIdValid(journalId: string | string[] | undefined): journalId is string {
+  return !!journalId && !Array.isArray(journalId) && typeof journalId === 'string';
+}
+
+async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IJournalData>>) {
+      const { journalId } = req.query;
+      if (!isJournalIdValid(journalId)) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const journalData = await getJournal(Number(journalId));
+      const journal = formatJournal(journalData);
+      const { httpCode, result } = formatApiResponse<IJournalData>(STATUS_MESSAGE.SUCCESS, journal);
+
+      res.status(httpCode).json(result);
+}
+
+function handleErrorResponse(res: NextApiResponse, message: string) {
+  const { httpCode, result } = formatApiResponse<IJournalData>(
+    message,
+    {} as IJournalData
+  );
+  res.status(httpCode).json(result);
+}
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ApiResponseType>>
+  res: NextApiResponse<IResponseData<IJournalData>>
 ) {
   try {
     if (req.method === 'GET') {
-      const { journalId } = req.query;
-      if (!journalId || Array.isArray(journalId) || Number.isNaN(Number(journalId))) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const journal = await getJournal(Number(journalId));
-      const { httpCode, result } = formatApiResponse<ApiResponseType>(STATUS_MESSAGE.SUCCESS, journal);
-
-      res.status(httpCode).json(result);
+      handleGetRequest(req, res);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ApiResponseType>(error.message, {} as ApiResponseType);
-    res.status(httpCode).json(result);
+    handleErrorResponse(res, error.message);
   }
 }

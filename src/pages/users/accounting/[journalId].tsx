@@ -77,25 +77,25 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
 
   const tokenContract = journalDetail ? journalDetail.tokenContract : '';
   const tokenId: string = journalDetail ? journalDetail.tokenId : '';
-  const type: string = journalDetail ? journalDetail.metadatas[0].voucherType : '';
-  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date / 1000 : 0;
-  const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
-  const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
-  const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
-  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].payment.price : 0; // Info Murky Edit (20240509)
-  const tax: number = journalDetail ? journalDetail.metadatas[0].payment.taxPercentage : 0; // Info Murky Edit (20240509)
-  const fee: number = journalDetail ? journalDetail.metadatas[0].payment.fee : 0; // Info Murky Edit (20240509)
+  const type: string = journalDetail ? journalDetail.metaData[0].voucherType : '';
+  const dateTimestamp: number = journalDetail ? journalDetail.metaData[0].date / 1000 : 0;
+  const reason: string = journalDetail ? journalDetail.metaData[0].reason : '';
+  const vendor: string = journalDetail ? journalDetail.metaData[0].companyName : '';
+  const description: string = journalDetail ? journalDetail.metaData[0].description : '';
+  const totalPrice: number = journalDetail ? journalDetail.metaData[0].payment.price : 0; // Info Murky Edit (20240509)
+  const tax: number = journalDetail ? journalDetail.metaData[0].payment.taxPercentage : 0; // Info Murky Edit (20240509)
+  const fee: number = journalDetail ? journalDetail.metaData[0].payment.fee : 0; // Info Murky Edit (20240509)
   const paymentMethod: string = journalDetail
-    ? journalDetail.metadatas[0].payment.paymentMethod
+    ? journalDetail.metaData[0].payment.paymentMethod
     : ''; // Info Murky Edit (20240509)
   const paymentPeriod: string = journalDetail
-    ? journalDetail.metadatas[0].payment.paymentPeriod
+    ? journalDetail.metaData[0].payment.paymentPeriod
     : ''; // Info Murky Edit (20240509)
   const paymentStatus: string = journalDetail
-    ? journalDetail.metadatas[0].payment.paymentStatus
+    ? journalDetail.metaData[0].payment.paymentStatus
     : ''; // Info Murky Edit (20240509)
-  const project: string = journalDetail ? journalDetail.metadatas[0].project : '';
-  const contract: string = journalDetail ? journalDetail.metadatas[0].contract : '';
+  const project: string = journalDetail ? journalDetail.metaData[0].project : '';
+  const contract: string = journalDetail ? journalDetail.metaData[0].contract : '';
   const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';
 
   const lineItems = journalDetail ? journalDetail.lineItems : [];

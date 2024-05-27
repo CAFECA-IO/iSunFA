@@ -13,7 +13,6 @@ import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
-import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
@@ -32,6 +31,7 @@ import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from './user_context';
 import { useRouter } from 'next/router';
+import LoadingModal from '@/components/loading_modal/loading_modal';
 
 interface IGlobalContext {
   width: number;
@@ -56,7 +56,6 @@ interface IGlobalContext {
 
   isConfirmModalVisible: boolean;
   confirmModalVisibilityHandler: () => void;
-  confirmModalDataHandler: (data: IConfirmModal) => void;
 
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
@@ -76,6 +75,9 @@ interface IGlobalContext {
 
   isCreateCompanyModalVisible: boolean;
   createCompanyModalVisibilityHandler: () => void;
+
+  isLoadingModalVisible: boolean;
+  loadingModalVisibilityHandler: () => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -108,7 +110,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
 
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
-  const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
 
@@ -124,6 +125,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isCompanyInvitationModalVisible, setIsCompanyInvitationModalVisible] = useState(false);
 
   const [isCreateCompanyModalVisible, setIsCreateCompanyModalVisible] = useState(false);
+
+  const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -159,10 +162,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsConfirmModalVisible(!isConfirmModalVisible);
   };
 
-  const confirmModalDataHandler = (data: IConfirmModal) => {
-    setConfirmModalData(data);
-  };
-
   const addAssetModalVisibilityHandler = () => {
     setIsAddAssetModalVisible(!isAddAssetModalVisible);
   };
@@ -188,6 +187,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const createCompanyModalVisibilityHandler = () => {
     setIsCreateCompanyModalVisible(!isCreateCompanyModalVisible);
+  };
+
+  const loadingModalVisibilityHandler = () => {
+    setIsLoadingModalVisible(!isLoadingModalVisible);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -361,7 +364,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     messageModalDataHandler,
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
-    confirmModalDataHandler,
     isAddAssetModalVisible,
     addAssetModalVisibilityHandler,
     isCameraScannerVisible,
@@ -375,6 +377,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     companyInvitationModalVisibilityHandler,
     isCreateCompanyModalVisible,
     createCompanyModalVisibilityHandler,
+    isLoadingModalVisible,
+    loadingModalVisibilityHandler,
     toastHandler,
     eliminateToast,
   };
@@ -405,7 +409,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ConfirmModal
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
-        confirmModalData={confirmModalData}
       />
 
       <AddAssetModal
@@ -438,6 +441,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isCompanyInvitationModalVisible}
         modalVisibilityHandler={companyInvitationModalVisibilityHandler}
         toastHandler={toastHandler}
+      />
+
+      <LoadingModal
+        isModalVisible={isLoadingModalVisible}
+        modalVisibilityHandler={loadingModalVisibilityHandler}
       />
 
       <Toast />
