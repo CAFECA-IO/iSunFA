@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { ICompany } from '@/interfaces/company';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -26,6 +27,9 @@ beforeEach(async () => {
       code: 'COMP123',
       name: 'Company Name',
       regional: 'Regional Name',
+      startDate: timestampInSeconds(Date.now()),
+      createdAt: timestampInSeconds(Date.now()),
+      updatedAt: timestampInSeconds(Date.now()),
     },
   });
 });

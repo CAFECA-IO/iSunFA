@@ -77,8 +77,11 @@ model client {
 model company {
   id                 Int               @id @default(autoincrement())
   name               String
-  code               String
+  code               String           @unique
   regional           String
+  startDate          Int              @map("start_date") 
+  createdAt          Int              @map("created_at")
+  updatedAt          Int              @map("updated_at")
   auditReports       auditReport[]
   cards              card[]
   clients            client[]
