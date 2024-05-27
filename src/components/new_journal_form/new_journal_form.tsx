@@ -80,10 +80,14 @@ const NewJournalForm = () => {
 
   const {
     trigger: createInvoice,
-    data: result,
+    data: invoiceReturn,
     success: createSuccess,
     code: createCode,
-  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_CREATE, {}, false, false);
+  } = APIHandler<{ journalId: number, resultStatus: IAccountResultStatus }>(APIName.INVOICE_CREATE, {}, false, false);
+
+  // Info: (20240527 - Murky) To Emily Invoice改這邊
+  const result = invoiceReturn?.resultStatus;
+  const journalId = invoiceReturn?.journalId;
 
   const {
     trigger: getAIStatus,
@@ -97,7 +101,7 @@ const NewJournalForm = () => {
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ journalId: string; lineItem: ILineItem[] }>(
+  } = APIHandler<{ lineItem: ILineItem[] }>(
     APIName.AI_ASK_RESULT,
     {},
     false,
@@ -511,7 +515,7 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId: AIResult.journalId } });
+      getJournalById({ params: { companyId, journalId } });
     }
     if (AIResultSuccess === false) {
       messageModalDataHandler({
