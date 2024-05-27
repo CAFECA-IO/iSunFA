@@ -3,7 +3,11 @@ import formidable from 'formidable';
 import { promises as fs } from 'fs';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, transformOCRImageIDToURL } from '@/lib/utils/common';
+import {
+  formatApiResponse,
+  timestampInSeconds,
+  transformOCRImageIDToURL,
+} from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import prisma from '@/client';
 
@@ -101,9 +105,12 @@ async function createJournalAndOcrInPrisma(
         company = await prisma.company.create({
           data: {
             id: companyId,
-            code: 'COMP123',
+            code: 'COMP12398989',
             name: 'Company Name',
             regional: 'Regional Name',
+            startDate: timestampInSeconds(Date.now()),
+            createdAt: timestampInSeconds(Date.now()),
+            updatedAt: timestampInSeconds(Date.now()),
           },
           select: {
             id: true,

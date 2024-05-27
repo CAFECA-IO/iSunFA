@@ -42,9 +42,12 @@ async function invoiceSaveToPrisma(
         company = await prisma.company.create({
           data: {
             id: companyId,
-            code: 'COMP123',
+            code: 'TSTST333',
             name: 'Company Name',
             regional: 'Regional Name',
+            startDate: timestampInSeconds(Date.now()),
+            createdAt: timestampInSeconds(Date.now()),
+            updatedAt: timestampInSeconds(Date.now()),
           },
           select: {
             id: true,
