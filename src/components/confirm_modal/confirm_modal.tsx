@@ -13,12 +13,14 @@ import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context'
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { checkboxStyle } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import { ILineItem } from '@/interfaces/line_item';
+import { ILineItem } from '@/interfaces/line_item';
 import AccountingVoucherRow, {
   AccountingVoucherRowMobile,
 } from '@/components/accounting_voucher_row/accounting_voucher_row';
 import { Button } from '@/components/button/button';
-import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -26,19 +28,25 @@ interface IConfirmModalProps {
   confirmModalData: IConfirmModal;
 }
 
+// ToDo: (20240527 - Julian) loading 暫時用這個代替
+const tempLoadingSkeleton = (
+  <div className="block h-20px w-100px animate-pulse rounded-xs bg-input-stroke-input" />
+);
+
 const ConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
   // confirmModalData,
 }: IConfirmModalProps) => {
   const { companyId, voucherPreview } = useAccountingCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const {
     trigger: uploadJournal,
     data: journal,
     success: uploadSuccess,
     code: uploadCode,
-    error: uploadError,
+    // error: uploadError,
   } = APIHandler<IJournal>(
     APIName.VOUCHER_GENERATE,
     {
@@ -50,72 +58,95 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
-  const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
-  const [date, setDate] = useState<number>(0);
-  const [reason, setReason] = useState<string>('');
-  const [companyName, setCompanyName] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [taxPercentage, setTaxPercentage] = useState<number>(0);
-  const [fee, setFee] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
-  const [project, setProject] = useState<string>('');
-  const [contract, setContract] = useState<string>('');
-  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const isLoading = !voucherPreview;
+
+  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
+  const [askAIResult, setAskAIResult] = useState<ILineItem[]>([]);
 
   useEffect(() => {
-    if (voucherPreview) {
-      setVoucherType(voucherPreview.metadatas[0].voucherType);
-      setDate(voucherPreview.metadatas[0].date);
-      setReason(voucherPreview.metadatas[0].reason);
-      setCompanyName(voucherPreview.metadatas[0].companyName);
-      setDescription(voucherPreview.metadatas[0].description);
-      setTotalPrice(voucherPreview.metadatas[0].payment.price);
-      setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
-      setFee(voucherPreview.metadatas[0].payment.fee);
-      setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
-      setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
-      setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
-      setProject(voucherPreview.metadatas[0].project);
-      setContract(voucherPreview.metadatas[0].contract);
-    }
-  }, [voucherPreview]);
+    const result = [
+      {
+        lineItemIndex: '1',
+        account: 'Salary',
+        debit: true,
+        amount: 1000,
+        description: 'Salary for May',
+      },
+      {
+        lineItemIndex: '2',
+        account: 'Rent',
+        debit: false,
+        amount: 200,
+        description: 'Rent for May',
+      },
+    ];
+
+    setTimeout(() => {
+      // 隨機回傳 result 或 []
+      if (Math.random() > 0.5) {
+        setAskAIResult(result);
+      } else {
+        setAskAIResult([]);
+      }
+      setIsAskAILoading(false);
+    }, 7000);
+  }, []);
+
+  // const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
+  // const [date, setDate] = useState<number>(0);
+  // const [reason, setReason] = useState<string>('');
+  // const [companyName, setCompanyName] = useState<string>('');
+  // const [description, setDescription] = useState<string>('');
+  // const [totalPrice, setTotalPrice] = useState<number>(0);
+  // const [taxPercentage, setTaxPercentage] = useState<number>(0);
+  // const [fee, setFee] = useState<number>(0);
+  // const [paymentMethod, setPaymentMethod] = useState<string>('');
+  // const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
+  // const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
+  // const [project, setProject] = useState<string>('');
+  // const [contract, setContract] = useState<string>('');
+  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+
+  // useEffect(() => {
+  //   if (voucherPreview) {
+  //     setVoucherType(voucherPreview.metadatas[0].voucherType);
+  //     setDate(voucherPreview.metadatas[0].date);
+  //     setReason(voucherPreview.metadatas[0].reason);
+  //     setCompanyName(voucherPreview.metadatas[0].companyName);
+  //     setDescription(voucherPreview.metadatas[0].description);
+  //     setTotalPrice(voucherPreview.metadatas[0].payment.price);
+  //     setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
+  //     setFee(voucherPreview.metadatas[0].payment.fee);
+  //     setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
+  //     setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
+  //     setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
+  //     setProject(voucherPreview.metadatas[0].project);
+  //     setContract(voucherPreview.metadatas[0].contract);
+  //   }
+  // }, [voucherPreview]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();
 
-  // ToDo: (20240503 - Julian) Get real journalId from API
-  // const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
-
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    if (voucherPreview) {
+    if (!isLoading) {
       const voucher: IVoucher = {
         voucherIndex: voucherPreview.voucherIndex,
         invoiceIndex: voucherPreview.invoiceIndex,
         metadatas: [
           {
-            date,
-            voucherType: voucherType!,
-            companyId: companyId!,
-            companyName,
-            description,
-            reason,
+            date: voucherPreview.metadatas[0].date,
+            voucherType: voucherPreview.metadatas[0].voucherType,
+            companyId: voucherPreview.metadatas[0].companyId,
+            companyName: voucherPreview.metadatas[0].companyName,
+            description: voucherPreview.metadatas[0].description,
+            reason: voucherPreview.metadatas[0].reason,
             projectId: voucherPreview.metadatas[0].projectId,
             project: voucherPreview.metadatas[0].project,
             contractId: voucherPreview.metadatas[0].contractId,
             contract: voucherPreview.metadatas[0].contract,
-            payment: {
-              ...voucherPreview.metadatas[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-              price: totalPrice,
-              taxPercentage,
-              fee,
-              paymentMethod,
-              paymentPeriod,
-              paymentStatus,
-            },
+            payment: { ...voucherPreview.metadatas[0].payment }, // TODO: replace with user Input @Julian (20240515 - tzuhan)
           },
         ],
         lineItems: voucherPreview.lineItems, // TODO: replace with user Input @Julian (20240515 - tzuhan)
@@ -138,63 +169,130 @@ const ConfirmModal = ({
     if (uploadSuccess === false) {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
       // eslint-disable-next-line no-console
-      console.log(`Failed to generate voucher: `, uploadCode, `error: `, uploadError);
+      // console.log(`Failed to generate voucher: `, uploadCode, `error: `, uploadError);
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Generate voucher failed',
+        subMsg: 'Please try again later',
+        content: `Error code: ${uploadCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
     }
   }, [uploadSuccess]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
-  const displayType = <p className="text-lightRed">{voucherType}</p>;
+  const displayType = !isLoading ? (
+    <p className="text-lightRed">{voucherPreview.metadatas[0].companyId}</p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
-  const displayDate = <p>{timestampToString(date).date}</p>;
+  const displayDate = !isLoading ? (
+    <p>{timestampToString(voucherPreview.metadatas[0].date).date}</p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
-  const displayReason = (
+  const displayReason = !isLoading ? (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
-      <p>{reason}</p>
+      <p>{voucherPreview.metadatas[0].reason}</p>
       <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
         <LuTag size={14} />
         Printer
       </div>
     </div>
+  ) : (
+    tempLoadingSkeleton
   );
 
-  const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
+  const displayVendor = !isLoading ? (
+    <p className="font-semibold text-navyBlue2">{voucherPreview.metadatas[0].companyName}</p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
-  const displayDescription = <p className="font-semibold text-navyBlue2">{description}</p>;
+  const displayDescription = !isLoading ? (
+    <p className="font-semibold text-navyBlue2">{voucherPreview.metadatas[0].description}</p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
-  const displayTotalPrice = (
+  const displayTotalPrice = !isLoading ? (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span> TWD
+        <span className="font-semibold text-navyBlue2">
+          {voucherPreview.metadatas[0].payment.price}
+        </span>{' '}
+        TWD
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> Tax /{' '}
-        <span className="font-semibold text-navyBlue2">{fee}</span> TWD fee)
+        (
+        <span className="font-semibold text-navyBlue2">
+          {voucherPreview.metadatas[0].payment.taxPercentage}%
+        </span>{' '}
+        Tax /{' '}
+        <span className="font-semibold text-navyBlue2">
+          {voucherPreview.metadatas[0].payment.fee}
+        </span>{' '}
+        TWD fee)
       </p>
     </div>
+  ) : (
+    tempLoadingSkeleton
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = !isLoading ? (
+    <p className="text-right font-semibold text-navyBlue2">
+      {voucherPreview.metadatas[0].payment.paymentMethod}
+    </p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const displayPeriod = !isLoading ? (
+    <p className="font-semibold text-navyBlue2">
+      {voucherPreview.metadatas[0].payment.paymentPeriod}
+    </p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  const displayStatus = !isLoading ? (
+    <p className="font-semibold text-navyBlue2">
+      {voucherPreview.metadatas[0].payment.paymentStatus}
+    </p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
+  const projectName = !isLoading ? voucherPreview.metadatas[0].project : '';
   // Info: (20240430 - Julian) Get first letter of each word
-  const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
+  const projectCode = projectName.split(' ').reduce((acc, word) => acc + word[0], '');
+
   const displayProject =
-    project !== 'None' ? (
-      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
-          {projectCode}
+    projectName !== 'None' ? (
+      !isLoading ? (
+        <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+          <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+            {projectCode}
+          </div>
+          <p>{projectName}</p>
         </div>
-        <p>{project}</p>
-      </div>
+      ) : (
+        tempLoadingSkeleton
+      )
     ) : (
       <p className="font-semibold text-navyBlue2">None</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  const displayContract = !isLoading ? (
+    <p className="font-semibold text-darkBlue">{voucherPreview.metadatas[0].contract}</p>
+  ) : (
+    tempLoadingSkeleton
+  );
 
   const accountingVoucherRow = accountingVoucher.map((voucher) => (
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
@@ -290,6 +388,22 @@ const ConfirmModal = ({
     </div>
   );
 
+  const displayedHint = isAskAILoading ? (
+    <p className="absolute left-0 text-text-neutral-secondary">AI is working on it...</p>
+  ) : askAIResult.length > 0 ? (
+    // ToDo: (20240527 - Julian) 串接 API
+    <button
+      type="button"
+      className="rounded-xs bg-badge-surface-soft-primary px-4px py-2px text-badge-text-primary-solid"
+    >
+      Import data
+    </button>
+  ) : (
+    <p className="absolute left-0 text-text-neutral-secondary">
+      There are no recommendations from AI
+    </p>
+  );
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
@@ -376,14 +490,20 @@ const ConfirmModal = ({
           {displayAccountingVoucher}
           {displayAccountingVoucherMobile}
 
-          {/* Info: (20240430 - Julian) Add Button */}
-          <button
-            type="button"
-            onClick={addRowHandler}
-            className="mx-auto mt-24px hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
-          >
-            <FiPlus size={20} />
-          </button>
+          <div className="relative mt-24px">
+            {/* Info: (20240527 - Julian) Hint */}
+            {displayedHint}
+
+            {/* Info: (20240430 - Julian) Add Button */}
+            <button
+              type="button"
+              onClick={addRowHandler}
+              className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
+            >
+              <FiPlus size={20} />
+            </button>
+          </div>
+
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
