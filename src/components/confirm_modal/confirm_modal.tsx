@@ -9,9 +9,7 @@ import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
-import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { checkboxStyle } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ILineItem } from '@/interfaces/line_item';
@@ -22,18 +20,14 @@ import { Button } from '@/components/button/button';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
+import { LoadingSVG } from '../loading_svg/loading_svg';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  confirmModalData: IConfirmModal;
 }
 
-const ConfirmModal = ({
-  isModalVisible,
-  modalVisibilityHandler,
-  // confirmModalData,
-}: IConfirmModalProps) => {
+const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalProps) => {
   const {
     companyId,
     selectedJournal,
@@ -72,7 +66,6 @@ const ConfirmModal = ({
   const router = useRouter();
 
   // ToDo: (20240527 - Julian) 串接 API
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
   const [askAIResult, setAskAIResult] = useState<string[]>([]);
 
@@ -344,6 +337,104 @@ const ConfirmModal = ({
     </p>
   );
 
+  const displayedBody = false ? (
+    <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px pb-20px md:bg-white">
+      {/* Info: (20240429 - Julian) content */}
+      <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
+        {/* Info: (20240429 - Julian) Type */}
+        <div className="flex items-center justify-between">
+          <p>Type</p>
+          {displayType}
+        </div>
+        {/* Info: (20240507 - Julian) Date */}
+        <div className="flex items-center justify-between">
+          <p>Date</p>
+          {displayDate}
+        </div>
+        {/* Info: (20240429 - Julian) Reason */}
+        <div className="flex items-center justify-between">
+          <p>Reason</p>
+          {displayReason}
+        </div>
+        {/* Info: (20240429 - Julian) Vendor/Supplier */}
+        <div className="flex items-center justify-between">
+          <p>Vendor/Supplier</p>
+          {displayVendor}
+        </div>
+        {/* Info: (20240429 - Julian) Description */}
+        <div className="flex items-center justify-between">
+          <p>Description</p>
+          {displayDescription}
+        </div>
+        {/* Info: (20240429 - Julian) Total Price */}
+        <div className="flex items-center justify-between">
+          <p className="whitespace-nowrap">Total Price</p>
+          {displayTotalPrice}
+        </div>
+        {/* Info: (20240429 - Julian) Payment Method */}
+        <div className="flex items-center justify-between">
+          <p className="whitespace-nowrap">Payment Method</p>
+          {displayMethod}
+        </div>
+        {/* Info: (20240429 - Julian) Payment Period */}
+        <div className="flex items-center justify-between">
+          <p className="whitespace-nowrap">Payment Period</p>
+          {displayPeriod}
+        </div>
+        {/* Info: (20240429 - Julian) Payment Status */}
+        <div className="flex items-center justify-between">
+          <p className="whitespace-nowrap">Payment Status</p>
+          {displayStatus}
+        </div>
+        {/* Info: (20240429 - Julian) Project */}
+        <div className="flex items-center justify-between">
+          <p>Project</p>
+          {displayProject}
+        </div>
+        {/* Info: (20240429 - Julian) Contract */}
+        <div className="flex items-center justify-between">
+          <p>Contract</p>
+          {displayContract}
+        </div>
+      </div>
+
+      {/* Info: (20240429 - Julian) Accounting Voucher */}
+      {displayAccountingVoucher}
+      {displayAccountingVoucherMobile}
+
+      <div className="relative mt-24px">
+        {/* Info: (20240527 - Julian) Hint */}
+        {displayedHint}
+
+        {/* Info: (20240430 - Julian) Add Button */}
+        <button
+          type="button"
+          onClick={addRowHandler}
+          className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
+        >
+          <FiPlus size={20} />
+        </button>
+      </div>
+
+      {/* Info: (20240429 - Julian) checkbox */}
+      <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
+        <p className="font-semibold text-navyBlue2">
+          {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
+          Attention: Saving this voucher means it&#39;s permanent on the blockchain. Mistakes
+          can&#39;t be fixed. You&#39;ll need new vouchers to make corrections.
+        </p>
+        <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
+          <input id="addToBook" className={checkboxStyle} type="checkbox" />
+          <p>Add Accounting Voucher to the book</p>
+        </label>
+      </div>
+    </div>
+  ) : (
+    <div className="flex h-700px w-full items-center justify-center">
+      <LoadingSVG />
+    </div>
+  );
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
@@ -366,97 +457,9 @@ const ConfirmModal = ({
           <RxCross2 size={20} />
         </button>
 
-        <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px pb-20px md:bg-white">
-          {/* Info: (20240429 - Julian) content */}
-          <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
-            {/* Info: (20240429 - Julian) Type */}
-            <div className="flex items-center justify-between">
-              <p>Type</p>
-              {displayType}
-            </div>
-            {/* Info: (20240507 - Julian) Date */}
-            <div className="flex items-center justify-between">
-              <p>Date</p>
-              {displayDate}
-            </div>
-            {/* Info: (20240429 - Julian) Reason */}
-            <div className="flex items-center justify-between">
-              <p>Reason</p>
-              {displayReason}
-            </div>
-            {/* Info: (20240429 - Julian) Vendor/Supplier */}
-            <div className="flex items-center justify-between">
-              <p>Vendor/Supplier</p>
-              {displayVendor}
-            </div>
-            {/* Info: (20240429 - Julian) Description */}
-            <div className="flex items-center justify-between">
-              <p>Description</p>
-              {displayDescription}
-            </div>
-            {/* Info: (20240429 - Julian) Total Price */}
-            <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Total Price</p>
-              {displayTotalPrice}
-            </div>
-            {/* Info: (20240429 - Julian) Payment Method */}
-            <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Payment Method</p>
-              {displayMethod}
-            </div>
-            {/* Info: (20240429 - Julian) Payment Period */}
-            <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Payment Period</p>
-              {displayPeriod}
-            </div>
-            {/* Info: (20240429 - Julian) Payment Status */}
-            <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Payment Status</p>
-              {displayStatus}
-            </div>
-            {/* Info: (20240429 - Julian) Project */}
-            <div className="flex items-center justify-between">
-              <p>Project</p>
-              {displayProject}
-            </div>
-            {/* Info: (20240429 - Julian) Contract */}
-            <div className="flex items-center justify-between">
-              <p>Contract</p>
-              {displayContract}
-            </div>
-          </div>
+        {/* Info: (20240527 - Julian) Body */}
+        {displayedBody}
 
-          {/* Info: (20240429 - Julian) Accounting Voucher */}
-          {displayAccountingVoucher}
-          {displayAccountingVoucherMobile}
-
-          <div className="relative mt-24px">
-            {/* Info: (20240527 - Julian) Hint */}
-            {displayedHint}
-
-            {/* Info: (20240430 - Julian) Add Button */}
-            <button
-              type="button"
-              onClick={addRowHandler}
-              className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
-            >
-              <FiPlus size={20} />
-            </button>
-          </div>
-
-          {/* Info: (20240429 - Julian) checkbox */}
-          <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
-            <p className="font-semibold text-navyBlue2">
-              {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
-              Attention: Saving this voucher means it&#39;s permanent on the blockchain. Mistakes
-              can&#39;t be fixed. You&#39;ll need new vouchers to make corrections.
-            </p>
-            <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
-              <input id="addToBook" className={checkboxStyle} type="checkbox" />
-              <p>Add Accounting Voucher to the book</p>
-            </label>
-          </div>
-        </div>
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button

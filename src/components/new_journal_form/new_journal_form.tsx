@@ -55,6 +55,7 @@ const NewJournalForm = () => {
     messageModalDataHandler,
     confirmModalVisibilityHandler,
     addAssetModalVisibilityHandler,
+    loadingModalVisibilityHandler,
   } = useGlobalCtx();
 
   const {
@@ -460,6 +461,7 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      loadingModalVisibilityHandler();
       setTimeout(() => {
         getAIStatus({
           params: {
@@ -1221,7 +1223,6 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Project */}
           {displayedProject}
-          {/* ToDo: (20240429 - Julian) Progress Bar */}
 
           {/* Info: (20240423 - Julian) Buttons */}
           <div className="ml-auto flex items-center gap-24px">
