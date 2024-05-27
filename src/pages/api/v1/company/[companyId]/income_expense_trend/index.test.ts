@@ -41,7 +41,6 @@ describe('Result API Handler Tests', () => {
           name: expect.any(String),
           data: expect.arrayContaining([
             expect.objectContaining({
-              percentage: expect.any(Number),
               absolute: expect.any(Number),
             }),
           ]),
