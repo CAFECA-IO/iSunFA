@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -158,7 +157,7 @@ const ConfirmModal = ({ isModalVisible, modalVisibilityHandler }: IConfirmModalP
       });
       messageModalVisibilityHandler();
     }
-  }, [createSuccess]);
+  }, [createSuccess, createCode]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
