@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-// import { useTranslation } from 'react-i18next';
-
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import {
-  MILLISECONDS_IN_A_SECOND,
-  // MONTH_ABR_LIST,
-  // default30DayPeriodInSec,
-} from '@/constants/display';
+import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 // import { TranslateFunction } from '@/interfaces/locale';
 import Tooltip from '@/components/tooltip/tooltip';
-import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
+import { getTodayPeriodInSec } from '@/lib/utils/common';
 import {
   DUMMY_CATEGORIES,
   DUMMY_START_DATE,
@@ -166,7 +160,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
   return <Chart options={options} series={data.series} type="bar" height={230} />;
 };
 
-const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
+const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
   const { toastHandler } = useGlobalCtx();
