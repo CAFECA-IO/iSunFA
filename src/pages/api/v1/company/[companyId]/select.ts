@@ -17,7 +17,7 @@ export default async function handler(
       if (!session.userId) {
         throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
       }
-      session.selectedCompanyId = req.query.companyId;
+      session.companyId = req.query.companyId;
       const { httpCode, result } = formatApiResponse<string>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
         session.selectedCompanyId
