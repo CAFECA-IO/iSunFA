@@ -46,10 +46,10 @@ export default async function handler(
         const match = cashflowLists.find((cashflow) => cashflow.projectId === project.id);
         if (match) {
           categories.push(project.name);
-          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
+          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
           // eslint-disable-next-line no-underscore-dangle
           income.push(match._sum.income!);
-          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
+          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
           // eslint-disable-next-line no-underscore-dangle
           expense.push(match._sum.expense!);
         }
