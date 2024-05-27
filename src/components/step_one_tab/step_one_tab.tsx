@@ -3,19 +3,20 @@ import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IUnprocessedJournal } from '@/interfaces/journal';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
-import UploadedFileItem from '../uploaded_file_item/uploaded_file_item';
-import Pagination from '../pagination/pagination';
+import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
+import Pagination from '@/components/pagination/pagination';
 
-// ToDo: (20240523 - Julian) replace dummyFileList with real data
+/**  ToDo: (20240523 - Julian) replace dummyFileList with real data */
 const dummyFileList: IUnprocessedJournal[] = [
   {
     id: 1,
-    aichResultId: 'invoiceId-0001',
+    aichResultId: 'b6e8a6c6e7',
     imageName: 'invoice_0001.pdf',
     imageUrl: '/elements/anonymous_avatar.svg',
     imageSize: '100 KB',
@@ -54,11 +55,13 @@ const dummyFileList: IUnprocessedJournal[] = [
     createdAt: Date.now(),
   },
 ];
+
 const totalPages = 10;
 
 const StepOneTab = () => {
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
-  const { companyId, selectUnprocessedJournalHandler } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
+  const { selectUnprocessedJournalHandler } = useAccountingCtx();
   const [load, setLoad] = useState(true);
 
   const {
@@ -69,7 +72,7 @@ const StepOneTab = () => {
     success: listSuccess,
     code: listCode,
   } = APIHandler<IUnprocessedJournal[]>(APIName.JOURNAL_LIST_UNPROCESSED, {
-    params: { companyId },
+    params: { companyId: selectedCompany?.id || '1' },
   });
 
   useEffect(() => {
@@ -99,7 +102,14 @@ const StepOneTab = () => {
   };
 
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUnprocessedJournal[]>(dummyFileList);
+  const [fileList, setFileList] = useState<IUnprocessedJournal[]>([]);
+
+  useEffect(() => {
+    if (listSuccess && unprocessJournals) {
+      const newList = dummyFileList.concat(unprocessJournals);
+      setFileList(newList);
+    }
+  }, [listSuccess, unprocessJournals]);
 
   const fileItemPauseHandler = (id: number) => {
     const newList = fileList.map((data) => {

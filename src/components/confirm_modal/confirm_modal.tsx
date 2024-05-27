@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -6,7 +7,7 @@ import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucher, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
@@ -19,6 +20,7 @@ import AccountingVoucherRow, {
 } from '@/components/accounting_voucher_row/accounting_voucher_row';
 import { Button } from '@/components/button/button';
 import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
+import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -31,16 +33,15 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   // confirmModalData,
 }: IConfirmModalProps) => {
-  const { companyId, voucherPreview } = useAccountingCtx();
+  const { companyId, selectedJournal } = useAccountingCtx();
 
   const {
-    trigger: uploadJournal,
-    data: journal,
-    success: uploadSuccess,
-    code: uploadCode,
-    error: uploadError,
+    trigger: createVoucher,
+    data: result,
+    success: createSuccess,
+    code: createCode,
   } = APIHandler<IJournal>(
-    APIName.VOUCHER_GENERATE,
+    APIName.VOUCHER_CREATE,
     {
       params: { companyId },
     },
@@ -63,25 +64,30 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   useEffect(() => {
-    if (voucherPreview) {
-      setVoucherType(voucherPreview.metaData[0].voucherType);
-      setDate(voucherPreview.metaData[0].date);
-      setReason(voucherPreview.metaData[0].reason);
-      setCompanyName(voucherPreview.metaData[0].companyName);
-      setDescription(voucherPreview.metaData[0].description);
-      setTotalPrice(voucherPreview.metaData[0].payment.price);
-      setTaxPercentage(voucherPreview.metaData[0].payment.taxPercentage);
-      setFee(voucherPreview.metaData[0].payment.fee);
-      setPaymentMethod(voucherPreview.metaData[0].payment.paymentMethod);
-      setPaymentPeriod(voucherPreview.metaData[0].payment.paymentPeriod);
-      setPaymentStatus(voucherPreview.metaData[0].payment.paymentStatus);
-      setProject(voucherPreview.metaData[0].project);
-      setContract(voucherPreview.metaData[0].contract);
+    if (selectedJournal) {
+      const { invoice, voucher } = selectedJournal;
+      if (invoice) {
+        // setDate(invoice.date);
+        // setReason(invoice.paymentReason);
+        setCompanyName(invoice.vendorOrSupplier);
+        setDescription(invoice.description);
+        setTotalPrice(invoice.payment.price);
+        setTaxPercentage(invoice.payment.taxPercentage);
+        setFee(invoice.payment.fee);
+        setPaymentMethod(invoice.payment.paymentMethod);
+        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
+        // setProject(selectedJournal.projectId ?? 'None');
+        // setContract(selectedJournal.contractId ?? 'None');
+      }
+      if (voucher) {
+        setLineItems(voucher.lineItems);
+      }
     }
-  }, [voucherPreview]);
+  }, [selectedJournal?.voucher]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();
@@ -91,38 +97,13 @@ const ConfirmModal = ({
 
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    if (voucherPreview) {
-      const voucher: IVoucher = {
-        voucherIndex: voucherPreview.voucherIndex,
-        invoiceIndex: voucherPreview.invoiceIndex,
-        metaData: [
-          {
-            date,
-            voucherType: voucherType!,
-            companyId: companyId!,
-            companyName,
-            description,
-            reason,
-            projectId: voucherPreview.metaData[0].projectId,
-            project: voucherPreview.metaData[0].project,
-            contractId: voucherPreview.metaData[0].contractId,
-            contract: voucherPreview.metaData[0].contract,
-            payment: {
-              ...voucherPreview.metaData[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-              price: totalPrice,
-              taxPercentage,
-              fee,
-              paymentMethod,
-              paymentPeriod,
-              paymentStatus,
-            },
-          },
-        ],
-        lineItems: voucherPreview.lineItems, // TODO: replace with user Input @Julian (20240515 - tzuhan)
+    if (selectedJournal && selectedJournal.invoice && selectedJournal.voucher) {
+      const voucher: IVoucherDataForSavingToDB = {
+        journalId: selectedJournal.id,
+        lineItems,
       };
-      uploadJournal({ body: { voucher } });
+      createVoucher({ params: { companyId }, body: { voucher } });
     }
-    // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
   };
 
   const addRowHandler = () => addVoucherRowHandler();
@@ -130,17 +111,15 @@ const ConfirmModal = ({
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
 
   useEffect(() => {
-    if (uploadSuccess && journal) {
+    if (createSuccess && result) {
       modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
       clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      // router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
     }
-    if (uploadSuccess === false) {
+    if (createSuccess === false) {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`Failed to generate voucher: `, uploadCode, `error: `, uploadError);
     }
-  }, [uploadSuccess]);
+  }, [createSuccess]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
