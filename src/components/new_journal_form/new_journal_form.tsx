@@ -22,10 +22,8 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
-import { IJournal } from '@/interfaces/journal';
+import { IJournalData } from '@/interfaces/journal';
 import { ILineItem } from '@/interfaces/line_item';
-
-// Info: (20240425 - Julian) dummy data, will be replaced by API data
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -35,8 +33,8 @@ const ficSelection: string[] = [
   '006 Taiwan Cooperative Bank',
   '007 First Commercial Bank',
 ];
-// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 
+// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 const projectSelection: { id: string | null; name: string }[] = [
   { id: null, name: 'None' },
   { id: 'project_a', name: 'Project A' },
@@ -59,15 +57,19 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
   } = useGlobalCtx();
 
-  const { companyId, selectedUnprocessedJournal, selectUnprocessedJournalHandler } =
-    useAccountingCtx();
+  const {
+    companyId,
+    selectedUnprocessedJournal,
+    selectUnprocessedJournalHandler,
+    selectJournalHandler,
+  } = useAccountingCtx();
 
   const {
     trigger: getJournalById,
     success: getJournalSuccess,
     data: journal,
     code: getJournalCode,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
 
   const {
     trigger: getOCRResult,
@@ -147,10 +149,43 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (selectedUnprocessedJournal && getJournalSuccess && journal) {
-      // TODO: add condition: if not invoice data then ask ocrResult(20240524 - tzuhan)
-      getOCRResult({ params: { companyId, resultId: selectedUnprocessedJournal.aichResultId } });
-      // TODO: else set journal data to form (20240524 - tzuhan)
-      // TODO: check if journal has line items show confirm modal (20240524 - tzuhan)
+      selectJournalHandler(journal);
+      if (journal.invoice === null) {
+        getOCRResult({ params: { companyId, resultId: selectedUnprocessedJournal.aichResultId } }); // selectedUnprocessedJournal.aichResultId
+      } else {
+        const { invoice } = journal;
+        // Info: update form data with journal data (20240524 - tzuhan)
+        // setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+        // setInputPaymentReason(invoice.paymentReason);
+        setSelectedEventType(invoice.eventType as EventType);
+        setInputDescription(invoice.description);
+        setInputVendor(invoice.vendorOrSupplier);
+        setInputTotalPrice(invoice.payment.price);
+        setTaxToggle(invoice.payment.hasTax);
+        setTaxRate(invoice.payment.taxPercentage);
+        setFeeToggle(invoice.payment.hasFee);
+        setInputFee(invoice.payment.fee);
+        setSelectedMethod(invoice.payment.paymentMethod);
+        // setInputAccountNumber(invoice.payment.accountNumber);
+        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setInputInstallment(invoice.payment.installmentPeriod);
+        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
+        setInputPartialPaid(invoice.payment.paymentAlreadyDone);
+        setSelectedProject(
+          projectSelection.find(
+            (project) => journal.projectId && project.id === journal.projectId.toString()
+          ) || projectSelection[0]
+        );
+        setSelectedContract(
+          contractSelection.find(
+            (contract) => journal.contractId && contract.id === journal.contractId.toString()
+          ) || contractSelection[0]
+        );
+        setProgressRate(invoice.payment.progress);
+      }
+      if (journal.voucher) {
+        confirmModalVisibilityHandler();
+      }
     }
     if (getJournalSuccess === false) {
       messageModalDataHandler({
@@ -178,6 +213,21 @@ const NewJournalForm = () => {
       setTaxRate(OCRResult.payment.taxPercentage);
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
+      setSelectedMethod(OCRResult.payment.paymentMethod);
+      // setInputAccountNumber(OCRResult.payment.accountNumber);
+      setPaymentPeriod(OCRResult.payment.paymentPeriod);
+      setInputInstallment(OCRResult.payment.installmentPeriod);
+      setPaymentStatus(OCRResult.payment.paymentStatus);
+      setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
+      setSelectedProject(
+        projectSelection.find((project) => project.id === OCRResult.projectId) ||
+          projectSelection[0]
+      );
+      setSelectedContract(
+        contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
+          contractSelection[0]
+      );
+      setProgressRate(OCRResult.payment.progress);
     }
     if (getSuccess === false) {
       // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
@@ -386,7 +436,7 @@ const NewJournalForm = () => {
       },
     };
 
-    createInvoice({ body: { invoice: invoiceData } });
+    createInvoice({ params: { companyId }, body: { invoice: invoiceData } });
   };
 
   useEffect(() => {

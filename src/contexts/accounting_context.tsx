@@ -1,5 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
-import { IJournal, IUnprocessedJournal } from '@/interfaces/journal';
+import { IJournalData, IUnprocessedJournal } from '@/interfaces/journal';
 import { IVoucher } from '@/interfaces/voucher';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
@@ -41,8 +41,8 @@ interface IAccountingContext {
 
   selectedUnprocessedJournal: IUnprocessedJournal | undefined;
   selectUnprocessedJournalHandler: (journal: IUnprocessedJournal | undefined) => void;
-  selectedJournal: IJournal | undefined;
-  selectJournalHandler: (journal: IJournal | undefined) => void;
+  selectedJournal: IJournalData | undefined;
+  selectJournalHandler: (journal: IJournalData | undefined) => void;
 
   companyId: string | undefined;
   invoiceId: string | undefined;
@@ -99,7 +99,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [selectedUnprocessedJournal, setEditingJournal] = useState<IUnprocessedJournal | undefined>(
     undefined
   );
-  const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
+  const [selectedJournal, setSelectedJournal] = useState<IJournalData | undefined>(undefined);
 
   const [companyId, setCompanyId] = useState<string | undefined>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
@@ -278,7 +278,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   );
 
   const selectJournalHandler = useCallback(
-    (journal: IJournal | undefined) => setSelectedJournal(journal),
+    (journal: IJournalData | undefined) => setSelectedJournal(journal),
     [selectedJournal]
   );
 

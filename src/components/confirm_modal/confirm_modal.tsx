@@ -7,7 +7,7 @@ import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucher, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
@@ -20,6 +20,7 @@ import AccountingVoucherRow, {
 } from '@/components/accounting_voucher_row/accounting_voucher_row';
 import { Button } from '@/components/button/button';
 import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
+import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -32,7 +33,7 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   // confirmModalData,
 }: IConfirmModalProps) => {
-  const { companyId } = useAccountingCtx();
+  const { companyId, selectedJournal } = useAccountingCtx();
 
   const {
     trigger: createVoucher,
@@ -63,26 +64,30 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
-  // useEffect(() => {
-  //   if (voucherPreview) {
-  //     setVoucherType(voucherPreview.metadatas[0].voucherType);
-  //     setDate(voucherPreview.metadatas[0].date);
-  //     setReason(voucherPreview.metadatas[0].reason);
-  //     setCompanyName(voucherPreview.metadatas[0].companyName);
-  //     setDescription(voucherPreview.metadatas[0].description);
-  //     setTotalPrice(voucherPreview.metadatas[0].payment.price);
-  //     setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
-  //     setFee(voucherPreview.metadatas[0].payment.fee);
-  //     setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
-  //     setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
-  //     setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
-  //     setProject(voucherPreview.metadatas[0].project);
-  //     setContract(voucherPreview.metadatas[0].contract);
-  //   }
-
-  // }, [voucherPreview]);
+  useEffect(() => {
+    if (selectedJournal) {
+      const { invoice, voucher } = selectedJournal;
+      if (invoice) {
+        // setDate(invoice.date);
+        // setReason(invoice.paymentReason);
+        setCompanyName(invoice.vendorOrSupplier);
+        setDescription(invoice.description);
+        setTotalPrice(invoice.payment.price);
+        setTaxPercentage(invoice.payment.taxPercentage);
+        setFee(invoice.payment.fee);
+        setPaymentMethod(invoice.payment.paymentMethod);
+        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
+        // setProject(selectedJournal.projectId ?? 'None');
+        // setContract(selectedJournal.contractId ?? 'None');
+      }
+      if (voucher) {
+        setLineItems(voucher.lineItems);
+      }
+    }
+  }, [selectedJournal?.voucher]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();
@@ -92,38 +97,13 @@ const ConfirmModal = ({
 
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    // if (voucherPreview) {
-    //   const voucher: IVoucher = {
-    //     voucherIndex: voucherPreview.voucherIndex,
-    //     invoiceIndex: voucherPreview.invoiceIndex,
-    //     metadatas: [
-    //       {
-    //         date,
-    //         voucherType: voucherType!,
-    //         companyId: companyId!,
-    //         companyName,
-    //         description,
-    //         reason,
-    //         projectId: voucherPreview.metadatas[0].projectId,
-    //         project: voucherPreview.metadatas[0].project,
-    //         contractId: voucherPreview.metadatas[0].contractId,
-    //         contract: voucherPreview.metadatas[0].contract,
-    //         payment: {
-    //           ...voucherPreview.metadatas[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-    //           price: totalPrice,
-    //           taxPercentage,
-    //           fee,
-    //           paymentMethod,
-    //           paymentPeriod,
-    //           paymentStatus,
-    //         },
-    //       },
-    //     ],
-    //     lineItems: voucherPreview.lineItems, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-    //   };
-    //   uploadJournal({ body: { voucher } });
-    // }
-    // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
+    if (selectedJournal && selectedJournal.invoice && selectedJournal.voucher) {
+      const voucher: IVoucherDataForSavingToDB = {
+        journalId: selectedJournal.id,
+        lineItems,
+      };
+      createVoucher({ params: { companyId }, body: { voucher } });
+    }
   };
 
   const addRowHandler = () => addVoucherRowHandler();
