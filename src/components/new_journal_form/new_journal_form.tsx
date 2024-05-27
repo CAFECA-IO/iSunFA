@@ -35,17 +35,17 @@ const ficSelection: string[] = [
 ];
 
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
-const projectSelection: { id: string | null; name: string }[] = [
+const projectSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'None' },
-  { id: 'project_a', name: 'Project A' },
-  { id: 'project_b', name: 'Project B' },
-  { id: 'project_c', name: 'Project C' },
+  { id: 1, name: 'Project A' },
+  { id: 2, name: 'Project B' },
+  { id: 3, name: 'Project C' },
 ];
-const contractSelection: { id: string | null; name: string }[] = [
+const contractSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'None' },
-  { id: 'contract_a', name: 'Contract A' },
-  { id: 'contract_b', name: 'Contract B' },
-  { id: 'contract_c', name: 'Contract C' },
+  { id: 1, name: 'Contract A' },
+  { id: 2, name: 'Contract B' },
+  { id: 3, name: 'Contract C' },
 ];
 
 const NewJournalForm = () => {
@@ -81,10 +81,14 @@ const NewJournalForm = () => {
 
   const {
     trigger: createInvoice,
-    data: result,
+    data: invoiceReturn,
     success: createSuccess,
     code: createCode,
-  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_CREATE, {}, false, false);
+  } = APIHandler<{ journalId: number, resultStatus: IAccountResultStatus }>(APIName.INVOICE_CREATE, {}, false, false);
+
+  // Info: (20240527 - Murky) To Emily Invoice改這邊
+  const result = invoiceReturn?.resultStatus;
+  const journalId = invoiceReturn?.journalId;
 
   const {
     trigger: getAIStatus,
@@ -98,7 +102,7 @@ const NewJournalForm = () => {
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ journalId: string; lineItem: ILineItem[] }>(
+  } = APIHandler<{ lineItem: ILineItem[] }>(
     APIName.AI_ASK_RESULT,
     {},
     false,
@@ -131,10 +135,10 @@ const NewJournalForm = () => {
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
-  const [selectedProject, setSelectedProject] = useState<{ id: string | null; name: string }>(
+  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>(
     projectSelection[0]
   );
-  const [selectedContract, setSelectedContract] = useState<{ id: string | null; name: string }>(
+  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>(
     contractSelection[0]
   );
   const [progressRate, setProgressRate] = useState<number>(0);
@@ -172,12 +176,12 @@ const NewJournalForm = () => {
         setInputPartialPaid(invoice.payment.paymentAlreadyDone);
         setSelectedProject(
           projectSelection.find(
-            (project) => journal.projectId && project.id === journal.projectId.toString()
+            (project) => journal.projectId && project.id === journal.projectId
           ) || projectSelection[0]
         );
         setSelectedContract(
           contractSelection.find(
-            (contract) => journal.contractId && contract.id === journal.contractId.toString()
+            (contract) => journal.contractId && contract.id === journal.contractId
           ) || contractSelection[0]
         );
         setProgressRate(invoice.payment.progress);
@@ -220,11 +224,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -516,7 +520,7 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId: AIResult.journalId } });
+      getJournalById({ params: { companyId, journalId } });
     }
     if (AIResultSuccess === false) {
       messageModalDataHandler({
@@ -619,7 +623,7 @@ const NewJournalForm = () => {
   });
 
   const displayProjectDropmenu = projectSelection.map(
-    (project: { id: string | null; name: string }) => {
+    (project: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
         setSelectedProject(project);
       };
@@ -637,7 +641,7 @@ const NewJournalForm = () => {
   );
 
   const displayContractDropmenu = contractSelection.map(
-    (contract: { id: string | null; name: string }) => {
+    (contract: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
         setSelectedContract(contract);
       };
