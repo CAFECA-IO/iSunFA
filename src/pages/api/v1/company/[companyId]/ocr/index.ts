@@ -66,7 +66,7 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unkno
   }
 
   if (!json || !json.payload) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   }
 
   return json.payload as IAccountResultStatus;
@@ -206,15 +206,16 @@ async function createJournalAndOcrInPrisma(
     });
 }
 
-async function isCompanyIdString(companyId: string | string[] | undefined) {
+function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
   if (
     Array.isArray(companyId) ||
     !companyId ||
     typeof companyId !== 'string' ||
     !Number.isInteger(Number(companyId))
   ) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    return false;
   }
+  return true;
 }
 
 async function getImageFileFromFormData(req: NextApiRequest) {
@@ -233,7 +234,9 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const { companyId } = req.query;
 
   // Info Murky (20240416): Check if companyId is string
-  await isCompanyIdString(companyId);
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
   const companyIdNumber = Number(companyId);
 
@@ -255,6 +258,14 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   res.status(httpCode).json(result);
 }
 
+function handleErrorResponse(res: NextApiResponse, message: string) {
+  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
+    message,
+    {} as IAccountResultStatus[]
+  );
+  res.status(httpCode).json(result);
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccountResultStatus[]>>
@@ -271,7 +282,6 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(error.message, []);
-    res.status(httpCode).json(result);
+    handleErrorResponse(res, error.message);
   }
 }
