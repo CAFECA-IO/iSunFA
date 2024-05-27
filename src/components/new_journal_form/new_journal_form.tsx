@@ -228,8 +228,11 @@ const NewJournalForm = () => {
       );
       setProgressRate(OCRResult.payment.progress);
     }
+  }, [getSuccess, OCRResult]);
+
+  useEffect(() => {
+    // Info: (20240527 - Julian) 顯示錯誤須分開處理，避免閃現
     if (getSuccess === false) {
-      // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Get OCR result Failed',
@@ -239,7 +242,7 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [getSuccess, OCRResult]);
+  }, [getSuccess]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {

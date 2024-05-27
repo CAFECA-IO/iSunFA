@@ -17,11 +17,12 @@ const UploadedFileItem = ({
   clickHandler,
 }: IUploadedFileItemProps) => {
   const { id, imageName, imageUrl, imageSize, progress, status } = itemData;
-  const isError =
-    status === ProgressStatus.INVALID_INPUT ||
-    status === ProgressStatus.LLM_ERROR ||
-    status === ProgressStatus.SYSTEM_ERROR ||
-    status === ProgressStatus.NOT_FOUND;
+  // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
+  const isError = !(
+    status === ProgressStatus.IN_PROGRESS ||
+    status === ProgressStatus.SUCCESS ||
+    status === ProgressStatus.PAUSED
+  );
 
   const pauseClickHandler = () => pauseHandler(id);
   const deleteClickHandler = () => deleteHandler(id);
