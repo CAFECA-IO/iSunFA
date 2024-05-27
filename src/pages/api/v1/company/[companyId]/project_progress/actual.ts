@@ -35,6 +35,7 @@ export default async function handler(
         series: [
           {
             name: 'Projects',
+            // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _count
             // eslint-disable-next-line no-underscore-dangle
             data: statusNumber.map((status) => status._count.id),
           },

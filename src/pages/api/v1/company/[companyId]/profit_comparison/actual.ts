@@ -12,7 +12,7 @@ export default async function handler(
   const { startDate, endDate, currentPage = 1, itemsPerPage = 10 } = req.query;
   try {
     if (startDate && endDate && currentPage && itemsPerPage) {
-      // transfer startDate to timestamp, using local time
+      // Info: (20240527 - Gibbs) transfer startDate to timestamp, using local time
       const startDateToTimeStamp = timestampInSeconds(
         new Date(startDate + 'T00:00:00+08:00').getTime()
       );
@@ -46,8 +46,10 @@ export default async function handler(
         const match = cashflowLists.find((cashflow) => cashflow.projectId === project.id);
         if (match) {
           categories.push(project.name);
+          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
           // eslint-disable-next-line no-underscore-dangle
           income.push(match._sum.income!);
+          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
           // eslint-disable-next-line no-underscore-dangle
           expense.push(match._sum.expense!);
         }

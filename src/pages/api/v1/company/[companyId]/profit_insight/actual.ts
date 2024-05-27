@@ -29,6 +29,7 @@ async function getPofitChange() {
     },
   });
   const profitToday = IncomeExpenseToday.reduce((acc, today) => {
+    // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
     // eslint-disable-next-line no-underscore-dangle
     return acc + (today._sum.income! - today._sum.expense!);
   }, 0);
@@ -46,6 +47,7 @@ async function getPofitChange() {
     },
   });
   const profitYesterday = IncomeExpenseYesterday.reduce((acc, yesterday) => {
+    // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
     // eslint-disable-next-line no-underscore-dangle
     return acc + (yesterday._sum.income! - yesterday._sum.expense!);
   }, 0);
@@ -73,6 +75,7 @@ export default async function handler(
         },
       });
       const topProjectRoi = projectsROI.reduce((acc, project) => {
+        // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for _sum
         // eslint-disable-next-line no-underscore-dangle
         const roi = (project._sum.income! - project._sum.expense!) / project._sum.income!;
         return roi > acc ? roi : acc;
