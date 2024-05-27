@@ -29,7 +29,7 @@ interface UserContextType {
   signedIn: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
-  selectCompany: (company: ICompany) => void;
+  selectCompany: (company: ICompany | null) => void;
   successSelectCompany: boolean | undefined;
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -250,7 +250,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = (company: ICompany) => {
+  const selectCompany = (company: ICompany | null) => {
+    if (!company) {
+      setSelectedCompany(null);
+      setSuccessSelectCompany(undefined);
+      return;
+    }
     setSelectedCompany(company);
     selectCompanyAPI({
       params: {
