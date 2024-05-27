@@ -50,7 +50,17 @@ const ConfirmModal = ({
     data: result,
     success: createSuccess,
     code: createCode,
-  } = APIHandler<IJournal>(
+  } = APIHandler<{
+    id: number;
+    lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number | null;
+    }[];
+  }>(
     APIName.VOUCHER_CREATE,
     {
       params: { companyId },
