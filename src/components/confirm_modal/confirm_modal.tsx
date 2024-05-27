@@ -67,19 +67,19 @@ const ConfirmModal = ({
 
   useEffect(() => {
     if (voucherPreview) {
-      setVoucherType(voucherPreview.metadatas[0].voucherType);
-      setDate(voucherPreview.metadatas[0].date);
-      setReason(voucherPreview.metadatas[0].reason);
-      setCompanyName(voucherPreview.metadatas[0].companyName);
-      setDescription(voucherPreview.metadatas[0].description);
-      setTotalPrice(voucherPreview.metadatas[0].payment.price);
-      setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
-      setFee(voucherPreview.metadatas[0].payment.fee);
-      setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
-      setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
-      setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
-      setProject(voucherPreview.metadatas[0].project);
-      setContract(voucherPreview.metadatas[0].contract);
+      setVoucherType(voucherPreview.metaData[0].voucherType);
+      setDate(voucherPreview.metaData[0].date);
+      setReason(voucherPreview.metaData[0].reason);
+      setCompanyName(voucherPreview.metaData[0].companyName);
+      setDescription(voucherPreview.metaData[0].description);
+      setTotalPrice(voucherPreview.metaData[0].payment.price);
+      setTaxPercentage(voucherPreview.metaData[0].payment.taxPercentage);
+      setFee(voucherPreview.metaData[0].payment.fee);
+      setPaymentMethod(voucherPreview.metaData[0].payment.paymentMethod);
+      setPaymentPeriod(voucherPreview.metaData[0].payment.paymentPeriod);
+      setPaymentStatus(voucherPreview.metaData[0].payment.paymentStatus);
+      setProject(voucherPreview.metaData[0].project);
+      setContract(voucherPreview.metaData[0].contract);
     }
   }, [voucherPreview]);
 
@@ -95,7 +95,7 @@ const ConfirmModal = ({
       const voucher: IVoucher = {
         voucherIndex: voucherPreview.voucherIndex,
         invoiceIndex: voucherPreview.invoiceIndex,
-        metadatas: [
+        metaData: [
           {
             date,
             voucherType: voucherType!,
@@ -103,12 +103,12 @@ const ConfirmModal = ({
             companyName,
             description,
             reason,
-            projectId: voucherPreview.metadatas[0].projectId,
-            project: voucherPreview.metadatas[0].project,
-            contractId: voucherPreview.metadatas[0].contractId,
-            contract: voucherPreview.metadatas[0].contract,
+            projectId: voucherPreview.metaData[0].projectId,
+            project: voucherPreview.metaData[0].project,
+            contractId: voucherPreview.metaData[0].contractId,
+            contract: voucherPreview.metaData[0].contract,
             payment: {
-              ...voucherPreview.metadatas[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
+              ...voucherPreview.metaData[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
               price: totalPrice,
               taxPercentage,
               fee,
