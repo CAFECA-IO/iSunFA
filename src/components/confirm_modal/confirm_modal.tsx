@@ -6,9 +6,8 @@ import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { checkboxStyle } from '@/constants/display';
@@ -19,6 +18,7 @@ import AccountingVoucherRow, {
 } from '@/components/accounting_voucher_row/accounting_voucher_row';
 import { Button } from '@/components/button/button';
 import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
+import { ILineItem } from '@/interfaces/line_item';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -31,16 +31,25 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   // confirmModalData,
 }: IConfirmModalProps) => {
-  const { companyId, voucherPreview } = useAccountingCtx();
+  const { companyId, selectedJournal } = useAccountingCtx();
 
   const {
-    trigger: uploadJournal,
-    data: journal,
-    success: uploadSuccess,
-    code: uploadCode,
-    error: uploadError,
-  } = APIHandler<IJournal>(
-    APIName.VOUCHER_GENERATE,
+    trigger: createVoucher,
+    data: result,
+    success: createSuccess,
+    code: createCode,
+  } = APIHandler<{
+    id: number;
+    lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number | null;
+    }[];
+  }>(
+    APIName.VOUCHER_CREATE,
     {
       params: { companyId },
     },
@@ -50,8 +59,11 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [date, setDate] = useState<number>(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -61,27 +73,34 @@ const ConfirmModal = ({
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [project, setProject] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [contract, setContract] = useState<string>('');
-  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   useEffect(() => {
-    if (voucherPreview) {
-      setVoucherType(voucherPreview.metadatas[0].voucherType);
-      setDate(voucherPreview.metadatas[0].date);
-      setReason(voucherPreview.metadatas[0].reason);
-      setCompanyName(voucherPreview.metadatas[0].companyName);
-      setDescription(voucherPreview.metadatas[0].description);
-      setTotalPrice(voucherPreview.metadatas[0].payment.price);
-      setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
-      setFee(voucherPreview.metadatas[0].payment.fee);
-      setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
-      setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
-      setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
-      setProject(voucherPreview.metadatas[0].project);
-      setContract(voucherPreview.metadatas[0].contract);
+    if (selectedJournal) {
+      const { invoice, voucher } = selectedJournal;
+      if (invoice) {
+        // setDate(invoice.date);
+        // setReason(invoice.paymentReason);
+        setCompanyName(invoice.vendorOrSupplier);
+        setDescription(invoice.description);
+        setTotalPrice(invoice.payment.price);
+        setTaxPercentage(invoice.payment.taxPercentage);
+        setFee(invoice.payment.fee);
+        setPaymentMethod(invoice.payment.paymentMethod);
+        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
+        // setProject(selectedJournal.projectId ?? 'None');
+        // setContract(selectedJournal.contractId ?? 'None');
+      }
+      if (voucher) {
+        setLineItems(voucher.lineItems);
+      }
     }
-  }, [voucherPreview]);
+  }, [selectedJournal?.voucher]);
 
   const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
     useAccountingCtx();
@@ -91,38 +110,13 @@ const ConfirmModal = ({
 
   // ToDo: (20240503 - Julian) 串接 API
   const confirmHandler = () => {
-    if (voucherPreview) {
-      const voucher: IVoucher = {
-        voucherIndex: voucherPreview.voucherIndex,
-        invoiceIndex: voucherPreview.invoiceIndex,
-        metadatas: [
-          {
-            date,
-            voucherType: voucherType!,
-            companyId: companyId!,
-            companyName,
-            description,
-            reason,
-            projectId: voucherPreview.metadatas[0].projectId,
-            project: voucherPreview.metadatas[0].project,
-            contractId: voucherPreview.metadatas[0].contractId,
-            contract: voucherPreview.metadatas[0].contract,
-            payment: {
-              ...voucherPreview.metadatas[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-              price: totalPrice,
-              taxPercentage,
-              fee,
-              paymentMethod,
-              paymentPeriod,
-              paymentStatus,
-            },
-          },
-        ],
-        lineItems: voucherPreview.lineItems, // TODO: replace with user Input @Julian (20240515 - tzuhan)
+    if (selectedJournal && selectedJournal.invoice && selectedJournal.voucher) {
+      const voucher: IVoucherDataForSavingToDB = {
+        journalId: selectedJournal.id,
+        lineItems,
       };
-      uploadJournal({ body: { voucher } });
+      createVoucher({ params: { companyId }, body: { voucher } });
     }
-    // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
   };
 
   const addRowHandler = () => addVoucherRowHandler();
@@ -130,17 +124,15 @@ const ConfirmModal = ({
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
 
   useEffect(() => {
-    if (uploadSuccess && journal) {
+    if (createSuccess && result && selectedJournal) {
       modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
       clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${selectedJournal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
     }
-    if (uploadSuccess === false) {
+    if (createSuccess === false) {
       // TODO: Error handling @Julian (20240510 - Tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`Failed to generate voucher: `, uploadCode, `error: `, uploadError);
     }
-  }, [uploadSuccess]);
+  }, [createSuccess, createCode]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 

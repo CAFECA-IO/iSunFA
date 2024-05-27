@@ -15,6 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { Button } from '@/components/button/button';
 import { MessageType } from '@/interfaces/message_modal';
+import { ProgressStatus } from '@/constants/account';
 
 // Info: (20240506 - Julian) const
 const PHOTO_WIDTH = 320;
@@ -36,10 +37,9 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   const {
     trigger: uploadInvoice,
     data: results,
-    error: uploadError,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD, {}, false, false);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -163,47 +163,49 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   useEffect(() => {
     if (uploadSuccess && results) {
-      /**   TODO: 可能需要調整 resultId 的解析 (20240508 - tzuhan)
-       * 目前的回傳格式
-        {
-            "resultId": "Already uploaded, resultId: 487a357c89",
-            "status": "inProgress"
-        }
-       * 期望的回傳格式
-        {
-            "resultId": "487a357c89",
-            "status": "inProgress"
-        }
-       */
-      // const result = results[0];
-      // const resultIdIndex = result.resultId.lastIndexOf(':');
-      // const resultId = result.resultId.substring(resultIdIndex + 1).trim();
-      // Info: (20240522 - Julian) 因 API response 格式改變，所以修改取得 resultId 的方式
-      const { resultId } = results;
-
-      messageModalDataHandler({
-        title: 'Upload Successful',
-        content: results.status,
-        messageType: MessageType.SUCCESS,
-        submitBtnStr: 'Done',
-        submitBtnFunction: () => {
-          setInvoiceIdHandler(resultId);
+      results.forEach((result) => {
+        const { resultId } = result;
+        if (
+          result.status === ProgressStatus.ALREADY_UPLOAD ||
+          result.status === ProgressStatus.SUCCESS ||
+          result.status === ProgressStatus.PAUSED ||
+          result.status === ProgressStatus.IN_PROGRESS
+        ) {
+          messageModalDataHandler({
+            title: 'Upload Successful',
+            content: result.status,
+            messageType: MessageType.SUCCESS,
+            submitBtnStr: 'Done',
+            submitBtnFunction: () => {
+              setInvoiceIdHandler(resultId);
+              messageModalVisibilityHandler();
+            },
+          });
           messageModalVisibilityHandler();
-        },
+        } else {
+          // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
+          messageModalDataHandler({
+            title: 'Upload Invoice Failed',
+            content: `Upload invoice failed(${uploadCode}): ${result.status}`,
+            messageType: MessageType.ERROR,
+            submitBtnStr: 'Close',
+            submitBtnFunction: () => messageModalVisibilityHandler(),
+          });
+          messageModalVisibilityHandler();
+        }
       });
-      messageModalVisibilityHandler();
-    } else if (uploadError && uploadCode) {
-      // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
+    }
+    if (uploadSuccess === false) {
       messageModalDataHandler({
         title: 'Upload Invoice Failed',
-        content: `Upload invoice failed: ${uploadCode}`,
+        content: `Upload invoice failed(${uploadCode})`,
         messageType: MessageType.ERROR,
         submitBtnStr: 'Close',
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
     }
-  }, [uploadSuccess, results, isModalVisible, uploadError, uploadCode]);
+  }, [uploadSuccess, results, isModalVisible, uploadCode]);
 
   useEffect(() => {
     // Info: (20240507 - Julian) 如果從相簿選擇照片，則將照片顯示在 canvas 上，並轉為預覽模式
