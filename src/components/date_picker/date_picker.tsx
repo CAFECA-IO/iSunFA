@@ -241,11 +241,17 @@ const DatePicker = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateOne, dateTwo]);
 
+  // TODO: 在不讓 parent component re-render 造成多次 API call 的情況下，將 period 從一段期間改成一個日期 (20240527 - Shirley)
   // Info: If type changed, reset the date (20240425 - Shirley)
-  useEffect(() => {
-    setDateOne(null);
-    setDateTwo(null);
-  }, [type]);
+  // useEffect(() => {
+  //   if (type === DatePickerType.CHOOSE_PERIOD || type === DatePickerType.ICON) {
+  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //     setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //   } else {
+  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //     setDateTwo(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //   }
+  // }, [type]);
 
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {

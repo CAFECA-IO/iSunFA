@@ -329,6 +329,20 @@ export function transformBytesToFileSizeString(bytes: number): string {
 }
 
 // page, limit to offset
-export function pageToOffset(page: number = DEFAULT_PAGE_START_AT, limit: number = DEFAULT_PAGE_LIMIT): number {
+export function pageToOffset(
+  page: number = DEFAULT_PAGE_START_AT,
+  limit: number = DEFAULT_PAGE_LIMIT
+): number {
   return (page - 1) * limit;
 }
+
+export const getTodayPeriodInSec = () => {
+  const today = new Date();
+  const startTimeStamp = timestampInSeconds(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  );
+  const endTimeStamp = timestampInSeconds(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).getTime()
+  );
+  return { startTimeStamp, endTimeStamp };
+};

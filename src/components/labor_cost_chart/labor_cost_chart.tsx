@@ -6,13 +6,13 @@ import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
-import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
+import { getTodayPeriodInSec } from '@/lib/utils/common';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -189,10 +189,9 @@ const PieChart = ({ data }: PieChartProps) => {
   );
 };
 
-const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
+const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const LaborCostChart = () => {
-  // TODO: 串上 API (20240522 - Shirley) -> done by tzuhan (20240523)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
@@ -206,14 +205,19 @@ const LaborCostChart = () => {
     success: getSuccess,
     code: getCode,
     error: getError,
-  } = APIHandler<ILaborCostChartData>(APIName.LABOR_COST_CHART, {
-    params: {
-      companyId,
+  } = APIHandler<ILaborCostChartData>(
+    APIName.LABOR_COST_CHART,
+    {
+      params: {
+        companyId,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
     },
-    query: {
-      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
-    },
-  });
+    false,
+    false
+  );
 
   const displayedYear = maxDate.getFullYear();
 
@@ -234,11 +238,7 @@ const LaborCostChart = () => {
 
   useEffect(() => {
     if (getSuccess && laborCostData) {
-      const { series: newSeries, categories: newCategories, startDate, endDate } = laborCostData;
-      setPeriod({
-        startTimeStamp: startDate,
-        endTimeStamp: endDate,
-      });
+      const { series: newSeries, categories: newCategories } = laborCostData;
       setSeries(newSeries);
       setCategories(newCategories);
     }
@@ -327,7 +327,7 @@ const LaborCostChart = () => {
           </div>
           <div className="w-10">
             <DatePicker
-              type={DatePickerType.ICON}
+              type={DatePickerType.ICON_CHOOSE_DATE}
               minDate={minDate}
               maxDate={maxDate}
               period={period}
