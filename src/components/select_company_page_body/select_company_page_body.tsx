@@ -47,7 +47,11 @@ const SelectCompanyPageBody = () => {
   const selectedCompanyName = selectedCompany?.name ?? 'Select an Company';
 
   const menuOpenHandler = () => {
-    listCompany();
+    listCompany({
+      header: {
+        userid: username || DEFAULT_DISPLAYED_USER_NAME,
+      },
+    });
     setIsCompanyMenuOpen(!isCompanyMenuOpen);
   };
 

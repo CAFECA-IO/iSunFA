@@ -13,9 +13,11 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
+import { useRouter } from 'next/router';
 
 const NavBar = () => {
-  const { signedIn, signOut, username, selectedCompany } = useUserCtx();
+  const { signedIn, signOut, username, selectedCompany, selectCompany } = useUserCtx();
+  const router = useRouter();
 
   const burgerButtonStyle =
     'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
@@ -55,6 +57,12 @@ const NavBar = () => {
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
     signOut();
+  };
+
+  const companyChangeClickHandler = (e: { preventDefault: () => void; }) => {
+    e.preventDefault();
+    selectCompany(null);
+    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const displayedAppMenuMobile = (
@@ -395,6 +403,7 @@ const NavBar = () => {
   const displayedCompanyChangeBtn = selectedCompany ? (
     <Link
       href={ISUNFA_ROUTE.SELECT_COMPANY}
+      onClick={companyChangeClickHandler}
       className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
     >
       {/* ToDo: (20240516 - Julian) icon */}

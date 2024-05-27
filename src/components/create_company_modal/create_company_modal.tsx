@@ -13,6 +13,7 @@ import { ICompany } from '@/interfaces/company';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { MessageType } from '@/interfaces/message_modal';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -34,7 +35,7 @@ const countryList = [
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { successSelectCompany, selectCompany, errorCode } = useUserCtx();
+  const { username, selectCompany } = useUserCtx();
 
   const {
     targetRef: menuRef,
@@ -78,6 +79,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
       selectCompany(company);
       modalVisibilityHandler();
+      router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
       // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
       messageModalDataHandler({
@@ -92,27 +94,13 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     }
   }, [createCompanySuccess, createCompanyError, createCompanyCode]);
 
-  useEffect(() => {
-    if (successSelectCompany) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-    }
-    if (successSelectCompany === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Selected Company Failed',
-        subMsg: 'Please try again later',
-        content: `Error code: ${errorCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [successSelectCompany, errorCode]);
-
   const confirmClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     createCompany({
+      header: {
+        userid: username || DEFAULT_DISPLAYED_USER_NAME,
+      },
       body: {
         name: nameValue,
         code: registrationNumberValue,

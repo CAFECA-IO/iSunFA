@@ -100,6 +100,10 @@ const useAPI = <Data>(
   const fetchDataCallback = useCallback(
     async (input?: IAPIInput, signal?: AbortSignal) => {
       setIsLoading(true);
+      setSuccess(undefined);
+      setCode(undefined);
+      setError(null);
+      setData(undefined);
       try {
         const response = await fetchData<Data>(
           apiConfig,
