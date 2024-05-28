@@ -75,8 +75,18 @@ async function getJournals(
       take: limit,
       where: {
         NOT: {
-          invoice: null,
-          voucher: null,
+          OR: [
+            {
+              invoiceId: {
+                equals: null
+              },
+            },
+            {
+              voucherId: {
+                equals: null
+              },
+            },
+          ],
         },
         companyId,
         createdAt: {
