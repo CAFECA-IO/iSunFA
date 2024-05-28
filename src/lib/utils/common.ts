@@ -15,11 +15,6 @@ export const getDomains = () => {
   return ALLOWED_ORIGINS;
 };
 
-export const getDomain = () => {
-  // depends on the dev or prod environment
-  return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://isunfa.com';
-};
-
 export const numberWithCommas = (x: number | string) => {
   return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 };
