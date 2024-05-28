@@ -26,15 +26,20 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 
   if (!company) {
     try {
-    company = await prisma.company.create({
-      data: {
-        id: companyId,
-        code: 'COMP123',
-        name: 'Company Name',
-        regional: 'Regional Name',
-      },
-      select: { id: true },
-    });
+      const now = Date.now();
+      const currentTimestamp = timestampInSeconds(now);
+      company = await prisma.company.create({
+        data: {
+          id: companyId,
+          code: 'COMP123',
+          name: 'Company Name',
+          regional: 'Regional Name',
+          startDate: currentTimestamp,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
+        },
+        select: { id: true },
+      });
     } catch (error) {
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
@@ -81,7 +86,7 @@ async function invoiceSaveToPrisma(
           paymentReason: invoiceData.paymentReason,
           description: invoiceData.description,
           vendorOrSupplier: invoiceData.vendorOrSupplier,
-          paymentId: payment.id
+          paymentId: payment.id,
         },
       });
 
@@ -121,7 +126,7 @@ async function journalSaveToPrisma(
           },
           select: {
             id: true,
-          }
+          },
         });
       } else {
         journal = await prisma.journal.update({
@@ -136,7 +141,7 @@ async function journalSaveToPrisma(
           },
           select: {
             id: true,
-          }
+          },
         });
       }
 
@@ -150,10 +155,9 @@ async function journalSaveToPrisma(
 }
 
 function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
-  if (Array.isArray(companyId) || !companyId || typeof companyId !== "string" || !Number.isInteger(Number(companyId))) {
-    return false;
-  }
-  return true;
+  const companyString = companyId as string;
+  const result = /d/.test(companyString);
+  return result;
 }
 
 // Info Murky (20240416): Body傳進來會是any
@@ -195,10 +199,10 @@ async function uploadInvoiceToAICH(invoice: IInvoiceDataForSavingToDB) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
 
-  return response.json() as Promise<{ payload?:unknown } | null>;
+  return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unknown } | null>) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -221,10 +225,10 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unkno
 }
 
 function getProjectIdAndContractIdFromInvoice(invoice: IInvoiceDataForSavingToDB) {
-  const projectId = !Number.isNaN(Number(invoice.projectId)) ? Number(invoice.projectId) : null;
-  const contractId = !Number.isNaN(Number(invoice.contractId))
-    ? Number(invoice.contractId)
-    : null;
+  const projectIdNum = Number(invoice.projectId);
+  const contractIdNum = Number(invoice.contractId);
+  const projectId = !Number.isNaN(projectIdNum) ? projectIdNum : null;
+  const contractId = !Number.isNaN(contractIdNum) ? contractIdNum : null;
   return { projectId, contractId };
 }
 
@@ -236,43 +240,45 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
   res.status(httpCode).json(result);
 }
 
-async function handleGetRequest(companyId: string, req: NextApiRequest, res: NextApiResponse<IResponseData<IPostApiResponseType>>) {
-      const { invoice } = req.body;
+async function handleGetRequest(
+  companyId: string,
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IPostApiResponseType>>
+) {
+  const { invoice } = req.body;
 
-      const formattedInvoice = formatInvoice(invoice);
+  const formattedInvoice = formatInvoice(invoice);
 
-      // ToDo: save to prisma
-      const { invoiceId, companyIdNumber } = await invoiceSaveToPrisma(formattedInvoice, Number(companyId));
+  // ToDo: save to prisma
+  const companyIdNum = Number(companyId);
+  const { invoiceId, companyIdNumber } = await invoiceSaveToPrisma(formattedInvoice, companyIdNum);
 
-      // Post to AICH
-      const fetchResult = uploadInvoiceToAICH(formattedInvoice);
+  // Post to AICH
+  const fetchResult = uploadInvoiceToAICH(formattedInvoice);
 
-      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+  const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
 
-      if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
-      }
+  if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
+    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+  }
 
-      // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-      const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
+  // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
 
-      const journalId = await journalSaveToPrisma(
-        formattedInvoice.journalId,
-        invoiceId,
-        resultStatus.resultId,
-        projectId,
-        contractId,
-        companyIdNumber
-      );
+  const journalId = await journalSaveToPrisma(
+    formattedInvoice.journalId,
+    invoiceId,
+    resultStatus.resultId,
+    projectId,
+    contractId,
+    companyIdNumber
+  );
 
-      const { httpCode, result } = formatApiResponse<IPostApiResponseType>(
-        STATUS_MESSAGE.CREATED,
-        {
-          journalId,
-          resultStatus
-        }
-      );
-      res.status(httpCode).json(result);
+  const { httpCode, result } = formatApiResponse<IPostApiResponseType>(STATUS_MESSAGE.CREATED, {
+    journalId,
+    resultStatus,
+  });
+  res.status(httpCode).json(result);
 }
 
 export default async function handler(

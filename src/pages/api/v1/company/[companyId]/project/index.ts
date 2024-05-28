@@ -17,10 +17,10 @@ export default async function handler(
     if (!session.userId) {
       throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
-    if (!session.selectedCompanyId) {
+    if (!session.companyId) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
-    const companyIdNum = Number(session.selectedCompanyId);
+    const companyIdNum = Number(session.companyId);
     if (req.method === 'GET') {
       const projectList = await prisma.project.findMany({
         where: {

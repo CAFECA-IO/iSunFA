@@ -27,7 +27,7 @@ export default async function handler(
       if (session.companyId) {
         company = (await prisma.company.findUnique({
           where: {
-            id: session.companyId,
+            id: +session.companyId,
           },
         })) as ICompany;
       }

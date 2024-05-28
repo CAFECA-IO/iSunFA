@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { ICard } from '@/interfaces/card';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -21,6 +22,23 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_card2',
+    },
+  });
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_card2',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: timestampInSeconds(Date.now()),
+        createdAt: timestampInSeconds(Date.now()),
+        updatedAt: timestampInSeconds(Date.now()),
+      },
+    });
+  }
   card = await prisma.card.create({
     data: {
       type: 'VISA',
@@ -30,15 +48,13 @@ beforeEach(async () => {
       cvc: '330',
       name: 'Taiwan Bank',
       company: {
-        create: {
-          name: 'Test Company',
-          code: 'TST',
-          regional: 'TW',
+        connect: {
+          id: company.id,
         },
       },
     },
   });
-  companyId = card.companyId;
+  companyId = company.id;
 });
 
 afterEach(async () => {
