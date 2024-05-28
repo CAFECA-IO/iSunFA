@@ -1,12 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/index';
-import { ICompany } from '@/interfaces/company';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let company: ICompany;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -22,18 +21,17 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-
-  const getCompany = await prisma.company.findFirst({
+  let company = await prisma.company.findFirst({
     where: {
-      code: 'TST',
+      code: 'TST_company2',
     },
   });
-  if (!getCompany) {
+  if (!company) {
     const now = Date.now();
     const currentTimestamp = timestampInSeconds(now);
-    await prisma.company.create({
+    company = await prisma.company.create({
       data: {
-        code: 'TST',
+        code: 'TST_company2',
         name: 'Test Company',
         regional: 'TW',
         startDate: currentTimestamp,
@@ -42,6 +40,7 @@ beforeEach(async () => {
       },
     });
   }
+  companyId = company.id;
 });
 
 afterEach(async () => {
@@ -49,7 +48,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: company.id,
+        id: companyId,
       },
     });
   } catch (error) {
