@@ -86,8 +86,8 @@ const NewJournalForm = () => {
   );
 
   // Info: (20240527 - Murky) To Emily Invoice改這邊
-  const result = invoiceReturn?.resultStatus;
-  const journalId = invoiceReturn?.journalId;
+  // const result = invoiceReturn?.resultStatus;
+  // const journalId = invoiceReturn?.journalId;
 
   // const {
   //   trigger: getAIStatus,
@@ -218,11 +218,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -410,7 +410,7 @@ const NewJournalForm = () => {
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoiceData: IInvoiceDataForSavingToDB = {
-      journalId: selectedUnprocessedJournal?.id || null,
+      journalId: selectedUnprocessedJournal?.id || invoiceReturn?.journalId || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
@@ -441,9 +441,13 @@ const NewJournalForm = () => {
   };
 
   useEffect(() => {
-    if (createSuccess && journalId) {
-      confirmModalDataHandler({ journalId, askAIId: result?.resultId });
+    if (createSuccess && invoiceReturn && invoiceReturn.resultStatus) {
+      confirmModalDataHandler({ journalId: invoiceReturn.journalId, askAIId: invoiceReturn.resultStatus?.resultId });
       confirmModalVisibilityHandler();
+
+      if (!selectedUnprocessedJournal) {
+        getJournalById({ params: { companyId, journalId: invoiceReturn.journalId } });
+      }
       // const { resultId } = result;
       // getAIStatus({
       //   params: {
@@ -461,7 +465,7 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [createSuccess, result, createCode]);
+  }, [createSuccess, invoiceReturn, createCode]);
 
   // useEffect(() => {
   //   let interval: NodeJS.Timeout | undefined;
