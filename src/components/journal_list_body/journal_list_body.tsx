@@ -7,7 +7,8 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
+// import { IJournal } from '@/interfaces/journal';
+import { IDummyJournal } from '@/interfaces/journal';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
@@ -32,7 +33,7 @@ const JournalListTab = () => {
     code,
     error,
     data: journals,
-  } = APIHandler<IJournal[]>(APIName.JOURNAL_LIST, {
+  } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
     params: { companyId },
   });
 
