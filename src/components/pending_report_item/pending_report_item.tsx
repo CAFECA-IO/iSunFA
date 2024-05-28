@@ -76,6 +76,7 @@ const PendingReportItem = ({
       submitBtnStr: 'Yes, Delete it',
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
+      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };
@@ -229,11 +230,13 @@ const PendingReportItem = ({
         <CalendarIcon timestamp={createdTimestamp} />
       </td>
       <td className="pl-5 text-start text-base text-text-neutral-primary">
+        {/* Info: 電腦版排版 (20240528 - Shirley) */}
         <p className="hidden lg:flex">{name}</p>
 
+        {/* Info: 手機版排版 (20240528 - Shirley) */}
         <div className="flex flex-col space-y-5 lg:hidden">
-          <p className="text-ellipsis md:hidden">{truncateString(name, 16)}</p>
-          <p className="hidden text-ellipsis md:block">{name}</p>
+          <p className="text-ellipsis sm:hidden">{truncateString(name, 16)}</p>
+          <p className="hidden text-ellipsis sm:flex">{name}</p>
 
           <div className="flex items-center justify-start">{displayedOperationsColumn}</div>
         </div>

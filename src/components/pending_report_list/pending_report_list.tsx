@@ -74,6 +74,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
       submitBtnStr: 'Yes, Delete it',
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
+      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };
