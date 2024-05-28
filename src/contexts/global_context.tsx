@@ -3,13 +3,13 @@ import React, { useState, useContext, createContext, useMemo, useCallback, useEf
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import { RegisterFormModalProps } from '@/interfaces/modals';
+import { DUMMY_FILTER_OPTIONS, IFilterOptions, RegisterFormModalProps } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
-import { LAYOUT_BREAKPOINT } from '@/constants/display';
+import { LAYOUT_BREAKPOINT, SortOptions } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
@@ -33,6 +33,8 @@ import { useUserCtx } from './user_context';
 import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
+import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+import { AllReportTypesKey } from '@/interfaces/report_type';
 
 interface IGlobalContext {
   width: number;
@@ -84,6 +86,11 @@ interface IGlobalContext {
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
+
+  isFilterOptionsModalVisible: boolean;
+  filterOptionsModalVisibilityHandler: () => void;
+  getFilterOptions: (filterOptions: IFilterOptions) => void;
+  filterOptionsGotFromModal: IFilterOptions;
 }
 
 export interface IGlobalProvider {
@@ -131,6 +138,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isCreateCompanyModalVisible, setIsCreateCompanyModalVisible] = useState(false);
 
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
+
+  const [isFilterOptionsModalVisible, setIsFilterOptionsModalVisible] = useState(false);
+  const [filterOptionsGotFromModal, setFilterOptionsGotFromModal] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
   const { width, height } = windowSize;
 
@@ -199,6 +210,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const loadingModalVisibilityHandler = () => {
     setIsLoadingModalVisible(!isLoadingModalVisible);
+  };
+
+  const filterOptionsModalVisibilityHandler = () => {
+    setIsFilterOptionsModalVisible(!isFilterOptionsModalVisible);
+  };
+
+  const getFilterOptions = (filterOptions: IFilterOptions) => {
+    setFilterOptionsGotFromModal(filterOptions);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -391,6 +410,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     loadingModalVisibilityHandler,
     toastHandler,
     eliminateToast,
+    isFilterOptionsModalVisible,
+    filterOptionsModalVisibilityHandler,
+    getFilterOptions,
+    filterOptionsGotFromModal,
   };
 
   return (
@@ -460,6 +483,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       />
 
       <Toast />
+
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalVisible}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandler}
+        getFilterOptions={getFilterOptions}
+      />
+
       {children}
     </GlobalContext.Provider>
   );

@@ -11,13 +11,19 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+  radioButtonStyle,
+} from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { IJournalData } from '@/interfaces/journal';
+import { ILineItem } from '@/interfaces/line_item';
+import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -51,13 +57,10 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
 
-  const {
-    companyId,
-    selectedUnprocessedJournal,
-    selectUnprocessedJournalHandler,
-    selectJournalHandler,
-  } = useAccountingCtx();
+  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
+    useAccountingCtx();
 
   const {
     trigger: getJournalById,
@@ -140,7 +143,12 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (selectedUnprocessedJournal !== undefined) {
-      getJournalById({ params: { companyId, journalId: selectedUnprocessedJournal.id } });
+      getJournalById({
+        params: {
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          journalId: selectedUnprocessedJournal.id,
+        },
+      });
     }
   }, [selectedUnprocessedJournal]);
 
@@ -148,7 +156,12 @@ const NewJournalForm = () => {
     if (selectedUnprocessedJournal && getJournalSuccess && journal) {
       selectJournalHandler(journal);
       if (journal.invoice === null) {
-        getOCRResult({ params: { companyId, resultId: selectedUnprocessedJournal.aichResultId } }); // selectedUnprocessedJournal.aichResultId
+        getOCRResult({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            resultId: selectedUnprocessedJournal.aichResultId,
+          },
+        }); // selectedUnprocessedJournal.aichResultId
       } else {
         const { invoice } = journal;
         // Info: update form data with journal data (20240524 - tzuhan)
@@ -436,25 +449,21 @@ const NewJournalForm = () => {
       },
     };
 
-    createInvoice({ params: { companyId }, body: { invoice: invoiceData } });
-    // confirmModalVisibilityHandler();
+    createInvoice({
+      params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+      body: { invoice: invoiceData },
+    });
   };
 
   useEffect(() => {
-    if (createSuccess && invoiceReturn && invoiceReturn.resultStatus) {
-      confirmModalDataHandler({ journalId: invoiceReturn.journalId, askAIId: invoiceReturn.resultStatus?.resultId });
-      confirmModalVisibilityHandler();
-
-      if (!selectedUnprocessedJournal) {
-        getJournalById({ params: { companyId, journalId: invoiceReturn.journalId } });
-      }
-      // const { resultId } = result;
-      // getAIStatus({
-      //   params: {
-      //     companyId,
-      //     resultId,
-      //   },
-      // });
+    if (createSuccess && result) {
+      const { resultId } = result;
+      getAIStatus({
+        params: {
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          resultId,
+        },
+      });
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -465,86 +474,82 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [createSuccess, invoiceReturn, createCode]);
+  }, [createSuccess, result, createCode]);
 
-  // useEffect(() => {
-  //   let interval: NodeJS.Timeout | undefined;
-  //   if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-  //     interval = setInterval(() => {
-  //       getAIStatus({
-  //         params: {
-  //           companyId,
-  //           resultId: result.resultId,
-  //         },
-  //       });
-  //     }, 2000);
-  //   }
-  //   if (statusSuccess === false) {
-  //     messageModalDataHandler({
-  //       messageType: MessageType.ERROR,
-  //       title: 'Upload Journal Failed',
-  //       content: `Upload journal failed: ${statusCode}`,
-  //       submitBtnStr: 'Close',
-  //       submitBtnFunction: messageModalVisibilityHandler,
-  //     });
-  //     messageModalVisibilityHandler();
-  //   }
-  //   if (
-  //     status === ProgressStatus.INVALID_INPUT ||
-  //     status === ProgressStatus.LLM_ERROR ||
-  //     status === ProgressStatus.SYSTEM_ERROR ||
-  //     status === ProgressStatus.NOT_FOUND ||
-  //     status === ProgressStatus.PAUSED
-  //   ) {
-  //     messageModalDataHandler({
-  //       messageType: MessageType.ERROR,
-  //       title: 'Upload Journal Failed',
-  //       content: `Upload journal status: ${status}`,
-  //       submitBtnStr: 'Close',
-  //       submitBtnFunction: messageModalVisibilityHandler,
-  //     });
-  //     messageModalVisibilityHandler();
-  //   }
-  //   if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
-  //     if (journal?.id) {
-  //       getJournalById({ params: { companyId, journalId: journal?.id } });
-  //     } else {
-  //       getAIResult({
-  //         params: {
-  //           companyId,
-  //           resultId: result.resultId,
-  //         },
-  //       });
-  //     }
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [result, statusSuccess, status]);
+  useEffect(() => {
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      loadingModalVisibilityHandler();
+      setTimeout(() => {
+        getAIStatus({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            resultId: result.resultId,
+          },
+        });
+      }, 2000);
+    }
+    if (statusSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal failed: ${statusCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+    if (
+      status === ProgressStatus.INVALID_INPUT ||
+      status === ProgressStatus.LLM_ERROR ||
+      status === ProgressStatus.SYSTEM_ERROR ||
+      status === ProgressStatus.NOT_FOUND ||
+      status === ProgressStatus.PAUSED
+    ) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal status: ${status}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
+      if (journal?.id) {
+        getJournalById({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            journalId: journal?.id,
+          },
+        });
+      } else {
+        getAIResult({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            resultId: result.resultId,
+          },
+        });
+      }
+    }
+  }, [result, statusSuccess, status]);
 
-  // useEffect(() => {
-  //   if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-  //     loadingModalVisibilityHandler();
-  //   }
-  //   if (status === ProgressStatus.SUCCESS) {
-  //     loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
-  //     confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
-  //   }
-  // }, [statusSuccess, status]);
-
-  // useEffect(() => {
-  //   if (AIResultSuccess && AIResult) {
-  //     getJournalById({ params: { companyId, journalId } });
-  //   }
-  //   if (AIResultSuccess === false) {
-  //     messageModalDataHandler({
-  //       messageType: MessageType.ERROR,
-  //       title: 'Get Voucher Preview Failed',
-  //       content: `Get voucher preview failed: ${AIResultCode}`,
-  //       submitBtnStr: 'Close',
-  //       submitBtnFunction: messageModalVisibilityHandler,
-  //     });
-  //     messageModalVisibilityHandler();
-  //   }
-  // }, [AIResultSuccess, AIResult, AIResultCode]);
+  useEffect(() => {
+    if (AIResultSuccess && AIResult) {
+      getJournalById({
+        params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
+      });
+    }
+    if (AIResultSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Voucher Preview Failed',
+        content: `Get voucher preview failed: ${AIResultCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [AIResultSuccess, AIResult, AIResultCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';

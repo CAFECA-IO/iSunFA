@@ -23,7 +23,7 @@ beforeEach(async () => {
   } as unknown as jest.Mocked<NextApiResponse>;
   let company = await prisma.company.findFirst({
     where: {
-      code: 'TST_company2',
+      code: 'TST_company1',
     },
   });
   if (!company) {
@@ -31,7 +31,7 @@ beforeEach(async () => {
     const currentTimestamp = timestampInSeconds(now);
     company = await prisma.company.create({
       data: {
-        code: 'TST_company2',
+        code: 'TST_company1',
         name: 'Test Company',
         regional: 'TW',
         startDate: currentTimestamp,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 // import { TranslateFunction } from '@/interfaces/locale';
 import Tooltip from '@/components/tooltip/tooltip';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
@@ -13,9 +13,9 @@ import {
 } from '@/interfaces/project_progress_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
+import { useUserCtx } from '@/contexts/user_context';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -164,7 +164,7 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -190,7 +190,7 @@ const ProjectProgressChart = () => {
     error: listError,
   } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {
     params: {
-      companyId,
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
     },
     query: {
       date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
@@ -230,7 +230,7 @@ const ProjectProgressChart = () => {
   useEffect(() => {
     listProjectProgress({
       params: {
-        companyId,
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

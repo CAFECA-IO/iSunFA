@@ -5,13 +5,15 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { DUMMY_PROJECT_INSIGHT, IProfitInsight } from '@/interfaces/project_insight';
 
 const DashboardOverview = () => {
   const [dashboardOverview, setDashboardOverview] =
     React.useState<IProfitInsight>(DUMMY_PROJECT_INSIGHT);
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     data: profitInsight,
     success: getSuccess,
@@ -19,7 +21,7 @@ const DashboardOverview = () => {
     error: getError,
   } = APIHandler<IProfitInsight>(APIName.PROFIT_GET_INSIGHT, {
     params: {
-      companyId,
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
     },
   });
 

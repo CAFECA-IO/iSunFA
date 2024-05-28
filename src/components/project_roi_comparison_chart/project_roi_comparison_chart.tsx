@@ -3,7 +3,11 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
-import { ITEMS_PER_PAGE_ON_DASHBOARD, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  ITEMS_PER_PAGE_ON_DASHBOARD,
+  MILLISECONDS_IN_A_SECOND,
+} from '@/constants/display';
 import { getPeriodOfThisMonthInSec } from '@/lib/utils/common';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
@@ -13,9 +17,9 @@ import {
 } from '@/interfaces/project_roi_comparison_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
+import { useUserCtx } from '@/contexts/user_context';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -155,7 +159,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
 
   const minDate = new Date(DUMMY_START_DATE);
@@ -194,7 +198,7 @@ const ProjectRoiComparisonChart = () => {
     APIName.PROJECT_LIST_PROFIT_COMPARISON,
     {
       params: {
-        companyId,
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
       },
       query: {
         page: currentPage,
@@ -236,7 +240,7 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage + 1);
       listProjectProfitComparison({
         params: {
-          companyId,
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
         },
         query: {
           page: currentPage + 1,
@@ -253,7 +257,7 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage - 1);
       listProjectProfitComparison({
         params: {
-          companyId,
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
         },
         query: {
           page: currentPage - 1,
@@ -268,7 +272,7 @@ const ProjectRoiComparisonChart = () => {
   useEffect(() => {
     listProjectProfitComparison({
       params: {
-        companyId,
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
       },
       query: {
         page: currentPage - 1,

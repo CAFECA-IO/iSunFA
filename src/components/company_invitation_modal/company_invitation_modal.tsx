@@ -7,8 +7,11 @@ import { ToastId } from '@/constants/toast_id';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
-import { IInvitation } from '@/interfaces/invitation';
 import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { ICompany } from '@/interfaces/company';
+import { useRouter } from 'next/router';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface ICompanyInvitationModal {
   isModalVisible: boolean;
@@ -21,24 +24,27 @@ const CompanyInvitationModal = ({
   modalVisibilityHandler,
   toastHandler,
 }: ICompanyInvitationModal) => {
+  const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
+  const router = useRouter();
 
   const {
-    data: result,
+    data: company,
     trigger: addCompany,
     success,
-  } = APIHandler<IInvitation>(APIName.COMPANY_ADD_BY_INVITATION_CODE, {}, false, false);
+  } = APIHandler<ICompany>(APIName.COMPANY_ADD_BY_INVITATION_CODE, { params: { userId: userAuth?.id } }, false, false);
 
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   useEffect(() => {
-    if (success && result) {
+    if (success && company) {
       // Info: (20240515 - Julian) Close modal
+      selectCompany(company);
       setCodeInput('');
       modalVisibilityHandler();
       // Info: (20240515 - Julian) Toastify
-      const companyName = result.companyId; // ToDo: (20240524 - Julian) Get company name by company ID
+      const companyName = company.name; // ToDo: (20240524 - Julian) Get company name by company ID
       toastHandler({
         id: ToastId.INVITATION_SUCCESS,
         type: ToastType.SUCCESS,
@@ -50,6 +56,7 @@ const CompanyInvitationModal = ({
         ),
         closeable: true,
       });
+      router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (success === false) {
       // Info: (20240516 - Julian) Error handling
       messageModalDataHandler({
@@ -62,7 +69,7 @@ const CompanyInvitationModal = ({
       });
       messageModalVisibilityHandler();
     }
-  }, [success, result]);
+  }, [success, company]);
 
   const changeCodeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCodeInput(e.target.value);
