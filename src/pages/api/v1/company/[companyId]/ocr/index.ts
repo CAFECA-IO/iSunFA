@@ -119,15 +119,17 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 
   if (!company) {
     try {
+      const now = Date.now();
+      const currentTimestamp = timestampInSeconds(now);
       company = await prisma.company.create({
         data: {
           id: companyId,
           code: 'TEST_OCR',
           name: 'Company Name',
           regional: 'Regional Name',
-          startDate: timestampInSeconds(Date.now()),
-          createdAt: timestampInSeconds(Date.now()),
-          updatedAt: timestampInSeconds(Date.now()),
+          startDate: currentTimestamp,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
         },
         select: { id: true },
       });

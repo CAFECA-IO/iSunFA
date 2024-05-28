@@ -28,7 +28,8 @@ export default async function handler(
       if (!code || !name || !regional) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const nowTimestamp = timestampInSeconds(Date.now());
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
       const newCompany: ICompany = await prisma.company.create({
         data: {
           code,

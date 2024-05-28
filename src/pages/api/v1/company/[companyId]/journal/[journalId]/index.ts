@@ -153,6 +153,12 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
   const { projectId } = journalData;
   const contractName = journalData?.contract?.contractContent?.name;
   const { contractId } = journalData;
+  const createTimestamp = journalData.ocr
+    ? timestampInSeconds(journalData.ocr.createdAt.getTime())
+    : null;
+  const updateTimestamp = journalData.ocr
+    ? timestampInSeconds(journalData.ocr.updatedAt.getTime())
+    : null;
 
   return {
     id: journalData.id,
@@ -166,8 +172,8 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
       imageName: journalData.ocr.imageName,
       imageUrl: journalData.ocr.imageUrl,
       imageSize: journalData.ocr.imageSize,
-      createdAt: timestampInSeconds(journalData.ocr.createdAt.getTime()),
-      updatedAt: timestampInSeconds(journalData.ocr.updatedAt.getTime()),
+      createdAt: createTimestamp as number,
+      updatedAt: updateTimestamp as number,
     },
     invoice: journalData.invoice && {
       journalId: journalData.id,

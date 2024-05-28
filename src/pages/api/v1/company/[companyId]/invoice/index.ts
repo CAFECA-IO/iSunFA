@@ -26,15 +26,17 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 
   if (!company) {
     try {
+      const now = Date.now();
+      const currentTimestamp = timestampInSeconds(now);
       company = await prisma.company.create({
         data: {
           id: companyId,
           code: 'COMP123',
           name: 'Company Name',
           regional: 'Regional Name',
-          startDate: timestampInSeconds(Date.now()),
-          createdAt: timestampInSeconds(Date.now()),
-          updatedAt: timestampInSeconds(Date.now()),
+          startDate: currentTimestamp,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
         },
         select: { id: true },
       });
@@ -229,8 +231,10 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
 }
 
 function getProjectIdAndContractIdFromInvoice(invoice: IInvoiceDataForSavingToDB) {
-  const projectId = !Number.isNaN(Number(invoice.projectId)) ? Number(invoice.projectId) : null;
-  const contractId = !Number.isNaN(Number(invoice.contractId)) ? Number(invoice.contractId) : null;
+  const projectIdNum = Number(invoice.projectId);
+  const contractIdNum = Number(invoice.contractId);
+  const projectId = !Number.isNaN(projectIdNum) ? projectIdNum : null;
+  const contractId = !Number.isNaN(contractIdNum) ? contractIdNum : null;
   return { projectId, contractId };
 }
 
@@ -252,10 +256,8 @@ async function handleGetRequest(
   const formattedInvoice = formatInvoice(invoice);
 
   // ToDo: save to prisma
-  const { invoiceId, companyIdNumber } = await invoiceSaveToPrisma(
-    formattedInvoice,
-    Number(companyId)
-  );
+  const companyIdNum = Number(companyId);
+  const { invoiceId, companyIdNumber } = await invoiceSaveToPrisma(formattedInvoice, companyIdNum);
 
   // Post to AICH
   const fetchResult = uploadInvoiceToAICH(formattedInvoice);

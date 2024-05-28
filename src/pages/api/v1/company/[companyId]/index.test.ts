@@ -22,14 +22,16 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
+  const now = Date.now();
+  const currentTimestamp = timestampInSeconds(now);
   company = await prisma.company.create({
     data: {
       code: 'COMP123',
       name: 'Company Name',
       regional: 'Regional Name',
-      startDate: timestampInSeconds(Date.now()),
-      createdAt: timestampInSeconds(Date.now()),
-      updatedAt: timestampInSeconds(Date.now()),
+      startDate: currentTimestamp,
+      createdAt: currentTimestamp,
+      updatedAt: currentTimestamp,
     },
   });
 });
