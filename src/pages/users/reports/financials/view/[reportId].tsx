@@ -18,6 +18,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { IReport } from '@/interfaces/report';
 
 interface IServerSideProps {
   reportId: string;
@@ -54,15 +55,7 @@ const DUMMY_DATA_FOR_REPORT = {
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const [reportData, setReportData] = React.useState<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>({
+  const [reportData, setReportData] = React.useState<IReport>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },
@@ -77,15 +70,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     data: reportFinancial,
     code: getFRCode,
     success: getFRSuccess,
-  } = APIHandler<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+  } = APIHandler<IReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId },
   });
 

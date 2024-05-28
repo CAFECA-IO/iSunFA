@@ -13,6 +13,7 @@ import ViewAnalysisSection from '@/components/view_analysis_section/view_analysi
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { IReport } from '@/interfaces/report';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -37,15 +38,7 @@ const ViewAnalysisReportPage = ({
 }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const [reportData, setReportData] = React.useState<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>({
+  const [reportData, setReportData] = React.useState<IReport>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
@@ -57,15 +50,7 @@ const ViewAnalysisReportPage = ({
     data: reportAnalysis,
     code: getARCode,
     success: getARSuccess,
-  } = APIHandler<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
+  } = APIHandler<IReport>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
     params: {
       params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId: '1' },
     },
