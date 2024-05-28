@@ -74,20 +74,21 @@ async function getJournals(
       skip: offset,
       take: limit,
       where: {
-        NOT: {
-          OR: [
-            {
-              invoiceId: {
-                equals: null
-              },
-            },
-            {
-              voucherId: {
-                equals: null
-              },
-            },
-          ],
-        },
+        // Info: (Murky - 20240527) 目前為了要讓使用者可以update journal，所以先不要限制未完成invoice或voucher
+        // NOT: {
+        //   OR: [
+        //     {
+        //       invoiceId: {
+        //         equals: null
+        //       },
+        //     },
+        //     {
+        //       voucherId: {
+        //         equals: null
+        //       },
+        //     },
+        //   ],
+        // },
         companyId,
         createdAt: {
           gte: startDateInMilliSecond,

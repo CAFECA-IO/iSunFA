@@ -236,7 +236,10 @@ async function updateInvoiceInPrisma(
       }
       const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
 
-      const invoice = await prisma.invoice.create({
+      const invoice = await prisma.invoice.update({
+        where: {
+          id: invoiceInDB.id,
+        },
         data: {
           date: timestampInSeconds(invoiceData.date),
           eventType: invoiceData.eventType,
@@ -262,6 +265,7 @@ async function updateInvoiceInPrisma(
 async function createJournalInPrisma(
   invoiceId: number,
   projectId: number | null,
+  aichResultId: string,
   contractId: number | null,
   companyId: number
 ) {
@@ -277,6 +281,7 @@ async function createJournalInPrisma(
           id: invoiceId,
         },
       },
+      aichResultId
     };
 
     if (projectId !== null) {
@@ -371,13 +376,14 @@ async function handlePrismaSavingLogic(
 
       let journalIdBeCreateOrUpdate: number;
 
-      if (journalId === null) {
+      if (!journalId) {
         // Info Murky (20240416): 如果不存在journalId，則代表是新的invoice，需要新增
         const company = await createOrFindCompanyInPrisma(companyId);
         const invoiceId = await createInvoiceInPrisma(formattedInvoice);
         journalIdBeCreateOrUpdate = await createJournalInPrisma(
           invoiceId,
           projectId,
+          aichResultId,
           contractId,
           company.id
         );
