@@ -29,10 +29,10 @@ async function fetchOCRResult(resultId: string) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
 
-  return response.json() as Promise<{ payload?:unknown } | null>;
+  return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unknown } | null>) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -60,7 +60,10 @@ function setOCRResultJournalId(ocrResult: IInvoiceDataForSavingToDB, journalId: 
   ocrResult.journalId = journalId;
 }
 
-async function handleGetRequest(resultId: string, res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>) {
+async function handleGetRequest(
+  resultId: string,
+  res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>
+) {
   const fetchResult = fetchOCRResult(resultId);
 
   const ocrResult: IInvoiceDataForSavingToDB = await getPayloadFromResponseJSON(fetchResult);

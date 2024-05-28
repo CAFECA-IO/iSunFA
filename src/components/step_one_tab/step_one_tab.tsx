@@ -103,7 +103,7 @@ const StepOneTab = () => {
 
   useEffect(() => {
     if (listSuccess && unprocessJournals) {
-      //const newList = dummyFileList.concat(unprocessJournals);
+      // const newList = dummyFileList.concat(unprocessJournals);
       setFileList(unprocessJournals);
     }
   }, [listSuccess, unprocessJournals]);

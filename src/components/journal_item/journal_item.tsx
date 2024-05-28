@@ -1,37 +1,44 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IJournalData } from '@/interfaces/journal';
+import { IDummyJournal } from '@/interfaces/journal';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { truncateString, numberWithCommas } from '@/lib/utils/common';
-import { EventType, VoucherType } from '@/constants/account';
+import { EventType } from '@/constants/account';
 import { checkboxStyle } from '@/constants/display';
 
 interface IJournalItemProps {
   isChecked: boolean;
   checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  journal: IJournalData;
+  // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
+  journal: IDummyJournal;
 }
 
 const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
-  const { id, invoice, voucher } = journal;
-  // Info: (20240528 - Julian) invoice data
-  const date = invoice?.date ?? 0;
-  const eventType = invoice?.eventType ?? EventType.PAYMENT;
-  const description = invoice?.description ?? '';
-  const projectName = invoice?.project ?? '';
-  const journalId = invoice?.journalId ?? '';
-  // Info: (20240528 - Julian) voucher data
-  const lineItems = voucher?.lineItems ?? [];
+  const {
+    id: journalId,
+    date,
+    type: eventType,
+    particulars: description,
+    projectName,
+    account: lineItems,
+    voucherId,
+    voucherNo,
+  } = journal;
 
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
-  const debitItem = lineItems.filter((item) => item.debit)[0];
+  const defaultItem = {
+    account: '',
+    amount: 0,
+  };
+
+  const debitItem = lineItems ? lineItems.filter((item) => item.debit)[0] : defaultItem;
   const debit = {
     account: debitItem.account,
     amount: numberWithCommas(debitItem.amount),
   };
 
-  const creditItem = lineItems.filter((item) => !item.debit)[0];
+  const creditItem = lineItems ? lineItems.filter((item) => !item.debit)[0] : defaultItem;
   const credit = {
     account: creditItem.account,
     amount: numberWithCommas(creditItem.amount),
@@ -124,14 +131,14 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 
   return (
     <tr
-      key={id}
+      key={voucherId}
       className="relative border-b border-lightGray6 text-center align-middle text-lightGray4"
     >
       {/* Info: (20240418 - Julian) 選取方塊 */}
       <td>
         <div className="flex justify-center px-10px">
           <input
-            id={`${id}`}
+            id={voucherNo}
             type="checkbox"
             checked={isChecked}
             onChange={checkHandler}
@@ -148,7 +155,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
       <td className="collapse px-16px md:visible">{displayedType}</td>
       {/* Info: (20240418 - Julian) 描述 */}
       <td className="px-16px text-left font-medium text-navyBlue2">
-        {truncateString(description, 10)}
+        {truncateString(description ?? '', 10)}
       </td>
       {/* Info: (20240418 - Julian) From / To */}
       <td className="px-16px text-left font-medium text-navyBlue2">{projectName}</td>
@@ -177,12 +184,8 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 };
 
 export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
-  const { id, invoice } = journal;
-  // Info: (20240528 - Julian) invoice data
-  const date = invoice?.date ?? 0;
-  const eventType = invoice?.eventType ?? EventType.PAYMENT;
-  const description = invoice?.description ?? '';
-  const price = invoice?.payment.price ?? 0;
+  const { id, date, type: eventType, particulars: description } = journal;
+  const price = 0; // ToDo: (20240528 - Julian) Interface lacks price
 
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
@@ -269,7 +272,7 @@ export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournal
           {displayedTypeMobile}
           <div className="flex flex-1 flex-col text-xs text-navyBlue2">
             {/* Info: (20240517 - Julian) 描述 */}
-            <p className="flex-1 whitespace-nowrap">{truncateString(description, 10)}</p>
+            <p className="flex-1 whitespace-nowrap">{truncateString(description ?? '', 10)}</p>
             {/* Info: (20240517 - Julian) 金額 */}
             <p>
               {numberWithCommas(price)} <span className="text-lightGray4">TWD</span>

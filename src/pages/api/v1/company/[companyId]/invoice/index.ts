@@ -67,10 +67,10 @@ async function uploadInvoiceToAICH(invoice: IInvoiceDataForSavingToDB) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
 
-  return response.json() as Promise<{ payload?:unknown } | null>;
+  return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unknown } | null>) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -115,15 +115,20 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 
   if (!company) {
     try {
-    company = await prisma.company.create({
-      data: {
-        id: companyId,
-        code: 'COMP123',
-        name: 'Company Name',
-        regional: 'Regional Name',
-      },
-      select: { id: true },
-    });
+      const now = Date.now();
+      const currentTimestamp = timestampInSeconds(now);
+      company = await prisma.company.create({
+        data: {
+          id: companyId,
+          code: 'COMP123',
+          name: 'Company Name',
+          regional: 'Regional Name',
+          startDate: currentTimestamp,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
+        },
+        select: { id: true },
+      });
     } catch (error) {
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
@@ -143,7 +148,7 @@ async function createPaymentInPrisma(paymentData: IPayment) {
 }
 
 async function updatePaymentInPrisma(paymentId: number, paymentData: IPayment) {
-    const payment = await prisma.payment.update({
+  const payment = await prisma.payment.update({
     where: {
       id: paymentId,
     },
@@ -168,9 +173,7 @@ async function findUniqueInvoiceInPrisma(invoiceId: number) {
   return invoice;
 }
 
-async function createInvoiceInPrisma(
-  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB,
-) {
+async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavingToDB) {
   const {
     payment: paymentData,
     project,
@@ -211,7 +214,7 @@ async function createInvoiceInPrisma(
 
 async function updateInvoiceInPrisma(
   invoiceIdToBeUpdated: number,
-  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB,
+  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB
 ) {
   const {
     payment: paymentData,
@@ -279,7 +282,7 @@ async function createJournalInPrisma(
       data.project = {
         connect: {
           id: projectId,
-        }
+        },
       };
     }
 
@@ -309,7 +312,7 @@ async function updateJournalInPrisma(
   invoiceId: number,
   aichResultId: string,
   projectId: number | null,
-  contractId: number | null,
+  contractId: number | null
 ) {
   try {
     const data: Prisma.journalUpdateInput = {
@@ -325,7 +328,7 @@ async function updateJournalInPrisma(
       data.project = {
         connect: {
           id: projectId,
-        }
+        },
       };
     }
 
@@ -371,7 +374,12 @@ async function handlePrismaSavingLogic(
         // Info Murky (20240416): 如果不存在journalId，則代表是新的invoice，需要新增
         const company = await createOrFindCompanyInPrisma(companyId);
         const invoiceId = await createInvoiceInPrisma(formattedInvoice);
-        journalIdBeCreateOrUpdate = await createJournalInPrisma(invoiceId, projectId, contractId, company.id);
+        journalIdBeCreateOrUpdate = await createJournalInPrisma(
+          invoiceId,
+          projectId,
+          contractId,
+          company.id
+        );
       } else {
         const journalInDB = await findUniqueJournalInPrisma(journalId);
 
@@ -388,7 +396,13 @@ async function handlePrismaSavingLogic(
           // Info Murky (20240416): If 有invoiceId，是之前傳錯要修改的invoice，需要更新
           invoiceId = await updateInvoiceInPrisma(journalId, formattedInvoice);
         }
-        journalIdBeCreateOrUpdate = await updateJournalInPrisma(journalId, invoiceId, aichResultId, projectId, contractId);
+        journalIdBeCreateOrUpdate = await updateJournalInPrisma(
+          journalId,
+          invoiceId,
+          aichResultId,
+          projectId,
+          contractId
+        );
       }
 
       return journalIdBeCreateOrUpdate;
@@ -400,37 +414,38 @@ async function handlePrismaSavingLogic(
   }
 }
 
-async function handlePostRequest(companyId: string, req: NextApiRequest, res: NextApiResponse<IResponseData<IPostApiResponseType>>) {
-      const { invoice } = req.body;
+async function handlePostRequest(
+  companyId: string,
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IPostApiResponseType>>
+) {
+  const { invoice } = req.body;
 
-      const formattedInvoice = formatInvoice(invoice);
+  const formattedInvoice = formatInvoice(invoice);
 
-      // Post to AICH
-      const fetchResult = uploadInvoiceToAICH(formattedInvoice);
+  // Post to AICH
+  const fetchResult = uploadInvoiceToAICH(formattedInvoice);
 
-      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+  const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
 
-      if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
-      }
+  if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
+    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+  }
 
-      // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-      // const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
+  // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  // const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
 
-      const journalId = await handlePrismaSavingLogic(
-        formattedInvoice,
-        resultStatus.resultId,
-        Number(companyId)
-      );
+  const journalId = await handlePrismaSavingLogic(
+    formattedInvoice,
+    resultStatus.resultId,
+    Number(companyId)
+  );
 
-      const { httpCode, result } = formatApiResponse<IPostApiResponseType>(
-        STATUS_MESSAGE.CREATED,
-        {
-          journalId,
-          resultStatus
-        }
-      );
-      res.status(httpCode).json(result);
+  const { httpCode, result } = formatApiResponse<IPostApiResponseType>(STATUS_MESSAGE.CREATED, {
+    journalId,
+    resultStatus,
+  });
+  res.status(httpCode).json(result);
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {

@@ -30,7 +30,7 @@ interface UserContextType {
   isSignInError: boolean;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null) => void;
-  isSelectCompany: boolean;
+  successSelectCompany: boolean | undefined;
   errorCode: string | null;
   toggleIsSignInError: () => void;
 }
@@ -46,7 +46,7 @@ export const UserContext = createContext<UserContextType>({
   isSignInError: false,
   selectedCompany: null,
   selectCompany: () => {},
-  isSelectCompany: false,
+  successSelectCompany: undefined,
   errorCode: null,
   toggleIsSignInError: () => {},
 });
@@ -67,7 +67,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     null
   );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isSelectCompany, setIsSelectCompany, isSelectCompanyRef] = useStateRef(false);
+  const [successSelectCompany, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<
+    boolean | undefined
+  >(undefined);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -111,6 +113,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false,
     false
   );
+
+  const {
+    trigger: selectCompanyAPI,
+    success: companySelectSuccess,
+    code: companySelectCode,
+  } = APIHandler<string>(APIName.COMPANY_SELECT, {}, false, false);
 
   const {
     trigger: getUserSessionData,
@@ -243,11 +251,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = (company: ICompany | null) => {
-    if (company) {
-      setSelectedCompany(company);
-    } else {
+    if (!company) {
       setSelectedCompany(null);
+      setSuccessSelectCompany(undefined);
+      return;
     }
+    setSelectedCompany(company);
+    selectCompanyAPI({
+      params: {
+        companyId: company.id,
+      },
+    });
   };
 
   const clearState = () => {
@@ -257,7 +271,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSignedIn(false);
     setIsSignInError(false);
     setSelectedCompany(null);
-    setIsSelectCompany(false);
+    setSuccessSelectCompany(undefined);
 
     toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
   };
@@ -353,8 +367,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
-          setIsSelectCompany(false);
-          setSelectedCompany(null);
+          setSuccessSelectCompany(true);
+          setSelectedCompany(userSessionData.company);
         }
       }
     }
@@ -364,16 +378,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // eslint-disable-next-line no-console
       console.log('getUserSessionError:', getUserSessionError);
       setErrorCode(getUserSessionCode ?? '');
+      setSuccessSelectCompany(undefined);
+      setSelectedCompany(null);
     }
   }, [userSessionData, isGetUserSessionLoading, getUserSessionSuccess, getUserSessionCode]);
 
   useEffect(() => {
-    if (selectedCompany) {
-      setIsSelectCompany(true);
-    } else {
-      setIsSelectCompany(false);
+    if (companySelectSuccess) {
+      setSuccessSelectCompany(true);
     }
-  }, [selectedCompany]);
+    if (companySelectSuccess === false) {
+      setSelectedCompany(null);
+      setSuccessSelectCompany(false);
+      setErrorCode(companySelectCode ?? '');
+    }
+  }, [companySelectSuccess, companySelectCode]);
 
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(
@@ -388,14 +407,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
-      isSelectCompany: isSelectCompanyRef.current,
+      successSelectCompany: successSelectCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
     }),
     [
       credentialRef.current,
       selectedCompanyRef.current,
-      isSelectCompanyRef.current,
+      successSelectCompanyRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
     ]

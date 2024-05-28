@@ -3,7 +3,11 @@ import formidable from 'formidable';
 import { promises as fs } from 'fs';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, transformOCRImageIDToURL } from '@/lib/utils/common';
+import {
+  formatApiResponse,
+  timestampInSeconds,
+  transformOCRImageIDToURL,
+} from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import prisma from '@/client';
 
@@ -47,10 +51,10 @@ async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
 
-  return response.json() as Promise<{ payload?:unknown } | null>;
+  return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unknown } | null>) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -115,15 +119,20 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 
   if (!company) {
     try {
-    company = await prisma.company.create({
-      data: {
-        id: companyId,
-        code: 'COMP123',
-        name: 'Company Name',
-        regional: 'Regional Name',
-      },
-      select: { id: true },
-    });
+      const now = Date.now();
+      const currentTimestamp = timestampInSeconds(now);
+      company = await prisma.company.create({
+        data: {
+          id: companyId,
+          code: 'TEST_OCR',
+          name: 'Company Name',
+          regional: 'Regional Name',
+          startDate: currentTimestamp,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
+        },
+        select: { id: true },
+      });
     } catch (error) {
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
@@ -132,14 +141,12 @@ async function createOrFindCompanyInPrisma(companyId: number) {
   return company;
 }
 
-async function createOcrInPrisma(
-  aichResult: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-  }
-) {
+async function createOcrInPrisma(aichResult: {
+  resultStatus: IAccountResultStatus;
+  imageUrl: string;
+  imageName: string;
+  imageSize: number;
+}) {
   try {
     const ocrData = await prisma.ocr.create({
       data: {
@@ -195,15 +202,15 @@ async function createJournalAndOcrInPrisma(
 ): Promise<void> {
   // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
   // ToDo: (20240521 - Murky) 重複的圖片一直post貌似會越來越多Journal? 目前沒有檢查重複post的狀況
-    // 如果是AICH已經重複的就不建立了
-    if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
-      return;
-    }
-    await prisma.$transaction(async () => {
-      const company = await createOrFindCompanyInPrisma(companyId);
-      const ocrData = await createOcrInPrisma(aichResult);
-      await upsertJournalInPrisma(company.id, aichResult, ocrData.id);
-    });
+  // 如果是AICH已經重複的就不建立了
+  if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
+    return;
+  }
+  await prisma.$transaction(async () => {
+    const company = await createOrFindCompanyInPrisma(companyId);
+    const ocrData = await createOcrInPrisma(aichResult);
+    await upsertJournalInPrisma(company.id, aichResult, ocrData.id);
+  });
 }
 
 function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
@@ -253,7 +260,10 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
     })
   );
 
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(STATUS_MESSAGE.CREATED, resultJson);
+  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
+    STATUS_MESSAGE.CREATED,
+    resultJson
+  );
 
   res.status(httpCode).json(result);
 }

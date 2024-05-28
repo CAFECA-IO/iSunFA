@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { ICompany } from '@/interfaces/company';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let company: ICompany;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -13,6 +13,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
+    session: { userId: 1 },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -20,14 +21,26 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-
-  company = await prisma.company.create({
-    data: {
-      code: 'COMP123',
-      name: 'Company Name',
-      regional: 'Regional Name',
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_company1',
     },
   });
+  if (!company) {
+    const now = Date.now();
+    const currentTimestamp = timestampInSeconds(now);
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_company1',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: currentTimestamp,
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
+      },
+    });
+  }
+  companyId = company.id;
 });
 
 afterEach(async () => {
@@ -35,7 +48,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: company.id,
+        id: companyId,
       },
     });
   } catch (error) {
@@ -47,7 +60,7 @@ describe('handler', () => {
   it('should handle GET method', async () => {
     req.method = 'GET';
     req.headers = { userid: '123' };
-    req.query = { companyId: company.id.toString() };
+    req.query = { companyId: companyId.toString() };
 
     await handler(req, res);
 
@@ -71,7 +84,7 @@ describe('handler', () => {
   it('should handle PUT method', async () => {
     req.method = 'PUT';
     req.headers = { userid: '123' };
-    req.query = { companyId: company.id.toString() };
+    req.query = { companyId: companyId.toString() };
     req.body = { code: 'C001', name: 'Company B', regional: 'US' };
 
     await handler(req, res);
@@ -95,7 +108,7 @@ describe('handler', () => {
   it('should handle DELETE method', async () => {
     req.method = 'DELETE';
     req.headers = { userid: '123' };
-    req.query = { companyId: company.id.toString() };
+    req.query = { companyId: companyId.toString() };
 
     await handler(req, res);
 
@@ -119,7 +132,7 @@ describe('handler', () => {
   it('should handle invalid method', async () => {
     req.method = 'POST';
     req.headers = { userid: '123' };
-    req.query = { companyId: company.id.toString() };
+    req.query = { companyId: companyId.toString() };
 
     await handler(req, res);
 
@@ -174,7 +187,7 @@ describe('handler', () => {
   it('should handle invalid input parameters for PUT method', async () => {
     req.method = 'PUT';
     req.headers = { userid: '123' };
-    req.query = { companyId: company.id.toString() };
+    req.query = { companyId: companyId.toString() };
     req.body = {};
 
     await handler(req, res);

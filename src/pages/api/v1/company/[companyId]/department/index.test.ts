@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -20,14 +21,26 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  const createdCompany = await prisma.company.create({
-    data: {
-      name: 'Test Company',
-      code: 'TST',
-      regional: 'TW',
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_department1',
     },
   });
-  companyId = createdCompany.id;
+  if (!company) {
+    const now = Date.now();
+    const currentTimestamp = timestampInSeconds(now);
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_department1',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: currentTimestamp,
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
+      },
+    });
+  }
+  companyId = company.id;
   await prisma.department.createMany({
     data: [
       { name: 'HR', companyId },

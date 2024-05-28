@@ -41,6 +41,10 @@ const useAPIWorker = <Data>(
     requestIdRef.current = requestId;
 
     setIsLoading(true);
+    setSuccess(undefined);
+    setCode(undefined);
+    setError(null);
+    setData(undefined);
 
     worker.postMessage({
       apiConfig,

@@ -5,12 +5,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import {
-  PaymentPeriodType,
-  PaymentStatusType,
-  EventType,
-  ProgressStatus,
-} from '@/constants/account';
+import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
 import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -23,7 +18,6 @@ import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { IJournalData } from '@/interfaces/journal';
-import { ILineItem } from '@/interfaces/line_item';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -55,7 +49,7 @@ const NewJournalForm = () => {
     messageModalDataHandler,
     confirmModalVisibilityHandler,
     addAssetModalVisibilityHandler,
-    loadingModalVisibilityHandler,
+    confirmModalDataHandler,
   } = useGlobalCtx();
 
   const {
@@ -95,19 +89,19 @@ const NewJournalForm = () => {
   const result = invoiceReturn?.resultStatus;
   const journalId = invoiceReturn?.journalId;
 
-  const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
+  // const {
+  //   trigger: getAIStatus,
+  //   data: status,
+  //   success: statusSuccess,
+  //   code: statusCode,
+  // } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
 
-  const {
-    trigger: getAIResult,
-    data: AIResult,
-    success: AIResultSuccess,
-    code: AIResultCode,
-  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
+  // const {
+  //   trigger: getAIResult,
+  //   data: AIResult,
+  //   success: AIResultSuccess,
+  //   code: AIResultCode,
+  // } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -186,9 +180,9 @@ const NewJournalForm = () => {
         );
         setProgressRate(invoice.payment.progress);
       }
-      if (journal.voucher) {
-        confirmModalVisibilityHandler();
-      }
+      // if (journal.voucher) {
+      //   confirmModalVisibilityHandler();
+      // }
     }
     if (getJournalSuccess === false) {
       messageModalDataHandler({
@@ -443,17 +437,20 @@ const NewJournalForm = () => {
     };
 
     createInvoice({ params: { companyId }, body: { invoice: invoiceData } });
+    // confirmModalVisibilityHandler();
   };
 
   useEffect(() => {
-    if (createSuccess && result) {
-      const { resultId } = result;
-      getAIStatus({
-        params: {
-          companyId,
-          resultId,
-        },
-      });
+    if (createSuccess && journalId) {
+      confirmModalDataHandler({ journalId, askAIId: result?.resultId });
+      confirmModalVisibilityHandler();
+      // const { resultId } = result;
+      // getAIStatus({
+      //   params: {
+      //     companyId,
+      //     resultId,
+      //   },
+      // });
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -466,84 +463,84 @@ const NewJournalForm = () => {
     }
   }, [createSuccess, result, createCode]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal failed: ${statusCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (
-      status === ProgressStatus.INVALID_INPUT ||
-      status === ProgressStatus.LLM_ERROR ||
-      status === ProgressStatus.SYSTEM_ERROR ||
-      status === ProgressStatus.NOT_FOUND ||
-      status === ProgressStatus.PAUSED
-    ) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal status: ${status}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
-      if (journal?.id) {
-        getJournalById({ params: { companyId, journalId: journal?.id } });
-      } else {
-        getAIResult({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }
-    }
-    return () => clearInterval(interval);
-  }, [result, statusSuccess, status]);
+  // useEffect(() => {
+  //   let interval: NodeJS.Timeout | undefined;
+  //   if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+  //     interval = setInterval(() => {
+  //       getAIStatus({
+  //         params: {
+  //           companyId,
+  //           resultId: result.resultId,
+  //         },
+  //       });
+  //     }, 2000);
+  //   }
+  //   if (statusSuccess === false) {
+  //     messageModalDataHandler({
+  //       messageType: MessageType.ERROR,
+  //       title: 'Upload Journal Failed',
+  //       content: `Upload journal failed: ${statusCode}`,
+  //       submitBtnStr: 'Close',
+  //       submitBtnFunction: messageModalVisibilityHandler,
+  //     });
+  //     messageModalVisibilityHandler();
+  //   }
+  //   if (
+  //     status === ProgressStatus.INVALID_INPUT ||
+  //     status === ProgressStatus.LLM_ERROR ||
+  //     status === ProgressStatus.SYSTEM_ERROR ||
+  //     status === ProgressStatus.NOT_FOUND ||
+  //     status === ProgressStatus.PAUSED
+  //   ) {
+  //     messageModalDataHandler({
+  //       messageType: MessageType.ERROR,
+  //       title: 'Upload Journal Failed',
+  //       content: `Upload journal status: ${status}`,
+  //       submitBtnStr: 'Close',
+  //       submitBtnFunction: messageModalVisibilityHandler,
+  //     });
+  //     messageModalVisibilityHandler();
+  //   }
+  //   if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
+  //     if (journal?.id) {
+  //       getJournalById({ params: { companyId, journalId: journal?.id } });
+  //     } else {
+  //       getAIResult({
+  //         params: {
+  //           companyId,
+  //           resultId: result.resultId,
+  //         },
+  //       });
+  //     }
+  //   }
+  //   return () => clearInterval(interval);
+  // }, [result, statusSuccess, status]);
 
-  useEffect(() => {
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      loadingModalVisibilityHandler();
-    }
-    if (status === ProgressStatus.SUCCESS) {
-      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
-      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
-    }
-  }, [statusSuccess, status]);
+  // useEffect(() => {
+  //   if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+  //     loadingModalVisibilityHandler();
+  //   }
+  //   if (status === ProgressStatus.SUCCESS) {
+  //     loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
+  //     confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
+  //   }
+  // }, [statusSuccess, status]);
 
-  useEffect(() => {
-    if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId } });
-    }
-    if (AIResultSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Get Voucher Preview Failed',
-        content: `Get voucher preview failed: ${AIResultCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [AIResultSuccess, AIResult, AIResultCode]);
+  // useEffect(() => {
+  //   if (AIResultSuccess && AIResult) {
+  //     getJournalById({ params: { companyId, journalId } });
+  //   }
+  //   if (AIResultSuccess === false) {
+  //     messageModalDataHandler({
+  //       messageType: MessageType.ERROR,
+  //       title: 'Get Voucher Preview Failed',
+  //       content: `Get voucher preview failed: ${AIResultCode}`,
+  //       submitBtnStr: 'Close',
+  //       submitBtnFunction: messageModalVisibilityHandler,
+  //     });
+  //     messageModalVisibilityHandler();
+  //   }
+  // }, [AIResultSuccess, AIResult, AIResultCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';
@@ -1225,59 +1222,55 @@ const NewJournalForm = () => {
 
   return (
     <div>
-      {status && status === ProgressStatus.IN_PROGRESS ? (
-        <p>Loading...</p>
-      ) : (
-        <form
-          onSubmit={createInvoiceHandler}
-          onChange={formChangedHandler}
-          className="flex flex-col gap-8px"
-        >
-          {/* Info: (20240423 - Julian) Basic Info */}
-          {displayedBasicInfo}
+      <form
+        onSubmit={createInvoiceHandler}
+        onChange={formChangedHandler}
+        className="flex flex-col gap-8px"
+      >
+        {/* Info: (20240423 - Julian) Basic Info */}
+        {displayedBasicInfo}
 
-          {/* Info: (20240423 - Julian) Payment */}
-          {displayedPayment}
+        {/* Info: (20240423 - Julian) Payment */}
+        {displayedPayment}
 
-          {/* Info: (20240423 - Julian) Project */}
-          {displayedProject}
+        {/* Info: (20240423 - Julian) Project */}
+        {displayedProject}
 
-          {/* Info: (20240423 - Julian) Buttons */}
-          <div className="ml-auto flex items-center gap-24px">
-            <button
-              id="clearJournalFormBtn"
-              type="button"
-              onClick={clearAllClickHandler}
-              className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+        {/* Info: (20240423 - Julian) Buttons */}
+        <div className="ml-auto flex items-center gap-24px">
+          <button
+            id="clearJournalFormBtn"
+            type="button"
+            onClick={clearAllClickHandler}
+            className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+          >
+            Clear all
+          </button>
+          <Button
+            id="uploadBtn"
+            type="submit"
+            className="px-16px py-8px"
+            disabled={isUploadDisabled}
+          >
+            <p>Upload</p>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              Clear all
-            </button>
-            <Button
-              id="uploadBtn"
-              type="submit"
-              className="px-16px py-8px"
-              disabled={isUploadDisabled}
-            >
-              <p>Upload</p>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  className="fill-current"
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
-                  fill="#996301"
-                />
-              </svg>
-            </Button>
-          </div>
-        </form>
-      )}
+              <path
+                className="fill-current"
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
+                fill="#996301"
+              />
+            </svg>
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
