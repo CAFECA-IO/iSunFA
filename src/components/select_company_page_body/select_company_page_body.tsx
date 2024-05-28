@@ -16,7 +16,7 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 
 const SelectCompanyPageBody = () => {
-  const { signedIn, username, selectCompany } = useUserCtx();
+  const { signedIn, username, selectCompany, successSelectCompany, errorCode } = useUserCtx();
   const {
     toastHandler,
     companyInvitationModalVisibilityHandler,
@@ -32,21 +32,11 @@ const SelectCompanyPageBody = () => {
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
+    trigger: listCompany,
     data: companyData,
     success: companyDataSuccess,
     isLoading: isCompanyDataLoading,
-  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {
-    header: {
-      userid: username ?? DEFAULT_DISPLAYED_USER_NAME, // ToDo: should remove when backend updated (shoud using session) @Julian (20240521 - tzuhan)
-    },
-  });
-
-  const {
-    trigger: selectCompanyTrigger,
-    data: companySelectedId,
-    success: companySelectSuccess,
-    code: companySelectCode,
-  } = APIHandler<string>(APIName.COMPANY_SELECT, {}, false, false);
+  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {}, false, false);
 
   const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
@@ -56,7 +46,14 @@ const SelectCompanyPageBody = () => {
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
   const selectedCompanyName = selectedCompany?.name ?? 'Select an Company';
 
-  const menuOpenHandler = () => setIsCompanyMenuOpen(!isCompanyMenuOpen);
+  const menuOpenHandler = () => {
+    listCompany({
+      header: {
+        userid: username || DEFAULT_DISPLAYED_USER_NAME,
+      },
+    });
+    setIsCompanyMenuOpen(!isCompanyMenuOpen);
+  };
 
   const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);
@@ -65,25 +62,20 @@ const SelectCompanyPageBody = () => {
   const selectCompanyClickHandler = () => {
     if (selectedCompany === null) return;
     selectCompany(selectedCompany);
-    selectCompanyTrigger({
-      params: {
-        companyId: selectedCompany.id,
-      },
-    });
   };
 
   useEffect(() => {
-    if (companySelectSuccess && companySelectedId) {
+    if (successSelectCompany) {
       router.push(ISUNFA_ROUTE.DASHBOARD);
-    } else if (companySelectSuccess === false) {
+    } else if (successSelectCompany === false) {
       toastHandler({
-        id: `companySelectError_${companySelectCode}`,
+        id: `companySelectError_${errorCode}`,
         type: ToastType.ERROR,
-        content: `Failed to select company: ${companySelectCode}`,
+        content: `Failed to select company: ${errorCode}`,
         closeable: true,
       });
     }
-  }, [companySelectSuccess, companySelectedId]);
+  }, [successSelectCompany, errorCode]);
 
   useEffect(() => {
     if (companyDataSuccess && companyData) {
