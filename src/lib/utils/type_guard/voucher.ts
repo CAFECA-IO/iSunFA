@@ -36,7 +36,9 @@ export function isIVoucher(arg: IVoucher): arg is IVoucher {
   return true;
 }
 
-export function isIVoucherDataForSavingToDB(arg: IVoucherDataForSavingToDB): arg is IVoucherDataForSavingToDB {
+export function isIVoucherDataForSavingToDB(
+  arg: IVoucherDataForSavingToDB
+): arg is IVoucherDataForSavingToDB {
   const isILineItemReturn = arg.lineItems.every(isILineItem);
   if (!isILineItemReturn) {
     return false;

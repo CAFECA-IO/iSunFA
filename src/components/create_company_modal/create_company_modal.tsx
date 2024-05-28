@@ -1,19 +1,19 @@
-/* eslint-disable */
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ICompany } from '@/interfaces/company';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { MessageType } from '@/interfaces/message_modal';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -74,77 +74,6 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setIsMenuOpen(false);
   };
 
-  const createCompanyHandler = async () => {
-    // createCompany({
-    //   body: {
-    //     name: nameValue,
-    //     code: registrationNumberValue,
-    //     regional: selectedCountry,
-    //   },
-    // });
-
-    // ToDo: (20240514 - Julian) @Tzuhan Add API call
-    const response = await fetch('/api/v1/company', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        userid: username ?? DEFAULT_DISPLAYED_USER_NAME,
-      },
-      body: JSON.stringify({
-        name: nameValue,
-        code: registrationNumberValue,
-        regional: selectedCountry,
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const { name } = data;
-      selectCompany(name);
-
-      // Info: (20240517 - Julian) Close modal
-      setNameValue('');
-      setRegistrationNumberValue('');
-      modalVisibilityHandler();
-    }
-
-    // const isCompanyPassedKyc =
-    //   Object.values(companyList).find(
-    //     (company) => company.name === nameValue || company.brn === registrationNumberValue
-    //   )?.isPassedKyc ?? false;
-    // const isRegistered = Object.values(companyList).some(
-    //   (company) => company.name === nameValue || company.brn === registrationNumberValue
-    // );
-    // // Info: (20240514 - Julian) If the company has passed KYC, show a error message
-    // if (isCompanyPassedKyc) {
-    //   messageModalDataHandler({
-    //     messageType: MessageType.ERROR,
-    //     title: 'This Company is already exist',
-    //     subMsg: 'This company has already been registered.',
-    //     content: `Please review the entered information again, or you can contact the company administrator to join the company.`,
-    //     submitBtnStr: 'Close',
-    //     submitBtnFunction: messageModalVisibilityHandler,
-    //   });
-    //   messageModalVisibilityHandler();
-    //   return;
-    // }
-    // // Info: (20240514 - Julian) If the company has already been registered, show a warning message
-    // if (isRegistered) {
-    //   messageModalDataHandler({
-    //     messageType: MessageType.WARNING,
-    //     title: 'Duplicate registration',
-    //     subMsg: 'This company has already been registered.',
-    //     content: `If you are the company's administrator, please complete KYC to regain access to the company account.`,
-    //     submitBtnStr: 'Go to KYC',
-    //     submitBtnFunction: () => {}, // ToDo: (20240514 - Julian) Add KYC page link
-    //     backBtnStr: 'Cancel',
-    //   });
-    //   messageModalVisibilityHandler();
-    //   return;
-    // }
-    // ToDo: (20240514 - Julian) create success handler: should push to dashboard page
-  };
-
   useEffect(() => {
     if (createCompanySuccess && company) {
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
@@ -170,7 +99,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
 
     createCompany({
       header: {
-        userid: username ?? DEFAULT_DISPLAYED_USER_NAME, // ToDo: should remove when backend updated (shoud using session) @Julian (20240521 - tzuhan)
+        userid: username || DEFAULT_DISPLAYED_USER_NAME,
       },
       body: {
         name: nameValue,
@@ -204,6 +133,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   });
 
   const isDisplayedCreateCompanyModal = isModalVisible ? (
+    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <form
         onSubmit={confirmClickHandler}
@@ -213,6 +143,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         <div className="flex justify-center px-20px">
           <h2 className="text-xl font-bold leading-8 text-navyBlue2">Create My Company</h2>
           <button
+            type="button"
             onClick={cancelBtnClickHandler}
             className="absolute right-3 top-3 flex items-center justify-center text-darkBlue2"
           >
@@ -280,6 +211,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
           <button
+            type="button"
             onClick={cancelBtnClickHandler}
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >

@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/index';
-import { ICompany } from '@/interfaces/company';
 import prisma from '@/client';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let company: ICompany;
+let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -13,6 +13,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
+    session: { userId: 1 },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -20,14 +21,26 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-
-  company = await prisma.company.create({
-    data: {
-      code: 'COMP123',
-      name: 'Company Name',
-      regional: 'Regional Name',
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_company2',
     },
   });
+  if (!company) {
+    const now = Date.now();
+    const currentTimestamp = timestampInSeconds(now);
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_company2',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: currentTimestamp,
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
+      },
+    });
+  }
+  companyId = company.id;
 });
 
 afterEach(async () => {
@@ -35,7 +48,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: company.id,
+        id: companyId,
       },
     });
   } catch (error) {
@@ -73,7 +86,7 @@ describe('Company API', () => {
     req.method = 'POST';
     req.headers.userid = '1';
     req.body = {
-      code: 'COMP123',
+      code: 'TSTTST',
       name: 'Company Name',
       regional: 'Regional Name',
     };
@@ -95,6 +108,11 @@ describe('Company API', () => {
         }),
       })
     );
+    await prisma.company.delete({
+      where: {
+        id: res.json.mock.calls[0][0].payload.id,
+      },
+    });
   });
 
   it('should return an error when method is POST and invalid data is provided', async () => {
@@ -136,17 +154,24 @@ describe('Company API', () => {
     );
   });
 
-  it('should return an error when user ID is not provided', async () => {
-    req.headers = {};
+  it('should return an error when session is UNAUTHORIZED', async () => {
+    req = {
+      headers: {},
+      body: null,
+      query: {},
+      method: 'GET',
+      session: {},
+      json: jest.fn(),
+    } as unknown as jest.Mocked<NextApiRequest>;
 
     await handler(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
+        code: expect.stringContaining('401'),
         message: expect.any(String),
         payload: expect.any(Object),
       })

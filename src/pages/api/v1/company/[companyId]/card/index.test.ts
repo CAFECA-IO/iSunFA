@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ICard } from '@/interfaces/card';
 import prisma from '@/client';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -20,6 +21,24 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_card1',
+    },
+  });
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_card1',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: timestampInSeconds(Date.now()),
+        createdAt: timestampInSeconds(Date.now()),
+        updatedAt: timestampInSeconds(Date.now()),
+      },
+    });
+  }
   card = await prisma.card.create({
     data: {
       type: 'VISA',
@@ -29,10 +48,8 @@ beforeEach(async () => {
       cvc: '330',
       name: 'Taiwan Bank',
       company: {
-        create: {
-          name: 'Test Company',
-          code: 'TST',
-          regional: 'TW',
+        connect: {
+          id: company.id,
         },
       },
     },
@@ -62,7 +79,7 @@ afterEach(async () => {
   }
 });
 
-describe('Payment API Handler Tests', () => {
+describe('CARD API Handler Tests', () => {
   it('should handle LIST requests successfully', async () => {
     req.method = 'GET';
     await handler(req, res);
@@ -103,11 +120,11 @@ describe('Payment API Handler Tests', () => {
     } as unknown as jest.Mocked<NextApiRequest>;
 
     await handler(req, res);
-    // await prisma.card.delete({
-    //   where: {
-    //     id: res.json.mock.calls[0][0].payload.id,
-    //   },
-    // });
+    await prisma.card.delete({
+      where: {
+        id: res.json.mock.calls[0][0].payload.id,
+      },
+    });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({

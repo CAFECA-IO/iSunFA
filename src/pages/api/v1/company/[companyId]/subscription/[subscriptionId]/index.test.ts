@@ -18,6 +18,7 @@ beforeEach(async () => {
     query: {},
     method: 'GET',
     json: jest.fn(),
+    session: { userId: '1' },
   } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
@@ -25,33 +26,45 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  const createdCompany = await prisma.company.create({
-    data: {
-      name: 'Test Company',
-      code: 'TST',
-      regional: 'TW',
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_subscription1',
     },
   });
-  companyId = createdCompany.id;
+  if (!company) {
+    const now = Date.now();
+    const currentTimestamp = timestampInSeconds(now);
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_subscription1',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: currentTimestamp,
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
+      },
+    });
+  }
+  companyId = company.id;
   const createdSubscription = await prisma.subscription.create({
     data: {
       company: {
         connect: {
-          id: createdCompany.id,
+          id: company.id,
         },
       },
       plan: 'pro',
       card: {
         create: {
           no: '1234567890',
-          type: 'VISA',
+          type: 'VISA22',
           expireYear: '23',
           expireMonth: '12',
           cvc: '123',
           name: 'Test Card',
           company: {
             connect: {
-              id: createdCompany.id,
+              id: company.id,
             },
           },
         },
@@ -96,7 +109,7 @@ afterEach(async () => {
       },
     });
   } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
   }
   try {
     await prisma.card.delete({
@@ -105,7 +118,7 @@ afterEach(async () => {
       },
     });
   } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
   }
 });
 
