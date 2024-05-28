@@ -1,13 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { IRole } from '@/interfaces/role';
-import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let role: IRole;
-let companyId: number;
 
 beforeEach(async () => {
   req = {
@@ -23,48 +21,12 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  let company = await prisma.company.findFirst({
-    where: {
-      code: 'TST_role1',
-    },
-  });
-  if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
-    company = await prisma.company.create({
-      data: {
-        code: 'TST_role1',
-        name: 'Test Company',
-        regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
-      },
-    });
-  }
-  const createdRole = await prisma.role.create({
+  role = await prisma.role.create({
     data: {
-      company: {
-        connect: {
-          id: company.id,
-        },
-      },
       name: 'KING',
       permissions: ['READ', 'WRITE'],
     },
-    include: {
-      company: {
-        select: {
-          name: true,
-        },
-      },
-    },
   });
-  companyId = createdRole.companyId;
-  role = {
-    ...createdRole,
-    companyName: createdRole.company.name,
-  };
 });
 
 afterEach(async () => {
@@ -73,15 +35,6 @@ afterEach(async () => {
     await prisma.role.delete({
       where: {
         id: role.id,
-      },
-    });
-  } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
-  }
-  try {
-    await prisma.company.delete({
-      where: {
-        id: companyId,
       },
     });
   } catch (error) {
@@ -104,8 +57,6 @@ describe('test role API', () => {
         payload: expect.objectContaining({
           id: expect.any(Number),
           name: expect.any(String),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
           permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })
@@ -133,8 +84,6 @@ describe('test role API', () => {
         payload: expect.objectContaining({
           id: expect.any(Number),
           name: expect.any(String),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
           permissions: expect.arrayContaining([expect.any(String)]),
         }),
       })

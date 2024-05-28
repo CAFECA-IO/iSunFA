@@ -92,7 +92,6 @@ model company {
   invitations        invitation[]
   journals           journal[]
   projects           project[]
-  roles              role[]
   subscriptions      subscription[]
   usersCompanysRoles userCompanyRole[]
 }
@@ -173,11 +172,11 @@ model employee {
   companyId        Int               @map("company_id")
   salary           Int
   insurancePayment Int
-  bonus            String
+  bonus            Int
   salaryPayMode    String
   payFrequency     String
   startDate        Int
-  endDate          Int
+  endDate          Int?
   company          company           @relation(fields: [companyId], references: [id])
   department       department        @relation(fields: [departmentId], references: [id])
   employeeProjects employeeProject[]
@@ -321,11 +320,9 @@ model payment {
 
 model role {
   id                 Int               @id @default(autoincrement())
-  companyId          Int               @map("company_id")
-  name               String
+  name               String            @unique
   permissions        String[]
   invitations        invitation[]
-  company            company           @relation(fields: [companyId], references: [id])
   usersCompanysRoles userCompanyRole[]
 }
 
@@ -356,10 +353,10 @@ model salary {
   id               Int      @id @default(autoincrement())
   employeeId       Int
   salary           Int
-  insurancePayment String
-  bonus            String
+  insurancePayment Int
+  bonus            Int
   description      String
-  month            String
+  month            String // 2024-05
   employee         employee @relation(fields: [employeeId], references: [id])
 }
 
