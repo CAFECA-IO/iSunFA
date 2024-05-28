@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
@@ -19,13 +19,12 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 
-enum SortingType {
-  NEWEST = 'Newest',
-  OLDEST = 'Oldest',
-}
-
 const MyReportsSection = () => {
-  const { toastHandler } = useGlobalCtx();
+  // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
+  // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
+  // eslint-disable-next-line no-unused-vars
+  const { toastHandler, filterOptionsModalVisibilityHandler, filterOptionsGotFromModal } =
+    useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
     data: pendingReports,
@@ -39,7 +38,7 @@ const MyReportsSection = () => {
   } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, { params: { companyId } });
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
-  const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
+  const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
@@ -47,7 +46,7 @@ const MyReportsSection = () => {
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
-  const [filteredHistorySort, setFilteredHistorySort] = useState<SortingType>(SortingType.NEWEST);
+  const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
@@ -56,6 +55,10 @@ const MyReportsSection = () => {
 
   const pendingTotalPages = 1;
   const historyTotalPages = 1;
+
+  // Deprecated: (20240531 - Shirley)
+  // eslint-disable-next-line no-console
+  console.log('filterOptionsGotFromModal in MyReportsSection', filterOptionsGotFromModal);
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports) {
@@ -145,7 +148,7 @@ const MyReportsSection = () => {
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isPendingSortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {Object.values(SortingType).map((sorting: SortingType) => (
+          {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
@@ -192,7 +195,7 @@ const MyReportsSection = () => {
   const displayedPendingFilterOptionsSection = (
     <div>
       {/* Info: 電腦版排版 (20240527 - Shirley) */}
-      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:flex lg:space-x-5">
+      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             Sort by
@@ -219,7 +222,11 @@ const MyReportsSection = () => {
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedPendingSearchBar}
         </div>
-        <Button className="px-3 py-3" variant={'secondaryOutline'}>
+        <Button
+          onClick={filterOptionsModalVisibilityHandler}
+          className="px-3 py-3"
+          variant={'secondaryOutline'}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -242,7 +249,7 @@ const MyReportsSection = () => {
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
-    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
+    <div className="mx-0 mt-0 flex flex-col pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
       {' '}
       <PendingReportList reports={pendingData} />
       <div className="mt-4 flex justify-center">
@@ -348,7 +355,7 @@ const MyReportsSection = () => {
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {Object.values(SortingType).map((sorting: SortingType) => (
+          {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
@@ -395,7 +402,7 @@ const MyReportsSection = () => {
   const displayedHistoryFilterOptionsSection = (
     <div>
       {/* Info: 電腦版排版 (20240527 - Shirley) */}
-      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:flex lg:space-x-5">
+      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             Sort by
@@ -422,7 +429,11 @@ const MyReportsSection = () => {
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedHistorySearchBar}
         </div>
-        <Button className="px-3 py-3" variant={'secondaryOutline'}>
+        <Button
+          onClick={filterOptionsModalVisibilityHandler}
+          className="px-3 py-3"
+          variant={'secondaryOutline'}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -544,7 +555,8 @@ const MyReportsSection = () => {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
+          {/* Info: Divider beneath Heading (20240528 - Shirley) */}
+          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:px-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
             </div>
@@ -553,7 +565,7 @@ const MyReportsSection = () => {
       </div>
 
       {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
-      <div className="mx-2 mt-5 flex flex-col pl-20 pr-5 max-md:mt-0 max-md:max-w-full max-md:pl-5 lg:mx-10">
+      <div className="mx-2 mt-5 flex flex-col px-2 max-md:mt-0 max-md:max-w-full sm:px-14 lg:mx-10 lg:pl-20 lg:pr-5">
         {displayedPendingFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
@@ -581,14 +593,14 @@ const MyReportsSection = () => {
             <div>Pending</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
         {displayedPendingDataSection}
       </div>
 
       {/* Info: ----- reports history (20240513 - Shirley) ----- */}
-      <div className="mx-2 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5 lg:mx-10">
+      <div className="mx-2 mt-10 flex flex-col px-2 max-md:max-w-full sm:px-14 lg:mx-10 lg:mt-0 lg:pl-20 lg:pr-5">
         {displayedHistoryFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
@@ -612,7 +624,7 @@ const MyReportsSection = () => {
             <div>Reports History</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
         {displayedHistoryDataSection}

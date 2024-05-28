@@ -1,16 +1,15 @@
 import React from 'react';
 import { cn } from '@/lib/utils/common';
-import { DUMMY_DASHBOARD_OVERVIEW, IDashboardOverview } from '@/interfaces/dashboard_overview';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
-import { IProfitInsight } from '@/interfaces/project_insight';
+import { DUMMY_PROJECT_INSIGHT, IProfitInsight } from '@/interfaces/project_insight';
 
 const DashboardOverview = () => {
   const [dashboardOverview, setDashboardOverview] =
-    React.useState<IDashboardOverview>(DUMMY_DASHBOARD_OVERVIEW);
+    React.useState<IProfitInsight>(DUMMY_PROJECT_INSIGHT);
   const { toastHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
@@ -24,21 +23,21 @@ const DashboardOverview = () => {
     },
   });
 
-  const displayedAssetsGrowthRate = `${dashboardOverview.profitGrowthRate > 0 ? `+${dashboardOverview.profitGrowthRate}` : dashboardOverview.profitGrowthRate < 0 ? `${dashboardOverview.profitGrowthRate}` : `0`}`;
-  const displayedProjectROI =
-    +dashboardOverview.projectROI > 0
-      ? `+${dashboardOverview.projectROI}`
-      : +dashboardOverview.projectROI < 0
-        ? `${dashboardOverview.projectROI}`
+  const displayedAssetsGrowthRate = `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange}` : dashboardOverview.profitChange < 0 ? `${dashboardOverview.profitChange}` : `0`}`;
+  const displayedTopProjectRoi =
+    +dashboardOverview.topProjectRoi > 0
+      ? `+${dashboardOverview.topProjectRoi}`
+      : +dashboardOverview.topProjectRoi < 0
+        ? `${dashboardOverview.topProjectRoi}`
         : `0`;
-  const displayedPreLaunchProjects = dashboardOverview.preLaunchProjects ?? `0`;
+  const displayedPreLaunchProject = dashboardOverview.preLaunchProject ?? `0`;
 
   React.useEffect(() => {
     if (getSuccess && profitInsight) {
       setDashboardOverview({
-        profitGrowthRate: profitInsight.profitChange * 100,
-        projectROI: (profitInsight.topProjectRoi * 100).toString(), // TODO: (20240524 - tzuhan) ask backend to return string instead of number
-        preLaunchProjects: profitInsight.preLaunchProject,
+        profitChange: profitInsight.profitChange * 100,
+        topProjectRoi: profitInsight.topProjectRoi * 100, // TODO: (20240524 - tzuhan) ask backend to return string instead of number -> the interface used in frontend is the same as backend so the data format for now is good (20240528 - Shirley)
+        preLaunchProject: profitInsight.preLaunchProject,
       });
     } else if (getSuccess === false) {
       toastHandler({
@@ -80,9 +79,9 @@ const DashboardOverview = () => {
             <div
               className={cn(
                 'text-5xl leading-52px',
-                dashboardOverview.profitGrowthRate > 0
+                dashboardOverview.profitChange > 0
                   ? 'text-text-state-success-solid'
-                  : dashboardOverview.profitGrowthRate < 0
+                  : dashboardOverview.profitChange < 0
                     ? 'text-text-state-error-solid'
                     : 'text-text-neutral-primary'
               )}
@@ -126,14 +125,14 @@ const DashboardOverview = () => {
             <div
               className={cn(
                 'text-5xl leading-52px',
-                +dashboardOverview.projectROI > 0
+                +dashboardOverview.topProjectRoi > 0
                   ? 'text-text-state-success-solid'
-                  : +dashboardOverview.projectROI < 0
+                  : +dashboardOverview.topProjectRoi < 0
                     ? 'text-text-state-error-solid'
                     : 'text-text-neutral-primary'
               )}
             >
-              <span className="">{displayedProjectROI}</span>
+              <span className="">{displayedTopProjectRoi}</span>
             </div>
             <div className="mt-7 self-end text-base leading-6 tracking-normal text-text-neutral-primary">
               %
@@ -169,7 +168,7 @@ const DashboardOverview = () => {
             </div>
           </div>
           <div className="mr-12 self-center text-center text-5xl font-semibold leading-52px text-text-neutral-solid-dark md:mr-0 lg:mb-3">
-            {displayedPreLaunchProjects}
+            {displayedPreLaunchProject}
           </div>
         </div>
       </div>
