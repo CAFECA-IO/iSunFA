@@ -25,7 +25,7 @@ export function isIVoucher(arg: IVoucher): arg is IVoucher {
   if (arg.voucherIndex === undefined || arg.invoiceIndex === undefined) {
     return false;
   }
-  const isIVoucherMetaDataReturn = arg.metadatas.every(isIVoucherMetaData);
+  const isIVoucherMetaDataReturn = arg.metaData.every(isIVoucherMetaData);
   if (isIVoucherMetaDataReturn) {
     return false;
   }
@@ -36,7 +36,9 @@ export function isIVoucher(arg: IVoucher): arg is IVoucher {
   return true;
 }
 
-export function isIVoucherDataForSavingToDB(arg: IVoucherDataForSavingToDB): arg is IVoucherDataForSavingToDB {
+export function isIVoucherDataForSavingToDB(
+  arg: IVoucherDataForSavingToDB
+): arg is IVoucherDataForSavingToDB {
   const isILineItemReturn = arg.lineItems.every(isILineItem);
   if (!isILineItemReturn) {
     return false;

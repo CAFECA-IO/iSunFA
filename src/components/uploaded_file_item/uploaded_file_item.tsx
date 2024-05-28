@@ -17,13 +17,19 @@ const UploadedFileItem = ({
   clickHandler,
 }: IUploadedFileItemProps) => {
   const { id, imageName, imageUrl, imageSize, progress, status } = itemData;
-  const isError =
-    status === ProgressStatus.INVALID_INPUT ||
-    status === ProgressStatus.LLM_ERROR ||
-    status === ProgressStatus.SYSTEM_ERROR;
+  // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
+  const isError = !(
+    status === ProgressStatus.IN_PROGRESS ||
+    status === ProgressStatus.SUCCESS ||
+    status === ProgressStatus.PAUSED
+  );
 
   const pauseClickHandler = () => pauseHandler(id);
   const deleteClickHandler = () => deleteHandler(id);
+
+  // Info: (20240527 - Julian) 若檔名過長，則擷取前 3 個和後 4 個(副檔名)字元，中間以 ... 代替
+  const truncatedFileName =
+    imageName.length > 20 ? `${imageName.slice(0, 3)}...${imageName.slice(-4)}` : imageName;
 
   const displayedPauseButton =
     status === ProgressStatus.PAUSED ? <FiPlay size={20} /> : <FiPauseCircle size={20} />;
@@ -39,7 +45,7 @@ const UploadedFileItem = ({
   );
 
   return (
-    <div className="relative inline-flex w-full flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 shadow">
+    <div className="relative inline-flex w-90vw flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 shadow md:w-full">
       <div className="inline-flex items-center gap-20px">
         <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="upload_cloud_icon" />
         {/* Info: (20240523 - Julian) File Thumbnail */}
@@ -51,7 +57,7 @@ const UploadedFileItem = ({
           <h3
             className={`text-base font-semibold leading-normal tracking-tight ${isError ? 'text-file-uploading-text-error' : 'text-file-uploading-text-primary'}`}
           >
-            {imageName}
+            {truncatedFileName}
           </h3>
           {/* Info: (20240523 - Julian) File Size */}
           <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">

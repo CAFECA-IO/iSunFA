@@ -315,8 +315,12 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
   return Object.values(value).every((v) => typeof v === 'number');
 }
 
-export function transformOCRImageIDToURL(documentType: string, imageID: string): string {
-  return `/api/v1/company/${documentType}/${imageID}/image`;
+export function transformOCRImageIDToURL(
+  documentType: string,
+  companyId: number,
+  imageID: string
+): string {
+  return `/api/v1/company/${companyId}/${documentType}/${imageID}/image`;
 }
 
 export function transformBytesToFileSizeString(bytes: number): string {
@@ -329,6 +333,20 @@ export function transformBytesToFileSizeString(bytes: number): string {
 }
 
 // page, limit to offset
-export function pageToOffset(page: number = DEFAULT_PAGE_START_AT, limit: number = DEFAULT_PAGE_LIMIT): number {
+export function pageToOffset(
+  page: number = DEFAULT_PAGE_START_AT,
+  limit: number = DEFAULT_PAGE_LIMIT
+): number {
   return (page - 1) * limit;
 }
+
+export const getTodayPeriodInSec = () => {
+  const today = new Date();
+  const startTimeStamp = timestampInSeconds(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  );
+  const endTimeStamp = timestampInSeconds(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).getTime()
+  );
+  return { startTimeStamp, endTimeStamp };
+};

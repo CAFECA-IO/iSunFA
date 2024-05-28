@@ -21,7 +21,7 @@ export interface IVoucherMetaData {
 export interface IVoucher {
   voucherIndex: string;
   invoiceIndex: string; // 改在這裡
-  metadatas: IVoucherMetaData[];
+  metaData: IVoucherMetaData[];
   lineItems: ILineItem[];
 }
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoice, IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
+import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
   PaymentPeriodType,
@@ -22,9 +22,8 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
-import { IVoucher } from '@/interfaces/voucher';
-
-// Info: (20240425 - Julian) dummy data, will be replaced by API data
+import { IJournalData } from '@/interfaces/journal';
+import { ILineItem } from '@/interfaces/line_item';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -34,19 +33,19 @@ const ficSelection: string[] = [
   '006 Taiwan Cooperative Bank',
   '007 First Commercial Bank',
 ];
-// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 
-const projectSelection: { id: string | null; name: string }[] = [
+// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
+const projectSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'None' },
-  { id: 'project_a', name: 'Project A' },
-  { id: 'project_b', name: 'Project B' },
-  { id: 'project_c', name: 'Project C' },
+  { id: 1, name: 'Project A' },
+  { id: 2, name: 'Project B' },
+  { id: 3, name: 'Project C' },
 ];
-const contractSelection: { id: string | null; name: string }[] = [
+const contractSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'None' },
-  { id: 'contract_a', name: 'Contract A' },
-  { id: 'contract_b', name: 'Contract B' },
-  { id: 'contract_c', name: 'Contract C' },
+  { id: 1, name: 'Contract A' },
+  { id: 2, name: 'Contract B' },
+  { id: 3, name: 'Contract C' },
 ];
 
 const NewJournalForm = () => {
@@ -56,84 +55,59 @@ const NewJournalForm = () => {
     messageModalDataHandler,
     confirmModalVisibilityHandler,
     addAssetModalVisibilityHandler,
+    loadingModalVisibilityHandler,
   } = useGlobalCtx();
 
   const {
     companyId,
     selectedUnprocessedJournal,
     selectUnprocessedJournalHandler,
-    voucherId,
-    // setInvoiceIdHandler,
-    setVoucherIdHandler,
-    setVoucherPreviewHandler,
+    selectJournalHandler,
   } = useAccountingCtx();
 
-  const aichResultId = selectedUnprocessedJournal?.aichResultId;
-
-  // Info: (20240508 - Julian) call API to get invoice data
   const {
+    trigger: getJournalById,
+    success: getJournalSuccess,
+    data: journal,
+    code: getJournalCode,
+  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: getOCRResult,
     success: getSuccess,
-    trigger: getOCRResult, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoiceDataForSavingToDB>(
-    APIName.OCR_RESULT_GET_BY_ID,
-    {
-      // TODO: update with IInvoiceDataForSavingToDB
-      params: { resultId: selectedUnprocessedJournal?.id },
-    },
+  } = APIHandler<IInvoiceDataForSavingToDB>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: createInvoice,
+    data: invoiceReturn,
+    success: createSuccess,
+    code: createCode,
+  } = APIHandler<{ journalId: number; resultStatus: IAccountResultStatus }>(
+    APIName.INVOICE_CREATE,
+    {},
     false,
     false
   );
 
-  const {
-    trigger: voucherUpload,
-    data: result,
-    success: uploadSuccess,
-    code: uploadCode,
-    error: uploadError,
-  } = APIHandler<IAccountResultStatus>(
-    APIName.JOURNAL_GENERATE,
-    {
-      params: { companyId },
-    },
-    false,
-    false
-  );
-
-  useEffect(() => {
-    if (aichResultId !== undefined && getSuccess === undefined) {
-      getOCRResult({ params: { resultId: aichResultId } });
-    }
-    if (getSuccess === false) {
-      // Info: (20240522 - Julian) 有取得 invoiceId 的狀態下才顯示錯誤訊息
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Get OCR result Failed',
-        content: `Get OCR result failed: ${getCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [getSuccess, getCode, OCRResult]);
+  // Info: (20240527 - Murky) To Emily Invoice改這邊
+  const result = invoiceReturn?.resultStatus;
+  const journalId = invoiceReturn?.journalId;
 
   const {
-    isLoading: isStatusLoading,
-    trigger: getVoucherStatus,
+    trigger: getAIStatus,
     data: status,
     success: statusSuccess,
     code: statusCode,
-    error: statusError,
-  } = APIHandler<ProgressStatus>(APIName.JOURNAL_GET_PROGRESS_STATUS, {}, false, false);
+  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
 
   const {
-    trigger: getVoucherPreview,
-    data: preview,
-    success: previewSuccess,
-    code: previewCode,
-    error: previewError,
-  } = APIHandler<IVoucher>(APIName.JOURNAL_GET_PREVIEW_BY_ID, {}, false, false);
+    trigger: getAIResult,
+    data: AIResult,
+    success: AIResultSuccess,
+    code: AIResultCode,
+  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -161,14 +135,72 @@ const NewJournalForm = () => {
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
-  const [selectedProject, setSelectedProject] = useState<{ id: string | null; name: string }>(
+  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>(
     projectSelection[0]
   );
-  const [selectedContract, setSelectedContract] = useState<{ id: string | null; name: string }>(
+  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>(
     contractSelection[0]
   );
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+
+  useEffect(() => {
+    if (selectedUnprocessedJournal !== undefined) {
+      getJournalById({ params: { companyId, journalId: selectedUnprocessedJournal.id } });
+    }
+  }, [selectedUnprocessedJournal]);
+
+  useEffect(() => {
+    if (selectedUnprocessedJournal && getJournalSuccess && journal) {
+      selectJournalHandler(journal);
+      if (journal.invoice === null) {
+        getOCRResult({ params: { companyId, resultId: selectedUnprocessedJournal.aichResultId } }); // selectedUnprocessedJournal.aichResultId
+      } else {
+        const { invoice } = journal;
+        // Info: update form data with journal data (20240524 - tzuhan)
+        // setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+        // setInputPaymentReason(invoice.paymentReason);
+        setSelectedEventType(invoice.eventType as EventType);
+        setInputDescription(invoice.description);
+        setInputVendor(invoice.vendorOrSupplier);
+        setInputTotalPrice(invoice.payment.price);
+        setTaxToggle(invoice.payment.hasTax);
+        setTaxRate(invoice.payment.taxPercentage);
+        setFeeToggle(invoice.payment.hasFee);
+        setInputFee(invoice.payment.fee);
+        setSelectedMethod(invoice.payment.paymentMethod);
+        // setInputAccountNumber(invoice.payment.accountNumber);
+        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setInputInstallment(invoice.payment.installmentPeriod);
+        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
+        setInputPartialPaid(invoice.payment.paymentAlreadyDone);
+        setSelectedProject(
+          projectSelection.find(
+            (project) => journal.projectId && project.id === journal.projectId
+          ) || projectSelection[0]
+        );
+        setSelectedContract(
+          contractSelection.find(
+            (contract) => journal.contractId && contract.id === journal.contractId
+          ) || contractSelection[0]
+        );
+        setProgressRate(invoice.payment.progress);
+      }
+      if (journal.voucher) {
+        confirmModalVisibilityHandler();
+      }
+    }
+    if (getJournalSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Journal Failed',
+        content: `Get Journal failed: ${getJournalCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [getJournalSuccess, journal, selectedUnprocessedJournal]);
 
   // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
@@ -184,24 +216,37 @@ const NewJournalForm = () => {
       setTaxRate(OCRResult.payment.taxPercentage);
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
+      setSelectedMethod(OCRResult.payment.paymentMethod);
+      // setInputAccountNumber(OCRResult.payment.accountNumber);
+      setPaymentPeriod(OCRResult.payment.paymentPeriod);
+      setInputInstallment(OCRResult.payment.installmentPeriod);
+      setPaymentStatus(OCRResult.payment.paymentStatus);
+      setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
+      setSelectedProject(
+        projectSelection.find((project) => project.id === OCRResult.projectId) ||
+          projectSelection[0]
+      );
+      setSelectedContract(
+        contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
+          contractSelection[0]
+      );
+      setProgressRate(OCRResult.payment.progress);
     }
   }, [getSuccess, OCRResult]);
 
   useEffect(() => {
-    if (OCRResult) {
-      // Info: (20240506 - Julian) 設定表單的預設值
-      setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
-      setSelectedEventType(OCRResult.eventType);
-      setInputPaymentReason(OCRResult.paymentReason);
-      setInputDescription(OCRResult.description);
-      setInputVendor(OCRResult.vendorOrSupplier);
-      setInputTotalPrice(OCRResult.payment.price);
-      setTaxToggle(OCRResult.payment.hasTax);
-      setTaxRate(OCRResult.payment.taxPercentage);
-      setFeeToggle(OCRResult.payment.hasFee);
-      setInputFee(OCRResult.payment.fee);
+    // Info: (20240527 - Julian) 顯示錯誤須分開處理，避免閃現
+    if (getSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get OCR result Failed',
+        content: `Get OCR result failed: ${getCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
     }
-  }, [OCRResult]);
+  }, [getSuccess]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -368,10 +413,10 @@ const NewJournalForm = () => {
   };
 
   // Info: (20240429 - Julian) 上傳日記帳資料
-  const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
+  const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoice: IInvoice = {
-      invoiceId: selectedUnprocessedJournal ? selectedUnprocessedJournal.aichResultId : '',
+    const invoiceData: IInvoiceDataForSavingToDB = {
+      journalId: selectedUnprocessedJournal?.id || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
@@ -397,124 +442,97 @@ const NewJournalForm = () => {
       },
     };
 
-    voucherUpload({ body: { invoices: [invoice] } });
+    createInvoice({ params: { companyId }, body: { invoice: invoiceData } });
   };
 
   useEffect(() => {
-    if (uploadSuccess && result) {
+    if (createSuccess && result) {
       const { resultId } = result;
-      setVoucherIdHandler(resultId);
-      confirmModalVisibilityHandler();
-    } else if (uploadSuccess === false) {
+      getAIStatus({
+        params: {
+          companyId,
+          resultId,
+        },
+      });
+    } else if (createSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Create Invoice Failed',
+        content: `Create Invoice failed: ${createCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [createSuccess, result, createCode]);
+
+  useEffect(() => {
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      loadingModalVisibilityHandler();
+      setTimeout(() => {
+        getAIStatus({
+          params: {
+            companyId,
+            resultId: result.resultId,
+          },
+        });
+      }, 2000);
+    }
+    if (statusSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Upload Journal Failed',
-        content: `Upload journal failed: ${uploadCode}`,
+        content: `Upload journal failed: ${statusCode}`,
         submitBtnStr: 'Close',
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
-
-      // TODO: error handling @Julian (20240510 - tzuhan)
-      // eslint-disable-next-line no-console
-      // console.log(`uploadError: `, uploadError);
-      // toastHandler({
-      //   id: `UploadJournalFailed_${uploadCode}_${(Math.random() * 100000).toFixed(5)}`,
-      //   type: ToastType.ERROR,
-      //   content: `Upload journal failed: ${uploadCode}`,
-      //   closeable: true,
-      // });
     }
-  }, [uploadSuccess, result, uploadCode, uploadError]);
-
-  useEffect(() => {
-    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.IN_PROGRESS)) {
-      setTimeout(
-        () => {
-          getVoucherStatus({
-            params: {
-              companyId,
-              voucherId,
-            },
-          });
-        },
-        statusSuccess === undefined ? 0 : 2000
-      );
-    }
-    if (statusSuccess && status && status !== ProgressStatus.IN_PROGRESS) {
-      if (
-        voucherId &&
-        (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)
-      ) {
-        getVoucherPreview({
-          params: {
-            companyId,
-            voucherId,
-          },
-        });
-      } else {
-        messageModalDataHandler({
-          messageType: MessageType.ERROR,
-          title: 'Upload Journal Failed',
-          content: `Upload journal failed: ${statusCode}`,
-          submitBtnStr: 'Close',
-          submitBtnFunction: messageModalVisibilityHandler,
-        });
-        messageModalVisibilityHandler();
-        // TODO: Error handling @Julian (20240514 - Tzuhan)
-        // toastHandler({
-        //   id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
-        //   type: ToastType.ERROR,
-        //   content: `ProgressStatus: ${ProgressStatus}`,
-        //   closeable: true,
-        // });
-      }
-    } else if (statusSuccess === false) {
+    if (
+      status === ProgressStatus.INVALID_INPUT ||
+      status === ProgressStatus.LLM_ERROR ||
+      status === ProgressStatus.SYSTEM_ERROR ||
+      status === ProgressStatus.NOT_FOUND ||
+      status === ProgressStatus.PAUSED
+    ) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Get Voucher Status Failed',
-        content: `Get voucher status failed: ${statusCode}`,
+        title: 'Upload Journal Failed',
+        content: `Upload journal status: ${status}`,
         submitBtnStr: 'Close',
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
-
-      // TODO: Error handling @Julian (20240514 - Tzuhan)
-      // eslint-disable-next-line no-console
-      // console.log(`status error: ${statusError}`);
-      // toastHandler({
-      //   id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
-      //   type: ToastType.ERROR,
-      //   content: `Get voucher status failed: ${statusCode}`,
-      //   closeable: true,
-      // });
     }
-  }, [voucherId, isStatusLoading, status, statusSuccess, statusCode, statusError]);
+    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
+      if (journal?.id) {
+        getJournalById({ params: { companyId, journalId: journal?.id } });
+      } else {
+        getAIResult({
+          params: {
+            companyId,
+            resultId: result.resultId,
+          },
+        });
+      }
+    }
+  }, [result, statusSuccess, status]);
 
   useEffect(() => {
-    if (previewSuccess && preview) {
-      setVoucherPreviewHandler(preview);
-      confirmModalVisibilityHandler();
-    } else if (previewError && previewCode) {
-      // TODO: Error handling @Julian (20240514 - Tzuhan)
-      // eslint-disable-next-line no-console
-      // console.log(`preview error: ${previewError}`);
+    if (AIResultSuccess && AIResult) {
+      getJournalById({ params: { companyId, journalId } });
+    }
+    if (AIResultSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Get Voucher Preview Failed',
-        content: `Get voucher preview failed: ${previewCode}`,
+        content: `Get voucher preview failed: ${AIResultCode}`,
         submitBtnStr: 'Close',
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
-      // toastHandler({
-      //   id: `GetVoucherPreviewFailed_${previewCode}_${(Math.random() * 100000).toFixed(5)}`,
-      //   type: ToastType.ERROR,
-      //   content: `Get voucher preview failed: ${previewCode}`,
-      //   closeable: true,
-      // });
     }
-  }, [previewSuccess, preview, previewError, previewCode]);
+  }, [AIResultSuccess, AIResult, AIResultCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';
@@ -605,7 +623,7 @@ const NewJournalForm = () => {
   });
 
   const displayProjectDropmenu = projectSelection.map(
-    (project: { id: string | null; name: string }) => {
+    (project: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
         setSelectedProject(project);
       };
@@ -623,7 +641,7 @@ const NewJournalForm = () => {
   );
 
   const displayContractDropmenu = contractSelection.map(
-    (contract: { id: string | null; name: string }) => {
+    (contract: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
         setSelectedContract(contract);
       };
@@ -1200,7 +1218,7 @@ const NewJournalForm = () => {
         <p>Loading...</p>
       ) : (
         <form
-          onSubmit={uploadJournalHandler}
+          onSubmit={createInvoiceHandler}
           onChange={formChangedHandler}
           className="flex flex-col gap-8px"
         >
@@ -1212,7 +1230,6 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Project */}
           {displayedProject}
-          {/* ToDo: (20240429 - Julian) Progress Bar */}
 
           {/* Info: (20240423 - Julian) Buttons */}
           <div className="ml-auto flex items-center gap-24px">

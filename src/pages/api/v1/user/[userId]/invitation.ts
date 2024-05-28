@@ -43,7 +43,7 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
       if (getInvitation.hasUsed) {
-        throw new Error(STATUS_MESSAGE.INVITATION_HASUSED);
+        throw new Error(STATUS_MESSAGE.INVITATION_HAS_USED);
       }
       const { company } = await prisma.$transaction(async (tx) => {
         await tx.invitation.update({

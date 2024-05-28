@@ -13,8 +13,8 @@ interface IJournalItemProps {
 }
 
 const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
-  const { id, voucherIndex, metadatas, lineItems } = journal;
-  const { date, voucherType, description, project, companyName } = metadatas[0]; // Info: (20240517 - Julian) 取第一筆
+  const { id, voucherIndex, metaData, lineItems } = journal;
+  const { date, voucherType, description, project, companyName } = metaData[0]; // Info: (20240517 - Julian) 取第一筆
 
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
@@ -170,8 +170,8 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 };
 
 export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
-  const { id, metadatas, voucherIndex } = journal;
-  const { date, voucherType, description, payment } = metadatas[0]; // Info: (20240517 - Julian) 取第一筆
+  const { id, metaData, voucherIndex } = journal;
+  const { date, voucherType, description, payment } = metaData[0]; // Info: (20240517 - Julian) 取第一筆
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
   const displayedTypeMobile =
