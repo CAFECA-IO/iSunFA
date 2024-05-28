@@ -26,7 +26,6 @@ const MyReportsSection = () => {
   // eslint-disable-next-line no-unused-vars
   const { toastHandler, filterOptionsModalVisibilityHandler, filterOptionsGotFromModal } =
     useGlobalCtx();
-  const { companyId } = useAccountingCtx();
   const {
     data: pendingReports,
     code: listPendingCode,
