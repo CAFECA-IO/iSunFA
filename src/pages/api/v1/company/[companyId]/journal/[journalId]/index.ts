@@ -3,55 +3,66 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { convertStringToEventType, convertStringToPaymentPeriodType, convertStringToPaymentStatusType } from '@/lib/utils/type_guard/account';
+import {
+  convertStringToEventType,
+  convertStringToPaymentPeriodType,
+  convertStringToPaymentStatusType,
+} from '@/lib/utils/type_guard/account';
 import { IJournalData } from '@/interfaces/journal';
 
 type IJournalResponseFromPrisma = {
+  id: number;
+  tokenContract: string | null;
+  tokenId: string | null;
+  aichResultId: string | null;
+  projectId: number | null;
+  project: { name: string | null } | null;
+  contractId: number | null;
+  contract: { contractContent: { name: string | null } | null } | null;
+  ocr: {
     id: number;
-    tokenContract: string | null;
-    tokenId: string | null;
-    aichResultId: string | null;
-    projectId: number | null;
-    project: { name: string | null } | null;
-    contractId: number | null;
-    contract: { contractContent: { name: string | null } | null } | null;
-    ocr: { id: number; imageName: string; imageUrl: string; imageSize: number; createdAt: Date; updatedAt: Date; } | null,
-    invoice: {
-        id: number;
-        date: number;
-        paymentReason: string;
-        eventType: string;
-        description: string;
-        vendorOrSupplier: string;
-        payment: {
-          id: number,
-          isRevenue: boolean,
-          price: number,
-          hasTax: boolean,
-          taxPercentage: number,
-          hasFee: boolean,
-          fee: number,
-          paymentMethod: string,
-          paymentPeriod: string,
-          installmentPeriod: number,
-          paymentAlreadyDone: number,
-          paymentStatus: string,
-          progress: number
-        };
-    } | null,
-    voucher: {
-        id: number;
-        no: string;
-        lineItems: {
-            id: number;
-            amount: number;
-            debit: boolean;
-            description: string;
-            account: {
-                name: string;
-            }
-        }[]
-    } | null
+    imageName: string;
+    imageUrl: string;
+    imageSize: number;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
+  invoice: {
+    id: number;
+    date: number;
+    paymentReason: string;
+    eventType: string;
+    description: string;
+    vendorOrSupplier: string;
+    payment: {
+      id: number;
+      isRevenue: boolean;
+      price: number;
+      hasTax: boolean;
+      taxPercentage: number;
+      hasFee: boolean;
+      fee: number;
+      paymentMethod: string;
+      paymentPeriod: string;
+      installmentPeriod: number;
+      paymentAlreadyDone: number;
+      paymentStatus: string;
+      progress: number;
+    };
+  } | null;
+  voucher: {
+    id: number;
+    no: string;
+    lineItems: {
+      id: number;
+      amount: number;
+      debit: boolean;
+      description: string;
+      account: {
+        name: string;
+      };
+    }[];
+  } | null;
 };
 
 async function getJournal(journalId: number) {
@@ -88,10 +99,10 @@ async function getJournal(journalId: number) {
                 installmentPeriod: true,
                 paymentAlreadyDone: true,
                 paymentStatus: true,
-                progress: true
-              }
+                progress: true,
+              },
             },
-          }
+          },
         },
         voucher: {
           select: {
@@ -106,11 +117,11 @@ async function getJournal(journalId: number) {
                 account: {
                   select: {
                     name: true,
-                  }
-                }
-              }
-            }
-          }
+                  },
+                },
+              },
+            },
+          },
         },
         projectId: true,
         project: {
@@ -120,11 +131,11 @@ async function getJournal(journalId: number) {
         contract: {
           select: {
             contractContent: {
-              select: { name: true }
+              select: { name: true },
             },
           },
         },
-      }
+      },
     });
 
     if (!journal) {
@@ -142,6 +153,12 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
   const { projectId } = journalData;
   const contractName = journalData?.contract?.contractContent?.name;
   const { contractId } = journalData;
+  const createTimestamp = journalData.ocr
+    ? timestampInSeconds(journalData.ocr.createdAt.getTime())
+    : null;
+  const updateTimestamp = journalData.ocr
+    ? timestampInSeconds(journalData.ocr.updatedAt.getTime())
+    : null;
 
   return {
     id: journalData.id,
@@ -155,8 +172,8 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
       imageName: journalData.ocr.imageName,
       imageUrl: journalData.ocr.imageUrl,
       imageSize: journalData.ocr.imageSize,
-      createdAt: timestampInSeconds(journalData.ocr.createdAt.getTime()),
-      updatedAt: timestampInSeconds(journalData.ocr.updatedAt.getTime())
+      createdAt: createTimestamp as number,
+      updatedAt: updateTimestamp as number,
     },
     invoice: journalData.invoice && {
       journalId: journalData.id,
@@ -181,8 +198,8 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
         installmentPeriod: journalData.invoice.payment.installmentPeriod,
         paymentAlreadyDone: journalData.invoice.payment.paymentAlreadyDone,
         paymentStatus: convertStringToPaymentStatusType(journalData.invoice.payment.paymentStatus),
-        progress: journalData.invoice.payment.progress
-      }
+        progress: journalData.invoice.payment.progress,
+      },
     },
     voucher: journalData.voucher && {
       journalId: journalData.id,
@@ -192,10 +209,10 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
           amount: lineItem.amount,
           debit: lineItem.debit,
           account: lineItem.account.name,
-          description: lineItem.description
+          description: lineItem.description,
         };
       }),
-    }
+    },
   };
 }
 
@@ -203,23 +220,23 @@ function isJournalIdValid(journalId: string | string[] | undefined): journalId i
   return !!journalId && !Array.isArray(journalId) && typeof journalId === 'string';
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IJournalData>>) {
-      const { journalId } = req.query;
-      if (!isJournalIdValid(journalId)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const journalData = await getJournal(Number(journalId));
-      const journal = formatJournal(journalData);
-      const { httpCode, result } = formatApiResponse<IJournalData>(STATUS_MESSAGE.SUCCESS, journal);
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IJournalData>>
+) {
+  const { journalId } = req.query;
+  if (!isJournalIdValid(journalId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+  const journalData = await getJournal(Number(journalId));
+  const journal = formatJournal(journalData);
+  const { httpCode, result } = formatApiResponse<IJournalData>(STATUS_MESSAGE.SUCCESS, journal);
 
-      res.status(httpCode).json(result);
+  res.status(httpCode).json(result);
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IJournalData>(
-    message,
-    {} as IJournalData
-  );
+  const { httpCode, result } = formatApiResponse<IJournalData>(message, {} as IJournalData);
   res.status(httpCode).json(result);
 }
 

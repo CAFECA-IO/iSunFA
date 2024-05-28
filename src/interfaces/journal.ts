@@ -17,9 +17,9 @@ export interface IJournalData {
   aichResultId: string | null;
   projectId: number | null;
   contractId: number | null;
-  OCR: IOCR | null,
-  invoice: IInvoiceDataForSavingToDB | null,
-  voucher: IVoucherDataForSavingToDB | null
+  OCR: IOCR | null;
+  invoice: IInvoiceDataForSavingToDB | null;
+  voucher: IVoucherDataForSavingToDB | null;
 }
 
 export interface IUnprocessedJournal {

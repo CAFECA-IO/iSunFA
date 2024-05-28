@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IRole } from '@/interfaces/role';
 import prisma from '@/client';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -22,13 +23,30 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_role2',
+    },
+  });
+  if (!company) {
+    const now = Date.now();
+    const currentTimestamp = timestampInSeconds(now);
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_role2',
+        name: 'Test Company',
+        regional: 'TW',
+        startDate: currentTimestamp,
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp,
+      },
+    });
+  }
   const createdRole = await prisma.role.create({
     data: {
       company: {
-        create: {
-          name: 'Test Company',
-          code: 'TST',
-          regional: 'TW',
+        connect: {
+          id: company.id,
         },
       },
       name: 'KING',
