@@ -32,6 +32,9 @@ async function createOrFindCompanyInPrisma(companyId: number) {
           code: 'COMP123',
           name: 'Company Name',
           regional: 'Regional Name',
+          startDate: timestampInSeconds(Date.now()),
+          createdAt: timestampInSeconds(Date.now()),
+          updatedAt: timestampInSeconds(Date.now()),
         },
         select: { id: true },
       });
