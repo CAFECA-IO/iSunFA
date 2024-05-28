@@ -24,7 +24,8 @@ function isCompanyIdValid(companyId: string | string[] | undefined): companyId i
   if (Array.isArray(companyId)) {
     return false;
   }
-  const companyIdRegex = /d/;
+
+  const companyIdRegex = /^\d+$/;
   return companyIdRegex.test(companyId as string);
 }
 

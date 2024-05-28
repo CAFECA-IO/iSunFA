@@ -74,6 +74,10 @@ async function getJournals(
       skip: offset,
       take: limit,
       where: {
+        NOT: {
+          invoice: null,
+          voucher: null,
+        },
         companyId,
         createdAt: {
           gte: startDateInMilliSecond,
