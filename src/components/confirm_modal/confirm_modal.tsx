@@ -104,7 +104,7 @@ const ConfirmModal = ({
 
   const [eventType, setEventType] = useState<string>('');
   const [date, setDate] = useState<number>(0);
-  //const [reason, setReason] = useState<string>('');
+  // const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -120,7 +120,7 @@ const ConfirmModal = ({
 
   useEffect(() => {
     if (journalId !== undefined) {
-      getJournalById({ params: { companyId, journalId: journalId } });
+      getJournalById({ params: { companyId, journalId } });
     }
   }, [journalId]);
 
@@ -282,7 +282,7 @@ const ConfirmModal = ({
 
   const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
 
-  const projectName = project; //selectedJournal?.projectId ? `${selectedJournal.projectId}` : 'None'; // ToDo: (20240527 - Julian) Get project name from somewhere
+  const projectName = project; // selectedJournal?.projectId ? `${selectedJournal.projectId}` : 'None'; // ToDo: (20240527 - Julian) Get project name from somewhere
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = projectName.split(' ').reduce((acc, word) => acc + word[0], '');
 
