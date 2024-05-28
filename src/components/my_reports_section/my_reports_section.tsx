@@ -20,7 +20,10 @@ import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 
 const MyReportsSection = () => {
-  const { toastHandler, filterOptionsModalVisibilityHandler } = useGlobalCtx();
+  // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
+  // eslint-disable-next-line no-unused-vars
+  const { toastHandler, filterOptionsModalVisibilityHandler, filterOptionsGotFromModal } =
+    useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
     data: pendingReports,
@@ -51,6 +54,10 @@ const MyReportsSection = () => {
 
   const pendingTotalPages = 1;
   const historyTotalPages = 1;
+
+  // Deprecated: (20240531 - Shirley)
+  // eslint-disable-next-line no-console
+  console.log('filterOptionsGotFromModal in MyReportsSection', filterOptionsGotFromModal);
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports) {
@@ -421,7 +428,11 @@ const MyReportsSection = () => {
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedHistorySearchBar}
         </div>
-        <Button className="px-3 py-3" variant={'secondaryOutline'}>
+        <Button
+          onClick={filterOptionsModalVisibilityHandler}
+          className="px-3 py-3"
+          variant={'secondaryOutline'}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"

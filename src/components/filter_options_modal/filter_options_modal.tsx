@@ -1,26 +1,23 @@
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
+import { IFilterOptions } from '@/interfaces/modals';
 import { AllReportTypesKey, AllReportTypesOptions } from '@/interfaces/report_type';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import React, { useEffect } from 'react';
 import useStateRef from 'react-usestateref';
 
-interface IFilterOptionsModal {
+interface IFilterOptionsModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  getFilterOptions?: (
-    period: { startTimeStamp: number; endTimeStamp: number },
-    sort: SortOptions,
-    selectedReportType: AllReportTypesKey
-  ) => void;
+  getFilterOptions?: (filterOptions: IFilterOptions) => void; // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
 }
 
 const FilterOptionsModal = ({
   isModalVisible,
   modalVisibilityHandler,
   getFilterOptions = () => {},
-}: IFilterOptionsModal) => {
+}: IFilterOptionsModalProps) => {
   const [period, setPeriod, periodRef] = useStateRef(default30DayPeriodInSec);
   const [sort, setSort, sortRef] = useStateRef<SortOptions>(SortOptions.newest);
   const [selectedReportType, setSelectedReportType, selectedReportTypeRef] = useStateRef<
@@ -53,12 +50,19 @@ const FilterOptionsModal = ({
 
   useEffect(() => {
     if (!isModalVisible) {
+      // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
+      if (getFilterOptions) {
+        getFilterOptions({
+          period: periodRef.current,
+          sort: sortRef.current,
+          selectedReportType: selectedReportTypeRef.current,
+        });
+      }
+
+      // Info: 關掉 modal 後把資料清空 (20240528 - Shirley)
       setPeriod(default30DayPeriodInSec);
       setSort(SortOptions.newest);
       setSelectedReportType(AllReportTypesKey.all as keyof typeof AllReportTypesOptions);
-      if (getFilterOptions) {
-        getFilterOptions(periodRef.current, sortRef.current, selectedReportTypeRef.current);
-      }
     }
   }, [isModalVisible]);
 
@@ -156,12 +160,12 @@ const FilterOptionsModal = ({
   );
 
   const isDisplayedModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-start rounded-md bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
-        {/* // <div className="flex max-w-[288px] flex-col rounded-xl border border-solid border-gray-300 bg-white shadow-xl"> */}
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="relative mx-auto flex flex-col items-center rounded-md bg-white pb-6 pt-3 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="flex w-full justify-between whitespace-nowrap bg-white px-5 py-4 text-xl font-bold leading-8 text-card-text-primary">
           <div className="flex-1">Filter</div>
 
+          {/* Info: close button (20240528 - Shirley) */}
           <Button
             onClick={modalVisibilityHandler}
             className="p-0 text-icon-surface-single-color-primary hover:text-icon-surface-single-color-primary"
@@ -192,56 +196,30 @@ const FilterOptionsModal = ({
             </svg>
           </Button>
         </div>
-        <div className="flex w-full flex-col bg-white p-5 text-base font-medium leading-6 tracking-normal text-slate-500">
+        <div className="flex w-full flex-col space-y-5 bg-white p-5 text-base font-medium leading-6 tracking-normal">
           <DatePicker
             type={DatePickerType.CHOOSE_PERIOD}
             period={period}
             setFilteredPeriod={setPeriod}
           />
-          {/* <div className="flex justify-between gap-5 rounded-xl border border-solid border-slate-300 bg-white px-3 py-2.5 shadow-sm">
-            <div>Start Date - End Date</div>
-            <img
-              loading="lazy"
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/b8900d6a8eb773a7c86fd5f42c8e84dc8416c92dde9acc782fb89588c47edd9d?apiKey=75cc332beefd4dcaaf41766f866c3d3e&"
-              className="my-auto aspect-square w-5 shrink-0"
-            />
-          </div> */}
 
           <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+            <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
               Type{' '}
             </div>
-            {/* Info: sort menu (20240513 - Shirley) */}
+            {/* Info: type menu (20240513 - Shirley) */}
             {displayedTypeMenu}
           </div>
-          {/* <div className="mt-2 flex justify-between gap-5 whitespace-nowrap rounded-xl border border-solid border-slate-300 bg-white px-3 py-2.5 shadow-sm">
-            <div>All</div>
-            <img
-              loading="lazy"
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/572e02dcc6b9b487a917fb0aba7aae71712fa4990066c30acaa40cf61f01c018?apiKey=75cc332beefd4dcaaf41766f866c3d3e&"
-              className="my-auto aspect-square w-5 shrink-0"
-            />
-          </div> */}
+
           <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+            <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
               Sort by
             </div>
             {/* Info: sort menu (20240513 - Shirley) */}
             {displayedSortMenu}
           </div>
-          {/* <div className="mt-2 text-sm font-semibold leading-5 tracking-normal text-card-text-primary">
-            Sort by
-          </div>
-          <div className="mt-2 flex justify-between gap-5 whitespace-nowrap rounded-xl border border-solid border-slate-300 bg-white px-3 py-2.5 shadow-sm">
-            <div>Newest</div>
-            <img
-              loading="lazy"
-              src="https://cdn.builder.io/api/v1/image/assets/TEMP/572e02dcc6b9b487a917fb0aba7aae71712fa4990066c30acaa40cf61f01c018?apiKey=75cc332beefd4dcaaf41766f866c3d3e&"
-              className="my-auto aspect-square w-5 shrink-0"
-            />
-          </div> */}
         </div>
-        <div className="min-h-30px w-full bg-white" />
+        <div className="h-10px w-full bg-white" />
       </div>
     </div>
   ) : null;
