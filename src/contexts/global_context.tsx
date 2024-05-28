@@ -32,6 +32,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from './user_context';
 import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
+import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 
 interface IGlobalContext {
   width: number;
@@ -81,6 +82,9 @@ interface IGlobalContext {
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
+
+  isFilterOptionsModalVisible: boolean;
+  filterOptionsModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -127,6 +131,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isCreateCompanyModalVisible, setIsCreateCompanyModalVisible] = useState(false);
 
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
+
+  const [isFilterOptionsModalVisible, setIsFilterOptionsModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -191,6 +197,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const loadingModalVisibilityHandler = () => {
     setIsLoadingModalVisible(!isLoadingModalVisible);
+  };
+
+  const filterOptionsModalVisibilityHandler = () => {
+    setIsFilterOptionsModalVisible(!isFilterOptionsModalVisible);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -381,6 +391,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     loadingModalVisibilityHandler,
     toastHandler,
     eliminateToast,
+    isFilterOptionsModalVisible,
+    filterOptionsModalVisibilityHandler,
   };
 
   return (
@@ -449,6 +461,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       />
 
       <Toast />
+
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalVisible}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandler}
+      />
+
       {children}
     </GlobalContext.Provider>
   );

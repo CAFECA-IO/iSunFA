@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
@@ -19,13 +19,8 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 
-enum SortingType {
-  NEWEST = 'Newest',
-  OLDEST = 'Oldest',
-}
-
 const MyReportsSection = () => {
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler, filterOptionsModalVisibilityHandler } = useGlobalCtx();
   const { companyId } = useAccountingCtx();
   const {
     data: pendingReports,
@@ -39,7 +34,7 @@ const MyReportsSection = () => {
   } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, { params: { companyId } });
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
-  const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
+  const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
@@ -47,7 +42,7 @@ const MyReportsSection = () => {
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
-  const [filteredHistorySort, setFilteredHistorySort] = useState<SortingType>(SortingType.NEWEST);
+  const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
@@ -145,7 +140,7 @@ const MyReportsSection = () => {
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isPendingSortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {Object.values(SortingType).map((sorting: SortingType) => (
+          {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
@@ -219,7 +214,11 @@ const MyReportsSection = () => {
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedPendingSearchBar}
         </div>
-        <Button className="px-3 py-3" variant={'secondaryOutline'}>
+        <Button
+          onClick={filterOptionsModalVisibilityHandler}
+          className="px-3 py-3"
+          variant={'secondaryOutline'}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -348,7 +347,7 @@ const MyReportsSection = () => {
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {Object.values(SortingType).map((sorting: SortingType) => (
+          {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
