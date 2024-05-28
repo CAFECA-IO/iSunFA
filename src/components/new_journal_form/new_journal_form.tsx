@@ -84,7 +84,12 @@ const NewJournalForm = () => {
     data: invoiceReturn,
     success: createSuccess,
     code: createCode,
-  } = APIHandler<{ journalId: number, resultStatus: IAccountResultStatus }>(APIName.INVOICE_CREATE, {}, false, false);
+  } = APIHandler<{ journalId: number; resultStatus: IAccountResultStatus }>(
+    APIName.INVOICE_CREATE,
+    {},
+    false,
+    false
+  );
 
   // Info: (20240527 - Murky) To Emily Invoice改這邊
   const result = invoiceReturn?.resultStatus;
@@ -102,12 +107,7 @@ const NewJournalForm = () => {
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ lineItem: ILineItem[] }>(
-    APIName.AI_ASK_RESULT,
-    {},
-    false,
-    false
-  );
+  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -224,11 +224,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-        projectSelection[0]
+          projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-        contractSelection[0]
+          contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -467,9 +467,9 @@ const NewJournalForm = () => {
   }, [createSuccess, result, createCode]);
 
   useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
     if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      loadingModalVisibilityHandler();
-      setTimeout(() => {
+      interval = setInterval(() => {
         getAIStatus({
           params: {
             companyId,
@@ -516,7 +516,18 @@ const NewJournalForm = () => {
         });
       }
     }
+    return () => clearInterval(interval);
   }, [result, statusSuccess, status]);
+
+  useEffect(() => {
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      loadingModalVisibilityHandler();
+    }
+    if (status === ProgressStatus.SUCCESS) {
+      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
+      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
+    }
+  }, [statusSuccess, status]);
 
   useEffect(() => {
     if (AIResultSuccess && AIResult) {
