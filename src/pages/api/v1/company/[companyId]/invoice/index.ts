@@ -96,9 +96,7 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?:unkno
 
 async function findUniqueJournalInPrisma(journalId: number) {
   const journal = await prisma.journal.findUnique({
-    where: {
-      id: journalId,
-    },
+    where: { id: journalId },
     select: {
       id: true,
       ocrId: true,
