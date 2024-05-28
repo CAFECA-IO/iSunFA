@@ -194,7 +194,7 @@ const MyReportsSection = () => {
   const displayedPendingFilterOptionsSection = (
     <div>
       {/* Info: 電腦版排版 (20240527 - Shirley) */}
-      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:flex lg:space-x-5">
+      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             Sort by
@@ -401,7 +401,7 @@ const MyReportsSection = () => {
   const displayedHistoryFilterOptionsSection = (
     <div>
       {/* Info: 電腦版排版 (20240527 - Shirley) */}
-      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:flex lg:space-x-5">
+      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             Sort by
@@ -554,7 +554,8 @@ const MyReportsSection = () => {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
+          {/* Info: Divider beneath Heading (20240528 - Shirley) */}
+          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:px-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
             </div>
@@ -563,7 +564,7 @@ const MyReportsSection = () => {
       </div>
 
       {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
-      <div className="mx-2 mt-5 flex flex-col pl-20 pr-5 max-md:mt-0 max-md:max-w-full max-md:pl-5 lg:mx-10">
+      <div className="mx-2 mt-5 flex flex-col px-2 max-md:mt-0 max-md:max-w-full sm:px-14 lg:mx-10 lg:pl-20 lg:pr-5">
         {displayedPendingFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
@@ -591,14 +592,14 @@ const MyReportsSection = () => {
             <div>Pending</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
         {displayedPendingDataSection}
       </div>
 
       {/* Info: ----- reports history (20240513 - Shirley) ----- */}
-      <div className="mx-2 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5 lg:mx-10">
+      <div className="mx-2 mt-10 flex flex-col px-2 max-md:max-w-full sm:px-14 lg:mx-10 lg:mt-0 lg:pl-20 lg:pr-5">
         {displayedHistoryFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
@@ -622,7 +623,7 @@ const MyReportsSection = () => {
             <div>Reports History</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
         {displayedHistoryDataSection}

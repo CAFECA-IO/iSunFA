@@ -63,6 +63,8 @@ const FilterOptionsModal = ({
       setPeriod(default30DayPeriodInSec);
       setSort(SortOptions.newest);
       setSelectedReportType(AllReportTypesKey.all as keyof typeof AllReportTypesOptions);
+      setIsTypeMenuSelected(false);
+      setIsSortSelected(false);
     }
   }, [isModalVisible]);
 
@@ -73,7 +75,7 @@ const FilterOptionsModal = ({
       className={`group relative flex h-44px w-300px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeMenuSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
       >
         {AllReportTypesOptions[selectedReportType as keyof typeof AllReportTypesOptions]}
       </p>
@@ -120,7 +122,7 @@ const FilterOptionsModal = ({
       className={`group relative flex h-44px w-200px cursor-pointer ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isSortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isSortSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
       >
         {sort}
       </p>
