@@ -20,6 +20,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 
 const MyReportsSection = () => {
+  // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
   const { toastHandler, filterOptionsModalVisibilityHandler, filterOptionsGotFromModal } =
@@ -248,7 +249,7 @@ const MyReportsSection = () => {
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
-    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
+    <div className="mx-0 mt-0 flex flex-col pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
       {' '}
       <PendingReportList reports={pendingData} />
       <div className="mt-4 flex justify-center">

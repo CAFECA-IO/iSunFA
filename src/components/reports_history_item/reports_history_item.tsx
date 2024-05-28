@@ -58,7 +58,6 @@ const ReportsHistoryItem = ({
           />
         </td>
       ) : null}
-
       <td className="border-x border-lightGray6">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdTimestamp} />

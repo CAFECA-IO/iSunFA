@@ -275,9 +275,9 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
             {displayedCheckbox}
             <th className="text-center">Date</th>
             <th className="px-16px">Report Name</th>
-            <th className="px-16px">Period</th>
-            <th className="px-16px">Remaining Time</th>
-            <th className="px-16px">Operations</th>
+            <th className="hidden px-16px lg:table-cell">Period</th>
+            <th className="hidden px-16px lg:table-cell">Remaining Time</th>
+            <th className="hidden px-16px lg:table-cell">Operations</th>
           </tr>
         </thead>
 
