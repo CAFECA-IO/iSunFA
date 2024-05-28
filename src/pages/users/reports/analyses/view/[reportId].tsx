@@ -8,10 +8,11 @@ import React, { useEffect } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
 import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -35,7 +36,7 @@ const ViewAnalysisReportPage = ({
   endTimestamp,
 }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const [reportData, setReportData] = React.useState<{
     reportTypesName: {
       name: string;
@@ -65,7 +66,9 @@ const ViewAnalysisReportPage = ({
     tokenId: string;
     reportLink: string;
   }>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
-    params: { params: { companyId, reportId: '1' } },
+    params: {
+      params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId: '1' },
+    },
     query: { reportType, reportLanguage, startTimestamp, endTimestamp },
   });
 

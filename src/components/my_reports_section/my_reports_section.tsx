@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
@@ -15,9 +15,9 @@ import Pagination from '@/components/pagination/pagination';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
+import { useUserCtx } from '@/contexts/user_context';
 
 enum SortingType {
   NEWEST = 'Newest',
@@ -26,17 +26,21 @@ enum SortingType {
 
 const MyReportsSection = () => {
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, { params: { companyId } });
+  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+  });
   const {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, { params: { companyId } });
+  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+  });
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);

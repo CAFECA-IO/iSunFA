@@ -15,8 +15,9 @@ import React, { useEffect } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 interface IServerSideProps {
   reportId: string;
@@ -52,7 +53,7 @@ const DUMMY_DATA_FOR_REPORT = {
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const [reportData, setReportData] = React.useState<{
     reportTypesName: {
       name: string;
@@ -84,7 +85,9 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     tokenContract: string;
     tokenId: string;
     reportLink: string;
-  }>(APIName.REPORT_FINANCIAL_GET_BY_ID, { params: { companyId, reportId } });
+  }>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId },
+  });
 
   useEffect(() => {
     if (getFRSuccess === false) {

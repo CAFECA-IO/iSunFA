@@ -6,13 +6,13 @@ import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
-import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
+import { useUserCtx } from '@/contexts/user_context';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -198,7 +198,7 @@ const LaborCostChart = () => {
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     trigger: getLaborCostChartData,
     data: laborCostData,
@@ -209,7 +209,7 @@ const LaborCostChart = () => {
     APIName.LABOR_COST_CHART,
     {
       params: {
-        companyId,
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
@@ -255,7 +255,7 @@ const LaborCostChart = () => {
   useEffect(() => {
     getLaborCostChartData({
       params: {
-        companyId,
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
