@@ -32,6 +32,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from './user_context';
 import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
+import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 
 interface IGlobalContext {
   width: number;
@@ -56,6 +57,8 @@ interface IGlobalContext {
 
   isConfirmModalVisible: boolean;
   confirmModalVisibilityHandler: () => void;
+  confirmModalData: IConfirmModal;
+  confirmModalDataHandler: (data: IConfirmModal) => void;
 
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
@@ -110,6 +113,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
 
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
 
@@ -160,6 +164,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const confirmModalVisibilityHandler = () => {
     setIsConfirmModalVisible(!isConfirmModalVisible);
+  };
+
+  const confirmModalDataHandler = (data: IConfirmModal) => {
+    setConfirmModalData(data);
   };
 
   const addAssetModalVisibilityHandler = () => {
@@ -364,6 +372,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     messageModalDataHandler,
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
+    confirmModalData,
+    confirmModalDataHandler,
     isAddAssetModalVisible,
     addAssetModalVisibilityHandler,
     isCameraScannerVisible,
@@ -409,6 +419,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ConfirmModal
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
+        confirmData={confirmModalData}
       />
 
       <AddAssetModal
