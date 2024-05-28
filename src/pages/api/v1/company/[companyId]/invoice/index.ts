@@ -155,15 +155,9 @@ async function journalSaveToPrisma(
 }
 
 function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
-  if (
-    Array.isArray(companyId) ||
-    !companyId ||
-    typeof companyId !== 'string' ||
-    !Number.isInteger(Number(companyId))
-  ) {
-    return false;
-  }
-  return true;
+  const companyString = companyId as string;
+  const result = /d/.test(companyString);
+  return result;
 }
 
 // Info Murky (20240416): Body傳進來會是any
