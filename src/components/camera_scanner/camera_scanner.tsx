@@ -16,6 +16,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { Button } from '@/components/button/button';
 import { MessageType } from '@/interfaces/message_modal';
 import { ProgressStatus } from '@/constants/account';
+import { useUserCtx } from '@/contexts/user_context';
 
 // Info: (20240506 - Julian) const
 const PHOTO_WIDTH = 320;
@@ -33,7 +34,8 @@ enum ScannerStep {
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { companyId, setInvoiceIdHandler } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
+  const { setInvoiceIdHandler } = useAccountingCtx();
   const {
     trigger: uploadInvoice,
     data: results,
@@ -83,7 +85,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
 
   // Info: (20240506 - Julian) 取得攝影機畫面
   const getCameraVideo = () => {
-    if (!isModalVisible) return;
+    if (!isModalVisible || !selectedCompany) return;
     navigator.mediaDevices
       .getUserMedia({
         video: {
@@ -135,7 +137,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
-    uploadInvoice({ params: { companyId }, body: formData });
+
+    uploadInvoice({ params: { companyId: selectedCompany!.id }, body: formData });
 
     // Info: (20240506 - Julian) 關閉攝影機
     handleCloseCamera();
@@ -149,17 +152,17 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   };
 
   useEffect(() => {
-    if (!isModalVisible) return; // Info: 在 modal 隱藏時，不做任何事情 (20240523 - Shirley)
+    if (!isModalVisible || !selectedCompany) return; // Info: 在 modal 隱藏時，不做任何事情 (20240523 - Shirley)
 
     // Info: (20240522 - Julian) 清空 invoiceId
     setInvoiceIdHandler(undefined);
 
-    if (isModalVisible) {
+    if (isModalVisible && selectedCompany) {
       // Info: (20240506 - Julian) 版面重啟時，將步驟設定為相機模式，並開啟攝影機
       setCurrentStep(ScannerStep.Camera);
       getCameraVideo();
     }
-  }, [isModalVisible]);
+  }, [isModalVisible, selectedCompany]);
 
   useEffect(() => {
     if (uploadSuccess && results) {
@@ -398,32 +401,33 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     </div>
   );
 
-  const isDisplayScanner = isModalVisible ? (
-    <div className="fixed inset-0 left-0 top-0 z-70 flex h-full w-full items-center justify-center bg-black/50">
-      <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-white py-16px text-navyBlue2">
-        {/* Info: (20240506 - Julian) title */}
-        <div className="flex flex-col items-center">
-          <h1 className="text-xl font-bold">{titleStr}</h1>
-          <p className="text-xs text-lightGray5">{subTitleStr}</p>
-        </div>
-        {/* Info: (20240506 - Julian) close button */}
-        <button
-          type="button"
-          onClick={handleCloseCamera}
-          className="absolute right-12px top-12px text-lightGray5"
-        >
-          <RxCross2 size={20} />
-        </button>
-        {/* Info: (20240506 - Julian) camera */}
-        {displayCamera}
-        {/* Info: (20240506 - Julian) function buttons */}
-        <div className="flex w-full flex-col items-center gap-32px">
-          {displayMainBtn}
-          {displayFunctionBtn}
+  const isDisplayScanner =
+    selectedCompany && isModalVisible ? (
+      <div className="fixed inset-0 left-0 top-0 z-70 flex h-full w-full items-center justify-center bg-black/50">
+        <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-white py-16px text-navyBlue2">
+          {/* Info: (20240506 - Julian) title */}
+          <div className="flex flex-col items-center">
+            <h1 className="text-xl font-bold">{titleStr}</h1>
+            <p className="text-xs text-lightGray5">{subTitleStr}</p>
+          </div>
+          {/* Info: (20240506 - Julian) close button */}
+          <button
+            type="button"
+            onClick={handleCloseCamera}
+            className="absolute right-12px top-12px text-lightGray5"
+          >
+            <RxCross2 size={20} />
+          </button>
+          {/* Info: (20240506 - Julian) camera */}
+          {displayCamera}
+          {/* Info: (20240506 - Julian) function buttons */}
+          <div className="flex w-full flex-col items-center gap-32px">
+            {displayMainBtn}
+            {displayFunctionBtn}
+          </div>
         </div>
       </div>
-    </div>
-  ) : null;
+    ) : null;
 
   return isDisplayScanner;
 };

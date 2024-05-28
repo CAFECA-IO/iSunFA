@@ -10,6 +10,30 @@ export interface IAnalysisReportRequest {
   end_date: Date;
 }
 
+export interface IReport {
+  reportTypesName: {
+    id: FinancialReportTypesKey | AnalysisReportTypesKey;
+    name: string;
+  };
+  tokenContract: string;
+  tokenId: string;
+  reportLink: string;
+}
+
+// export interface IFinancialReport extends IReport {
+//   reportTypesName: {
+//     id: FinancialReportTypesKey;
+//     name: string;
+//   };
+// }
+
+// export interface IAnalysisReport extends IReport {
+//   reportTypesName: {
+//     id: AnalysisReportTypesKey;
+//     name: string;
+//   };
+// }
+
 export type IAnalysisReport = string | null;
 
 export type IFinancialReport = string | null;

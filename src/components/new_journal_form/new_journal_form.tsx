@@ -16,7 +16,11 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+  radioButtonStyle,
+} from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
@@ -24,6 +28,7 @@ import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { IJournalData } from '@/interfaces/journal';
 import { ILineItem } from '@/interfaces/line_item';
+import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -57,13 +62,10 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     loadingModalVisibilityHandler,
   } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
 
-  const {
-    companyId,
-    selectedUnprocessedJournal,
-    selectUnprocessedJournalHandler,
-    selectJournalHandler,
-  } = useAccountingCtx();
+  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
+    useAccountingCtx();
 
   const {
     trigger: getJournalById,
@@ -146,7 +148,12 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (selectedUnprocessedJournal !== undefined) {
-      getJournalById({ params: { companyId, journalId: selectedUnprocessedJournal.id } });
+      getJournalById({
+        params: {
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          journalId: selectedUnprocessedJournal.id,
+        },
+      });
     }
   }, [selectedUnprocessedJournal]);
 
@@ -154,7 +161,12 @@ const NewJournalForm = () => {
     if (selectedUnprocessedJournal && getJournalSuccess && journal) {
       selectJournalHandler(journal);
       if (journal.invoice === null) {
-        getOCRResult({ params: { companyId, resultId: selectedUnprocessedJournal.aichResultId } }); // selectedUnprocessedJournal.aichResultId
+        getOCRResult({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            resultId: selectedUnprocessedJournal.aichResultId,
+          },
+        }); // selectedUnprocessedJournal.aichResultId
       } else {
         const { invoice } = journal;
         // Info: update form data with journal data (20240524 - tzuhan)
@@ -442,7 +454,10 @@ const NewJournalForm = () => {
       },
     };
 
-    createInvoice({ params: { companyId }, body: { invoice: invoiceData } });
+    createInvoice({
+      params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+      body: { invoice: invoiceData },
+    });
   };
 
   useEffect(() => {
@@ -450,7 +465,7 @@ const NewJournalForm = () => {
       const { resultId } = result;
       getAIStatus({
         params: {
-          companyId,
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
           resultId,
         },
       });
@@ -472,7 +487,7 @@ const NewJournalForm = () => {
       setTimeout(() => {
         getAIStatus({
           params: {
-            companyId,
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
             resultId: result.resultId,
           },
         });
@@ -506,11 +521,16 @@ const NewJournalForm = () => {
     }
     if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
       if (journal?.id) {
-        getJournalById({ params: { companyId, journalId: journal?.id } });
+        getJournalById({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            journalId: journal?.id,
+          },
+        });
       } else {
         getAIResult({
           params: {
-            companyId,
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
             resultId: result.resultId,
           },
         });
@@ -520,7 +540,9 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId } });
+      getJournalById({
+        params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
+      });
     }
     if (AIResultSuccess === false) {
       messageModalDataHandler({
