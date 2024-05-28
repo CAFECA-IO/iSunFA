@@ -25,13 +25,13 @@ beforeEach(async () => {
 
   let company = await prisma.company.findFirst({
     where: {
-      code: 'TST',
+      code: 'TST_role2',
     },
   });
   if (!company) {
     company = await prisma.company.create({
       data: {
-        code: 'TST',
+        code: 'TST_role2',
         name: 'Test Company',
         regional: 'TW',
         startDate: timestampInSeconds(Date.now()),

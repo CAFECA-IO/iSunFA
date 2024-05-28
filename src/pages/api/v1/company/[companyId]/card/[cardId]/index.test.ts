@@ -24,13 +24,13 @@ beforeEach(async () => {
   } as unknown as jest.Mocked<NextApiResponse>;
   let company = await prisma.company.findFirst({
     where: {
-      code: 'TST',
+      code: 'TST_card2',
     },
   });
   if (!company) {
     company = await prisma.company.create({
       data: {
-        code: 'TST',
+        code: 'TST_card2',
         name: 'Test Company',
         regional: 'TW',
         startDate: timestampInSeconds(Date.now()),
@@ -54,7 +54,7 @@ beforeEach(async () => {
       },
     },
   });
-  companyId = card.companyId;
+  companyId = company.id;
 });
 
 afterEach(async () => {

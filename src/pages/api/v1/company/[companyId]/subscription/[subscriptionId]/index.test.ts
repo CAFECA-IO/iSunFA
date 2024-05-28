@@ -34,7 +34,7 @@ beforeEach(async () => {
   if (!company) {
     company = await prisma.company.create({
       data: {
-        code: 'TST',
+        code: 'TST_subscription1',
         name: 'Test Company',
         regional: 'TW',
         startDate: timestampInSeconds(Date.now()),
