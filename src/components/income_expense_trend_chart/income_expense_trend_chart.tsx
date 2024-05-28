@@ -1,4 +1,3 @@
-/* eslint-disable */
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import React, { useEffect } from 'react';
@@ -6,7 +5,6 @@ import Tooltip from '@/components/tooltip/tooltip';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { Period } from '@/interfaces/chart_unit';
 import {
   DUMMY_INCOME_EXPENSE_TREND_CHART_DATA,
@@ -15,7 +13,6 @@ import {
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 
@@ -179,6 +176,7 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`,
       },
       y: {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         formatter: (value, { series, seriesIndex, dataPointIndex }) => {
           const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
           const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
