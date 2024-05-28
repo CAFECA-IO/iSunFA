@@ -29,7 +29,7 @@ beforeEach(async () => {
 
   let company = await prisma.company.findFirst({
     where: {
-      code: 'TST',
+      code: 'TST_subscription2',
     },
   });
   if (!company) {
