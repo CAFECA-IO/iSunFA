@@ -40,7 +40,7 @@ const AnalysesReportsPage = () => {
           <ReportsSidebar />
         </div>
 
-        <div className="h-1300px overflow-x-hidden bg-surface-neutral-main-background md:h-1300px">
+        <div className="h-1200px overflow-x-hidden bg-surface-neutral-main-background lg:h-1200px">
           <AnalysisReportSection />
         </div>
       </div>

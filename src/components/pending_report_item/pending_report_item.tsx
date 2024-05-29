@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { countdown, timestampToString } from '@/lib/utils/common';
+import { countdown, timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
@@ -76,6 +76,7 @@ const PendingReportItem = ({
       submitBtnStr: 'Yes, Delete it',
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
+      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };
@@ -155,7 +156,7 @@ const PendingReportItem = ({
 
   const displayedOperationsColumn =
     remainingTime > 0 ? (
-      <>
+      <div className="flex w-full justify-start space-x-2 md:space-x-10 lg:space-x-2">
         {/* Info: Pause / Resume (20240514 - Shirley) */}
         {displayedPauseOrResumeButton}
         {/* Info: Delete (20240514 - Shirley) */}
@@ -181,7 +182,7 @@ const PendingReportItem = ({
         </Button>
         {/* Info: Loading (20240514 - Shirley) */}
         <div className="">{displayedSpinner}</div>
-      </>
+      </div>
     ) : null;
 
   const displayedEstimatedTime =
@@ -228,8 +229,19 @@ const PendingReportItem = ({
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdTimestamp} />
       </td>
-      <td className="pl-5 text-start text-base text-text-neutral-primary">{name}</td>
-      <td className="px-16px text-left font-medium text-navyBlue2">
+      <td className="pl-5 text-start text-base text-text-neutral-primary">
+        {/* Info: desktop (20240528 - Shirley) */}
+        <p className="hidden lg:flex">{name}</p>
+
+        {/* Info: mobile (20240528 - Shirley) */}
+        <div className="flex flex-col space-y-5 lg:hidden">
+          <p className="text-ellipsis sm:hidden">{truncateString(name, 16)}</p>
+          <p className="hidden text-ellipsis sm:flex">{name}</p>
+
+          <div className="flex items-center justify-start">{displayedOperationsColumn}</div>
+        </div>
+      </td>
+      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">From</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
@@ -238,14 +250,14 @@ const PendingReportItem = ({
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
-      <td className="px-16px text-left font-medium text-navyBlue2">
+      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">Estimated</span>
           {displayedEstimatedTime}
         </div>
       </td>
       {/* Info: Operations (20240514 - Shirley) */}
-      <td className="px-16px">
+      <td className="hidden px-16px lg:table-cell">
         <div className="flex items-center">{displayedOperationsColumn}</div>
       </td>
     </tr>

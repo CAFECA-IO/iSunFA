@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { IJournal } from '@/interfaces/journal';
+// import { IJournal } from '@/interfaces/journal';
+import { IDummyJournal } from '@/interfaces/journal';
 import JournalItem, { JournalItemMobile } from '@/components/journal_item/journal_item';
 import { checkboxStyle } from '@/constants/display';
 
-const JournalList = ({ journals }: { journals: IJournal[] }) => {
+const JournalList = ({ journals }: { journals: IDummyJournal[] }) => {
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [isCheckAll, setIsCheckAll] = useState<boolean>(false);
 
@@ -29,20 +30,20 @@ const JournalList = ({ journals }: { journals: IJournal[] }) => {
       return;
     }
     // Info: (20240517 - Julian) 反之就把所有 journal 加進 checkedItems
-    setCheckedItems(journals.map((journal) => journal.voucherIndex));
+    setCheckedItems(journals.map((journal) => `${journal.voucherId}`));
   };
 
   const displayedList = journals.map((journal) => (
     <JournalItem
       journal={journal}
-      isChecked={checkedItems.includes(journal.voucherIndex)}
+      isChecked={checkedItems.includes(`${journal.voucherId}`)}
       checkHandler={checkHandler}
     />
   ));
   const displayedListMobile = journals.map((journal) => (
     <JournalItemMobile
       journal={journal}
-      isChecked={checkedItems.includes(journal.voucherIndex)}
+      isChecked={checkedItems.includes(`${journal.voucherId}`)}
       checkHandler={checkHandler}
     />
   ));

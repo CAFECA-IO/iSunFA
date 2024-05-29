@@ -4,16 +4,15 @@ import { FaPlus } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
+import { IDummyJournal } from '@/interfaces/journal';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { Button } from '../button/button';
@@ -24,7 +23,6 @@ enum JournalListSubTab {
 }
 
 const JournalListTab = () => {
-  const { companyId } = useAccountingCtx();
   const { selectedCompany } = useUserCtx();
   const {
     isLoading,
@@ -32,8 +30,9 @@ const JournalListTab = () => {
     code,
     error,
     data: journals,
-  } = APIHandler<IJournal[]>(APIName.JOURNAL_LIST, {
-    params: { companyId },
+    // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
+  } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
   });
 
   const {

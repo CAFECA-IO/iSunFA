@@ -15,8 +15,10 @@ import React, { useEffect } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { IReport } from '@/interfaces/report';
 
 interface IServerSideProps {
   reportId: string;
@@ -52,16 +54,8 @@ const DUMMY_DATA_FOR_REPORT = {
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
-  const [reportData, setReportData] = React.useState<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>({
+  const { selectedCompany } = useUserCtx();
+  const [reportData, setReportData] = React.useState<IReport>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },
@@ -76,15 +70,9 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     data: reportFinancial,
     code: getFRCode,
     success: getFRSuccess,
-  } = APIHandler<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>(APIName.REPORT_FINANCIAL_GET_BY_ID, { params: { companyId, reportId } });
+  } = APIHandler<IReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId },
+  });
 
   useEffect(() => {
     if (getFRSuccess === false) {
@@ -141,7 +129,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           <ReportsSidebar />
         </div>
 
-        <div className="h-screen bg-surface-neutral-main-background">
+        <div className="h-1400px bg-surface-neutral-main-background">
           <ViewFinancialSection
             reportTypesName={
               reportData.reportTypesName as {

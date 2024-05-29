@@ -1,6 +1,6 @@
 import { IGeneratedReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { timestampToString } from '@/lib/utils/common';
+import { timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import Link from 'next/link';
 import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
@@ -58,19 +58,45 @@ const ReportsHistoryItem = ({
           />
         </td>
       ) : null}
-
       <td className="border-x border-lightGray6">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdTimestamp} />
       </td>
+      {/* Info: report name (20240528 - Shirley) */}
       <td className="pl-5 text-start text-base text-text-neutral-primary">
-        <Link
-          href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
-        >
-          {name}
-        </Link>
+        <div className="flex w-full flex-col justify-start">
+          <Link
+            className="hidden lg:flex"
+            href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
+          >
+            {name}
+          </Link>
+
+          <div className="flex flex-col space-y-2 lg:hidden">
+            <Link
+              className="sm:hidden"
+              href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
+            >
+              {truncateString(name, 16)}
+            </Link>
+
+            <Link
+              className="hidden sm:block"
+              href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
+            >
+              {name}
+            </Link>
+
+            <div className="flex space-x-1 text-xs">
+              <span className="text-text-neutral-primary">{startDate.date}</span>
+              <span className="text-text-neutral-tertiary">-</span>
+              <span className="text-text-neutral-primary">{endDate.date}</span>
+            </div>
+          </div>
+        </div>
       </td>
-      <td className="px-16px text-left font-medium text-navyBlue2">
+      {/* Info: period (20240528 - Shirley) */}
+      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">From</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
@@ -78,8 +104,8 @@ const ReportsHistoryItem = ({
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
-      <td className="px-16px text-left font-medium text-navyBlue2">
-        {/* Info: (20240514 - Shirley) Blockchain explorer link */}
+      {/* Info: (20240514 - Shirley) Blockchain explorer link */}
+      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <Link href={blockchainExplorerLink} target="_blank">
           <Button variant={'tertiaryBorderless'} size={'small'}>
             {' '}
@@ -100,8 +126,10 @@ const ReportsHistoryItem = ({
           </Button>
         </Link>
       </td>
-      <td className="px-16px text-left">{displayedProject}</td>
-      <td className="px-16px">
+      {/* Info: project (20240528 - Shirley) */}
+      <td className="hidden px-16px text-left lg:table-cell">{displayedProject}</td>
+      {/* Info: operation buttons (20240516 - Shirley) */}
+      <td className="hidden px-16px lg:table-cell">
         <div className="flex items-center">
           {/* Info: download button (20240516 - Shirley) */}
           <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">

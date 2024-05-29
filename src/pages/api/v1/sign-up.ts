@@ -10,6 +10,7 @@ import { DUMMY_CHALLENGE } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvitation } from '@/interfaces/invitation';
 import { getSession } from '@/lib/utils/get_session';
+import { generateUserIcon } from '@/lib/utils/generate_user_icon';
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,13 +36,15 @@ export default async function handler(
     )) as IUserAuth;
     const { credential } = registrationParsed;
 
+    const imageUrl = await generateUserIcon(registrationParsed.username);
+
     const newUser = {
       name: registrationParsed.username,
       // kycStatus: false,
       credentialId: credential.id,
       publicKey: credential.publicKey,
       algorithm: credential.algorithm,
-      imageId: '', // ToDo: check the interface (20240516 - Luphia)
+      imageId: imageUrl, // ToDo: check the interface (20240516 - Luphia)
     };
     const createdUser: IUser = await prisma.user.create({
       data: newUser,

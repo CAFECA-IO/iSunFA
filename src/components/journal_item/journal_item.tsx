@@ -1,30 +1,44 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IJournal } from '@/interfaces/journal';
+import { IDummyJournal } from '@/interfaces/journal';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { truncateString, numberWithCommas } from '@/lib/utils/common';
-import { VoucherType } from '@/constants/account';
+import { EventType } from '@/constants/account';
 import { checkboxStyle } from '@/constants/display';
 
 interface IJournalItemProps {
   isChecked: boolean;
   checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  journal: IJournal;
+  // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
+  journal: IDummyJournal;
 }
 
 const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
-  const { id, voucherIndex, metaData, lineItems } = journal;
-  const { date, voucherType, description, project, companyName } = metaData[0]; // Info: (20240517 - Julian) 取第一筆
+  const {
+    id: journalId,
+    date,
+    type: eventType,
+    particulars: description,
+    projectName,
+    account: lineItems,
+    voucherId,
+    voucherNo,
+  } = journal;
 
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
-  const debitItem = lineItems.filter((item) => item.debit)[0];
+  const defaultItem = {
+    account: '',
+    amount: 0,
+  };
+
+  const debitItem = lineItems ? lineItems.filter((item) => item.debit)[0] : defaultItem;
   const debit = {
     account: debitItem.account,
     amount: numberWithCommas(debitItem.amount),
   };
 
-  const creditItem = lineItems.filter((item) => !item.debit)[0];
+  const creditItem = lineItems ? lineItems.filter((item) => !item.debit)[0] : defaultItem;
   const credit = {
     account: creditItem.account,
     amount: numberWithCommas(creditItem.amount),
@@ -32,7 +46,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 
   const displayedType =
     // Info: (20240517 - Julian) 費用
-    voucherType === VoucherType.EXPENSE ? (
+    eventType === EventType.PAYMENT ? (
       <div className="flex w-fit items-center gap-5px rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +65,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
         <p>Payment</p>
       </div>
     ) : // Info: (20240517 - Julian) 收入
-    voucherType === VoucherType.RECEIVE ? (
+    eventType === EventType.INCOME ? (
       <div className="flex w-fit items-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -70,7 +84,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
         <p>Receiving</p>
       </div>
     ) : // Info: (20240517 - Julian) 轉帳
-    voucherType === VoucherType.TRANSFER ? (
+    eventType === EventType.TRANSFER ? (
       <div className="flex w-fit items-center gap-5px rounded-full bg-lightGray3 px-10px py-6px text-sm font-medium text-navyBlue">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -117,14 +131,14 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 
   return (
     <tr
-      key={id}
+      key={voucherId}
       className="relative border-b border-lightGray6 text-center align-middle text-lightGray4"
     >
       {/* Info: (20240418 - Julian) 選取方塊 */}
       <td>
         <div className="flex justify-center px-10px">
           <input
-            id={voucherIndex}
+            id={voucherNo}
             type="checkbox"
             checked={isChecked}
             onChange={checkHandler}
@@ -139,12 +153,12 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
       </td>
       {/* Info: (20240418 - Julian) 類型 */}
       <td className="collapse px-16px md:visible">{displayedType}</td>
-      {/* Info: (20240418 - Julian) 項目 */}
+      {/* Info: (20240418 - Julian) 描述 */}
       <td className="px-16px text-left font-medium text-navyBlue2">
-        {truncateString(description, 10)}
+        {truncateString(description ?? '', 10)}
       </td>
       {/* Info: (20240418 - Julian) From / To */}
-      <td className="px-16px text-left font-medium text-navyBlue2">{companyName}</td>
+      <td className="px-16px text-left font-medium text-navyBlue2">{projectName}</td>
       {/* Info: (20240418 - Julian) 金額 */}
       <td className="px-16px">{displayedAmount}</td>
       {/* Info: (20240418 - Julian) 專案 */}
@@ -154,11 +168,11 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
           <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
             BF
           </div>
-          <p>{project}</p>
+          <p>{projectName}</p>
         </div>
       </td>
       {/* Info: (20240418 - Julian) 單據編號 */}
-      <td className="px-16px text-right font-medium text-darkBlue">{voucherIndex}</td>
+      <td className="px-16px text-right font-medium text-darkBlue">{journalId}</td>
 
       {/* Info: (20240418 - Julian) Link */}
       <Link
@@ -170,13 +184,14 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 };
 
 export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
-  const { id, metaData, voucherIndex } = journal;
-  const { date, voucherType, description, payment } = metaData[0]; // Info: (20240517 - Julian) 取第一筆
+  const { id, date, type: eventType, particulars: description } = journal;
+  const price = 0; // ToDo: (20240528 - Julian) Interface lacks price
+
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
   const displayedTypeMobile =
     // Info: (20240517 - Julian) 費用
-    voucherType === VoucherType.EXPENSE ? (
+    eventType === EventType.PAYMENT ? (
       <div className="flex w-fit items-center rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -194,7 +209,7 @@ export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournal
         </svg>
       </div>
     ) : // Info: (20240517 - Julian) 收入
-    voucherType === VoucherType.RECEIVE ? (
+    eventType === EventType.INCOME ? (
       <div className="flex w-fit items-center rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -212,7 +227,7 @@ export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournal
         </svg>
       </div>
     ) : // Info: (20240517 - Julian) 轉帳
-    voucherType === VoucherType.TRANSFER ? (
+    eventType === EventType.TRANSFER ? (
       <div className="flex w-fit items-center rounded-full bg-lightGray3 px-10px py-6px text-sm font-medium text-navyBlue">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -237,7 +252,7 @@ export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournal
       <td className="w-50px align-middle">
         <div className="flex justify-center px-10px">
           <input
-            id={voucherIndex}
+            id={`${id}`}
             type="checkbox"
             checked={isChecked}
             onChange={checkHandler}
@@ -257,10 +272,10 @@ export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournal
           {displayedTypeMobile}
           <div className="flex flex-1 flex-col text-xs text-navyBlue2">
             {/* Info: (20240517 - Julian) 描述 */}
-            <p className="flex-1 whitespace-nowrap">{truncateString(description, 10)}</p>
+            <p className="flex-1 whitespace-nowrap">{truncateString(description ?? '', 10)}</p>
             {/* Info: (20240517 - Julian) 金額 */}
             <p>
-              {numberWithCommas(payment.price)} <span className="text-lightGray4">TWD</span>
+              {numberWithCommas(price)} <span className="text-lightGray4">TWD</span>
             </p>
           </div>
         </div>

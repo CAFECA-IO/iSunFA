@@ -59,7 +59,7 @@ const NavBar = () => {
     signOut();
   };
 
-  const companyChangeClickHandler = (e: { preventDefault: () => void; }) => {
+  const companyChangeClickHandler = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     selectCompany(null);
     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
@@ -287,6 +287,7 @@ const NavBar = () => {
         </div>
         <Link
           href={ISUNFA_ROUTE.SELECT_COMPANY}
+          onClick={companyChangeClickHandler}
           className={`mt-3 flex gap-2 rounded-xs px-4 py-2.5 ${selectedCompany ? '' : 'pointer-events-none opacity-50'}`}
         >
           <div className="my-auto flex items-center justify-center">
