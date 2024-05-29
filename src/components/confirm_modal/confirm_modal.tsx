@@ -40,7 +40,6 @@ const ConfirmModal = ({
 }: IConfirmModalProps) => {
   const { selectedCompany } = useUserCtx();
   const {
-    selectedJournal,
     accountingVoucher,
     addVoucherRowHandler,
     changeVoucherAmountHandler,
@@ -57,7 +56,7 @@ const ConfirmModal = ({
     trigger: getJournalById,
     success: getJournalSuccess,
     data: journal,
-    // code: getJournalCode,
+    code: getJournalCode,
   } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
 
   const {
@@ -185,13 +184,24 @@ const ConfirmModal = ({
         setLineItems(voucher.lineItems);
       }
     }
-  }, [journal, getJournalSuccess]);
+    if (getJournalSuccess === false) {
+      messageModalDataHandler({
+        title: 'Get Journal Failed',
+        subMsg: 'Please try again later',
+        content: `Error code: ${getJournalCode}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [journal, getJournalSuccess, getJournalCode]);
 
   // Info: (20240527 - Julian) 送出 Voucher
   const confirmHandler = () => {
-    if (selectedJournal && selectedJournal.invoice && selectedJournal.voucher) {
+    if (journal && journal.invoice && lineItems) {
       const voucher: IVoucherDataForSavingToDB = {
-        journalId: selectedJournal.id,
+        journalId: journal.id,
         lineItems,
       };
       createVoucher({
@@ -220,16 +230,33 @@ const ConfirmModal = ({
         lineItem.description
       );
     });
-    // Info: (20240529 - Julian) 寫入 lineItems state
-    setLineItems(AILineItems);
   };
 
   useEffect(() => {
-    if (createSuccess && result && selectedJournal) {
+    // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
+    const newLineItems = accountingVoucher.map((voucher) => {
+      const isDebit = voucher.debit !== 0;
+      const debitAmount = voucher.debit ?? 0;
+      const creditAmount = voucher.credit ?? 0;
+
+      return {
+        lineItemIndex: `${voucher.id}`,
+        account: voucher.accountTitle,
+        description: voucher.particulars,
+        debit: isDebit,
+        amount: isDebit ? debitAmount : creditAmount,
+      };
+    });
+
+    setLineItems(newLineItems);
+  }, [accountingVoucher]);
+
+  useEffect(() => {
+    if (createSuccess && result && journal) {
       modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
       clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
       // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${selectedJournal.id}`);
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`);
       // Info: (20240527 - Julian) Toast notification
       toastHandler({
         id: `createVoucher-${result.id}`,
