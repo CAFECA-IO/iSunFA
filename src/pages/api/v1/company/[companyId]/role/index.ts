@@ -12,20 +12,7 @@ export default async function handler(
   try {
     if (req.method === 'GET') {
       // get all roles
-      const rawRoleList = await prisma.role.findMany({
-        include: {
-          company: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      });
-      const roleList: IRole[] = rawRoleList.map((role) => ({
-        ...role,
-        companyName: role.company.name,
-        company: null,
-      }));
+      const roleList: IRole[] = await prisma.role.findMany();
 
       const { httpCode, result } = formatApiResponse<IRole[]>(
         STATUS_MESSAGE.SUCCESS_LIST,
@@ -35,36 +22,18 @@ export default async function handler(
       // Info: (20240419 - Jacky) A010003 - POST /role
     } else if (req.method === 'POST') {
       const { name } = req.body;
-      const { companyId } = req.query;
-      const companyIdNum = Number(companyId);
       if (!name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const createdRole = await prisma.role.create({
         data: {
           name,
-          company: {
-            connect: {
-              id: companyIdNum,
-            },
-          },
           permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
-        },
-        include: {
-          company: {
-            select: {
-              name: true,
-            },
-          },
         },
       });
       // const { company, ...role } = createdRole;
-      const formattedRole: IRole = {
-        ...createdRole,
-        companyName: createdRole.company.name,
-      };
 
-      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.CREATED, formattedRole);
+      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.CREATED, createdRole);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
