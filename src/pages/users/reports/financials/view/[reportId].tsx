@@ -129,7 +129,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           <ReportsSidebar />
         </div>
 
-        <div className="h-screen bg-surface-neutral-main-background">
+        <div className="h-1400px bg-surface-neutral-main-background">
           <ViewFinancialSection
             reportTypesName={
               reportData.reportTypesName as {
