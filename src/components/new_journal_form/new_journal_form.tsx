@@ -836,6 +836,7 @@ const NewJournalForm = () => {
                 onChange={totalPriceChangeHandler}
                 required
                 className="flex-1 bg-transparent px-10px outline-none"
+                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                 <Image
@@ -897,7 +898,7 @@ const NewJournalForm = () => {
               />
             </div>
             <div
-              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
             >
               <input
                 id="feeInput"
@@ -907,6 +908,7 @@ const NewJournalForm = () => {
                 value={inputFee}
                 onChange={feeChangeHandler}
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                 <Image

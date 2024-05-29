@@ -55,7 +55,12 @@ interface IAccountingContext {
   addVoucherRowHandler: (type?: VoucherRowType) => void;
   deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
-  changeVoucherAmountHandler: (index: number, value: number | null, type: VoucherRowType) => void;
+  changeVoucherAmountHandler: (
+    index: number,
+    value: number | null,
+    type: VoucherRowType,
+    description?: string
+  ) => void;
   clearVoucherHandler: () => void;
 
   totalDebit: number;
@@ -178,17 +183,33 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   // Info: (20240430 - Julian) 將 debit/credit 值寫入 state
   const changeVoucherAmountHandler = useCallback(
-    (index: number, value: number | null, type: VoucherRowType) => {
+    (index: number, value: number | null, type: VoucherRowType, description?: string) => {
       setAccountingVoucher((prev) => {
-        const newVoucher = [...prev]; // Info: (20240430 - Julian) 複製現有的傳票
-        const newAmount = value || 0; // Info: (20240430 - Julian) 若 value 為 null 則預設為 0
-        const targetId = prev.findIndex((voucher) => voucher.id === index); // Info: (20240430 - Julian) 找到要寫入的傳票 id
+        // Info: (20240430 - Julian) 複製現有的傳票
+        const newVoucher = [...prev];
+
+        // Info: (20240430 - Julian) 新的 amount 值，若 value 為 null 則預設為 0
+        const newAmount = value || 0;
+
+        // Info: (20240430 - Julian) 找到要寫入的傳票 id
+        const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index;
+
         if (type === VoucherRowType.CREDIT) {
-          newVoucher[targetId].credit = newAmount; // Info: (20240430 - Julian) 寫入新的 credit 值
+          // Info: (20240430 - Julian) credit 的處理：寫入 amount 值，如果 description 有值則寫入，否則不動作
+          newVoucher[targetId].credit = newAmount;
+          if (description) newVoucher[targetId].particulars = description;
         } else if (type === VoucherRowType.DEBIT) {
-          newVoucher[targetId].debit = newAmount; // Info: (20240430 - Julian) 寫入新的 debit 值
+          // Info: (20240430 - Julian) debit 的處理：寫入 amount 值，如果 description 有值則寫入，否則不動作
+          newVoucher[targetId].debit = newAmount;
+          if (description) newVoucher[targetId].particulars = description;
         }
-        return newVoucher;
+
+        // Info: (20240529 - Julian) 移除借貸皆為 0 的傳票列
+        const newVoucherWithoutVoid = newVoucher.filter(
+          (voucher) => voucher.debit || voucher.credit
+        );
+
+        return newVoucherWithoutVoid;
       });
     },
     [accountingVoucher]
