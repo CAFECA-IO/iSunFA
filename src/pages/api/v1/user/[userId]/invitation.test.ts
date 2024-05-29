@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
+import { IUser } from '@/interfaces/user';
 import handler from './invitation';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -81,11 +82,11 @@ beforeEach(async () => {
   invitationCode = invitation.code;
   roleId = invitation.roleId;
   companyId = invitation.companyId;
-  const user = await prisma.user.findFirstOrThrow({
+  const user = (await prisma.user.findUnique({
     where: {
-      credentialId: 'test',
+      credentialId: 'test_PUT_INVITATION',
     },
-  });
+  })) as IUser;
   userId = user.id;
   req = {
     headers: {},
