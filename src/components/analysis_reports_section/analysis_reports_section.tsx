@@ -490,7 +490,7 @@ const AnalysisReportSection = () => {
               type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
-              className=""
+              btnClassName="px-6"
             />
           </div>
         </div>

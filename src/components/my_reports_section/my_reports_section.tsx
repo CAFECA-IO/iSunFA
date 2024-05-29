@@ -1,7 +1,11 @@
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { SortOptions, DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
+import {
+  SortOptions,
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+} from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
@@ -212,7 +216,7 @@ const MyReportsSection = () => {
           type={DatePickerType.CHOOSE_PERIOD}
           period={pendingPeriod}
           setFilteredPeriod={setPendingPeriod}
-          className="w-250px"
+          btnClassName="w-250px"
         />{' '}
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
@@ -419,7 +423,7 @@ const MyReportsSection = () => {
           type={DatePickerType.CHOOSE_PERIOD}
           period={historyPeriod}
           setFilteredPeriod={setHistoryPeriod}
-          className="w-250px"
+          btnClassName="w-250px"
         />{' '}
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
