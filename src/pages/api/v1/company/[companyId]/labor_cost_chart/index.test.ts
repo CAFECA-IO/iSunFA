@@ -29,8 +29,7 @@ describe('Result API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const expectedPayload = {
-      startDate: expect.any(Number),
-      endDate: expect.any(Number),
+      date: expect.any(Number),
       categories: expect.arrayContaining([expect.any(String)]),
       series: expect.arrayContaining([expect.any(Number)]),
     };
