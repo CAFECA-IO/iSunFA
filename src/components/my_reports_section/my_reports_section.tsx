@@ -72,8 +72,14 @@ const MyReportsSection = () => {
   // Deprecated: (20240531 - Shirley)
   // eslint-disable-next-line no-console
   console.table({
-    history: filterOptionsForHistory,
-    pending: filterOptionsForPending,
+    history: {
+      ...filterOptionsForHistory,
+      period: JSON.stringify(filterOptionsForHistory.period),
+    },
+    pending: {
+      ...filterOptionsForPending,
+      period: JSON.stringify(filterOptionsForPending.period),
+    },
   });
 
   useEffect(() => {
@@ -210,7 +216,7 @@ const MyReportsSection = () => {
 
   const displayedPendingFilterOptionsSection = (
     <div>
-      {/* Info: 電腦版排版 (20240527 - Shirley) */}
+      {/* Info: desktop (20240527 - Shirley) */}
       <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
@@ -232,7 +238,7 @@ const MyReportsSection = () => {
         </div>
       </div>
 
-      {/* Info: 手機版排版 (20240527 - Shirley) */}
+      {/* Info: mobile (20240527 - Shirley) */}
       <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
@@ -417,7 +423,7 @@ const MyReportsSection = () => {
 
   const displayedHistoryFilterOptionsSection = (
     <div>
-      {/* Info: 電腦版排版 (20240527 - Shirley) */}
+      {/* Info: desktop (20240527 - Shirley) */}
       <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
@@ -439,7 +445,7 @@ const MyReportsSection = () => {
         </div>
       </div>
 
-      {/* Info: 手機版排版 (20240527 - Shirley) */}
+      {/* Info: mobile (20240527 - Shirley) */}
       <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
