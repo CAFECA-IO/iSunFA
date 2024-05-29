@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { MessageType } from '@/interfaces/message_modal';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { IRole } from '@/interfaces/role';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -45,11 +46,11 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
 
   const {
     trigger: createCompany,
-    data: company,
+    data: companyAndRole,
     success: createCompanySuccess,
     error: createCompanyError,
     code: createCompanyCode,
-  } = APIHandler<ICompany>(APIName.COMPANY_ADD, {}, false, false);
+  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD, {}, false, false);
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
@@ -75,9 +76,9 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   };
 
   useEffect(() => {
-    if (createCompanySuccess && company) {
+    if (createCompanySuccess && companyAndRole) {
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
-      selectCompany(company);
+      selectCompany(companyAndRole.company);
       modalVisibilityHandler();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
