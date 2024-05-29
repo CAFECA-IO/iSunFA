@@ -9,7 +9,6 @@ let userCompanyRole: {
   companyId: number;
   roleId: number;
   startDate: number;
-  id: number;
 };
 
 beforeEach(async () => {
@@ -106,7 +105,11 @@ afterEach(async () => {
   try {
     await prisma.userCompanyRole.delete({
       where: {
-        id: userCompanyRole.id,
+        userId_companyId_roleId: {
+          userId: userCompanyRole.userId,
+          companyId: userCompanyRole.companyId,
+          roleId: userCompanyRole.roleId,
+        },
       },
     });
   } catch (error) {
@@ -149,7 +152,7 @@ describe('Company API', () => {
   it('should create a new company when method is POST and valid data is provided', async () => {
     req.method = 'POST';
     req.body = {
-      code: 'TST_createCompany',
+      code: 'TST_createCompany1',
       name: 'Company Name',
       regional: 'Regional Name',
     };
@@ -170,7 +173,6 @@ describe('Company API', () => {
             name: expect.any(String),
             regional: expect.any(String),
           }),
-          id: expect.any(Number),
           role: expect.objectContaining({
             id: expect.any(Number),
             name: expect.any(String),
@@ -181,12 +183,16 @@ describe('Company API', () => {
     );
     await prisma.userCompanyRole.delete({
       where: {
-        id: res.json.mock.calls[0][0].payload.id,
+        userId_companyId_roleId: {
+          userId: userCompanyRole.userId,
+          companyId: res.json.mock.calls[0][0].payload.company.id,
+          roleId: res.json.mock.calls[0][0].payload.role.id,
+        },
       },
     });
     await prisma.company.delete({
       where: {
-        code: 'TST_createCompany',
+        code: 'TST_createCompany1',
       },
     });
   });

@@ -9,7 +9,6 @@ let userCompanyRole: {
   companyId: number;
   roleId: number;
   startDate: number;
-  id: number;
 };
 
 beforeEach(async () => {
@@ -106,7 +105,11 @@ afterEach(async () => {
   try {
     await prisma.userCompanyRole.delete({
       where: {
-        id: userCompanyRole.id,
+        userId_companyId_roleId: {
+          userId: userCompanyRole.userId,
+          companyId: userCompanyRole.companyId,
+          roleId: userCompanyRole.roleId,
+        },
       },
     });
   } catch (error) {

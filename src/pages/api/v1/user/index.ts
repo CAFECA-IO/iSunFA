@@ -4,7 +4,7 @@ import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { getSession } from '@/lib/utils/get_session';
+import { checkUserSession } from '@/lib/utils/session_check';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,17 +12,13 @@ export default async function handler(
 ) {
   try {
     // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
-    const session = await getSession(req, res);
+    const session = await checkUserSession(req, res);
     const { userId } = session;
-    if (!userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
     const userCompanyRole = await prisma.userCompanyRole.findMany({
       where: {
         userId,
       },
       select: {
-        id: true,
         role: true,
       },
     });

@@ -51,16 +51,9 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
-      const listUserCompanyRole = await prisma.userCompanyRole.findMany({
-        where: {
-          companyId: companyIdNum,
-        },
-      });
       await prisma.userCompanyRole.deleteMany({
         where: {
-          id: {
-            in: listUserCompanyRole.map((item) => item.id),
-          },
+          companyId: companyIdNum,
         },
       });
       const company: ICompany = await prisma.company.delete({
