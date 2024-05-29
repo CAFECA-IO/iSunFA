@@ -3,13 +3,12 @@ import { pdfjs, Document, Page } from 'react-pdf';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
-
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { EXTERNAL_API } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
-
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -370,12 +369,26 @@ const ViewFinancialSection = ({
 
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
-    window.alert(`Token contract ${tokenContract} copied to clipboard!`);
+
+    globalCtx.toastHandler({
+      type: ToastType.SUCCESS,
+      id: 'token-copied',
+      closeable: true,
+      content: 'Copied',
+      autoClose: 500,
+    });
   };
 
   const copyTokenId = () => {
     navigator.clipboard.writeText(tokenId);
-    window.alert(`Token ID ${tokenId} copied to clipboard!`);
+
+    globalCtx.toastHandler({
+      type: ToastType.SUCCESS,
+      id: 'token-copied',
+      closeable: true,
+      content: 'Copied',
+      autoClose: 500,
+    });
   };
 
   const copyTokenContractClickHandler = () => {

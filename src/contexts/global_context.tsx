@@ -358,7 +358,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id: 'latest-report-generated',
         closeable: true,
         content: (
-          <div className="flex items-center space-x-10">
+          <div className="flex items-center space-x-5">
             <p>Your report is done</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
