@@ -11,13 +11,19 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+  radioButtonStyle,
+} from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { IJournalData } from '@/interfaces/journal';
+import { ILineItem } from '@/interfaces/line_item';
+import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -51,13 +57,10 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
 
-  const {
-    companyId,
-    selectedUnprocessedJournal,
-    selectUnprocessedJournalHandler,
-    selectJournalHandler,
-  } = useAccountingCtx();
+  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
+    useAccountingCtx();
 
   const {
     trigger: getJournalById,
@@ -88,6 +91,8 @@ const NewJournalForm = () => {
   // Info: (20240527 - Murky) To Emily Invoice改這邊
   const result = invoiceReturn?.resultStatus;
   const journalId = invoiceReturn?.journalId;
+
+  const companyId = selectedCompany?.id || DEFAULT_DISPLAYED_COMPANY_ID;
 
   // const {
   //   trigger: getAIStatus,
@@ -140,7 +145,12 @@ const NewJournalForm = () => {
 
   useEffect(() => {
     if (selectedUnprocessedJournal !== undefined) {
-      getJournalById({ params: { companyId, journalId: selectedUnprocessedJournal.id } });
+      getJournalById({
+        params: {
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          journalId: selectedUnprocessedJournal.id,
+        },
+      });
     }
   }, [selectedUnprocessedJournal]);
 
@@ -148,7 +158,12 @@ const NewJournalForm = () => {
     if (selectedUnprocessedJournal && getJournalSuccess && journal) {
       selectJournalHandler(journal);
       if (journal.invoice === null) {
-        getOCRResult({ params: { companyId, resultId: selectedUnprocessedJournal.aichResultId } }); // selectedUnprocessedJournal.aichResultId
+        getOCRResult({
+          params: {
+            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            resultId: selectedUnprocessedJournal.aichResultId,
+          },
+        }); // selectedUnprocessedJournal.aichResultId
       } else {
         const { invoice } = journal;
         // Info: update form data with journal data (20240524 - tzuhan)

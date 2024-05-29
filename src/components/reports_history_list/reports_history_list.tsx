@@ -151,10 +151,10 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
             {displayedCheckbox}
             <th className="text-center">Date</th>
             <th className="px-16px">Report Name</th>
-            <th className="px-16px">Period</th>
-            <th className="px-16px">Blockchain</th>
-            <th className="px-16px">Project</th>
-            <th className="px-16px">Operations</th>
+            <th className="hidden px-16px lg:table-cell">Period</th>
+            <th className="hidden px-16px lg:table-cell">Blockchain</th>
+            <th className="hidden px-16px lg:table-cell">Project</th>
+            <th className="hidden px-16px lg:table-cell">Operations</th>
           </tr>
         </thead>
 

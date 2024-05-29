@@ -8,10 +8,12 @@ import React, { useEffect } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ToastType } from '@/interfaces/toastify';
 import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { IReport } from '@/interfaces/report';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -35,16 +37,8 @@ const ViewAnalysisReportPage = ({
   endTimestamp,
 }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
-  const [reportData, setReportData] = React.useState<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>({
+  const { selectedCompany } = useUserCtx();
+  const [reportData, setReportData] = React.useState<IReport>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
@@ -56,16 +50,10 @@ const ViewAnalysisReportPage = ({
     data: reportAnalysis,
     code: getARCode,
     success: getARSuccess,
-  } = APIHandler<{
-    reportTypesName: {
-      name: string;
-      id: string;
-    };
-    tokenContract: string;
-    tokenId: string;
-    reportLink: string;
-  }>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
-    params: { params: { companyId, reportId: '1' } },
+  } = APIHandler<IReport>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
+    params: {
+      params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId: '1' },
+    },
     query: { reportType, reportLanguage, startTimestamp, endTimestamp },
   });
 

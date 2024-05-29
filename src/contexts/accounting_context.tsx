@@ -44,7 +44,6 @@ interface IAccountingContext {
   selectedJournal: IJournalData | undefined;
   selectJournalHandler: (journal: IJournalData | undefined) => void;
 
-  companyId: string | undefined;
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
   voucherId: string | undefined;
@@ -74,7 +73,6 @@ const initialAccountingContext: IAccountingContext = {
   selectedJournal: undefined,
   selectJournalHandler: () => {},
 
-  companyId: undefined,
   invoiceId: '1',
   setInvoiceIdHandler: () => {},
   voucherId: undefined,
@@ -100,8 +98,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     undefined
   );
   const [selectedJournal, setSelectedJournal] = useState<IJournalData | undefined>(undefined);
-
-  const [companyId, setCompanyId] = useState<string | undefined>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
@@ -220,11 +216,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalCredit(credit);
   }, [accountingVoucher]);
 
-  // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
-  const setCompanyIdHandler = useCallback(
-    (id: string | undefined) => setCompanyId(id),
-    [companyId]
-  );
   const setInvoiceIdHandler = useCallback(
     (id: string | undefined) => setInvoiceId(id),
     [invoiceId]
@@ -293,8 +284,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       totalDebit,
       totalCredit,
 
-      companyId,
-      setCompanyIdHandler,
       invoiceId,
       setInvoiceIdHandler,
       voucherId,
@@ -316,7 +305,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearVoucherHandler,
       totalDebit,
       totalCredit,
-      companyId,
       invoiceId,
       voucherId,
       voucherStatus,
