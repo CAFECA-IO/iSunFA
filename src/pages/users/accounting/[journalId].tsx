@@ -1,14 +1,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
-import { IJournal } from '@/interfaces/journal';
+import { IJournalData } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -19,6 +19,7 @@ import { timestampToString } from '@/lib/utils/common';
 import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { ILineItem } from '@/interfaces/line_item';
 
 interface IJournalDetailPageProps {
   journalId: string;
@@ -54,9 +55,27 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     // error,
     success,
     code,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
+  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
   });
+
+  const [tokenContract, setTokenContract] = useState<string>('');
+  const [tokenId, setTokenId] = useState<string>('');
+  const [type, setType] = useState<string>('');
+  const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  const [reason, setReason] = useState<string>('');
+  const [vendor, setVendor] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [tax, setTax] = useState<number>(0);
+  const [fee, setFee] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentPeriod, setPaymentPeriod] = useState<string>('');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
+  const [project, setProject] = useState<string>('');
+  const [contract, setContract] = useState<string>('');
+  const [invoiceIndex, setInvoiceIndex] = useState<string>('');
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   useEffect(() => {
     if (success === false && isLoading === false) {
@@ -76,30 +95,34 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     }
   }, [success, isLoading]);
 
-  const tokenContract = journalDetail ? journalDetail.tokenContract : '';
-  const tokenId: string = journalDetail ? journalDetail.tokenId : '';
-  const type: string = journalDetail ? journalDetail.metaData[0].voucherType : '';
-  const dateTimestamp: number = journalDetail ? journalDetail.metaData[0].date / 1000 : 0;
-  const reason: string = journalDetail ? journalDetail.metaData[0].reason : '';
-  const vendor: string = journalDetail ? journalDetail.metaData[0].companyName : '';
-  const description: string = journalDetail ? journalDetail.metaData[0].description : '';
-  const totalPrice: number = journalDetail ? journalDetail.metaData[0].payment.price : 0; // Info Murky Edit (20240509)
-  const tax: number = journalDetail ? journalDetail.metaData[0].payment.taxPercentage : 0; // Info Murky Edit (20240509)
-  const fee: number = journalDetail ? journalDetail.metaData[0].payment.fee : 0; // Info Murky Edit (20240509)
-  const paymentMethod: string = journalDetail
-    ? journalDetail.metaData[0].payment.paymentMethod
-    : ''; // Info Murky Edit (20240509)
-  const paymentPeriod: string = journalDetail
-    ? journalDetail.metaData[0].payment.paymentPeriod
-    : ''; // Info Murky Edit (20240509)
-  const paymentStatus: string = journalDetail
-    ? journalDetail.metaData[0].payment.paymentStatus
-    : ''; // Info Murky Edit (20240509)
-  const project: string = journalDetail ? journalDetail.metaData[0].project : '';
-  const contract: string = journalDetail ? journalDetail.metaData[0].contract : '';
-  const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';
+  useEffect(() => {
+    if (journalDetail) {
+      const { tokenContract, tokenId, invoice, voucher } = journalDetail;
 
-  const lineItems = journalDetail ? journalDetail.lineItems : [];
+      setTokenContract(tokenContract ?? '-');
+      setTokenId(tokenId ?? '-');
+      setInvoiceIndex(`${journalDetail.id}`);
+
+      if (invoice) {
+        setType(invoice.eventType);
+        setDateTimestamp(invoice.date);
+        // setReason(invoice.reason); ToDo: (20240503 - Julian) interface lacks reason
+        setVendor(invoice.vendorOrSupplier);
+        setDescription(invoice.description);
+        setTotalPrice(invoice.payment.price);
+        setTax(invoice.payment.taxPercentage);
+        setFee(invoice.payment.fee);
+        setPaymentMethod(invoice.payment.paymentMethod);
+        setPaymentPeriod(invoice.payment.paymentPeriod);
+        setPaymentStatus(invoice.payment.paymentStatus);
+        setProject(invoice.project ?? 'None');
+        setContract(invoice.contract ?? 'None');
+      }
+      if (voucher) {
+        setLineItems(voucher.lineItems);
+      }
+    }
+  }, [journalDetail]);
 
   const voucherList: IVoucherItem[] = lineItems.map((lineItem) => {
     return {
