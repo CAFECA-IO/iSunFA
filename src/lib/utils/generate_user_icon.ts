@@ -36,7 +36,7 @@ function generateRandomUUID() {
 
 function generateUserIconSvg(initials: string, backgroundColor: string) {
   return `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="100" cy="100" r="80" stroke=${backgroundColor} stroke-width="3" fill="${backgroundColor}" />
+  <circle cx="100" cy="100" r="80" stroke="${backgroundColor}" stroke-width="3" fill="${backgroundColor}" />
   <text x="100" y="105" font-size="48" text-anchor="middle" dominant-baseline="middle" fill="#FFFFFF">${initials}</text>
 </svg>`;
 }
