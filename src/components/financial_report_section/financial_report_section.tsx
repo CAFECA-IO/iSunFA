@@ -502,7 +502,7 @@ const FinancialReportSection = () => {
         </div>
       </div>
       {/* Info: options for generation (20240513 - Shirley) */}
-      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
+      <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
