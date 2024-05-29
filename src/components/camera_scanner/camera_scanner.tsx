@@ -8,7 +8,6 @@ import { TbArrowBackUp } from 'react-icons/tb';
 // ToDo: (20240523 - Luphia) fix loop import issue
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
-
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -47,8 +46,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   const [uploadImage, setUploadImage] = useState<File | null>(null);
   // Info: (20240507 - Julian) 檢查步驟
   const [currentStep, setCurrentStep] = useState<ScannerStep>(ScannerStep.Camera);
-  // Info: (20240507 - Julian) ocr result id
-  // const [resultId, setResultId] = useState<string>('');
+  // Info: (20240528 - Julian) 決定是否顯示 modal 的 flag
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
 
   const isCameraMode = currentStep === ScannerStep.Camera;
   const isPreviewMode = currentStep === ScannerStep.Preview;
@@ -137,7 +136,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
-
+    setIsShowSuccessModal(true); // Info: (20240528 - Julian) 點擊上傳後才升起 flag
     uploadInvoice({ params: { companyId: selectedCompany!.id }, body: formData });
 
     // Info: (20240506 - Julian) 關閉攝影機
@@ -165,7 +164,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   }, [isModalVisible, selectedCompany]);
 
   useEffect(() => {
-    if (uploadSuccess && results) {
+    if (uploadSuccess && results && isShowSuccessModal) {
       results.forEach((result) => {
         const { resultId } = result;
         if (
@@ -185,6 +184,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
             },
           });
           messageModalVisibilityHandler();
+          setIsShowSuccessModal(false); // Info: (20240528 - Julian) 顯示完後將 flag 降下
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
           messageModalDataHandler({

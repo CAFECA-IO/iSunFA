@@ -2,25 +2,37 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
+import { IRole } from '@/interfaces/role';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/get_session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | ICompany[]>>
+  res: NextApiResponse<
+    IResponseData<{ company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }>>
+  >
 ) {
   try {
+    const session = await getSession(req, res);
+    const { userId } = session;
+    if (!userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    }
     if (req.method === 'GET') {
-      const session = await getSession(req, res);
-      const { userId } = session;
-      if (!userId) {
-        throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-      }
-      const companyList: ICompany[] = await prisma.company.findMany();
-      const { httpCode, result } = formatApiResponse<ICompany[]>(
+      const companyRoleList: Array<{ company: ICompany; role: IRole }> =
+        await prisma.userCompanyRole.findMany({
+          where: {
+            userId,
+          },
+          select: {
+            company: true,
+            role: true,
+          },
+        });
+      const { httpCode, result } = formatApiResponse<Array<{ company: ICompany; role: IRole }>>(
         STATUS_MESSAGE.SUCCESS_GET,
-        companyList
+        companyRoleList
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
@@ -30,25 +42,58 @@ export default async function handler(
       }
       const now = Date.now();
       const nowTimestamp = timestampInSeconds(now);
-      const newCompany: ICompany = await prisma.company.create({
-        data: {
-          code,
-          name,
-          regional,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-          // Todo: (20240527 - Jacky) Maybe get by frontend?
-          startDate: nowTimestamp,
-        },
-      });
-      const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.CREATED, newCompany);
+      const newCompanyRoleList: { company: ICompany; role: IRole } =
+        await prisma.userCompanyRole.create({
+          data: {
+            user: {
+              connect: {
+                id: userId,
+              },
+            },
+            company: {
+              create: {
+                code,
+                name,
+                regional,
+                createdAt: nowTimestamp,
+                updatedAt: nowTimestamp,
+                startDate: nowTimestamp,
+              },
+            },
+            role: {
+              connectOrCreate: {
+                where: {
+                  // SUPER_ADMIN
+                  name: 'ADMIN',
+                },
+                create: {
+                  name: 'ADMIN',
+                  permissions: ['read'],
+                },
+              },
+            },
+            startDate: nowTimestamp,
+          },
+          select: {
+            id: true,
+            company: true,
+            role: true,
+          },
+        });
+      const { httpCode, result } = formatApiResponse<{ company: ICompany; role: IRole }>(
+        STATUS_MESSAGE.CREATED,
+        newCompanyRoleList
+      );
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ICompany>(error.message, {} as ICompany);
+    const { httpCode, result } = formatApiResponse<{ company: ICompany; role: IRole }>(
+      error.message,
+      {} as { company: ICompany; role: IRole }
+    );
     res.status(httpCode).json(result);
   }
 }

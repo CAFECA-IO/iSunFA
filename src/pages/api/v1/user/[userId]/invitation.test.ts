@@ -17,7 +17,7 @@ beforeEach(async () => {
 
   const getCompany = await prisma.company.findFirst({
     where: {
-      code: 'TST',
+      code: 'TST_invitation1',
     },
   });
   if (!getCompany) {
@@ -25,7 +25,7 @@ beforeEach(async () => {
     const currentTimestamp = timestampInSeconds(now);
     await prisma.company.create({
       data: {
-        code: 'TST',
+        code: 'TST_invitation1',
         name: 'Test Company',
         regional: 'TW',
         startDate: currentTimestamp,
@@ -40,19 +40,28 @@ beforeEach(async () => {
       hasUsed: false,
       expiredAt: timestampInSeconds(Date.now() + 86400),
       company: {
-        connect: {
-          code: 'TST',
+        connectOrCreate: {
+          where: {
+            code: 'TST_invitation3',
+          },
+          create: {
+            code: 'TST_invitation3',
+            name: 'Test Company',
+            regional: 'TW',
+            startDate: 0,
+            createdAt: 0,
+            updatedAt: 0,
+          },
         },
       },
       role: {
-        create: {
-          name: 'Test Role',
-          company: {
-            connect: {
-              code: 'TST',
-            },
+        connectOrCreate: {
+          where: {
+            name: 'Test_invitaion',
           },
-          permissions: ['READ', 'WRITE', 'DELETE'],
+          create: {
+            name: 'Test_invitaion',
+          },
         },
       },
       createdUser: {

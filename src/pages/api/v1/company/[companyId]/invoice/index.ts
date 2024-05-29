@@ -12,152 +12,21 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { IPayment } from '@/interfaces/payment';
+import { Prisma } from '@prisma/client';
 
 interface IPostApiResponseType {
   journalId: number;
   resultStatus: IAccountResultStatus;
 }
 
-async function createOrFindCompanyInPrisma(companyId: number) {
-  let company = await prisma.company.findUnique({
-    where: { id: companyId },
-    select: { id: true },
-  });
-
-  if (!company) {
-    try {
-      const now = Date.now();
-      const currentTimestamp = timestampInSeconds(now);
-      company = await prisma.company.create({
-        data: {
-          id: companyId,
-          code: 'COMP123',
-          name: 'Company Name',
-          regional: 'Regional Name',
-          startDate: currentTimestamp,
-          createdAt: currentTimestamp,
-          updatedAt: currentTimestamp,
-        },
-        select: { id: true },
-      });
-    } catch (error) {
-      throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-    }
-  }
-
-  return company;
-}
-
-async function paymentSaveToPrisma(paymentData: IPayment) {
-  const payment = await prisma.payment.create({
-    data: paymentData,
-    select: {
-      id: true,
-    },
-  });
-  return payment;
-}
-
-async function invoiceSaveToPrisma(
-  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB,
-  companyId: number
-) {
-  const {
-    payment: paymentData,
-    project,
-    projectId,
-    contract,
-    contractId,
-    journalId,
-    ...invoiceData
-  } = invoiceDataForSavingToDB;
-
-  // Depreciate ( 20240522 - Murky ) For demo purpose, create company if not exist
-  try {
-    const result = await prisma.$transaction(async () => {
-      const company = await createOrFindCompanyInPrisma(companyId);
-
-      const payment = await paymentSaveToPrisma(paymentData);
-
-      const invoice = await prisma.invoice.create({
-        data: {
-          date: timestampInSeconds(invoiceData.date),
-          eventType: invoiceData.eventType,
-          paymentReason: invoiceData.paymentReason,
-          description: invoiceData.description,
-          vendorOrSupplier: invoiceData.vendorOrSupplier,
-          paymentId: payment.id,
-        },
-      });
-
-      return { invoiceId: invoice.id, companyIdNumber: company.id };
-    });
-    return result;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-}
-
-async function journalSaveToPrisma(
-  journalId: number | null,
-  invoiceId: number,
-  aichResultId: string,
-  projectId: number | null,
-  contractId: number | null,
-  companyId: number
-) {
-  // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
-  try {
-    const result = await prisma.$transaction(async () => {
-      // Check if contractId exists if it's not null
-
-      let journal: {
-        id: number;
-      };
-
-      if (!journalId) {
-        journal = await prisma.journal.create({
-          data: {
-            invoiceId,
-            aichResultId,
-            projectId: projectId || undefined,
-            contractId: contractId || undefined,
-            companyId,
-          },
-          select: {
-            id: true,
-          },
-        });
-      } else {
-        journal = await prisma.journal.update({
-          where: {
-            id: journalId,
-          },
-          data: {
-            invoiceId,
-            aichResultId,
-            projectId: projectId || undefined,
-            contractId: contractId || undefined,
-          },
-          select: {
-            id: true,
-          },
-        });
-      }
-
-      return journal.id;
-    });
-
-    return result;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-}
-
+// Info Murky (20240416): Utils
 function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
-  const companyString = companyId as string;
-  const result = /d/.test(companyString);
-  return result;
+  if (Array.isArray(companyId)) {
+    return false;
+  }
+
+  const companyIdRegex = /^\d+$/;
+  return companyIdRegex.test(companyId as string);
 }
 
 // Info Murky (20240416): Body傳進來會是any
@@ -224,23 +93,335 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   return json.payload as IAccountResultStatus;
 }
 
-function getProjectIdAndContractIdFromInvoice(invoice: IInvoiceDataForSavingToDB) {
-  const projectIdNum = Number(invoice.projectId);
-  const contractIdNum = Number(invoice.contractId);
-  const projectId = !Number.isNaN(projectIdNum) ? projectIdNum : null;
-  const contractId = !Number.isNaN(contractIdNum) ? contractIdNum : null;
-  return { projectId, contractId };
+// Info (20240526 - Murky): Prisma
+
+async function findUniqueJournalInPrisma(journalId: number) {
+  const journal = await prisma.journal.findUnique({
+    where: { id: journalId },
+    select: {
+      id: true,
+      ocrId: true,
+      invoiceId: true,
+      projectId: true,
+    },
+  });
+  return journal;
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
-    message,
-    {} as IAccountResultStatus
-  );
-  res.status(httpCode).json(result);
+async function createOrFindCompanyInPrisma(companyId: number) {
+  let company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { id: true },
+  });
+
+  if (!company) {
+    try {
+      const now = Date.now();
+      const currentTimestamp = timestampInSeconds(now);
+      company = await prisma.company.create({
+        data: {
+          id: companyId,
+          code: 'COMP123',
+          name: 'Company Name',
+          regional: 'Regional Name',
+          startDate: currentTimestamp,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
+        },
+        select: { id: true },
+      });
+    } catch (error) {
+      throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    }
+  }
+
+  return company;
 }
 
-async function handleGetRequest(
+async function createPaymentInPrisma(paymentData: IPayment) {
+  const payment = await prisma.payment.create({
+    data: paymentData,
+    select: {
+      id: true,
+    },
+  });
+  return payment;
+}
+
+async function updatePaymentInPrisma(paymentId: number, paymentData: IPayment) {
+  const payment = await prisma.payment.update({
+    where: {
+      id: paymentId,
+    },
+    data: paymentData,
+    select: {
+      id: true,
+    },
+  });
+  return payment;
+}
+
+async function findUniqueInvoiceInPrisma(invoiceId: number) {
+  const invoice = await prisma.invoice.findUnique({
+    where: {
+      id: invoiceId,
+    },
+    select: {
+      id: true,
+      paymentId: true,
+    },
+  });
+  return invoice;
+}
+
+async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavingToDB) {
+  const {
+    payment: paymentData,
+    project,
+    projectId,
+    contract,
+    contractId,
+    journalId,
+    ...invoiceData
+  } = invoiceDataForSavingToDB;
+
+  try {
+    const result = await prisma.$transaction(async () => {
+      // Depreciate ( 20240522 - Murky ) For demo purpose, create company if not exist
+      const payment = await createPaymentInPrisma(paymentData);
+
+      const invoice = await prisma.invoice.create({
+        data: {
+          date: timestampInSeconds(invoiceData.date),
+          eventType: invoiceData.eventType,
+          paymentReason: invoiceData.paymentReason,
+          description: invoiceData.description,
+          vendorOrSupplier: invoiceData.vendorOrSupplier,
+          payment: {
+            connect: {
+              id: payment.id,
+            },
+          },
+        },
+      });
+
+      return invoice.id;
+    });
+    return result;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+async function updateInvoiceInPrisma(
+  invoiceIdToBeUpdated: number,
+  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB
+) {
+  const {
+    payment: paymentData,
+    project,
+    projectId,
+    contract,
+    contractId,
+    journalId,
+    ...invoiceData
+  } = invoiceDataForSavingToDB;
+
+  try {
+    const result = await prisma.$transaction(async () => {
+      const invoiceInDB = await findUniqueInvoiceInPrisma(invoiceIdToBeUpdated);
+
+      if (!invoiceInDB) {
+        throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+      }
+      const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
+
+      const invoice = await prisma.invoice.update({
+        where: {
+          id: invoiceInDB.id,
+        },
+        data: {
+          date: timestampInSeconds(invoiceData.date),
+          eventType: invoiceData.eventType,
+          paymentReason: invoiceData.paymentReason,
+          description: invoiceData.description,
+          vendorOrSupplier: invoiceData.vendorOrSupplier,
+          payment: {
+            connect: {
+              id: payment.id,
+            },
+          },
+        },
+      });
+
+      return invoice.id;
+    });
+    return result;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+async function createJournalInPrisma(
+  invoiceId: number,
+  projectId: number | null,
+  aichResultId: string,
+  contractId: number | null,
+  companyId: number
+) {
+  try {
+    const data: Prisma.journalCreateInput = {
+      company: {
+        connect: {
+          id: companyId,
+        },
+      },
+      invoice: {
+        connect: {
+          id: invoiceId,
+        },
+      },
+      aichResultId
+    };
+
+    if (projectId !== null) {
+      data.project = {
+        connect: {
+          id: projectId,
+        },
+      };
+    }
+
+    if (contractId !== null) {
+      data.contract = {
+        connect: {
+          id: contractId,
+        },
+      };
+    }
+
+    const journal = await prisma.journal.create({
+      data,
+      select: {
+        id: true,
+      },
+    });
+
+    return journal.id;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+async function updateJournalInPrisma(
+  journalId: number,
+  invoiceId: number,
+  aichResultId: string,
+  projectId: number | null,
+  contractId: number | null
+) {
+  try {
+    const data: Prisma.journalUpdateInput = {
+      invoice: {
+        connect: {
+          id: invoiceId,
+        },
+      },
+      aichResultId,
+    };
+
+    if (projectId !== null) {
+      data.project = {
+        connect: {
+          id: projectId,
+        },
+      };
+    }
+
+    if (contractId !== null) {
+      data.contract = {
+        connect: {
+          id: contractId,
+        },
+      };
+    }
+
+    const journal = await prisma.journal.update({
+      where: {
+        id: journalId,
+      },
+      data,
+      select: {
+        id: true,
+      },
+    });
+
+    return journal.id;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+  }
+}
+
+// Info (20240524 - Murky): Main logics
+async function handlePrismaSavingLogic(
+  formattedInvoice: IInvoiceDataForSavingToDB,
+  aichResultId: string,
+  companyId: number
+) {
+  // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
+  try {
+    const result = await prisma.$transaction(async () => {
+      // Check if contractId exists if it's not null
+      const { journalId, projectId, contractId } = formattedInvoice;
+
+      let journalIdBeCreateOrUpdate: number;
+
+      if (!journalId) {
+        // Info Murky (20240416): 如果不存在journalId，則代表是新的invoice，需要新增
+        const company = await createOrFindCompanyInPrisma(companyId);
+        const invoiceId = await createInvoiceInPrisma(formattedInvoice);
+        journalIdBeCreateOrUpdate = await createJournalInPrisma(
+          invoiceId,
+          projectId,
+          aichResultId,
+          contractId,
+          company.id
+        );
+      } else {
+        const journalInDB = await findUniqueJournalInPrisma(journalId);
+
+        if (!journalInDB) {
+          throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+        }
+
+        let invoiceId: number;
+
+        if (!journalInDB.invoiceId) {
+          // Info Murky (20240416): If 沒有invoiceId，代表是新的invoice，需要新增
+          invoiceId = await createInvoiceInPrisma(formattedInvoice);
+        } else {
+          // Info Murky (20240416): If 有invoiceId，是之前傳錯要修改的invoice，需要更新
+          invoiceId = await updateInvoiceInPrisma(journalId, formattedInvoice);
+        }
+        journalIdBeCreateOrUpdate = await updateJournalInPrisma(
+          journalId,
+          invoiceId,
+          aichResultId,
+          projectId,
+          contractId
+        );
+      }
+
+      return journalIdBeCreateOrUpdate;
+    });
+
+    return result;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+async function handlePostRequest(
   companyId: string,
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IPostApiResponseType>>
@@ -248,10 +429,6 @@ async function handleGetRequest(
   const { invoice } = req.body;
 
   const formattedInvoice = formatInvoice(invoice);
-
-  // ToDo: save to prisma
-  const companyIdNum = Number(companyId);
-  const { invoiceId, companyIdNumber } = await invoiceSaveToPrisma(formattedInvoice, companyIdNum);
 
   // Post to AICH
   const fetchResult = uploadInvoiceToAICH(formattedInvoice);
@@ -263,21 +440,26 @@ async function handleGetRequest(
   }
 
   // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-  const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
+  // const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
 
-  const journalId = await journalSaveToPrisma(
-    formattedInvoice.journalId,
-    invoiceId,
+  const journalId = await handlePrismaSavingLogic(
+    formattedInvoice,
     resultStatus.resultId,
-    projectId,
-    contractId,
-    companyIdNumber
+    Number(companyId)
   );
 
   const { httpCode, result } = formatApiResponse<IPostApiResponseType>(STATUS_MESSAGE.CREATED, {
     journalId,
     resultStatus,
   });
+  res.status(httpCode).json(result);
+}
+
+function handleErrorResponse(res: NextApiResponse, message: string) {
+  const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
+    message,
+    {} as IAccountResultStatus
+  );
   res.status(httpCode).json(result);
 }
 
@@ -354,7 +536,7 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
       // Handle POST request to create a new invoice
-      await handleGetRequest(companyId, req, res);
+      await handlePostRequest(companyId, req, res);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }

@@ -4,14 +4,33 @@ import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
+import { getSession } from '@/lib/utils/get_session';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUser | IUser[]>>
 ) {
   try {
+    // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
+    const session = await getSession(req, res);
+    const { userId } = session;
+    if (!userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    }
+    const userCompanyRole = await prisma.userCompanyRole.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+    const roleNames: string[] = userCompanyRole.map((item) => item.role.name);
+    if (!roleNames.includes('SUPER_ADMIN')) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    }
     if (req.method === 'GET') {
-      // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
       const userList: IUser[] = await prisma.user.findMany();
       const { httpCode, result } = formatApiResponse<IUser[]>(
         STATUS_MESSAGE.SUCCESS_LIST,

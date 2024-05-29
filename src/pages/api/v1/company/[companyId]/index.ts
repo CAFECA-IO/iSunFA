@@ -12,9 +12,6 @@ export default async function handler(
   const { method } = req;
 
   try {
-    if (!req.headers.userid) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-    }
     if (!req.query.companyId) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
@@ -54,6 +51,18 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
+      const listUserCompanyRole = await prisma.userCompanyRole.findMany({
+        where: {
+          companyId: companyIdNum,
+        },
+      });
+      await prisma.userCompanyRole.deleteMany({
+        where: {
+          id: {
+            in: listUserCompanyRole.map((item) => item.id),
+          },
+        },
+      });
       const company: ICompany = await prisma.company.delete({
         where: {
           id: companyIdNum,

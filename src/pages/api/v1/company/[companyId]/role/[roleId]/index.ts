@@ -20,26 +20,15 @@ export default async function handler(
     const roleIdNum = Number(roleId);
     // Info: (20240419 - Jacky) A010002 - GET /admin/:id
     if (req.method === 'GET') {
-      const getRole = await prisma.role.findUnique({
+      const getRole: IRole = (await prisma.role.findUnique({
         where: {
           id: roleIdNum,
         },
-        include: {
-          company: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      });
+      })) as IRole;
       if (!getRole) {
         throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
-      const role: IRole = {
-        ...getRole,
-        companyName: getRole.company.name,
-      };
-      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.SUCCESS_GET, role);
+      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.SUCCESS_GET, getRole);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) A010004 - PUT /admin/:id
     } else if (req.method === 'PUT') {
@@ -47,7 +36,7 @@ export default async function handler(
       if (!name || !permissions) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const updatedRole = await prisma.role.update({
+      const updatedRole: IRole = await prisma.role.update({
         where: {
           id: roleIdNum,
         },
@@ -55,39 +44,17 @@ export default async function handler(
           name,
           permissions,
         },
-        include: {
-          company: {
-            select: {
-              name: true,
-            },
-          },
-        },
       });
-      const role: IRole = {
-        ...updatedRole,
-        companyName: updatedRole.company.name,
-      };
-      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.SUCCESS, role);
+      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.SUCCESS, updatedRole);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) A010005 - DELETE /admin/:id
     } else if (req.method === 'DELETE') {
-      const deletedAdmin = await prisma.role.delete({
+      const deletedRole: IRole = await prisma.role.delete({
         where: {
           id: roleIdNum,
         },
-        include: {
-          company: {
-            select: {
-              name: true,
-            },
-          },
-        },
       });
-      const admin: IRole = {
-        ...deletedAdmin,
-        companyName: deletedAdmin.company.name,
-      };
-      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.SUCCESS, admin);
+      const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.SUCCESS, deletedRole);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);

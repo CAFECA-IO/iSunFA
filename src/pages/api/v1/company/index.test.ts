@@ -1,19 +1,70 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/index';
 import prisma from '@/client';
-import { timestampInSeconds } from '@/lib/utils/common';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let companyId: number;
+let userCompanyRole: {
+  userId: number;
+  companyId: number;
+  roleId: number;
+  startDate: number;
+  id: number;
+};
 
 beforeEach(async () => {
+  userCompanyRole = await prisma.userCompanyRole.create({
+    data: {
+      user: {
+        connectOrCreate: {
+          where: {
+            credentialId: 'company_index_test',
+          },
+          create: {
+            name: 'John',
+            credentialId: 'company_index_test',
+            publicKey: 'publicKey',
+            algorithm: 'ES256',
+            imageId: 'imageId',
+          },
+        },
+      },
+      role: {
+        connectOrCreate: {
+          where: {
+            name: 'COMPANY_ADMIN',
+          },
+          create: {
+            name: 'COMPANY_ADMIN',
+            permissions: ['hihi', 'ooo'],
+          },
+        },
+      },
+      company: {
+        connectOrCreate: {
+          where: {
+            code: 'TST_company_user1',
+          },
+          create: {
+            code: 'TST_company_user1',
+            name: 'Test Company',
+            regional: 'TW',
+            startDate: 0,
+            createdAt: 0,
+            updatedAt: 0,
+          },
+        },
+      },
+      startDate: 0,
+    },
+  });
+
   req = {
     headers: {},
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: 1 },
+    session: { userId: userCompanyRole.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -21,45 +72,51 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-  let company = await prisma.company.findFirst({
-    where: {
-      code: 'TST_company1',
-    },
-  });
-  if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
-    company = await prisma.company.create({
-      data: {
-        code: 'TST_company1',
-        name: 'Test Company',
-        regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
-      },
-    });
-  }
-  companyId = company.id;
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.company.delete({
+    await prisma.user.delete({
       where: {
-        id: companyId,
+        id: userCompanyRole.userId,
       },
     });
   } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+    /* empty */
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: userCompanyRole.companyId,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.role.delete({
+      where: {
+        id: userCompanyRole.roleId,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.userCompanyRole.delete({
+      where: {
+        id: userCompanyRole.id,
+      },
+    });
+  } catch (error) {
+    /* empty */
   }
 });
 
 describe('Company API', () => {
   it('should return a list of companies when method is GET', async () => {
     req.method = 'GET';
-    req.headers.userid = '1';
 
     await handler(req, res);
 
@@ -72,10 +129,17 @@ describe('Company API', () => {
         message: expect.any(String),
         payload: expect.arrayContaining([
           expect.objectContaining({
-            id: expect.any(Number),
-            code: expect.any(String),
-            name: expect.any(String),
-            regional: expect.any(String),
+            company: expect.objectContaining({
+              id: expect.any(Number),
+              code: expect.any(String),
+              name: expect.any(String),
+              regional: expect.any(String),
+            }),
+            role: expect.objectContaining({
+              id: expect.any(Number),
+              name: expect.any(String),
+              permissions: expect.any(Array),
+            }),
           }),
         ]),
       })
@@ -84,9 +148,8 @@ describe('Company API', () => {
 
   it('should create a new company when method is POST and valid data is provided', async () => {
     req.method = 'POST';
-    req.headers.userid = '1';
     req.body = {
-      code: 'TSTTST',
+      code: 'TST_createCompany',
       name: 'Company Name',
       regional: 'Regional Name',
     };
@@ -100,17 +163,30 @@ describe('Company API', () => {
         success: expect.any(Boolean),
         code: expect.stringContaining('201'),
         message: expect.any(String),
-        payload: expect.objectContaining({
+        payload: {
+          company: expect.objectContaining({
+            id: expect.any(Number),
+            code: expect.any(String),
+            name: expect.any(String),
+            regional: expect.any(String),
+          }),
           id: expect.any(Number),
-          code: expect.any(String),
-          name: expect.any(String),
-          regional: expect.any(String),
-        }),
+          role: expect.objectContaining({
+            id: expect.any(Number),
+            name: expect.any(String),
+            permissions: expect.any(Array),
+          }),
+        },
       })
     );
-    await prisma.company.delete({
+    await prisma.userCompanyRole.delete({
       where: {
         id: res.json.mock.calls[0][0].payload.id,
+      },
+    });
+    await prisma.company.delete({
+      where: {
+        code: 'TST_createCompany',
       },
     });
   });
