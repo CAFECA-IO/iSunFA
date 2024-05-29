@@ -136,8 +136,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
-    uploadInvoice({ params: { companyId: selectedCompany?.id }, body: formData });
     setIsShowSuccessModal(true); // Info: (20240528 - Julian) 點擊上傳後才升起 flag
+    uploadInvoice({ params: { companyId: selectedCompany!.id }, body: formData });
 
     // Info: (20240506 - Julian) 關閉攝影機
     handleCloseCamera();

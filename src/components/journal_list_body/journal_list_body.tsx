@@ -30,8 +30,9 @@ const JournalListTab = () => {
     code,
     error,
     data: journals,
+    // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
   } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
-    params: { companyId: selectedCompany?.id },
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
   });
 
   const {

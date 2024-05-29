@@ -34,6 +34,8 @@ import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { AllReportTypesKey } from '@/interfaces/report_type';
 
 interface IGlobalContext {
   width: number;

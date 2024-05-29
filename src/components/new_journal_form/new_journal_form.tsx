@@ -49,6 +49,7 @@ const contractSelection: { id: number | null; name: string }[] = [
 ];
 
 const NewJournalForm = () => {
+  const { selectedCompany } = useUserCtx();
   // Info: (20240428 - Julian) get values from context
   const {
     messageModalVisibilityHandler,
@@ -57,7 +58,6 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
 
   const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
     useAccountingCtx();
@@ -88,25 +88,23 @@ const NewJournalForm = () => {
     false
   );
 
-  // Info: (20240527 - Murky) To Emily Invoice改這邊
-  const result = invoiceReturn?.resultStatus;
-  const journalId = invoiceReturn?.journalId;
+  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
 
-  const companyId = selectedCompany?.id || DEFAULT_DISPLAYED_COMPANY_ID;
+  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
+  const {
+    trigger: getAIStatus,
+    data: status,
+    success: statusSuccess,
+    code: statusCode,
+  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
 
-  // const {
-  //   trigger: getAIStatus,
-  //   data: status,
-  //   success: statusSuccess,
-  //   code: statusCode,
-  // } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
-
-  // const {
-  //   trigger: getAIResult,
-  //   data: AIResult,
-  //   success: AIResultSuccess,
-  //   code: AIResultCode,
-  // } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
+  const {
+    trigger: getAIResult,
+    data: AIResult,
+    success: AIResultSuccess,
+    code: AIResultCode,
+  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
+  */
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -146,10 +144,7 @@ const NewJournalForm = () => {
   useEffect(() => {
     if (selectedUnprocessedJournal !== undefined) {
       getJournalById({
-        params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
-          journalId: selectedUnprocessedJournal.id,
-        },
+        params: { companyId: selectedCompany?.id, journalId: selectedUnprocessedJournal.id },
       });
     }
   }, [selectedUnprocessedJournal]);
@@ -160,7 +155,7 @@ const NewJournalForm = () => {
       if (journal.invoice === null) {
         getOCRResult({
           params: {
-            companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+            companyId,
             resultId: selectedUnprocessedJournal.aichResultId,
           },
         }); // selectedUnprocessedJournal.aichResultId
@@ -425,7 +420,7 @@ const NewJournalForm = () => {
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoiceData: IInvoiceDataForSavingToDB = {
-      journalId: selectedUnprocessedJournal?.id || null,
+      journalId: selectedUnprocessedJournal?.id || invoiceReturn?.journalId || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
@@ -451,13 +446,18 @@ const NewJournalForm = () => {
       },
     };
 
-    createInvoice({ params: { companyId }, body: { invoice: invoiceData } });
-    // confirmModalVisibilityHandler();
+    createInvoice({
+      params: { companyId },
+      body: { invoice: invoiceData },
+    });
   };
 
   useEffect(() => {
-    if (createSuccess && journalId) {
-      confirmModalDataHandler({ journalId, askAIId: result?.resultId });
+    if (createSuccess && invoiceReturn?.journalId && invoiceReturn?.resultStatus) {
+      confirmModalDataHandler({
+        journalId: invoiceReturn.journalId,
+        askAIId: invoiceReturn.resultStatus.resultId,
+      });
       confirmModalVisibilityHandler();
       // const { resultId } = result;
       // getAIStatus({
@@ -476,86 +476,88 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [createSuccess, result, createCode]);
+  }, [createSuccess, invoiceReturn, createCode]);
 
-  // useEffect(() => {
-  //   let interval: NodeJS.Timeout | undefined;
-  //   if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-  //     interval = setInterval(() => {
-  //       getAIStatus({
-  //         params: {
-  //           companyId,
-  //           resultId: result.resultId,
-  //         },
-  //       });
-  //     }, 2000);
-  //   }
-  //   if (statusSuccess === false) {
-  //     messageModalDataHandler({
-  //       messageType: MessageType.ERROR,
-  //       title: 'Upload Journal Failed',
-  //       content: `Upload journal failed: ${statusCode}`,
-  //       submitBtnStr: 'Close',
-  //       submitBtnFunction: messageModalVisibilityHandler,
-  //     });
-  //     messageModalVisibilityHandler();
-  //   }
-  //   if (
-  //     status === ProgressStatus.INVALID_INPUT ||
-  //     status === ProgressStatus.LLM_ERROR ||
-  //     status === ProgressStatus.SYSTEM_ERROR ||
-  //     status === ProgressStatus.NOT_FOUND ||
-  //     status === ProgressStatus.PAUSED
-  //   ) {
-  //     messageModalDataHandler({
-  //       messageType: MessageType.ERROR,
-  //       title: 'Upload Journal Failed',
-  //       content: `Upload journal status: ${status}`,
-  //       submitBtnStr: 'Close',
-  //       submitBtnFunction: messageModalVisibilityHandler,
-  //     });
-  //     messageModalVisibilityHandler();
-  //   }
-  //   if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
-  //     if (journal?.id) {
-  //       getJournalById({ params: { companyId, journalId: journal?.id } });
-  //     } else {
-  //       getAIResult({
-  //         params: {
-  //           companyId,
-  //           resultId: result.resultId,
-  //         },
-  //       });
-  //     }
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [result, statusSuccess, status]);
+  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      interval = setInterval(() => {
+        getAIStatus({
+          params: {
+            companyId,
+            resultId: result.resultId,
+          },
+        });
+      }, 2000);
+    }
+    if (statusSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal failed: ${statusCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+    if (
+      status === ProgressStatus.INVALID_INPUT ||
+      status === ProgressStatus.LLM_ERROR ||
+      status === ProgressStatus.SYSTEM_ERROR ||
+      status === ProgressStatus.NOT_FOUND ||
+      status === ProgressStatus.PAUSED
+    ) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal status: ${status}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
+      if (journal?.id) {
+        getJournalById({ params: { companyId, journalId: journal?.id } });
+      } else {
+        getAIResult({
+          params: {
+            companyId,
+            resultId: result.resultId,
+          },
+        });
+      }
+    }
+    return () => clearInterval(interval);
+  }, [result, statusSuccess, status]);
 
-  // useEffect(() => {
-  //   if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-  //     loadingModalVisibilityHandler();
-  //   }
-  //   if (status === ProgressStatus.SUCCESS) {
-  //     loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
-  //     confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
-  //   }
-  // }, [statusSuccess, status]);
+  useEffect(() => {
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      loadingModalVisibilityHandler();
+    }
+    if (status === ProgressStatus.SUCCESS) {
+      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
+      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
+    }
+  }, [statusSuccess, status]);
 
-  // useEffect(() => {
-  //   if (AIResultSuccess && AIResult) {
-  //     getJournalById({ params: { companyId, journalId } });
-  //   }
-  //   if (AIResultSuccess === false) {
-  //     messageModalDataHandler({
-  //       messageType: MessageType.ERROR,
-  //       title: 'Get Voucher Preview Failed',
-  //       content: `Get voucher preview failed: ${AIResultCode}`,
-  //       submitBtnStr: 'Close',
-  //       submitBtnFunction: messageModalVisibilityHandler,
-  //     });
-  //     messageModalVisibilityHandler();
-  //   }
-  // }, [AIResultSuccess, AIResult, AIResultCode]);
+  useEffect(() => {
+    if (AIResultSuccess && AIResult) {
+      getJournalById({ params: { companyId, journalId } });
+    }
+    if (AIResultSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Voucher Preview Failed',
+        content: `Get voucher preview failed: ${AIResultCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [AIResultSuccess, AIResult, AIResultCode]);
+  */
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';
