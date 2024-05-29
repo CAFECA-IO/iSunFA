@@ -141,7 +141,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
   ) : null;
 
   return (
-    <div className="lg:mr-10">
+    <div className="">
       {displayedStatusButtons}
       <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
         {/* Info: (20240514 - Shirley) Header */}

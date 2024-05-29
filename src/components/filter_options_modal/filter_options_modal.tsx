@@ -1,7 +1,7 @@
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
-import { IFilterOptions } from '@/interfaces/modals';
+import { FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import { AllReportTypesKey, AllReportTypesOptions } from '@/interfaces/report_type';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import React, { useEffect } from 'react';
@@ -10,12 +10,14 @@ import useStateRef from 'react-usestateref';
 interface IFilterOptionsModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  filterType: FilterOptionsModalType;
   getFilterOptions?: (filterOptions: IFilterOptions) => void; // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
 }
 
 const FilterOptionsModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  filterType,
   getFilterOptions = () => {},
 }: IFilterOptionsModalProps) => {
   const [period, setPeriod, periodRef] = useStateRef(default30DayPeriodInSec);
@@ -72,7 +74,7 @@ const FilterOptionsModal = ({
     <div
       ref={typeMenuRef}
       onClick={toggleTypeMenu}
-      className={`group relative flex h-44px w-300px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex w-full cursor-pointer max-md:max-w-full lg:w-auto ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
@@ -95,8 +97,7 @@ const FilterOptionsModal = ({
       </svg>{' '}
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
-        // eslint-disable-next-line tailwindcss/no-custom-classname
-        className={`grid-cols-0 absolute left-0 top-50px grid w-full overflow-hidden shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} rounded-sm border transition-all duration-150 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-rows-0 overflow-hidden shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} rounded-sm border transition-all duration-150 ease-in-out`}
       >
         {/* Info: 超過高度就顯示卷軸 (20240528 - Shirley) */}
         <ul className="z-10 flex max-h-200px w-full flex-col items-start overflow-y-auto bg-white p-8px">
@@ -120,7 +121,7 @@ const FilterOptionsModal = ({
     <div
       ref={historySortMenuRef}
       onClick={toggleHistorySortMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex w-full cursor-pointer max-md:max-w-full lg:w-auto ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isSortSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
@@ -164,7 +165,7 @@ const FilterOptionsModal = ({
 
   const isDisplayedModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative mx-auto flex flex-col items-center rounded-md bg-white pb-6 pt-3 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+      <div className="relative mx-5 flex w-full flex-col items-center rounded-md bg-white pb-6 pt-3 shadow-lg shadow-black/80 sm:mx-auto sm:w-400px sm:px-3">
         <div className="flex w-full justify-between whitespace-nowrap bg-white px-5 py-4 text-xl font-bold leading-8 text-card-text-primary">
           <div className="flex-1">Filter</div>
 
@@ -204,6 +205,7 @@ const FilterOptionsModal = ({
             type={DatePickerType.CHOOSE_PERIOD}
             period={period}
             setFilteredPeriod={setPeriod}
+            btnClassName=""
           />
 
           <div className="flex flex-col space-y-2 self-stretch">
@@ -226,7 +228,7 @@ const FilterOptionsModal = ({
       </div>
     </div>
   ) : null;
-  return <div>{isDisplayedModal}</div>;
+  return <div id={`${filterType}-filter-options-modal`}>{isDisplayedModal}</div>;
 };
 
 export default FilterOptionsModal;

@@ -266,7 +266,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
   ) : null;
 
   return (
-    <>
+    <div className="">
       {displayedStatusButtons}
       <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
@@ -285,7 +285,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
         {/* Info: (20240514 - Shirley) Body */}
         <tbody>{displayedList}</tbody>
       </table>
-    </>
+    </div>
   );
 };
 
