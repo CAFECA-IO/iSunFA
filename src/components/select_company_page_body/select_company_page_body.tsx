@@ -14,6 +14,7 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
+import { IRole } from '@/interfaces/role';
 
 const SelectCompanyPageBody = () => {
   const { signedIn, username, selectCompany, successSelectCompany, errorCode } = useUserCtx();
@@ -33,15 +34,17 @@ const SelectCompanyPageBody = () => {
 
   const {
     trigger: listCompany,
-    data: companyData,
-    success: companyDataSuccess,
-    isLoading: isCompanyDataLoading,
-  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {}, false, false);
+    data: companyAndRoleList,
+    success: companyAndRoleListSuccess,
+    isLoading: iscompanyAndRoleListLoading,
+  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST, {}, false, false);
 
   const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
-  const [companyList, setCompanyList] = useState<ICompany[]>([]);
-  const [filteredCompanyList, setFilteredCompanyList] = useState<ICompany[]>([]);
+  const [companyList, setCompanyList] = useState<Array<{ company: ICompany; role: IRole }>>([]);
+  const [filteredCompanyList, setFilteredCompanyList] = useState<
+    Array<{ company: ICompany; role: IRole }>
+  >([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
   const selectedCompanyName = selectedCompany?.name ?? 'Select an Company';
@@ -78,16 +81,16 @@ const SelectCompanyPageBody = () => {
   }, [successSelectCompany, errorCode]);
 
   useEffect(() => {
-    if (companyDataSuccess && companyData) {
-      setCompanyList(companyData);
-      setFilteredCompanyList(companyData);
+    if (companyAndRoleListSuccess && companyAndRoleList) {
+      setCompanyList(companyAndRoleList);
+      setFilteredCompanyList(companyAndRoleList);
     }
-  }, [companyDataSuccess, companyData]);
+  }, [companyAndRoleListSuccess, companyAndRoleList]);
 
   useEffect(() => {
     if (searchValue !== '') {
       const filteredList = companyList.filter(
-        (company) => company.name.toLowerCase().includes(searchValue.toLowerCase())
+        (data) => data.company.name.toLowerCase().includes(searchValue.toLowerCase())
         // ToDo: (20240516 - Julian) role
       );
       setFilteredCompanyList(filteredList);
@@ -96,28 +99,33 @@ const SelectCompanyPageBody = () => {
     }
   }, [searchValue]);
 
-  const displayCompanyList = !isCompanyDataLoading ? (
-    filteredCompanyList.map((company) => {
+  const displayCompanyList = !iscompanyAndRoleListLoading ? (
+    filteredCompanyList.map((companyAndRole) => {
       const companyClickHandler = () => {
-        setSelectedCompany(company);
+        setSelectedCompany(companyAndRole.company);
         setIsCompanyMenuOpen(false);
       };
       return (
         <button
-          key={company.id}
+          key={companyAndRole.company.id}
           onClick={companyClickHandler}
           type="button"
           className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
         >
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             {/* ToDo: (20240516 - Julian) icon */}
-            <Image alt={company.name} src={'/entities/happy.png'} width={20} height={20} />
+            <Image
+              alt={companyAndRole.company.name}
+              src={'/entities/happy.png'}
+              width={20}
+              height={20}
+            />
           </div>
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
-            {company.name}
+            {companyAndRole.company.name}
           </p>
           {/* ToDo: (20240516 - Julian) role */}
-          <p className="text-xs text-lightGray5">{'my role'}</p>
+          <p className="text-xs text-lightGray5">{companyAndRole.role.name}</p>
         </button>
       );
     })
