@@ -101,7 +101,7 @@ const NewJournalForm = () => {
     success: AIResultSuccess,
     code: AIResultCode,
   } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-  */ 
+  */
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);

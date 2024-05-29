@@ -95,6 +95,7 @@ const FilterOptionsModal = ({
       </svg>{' '}
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
+        // eslint-disable-next-line tailwindcss/no-custom-classname
         className={`grid-cols-0 absolute left-0 top-50px grid w-full overflow-hidden shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} rounded-sm border transition-all duration-150 ease-in-out`}
       >
         {/* Info: 超過高度就顯示卷軸 (20240528 - Shirley) */}
