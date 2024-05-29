@@ -59,10 +59,11 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
   });
 
-  const [tokenContract, setTokenContract] = useState<string>('');
-  const [tokenId, setTokenId] = useState<string>('');
+  const [contractId, setContractId] = useState<string>('');
+  const [journalTokenId, setJournalTokenId] = useState<string>('');
   const [type, setType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reason, setReason] = useState<string>('');
   const [vendor, setVendor] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -99,8 +100,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     if (journalDetail) {
       const { tokenContract, tokenId, invoice, voucher } = journalDetail;
 
-      setTokenContract(tokenContract ?? '-');
-      setTokenId(tokenId ?? '-');
+      setContractId(tokenContract ?? '-');
+      setJournalTokenId(tokenId ?? '-');
       setInvoiceIndex(`${journalDetail.id}`);
 
       if (invoice) {
@@ -162,10 +163,10 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const invoicePreviewSrc = `/api/v1/company/1/invoice/${invoiceIndex}/image`;
 
   const copyTokenContractHandler = () => {
-    navigator.clipboard.writeText(tokenContract);
+    navigator.clipboard.writeText(contractId);
   };
   const copyTokenIdHandler = () => {
-    navigator.clipboard.writeText(tokenId);
+    navigator.clipboard.writeText(journalTokenId);
   };
 
   const invoicePreviewClickHandler = () => {
@@ -490,7 +491,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                           </button>
                         </div>
 
-                        <p className="break-all text-darkBlue">{tokenContract}</p>
+                        <p className="break-all text-darkBlue">{contractId}</p>
                       </div>
                       <button
                         type="button"
@@ -513,7 +514,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                             <PiCopySimpleBold size={16} />
                           </button>
                         </div>
-                        <p className=" text-darkBlue">{tokenId}</p>
+                        <p className=" text-darkBlue">{journalTokenId}</p>
                       </div>
                       <button
                         type="button"

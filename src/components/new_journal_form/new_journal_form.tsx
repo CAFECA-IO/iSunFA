@@ -22,7 +22,6 @@ import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { IJournalData } from '@/interfaces/journal';
-import { ILineItem } from '@/interfaces/line_item';
 import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
@@ -144,7 +143,7 @@ const NewJournalForm = () => {
   useEffect(() => {
     if (selectedUnprocessedJournal !== undefined) {
       getJournalById({
-        params: { companyId: selectedCompany?.id, journalId: selectedUnprocessedJournal.id },
+        params: { companyId, journalId: selectedUnprocessedJournal.id },
       });
     }
   }, [selectedUnprocessedJournal]);
@@ -440,7 +439,7 @@ const NewJournalForm = () => {
         installmentPeriod: inputInstallment,
         paymentAlreadyDone: inputPartialPaid,
         isRevenue: true,
-        progress: 0,
+        progress: progressRate,
         paymentPeriod,
         paymentStatus,
       },

@@ -204,12 +204,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
           if (description) newVoucher[targetId].particulars = description;
         }
 
-        // Info: (20240529 - Julian) 移除借貸皆為 0 的傳票列
-        const newVoucherWithoutVoid = newVoucher.filter(
-          (voucher) => voucher.debit || voucher.credit
-        );
-
-        return newVoucherWithoutVoid;
+        return newVoucher;
       });
     },
     [accountingVoucher]

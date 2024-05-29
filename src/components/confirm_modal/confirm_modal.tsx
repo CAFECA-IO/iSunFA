@@ -122,6 +122,7 @@ const ConfirmModal = ({
   }, [journalId]);
 
   useEffect(() => {
+    clearVoucherHandler();
     // Info: (20240528 - Julian) Reset AI status
     setIsAskAILoading(true);
     // Info: (20240528 - Julian) Call AI API first time
@@ -207,14 +208,16 @@ const ConfirmModal = ({
   const importVoucherClickHandler = () => {
     const AILineItems = AIResult?.lineItems ?? [];
 
-    // Info: (20240529 - Julian) 清空 accountingVoucher，再寫入 AI 資料
+    // Info: (20240529 - Julian) 清空 accountingVoucher
     clearVoucherHandler();
-    AILineItems.map((lineItem, index) => {
+    // Info: (20240529 - Julian) 先加入空白列，再寫入資料
+    AILineItems.forEach((lineItem, index) => {
       addRowHandler();
       changeVoucherAmountHandler(
         index,
         lineItem.amount,
-        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT
+        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
+        lineItem.description
       );
     });
     // Info: (20240529 - Julian) 寫入 lineItems state
