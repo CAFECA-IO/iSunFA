@@ -31,7 +31,7 @@ const DashboardOverview = () => {
       : +dashboardOverview.topProjectRoi < 0
         ? `${dashboardOverview.topProjectRoi}`
         : `0`;
-  const displayedPreLaunchProject = dashboardOverview.preLaunchProject ?? `0`;
+  const displayedpreLaunchProject = dashboardOverview.preLaunchProject ?? `0`;
 
   React.useEffect(() => {
     if (getSuccess && profitInsight) {
@@ -169,7 +169,7 @@ const DashboardOverview = () => {
             </div>
           </div>
           <div className="mr-12 self-center text-center text-5xl font-semibold leading-52px text-text-neutral-solid-dark md:mr-0 lg:mb-3">
-            {displayedPreLaunchProject}
+            {displayedpreLaunchProject}
           </div>
         </div>
       </div>

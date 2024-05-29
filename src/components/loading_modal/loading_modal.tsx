@@ -11,6 +11,7 @@ const LoadingModal = ({ isModalVisible }: ILoadingModalProps) => {
       <div
         className={`relative flex h-376px w-90vw items-center justify-center gap-16px rounded-xs bg-white px-32px py-16px md:w-376px`}
       >
+        It is loading, please wait...
         <LoadingSVG />
       </div>
     </div>

@@ -6,7 +6,8 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
+// import { IJournal } from '@/interfaces/journal';
+import { IDummyJournal } from '@/interfaces/journal';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
@@ -30,7 +31,8 @@ const JournalListTab = () => {
     code,
     error,
     data: journals,
-  } = APIHandler<IJournal[]>(APIName.JOURNAL_LIST, {
+    // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
+  } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
   });
 

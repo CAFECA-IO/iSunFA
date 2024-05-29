@@ -59,7 +59,7 @@ const NavBar = () => {
     signOut();
   };
 
-  const companyChangeClickHandler = (e: { preventDefault: () => void; }) => {
+  const companyChangeClickHandler = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     selectCompany(null);
     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
