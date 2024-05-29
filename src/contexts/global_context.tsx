@@ -376,21 +376,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    if (reportPendingStatus) {
-      toastHandler({
-        type: ToastType.INFO,
-        id: 'report-generating',
-        closeable: false,
-        content: (
-          <div className="flex items-center space-x-2">
-            <span>Generating the report</span>
-            <LoadingSVG />
-          </div>
-        ),
-        position: ToastPosition.BOTTOM_RIGHT,
-        autoClose: false,
-      });
-    }
+    // TODO: Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // if (reportPendingStatus) {
+    //   toastHandler({
+    //     type: ToastType.INFO,
+    //     id: 'report-generating',
+    //     closeable: false,
+    //     content: (
+    //       <div className="flex items-center space-x-2">
+    //         <span>Generating the report</span>
+    //         <LoadingSVG />
+    //       </div>
+    //     ),
+    //     position: ToastPosition.BOTTOM_RIGHT,
+    //     autoClose: false,
+    //   });
+    // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
