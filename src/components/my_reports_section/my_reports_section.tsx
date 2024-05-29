@@ -22,14 +22,19 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
+import { FilterOptionsModalType } from '@/interfaces/modals';
 
 const MyReportsSection = () => {
   const { selectedCompany } = useUserCtx();
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
-  const { toastHandler, filterOptionsModalVisibilityHandler, filterOptionsGotFromModal } =
-    useGlobalCtx();
+  const {
+    toastHandler,
+    filterOptionsModalVisibilityHandler,
+    filterOptionsForHistory,
+    filterOptionsForPending,
+  } = useGlobalCtx();
   const {
     data: pendingReports,
     code: listPendingCode,
@@ -66,7 +71,10 @@ const MyReportsSection = () => {
 
   // Deprecated: (20240531 - Shirley)
   // eslint-disable-next-line no-console
-  console.log('filterOptionsGotFromModal in MyReportsSection', filterOptionsGotFromModal);
+  console.table({
+    history: filterOptionsForHistory,
+    pending: filterOptionsForPending,
+  });
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports) {
@@ -231,7 +239,7 @@ const MyReportsSection = () => {
           {displayedPendingSearchBar}
         </div>
         <Button
-          onClick={filterOptionsModalVisibilityHandler}
+          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)}
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -438,7 +446,7 @@ const MyReportsSection = () => {
           {displayedHistorySearchBar}
         </div>
         <Button
-          onClick={filterOptionsModalVisibilityHandler}
+          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)}
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >

@@ -3,7 +3,12 @@ import React, { useState, useContext, createContext, useMemo, useCallback, useEf
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import { DUMMY_FILTER_OPTIONS, IFilterOptions, RegisterFormModalProps } from '@/interfaces/modals';
+import {
+  DUMMY_FILTER_OPTIONS,
+  FilterOptionsModalType,
+  IFilterOptions,
+  RegisterFormModalProps,
+} from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
@@ -84,10 +89,13 @@ interface IGlobalContext {
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
 
-  isFilterOptionsModalVisible: boolean;
-  filterOptionsModalVisibilityHandler: () => void;
-  getFilterOptions: (filterOptions: IFilterOptions) => void;
-  filterOptionsGotFromModal: IFilterOptions;
+  filterOptionsForHistory: IFilterOptions;
+  filterOptionsForPending: IFilterOptions;
+  getFilterOptionsForHistory: (options: IFilterOptions) => void;
+  getFilterOptionsForPending: (options: IFilterOptions) => void;
+  isFilterOptionsModalForHistoryVisible: boolean;
+  isFilterOptionsModalForPendingVisible: boolean;
+  filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
 }
 
 export interface IGlobalProvider {
@@ -135,8 +143,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
 
-  const [isFilterOptionsModalVisible, setIsFilterOptionsModalVisible] = useState(false);
-  const [filterOptionsGotFromModal, setFilterOptionsGotFromModal] =
+  const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
+    useState(false);
+  const [isFilterOptionsModalForPendingVisible, setIsFilterOptionsModalForPendingVisible] =
+    useState(false);
+  const [filterOptionsForHistory, setFilterOptionsForHistory] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+  const [filterOptionsForPending, setFilterOptionsForPending] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
   const { width, height } = windowSize;
@@ -204,12 +217,28 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsLoadingModalVisible(!isLoadingModalVisible);
   };
 
-  const filterOptionsModalVisibilityHandler = () => {
-    setIsFilterOptionsModalVisible(!isFilterOptionsModalVisible);
+  const filterOptionsModalVisibilityHandlerForHistory = () => {
+    setIsFilterOptionsModalForHistoryVisible(!isFilterOptionsModalForHistoryVisible);
   };
 
-  const getFilterOptions = (filterOptions: IFilterOptions) => {
-    setFilterOptionsGotFromModal(filterOptions);
+  const filterOptionsModalVisibilityHandlerForPending = () => {
+    setIsFilterOptionsModalForPendingVisible(!isFilterOptionsModalForPendingVisible);
+  };
+
+  const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
+    if (filterType === FilterOptionsModalType.history) {
+      filterOptionsModalVisibilityHandlerForHistory();
+    } else if (filterType === FilterOptionsModalType.pending) {
+      filterOptionsModalVisibilityHandlerForPending();
+    }
+  };
+
+  const getFilterOptionsForHistory = (options: IFilterOptions) => {
+    setFilterOptionsForHistory(options);
+  };
+
+  const getFilterOptionsForPending = (options: IFilterOptions) => {
+    setFilterOptionsForPending(options);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -400,10 +429,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     loadingModalVisibilityHandler,
     toastHandler,
     eliminateToast,
-    isFilterOptionsModalVisible,
+
+    filterOptionsForHistory,
+    filterOptionsForPending,
+    getFilterOptionsForHistory,
+    getFilterOptionsForPending,
+    isFilterOptionsModalForHistoryVisible,
+    isFilterOptionsModalForPendingVisible,
     filterOptionsModalVisibilityHandler,
-    getFilterOptions,
-    filterOptionsGotFromModal,
   };
 
   return (
@@ -474,9 +507,16 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <Toast />
 
       <FilterOptionsModal
-        isModalVisible={isFilterOptionsModalVisible}
-        modalVisibilityHandler={filterOptionsModalVisibilityHandler}
-        getFilterOptions={getFilterOptions}
+        isModalVisible={isFilterOptionsModalForPendingVisible}
+        filterType={FilterOptionsModalType.pending}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForPending}
+        getFilterOptions={getFilterOptionsForPending}
+      />
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalForHistoryVisible}
+        filterType={FilterOptionsModalType.history}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForHistory}
+        getFilterOptions={getFilterOptionsForHistory}
       />
 
       {children}

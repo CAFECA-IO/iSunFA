@@ -1,7 +1,7 @@
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
-import { IFilterOptions } from '@/interfaces/modals';
+import { FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import { AllReportTypesKey, AllReportTypesOptions } from '@/interfaces/report_type';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import React, { useEffect } from 'react';
@@ -10,12 +10,14 @@ import useStateRef from 'react-usestateref';
 interface IFilterOptionsModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  filterType: FilterOptionsModalType;
   getFilterOptions?: (filterOptions: IFilterOptions) => void; // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
 }
 
 const FilterOptionsModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  filterType,
   getFilterOptions = () => {},
 }: IFilterOptionsModalProps) => {
   const [period, setPeriod, periodRef] = useStateRef(default30DayPeriodInSec);
@@ -226,7 +228,7 @@ const FilterOptionsModal = ({
       </div>
     </div>
   ) : null;
-  return <div>{isDisplayedModal}</div>;
+  return <div id={`${filterType}-filter-options-modal`}>{isDisplayedModal}</div>;
 };
 
 export default FilterOptionsModal;
