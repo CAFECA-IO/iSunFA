@@ -20,13 +20,19 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-
-  role = await prisma.role.create({
-    data: {
-      name: 'KING',
-      permissions: ['READ', 'WRITE'],
+  role = (await prisma.role.findFirst({
+    where: {
+      name: 'TST_KING1',
     },
-  });
+  })) as IRole;
+  if (!role) {
+    role = await prisma.role.create({
+      data: {
+        name: 'TST_KING1',
+        permissions: ['READ', 'WRITE'],
+      },
+    });
+  }
 });
 
 afterEach(async () => {
