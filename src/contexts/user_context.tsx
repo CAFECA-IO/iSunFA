@@ -367,6 +367,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
+        }
+        if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
           setSuccessSelectCompany(true);
           setSelectedCompany(userSessionData.company);
         }
