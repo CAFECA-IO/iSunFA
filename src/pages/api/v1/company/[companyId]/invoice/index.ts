@@ -281,7 +281,7 @@ async function createJournalInPrisma(
           id: invoiceId,
         },
       },
-      aichResultId
+      aichResultId,
     };
 
     if (projectId !== null) {

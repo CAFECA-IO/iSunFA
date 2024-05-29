@@ -25,3 +25,8 @@ export const DUMMY_FILTER_OPTIONS: IFilterOptions = {
   sort: SortOptions.newest,
   selectedReportType: AllReportTypesKey.all,
 };
+
+export enum FilterOptionsModalType {
+  history = 'history',
+  pending = 'pending',
+}

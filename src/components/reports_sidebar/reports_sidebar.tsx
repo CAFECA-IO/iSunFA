@@ -193,7 +193,7 @@ const ReportsSidebar = () => {
       </div>
 
       {/* Info: ----- mobile version (20240507 - Shirley) ----- */}
-      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-4 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
+      <div className="fixed bottom-0 z-50 grid h-72px w-screen grid-cols-4 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
         <Link
           href={ISUNFA_ROUTE.USERS_MY_REPORTS}
           className={cn(

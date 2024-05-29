@@ -1,7 +1,11 @@
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { SortOptions, DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
+import {
+  SortOptions,
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+} from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
@@ -18,14 +22,19 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
+import { FilterOptionsModalType } from '@/interfaces/modals';
 
 const MyReportsSection = () => {
   const { selectedCompany } = useUserCtx();
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
-  const { toastHandler, filterOptionsModalVisibilityHandler, filterOptionsGotFromModal } =
-    useGlobalCtx();
+  const {
+    toastHandler,
+    filterOptionsModalVisibilityHandler,
+    filterOptionsForHistory,
+    filterOptionsForPending,
+  } = useGlobalCtx();
   const {
     data: pendingReports,
     code: listPendingCode,
@@ -62,7 +71,16 @@ const MyReportsSection = () => {
 
   // Deprecated: (20240531 - Shirley)
   // eslint-disable-next-line no-console
-  console.log('filterOptionsGotFromModal in MyReportsSection', filterOptionsGotFromModal);
+  console.table({
+    history: {
+      ...filterOptionsForHistory,
+      period: JSON.stringify(filterOptionsForHistory.period),
+    },
+    pending: {
+      ...filterOptionsForPending,
+      period: JSON.stringify(filterOptionsForPending.period),
+    },
+  });
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports) {
@@ -198,8 +216,8 @@ const MyReportsSection = () => {
 
   const displayedPendingFilterOptionsSection = (
     <div>
-      {/* Info: 電腦版排版 (20240527 - Shirley) */}
-      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
+      {/* Info: desktop (20240527 - Shirley) */}
+      <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             Sort by
@@ -212,7 +230,7 @@ const MyReportsSection = () => {
           type={DatePickerType.CHOOSE_PERIOD}
           period={pendingPeriod}
           setFilteredPeriod={setPendingPeriod}
-          className="w-250px"
+          btnClassName="w-250px"
         />{' '}
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
@@ -220,14 +238,14 @@ const MyReportsSection = () => {
         </div>
       </div>
 
-      {/* Info: 手機版排版 (20240527 - Shirley) */}
+      {/* Info: mobile (20240527 - Shirley) */}
       <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedPendingSearchBar}
         </div>
         <Button
-          onClick={filterOptionsModalVisibilityHandler}
+          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)}
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -253,7 +271,7 @@ const MyReportsSection = () => {
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
-    <div className="mx-0 mt-0 flex flex-col pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
+    <div className="flex flex-col max-md:max-w-full">
       {' '}
       <PendingReportList reports={pendingData} />
       <div className="mt-4 flex justify-center">
@@ -405,8 +423,8 @@ const MyReportsSection = () => {
 
   const displayedHistoryFilterOptionsSection = (
     <div>
-      {/* Info: 電腦版排版 (20240527 - Shirley) */}
-      <div className="hidden flex-wrap items-end justify-between space-y-2 pr-14 lg:flex lg:space-x-5">
+      {/* Info: desktop (20240527 - Shirley) */}
+      <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             Sort by
@@ -419,7 +437,7 @@ const MyReportsSection = () => {
           type={DatePickerType.CHOOSE_PERIOD}
           period={historyPeriod}
           setFilteredPeriod={setHistoryPeriod}
-          className="w-250px"
+          btnClassName="w-250px"
         />{' '}
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
@@ -427,14 +445,14 @@ const MyReportsSection = () => {
         </div>
       </div>
 
-      {/* Info: 手機版排版 (20240527 - Shirley) */}
+      {/* Info: mobile (20240527 - Shirley) */}
       <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedHistorySearchBar}
         </div>
         <Button
-          onClick={filterOptionsModalVisibilityHandler}
+          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)}
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -460,7 +478,7 @@ const MyReportsSection = () => {
   const displayedHistoryDataSection = isHistoryDataLoading ? (
     <div>Loading...</div>
   ) : historyData.length !== 0 ? (
-    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-0">
+    <div className="flex flex-col max-md:max-w-full">
       <ReportsHistoryList reports={historyData} />
 
       <div className="mt-4 flex justify-center">
@@ -541,7 +559,7 @@ const MyReportsSection = () => {
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">My Reports</div>
+            <div className="w-full justify-center px-10 md:px-16 lg:px-28">My Reports</div>
           </div>
           {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
@@ -560,7 +578,7 @@ const MyReportsSection = () => {
           </div>
 
           {/* Info: Divider beneath Heading (20240528 - Shirley) */}
-          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:px-28">
+          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:pl-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
             </div>
@@ -569,7 +587,7 @@ const MyReportsSection = () => {
       </div>
 
       {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
-      <div className="mx-2 mt-5 flex flex-col px-2 max-md:mt-0 max-md:max-w-full sm:px-14 lg:mx-10 lg:pl-20 lg:pr-5">
+      <div className="mt-5 flex flex-col px-6 max-md:mt-0 max-md:max-w-full md:px-16 lg:mx-10 lg:pl-20 lg:pr-5">
         {displayedPendingFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
@@ -604,7 +622,7 @@ const MyReportsSection = () => {
       </div>
 
       {/* Info: ----- reports history (20240513 - Shirley) ----- */}
-      <div className="mx-2 mt-10 flex flex-col px-2 max-md:max-w-full sm:px-14 lg:mx-10 lg:mt-0 lg:pl-20 lg:pr-5">
+      <div className="mt-10 flex flex-col px-6 max-md:max-w-full md:px-16 lg:mx-10 lg:pl-20 lg:pr-5">
         {displayedHistoryFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">

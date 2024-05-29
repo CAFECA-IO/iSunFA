@@ -28,6 +28,7 @@ interface IPopulateDatesParams {
   type: DatePickerType;
 }
 
+// TODO: refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE (20240529 - Shirley)
 export enum DatePickerType {
   ICON = 'ICON',
   TEXT = 'TEXT',
@@ -44,7 +45,7 @@ interface IDatePickerProps {
   maxDate?: Date;
   loading?: boolean;
   datePickerHandler?: (start: number, end: number) => Promise<void>;
-  className?: string;
+  btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
   onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
@@ -190,7 +191,7 @@ const DatePicker = ({
   period,
   setFilteredPeriod,
   loading,
-  className,
+  btnClassName,
   calenderClassName,
   buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
   onClose,
@@ -370,9 +371,9 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-lightGray3 hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
           // props control style
-          className,
+          btnClassName,
           // variables control style
           {
             [buttonStyleAfterDateSelected]: isDateSelected,
@@ -408,8 +409,8 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
-          className,
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          btnClassName,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
             'text-secondaryBlue': isDateSelected,
@@ -418,7 +419,7 @@ const DatePicker = ({
       >
         <p
           className={cn(
-            'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
+            'flex-1 whitespace-nowrap text-start text-sm text-input-text-input-placeholder group-hover:text-primaryYellow',
             {
               'text-primaryYellow': componentVisible,
               [buttonStyleAfterDateSelected]: isDateSelected,
@@ -455,8 +456,8 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
-          className,
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          btnClassName,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
             'text-secondaryBlue': isDateSelected,
@@ -465,7 +466,7 @@ const DatePicker = ({
       >
         <p
           className={cn(
-            'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
+            'flex-1 whitespace-nowrap text-start text-sm text-input-text-input-placeholder group-hover:text-primaryYellow',
             {
               'text-primaryYellow': componentVisible,
               [buttonStyleAfterDateSelected]: isDateSelected,

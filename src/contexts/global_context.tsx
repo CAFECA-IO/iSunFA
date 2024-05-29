@@ -3,13 +3,18 @@ import React, { useState, useContext, createContext, useMemo, useCallback, useEf
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import { DUMMY_FILTER_OPTIONS, IFilterOptions, RegisterFormModalProps } from '@/interfaces/modals';
+import {
+  DUMMY_FILTER_OPTIONS,
+  FilterOptionsModalType,
+  IFilterOptions,
+  RegisterFormModalProps,
+} from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
-import { LAYOUT_BREAKPOINT, SortOptions } from '@/constants/display';
+import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
@@ -34,6 +39,7 @@ import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AllReportTypesKey } from '@/interfaces/report_type';
 
 interface IGlobalContext {
@@ -87,10 +93,13 @@ interface IGlobalContext {
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
 
-  isFilterOptionsModalVisible: boolean;
-  filterOptionsModalVisibilityHandler: () => void;
-  getFilterOptions: (filterOptions: IFilterOptions) => void;
-  filterOptionsGotFromModal: IFilterOptions;
+  filterOptionsForHistory: IFilterOptions;
+  filterOptionsForPending: IFilterOptions;
+  getFilterOptionsForHistory: (options: IFilterOptions) => void;
+  getFilterOptionsForPending: (options: IFilterOptions) => void;
+  isFilterOptionsModalForHistoryVisible: boolean;
+  isFilterOptionsModalForPendingVisible: boolean;
+  filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
 }
 
 export interface IGlobalProvider {
@@ -139,8 +148,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
 
-  const [isFilterOptionsModalVisible, setIsFilterOptionsModalVisible] = useState(false);
-  const [filterOptionsGotFromModal, setFilterOptionsGotFromModal] =
+  const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
+    useState(false);
+  const [isFilterOptionsModalForPendingVisible, setIsFilterOptionsModalForPendingVisible] =
+    useState(false);
+  const [filterOptionsForHistory, setFilterOptionsForHistory] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+  const [filterOptionsForPending, setFilterOptionsForPending] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
   const { width, height } = windowSize;
@@ -212,12 +226,28 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsLoadingModalVisible(!isLoadingModalVisible);
   };
 
-  const filterOptionsModalVisibilityHandler = () => {
-    setIsFilterOptionsModalVisible(!isFilterOptionsModalVisible);
+  const filterOptionsModalVisibilityHandlerForHistory = () => {
+    setIsFilterOptionsModalForHistoryVisible(!isFilterOptionsModalForHistoryVisible);
   };
 
-  const getFilterOptions = (filterOptions: IFilterOptions) => {
-    setFilterOptionsGotFromModal(filterOptions);
+  const filterOptionsModalVisibilityHandlerForPending = () => {
+    setIsFilterOptionsModalForPendingVisible(!isFilterOptionsModalForPendingVisible);
+  };
+
+  const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
+    if (filterType === FilterOptionsModalType.history) {
+      filterOptionsModalVisibilityHandlerForHistory();
+    } else if (filterType === FilterOptionsModalType.pending) {
+      filterOptionsModalVisibilityHandlerForPending();
+    }
+  };
+
+  const getFilterOptionsForHistory = (options: IFilterOptions) => {
+    setFilterOptionsForHistory(options);
+  };
+
+  const getFilterOptionsForPending = (options: IFilterOptions) => {
+    setFilterOptionsForPending(options);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -337,7 +367,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id: 'latest-report-generated',
         closeable: true,
         content: (
-          <div className="flex items-center space-x-10">
+          <div className="flex items-center space-x-5">
             <p>Your report is done</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
@@ -355,21 +385,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    if (reportPendingStatus) {
-      toastHandler({
-        type: ToastType.INFO,
-        id: 'report-generating',
-        closeable: false,
-        content: (
-          <div className="flex items-center space-x-2">
-            <span>Generating the report</span>
-            <LoadingSVG />
-          </div>
-        ),
-        position: ToastPosition.BOTTOM_RIGHT,
-        autoClose: false,
-      });
-    }
+    // TODO: Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // if (reportPendingStatus) {
+    //   toastHandler({
+    //     type: ToastType.INFO,
+    //     id: 'report-generating',
+    //     closeable: false,
+    //     content: (
+    //       <div className="flex items-center space-x-2">
+    //         <span>Generating the report</span>
+    //         <LoadingSVG />
+    //       </div>
+    //     ),
+    //     position: ToastPosition.BOTTOM_RIGHT,
+    //     autoClose: false,
+    //   });
+    // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
@@ -410,10 +441,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     loadingModalVisibilityHandler,
     toastHandler,
     eliminateToast,
-    isFilterOptionsModalVisible,
+
+    filterOptionsForHistory,
+    filterOptionsForPending,
+    getFilterOptionsForHistory,
+    getFilterOptionsForPending,
+    isFilterOptionsModalForHistoryVisible,
+    isFilterOptionsModalForPendingVisible,
     filterOptionsModalVisibilityHandler,
-    getFilterOptions,
-    filterOptionsGotFromModal,
   };
 
   return (
@@ -485,9 +520,16 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <Toast />
 
       <FilterOptionsModal
-        isModalVisible={isFilterOptionsModalVisible}
-        modalVisibilityHandler={filterOptionsModalVisibilityHandler}
-        getFilterOptions={getFilterOptions}
+        isModalVisible={isFilterOptionsModalForPendingVisible}
+        filterType={FilterOptionsModalType.pending}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForPending}
+        getFilterOptions={getFilterOptionsForPending}
+      />
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalForHistoryVisible}
+        filterType={FilterOptionsModalType.history}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForHistory}
+        getFilterOptions={getFilterOptionsForHistory}
       />
 
       {children}
