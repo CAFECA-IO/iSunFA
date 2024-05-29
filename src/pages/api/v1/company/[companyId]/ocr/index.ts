@@ -153,6 +153,7 @@ async function createOcrInPrisma(aichResult: {
         imageName: aichResult.imageName,
         imageUrl: aichResult.imageUrl,
         imageSize: aichResult.imageSize,
+        status: ProgressStatus.IN_PROGRESS,
       },
     });
 

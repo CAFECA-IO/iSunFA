@@ -4,24 +4,20 @@ import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { getSession } from '@/lib/utils/get_session';
+import { checkUserSession } from '@/lib/utils/session_check';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUser>>
 ) {
   try {
-    const session = await getSession(req, res);
+    const session = await checkUserSession(req, res);
     const { userId } = session;
-    if (!userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
     const userCompanyRole = await prisma.userCompanyRole.findMany({
       where: {
         userId,
       },
       select: {
-        id: true,
         role: true,
       },
     });
@@ -64,16 +60,9 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
       // Handle DELETE request to delete user by userid
-      const listUserCompanyRole = await prisma.userCompanyRole.findMany({
-        where: {
-          userId: userIdNum,
-        },
-      });
       await prisma.userCompanyRole.deleteMany({
         where: {
-          id: {
-            in: listUserCompanyRole.map((item) => item.id),
-          },
+          userId: userIdNum,
         },
       });
       const user = await prisma.user.delete({

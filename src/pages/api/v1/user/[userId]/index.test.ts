@@ -9,7 +9,6 @@ let userCompanyRole: {
   companyId: number;
   roleId: number;
   startDate: number;
-  id: number;
 };
 
 beforeEach(async () => {
@@ -22,11 +21,11 @@ beforeEach(async () => {
       user: {
         connectOrCreate: {
           where: {
-            credentialId: '113356',
+            credentialId: 'john_tst22',
           },
           create: {
-            name: 'John',
-            credentialId: '113356',
+            name: 'John user',
+            credentialId: 'john_tst22',
             publicKey: 'publicKey',
             algorithm: 'ES256',
             imageId: 'imageId',
@@ -75,6 +74,19 @@ beforeEach(async () => {
 afterEach(async () => {
   jest.clearAllMocks();
   try {
+    await prisma.userCompanyRole.delete({
+      where: {
+        userId_companyId_roleId: {
+          userId: userCompanyRole.userId,
+          companyId: userCompanyRole.companyId,
+          roleId: userCompanyRole.roleId,
+        },
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
     await prisma.user.delete({
       where: {
         id: userCompanyRole.userId,
@@ -96,15 +108,6 @@ afterEach(async () => {
     await prisma.role.delete({
       where: {
         id: userCompanyRole.roleId,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.userCompanyRole.delete({
-      where: {
-        id: userCompanyRole.id,
       },
     });
   } catch (error) {

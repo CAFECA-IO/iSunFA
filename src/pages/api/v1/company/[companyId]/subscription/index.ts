@@ -6,26 +6,20 @@ import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { SubscriptionPeriod, SubscriptionStatus } from '@/constants/subscription';
 import { ONE_MONTH_IN_MS, ONE_YEAR_IN_MS } from '@/constants/time';
-import { getSession } from '@/lib/utils/get_session';
+import { checkCompanySession } from '@/lib/utils/session_check';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ISubscription | ISubscription[]>>
 ) {
   try {
-    if (!req.query.companyId) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-    const companyIdNum = Number(req.query.companyId);
-    const session = await getSession(req, res);
-    if (!session.userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
+    const session = await checkCompanySession(req, res);
+    const { companyId } = session;
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {
       const listedSubscription = await prisma.subscription.findMany({
         where: {
-          companyId: companyIdNum,
+          companyId,
         },
         include: {
           company: {
@@ -48,7 +42,7 @@ export default async function handler(
       // Info: (20240419 - Jacky) S010002 - POST /subscription
     } else if (req.method === 'POST') {
       const { plan, cardId, autoRenew, price, period } = req.body;
-      if (!plan || !autoRenew || !companyIdNum || !price || !period) {
+      if (!plan || !autoRenew || !price || !period) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const cardIdNum = Number(cardId);
@@ -64,9 +58,6 @@ export default async function handler(
       const startDate = timestampInSeconds(startDateInMillisecond);
       const expireDate = timestampInSeconds(expireDateInMillisecond);
       const status = SubscriptionStatus.ACTIVE;
-      if (!companyIdNum) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
       const createdSubscription = await prisma.subscription.create({
         data: {
           plan,
@@ -78,7 +69,7 @@ export default async function handler(
           autoRenew,
           company: {
             connect: {
-              id: companyIdNum,
+              id: companyId,
             },
           },
           startDate,

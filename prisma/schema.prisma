@@ -259,6 +259,7 @@ model ocr {
   imageName String    @map("image_name")
   imageUrl  String    @map("image_url")
   imageSize Float     @map("image_size")
+  status    String
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   contract  contract?
@@ -284,6 +285,7 @@ model project {
   sales            sale[]
   values           value[]
   workRates        workRate[]
+  report           report[]
 }
 
 model payment {
@@ -312,6 +314,25 @@ model role {
   permissions        String[]
   invitations        invitation[]
   usersCompanysRoles userCompanyRole[]
+}
+
+model report {
+  id        Int     @id @default(autoincrement())
+  createdAt Int     @map("created_at")
+  name      String
+  periodFrom Int
+  periodTo   Int
+  type      String
+  reportType String
+  status    String
+  remainingSeconds Int?
+  paused Boolean?
+  projectId Int?
+  reportLink String?
+  downloadLink String?
+  blockChaonExplorerLink String?
+  evidenceId String?
+  project project?  @relation(fields: [projectId], references: [id])
 }
 
 model subscription {
@@ -344,7 +365,7 @@ model salary {
   insurancePayment Int
   bonus            Int
   description      String
-  month            String // 2024-05
+  date             Int
   employee         employee @relation(fields: [employeeId], references: [id])
 }
 
@@ -363,7 +384,7 @@ model user {
 }
 
 model userCompanyRole {
-  id        Int     @id @default(autoincrement())
+  @@id([userId, companyId, roleId])
   userId    Int
   companyId Int
   roleId    Int
@@ -397,12 +418,12 @@ model value {
 }
 
 model workRate {
-  id              Int     @id @default(autoincrement())
+  @@id([projectId, employeeId])
   projectId       Int
   employeeId      Int
   involvementRate Int?    @map("involvement_rate")
   hours           Int
-  month           String
+  date            Int
   project         project @relation(fields: [projectId], references: [id])
   employee        employee @relation(fields: [employeeId], references: [id])
 }

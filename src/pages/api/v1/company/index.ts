@@ -3,8 +3,8 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { IRole } from '@/interfaces/role';
+import { checkUserSession } from '@/lib/utils/session_check';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
-import { getSession } from '@/lib/utils/get_session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -14,11 +14,8 @@ export default async function handler(
   >
 ) {
   try {
-    const session = await getSession(req, res);
+    const session = await checkUserSession(req, res);
     const { userId } = session;
-    if (!userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
     if (req.method === 'GET') {
       const companyRoleList: Array<{ company: ICompany; role: IRole }> =
         await prisma.userCompanyRole.findMany({
@@ -75,7 +72,6 @@ export default async function handler(
             startDate: nowTimestamp,
           },
           select: {
-            id: true,
             company: true,
             role: true,
           },

@@ -66,9 +66,9 @@ beforeEach(async () => {
       },
       createdUser: {
         connectOrCreate: {
-          where: { credentialId: 'test' },
+          where: { credentialId: 'test_PUT_INVITATION' },
           create: {
-            credentialId: 'test',
+            credentialId: 'test_PUT_INVITATION',
             email: '',
             name: '',
             publicKey: '',
@@ -99,6 +99,19 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
+  try {
+    await prisma.userCompanyRole.delete({
+      where: {
+        userId_companyId_roleId: {
+          userId,
+          companyId,
+          roleId,
+        },
+      },
+    });
+  } catch (error) {
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
+  }
   try {
     await prisma.company.delete({
       where: {
