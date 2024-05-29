@@ -90,8 +90,10 @@ const SelectCompanyPageBody = () => {
   useEffect(() => {
     if (searchValue !== '') {
       const filteredList = companyList.filter(
-        (data) => data.company.name.toLowerCase().includes(searchValue.toLowerCase())
-        // ToDo: (20240516 - Julian) role
+        (companyAndRole) =>
+          // eslint-disable-next-line implicit-arrow-linebreak
+          companyAndRole.company.name.toLowerCase().includes(searchValue.toLowerCase())
+        // eslint-disable-next-line implicit-arrow-linebreak
       );
       setFilteredCompanyList(filteredList);
     } else {
