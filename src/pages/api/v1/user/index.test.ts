@@ -1,49 +1,114 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IUser } from '@/interfaces/user';
 import prisma from '@/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let user: IUser;
+let userCompanyRole: {
+  userId: number;
+  companyId: number;
+  roleId: number;
+  startDate: number;
+  id: number;
+};
 
 beforeEach(async () => {
+  res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  } as unknown as jest.Mocked<NextApiResponse>;
+  userCompanyRole = await prisma.userCompanyRole.create({
+    data: {
+      user: {
+        connectOrCreate: {
+          where: {
+            credentialId: '113356',
+          },
+          create: {
+            name: 'John',
+            credentialId: '113356',
+            publicKey: 'publicKey',
+            algorithm: 'ES256',
+            imageId: 'imageId',
+          },
+        },
+      },
+      role: {
+        connectOrCreate: {
+          where: {
+            name: 'SUPER_ADMIN',
+          },
+          create: {
+            name: 'SUPER_ADMIN',
+            permissions: ['hihi', 'ooo'],
+          },
+        },
+      },
+      company: {
+        connectOrCreate: {
+          where: {
+            code: 'TST_user1',
+          },
+          create: {
+            code: 'TST_user1',
+            name: 'Test Company',
+            regional: 'TW',
+            startDate: 0,
+            createdAt: 0,
+            updatedAt: 0,
+          },
+        },
+      },
+      startDate: 0,
+    },
+  });
   req = {
     headers: {},
     body: null,
     query: {},
     method: 'GET',
+    session: { userId: userCompanyRole.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
-
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
-  user = await prisma.user.create({
-    data: {
-      name: 'John',
-      credentialId: '123456',
-      publicKey: 'publicKey',
-      algorithm: 'ES256',
-      imageId: 'imageId',
-    },
-  });
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
-  const afterUser = await prisma.user.findUnique({
-    where: {
-      id: user.id,
-    },
-  });
-  if (afterUser) {
+  try {
     await prisma.user.delete({
       where: {
-        id: user.id,
+        id: userCompanyRole.userId,
       },
     });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: userCompanyRole.companyId,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.role.delete({
+      where: {
+        id: userCompanyRole.roleId,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.userCompanyRole.delete({
+      where: {
+        id: userCompanyRole.id,
+      },
+    });
+  } catch (error) {
+    /* empty */
   }
 });
 

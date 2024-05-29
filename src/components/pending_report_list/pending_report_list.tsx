@@ -74,6 +74,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
       submitBtnStr: 'Yes, Delete it',
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
+      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };
@@ -265,7 +266,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
   ) : null;
 
   return (
-    <>
+    <div className="">
       {displayedStatusButtons}
       <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
@@ -275,16 +276,16 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
             {displayedCheckbox}
             <th className="text-center">Date</th>
             <th className="px-16px">Report Name</th>
-            <th className="px-16px">Period</th>
-            <th className="px-16px">Remaining Time</th>
-            <th className="px-16px">Operations</th>
+            <th className="hidden px-16px lg:table-cell">Period</th>
+            <th className="hidden px-16px lg:table-cell">Remaining Time</th>
+            <th className="hidden px-16px lg:table-cell">Operations</th>
           </tr>
         </thead>
 
         {/* Info: (20240514 - Shirley) Body */}
         <tbody>{displayedList}</tbody>
       </table>
-    </>
+    </div>
   );
 };
 

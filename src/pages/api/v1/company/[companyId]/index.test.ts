@@ -1,19 +1,70 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let companyId: number;
+let userCompanyRole: {
+  userId: number;
+  companyId: number;
+  roleId: number;
+  startDate: number;
+  id: number;
+};
 
 beforeEach(async () => {
+  userCompanyRole = await prisma.userCompanyRole.create({
+    data: {
+      user: {
+        connectOrCreate: {
+          where: {
+            credentialId: 'company_index2_test',
+          },
+          create: {
+            name: 'John',
+            credentialId: 'company_index2_test',
+            publicKey: 'publicKey',
+            algorithm: 'ES256',
+            imageId: 'imageId',
+          },
+        },
+      },
+      role: {
+        connectOrCreate: {
+          where: {
+            name: 'COMPANY_ADMIN2',
+          },
+          create: {
+            name: 'COMPANY_ADMIN2',
+            permissions: ['hihi', 'ooo'],
+          },
+        },
+      },
+      company: {
+        connectOrCreate: {
+          where: {
+            code: 'TST_company_11',
+          },
+          create: {
+            code: 'TST_company_11',
+            name: 'Test Company',
+            regional: 'TW',
+            startDate: 0,
+            createdAt: 0,
+            updatedAt: 0,
+          },
+        },
+      },
+      startDate: 0,
+    },
+  });
+
   req = {
     headers: {},
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: 1 },
+    session: { userId: userCompanyRole.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -21,38 +72,45 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-  let company = await prisma.company.findFirst({
-    where: {
-      code: 'TST_company2',
-    },
-  });
-  if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
-    company = await prisma.company.create({
-      data: {
-        code: 'TST_company2',
-        name: 'Test Company',
-        regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
-      },
-    });
-  }
-  companyId = company.id;
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.company.delete({
+    await prisma.user.delete({
       where: {
-        id: companyId,
+        id: userCompanyRole.userId,
       },
     });
   } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
+    /* empty */
+  }
+  try {
+    await prisma.company.delete({
+      where: {
+        id: userCompanyRole.companyId,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.role.delete({
+      where: {
+        id: userCompanyRole.roleId,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
+    await prisma.userCompanyRole.delete({
+      where: {
+        id: userCompanyRole.id,
+      },
+    });
+  } catch (error) {
+    /* empty */
   }
 });
 
@@ -60,7 +118,7 @@ describe('handler', () => {
   it('should handle GET method', async () => {
     req.method = 'GET';
     req.headers = { userid: '123' };
-    req.query = { companyId: companyId.toString() };
+    req.query = { companyId: userCompanyRole.companyId.toString() };
 
     await handler(req, res);
 
@@ -83,9 +141,8 @@ describe('handler', () => {
 
   it('should handle PUT method', async () => {
     req.method = 'PUT';
-    req.headers = { userid: '123' };
-    req.query = { companyId: companyId.toString() };
-    req.body = { code: 'C001', name: 'Company B', regional: 'US' };
+    req.query = { companyId: userCompanyRole.companyId.toString() };
+    req.body = { name: 'Company B', regional: 'US' };
 
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -108,7 +165,7 @@ describe('handler', () => {
   it('should handle DELETE method', async () => {
     req.method = 'DELETE';
     req.headers = { userid: '123' };
-    req.query = { companyId: companyId.toString() };
+    req.query = { companyId: userCompanyRole.companyId.toString() };
 
     await handler(req, res);
 
@@ -132,7 +189,7 @@ describe('handler', () => {
   it('should handle invalid method', async () => {
     req.method = 'POST';
     req.headers = { userid: '123' };
-    req.query = { companyId: companyId.toString() };
+    req.query = { companyId: userCompanyRole.companyId.toString() };
 
     await handler(req, res);
 
@@ -187,7 +244,7 @@ describe('handler', () => {
   it('should handle invalid input parameters for PUT method', async () => {
     req.method = 'PUT';
     req.headers = { userid: '123' };
-    req.query = { companyId: companyId.toString() };
+    req.query = { companyId: userCompanyRole.companyId.toString() };
     req.body = {};
 
     await handler(req, res);

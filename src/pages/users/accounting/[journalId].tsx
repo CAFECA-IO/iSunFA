@@ -11,13 +11,14 @@ import { GetServerSideProps } from 'next';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { timestampToString } from '@/lib/utils/common';
 import { MessageType } from '@/interfaces/message_modal';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 interface IJournalDetailPageProps {
   journalId: string;
@@ -40,7 +41,7 @@ enum VoucherItem {
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const router = useRouter();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     previewInvoiceModalDataHandler,
     previewInvoiceModalVisibilityHandler,
@@ -54,7 +55,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     success,
     code,
   } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
-    params: { companyId, journalId },
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
   });
 
   useEffect(() => {

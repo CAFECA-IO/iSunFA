@@ -2,6 +2,7 @@ export const IS_BUTTON_DISABLED_TEMP = true;
 export const INTERVAL_NUMBER_ANIMATION_MOBILE = 1000;
 export const INTERVAL_NUMBER_ANIMATION_DESKTOP = 10;
 export const DEFAULT_DISPLAYED_USER_NAME = 'User';
+export const DEFAULT_DISPLAYED_COMPANY_ID = 1; // Deprecated: remove when production (20240528 - tzuhan)
 export const NO_DATA_FOR_DEMO = false;
 export const LAYOUT_BREAKPOINT = 1440;
 
@@ -61,3 +62,13 @@ export const radioButtonStyle =
   'relative h-16px w-16px appearance-none outline-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
 
 export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;
+
+export enum SortOptions {
+  newest = 'Newest',
+  oldest = 'Oldest',
+}
+
+export enum ReportTypeOptions {
+  BALANCES = 'Balances',
+  TRANSACTIONS = 'Transactions',
+}

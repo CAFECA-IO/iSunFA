@@ -27,7 +27,7 @@ export default async function handler(
           companyId: companyIdNum,
         },
         include: {
-          employeeProjects: {
+          workRates: {
             include: {
               employee: {
                 select: {
@@ -40,11 +40,11 @@ export default async function handler(
         },
       });
       const projectListWithMembers: IProject[] = projectList.map((project) => {
-        const members = project.employeeProjects.map((employeeToProject) => ({
-          name: employeeToProject.employee.name,
-          imageId: employeeToProject.employee.imageId as string,
+        const members = project.workRates.map((workRate) => ({
+          name: workRate.employee.name,
+          imageId: workRate.employee.imageId as string,
         }));
-        const { employeeProjects, ...projectData } = project;
+        const { workRates, ...projectData } = project;
         return {
           ...projectData,
           members,
@@ -66,7 +66,7 @@ export default async function handler(
           companyId: companyIdNum,
           name,
           stage,
-          employeeProjects: {
+          workRates: {
             create: members.map((memberId: number) => ({
               employeeId: memberId,
             })),
@@ -74,7 +74,7 @@ export default async function handler(
           completedPercent: 0,
         },
         include: {
-          employeeProjects: {
+          workRates: {
             include: {
               employee: {
                 select: {
@@ -88,12 +88,12 @@ export default async function handler(
       });
       const newProjectWithMembers = {
         ...newProject,
-        members: newProject.employeeProjects.map((employeeToProject) => ({
-          name: employeeToProject.employee.name,
-          imageId: employeeToProject.employee.imageId as string,
+        members: newProject.workRates.map((workRate) => ({
+          name: workRate.employee.name,
+          imageId: workRate.employee.imageId as string,
         })),
       };
-      const { employeeProjects, ...project } = newProjectWithMembers;
+      const { workRates, ...project } = newProjectWithMembers;
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
       res.status(httpCode).json(result);
     } else {
