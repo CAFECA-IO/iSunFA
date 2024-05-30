@@ -179,7 +179,7 @@ model employee {
   bonus            Int
   company          company    @relation(fields: [company_id], references: [id])
   department       department @relation(fields: [department_id], references: [id])
-  salaries           salary[]
+  salaries         salary[]
   workRate         workRate[]
 }
 
@@ -300,10 +300,10 @@ model project {
   journal           journal?
   milestone         milestone[]
   company           company     @relation(fields: [company_id], references: [id])
+  report            report[]
   sale              sale[]
   value             value[]
   workRate          workRate[]
-  report            report[]
 }
 
 model role {
@@ -363,7 +363,6 @@ model user {
 }
 
 model user_company_role {
-  id        Int     @id @default(autoincrement())
   userId    Int
   companyId Int
   roleId    Int
@@ -371,6 +370,8 @@ model user_company_role {
   company   company @relation(fields: [companyId], references: [id])
   role      role    @relation(fields: [roleId], references: [id])
   user      user    @relation(fields: [userId], references: [id])
+
+  @@id([userId, companyId, roleId])
 }
 
 model value {
@@ -395,7 +396,6 @@ model voucher {
 }
 
 model workRate {
-  id               Int      @id @default(autoincrement())
   projectId        Int
   employeeId       Int
   hours            Int
@@ -403,23 +403,25 @@ model workRate {
   involvement_rate Int?
   employee         employee @relation(fields: [employeeId], references: [id])
   project          project  @relation(fields: [projectId], references: [id])
+
+  @@id([projectId, employeeId])
 }
 
 model report {
-  id        Int     @id @default(autoincrement())
-  createdAt Int     @map("created_at")
-  name      String
-  periodFrom Int
-  periodTo   Int
-  type      String
-  reportType String
-  status    String
-  remainingSeconds Int?
-  paused Boolean?
-  projectId Int?
-  reportLink String?
-  downloadLink String?
+  id                     Int      @id @default(autoincrement())
+  createdAt              Int      @map("created_at")
+  name                   String
+  periodFrom             Int
+  periodTo               Int
+  type                   String
+  reportType             String
+  status                 String
+  remainingSeconds       Int?
+  paused                 Boolean?
+  projectId              Int?
+  reportLink             String?
+  downloadLink           String?
   blockChaonExplorerLink String?
-  evidenceId String?
-  project project?  @relation(fields: [projectId], references: [id])
+  evidenceId             String?
+  project                project? @relation(fields: [projectId], references: [id])
 }
