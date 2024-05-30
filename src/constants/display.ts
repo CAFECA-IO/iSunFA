@@ -83,9 +83,4 @@ export enum SortOptions {
   oldest = 'Oldest',
 }
 
-export enum ReportTypeOptions {
-  BALANCES = 'Balances',
-  TRANSACTIONS = 'Transactions',
-}
-
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';

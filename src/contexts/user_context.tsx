@@ -3,9 +3,8 @@ import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
-import { ICredential } from '@/interfaces/webauthn';
 import { createChallenge } from '@/lib/utils/authorization';
-import { COOKIE_NAME, DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
+import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
@@ -129,42 +128,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     code: getUserSessionCode,
   } = APIHandler<ISessionData>(APIName.SESSION_GET, {}, false, false);
 
-  const readFIDO2Cookie = async () => {
-    const cookie = document.cookie.split('; ').find((row: string) => row.startsWith('FIDO2='));
-
-    const FIDO2 = cookie ? cookie.split('=')[1] : null;
-
-    if (FIDO2) {
-      const decoded = decodeURIComponent(FIDO2);
-      if (
-        !decoded ||
-        decoded === undefined ||
-        decoded === 'undefined' ||
-        decoded === 'null' ||
-        decoded === null
-      ) {
-        return null;
-      }
-      const credentialData = JSON.parse(decoded) as ICredential;
-      return credentialData;
-    }
-
-    return null;
-  };
-
-  const writeFIDO2Cookie = async () => {
-    const expiration = new Date();
-    expiration.setHours(expiration.getHours() + 1);
-
-    // TODO: read cookie first (20240520 - Shirley)
-    // const credentialData = await readFIDO2Cookie();
-    document.cookie = `FIDO2=${encodeURIComponent(JSON.stringify(credentialRef.current))}; expires=${expiration.toUTCString()}; path=/`;
-  };
-
-  const deleteCookie = (name: string) => {
-    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-  };
-
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
   };
@@ -238,15 +201,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
     getUserSessionData();
-    const credentialFromCookie = await readFIDO2Cookie();
+    // const credentialFromCookie = await readFIDO2Cookie();
 
-    if (credentialFromCookie !== null) {
-      setCredential(credentialFromCookie.id);
-      setSignedIn(true);
-    } else {
-      setSignedIn(false);
-      deleteCookie(COOKIE_NAME.FIDO2);
-    }
+    // if (credentialFromCookie !== null) {
+    //   setCredential(credentialFromCookie.id);
+    //   setSignedIn(true);
+    // } else {
+    //   setSignedIn(false);
+    //   deleteCookie(COOKIE_NAME.FIDO2);
+    // }
   };
 
   // Info: (20240513 - Julian) 選擇公司的功能
@@ -282,22 +245,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return result;
   };
 
-  const checkCookieAndSignOut = async () => {
-    const cookie = await readFIDO2Cookie();
-
-    if (!cookie) {
-      clearState();
-    } else {
-      // TODO: send request with session cookie (20240520 - Shirley)
-    }
-  };
+  // const checkCookieAndSignOut = async () => {
+  //   getUserSessionData();
+  // };
 
   const signOut = async () => {
     signOutAPI(); // TODO: signOutAPI to delete the session (20240524 - Shirley)
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
-    const cookieName = COOKIE_NAME.FIDO2;
-    deleteCookie(cookieName);
   };
 
   useEffect(() => {
@@ -306,9 +261,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     })();
   }, []);
 
-  useEffect(() => {
-    checkCookieAndSignOut();
-  }, [router.pathname]);
+  // useEffect(() => {
+  //   checkCookieAndSignOut();
+  // }, [router.pathname]);
 
   useEffect(() => {
     if (isSignUpLoading) return;
@@ -320,7 +275,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setCredential(signUpData.credentialId);
         setSignedIn(true);
         setIsSignInError(false);
-        writeFIDO2Cookie();
       }
     }
     if (signUpSuccess === false) {
@@ -339,7 +293,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setCredential(signInData.credentialId);
         setSignedIn(true);
         setIsSignInError(false);
-        writeFIDO2Cookie();
       }
     }
     if (signInSuccess === false) {
