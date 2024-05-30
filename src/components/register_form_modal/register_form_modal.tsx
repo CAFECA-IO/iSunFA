@@ -30,7 +30,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative mx-auto flex flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
-        <div className="flex gap-2.5 bg-white py-4 pl-10 pr-5">
+        <div className="flex gap-2.5 bg-white px-5 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="space-y-2 px-0">
               <div className="text-xl font-bold text-slate-700">Set User Name</div>
@@ -58,7 +58,7 @@ const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegister
             </button>
           </div>{' '}
         </div>
-        <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
+        <div className="flex w-full flex-col justify-center bg-white px-0 py-2.5 lg:px-5">
           <div className="flex flex-col justify-center">
             <div className="flex gap-0 rounded-sm border border-lightGray3 bg-white shadow-sm">
               <div className="flex items-center justify-center px-3 py-2.5">

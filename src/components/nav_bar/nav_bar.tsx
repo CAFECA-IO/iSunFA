@@ -438,12 +438,33 @@ const NavBar = () => {
     </div>
   ) : (
     <Link href={ISUNFA_ROUTE.LOGIN}>
-      <Button className="h-40px bg-button-surface-strong-primary">
+      {/* Info: desktop version (20240530 - Shirley) */}
+      <Button className="hidden h-40px bg-button-surface-strong-primary lg:flex">
         <p className={cn('text-sm leading-6 tracking-normal text-button-text-primary-solid')}>
           Login
           {/* {t('login')} */}
         </p>
 
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="none"
+          viewBox="0 0 20 20"
+        >
+          <g>
+            <path
+              className={cn(`fill-current`, `text-button-text-primary-solid`)}
+              fillRule="evenodd"
+              d="M8.21 1.501H13.542c.667 0 1.226 0 1.684.037.479.04.934.125 1.365.345l-.454.89.454-.89a3.5 3.5 0 011.53 1.53c.22.431.305.886.344 1.365.038.458.038 1.017.037 1.683v7.08c0 .666 0 1.226-.037 1.684-.04.478-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.431.22-.886.305-1.365.344-.458.037-1.018.037-1.683.037H8.21c-.65 0-1.165.001-1.613-.12a3.5 3.5 0 01-2.475-2.474c-.12-.448-.12-.963-.12-1.613v-.126a1 1 0 112 0c0 .84.009 1.063.052 1.221l-.961.258.96-.258a1.5 1.5 0 001.061 1.061c.159.043.382.051 1.222.051h5.166c.717 0 1.194 0 1.561-.03.355-.03.518-.081.62-.133a1.5 1.5 0 00.656-.656c.052-.103.104-.265.133-.62.03-.367.03-.844.03-1.56v-7c0-.717 0-1.195-.03-1.561-.03-.356-.08-.518-.133-.62l.891-.455-.891.454a1.5 1.5 0 00-.656-.655c-.102-.053-.265-.104-.62-.133-.367-.03-.844-.03-1.56-.03H8.335c-.84 0-1.063.008-1.222.05a1.5 1.5 0 00-1.06 1.06c-.043.16-.052.383-.052 1.222a1 1 0 11-2 0v-.126c0-.65 0-1.164.12-1.613A3.5 3.5 0 016.597 1.62c.448-.12.962-.12 1.613-.119zm1.085 4.46a1 1 0 011.415 0l3.333 3.333a1 1 0 010 1.414l-3.333 3.333a1 1 0 11-1.415-1.414l1.627-1.626h-8.42a1 1 0 110-2h8.42L9.295 7.375a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            ></path>
+          </g>
+        </svg>
+      </Button>
+
+      {/* Info: mobile version (20240530 - Shirley) */}
+      <Button className="flex h-40px bg-button-surface-strong-primary px-3 lg:hidden">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
