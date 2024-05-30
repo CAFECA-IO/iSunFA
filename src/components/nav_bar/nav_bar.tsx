@@ -11,12 +11,12 @@ import { useUserCtx } from '@/contexts/user_context';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
 
 const NavBar = () => {
-  const { signedIn, signOut, username, selectedCompany, selectCompany } = useUserCtx();
+  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth } = useUserCtx();
   const router = useRouter();
 
   const burgerButtonStyle =
@@ -245,7 +245,7 @@ const NavBar = () => {
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
         <Image
           alt="avatar"
-          src="/elements/avatar.png"
+          src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
           width={56}
           height={56}
           className="mx-auto aspect-square w-16 self-center"
@@ -426,7 +426,13 @@ const NavBar = () => {
       <button type="button" onClick={avatarClickHandler}>
         {/* Info: avatar svg (20240408 - Shirley) */}
 
-        <Image alt="avatar" src="/elements/avatar.png" width={40} height={40} className="my-auto" />
+        <Image
+          alt="avatar"
+          src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+          width={40}
+          height={40}
+          className="my-auto"
+        />
       </button>
       {displayedUserMenu}
     </div>

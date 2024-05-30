@@ -121,6 +121,7 @@ const ConfirmModal = ({
   }, [journalId]);
 
   useEffect(() => {
+    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     clearVoucherHandler();
     // Info: (20240528 - Julian) Reset AI status
     setIsAskAILoading(true);
