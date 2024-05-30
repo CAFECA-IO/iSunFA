@@ -46,6 +46,7 @@ const ConfirmModal = ({
     clearVoucherHandler,
     totalCredit,
     totalDebit,
+    selectJournalHandler,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
@@ -253,8 +254,12 @@ const ConfirmModal = ({
 
   useEffect(() => {
     if (createSuccess && result && journal) {
-      modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
-      clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
+      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
+      modalVisibilityHandler();
+      clearVoucherHandler();
+      setIsAskAILoading(true);
+      selectJournalHandler(undefined);
+
       // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
       router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`);
       // Info: (20240527 - Julian) Toast notification
@@ -345,8 +350,8 @@ const ConfirmModal = ({
 
   const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>; // ToDo: (20240527 - Julian) Get contract name from somewhere
 
-  const accountingVoucherRow = accountingVoucher.map((voucher) => (
-    <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
+  const accountingVoucherRow = accountingVoucher.map((voucher, index) => (
+    <AccountingVoucherRow key={voucher.id} rowOrder={index} accountingVoucher={voucher} />
   ));
 
   const displayAccountingVoucher = (
@@ -380,12 +385,24 @@ const ConfirmModal = ({
   );
 
   const debitListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.debit)
-    .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
+    .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
+    .map((debit, index) => {
+      return AccountingVoucherRowMobile({
+        type: 'Debit',
+        rowOrder: index,
+        accountingVoucher: debit,
+      });
+    });
 
   const creditListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.credit)
-    .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
+    .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
+    .map((credit, index) => {
+      return AccountingVoucherRowMobile({
+        type: 'Credit',
+        rowOrder: index,
+        accountingVoucher: credit,
+      });
+    });
 
   const displayAccountingVoucherMobile = (
     <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">

@@ -24,9 +24,20 @@ const UploadedFileItem = ({
     status === ProgressStatus.PAUSED
   );
 
-  const pauseClickHandler = () => pauseHandler(id);
-  const deleteClickHandler = () => deleteHandler(id);
-  const itemClickHandler = () => clickHandler(itemData);
+  const pauseClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation(); // Info: (20240530 - Julian) 防止點擊暫停時，觸發 itemClickHandler
+    pauseHandler(id);
+  };
+
+  const deleteClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation(); // Info: (20240530 - Julian) 防止點擊刪除時，觸發 itemClickHandler
+    deleteHandler(id);
+  };
+
+  const itemClickHandler = () => {
+    if (progress !== 100) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
+    clickHandler(itemData);
+  };
 
   // Info: (20240527 - Julian) 若檔名過長，則擷取前 3 個和後 4 個(副檔名)字元，中間以 ... 代替
   const truncatedFileName =
@@ -45,10 +56,16 @@ const UploadedFileItem = ({
     </button>
   );
 
+  const displayedProgress = progress === 100 ? 'Completed' : `${progress}%`;
+
   return (
-    <div className="relative inline-flex w-90vw flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 shadow md:w-full">
-      <div className="inline-flex items-center gap-20px">
-        <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="upload_cloud_icon" />
+    <div
+      // Info: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
+      onClick={itemClickHandler}
+      className={`relative inline-flex w-90vw flex-col gap-10px rounded-sm border ${isError ? 'border-file-uploading-text-error hover:border-file-uploading-text-error' : 'border-file-uploading-stroke-outline hover:cursor-pointer hover:border-slider-surface-bar disabled:hover:border-file-uploading-stroke-outline'} bg-white p-5 md:w-full`}
+    >
+      <div className="relative inline-flex w-full items-center gap-20px">
+        <Image src="/animations/scanning.gif" width={56} height={56} alt="scanning_animation" />
         {/* Info: (20240523 - Julian) File Thumbnail */}
         <div className="inline-flex h-64px w-64px items-center justify-center">
           <Image src={imageUrl} width={64} height={64} alt="file_thumbnail" />
@@ -66,7 +83,7 @@ const UploadedFileItem = ({
           </p>
         </div>
         {/* Info: (20240523 - Julian) Tool Buttons */}
-        <div className="z-30 flex items-center gap-10px text-icon-surface-single-color-primary">
+        <div className="absolute right-0 z-30 flex items-center gap-10px text-icon-surface-single-color-primary">
           {/* Info: (20240523 - Julian) Status */}
           {displayedStatus}
           {/* Info: (20240523 - Julian) Trash Button */}
@@ -76,7 +93,8 @@ const UploadedFileItem = ({
         </div>
       </div>
       {/* Info: (20240523 - Julian) Progress Bar */}
-      <div className="inline-flex items-center gap-16px">
+      <div className="inline-flex w-full items-center gap-16px">
+        <p className="text-slider-surface-bar">AI technology recognizing</p>
         <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
           <div
             className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${isError ? 'bg-file-uploading-text-error' : 'bg-progress-bar-surface-bar-secondary'}`}
@@ -84,18 +102,9 @@ const UploadedFileItem = ({
           />
         </div>
         <p className="text-xs font-medium leading-tight tracking-tight text-progress-bar-text-indicator">
-          {progress} %
+          {displayedProgress}
         </p>
       </div>
-
-      {/* Info: (20240523 - Julian) click mask */}
-      <button
-        type="button"
-        disabled={progress !== 100}
-        // Info: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
-        onClick={itemClickHandler}
-        className="absolute left-0 top-0 h-full w-full disabled:hidden"
-      ></button>
     </div>
   );
 };

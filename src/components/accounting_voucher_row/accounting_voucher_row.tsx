@@ -12,15 +12,17 @@ import {
 const accountingList = ['1441- Machinery', '1113- Cash in banks'];
 
 interface IAccountingVoucherRow {
+  rowOrder: number;
   accountingVoucher: IAccountingVoucher;
 }
 
 interface IAccountingVoucherRowMobile {
+  rowOrder: number;
   type: 'Debit' | 'Credit';
   accountingVoucher: IAccountingVoucher;
 }
 
-const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
+const AccountingVoucherRow = ({ rowOrder, accountingVoucher }: IAccountingVoucherRow) => {
   const { id, particulars, debit, credit } = accountingVoucher;
   const { deleteVoucherRowHandler, changeVoucherStringHandler, changeVoucherAmountHandler } =
     useAccountingCtx();
@@ -133,7 +135,12 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       </td>
       {/* Info: (20240429 - Julian) Delete Button */}
       <td className="w-50px">
-        <button type="button" className="p-12px" onClick={deleteClickHandler}>
+        <button
+          type="button"
+          className="p-12px disabled:hidden"
+          onClick={deleteClickHandler}
+          disabled={rowOrder === 0} // Info: (20240530 - Julian) 第一列不能刪除
+        >
           <RiDeleteBinLine size={24} />
         </button>
       </td>
@@ -142,6 +149,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
 };
 
 export const AccountingVoucherRowMobile = ({
+  rowOrder,
   type,
   accountingVoucher,
 }: IAccountingVoucherRowMobile) => {
@@ -158,6 +166,8 @@ export const AccountingVoucherRowMobile = ({
   const changeParticularMobileHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     changeVoucherStringHandler(id, event.target.value, VoucherString.PARTICULARS);
   };
+
+  const deleteVoucherRowMobileHandler = () => deleteVoucherRowHandler(id);
 
   const changeAmountHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     changeVoucherAmountHandler(
@@ -217,8 +227,8 @@ export const AccountingVoucherRowMobile = ({
         />
       </div>
       {/* Info: (20240510 - Julian) Buttons */}
-      <div className="flex items-center justify-center">
-        <button type="button" onClick={() => deleteVoucherRowHandler(id)}>
+      <div className="flex items-center justify-center disabled:hidden">
+        <button type="button" onClick={deleteVoucherRowMobileHandler} disabled={rowOrder === 0}>
           <RiDeleteBinLine size={24} />
         </button>
       </div>
