@@ -18,7 +18,7 @@ const AccountingPage = () => {
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
 
-  // ToDo: (20240422 - Julian) Back button -> 回到上一步
+  // Info: (20240422 - Julian) Back button -> 回到上一步
   const backClickHandler = () => {
     setCurrentStep(AccountingStep.STEP_ONE);
     selectUnprocessedJournalHandler(undefined);

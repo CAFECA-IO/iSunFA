@@ -58,7 +58,7 @@ const JournalListTab = () => {
   const totalPages = 100;
   const uploadedEventsCount = 999;
   const upcomingEventsCount = 9;
-  // const isShowJournalList = false;
+
   const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
   // Info: (20240418 - Julian) for css
