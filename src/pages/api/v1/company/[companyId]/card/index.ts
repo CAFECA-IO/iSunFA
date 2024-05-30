@@ -3,11 +3,33 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import prisma from '@/client';
 import { getSession } from '@/lib/utils/get_session';
 
 async function getCardList() {
-  const cardList = await prisma.card.findMany();
+  // TODO (20240530 - Jacky): Implement the function to get the list of cards
+  // const cardList = await prisma.card.findMany();
+  const cardList: ICard[] = [
+    {
+      id: 1,
+      type: 'VISA',
+      no: '1234-1234-1234-1234',
+      expireYear: '29',
+      expireMonth: '01',
+      cvc: '330',
+      name: 'Taiwan Bank',
+      companyId: 4,
+    },
+    {
+      id: 2,
+      type: 'VISA',
+      no: '5678-5678-5678-5678',
+      expireYear: '29',
+      expireMonth: '01',
+      cvc: '355',
+      name: 'Taishin International Bank',
+      companyId: 4,
+    },
+  ];
   return cardList;
 }
 
@@ -20,21 +42,17 @@ async function createCard(
   name: string,
   companyId: number
 ): Promise<ICard> {
-  const createdCard = await prisma.card.create({
-    data: {
-      type,
-      no,
-      expireYear,
-      expireMonth,
-      cvc,
-      name,
-      company: {
-        connect: {
-          id: companyId,
-        },
-      },
-    },
-  });
+  // TODO (20240530 - Jacky): Implement the function to create a card
+  const createdCard: ICard = {
+    id: 3,
+    type,
+    no,
+    expireYear,
+    expireMonth,
+    cvc,
+    name,
+    companyId,
+  };
   return createdCard;
 }
 

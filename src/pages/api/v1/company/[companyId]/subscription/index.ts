@@ -61,11 +61,7 @@ export default async function handler(
       const createdSubscription = await prisma.subscription.create({
         data: {
           plan,
-          card: {
-            connect: {
-              id: cardIdNum,
-            },
-          },
+          cardId: cardIdNum,
           autoRenew,
           company: {
             connect: {

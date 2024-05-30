@@ -80,21 +80,8 @@ beforeEach(async () => {
         },
       },
       plan: 'pro',
-      card: {
-        create: {
-          no: '1234567890',
-          type: 'VISA22',
-          expireYear: '23',
-          expireMonth: '12',
-          cvc: '123',
-          name: 'Test Card',
-          company: {
-            connect: {
-              id: userCompanyRole.companyId,
-            },
-          },
-        },
-      },
+      // TODO: (20240530 - Jacky) Add cardId to the test data.
+      cardId: 1,
       price: '100',
       autoRenew: true,
       startDate: timestampInSeconds(Date.now()),
@@ -144,15 +131,6 @@ afterEach(async () => {
     await prisma.company.delete({
       where: {
         id: userCompanyRole.companyId,
-      },
-    });
-  } catch (error) {
-    // Info: (20240517 - Jacky) If already deleted, ignore the error.
-  }
-  try {
-    await prisma.card.delete({
-      where: {
-        id: cardId,
       },
     });
   } catch (error) {
