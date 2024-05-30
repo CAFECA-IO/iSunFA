@@ -165,11 +165,11 @@ model department {
 }
 
 model employee {
-  id               Int               @id @default(autoincrement())
+  id               Int        @id @default(autoincrement())
   name             String
   imageId          String?
-  departmentId     Int               @map("department_id")
-  companyId        Int               @map("company_id")
+  departmentId     Int        @map("department_id")
+  companyId        Int        @map("company_id")
   salary           Int
   insurancePayment Int
   bonus            Int
@@ -177,11 +177,12 @@ model employee {
   payFrequency     String
   startDate        Int
   endDate          Int?
-  company          company           @relation(fields: [companyId], references: [id])
-  department       department        @relation(fields: [departmentId], references: [id])
+  company          company    @relation(fields: [companyId], references: [id])
+  department       department @relation(fields: [departmentId], references: [id])
   salaries         salary[]
   workRates        workRate[]
 }
+
 model invoice {
   id               Int      @id @default(autoincrement())
   date             Int
@@ -267,10 +268,10 @@ model ocr {
 }
 
 model project {
-  id               Int               @id @default(autoincrement())
-  companyId        Int               @map("company_id")
+  id               Int         @id @default(autoincrement())
+  companyId        Int         @map("company_id")
   name             String
-  completedPercent Int               @map("completed_percent")
+  completedPercent Int         @map("completed_percent")
   stage            String
   totalExpense     Int?
   totalIncome      Int?
@@ -281,7 +282,7 @@ model project {
   invoices         invoice[]
   journals         journal?
   milestones       milestone[]
-  company          company           @relation(fields: [companyId], references: [id])
+  company          company     @relation(fields: [companyId], references: [id])
   sales            sale[]
   values           value[]
   workRates        workRate[]
@@ -317,22 +318,22 @@ model role {
 }
 
 model report {
-  id        Int     @id @default(autoincrement())
-  createdAt Int     @map("created_at")
-  name      String
-  periodFrom Int
-  periodTo   Int
-  type      String
-  reportType String
-  status    String
-  remainingSeconds Int?
-  paused Boolean?
-  projectId Int?
-  reportLink String?
-  downloadLink String?
+  id                     Int      @id @default(autoincrement())
+  createdAt              Int      @map("created_at")
+  name                   String
+  periodFrom             Int
+  periodTo               Int
+  type                   String
+  reportType             String
+  status                 String
+  remainingSeconds       Int?
+  paused                 Boolean?
+  projectId              Int?
+  reportLink             String?
+  downloadLink           String?
   blockChaonExplorerLink String?
-  evidenceId String?
-  project project?  @relation(fields: [projectId], references: [id])
+  evidenceId             String?
+  project                project? @relation(fields: [projectId], references: [id])
 }
 
 model subscription {
@@ -384,7 +385,6 @@ model user {
 }
 
 model userCompanyRole {
-  @@id([userId, companyId, roleId])
   userId    Int
   companyId Int
   roleId    Int
@@ -393,6 +393,7 @@ model userCompanyRole {
   role      role    @relation(fields: [roleId], references: [id])
   user      user    @relation(fields: [userId], references: [id])
 
+  @@id([userId, companyId, roleId])
   @@map("user_company_role")
 }
 
@@ -418,12 +419,13 @@ model value {
 }
 
 model workRate {
-  @@id([projectId, employeeId])
   projectId       Int
   employeeId      Int
-  involvementRate Int?    @map("involvement_rate")
+  involvementRate Int?     @map("involvement_rate")
   hours           Int
   date            Int
-  project         project @relation(fields: [projectId], references: [id])
+  project         project  @relation(fields: [projectId], references: [id])
   employee        employee @relation(fields: [employeeId], references: [id])
+
+  @@id([projectId, employeeId])
 }
