@@ -172,14 +172,14 @@ model employee {
   company_id       Int
   salary           Int
   insurancePayment Int
+  bonus            Int
   salaryPayMode    String
   payFrequency     String
   startDate        Int
   endDate          Int?
-  bonus            Int
   company          company    @relation(fields: [company_id], references: [id])
   department       department @relation(fields: [department_id], references: [id])
-  salaries         salary[]
+  salaries           salary[]
   workRate         workRate[]
 }
 
@@ -254,37 +254,15 @@ model milestone {
 }
 
 model ocr {
-  id        Int       @id @default(autoincrement())
-  imageName String    @map("image_name")
-  imageUrl  String    @map("image_url")
-  imageSize Float     @map("image_size")
-  status    String
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  contract  contract?
-  journal   journal?
-}
-
-model project {
-  id               Int               @id @default(autoincrement())
-  companyId        Int               @map("company_id")
-  name             String
-  completedPercent Int               @map("completed_percent")
-  stage            String
-  totalExpense     Int?
-  totalIncome      Int?
-  imageId          String?
-  assets           asset[]
-  cashflow         cashflow[]
-  contracts        contract[]
-  invoices         invoice[]
-  journals         journal?
-  milestones       milestone[]
-  company          company           @relation(fields: [companyId], references: [id])
-  sales            sale[]
-  values           value[]
-  workRates        workRate[]
-  report           report[]
+  id         Int       @id @default(autoincrement())
+  image_name String
+  image_url  String
+  image_size Float
+  status     String
+  created_at DateTime  @default(now())
+  updated_at DateTime
+  contract   contract?
+  journal    journal?
 }
 
 model payment {
@@ -329,6 +307,25 @@ model project {
   workRate          workRate[]
 }
 
+model report {
+  id                     Int      @id @default(autoincrement())
+  created_at             Int
+  name                   String
+  periodFrom             Int
+  periodTo               Int
+  type                   String
+  reportType             String
+  status                 String
+  remainingSeconds       Int?
+  paused                 Boolean?
+  projectId              Int?
+  reportLink             String?
+  downloadLink           String?
+  blockChaonExplorerLink String?
+  evidenceId             String?
+  project                project? @relation(fields: [projectId], references: [id])
+}
+
 model role {
   id                Int                 @id @default(autoincrement())
   name              String              @unique
@@ -337,33 +334,14 @@ model role {
   user_company_role user_company_role[]
 }
 
-model report {
-  id        Int     @id @default(autoincrement())
-  createdAt Int     @map("created_at")
-  name      String
-  periodFrom Int
-  periodTo   Int
-  type      String
-  reportType String
-  status    String
-  remainingSeconds Int?
-  paused Boolean?
-  projectId Int?
-  reportLink String?
-  downloadLink String?
-  blockChaonExplorerLink String?
-  evidenceId String?
-  project project?  @relation(fields: [projectId], references: [id])
-}
-
 model salary {
   id               Int      @id @default(autoincrement())
   employeeId       Int
   salary           Int
-  description      String
-  date             Int
   insurancePayment Int
   bonus            Int
+  description      String
+  date             Int
   employee         employee @relation(fields: [employeeId], references: [id])
 }
 
@@ -376,15 +354,18 @@ model sale {
   project    project @relation(fields: [projectId], references: [id])
 }
 
-model salary {
-  id               Int      @id @default(autoincrement())
-  employeeId       Int
-  salary           Int
-  insurancePayment Int
-  bonus            Int
-  description      String
-  month            String // 2024-05
-  employee         employee @relation(fields: [employeeId], references: [id])
+model subscription {
+  id         Int     @id @default(autoincrement())
+  plan       String
+  price      String
+  autoRenew  Boolean
+  status     String
+  card_id    Int
+  startDate  Int
+  expireDate Int
+  company_id Int
+  card       card    @relation(fields: [card_id], references: [id])
+  company    company @relation(fields: [company_id], references: [id])
 }
 
 model user {
@@ -401,8 +382,7 @@ model user {
   user_company_role user_company_role[]
 }
 
-model userCompanyRole {
-  id        Int     @id @default(autoincrement())
+model user_company_role {
   userId    Int
   companyId Int
   roleId    Int
@@ -436,12 +416,13 @@ model voucher {
 }
 
 model workRate {
-  id              Int     @id @default(autoincrement())
-  projectId       Int
-  employeeId      Int
-  involvementRate Int?    @map("involvement_rate")
-  hours           Int
-  month           String
-  project         project @relation(fields: [projectId], references: [id])
-  employee        employee @relation(fields: [employeeId], references: [id])
+  projectId        Int
+  employeeId       Int
+  involvement_rate Int?
+  hours            Int
+  date             Int
+  employee         employee @relation(fields: [employeeId], references: [id])
+  project          project  @relation(fields: [projectId], references: [id])
+
+  @@id([projectId, employeeId])
 }
