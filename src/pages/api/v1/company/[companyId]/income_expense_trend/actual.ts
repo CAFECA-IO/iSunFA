@@ -5,6 +5,7 @@ import {
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import { MONTH_FULL_LIST_SHORT } from '@/constants/display';
 import prisma from '@/client';
 
 async function getIncomeExpenseTrendChartData(period: string): Promise<IIncomeExpenseTrendChartData> {
@@ -25,7 +26,7 @@ async function getIncomeExpenseTrendChartData(period: string): Promise<IIncomeEx
   const totalExpense: number[] = [];
   const totalProfit: number[] = [];
   if (period === 'month') {
-    const categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const categories = MONTH_FULL_LIST_SHORT;
     // Info: (20240528 - Gibbs) use 0 if no data found in month
     categories.forEach((_, index) => {
       const data = incomeExpenseData.find((ele) => Number(ele.month) === index + 1);

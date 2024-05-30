@@ -21,6 +21,8 @@ export const MONTH_LIST = [
   'DATE_PICKER.DEC',
 ];
 
+export const MONTH_FULL_LIST_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export const MONTH_ABR_LIST = [
   'DATE_PICKER.JAN_ABR',
   'DATE_PICKER.FEB_ABR',
