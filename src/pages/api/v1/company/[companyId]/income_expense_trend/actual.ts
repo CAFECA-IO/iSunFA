@@ -79,13 +79,15 @@ async function getIncomeExpenseTrendChartData(period: string): Promise<IIncomeEx
     const categories: string[] = [];
     // Info: (20240528 - Gibbs) get only year data from incomeExpenseData
     incomeExpenseData.forEach((ele) => {
-      if (!categories.includes((ele.year).toString())) {
-        categories.push((ele.year).toString());
+      const currentYear = (ele.year).toString();
+      if (!categories.includes(currentYear)) {
+        categories.push(currentYear);
       }
     });
     // Info: (20240528 - Gibbs) calculate total income, expense, profit by year using incomeExpenseData
     incomeExpenseData.forEach((ele) => {
-      const index = categories.indexOf((ele.year).toString());
+      const currentYear = (ele.year).toString();
+      const index = categories.indexOf(currentYear);
       totalIncome[index] = totalIncome[index] ? Number(totalIncome[index]) + Number(ele.total_income) : Number(ele.total_income);
       totalExpense[index] = totalExpense[index] ? Number(totalExpense[index]) + Number(ele.total_expense) : Number(ele.total_expense);
       totalProfit[index] = totalIncome[index] - totalExpense[index];
