@@ -46,6 +46,7 @@ const ConfirmModal = ({
     clearVoucherHandler,
     totalCredit,
     totalDebit,
+    selectJournalHandler,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
@@ -88,7 +89,7 @@ const ConfirmModal = ({
     trigger: getAIResult,
     data: AIResult,
     success: AIResultSuccess,
-    // code: AIResultCode,
+    code: AIResultCode,
   } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
 
   const router = useRouter();
@@ -96,7 +97,7 @@ const ConfirmModal = ({
   const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
 
   const [eventType, setEventType] = useState<string>('');
-  const [date, setDate] = useState<number>(0);
+  const [dateTimestamp, setDateTimestamp] = useState<number>(0);
   // const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -162,12 +163,11 @@ const ConfirmModal = ({
     return () => clearInterval(interval);
   }, [askAIId, statusSuccess, status, statusError, statusCode]);
 
-  // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
     if (journal && getJournalSuccess) {
       const { invoice, voucher } = journal;
       if (invoice) {
-        setDate(invoice.date);
+        setDateTimestamp(invoice.date);
         // setReason(invoice.paymentReason);
         setEventType(invoice.eventType);
         setCompanyName(invoice.vendorOrSupplier);
@@ -215,12 +215,13 @@ const ConfirmModal = ({
   const addRowHandler = () => addVoucherRowHandler();
   const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
-  // ToDo: (20240528 - Julian) 這裡資料沒有寫入，需檢查
+
   const importVoucherClickHandler = () => {
     const AILineItems = AIResult?.lineItems ?? [];
 
     // Info: (20240529 - Julian) 清空 accountingVoucher
     clearVoucherHandler();
+
     // Info: (20240529 - Julian) 先加入空白列，再寫入資料
     AILineItems.forEach((lineItem, index) => {
       addRowHandler();
@@ -254,8 +255,12 @@ const ConfirmModal = ({
 
   useEffect(() => {
     if (createSuccess && result && journal) {
-      modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
-      clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
+      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
+      modalVisibilityHandler();
+      clearVoucherHandler();
+      setIsAskAILoading(true);
+      selectJournalHandler(undefined);
+
       // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
       router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`);
       // Info: (20240527 - Julian) Toast notification
@@ -277,7 +282,6 @@ const ConfirmModal = ({
       });
     }
     if (createSuccess === false) {
-      // TODO: Error handling @Julian (20240510 - Tzuhan)
       messageModalDataHandler({
         title: 'Create Voucher Failed',
         subMsg: 'Please try again later',
@@ -294,7 +298,7 @@ const ConfirmModal = ({
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
 
-  const displayDate = <p>{timestampToString(date).date}</p>; // ToDo: (20240527 - Julian) Interface lacks date
+  const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
   const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
     (
@@ -329,7 +333,7 @@ const ConfirmModal = ({
 
   const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
 
-  const projectName = project; // selectedJournal?.projectId ? `${selectedJournal.projectId}` : 'None'; // ToDo: (20240527 - Julian) Get project name from somewhere
+  const projectName = project; // ToDo: (20240527 - Julian) Get project name from somewhere
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = projectName.split(' ').reduce((acc, word) => acc + word[0], '');
 
@@ -382,11 +386,11 @@ const ConfirmModal = ({
   );
 
   const debitListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.debit)
+    .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
     .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
 
   const creditListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.credit)
+    .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
     .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
 
   const displayAccountingVoucherMobile = (
@@ -446,7 +450,6 @@ const ConfirmModal = ({
       AI is working on it...
     </p>
   ) : AIResultSuccess && AIResult && AIResult.lineItems.length > 0 ? (
-    // ToDo: (20240527 - Julian) 串接 API
     <button
       type="button"
       className="rounded-xs bg-badge-surface-soft-primary px-4px py-2px text-badge-text-primary-solid"
@@ -454,6 +457,10 @@ const ConfirmModal = ({
     >
       Import voucher from AI
     </button>
+  ) : AIResultSuccess === false && AIResultCode ? (
+    <p className="absolute left-0 text-text-neutral-secondary">
+      Failed to get AI result, error code: {AIResultCode}
+    </p>
   ) : (
     <p className="absolute left-0 text-text-neutral-secondary">
       There are no recommendations from AI

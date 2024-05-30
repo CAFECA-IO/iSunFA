@@ -117,39 +117,33 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // Info: (20240430 - Julian) 新增日記帳列
   const addVoucherRowHandler = useCallback(
     (type?: VoucherRowType) => {
-      if (type === VoucherRowType.DEBIT) {
-        setAccountingVoucher((prev) => [
-          ...prev,
-          {
-            id: prev[prev.length - 1].id + 1,
-            accountTitle: '',
-            particulars: '',
-            debit: 1,
-            credit: 0,
-          },
-        ]);
-      } else if (type === VoucherRowType.CREDIT) {
-        setAccountingVoucher((prev) => [
-          ...prev,
-          {
-            id: prev[prev.length - 1].id + 1,
-            accountTitle: '',
-            particulars: '',
-            debit: 0,
-            credit: 1,
-          },
-        ]);
-      } else {
-        setAccountingVoucher((prev) => [
-          ...prev,
-          {
-            id: prev[prev.length - 1].id + 1,
-            accountTitle: '',
-            particulars: '',
-            debit: 0,
-            credit: 0,
-          },
-        ]);
+      // Info: (20240530 - Julian) 檢查 accountingVoucher 是否有列
+      const isVoucherEmpty = !!accountingVoucher && accountingVoucher.length > 0;
+      // Info: (20240530 - Julian) 若 accountingVoucher 為空，則新增 id = 0，否則最後一列 id + 1
+      const newId = isVoucherEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
+
+      switch (type) {
+        // Info: (20240530 - Julian) 新增借方列
+        case VoucherRowType.DEBIT:
+          setAccountingVoucher((prev) => [
+            ...prev,
+            { id: newId, accountTitle: '', particulars: '', debit: 1, credit: 0 },
+          ]);
+          break;
+        // Info: (20240530 - Julian) 新增貸方列
+        case VoucherRowType.CREDIT:
+          setAccountingVoucher((prev) => [
+            ...prev,
+            { id: newId, accountTitle: '', particulars: '', debit: 0, credit: 1 },
+          ]);
+          break;
+        // Info: (20240530 - Julian) 新增空白列
+        default:
+          setAccountingVoucher((prev) => [
+            ...prev,
+            { id: newId, accountTitle: '', particulars: '', debit: 0, credit: 0 },
+          ]);
+          break;
       }
     },
     [accountingVoucher]
@@ -217,7 +211,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
     changeVoucherStringHandler(0, '', VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
     changeVoucherStringHandler(0, '', VoucherString.PARTICULARS); // Info: (20240503 - Julian) 清空摘要 input
-    // Info: 清空欄位資料 @Julian 需要幫忙檢查 (20240515 - Tzuhan)
+    // Info: (20240515 - Julian) 清空欄位資料
     setInvoiceId('');
     setVoucherId(undefined);
     setVoucherStatus(undefined);
