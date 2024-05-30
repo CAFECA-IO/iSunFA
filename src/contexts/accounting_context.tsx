@@ -1,5 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
-import { IJournalData, IUnprocessedJournal } from '@/interfaces/journal';
+import { IJournal, IUnprocessedJournal } from '@/interfaces/journal';
 import { IVoucher } from '@/interfaces/voucher';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
@@ -41,8 +41,8 @@ interface IAccountingContext {
 
   selectedUnprocessedJournal: IUnprocessedJournal | undefined;
   selectUnprocessedJournalHandler: (journal: IUnprocessedJournal | undefined) => void;
-  selectedJournal: IJournalData | undefined;
-  selectJournalHandler: (journal: IJournalData | undefined) => void;
+  selectedJournal: IJournal | undefined;
+  selectJournalHandler: (journal: IJournal | undefined) => void;
 
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
@@ -74,23 +74,23 @@ const initialAccountingContext: IAccountingContext = {
   // removeTempJournal: () => {},
 
   selectedUnprocessedJournal: undefined,
-  selectUnprocessedJournalHandler: () => {},
+  selectUnprocessedJournalHandler: () => { },
   selectedJournal: undefined,
-  selectJournalHandler: () => {},
+  selectJournalHandler: () => { },
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => {},
+  setInvoiceIdHandler: () => { },
   voucherId: undefined,
-  setVoucherIdHandler: () => {},
+  setVoucherIdHandler: () => { },
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => {},
+  setVoucherPreviewHandler: () => { },
 
   accountingVoucher: [defaultAccountingVoucher],
-  addVoucherRowHandler: () => {},
-  deleteVoucherRowHandler: () => {},
-  changeVoucherStringHandler: () => {},
-  changeVoucherAmountHandler: () => {},
-  clearVoucherHandler: () => {},
+  addVoucherRowHandler: () => { },
+  deleteVoucherRowHandler: () => { },
+  changeVoucherStringHandler: () => { },
+  changeVoucherAmountHandler: () => { },
+  clearVoucherHandler: () => { },
 
   totalDebit: 0,
   totalCredit: 0,
@@ -102,7 +102,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [selectedUnprocessedJournal, setEditingJournal] = useState<IUnprocessedJournal | undefined>(
     undefined
   );
-  const [selectedJournal, setSelectedJournal] = useState<IJournalData | undefined>(undefined);
+  const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
@@ -279,7 +279,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   );
 
   const selectJournalHandler = useCallback(
-    (journal: IJournalData | undefined) => setSelectedJournal(journal),
+    (journal: IJournal | undefined) => setSelectedJournal(journal),
     [selectedJournal]
   );
 

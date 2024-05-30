@@ -3,14 +3,7 @@ import { IVoucher, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { IOCR } from '@/interfaces/ocr';
 import { IInvoiceDataForSavingToDB } from './invoice';
 
-// Depreciated (20240527 - Murky): IJournal will be replace by IJournalData
-export interface IJournal extends IVoucher {
-  id: string;
-  tokenContract: string;
-  tokenId: string;
-}
-
-export interface IJournalData {
+export interface IJournal {
   id: number;
   tokenContract: string | null;
   tokenId: string | null;

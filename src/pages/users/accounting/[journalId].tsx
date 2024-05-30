@@ -8,7 +8,7 @@ import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
-import { IJournalData } from '@/interfaces/journal';
+import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -55,7 +55,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     // error,
     success,
     code,
-  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
   });
 
