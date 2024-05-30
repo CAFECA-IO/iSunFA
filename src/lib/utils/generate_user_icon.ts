@@ -4,15 +4,15 @@ import path from 'path';
 import { transformOCRImageIDToURL } from './common';
 
 const savePath =
-process.env.VERCEL === '1'
-  ? FORMIDABLE_CONFIG.uploadDir
-  : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+  process.env.VERCEL === '1'
+    ? FORMIDABLE_CONFIG.uploadDir
+    : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
 
-function isChinese(name:string) {
-    return /[\u3400-\u9FBF]/.test(name);
+function isChinese(name: string) {
+  return /[\u3400-\u9FBF]/.test(name);
 }
 
-function generateInitials(name:string) {
+function generateInitials(name: string) {
   if (isChinese(name)) {
     return name.slice(-2);
   } else {
@@ -63,6 +63,6 @@ export async function generateUserIcon(name: string) {
   const filepath = await generateSvgSavePath();
   await saveUserIconToFile(iconSvg, filepath);
   const filename = getFileNameFromPath(filepath);
-  const url = transformOCRImageIDToURL("invoice", 0, filename);
+  const url = transformOCRImageIDToURL('invoice', 0, filename);
   return url;
 }
