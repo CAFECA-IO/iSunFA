@@ -15,7 +15,6 @@ const LoginPage = () => {
   useEffect(() => {
     if (signedIn) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-      // window.location.href = '/users/dashboard';
     }
   }, [signedIn]);
 

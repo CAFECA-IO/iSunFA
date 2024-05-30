@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -15,9 +15,11 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { IRole } from '@/interfaces/role';
+import { cn } from '@/lib/utils/common';
 
 const SelectCompanyPageBody = () => {
-  const { signedIn, username, selectCompany, successSelectCompany, errorCode } = useUserCtx();
+  const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
+    useUserCtx();
   const {
     toastHandler,
     companyInvitationModalVisibilityHandler,
@@ -115,7 +117,6 @@ const SelectCompanyPageBody = () => {
           className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
         >
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
-            {/* ToDo: (20240516 - Julian) icon */}
             <Image
               alt={companyAndRole.company.name}
               src={'/entities/happy.png'}
@@ -126,7 +127,6 @@ const SelectCompanyPageBody = () => {
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
             {companyAndRole.company.name}
           </p>
-          {/* ToDo: (20240516 - Julian) role */}
           <p className="text-xs text-lightGray5">{companyAndRole.role.name}</p>
         </button>
       );
@@ -187,10 +187,15 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) company selection */}
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
-          <div className="relative flex w-200px items-center justify-center py-4">
-            <Image alt="avatar" src="/elements/avatar.png" width={200} height={200} />
+          <div className="relative flex w-200px items-center justify-center py-0">
+            <Image
+              alt="avatar"
+              src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+              width={200}
+              height={200}
+            />
             {/* Info: (20240513 - Julian) green dot */}
-            <div className="absolute bottom-4 right-4">
+            <div className={cn('absolute right-4', userAuth?.imageId ? 'bottom-4' : 'bottom-0')}>
               <svg
                 width="41"
                 height="40"
@@ -229,7 +234,6 @@ const SelectCompanyPageBody = () => {
               </button>
               <div className="w-px self-stretch bg-slate-300" />
               <button
-                // ToDo: (20240514 - Julian) select company function
                 type="button"
                 disabled={selectedCompany === null}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"

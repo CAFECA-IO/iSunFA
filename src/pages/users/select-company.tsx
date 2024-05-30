@@ -49,12 +49,12 @@ const SelectCompanyPage = () => {
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common'])),
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
+export const getServerSideProps = async ({ locale }: ILocale) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale as string, ['common'])),
+    },
+  };
+};
 
 export default SelectCompanyPage;

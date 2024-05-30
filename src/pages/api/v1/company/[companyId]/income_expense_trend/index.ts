@@ -19,7 +19,7 @@ export default function handler(
     }
     const { httpCode, result } = formatApiResponse<IIncomeExpenseTrendChartData>(
       STATUS_MESSAGE.SUCCESS_GET,
-      incomeExpenseTrendChartData.week
+      incomeExpenseTrendChartData.month
     );
     res.status(httpCode).json(result);
   } catch (_error) {

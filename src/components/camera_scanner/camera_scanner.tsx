@@ -351,7 +351,6 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           <TbArrowBackUp size={16} />
         </button>
       ) : (
-        /* ToDo: (20240507 - Julian) album button */
         // eslint-disable-next-line jsx-a11y/label-has-associated-control
         <label
           htmlFor="uploadImageFromAlbum"

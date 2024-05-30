@@ -1,15 +1,13 @@
 import { timestampInSeconds } from '@/lib/utils/common';
 
 export interface ILaborCostChartData {
-  startDate: number;
-  endDate: number;
+  date: number;
   categories: string[];
   series: number[];
 }
 
 export function generateRandomLaborCostData(items: number): ILaborCostChartData {
-  const startDate = timestampInSeconds(new Date('2024-04-01').getTime());
-  const endDate = timestampInSeconds(new Date('2024-05-01').getTime());
+  const date = timestampInSeconds(new Date('2024-04-01').getTime());
   const categories = [
     'Project A',
     'Project B',
@@ -41,8 +39,7 @@ export function generateRandomLaborCostData(items: number): ILaborCostChartData 
   const series = Array.from({ length: items }, () => Math.floor(Math.random() * 100));
 
   return {
-    startDate, // Info: 畫圖表不會用到 date，但為了後續 debug，將前端給的時間參數都放進去 (20240521 - Shirley)
-    endDate,
+    date,
     categories,
     series,
   };
