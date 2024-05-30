@@ -198,18 +198,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
+  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
     getUserSessionData();
-    // const credentialFromCookie = await readFIDO2Cookie();
-
-    // if (credentialFromCookie !== null) {
-    //   setCredential(credentialFromCookie.id);
-    //   setSignedIn(true);
-    // } else {
-    //   setSignedIn(false);
-    //   deleteCookie(COOKIE_NAME.FIDO2);
-    // }
   };
 
   // Info: (20240513 - Julian) 選擇公司的功能
@@ -245,10 +236,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return result;
   };
 
-  // const checkCookieAndSignOut = async () => {
-  //   getUserSessionData();
-  // };
-
   const signOut = async () => {
     signOutAPI(); // TODO: signOutAPI to delete the session (20240524 - Shirley)
     clearState();
@@ -260,10 +247,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       await init();
     })();
   }, []);
-
-  // useEffect(() => {
-  //   checkCookieAndSignOut();
-  // }, [router.pathname]);
 
   useEffect(() => {
     if (isSignUpLoading) return;
@@ -300,6 +283,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setErrorCode(signInCode ?? '');
     }
   }, [signInData, isSignInLoading, signInSuccess, signInCode]);
+
+  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  useEffect(() => {
+    if (!signedIn && !isGetUserSessionLoading) {
+      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+        router.push(ISUNFA_ROUTE.LOGIN);
+      }
+    }
+  }, [signedIn, isGetUserSessionLoading]);
 
   useEffect(() => {
     if (isGetUserSessionLoading) return;

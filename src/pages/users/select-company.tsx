@@ -1,4 +1,3 @@
-/* eslint-disable */
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -7,7 +6,6 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ToastId } from '@/constants/toast_id';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { ILocale } from '@/interfaces/locale';
-import { getSession } from '@/lib/utils/get_session';
 
 const SelectCompanyPage = () => {
   const { eliminateToast } = useGlobalCtx();
@@ -51,20 +49,10 @@ const SelectCompanyPage = () => {
   );
 };
 
-export const getServerSideProps = async ({ req, res, locale }: any) => {
-  const session = await getSession(req, res);
-
-  // Ensure no undefined values in the session object
-  // if (session && session.cookie && session.cookie.domain === undefined) {
-  //   session.cookie.domain = null;
-  // }
-
-  console.log('session in select-company serverSide', session);
-
+export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale, ['common'])),
-      // session,
+      ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };
 };
