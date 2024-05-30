@@ -1,0 +1,2039 @@
+[
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "營業收入總額",
+        "code": "0100001",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "減：銷貨退回",
+        "code": "0100002",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "減：銷貨折讓",
+        "code": "0100003",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "營業收入淨額",
+        "code": "0100004",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "營業成本",
+        "code": "0100005",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "營業毛利",
+        "code": "0100006",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "營業費用及損失總額",
+        "code": "0100008",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "薪資支出",
+        "code": "0100010",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "租金支出",
+        "code": "0100011",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "文具用品",
+        "code": "0100012",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "旅費",
+        "code": "0100013",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "運費",
+        "code": "0100014",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "郵電費",
+        "code": "0100015",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "修繕費",
+        "code": "0100016",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "廣告費",
+        "code": "0100017",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "水電瓦斯費",
+        "code": "0100018",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "保險費",
+        "code": "0100019",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "交際費",
+        "code": "0100020",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "捐贈",
+        "code": "0100021",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "稅捐",
+        "code": "0100022",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "呆帳損失",
+        "code": "0100023",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "折舊",
+        "code": "0100024",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "各項耗竭及攤提(包括商譽攤銷)",
+        "code": "0100025",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "外銷損失",
+        "code": "0100026",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "伙食費",
+        "code": "0100027",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "職工福利",
+        "code": "0100028",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "研究發展費",
+        "code": "0100029",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "佣金支出",
+        "code": "0100030",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "訓練費",
+        "code": "0100031",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "其他費用",
+        "code": "0100032",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "營業淨利",
+        "code": "0100033",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "非營業收入總額",
+        "code": "0100034",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "投資收益(含權益法之投資收益)及一般股息及紅利(含國外投資收益)",
+        "code": "0100035",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "依所得稅法第42條規定取得之股利或盈餘",
+        "code": "0100036",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "依所得稅法第43條之3規定計算之投資收益",
+        "code": "0100037",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "利息收入",
+        "code": "0100038",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "租賃收入",
+        "code": "0100039",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "處分資產利益(包括證券、期貨、土地交易所得)",
+        "code": "0100040",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "佣金收入",
+        "code": "0100041",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "兌換盈益",
+        "code": "0100043",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "其他收入",
+        "code": "0100044",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "非營業損失及費用總額",
+        "code": "0100045",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "利息支出",
+        "code": "0100046",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "投資損失",
+        "code": "0100047",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "處分資產損失(包括證券、期貨、土地交易損失)",
+        "code": "0100048",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "災害損失",
+        "code": "0100049",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "兌換虧損",
+        "code": "0100051",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "其他損失",
+        "code": "0100052",
+        "name": "主要"
+    },
+    {
+        "type": "Revenue",
+        "liquidity": "current",
+        "account": "全年所得額",
+        "code": "0100053",
+        "name": "主要"
+    },
+    {
+        "type": "Expense",
+        "liquidity": "current",
+        "account": "所得稅費用",
+        "code": "0100122",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "資產總額",
+        "code": "0201000",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "流動資產",
+        "code": "0201100",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "現金",
+        "code": "0201111",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "銀行存款",
+        "code": "0201112",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "約當現金",
+        "code": "0201113",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "短期性之投資",
+        "code": "0201114",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "透過損益按公允價值衡量之金融資產－流動",
+        "code": "0201151",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "避險之金融資產－流動",
+        "code": "0201154",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "透過其他綜合損益按公允價值衡量之金融資產－流動",
+        "code": "0201158",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "按攤銷後成本衡量之金融資產－流動",
+        "code": "0201161",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他金融資產－流動",
+        "code": "0201157",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減：累計減損-其他金融資產－流動",
+        "code": "0201159",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "合約資產－流動",
+        "code": "0201125",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減：累計減損-合約資產－流動",
+        "code": "0201126",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "應收票據",
+        "code": "0201121",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減：備抵呆帳-應收票據",
+        "code": "0201122",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "應收帳款",
+        "code": "0201123",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減：備抵呆帳-應收帳款",
+        "code": "0201124",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他應收款",
+        "code": "0201129",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨",
+        "code": "0201130",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-商品",
+        "code": "0201131",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-製成品",
+        "code": "0201132",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-在製品（或在建工程）",
+        "code": "0201133",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-原料",
+        "code": "0201134",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-物料",
+        "code": "0201135",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-寄銷品",
+        "code": "0201136",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "存貨-其他",
+        "code": "0201138",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減：備抵存貨跌價-存貨",
+        "code": "0201137",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項",
+        "code": "0201140",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項-預付費用",
+        "code": "0201141",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項-用品盤存",
+        "code": "0201142",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項-預付貨款",
+        "code": "0201143",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項-進項稅款",
+        "code": "0201144",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項-留抵稅額",
+        "code": "0201145",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "預付款項-其他預付款",
+        "code": "0201149",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他流動資產",
+        "code": "0201190",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他流動資產-暫付款",
+        "code": "0201191",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他流動資產-業主（股東）往來",
+        "code": "0201192",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他流動資產-同業往來",
+        "code": "0201193",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他流動資產－其他",
+        "code": "0201199",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "非流動資產",
+        "code": "0201200",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "長期性之投資",
+        "code": "0201300",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-長期性之投資",
+        "code": "0201302",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "透過損益按公允價值衡量之金融資產－非流動",
+        "code": "0201612",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "避險之金融資產－非流動",
+        "code": "0201615",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "透過其他綜合損益按公允價值衡量之金融資產－非流動",
+        "code": "0201621",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "按攤銷後成本衡量之金融資產－非流動",
+        "code": "0201622",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "其他金融資產－非流動",
+        "code": "0201618",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "採用權益法之投資",
+        "code": "0201630",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-採用權益法之投資",
+        "code": "0201631",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "合約資產－非流動",
+        "code": "0201640",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-合約資產－非流動",
+        "code": "0201641",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "不動產、廠房及設備（固定資產）",
+        "code": "0201400",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "土地",
+        "code": "0201410",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-土地",
+        "code": "0201411",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "房屋及建築",
+        "code": "0201431",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-房屋及建築",
+        "code": "0201432",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-房屋及建築",
+        "code": "0201433",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "機器設備",
+        "code": "0201441",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-機器設備",
+        "code": "0201442",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-機器設備",
+        "code": "0201443",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "運輸設備",
+        "code": "0201451",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-運輸設備",
+        "code": "0201452",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-運輸設備",
+        "code": "0201453",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "辦公設備",
+        "code": "0201461",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-辦公設備",
+        "code": "0201462",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-辦公設備",
+        "code": "0201463",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "未完工程及待驗設備",
+        "code": "0201470",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "其他固定資產",
+        "code": "0201491",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-其他固定資產",
+        "code": "0201492",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-其他固定資產",
+        "code": "0201493",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "投資性不動產",
+        "code": "0201541",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-投資性不動產",
+        "code": "0201542",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "礦產資源",
+        "code": "0201421",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折耗-礦產資源",
+        "code": "0201422",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "生物資產",
+        "code": "0201551",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-生物資產",
+        "code": "0201552",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-生物資產",
+        "code": "0201553",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "無形資產",
+        "code": "0201510",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計攤折-無形資產",
+        "code": "0201511",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-無形資產",
+        "code": "0201512",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "使用權資產",
+        "code": "0201710",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計折舊-使用權資產",
+        "code": "0201711",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "減：累計減損-使用權資產",
+        "code": "0201712",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "其他非流動資產",
+        "code": "0201900",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "存出保證金",
+        "code": "0201901",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "未攤銷費用",
+        "code": "0201902",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "預付設備款",
+        "code": "0201903",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "nonCurrent",
+        "account": "其他非流動資產－其他",
+        "code": "0201904",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "負債總額",
+        "code": "0202000",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "流動負債",
+        "code": "0202100",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "短期借款",
+        "code": "0202110",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "銀行透支",
+        "code": "0202111",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "銀行借款",
+        "code": "0202112",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "應付短期票券",
+        "code": "0202113",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他短期借款",
+        "code": "0202119",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "透過損益按公允價值衡量之金融負債－流動",
+        "code": "0202140",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "避險之金融負債－流動",
+        "code": "0202150",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "特別股負債－流動",
+        "code": "0202170",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他金融負債－流動",
+        "code": "0202180",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "合約負債－流動",
+        "code": "0202126",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "應付票據",
+        "code": "0202120",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "應付帳款",
+        "code": "0202121",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他應付款",
+        "code": "0202130",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "應付費用",
+        "code": "0202131",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "應付稅捐",
+        "code": "0202132",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "應付股利",
+        "code": "0202133",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "銷項稅額",
+        "code": "0202134",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "預收款項",
+        "code": "0202135",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "非流動負傡",
+        "code": "0202136",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期末存料",
+        "code": "0202137",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他應付款-其他",
+        "code": "0202138",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "預收貨款",
+        "code": "0202190",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他預收款",
+        "code": "0202191",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他流動負債",
+        "code": "0202192",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "暫收款",
+        "code": "0202193",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "業主(股東)往來",
+        "code": "0202195",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "同業往來",
+        "code": "0202196",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "代收款",
+        "code": "0202200",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "其他流動負債-其他",
+        "code": "0202210",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "應付公司債",
+        "code": "0202220",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "長期借款",
+        "code": "0202230",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "透過損益按公允價值衡量之金融負債-非流動",
+        "code": "0202240",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "避險之金融負債-非流動",
+        "code": "0202260",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "特別股負債-非流動",
+        "code": "0202270",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "其他金融負債-非流動",
+        "code": "0202280",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "長期應付票據及款項",
+        "code": "0202281",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "合約負債-非流動",
+        "code": "0202282",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "租賃負傡",
+        "code": "0202290",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "其他長期負債",
+        "code": "0202900",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "其他非流動負傡",
+        "code": "0202910",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "存入保證金",
+        "code": "0202940",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "退休金準備",
+        "code": "0202951",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "國外投資損失準備",
+        "code": "0202970",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "受託承銷品",
+        "code": "0202999",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "nonCurrent",
+        "account": "其他非流動負傡-其他",
+        "code": "0203000",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "權益總額",
+        "code": "0203100",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "資本或股本(實收)",
+        "code": "0203110",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "股本(登記)",
+        "code": "0203130",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "加:預收股款",
+        "code": "0203120",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "減:未發行股本",
+        "code": "0203300",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "資本公積",
+        "code": "0203400",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "保留盈餘",
+        "code": "0203410",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "法定盈餘公積",
+        "code": "0203411",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "法定盈餘公積(86年度以前餘額)",
+        "code": "0203412",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "法定盈餘公積(87年度以後餘額)",
+        "code": "0203420",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "特別盈餘公積",
+        "code": "0203421",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "特別盈餘公積(86年度以前餘額)",
+        "code": "0203422",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "特別盈餘公積(87年度以後餘額)",
+        "code": "0203430",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "累積盈虧",
+        "code": "0203431",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "累積盈虧(86年度以前餘額)",
+        "code": "0203432",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "累積盈虧(87年度以後餘額)",
+        "code": "0203434",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "追溯適用及追溯重編之影響數",
+        "code": "0203435",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "本期自其他綜合損益或其他權益項目轉入之稅後淨額",
+        "code": "0203440",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "本期損益(稅後)",
+        "code": "0203450",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "減:自本期盈餘分配、撥補虧損及提列法定(特別)盈餘公積之合計金額",
+        "code": "0203500",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "其他權益",
+        "code": "0203502",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "避險工具之損益",
+        "code": "0203503",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "國外營運機構財務報表換算之兌換差額",
+        "code": "0203503",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "未實現重估增值",
+        "code": "0203504",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "確定福利計畫再衡量數",
+        "code": "0203505",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "透過其他綜合損益按公允價值衡量之未實現損益",
+        "code": "0203507",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "員工未賺得酬勞",
+        "code": "0203508",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "其他權益-其他",
+        "code": "0203506",
+        "name": "主要"
+    },
+    {
+        "type": "Equity",
+        "liquidity": "nonCurrent",
+        "account": "減:庫藏股票",
+        "code": "0203600",
+        "name": "主要"
+    },
+    {
+        "type": "liability",
+        "liquidity": "current",
+        "account": "負債及權益總額",
+        "code": "0209000",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期初存貨",
+        "code": "0300001",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "本期進貨(淨額)",
+        "code": "0300002",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期末存貨",
+        "code": "0300301",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加:存貨-其他",
+        "code": "0300302",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減:存貨-其他",
+        "code": "0300303",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "進銷成本",
+        "code": "0300009",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期初存料",
+        "code": "0300010",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "本期進料(淨額)",
+        "code": "0300011",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加:期末存料-其他( )",
+        "code": "0301202",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期末存料-減:其他( )",
+        "code": "0301203",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "直接原料",
+        "code": "0300013",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期初存料",
+        "code": "0300014",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "本期進料(淨額)",
+        "code": "0300015",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期末存料",
+        "code": "0301601",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加:存料-其他( )",
+        "code": "0301602",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減:存料-其他( )",
+        "code": "0301603",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "間接材料",
+        "code": "0300017",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "直接人工",
+        "code": "0300018",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "製造費用",
+        "code": "0300019",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "製造成本",
+        "code": "0300020",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期初在製品存貨",
+        "code": "0300021",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期末在製品存貨",
+        "code": "0302201",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加:在製品存貨-其他( )",
+        "code": "0302202",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減:在製品存貨-其他( )",
+        "code": "0302203",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "製成品成本",
+        "code": "0300030",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期初製成品存貨",
+        "code": "0300031",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "期末製成品存貨",
+        "code": "0303201",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加:製成品存貨-其他( )",
+        "code": "0303202",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "減:製成品存貨-其他( )",
+        "code": "0303203",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "外銷估列應收退稅或已收退稅款",
+        "code": "0300033",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "產銷成本減項",
+        "code": "0300040",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "產銷成本",
+        "code": "0300050",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "勞務成本",
+        "code": "0300060",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "修理成本",
+        "code": "0300070",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加工成本",
+        "code": "0300080",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "業務成本",
+        "code": "0300081",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他營業成本",
+        "code": "0300085",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "營業成本",
+        "code": "0300090",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "間接人工",
+        "code": "04B0001",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "租金支出",
+        "code": "04B0002",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "文具用品",
+        "code": "04B0003",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "旅費",
+        "code": "04B0004",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "運費",
+        "code": "04B0005",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "郵電費",
+        "code": "04B0006",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "修繕費",
+        "code": "04B0007",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "包裝費",
+        "code": "04B0008",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "水電瓦斯費",
+        "code": "04B0009",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "保險費",
+        "code": "04B0010",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "加工費",
+        "code": "04B0011",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "稅捐",
+        "code": "04B0012",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "折舊",
+        "code": "04B0013",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "各項耗竭及攤提",
+        "code": "04B0014",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "伙食費",
+        "code": "04B0015",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "職工福利",
+        "code": "04B0016",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他製造費用",
+        "code": "04B0090",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "耗材費用",
+        "code": "05C2901",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "薪資費用",
+        "code": "05C2902",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "租金支出",
+        "code": "05C2903",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "文具用品",
+        "code": "05C2904",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "旅費",
+        "code": "05C2905",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "運費",
+        "code": "05C2906",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "郵電費",
+        "code": "05C2907",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "修繕費",
+        "code": "05C2908",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "水電瓦斯費",
+        "code": "05C2909",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "保險費",
+        "code": "05C2910",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "交際費",
+        "code": "05C2911",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "稅捐",
+        "code": "05C2912",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "折舊",
+        "code": "05C2913",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "各項耗竭及攤提",
+        "code": "05C2914",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "伙食費",
+        "code": "05C2915",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "職工福利",
+        "code": "05C2916",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "權利金",
+        "code": "05C2917",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "勞務費",
+        "code": "05C2918",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "訓練費",
+        "code": "05C2919",
+        "name": "主要"
+    },
+    {
+        "type": "asset",
+        "liquidity": "current",
+        "account": "其他研究發展費用",
+        "code": "05C2920",
+        "name": "主要"
+    }
+]

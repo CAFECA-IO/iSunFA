@@ -59,6 +59,8 @@ function calculateProgress(createdAt: Date, status: ProgressStatus) {
 
   if (status === ProgressStatus.SUCCESS) {
     process = 100;
+  } else if (status !== ProgressStatus.IN_PROGRESS) {
+    process = 0;
   }
   return process;
 }

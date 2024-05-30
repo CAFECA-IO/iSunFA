@@ -22,7 +22,7 @@ import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { IJournalData } from '@/interfaces/journal';
+import { IJournal } from '@/interfaces/journal';
 import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
@@ -57,7 +57,7 @@ const ConfirmModal = ({
     success: getJournalSuccess,
     data: journal,
     code: getJournalCode,
-  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
 
   const {
     trigger: createVoucher,
