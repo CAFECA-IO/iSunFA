@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
+import { IUser } from '@/interfaces/user';
 import handler from './invitation';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -66,9 +67,9 @@ beforeEach(async () => {
       },
       createdUser: {
         connectOrCreate: {
-          where: { credentialId: 'test' },
+          where: { credentialId: 'test_PUT_INVITATION' },
           create: {
-            credentialId: 'test',
+            credentialId: 'test_PUT_INVITATION',
             email: '',
             name: '',
             publicKey: '',
@@ -81,11 +82,11 @@ beforeEach(async () => {
   invitationCode = invitation.code;
   roleId = invitation.roleId;
   companyId = invitation.companyId;
-  const user = await prisma.user.findFirstOrThrow({
+  const user = (await prisma.user.findUnique({
     where: {
-      credentialId: 'test',
+      credentialId: 'test_PUT_INVITATION',
     },
-  });
+  })) as IUser;
   userId = user.id;
   req = {
     headers: {},
@@ -99,6 +100,19 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
+  try {
+    await prisma.userCompanyRole.delete({
+      where: {
+        userId_companyId_roleId: {
+          userId,
+          companyId,
+          roleId,
+        },
+      },
+    });
+  } catch (error) {
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
+  }
   try {
     await prisma.company.delete({
       where: {

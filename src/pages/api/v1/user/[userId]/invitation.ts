@@ -3,9 +3,8 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IInvitation } from '@/interfaces/invitation';
 import { IResponseData } from '@/interfaces/response_data';
-import { IUser } from '@/interfaces/user';
+import { checkUserSession } from '@/lib/utils/session_check';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
-import { getSession } from '@/lib/utils/get_session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -15,24 +14,11 @@ export default async function handler(
   try {
     if (req.method === 'PUT') {
       // Extract the necessary data from the request body
-      const session = await getSession(req, res);
+      const session = await checkUserSession(req, res);
       const { userId } = session;
-      if (!userId) {
-        throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-      }
       const { invitation } = req.body;
       if (!invitation) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const userIdNum = Number(userId);
-      // Perform any necessary validation on the data
-      const user: IUser = (await prisma.user.findUnique({
-        where: {
-          id: userIdNum,
-        },
-      })) as IUser;
-      if (!user) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
       const getInvitation: IInvitation = (await prisma.invitation.findUnique({
         where: {
@@ -58,7 +44,7 @@ export default async function handler(
           data: {
             user: {
               connect: {
-                id: userIdNum,
+                id: userId,
               },
             },
             role: {

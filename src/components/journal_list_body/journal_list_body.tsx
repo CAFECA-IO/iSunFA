@@ -6,7 +6,6 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-// import { IJournal } from '@/interfaces/journal';
 import { IDummyJournal } from '@/interfaces/journal';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import JournalList from '@/components/journal_list/journal_list';

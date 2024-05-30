@@ -9,49 +9,74 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let subscription: ISubscription;
-let companyId: number;
+let userCompanyRole: {
+  userId: number;
+  companyId: number;
+  roleId: number;
+  startDate: number;
+};
 let cardId: number;
 
 beforeEach(async () => {
-  req = {
-    headers: {},
-    body: null,
-    query: {},
-    method: 'GET',
-    json: jest.fn(),
-    session: { userId: '1' },
-  } as unknown as jest.Mocked<NextApiRequest>;
-
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
-
-  let company = await prisma.company.findFirst({
+  userCompanyRole = (await prisma.userCompanyRole.findFirst({
     where: {
-      code: 'TST_subscription2',
+      user: {
+        credentialId: 'subscription_index2_test',
+      },
     },
-  });
-  if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
-    company = await prisma.company.create({
+  })) as { userId: number; companyId: number; roleId: number; startDate: number };
+  if (!userCompanyRole) {
+    userCompanyRole = await prisma.userCompanyRole.create({
       data: {
-        code: 'TST_subscription2',
-        name: 'Test Company',
-        regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        user: {
+          connectOrCreate: {
+            where: {
+              credentialId: 'subscription_index2_test',
+            },
+            create: {
+              name: 'John',
+              credentialId: 'subscription_index2_test',
+              publicKey: 'publicKey',
+              algorithm: 'ES256',
+              imageId: 'imageId',
+            },
+          },
+        },
+        role: {
+          connectOrCreate: {
+            where: {
+              name: 'subscription_ADMIN2',
+            },
+            create: {
+              name: 'subscription_ADMIN2',
+              permissions: ['hihi', 'ooo'],
+            },
+          },
+        },
+        company: {
+          connectOrCreate: {
+            where: {
+              code: 'TST_subscription_11',
+            },
+            create: {
+              code: 'TST_subscription_11',
+              name: 'Test Company',
+              regional: 'TW',
+              startDate: 0,
+              createdAt: 0,
+              updatedAt: 0,
+            },
+          },
+        },
+        startDate: 0,
       },
     });
   }
-  companyId = company.id;
   const createdSubscription = await prisma.subscription.create({
     data: {
       company: {
         connect: {
-          id: company.id,
+          id: userCompanyRole.companyId,
         },
       },
       plan: 'pro',
@@ -65,7 +90,7 @@ beforeEach(async () => {
           name: 'Test Card',
           company: {
             connect: {
-              id: company.id,
+              id: userCompanyRole.companyId,
             },
           },
         },
@@ -84,12 +109,24 @@ beforeEach(async () => {
       },
     },
   });
-  companyId = createdSubscription.companyId;
   cardId = createdSubscription.cardId;
   subscription = {
     ...createdSubscription,
     companyName: createdSubscription.company.name,
   };
+  req = {
+    headers: {},
+    body: null,
+    query: {},
+    method: 'GET',
+    json: jest.fn(),
+    session: { userId: userCompanyRole.userId, companyId: userCompanyRole.companyId },
+  } as unknown as jest.Mocked<NextApiRequest>;
+
+  res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  } as unknown as jest.Mocked<NextApiResponse>;
 });
 
 afterEach(async () => {
@@ -106,7 +143,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: companyId,
+        id: userCompanyRole.companyId,
       },
     });
   } catch (error) {
@@ -125,7 +162,6 @@ afterEach(async () => {
 
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
-    req.query.companyId = companyId.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -153,9 +189,7 @@ describe('test subscription API', () => {
   });
 
   it('should create a new subscription', async () => {
-    req.headers.userid = '1';
     req.method = 'POST';
-    req.query.companyId = companyId.toString();
     req.body = {
       plan: 'pro',
       autoRenew: true,
@@ -194,7 +228,7 @@ describe('test subscription API', () => {
   it('should handle unsupported HTTP methods', async () => {
     req.headers.userid = '1';
     req.method = 'PUT';
-    req.query.companyId = companyId.toString();
+    req.query.companyId = userCompanyRole.companyId.toString();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith(
@@ -211,9 +245,6 @@ describe('test subscription API', () => {
     req = {
       headers: {},
       body: null,
-      query: {
-        companyId: companyId.toString(),
-      },
       method: 'GET',
       json: jest.fn(),
       session: {},

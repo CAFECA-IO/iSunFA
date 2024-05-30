@@ -140,7 +140,11 @@ async function getLatestVoucherNoInPrisma(companyId: number) {
   }
 }
 
-async function createVoucherInPrisma(newVoucherNo: string, journalId: number, lineItemIds: number[]) {
+async function createVoucherInPrisma(
+  newVoucherNo: string,
+  journalId: number,
+  lineItemIds: number[]
+) {
   try {
     const voucherData = await prisma.voucher.create({
       data: {
@@ -191,8 +195,15 @@ async function handleVoucherCreatePrismaLogic(voucher: IVoucherDataForSavingToDB
   }
 }
 
-function isVoucherValid(voucher: IVoucherDataForSavingToDB): voucher is IVoucherDataForSavingToDB & { journalId: number } {
-  if (!voucher || !isIVoucherDataForSavingToDB(voucher) || !voucher.journalId || typeof voucher.journalId !== 'number') {
+function isVoucherValid(
+  voucher: IVoucherDataForSavingToDB
+): voucher is IVoucherDataForSavingToDB & { journalId: number } {
+  if (
+    !voucher ||
+    !isIVoucherDataForSavingToDB(voucher) ||
+    !voucher.journalId ||
+    typeof voucher.journalId !== 'number'
+  ) {
     return false;
   }
   return true;
@@ -204,7 +215,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'POST') {
-      const voucher = req.body;
+      const { voucher } = req.body;
 
       // Info: （ 20240522 - Murky）body need to provide LineItems and journalId
       if (!isVoucherValid(voucher)) {
@@ -224,7 +235,6 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-
     const { httpCode, result } = formatApiResponse<ApiResponseType>(
       error.message,
       {} as ApiResponseType
