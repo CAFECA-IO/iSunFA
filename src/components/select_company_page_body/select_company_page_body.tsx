@@ -115,7 +115,6 @@ const SelectCompanyPageBody = () => {
           className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
         >
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
-            {/* ToDo: (20240516 - Julian) icon */}
             <Image
               alt={companyAndRole.company.name}
               src={'/entities/happy.png'}
@@ -126,7 +125,6 @@ const SelectCompanyPageBody = () => {
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
             {companyAndRole.company.name}
           </p>
-          {/* ToDo: (20240516 - Julian) role */}
           <p className="text-xs text-lightGray5">{companyAndRole.role.name}</p>
         </button>
       );
@@ -229,7 +227,6 @@ const SelectCompanyPageBody = () => {
               </button>
               <div className="w-px self-stretch bg-slate-300" />
               <button
-                // ToDo: (20240514 - Julian) select company function
                 type="button"
                 disabled={selectedCompany === null}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"

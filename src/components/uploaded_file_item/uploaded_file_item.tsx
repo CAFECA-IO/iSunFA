@@ -26,6 +26,7 @@ const UploadedFileItem = ({
 
   const pauseClickHandler = () => pauseHandler(id);
   const deleteClickHandler = () => deleteHandler(id);
+  const itemClickHandler = () => clickHandler(itemData);
 
   // Info: (20240527 - Julian) 若檔名過長，則擷取前 3 個和後 4 個(副檔名)字元，中間以 ... 代替
   const truncatedFileName =
@@ -92,7 +93,7 @@ const UploadedFileItem = ({
         type="button"
         disabled={progress !== 100}
         // Info: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
-        onClick={() => clickHandler(itemData)}
+        onClick={itemClickHandler}
         className="absolute left-0 top-0 h-full w-full disabled:hidden"
       ></button>
     </div>

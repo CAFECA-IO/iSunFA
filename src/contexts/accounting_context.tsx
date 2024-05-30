@@ -217,7 +217,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
     changeVoucherStringHandler(0, '', VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
     changeVoucherStringHandler(0, '', VoucherString.PARTICULARS); // Info: (20240503 - Julian) 清空摘要 input
-    // Info: 清空欄位資料 @Julian 需要幫忙檢查 (20240515 - Tzuhan)
+    // Info: (20240515 - Julian) 清空欄位資料
     setInvoiceId('');
     setVoucherId(undefined);
     setVoucherStatus(undefined);
