@@ -39,6 +39,7 @@ async function findUniqueJournalInPrisma(journalId: number | undefined) {
     return result.id;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
@@ -58,6 +59,7 @@ async function findFirstAccountInPrisma(accountName: string) {
     return result?.id || null;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
@@ -82,6 +84,7 @@ async function createFakeAccountInPrisma() {
     return result.id;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
@@ -114,6 +117,7 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
     return result.id;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }

@@ -1,7 +1,7 @@
 import { FORMIDABLE_CONFIG, USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { transformOCRImageIDToURL } from './common';
+import { mkUploadFolder, transformOCRImageIDToURL } from '@/lib/utils/common';
 
 const savePath =
   process.env.VERCEL === '1'
@@ -40,7 +40,11 @@ function generateRandomUUID() {
   return crypto.randomUUID();
 }
 
-function generateUserIconSvg(initials:string, backgroundColor:string, darkBackgroundColor: string) {
+function generateUserIconSvg(
+  initials: string,
+  backgroundColor: string,
+  darkBackgroundColor: string
+) {
   return `
     <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
       <style>
@@ -50,6 +54,7 @@ function generateUserIconSvg(initials:string, backgroundColor:string, darkBackgr
         }
         text {
           fill: #FFFFFF;
+          font-family: sans-serif;
         }
         @media (prefers-color-scheme: dark) {
           circle {
@@ -80,13 +85,21 @@ function getFileNameFromPath(filepath: string) {
   return parts[parts.length - 1];
 }
 export async function generateUserIcon(name: string) {
-  const initials = generateInitials(name);
-  const backgroundColor = generateRandomColor();
-  const iconSvg = generateUserIconSvg(initials, backgroundColor.lightMode, backgroundColor.darkMode);
-  const filepath = await generateSvgSavePath();
-  await saveUserIconToFile(iconSvg, filepath);
-  const filename = getFileNameFromPath(filepath);
-  const url = transformOCRImageIDToURL('invoice', 0, filename);
-  return url;
-
+  try {
+    await mkUploadFolder();
+    const initials = generateInitials(name);
+    const backgroundColor = generateRandomColor();
+    const iconSvg = generateUserIconSvg(
+      initials,
+      backgroundColor.lightMode,
+      backgroundColor.darkMode
+    );
+    const filepath = await generateSvgSavePath();
+    await saveUserIconToFile(iconSvg, filepath);
+    const filename = getFileNameFromPath(filepath);
+    const url = transformOCRImageIDToURL('invoice', 0, filename);
+    return url;
+  } catch (error) {
+    return '';
+  }
 }

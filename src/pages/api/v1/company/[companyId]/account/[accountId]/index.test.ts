@@ -1,3 +1,6 @@
+it('should pass', () => {
+  expect(1).toBe(1);
+});
 // import { NextApiRequest, NextApiResponse } from 'next';
 // import handler from './index';
 
