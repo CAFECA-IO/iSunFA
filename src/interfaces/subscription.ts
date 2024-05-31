@@ -7,6 +7,6 @@ export interface ISubscription {
   price: string;
   autoRenew: boolean;
   startDate: number; // timestamp
-  expireDate: number; // timestamp
+  expiredDate: number; // timestamp
   status: string;
 }

@@ -10,7 +10,7 @@ export interface IAccountingAccount {
 export interface IDetailAccountingAccount {
   id: number;
   type: string;
-  liquidity: string;
+  liquidity: boolean;
   account: string;
   code: string;
   name: string;

@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { checkUserSession } from '@/lib/utils/session_check';
@@ -37,6 +37,8 @@ export default async function handler(
       // Handle POST request to create a new user
       const { name, fullName, email, phone, credentialId, publicKey, algorithm, imageId } =
         req.body;
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
       const createdUser: IUser = await prisma.user.create({
         data: {
           name,
@@ -47,6 +49,8 @@ export default async function handler(
           publicKey,
           algorithm,
           imageId,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       });
 

@@ -37,17 +37,17 @@ beforeEach(async () => {
       code: 'TST_kyc1',
     },
   });
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
     company = await prisma.company.create({
       data: {
         code: 'TST_kyc1',
         name: 'Test Company',
         regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
@@ -76,7 +76,8 @@ beforeEach(async () => {
       registrationCertificateId: 'ABC123',
       taxCertificateId: 'DEF456',
       representativeIdCardId: 'GHI789',
-      createdAt: timestampInSeconds(Date.now()),
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
   });
 });
