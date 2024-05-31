@@ -26,7 +26,7 @@ afterEach(() => {
 describe('getOwnAccounts API Handler Tests', () => {
   it('should return all response data when type and liquidity query params are provided correctly', async () => {
     req.method = 'GET';
-    req.query = { type: 'asset', liquidity: 'current' };
+    req.query = { type: 'asset', liquidity: 'false' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -62,7 +62,7 @@ describe('getOwnAccounts API Handler Tests', () => {
   });
   it('should return a error when type and liquidity query params are not provided correctly', async () => {
     req.method = 'GET';
-    req.query = { type: 'money', liquidity: 'high' };
+    req.query = { type: 'money', liquidity: 'true' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(
@@ -82,7 +82,7 @@ describe('createNewAccountingAccount API Handler Tests', () => {
     req.method = 'POST';
     req.body = {
       type: 'asset',
-      liquidity: 'current',
+      liquidity: false,
       account: 'cash',
       code: '1103-1',
       name: 'Taiwan Bank',
@@ -98,7 +98,7 @@ describe('createNewAccountingAccount API Handler Tests', () => {
         payload: expect.objectContaining({
           id: expect.any(Number),
           type: expect.any(String),
-          liquidity: expect.any(String),
+          liquidity: expect.any(Boolean),
           account: expect.any(String),
           code: expect.any(String),
           name: expect.any(String),
@@ -110,7 +110,7 @@ describe('createNewAccountingAccount API Handler Tests', () => {
     req.method = 'POST';
     req.body = {
       type: 'asset',
-      liquidity: 'non-current',
+      liquidity: true,
       code: '1103',
     };
     await handler(req, res);

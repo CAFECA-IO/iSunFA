@@ -1,82 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ICard } from '@/interfaces/card';
-import prisma from '@/client';
-import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let card: ICard;
-let companyId: number;
 
 beforeEach(async () => {
   req = {
     body: {},
     method: 'POST',
     json: jest.fn(),
-    session: { companyId, userId: 1 },
+    session: { companyId: 5, userId: 1 },
   } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-
-  let company = await prisma.company.findFirst({
-    where: {
-      code: 'TST_card1',
-    },
-  });
-  if (!company) {
-    company = await prisma.company.create({
-      data: {
-        code: 'TST_card1',
-        name: 'Test Company',
-        regional: 'TW',
-        startDate: timestampInSeconds(Date.now()),
-        createdAt: timestampInSeconds(Date.now()),
-        updatedAt: timestampInSeconds(Date.now()),
-      },
-    });
-  }
-  card = await prisma.card.create({
-    data: {
-      type: 'VISA',
-      no: '1234-1234-1234-1234',
-      expireYear: '29',
-      expireMonth: '01',
-      cvc: '330',
-      name: 'Taiwan Bank',
-      company: {
-        connect: {
-          id: company.id,
-        },
-      },
-    },
-  });
-  companyId = card.companyId;
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
-  try {
-    await prisma.card.delete({
-      where: {
-        id: card.id,
-      },
-    });
-  } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
-  }
-  try {
-    await prisma.company.delete({
-      where: {
-        id: companyId,
-      },
-    });
-  } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
-  }
 });
 
 describe('CARD API Handler Tests', () => {
@@ -116,15 +59,10 @@ describe('CARD API Handler Tests', () => {
       },
       method: 'POST',
       json: jest.fn(),
-      session: { companyId, userId: 1 },
+      session: { companyId: 4, userId: 1 },
     } as unknown as jest.Mocked<NextApiRequest>;
 
     await handler(req, res);
-    await prisma.card.delete({
-      where: {
-        id: res.json.mock.calls[0][0].payload.id,
-      },
-    });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/index';
 import prisma from '@/client';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -12,6 +13,8 @@ let userCompanyRole: {
 };
 
 beforeEach(async () => {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   userCompanyRole = await prisma.userCompanyRole.create({
     data: {
       user: {
@@ -25,6 +28,8 @@ beforeEach(async () => {
             publicKey: 'publicKey',
             algorithm: 'ES256',
             imageId: 'imageId',
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         },
       },
@@ -36,6 +41,8 @@ beforeEach(async () => {
           create: {
             name: 'COMPANY_ADMIN',
             permissions: ['hihi', 'ooo'],
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         },
       },
@@ -48,13 +55,15 @@ beforeEach(async () => {
             code: 'TST_company_user1',
             name: 'Test Company',
             regional: 'TW',
-            startDate: 0,
-            createdAt: 0,
-            updatedAt: 0,
+            startDate: nowTimestamp,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         },
       },
-      startDate: 0,
+      startDate: nowTimestamp,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
   });
 

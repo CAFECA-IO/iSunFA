@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
+import { ONE_DAY_IN_S } from '@/constants/time';
 import handler from './invitation';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -15,23 +16,23 @@ beforeEach(async () => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const expireTimestamp = nowTimestamp + ONE_DAY_IN_S;
   const getCompany = await prisma.company.findFirst({
     where: {
       code: 'TST_invitation1',
     },
   });
   if (!getCompany) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
     await prisma.company.create({
       data: {
         code: 'TST_invitation1',
         name: 'Test Company',
         regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
@@ -39,7 +40,7 @@ beforeEach(async () => {
     data: {
       code: 'test',
       hasUsed: false,
-      expiredAt: timestampInSeconds(Date.now() + 86400),
+      expiredAt: expireTimestamp,
       company: {
         connectOrCreate: {
           where: {
@@ -50,8 +51,8 @@ beforeEach(async () => {
             name: 'Test Company',
             regional: 'TW',
             startDate: 0,
-            createdAt: 0,
-            updatedAt: 0,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         },
       },
@@ -62,6 +63,8 @@ beforeEach(async () => {
           },
           create: {
             name: 'Test_invitaion',
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         },
       },
@@ -74,9 +77,13 @@ beforeEach(async () => {
             name: '',
             publicKey: '',
             algorithm: '',
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         },
       },
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
   });
   invitationCode = invitation.code;

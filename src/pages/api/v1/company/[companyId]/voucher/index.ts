@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -38,8 +38,6 @@ async function findUniqueJournalInPrisma(journalId: number | undefined) {
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -57,23 +55,26 @@ async function findFirstAccountInPrisma(accountName: string) {
 
     return result?.id || null;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
 
 // Deprecated: (20240527 - Murky) This function is for demo purpose only
 async function createFakeAccountInPrisma() {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   try {
     const result = await prisma.account.create({
       data: {
         type: 'expense',
-        liquidity: 'current',
+        liquidity: true,
         account: '其他費用',
         code: '0100032',
         name: '其他費用',
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
+
       select: {
         id: true,
       },
@@ -81,8 +82,6 @@ async function createFakeAccountInPrisma() {
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -98,13 +97,16 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
         accountId = await createFakeAccountInPrisma();
       }
     }
-
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     const result = await prisma.lineItem.create({
       data: {
         accountId,
         description: lineItem.description,
         debit: lineItem.debit,
         amount: lineItem.amount,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
       select: {
         id: true,
@@ -113,8 +115,6 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }

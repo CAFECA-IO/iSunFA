@@ -3,7 +3,7 @@ import { ISubscription } from '@/interfaces/subscription';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { SubscriptionPeriod } from '@/constants/subscription';
 import prisma from '@/client';
-import { ONE_MONTH_IN_MS } from '@/constants/time';
+import { ONE_MONTH_IN_S } from '@/constants/time';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -25,6 +25,8 @@ beforeEach(async () => {
       },
     },
   })) as { userId: number; companyId: number; roleId: number; startDate: number };
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!userCompanyRole) {
     userCompanyRole = await prisma.userCompanyRole.create({
       data: {
@@ -39,6 +41,8 @@ beforeEach(async () => {
               publicKey: 'publicKey',
               algorithm: 'ES256',
               imageId: 'imageId',
+              createdAt: nowTimestamp,
+              updatedAt: nowTimestamp,
             },
           },
         },
@@ -50,6 +54,8 @@ beforeEach(async () => {
             create: {
               name: 'subscription_ADMIN2',
               permissions: ['hihi', 'ooo'],
+              createdAt: nowTimestamp,
+              updatedAt: nowTimestamp,
             },
           },
         },
@@ -69,6 +75,8 @@ beforeEach(async () => {
           },
         },
         startDate: 0,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
@@ -80,26 +88,15 @@ beforeEach(async () => {
         },
       },
       plan: 'pro',
-      card: {
-        create: {
-          no: '1234567890',
-          type: 'VISA22',
-          expireYear: '23',
-          expireMonth: '12',
-          cvc: '123',
-          name: 'Test Card',
-          company: {
-            connect: {
-              id: userCompanyRole.companyId,
-            },
-          },
-        },
-      },
+      // TODO: (20240530 - Jacky) Add cardId to the test data.
+      cardId: 1,
       price: '100',
       autoRenew: true,
-      startDate: timestampInSeconds(Date.now()),
-      expireDate: timestampInSeconds(Date.now() + ONE_MONTH_IN_MS),
+      startDate: nowTimestamp,
+      expiredDate: nowTimestamp + ONE_MONTH_IN_S,
       status: 'active',
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
     include: {
       company: {
@@ -149,15 +146,6 @@ afterEach(async () => {
   } catch (error) {
     // Info: (20240517 - Jacky) If already deleted, ignore the error.
   }
-  try {
-    await prisma.card.delete({
-      where: {
-        id: cardId,
-      },
-    });
-  } catch (error) {
-    // Info: (20240517 - Jacky) If already deleted, ignore the error.
-  }
 });
 
 describe('test subscription API', () => {
@@ -180,7 +168,7 @@ describe('test subscription API', () => {
             price: expect.any(String),
             autoRenew: expect.any(Boolean),
             startDate: expect.any(Number),
-            expireDate: expect.any(Number),
+            expiredDate: expect.any(Number),
             status: expect.any(String),
           }),
         ]),
@@ -218,7 +206,7 @@ describe('test subscription API', () => {
           cardId: expect.any(Number),
           price: expect.any(String),
           autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
+          expiredDate: expect.any(Number),
           status: expect.any(String),
         }),
       })

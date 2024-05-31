@@ -66,10 +66,14 @@ export default async function handler(
                 create: {
                   name: 'ADMIN',
                   permissions: ['read'],
+                  createdAt: nowTimestamp,
+                  updatedAt: nowTimestamp,
                 },
               },
             },
             startDate: nowTimestamp,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
           select: {
             company: true,
