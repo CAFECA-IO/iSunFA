@@ -1,3 +1,5 @@
+const { off } = require("process");
+
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -67,6 +69,17 @@ module.exports = {
         'import/no-extraneous-dependencies': 'off',
         'no-nested-ternary': 'off',
         'react/require-default-props': 'off',
+
+        // Info: (murky - 20240530) 讓private function前面可以加上_
+        "no-underscore-dangle": off,
+        '@typescript-eslint/naming-convention': [
+          'error',
+          {
+            selector: 'function',
+            format: ['camelCase', 'PascalCase'],
+            leadingUnderscore: 'allow'
+          }
+        ],
       },
     },
   ],

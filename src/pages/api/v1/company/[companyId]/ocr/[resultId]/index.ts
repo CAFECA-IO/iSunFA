@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
 
@@ -60,6 +60,12 @@ function setOCRResultJournalId(ocrResult: IInvoiceDataForSavingToDB, journalId: 
   ocrResult.journalId = journalId;
 }
 
+function formatOCRResultDate(ocrResult: IInvoiceDataForSavingToDB) {
+  // Info: (20240522 - Murky) This function is used to format the date in OCR result
+  // eslint-disable-next-line no-param-reassign
+  ocrResult.date = timestampInSeconds(ocrResult.date);
+}
+
 async function handleGetRequest(
   resultId: string,
   res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>
@@ -69,6 +75,7 @@ async function handleGetRequest(
   const ocrResult: IInvoiceDataForSavingToDB = await getPayloadFromResponseJSON(fetchResult);
 
   setOCRResultJournalId(ocrResult, null);
+  formatOCRResultDate(ocrResult);
 
   if (!isIInvoiceDataForSavingToDB(ocrResult)) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);

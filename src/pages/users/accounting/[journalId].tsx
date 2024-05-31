@@ -8,7 +8,7 @@ import { PiCopySimpleBold } from 'react-icons/pi';
 import { LuTag } from 'react-icons/lu';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
-import { IJournalData } from '@/interfaces/journal';
+import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -55,7 +55,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     // error,
     success,
     code,
-  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
   });
 
@@ -297,7 +297,10 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
               ? voucher.debit
               : voucher.credit;
       return (
-        <div key={voucher.id} className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+        <div
+          key={voucher.id}
+          className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px"
+        >
           <p className="w-9/10 whitespace-nowrap">{str}</p>
         </div>
       );
@@ -355,21 +358,21 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
-          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Particulars</p>
-          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Debit</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.debit}</p>
           </div>
         </div>
@@ -383,21 +386,21 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Particulars</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Credit</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.credit}</p>
           </div>
         </div>

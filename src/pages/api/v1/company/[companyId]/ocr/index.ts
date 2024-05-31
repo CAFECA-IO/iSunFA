@@ -16,26 +16,31 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ProgressStatus } from '@/constants/account';
 
-// Info Murky (20240424) 要使用formidable要先關掉bodyParsor
+// Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-async function readImageFromFilePath(image: formidable.File): Promise<Blob> {
+export async function _readImageFromFilePath(image: formidable.File): Promise<Blob> {
   const imageContent = await fs.readFile(image.filepath);
   return new Blob([imageContent], { type: image.mimetype || undefined });
 }
 
-function getImageName(image: formidable.File) {
+export function _getImageName(image: formidable.File) {
   return image.filepath.split('/').pop() || 'unknown';
 }
 
-async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
+export function _createImageFormData(imageBlob: Blob, imageName: string) {
   const formData = new FormData();
   formData.append('image', imageBlob);
   formData.append('imageName', imageName);
+  return formData;
+}
+
+export async function _uploadImageToAICH(imageBlob: Blob, imageName: string) {
+  const formData = _createImageFormData(imageBlob, imageName);
 
   let response: Response;
   try {
@@ -54,7 +59,7 @@ async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
+export async function _getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -78,7 +83,7 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
 
 // Info (20240521-Murky) 回傳目前還是array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-async function postImageToAICH(files: formidable.Files): Promise<
+async function _postImageToAICH(files: formidable.Files): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
@@ -93,15 +98,16 @@ async function postImageToAICH(files: formidable.Files): Promise<
   // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
   const resultJson = await Promise.all(
     files.image.map(async (image) => {
-      const imageBlob = await readImageFromFilePath(image);
-      const imageName = getImageName(image);
+      const imageBlob = await _readImageFromFilePath(image);
+      const imageName = _getImageName(image);
 
-      const fetchResult = uploadImageToAICH(imageBlob, imageName);
+      const fetchResult = _uploadImageToAICH(imageBlob, imageName);
 
-      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+      const resultStatus: IAccountResultStatus = await _getPayloadFromResponseJSON(fetchResult);
+      const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
       return {
         resultStatus,
-        imageUrl: transformOCRImageIDToURL('invoice', 0, imageName),
+        imageUrl,
         imageName,
         imageSize: image.size,
       };
@@ -111,7 +117,7 @@ async function postImageToAICH(files: formidable.Files): Promise<
   return resultJson;
 }
 
-async function createOrFindCompanyInPrisma(companyId: number) {
+async function _createOrFindCompanyInPrisma(companyId: number) {
   let company = await prisma.company.findUnique({
     where: { id: companyId },
     select: { id: true },
@@ -141,7 +147,7 @@ async function createOrFindCompanyInPrisma(companyId: number) {
   return company;
 }
 
-async function createOcrInPrisma(aichResult: {
+async function _createOcrInPrisma(aichResult: {
   resultStatus: IAccountResultStatus;
   imageUrl: string;
   imageName: string;
@@ -153,7 +159,7 @@ async function createOcrInPrisma(aichResult: {
         imageName: aichResult.imageName,
         imageUrl: aichResult.imageUrl,
         imageSize: aichResult.imageSize,
-        status: ProgressStatus.IN_PROGRESS,
+        status: aichResult.resultStatus.status,
       },
     });
 
@@ -163,7 +169,7 @@ async function createOcrInPrisma(aichResult: {
   }
 }
 
-async function upsertJournalInPrisma(
+async function _upsertJournalInPrisma(
   companyId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
@@ -192,7 +198,7 @@ async function upsertJournalInPrisma(
   }
 }
 
-async function createJournalAndOcrInPrisma(
+async function _createJournalAndOcrInPrisma(
   companyId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
@@ -208,9 +214,9 @@ async function createJournalAndOcrInPrisma(
     return;
   }
   await prisma.$transaction(async () => {
-    const company = await createOrFindCompanyInPrisma(companyId);
-    const ocrData = await createOcrInPrisma(aichResult);
-    await upsertJournalInPrisma(company.id, aichResult, ocrData.id);
+    const company = await _createOrFindCompanyInPrisma(companyId);
+    const ocrData = await _createOcrInPrisma(aichResult);
+    await _upsertJournalInPrisma(company.id, aichResult, ocrData.id);
   });
 }
 
@@ -226,7 +232,7 @@ function isCompanyIdValid(companyId: string | string[] | undefined): companyId i
   return true;
 }
 
-async function getImageFileFromFormData(req: NextApiRequest) {
+async function _getImageFileFromFormData(req: NextApiRequest) {
   let files: formidable.Files;
 
   try {
@@ -238,7 +244,7 @@ async function getImageFileFromFormData(req: NextApiRequest) {
   return files;
 }
 
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+async function _handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const { companyId } = req.query;
 
   // Info Murky (20240416): Check if companyId is string
@@ -248,15 +254,15 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
 
   const companyIdNumber = Number(companyId);
 
-  const files = await getImageFileFromFormData(req);
+  const files = await _getImageFileFromFormData(req);
 
-  const aichReturn = await postImageToAICH(files);
+  const aichReturn = await _postImageToAICH(files);
 
   const resultJson: IAccountResultStatus[] = [];
 
   await Promise.all(
     aichReturn.map(async (aichResult) => {
-      await createJournalAndOcrInPrisma(companyIdNumber, aichResult);
+      await _createJournalAndOcrInPrisma(companyIdNumber, aichResult);
       resultJson.push(aichResult.resultStatus);
     })
   );
@@ -269,7 +275,7 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   res.status(httpCode).json(result);
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
+function _handleErrorResponse(res: NextApiResponse, message: string) {
   const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
     message,
     {} as IAccountResultStatus[]
@@ -284,7 +290,7 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'POST': {
-        await handlePostRequest(req, res);
+        await _handlePostRequest(req, res);
         break;
       }
       default: {
@@ -293,6 +299,6 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    handleErrorResponse(res, error.message);
+    _handleErrorResponse(res, error.message);
   }
 }

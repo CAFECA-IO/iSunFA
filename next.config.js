@@ -34,6 +34,8 @@ const nextConfig = {
     // eslint-disable-next-line no-param-reassign
     config.resolve.alias.canvas = false;
 
+    // Fixes npm packages that depend on `fs` module
+    config.resolve.fallback = { fs: false };
     return config;
   },
 };

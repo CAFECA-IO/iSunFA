@@ -21,7 +21,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
-import { IJournalData } from '@/interfaces/journal';
+import { IJournal } from '@/interfaces/journal';
 import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
@@ -66,7 +66,7 @@ const NewJournalForm = () => {
     success: getJournalSuccess,
     data: journal,
     code: getJournalCode,
-  } = APIHandler<IJournalData>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
 
   const {
     trigger: getOCRResult,
@@ -227,11 +227,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
