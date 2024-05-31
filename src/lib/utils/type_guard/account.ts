@@ -75,3 +75,10 @@ export function convertStringToPaymentPeriodType(data: string) {
   }
   return data as PaymentPeriodType;
 }
+
+export function convertStringToAccountType(data: string) {
+  if (!isAccountType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as AccountType;
+}
