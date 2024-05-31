@@ -3,14 +3,18 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/client';
 
 async function getCardById(cardId: number) {
-  const card: ICard = (await prisma.card.findUnique({
-    where: {
-      id: cardId,
-    },
-  })) as ICard;
+  const card: ICard = {
+    id: cardId,
+    type: 'VISA',
+    no: '1234-1234-1234-1234',
+    expireYear: '29',
+    expireMonth: '01',
+    cvc: '330',
+    name: 'Taiwan Bank',
+    companyId: 4,
+  };
   return card;
 }
 
@@ -23,28 +27,30 @@ async function updateCardById(
   cvc?: string,
   name?: string
 ) {
-  const updatedCard = await prisma.card.update({
-    where: {
-      id: cardId,
-    },
-    data: {
-      type,
-      no,
-      expireYear,
-      expireMonth,
-      cvc,
-      name,
-    },
-  });
+  const updatedCard = {
+    id: cardId,
+    type,
+    no,
+    expireYear,
+    expireMonth,
+    cvc,
+    name,
+    companyId: 4,
+  };
   return updatedCard;
 }
 
 async function deleteCardById(cardId: number) {
-  const deletedCard = await prisma.card.delete({
-    where: {
-      id: cardId,
-    },
-  });
+  const deletedCard = {
+    id: cardId,
+    type: 'VISA',
+    no: '1234-1234-1234-1234',
+    expireYear: '29',
+    expireMonth: '01',
+    cvc: '330',
+    name: 'Taiwan Bank',
+    companyId: 4,
+  };
   return deletedCard;
 }
 
@@ -75,7 +81,7 @@ export default async function handler(
       if (!type && !no && !expireYear && !expireMonth && !cvc && !name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const card: ICard = await updateCardById(
+      const card: ICard = (await updateCardById(
         cardIdNum,
         type,
         no,
@@ -83,7 +89,7 @@ export default async function handler(
         expireMonth,
         cvc,
         name
-      );
+      )) as ICard;
       const { httpCode, result } = formatApiResponse<ICard>(STATUS_MESSAGE.SUCCESS_UPDATE, card);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) P010004 - DELETE /payment/:id

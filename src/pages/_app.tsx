@@ -2,29 +2,14 @@ import { NotificationProvider } from '@/contexts/notification_context';
 import 'react-toastify/dist/ReactToastify.css';
 import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React from 'react';
 import { UserProvider } from '@/contexts/user_context';
 import { GlobalProvider } from '@/contexts/global_context';
 import { DashboardProvider } from '@/contexts/dashboard_context';
 import { AccountingProvider } from '@/contexts/accounting_context';
-import { COOKIE_NAME } from '@/constants/config';
-import { ISUNFA_ROUTE } from '../constants/url';
 import '@/styles/globals.css';
 
 function App({ Component, pageProps }: AppProps) {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Info: get cookie `COOKIE_NAME.FIDO2` and check if it is empty, if it is empty, redirect to login page (20240425 - Shirley)
-    const cookie = document.cookie
-      .split(';')
-      .find((item: string) => item.includes(COOKIE_NAME.FIDO2));
-    if (router.pathname.startsWith('/users/') && !cookie) {
-      router.push(ISUNFA_ROUTE.LOGIN);
-    }
-  }, [router.pathname]);
-
   return (
     <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
       <NotificationProvider>

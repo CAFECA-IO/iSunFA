@@ -62,13 +62,7 @@ export default async function handler(
         },
         data: {
           plan,
-          card: cardIdNum
-            ? {
-                connect: {
-                  id: cardIdNum,
-                },
-              }
-            : undefined,
+          cardId: cardIdNum,
           autoRenew,
           price,
         },

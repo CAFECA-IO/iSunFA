@@ -12,50 +12,6 @@ import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
 import Pagination from '@/components/pagination/pagination';
 
-/**  ToDo: (20240523 - Julian) replace dummyFileList with real data */
-// const dummyFileList: IUnprocessedJournal[] = [
-//   {
-//     id: 1,
-//     aichResultId: 'b6e8a6c6e7',
-//     imageName: 'invoice_0001.pdf',
-//     imageUrl: '/elements/anonymous_avatar.svg',
-//     imageSize: '100 KB',
-//     progress: 100,
-//     status: ProgressStatus.SUCCESS,
-//     createdAt: Date.now(),
-//   },
-//   {
-//     id: 2,
-//     aichResultId: 'invoiceId-0002',
-//     imageName: 'invoice_0002.pdf',
-//     imageUrl: '/elements/anonymous_avatar.svg',
-//     imageSize: '150 KB',
-//     progress: 82,
-//     status: ProgressStatus.IN_PROGRESS,
-//     createdAt: Date.now(),
-//   },
-//   {
-//     id: 3,
-//     aichResultId: 'invoiceId-0003',
-//     imageName: 'invoice_0003.pdf',
-//     imageUrl: '/elements/anonymous_avatar.svg',
-//     imageSize: '175 KB',
-//     progress: 40,
-//     status: ProgressStatus.PAUSED,
-//     createdAt: Date.now(),
-//   },
-//   {
-//     id: 4,
-//     aichResultId: 'invoiceId-0004',
-//     imageName: 'invoice_0004.pdf',
-//     imageUrl: '/elements/anonymous_avatar.svg',
-//     imageSize: '200 KB',
-//     progress: 30,
-//     status: ProgressStatus.LLM_ERROR,
-//     createdAt: Date.now(),
-//   },
-// ];
-
 const StepOneTab = () => {
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();

@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ONE_DAY_IN_MS } from '@/constants/time';
+import { ONE_DAY_IN_S } from '@/constants/time';
 import { ICompany } from '@/interfaces/company';
 import { IInvitation } from '@/interfaces/invitation';
 import { IResponseData } from '@/interfaces/response_data';
@@ -27,6 +27,8 @@ async function createInvitation(
   userIdNum: number,
   code: string
 ): Promise<IInvitation> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const invitation: IInvitation = await prisma.invitation.create({
     data: {
       role: {
@@ -46,7 +48,9 @@ async function createInvitation(
       },
       code,
       hasUsed: false,
-      expiredAt: timestampInSeconds(Date.now() + ONE_DAY_IN_MS),
+      expiredAt: nowTimestamp + ONE_DAY_IN_S,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
   });
   return invitation;

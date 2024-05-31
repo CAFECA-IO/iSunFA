@@ -29,7 +29,7 @@ describe('updateOwnAccountInfoById API Handler Tests', () => {
     req.query = { accountId: '1' };
     req.body = {
       type: 'asset',
-      liquidity: 'non-current',
+      liquidity: false,
       account: 'cash',
       code: '1103-2',
       name: 'Sun Bank',
@@ -45,7 +45,7 @@ describe('updateOwnAccountInfoById API Handler Tests', () => {
         payload: expect.objectContaining({
           id: expect.any(Number),
           type: expect.any(String),
-          liquidity: expect.any(String),
+          liquidity: expect.any(Boolean),
           account: expect.any(String),
           code: expect.any(String),
           name: expect.any(String),
@@ -58,7 +58,7 @@ describe('updateOwnAccountInfoById API Handler Tests', () => {
     req.query = { accountId: '1' };
     req.body = {
       type: 'asset',
-      liquidity: 'non-current',
+      liquidity: false,
       code: '1103-2',
       name: 'Sun Bank',
     };

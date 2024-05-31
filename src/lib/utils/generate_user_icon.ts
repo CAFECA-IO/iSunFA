@@ -1,18 +1,18 @@
-import { FORMIDABLE_CONFIG } from '@/constants/config';
+import { FORMIDABLE_CONFIG, USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { transformOCRImageIDToURL } from './common';
+import { mkUploadFolder, transformOCRImageIDToURL } from '@/lib/utils/common';
 
 const savePath =
-process.env.VERCEL === '1'
-  ? FORMIDABLE_CONFIG.uploadDir
-  : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+  process.env.VERCEL === '1'
+    ? FORMIDABLE_CONFIG.uploadDir
+    : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
 
-function isChinese(name:string) {
-    return /[\u3400-\u9FBF]/.test(name);
+function isChinese(name: string) {
+  return /[\u3400-\u9FBF]/.test(name);
 }
 
-function generateInitials(name:string) {
+function generateInitials(name: string) {
   if (isChinese(name)) {
     return name.slice(-2);
   } else {
@@ -26,19 +26,42 @@ function generateInitials(name:string) {
   }
 }
 
+function getRandomInt(max: number) {
+  return Math.floor(Math.random() * max);
+}
+
 function generateRandomColor() {
-  return '#' + Math.floor(Math.random() * 16777215).toString(16);
+  const colorsLen = USER_ICON_BACKGROUND_COLORS.length;
+  const randomIdx = getRandomInt(colorsLen);
+  return USER_ICON_BACKGROUND_COLORS[randomIdx];
 }
 
 function generateRandomUUID() {
   return crypto.randomUUID();
 }
 
-function generateUserIconSvg(initials: string, backgroundColor: string) {
-  return `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="100" cy="100" r="80" stroke="${backgroundColor}" stroke-width="3" fill="${backgroundColor}" />
-  <text x="100" y="105" font-size="48" text-anchor="middle" dominant-baseline="middle" fill="#FFFFFF">${initials}</text>
-</svg>`;
+function generateUserIconSvg(initials:string, backgroundColor:string, darkBackgroundColor: string) {
+  return `
+    <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        circle {
+          fill: ${backgroundColor};
+          stroke: ${backgroundColor};
+        }
+        text {
+          fill: #FFFFFF;
+        }
+        @media (prefers-color-scheme: dark) {
+          circle {
+            fill: ${darkBackgroundColor};
+            stroke: ${darkBackgroundColor};
+          }
+        }
+      </style>
+      <circle cx="100" cy="100" r="80" stroke-width="3" />
+      <text x="100" y="105" font-size="48" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+    </svg>
+  `;
 }
 
 async function saveUserIconToFile(iconSvg: string, filepath: string) {
@@ -57,12 +80,17 @@ function getFileNameFromPath(filepath: string) {
   return parts[parts.length - 1];
 }
 export async function generateUserIcon(name: string) {
-  const initials = generateInitials(name);
-  const backgroundColor = generateRandomColor();
-  const iconSvg = generateUserIconSvg(initials, backgroundColor);
-  const filepath = await generateSvgSavePath();
-  await saveUserIconToFile(iconSvg, filepath);
-  const filename = getFileNameFromPath(filepath);
-  const url = transformOCRImageIDToURL("invoice", 0, filename);
-  return url;
+  try {
+    await mkUploadFolder();
+    const initials = generateInitials(name);
+    const backgroundColor = generateRandomColor();
+    const iconSvg = generateUserIconSvg(initials, backgroundColor.lightMode, backgroundColor.darkMode);
+    const filepath = await generateSvgSavePath();
+    await saveUserIconToFile(iconSvg, filepath);
+    const filename = getFileNameFromPath(filepath);
+    const url = transformOCRImageIDToURL('invoice', 0, filename);
+    return url;
+  } catch (error) {
+    return "";
+  }
 }

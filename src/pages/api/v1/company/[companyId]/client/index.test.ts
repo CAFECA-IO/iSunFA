@@ -28,17 +28,17 @@ beforeEach(async () => {
       code: 'TST_client2',
     },
   });
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
     company = await prisma.company.create({
       data: {
         code: 'TST_client2',
         name: 'Test Company',
         regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
@@ -50,6 +50,8 @@ beforeEach(async () => {
         },
       },
       favorite: false,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
     include: {
       company: {

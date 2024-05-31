@@ -8,7 +8,7 @@ import {
   convertStringToPaymentPeriodType,
   convertStringToPaymentStatusType,
 } from '@/lib/utils/type_guard/account';
-import { IJournalData } from '@/interfaces/journal';
+import { IJournal } from '@/interfaces/journal';
 
 type IJournalResponseFromPrisma = {
   id: number;
@@ -148,7 +148,7 @@ async function getJournal(journalId: number) {
   }
 }
 
-function formatJournal(journalData: IJournalResponseFromPrisma): IJournalData {
+function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
   const projectName = journalData?.project?.name;
   const { projectId } = journalData;
   const contractName = journalData?.contract?.contractContent?.name;
@@ -222,7 +222,7 @@ function isJournalIdValid(journalId: string | string[] | undefined): journalId i
 
 async function handleGetRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournalData>>
+  res: NextApiResponse<IResponseData<IJournal>>
 ) {
   const { journalId } = req.query;
   if (!isJournalIdValid(journalId)) {
@@ -230,19 +230,19 @@ async function handleGetRequest(
   }
   const journalData = await getJournal(Number(journalId));
   const journal = formatJournal(journalData);
-  const { httpCode, result } = formatApiResponse<IJournalData>(STATUS_MESSAGE.SUCCESS, journal);
+  const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.SUCCESS, journal);
 
   res.status(httpCode).json(result);
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IJournalData>(message, {} as IJournalData);
+  const { httpCode, result } = formatApiResponse<IJournal>(message, {} as IJournal);
   res.status(httpCode).json(result);
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournalData>>
+  res: NextApiResponse<IResponseData<IJournal>>
 ) {
   try {
     if (req.method === 'GET') {

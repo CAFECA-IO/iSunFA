@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -61,15 +61,20 @@ async function findFirstAccountInPrisma(accountName: string) {
 
 // Deprecated: (20240527 - Murky) This function is for demo purpose only
 async function createFakeAccountInPrisma() {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   try {
     const result = await prisma.account.create({
       data: {
-        type: 'FAKE',
-        liquidity: 'FAKE',
-        account: 'FAKE',
-        code: 'FAKE',
-        name: 'FAKE',
+        type: 'expense',
+        liquidity: true,
+        account: '其他費用',
+        code: '0100032',
+        name: '其他費用',
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
+
       select: {
         id: true,
       },
@@ -87,18 +92,21 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
 
     // Deprecated: (20240527 - Murky) This is for demo purpose only
     if (!accountId) {
-      accountId = await findFirstAccountInPrisma('FAKE');
+      accountId = await findFirstAccountInPrisma('其他費用');
       if (!accountId) {
         accountId = await createFakeAccountInPrisma();
       }
     }
-
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     const result = await prisma.lineItem.create({
       data: {
         accountId,
         description: lineItem.description,
         debit: lineItem.debit,
         amount: lineItem.amount,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
       select: {
         id: true,
@@ -128,7 +136,7 @@ async function getLatestVoucherNoInPrisma(companyId: number) {
       },
     });
 
-    const localToday = new Date().toLocaleDateString();
+    const localToday = `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()}`;
     const localTodayStrip = localToday.replace(/\//g, '');
     const isYesterday = result?.createdAt?.getDate() !== new Date().getDate();
     const latestNo = result?.no.slice(result.no.length - 3) || '0'; // Info: （ 20240522 - Murky）I want to slice the last 3 digits
