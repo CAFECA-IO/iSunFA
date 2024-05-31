@@ -36,7 +36,13 @@ export default async function handler(
     )) as IUserAuth;
     const { credential } = registrationParsed;
 
-    const imageUrl = await generateUserIcon(registrationParsed.username);
+    let imageUrl = "" 
+    
+    try{
+      imageUrl = await generateUserIcon(registrationParsed.username)
+    } catch(e){
+      // Info: (20240516 - Murky) If the image generation fails, the user will not have an image
+    };
 
     const newUser = {
       name: registrationParsed.username,
