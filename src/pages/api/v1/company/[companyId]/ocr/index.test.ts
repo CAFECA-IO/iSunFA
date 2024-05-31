@@ -42,7 +42,7 @@ describe('/OCR/index.ts', () => {
       mockImage.mimetype = mockMimetype;
       (fs.readFile as jest.Mock).mockResolvedValue(mockFileContent);
     });
-    it('should return Blob', async () => {
+    it("should return Blob", async () => {
       const blob = await module._readImageFromFilePath(mockImage);
       expect(fs.readFile).toHaveBeenCalledWith(mockPath);
       expect(blob).toEqual(new Blob([mockFileContent], { type: mockMimetype || undefined }));

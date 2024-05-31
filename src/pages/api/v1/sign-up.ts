@@ -35,7 +35,6 @@ export default async function handler(
       expected
     )) as IUserAuth;
     const { credential } = registrationParsed;
-
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);
     let imageUrl = '';
