@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 async function listClient(): Promise<IClient[]> {
@@ -28,6 +28,8 @@ async function listClient(): Promise<IClient[]> {
 }
 
 async function createClient(companyId: number, favorite: boolean): Promise<IClient> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const createdClient = await prisma.client.create({
     data: {
       company: {
@@ -36,6 +38,8 @@ async function createClient(companyId: number, favorite: boolean): Promise<IClie
         },
       },
       favorite,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
     include: {
       company: {

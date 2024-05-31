@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { ISubscription } from '@/interfaces/subscription';
-import { ONE_MONTH_IN_MS } from '@/constants/time';
+import { ONE_MONTH_IN_S } from '@/constants/time';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -31,17 +31,17 @@ beforeEach(async () => {
       code: 'TST_subscription1',
     },
   });
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
     company = await prisma.company.create({
       data: {
         code: 'TST_subscription1',
         name: 'Test Company',
         regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
@@ -58,9 +58,11 @@ beforeEach(async () => {
       cardId: 1,
       price: '100',
       autoRenew: true,
-      startDate: timestampInSeconds(Date.now()),
-      expireDate: timestampInSeconds(Date.now() + ONE_MONTH_IN_MS),
+      startDate: nowTimestamp,
+      expiredDate: nowTimestamp + ONE_MONTH_IN_S,
       status: 'active',
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
     include: {
       company: {
@@ -124,7 +126,7 @@ describe('test subscription API by id', () => {
           cardId: expect.any(Number),
           price: expect.any(String),
           autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
+          expiredDate: expect.any(Number),
           status: expect.any(String),
         }),
       })
@@ -159,7 +161,7 @@ describe('test subscription API by id', () => {
           cardId: expect.any(Number),
           price: expect.any(String),
           autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
+          expiredDate: expect.any(Number),
           status: expect.any(String),
         }),
       })
@@ -189,7 +191,7 @@ describe('test subscription API by id', () => {
           cardId: expect.any(Number),
           price: expect.any(String),
           autoRenew: expect.any(Boolean),
-          expireDate: expect.any(Number),
+          expiredDate: expect.any(Number),
           status: expect.any(String),
         }),
       })

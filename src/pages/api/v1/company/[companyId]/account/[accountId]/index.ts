@@ -7,7 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 const responseData: DetailAccountingAccountOrEmpty = {
   id: 1,
   type: 'asset',
-  liquidity: 'non-current',
+  liquidity: false,
   account: 'cash',
   code: '1103-2',
   name: 'Sun Bank',
@@ -21,7 +21,7 @@ export default function handler(
     if (req.method === 'PUT') {
       const { accountId } = req.query;
       const { type, liquidity, account, code, name } = req.body;
-      if (accountId && type && liquidity && account && code && name) {
+      if (accountId && type && liquidity !== null && account && code && name) {
         const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
           STATUS_MESSAGE.SUCCESS_UPDATE,
           responseData

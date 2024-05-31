@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -65,10 +65,12 @@ async function createFakeAccountInPrisma() {
     const result = await prisma.account.create({
       data: {
         type: 'FAKE',
-        liquidity: 'FAKE',
+        liquidity: true,
         account: 'FAKE',
         code: 'FAKE',
         name: 'FAKE',
+        createdAt: 0,
+        updatedAt: 0,
       },
       select: {
         id: true,
@@ -92,13 +94,16 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
         accountId = await createFakeAccountInPrisma();
       }
     }
-
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     const result = await prisma.lineItem.create({
       data: {
         accountId,
         description: lineItem.description,
         debit: lineItem.debit,
         amount: lineItem.amount,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
       select: {
         id: true,

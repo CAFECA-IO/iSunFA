@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { IRole } from '@/interfaces/role';
+import { timestampInSeconds } from '@/lib/utils/common';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -26,11 +27,15 @@ beforeEach(async () => {
       name: 'TST_KING2',
     },
   })) as IRole;
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!role) {
     role = await prisma.role.create({
       data: {
         name: 'TST_KING2',
         permissions: ['READ', 'WRITE'],
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }

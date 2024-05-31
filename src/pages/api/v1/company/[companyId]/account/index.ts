@@ -31,7 +31,7 @@ const responseDataArray: AccountingAccountOrEmpty[] = [
 const responseData: DetailAccountingAccountOrEmpty = {
   id: 1,
   type: 'asset',
-  liquidity: 'current',
+  liquidity: true,
   account: 'cash',
   code: '1103-1',
   name: 'Taiwan Bank',
@@ -47,7 +47,7 @@ export default function handler(
       if (type && liquidity) {
         if (
           (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-          (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
+          (liquidity !== 'true' && liquidity !== 'false' && liquidity !== 'na')
         ) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
@@ -62,10 +62,10 @@ export default function handler(
     }
     if (req.method === 'POST') {
       const { type, liquidity, account, code, name } = req.body;
-      if (type && liquidity && account && code && name) {
+      if (type && liquidity !== null && account && code && name) {
         if (
           (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-          (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
+          typeof liquidity !== 'boolean'
         ) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }

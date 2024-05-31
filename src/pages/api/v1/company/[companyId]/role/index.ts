@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import prisma from '@/client';
 import { IRole } from '@/interfaces/role';
@@ -25,10 +25,14 @@ export default async function handler(
       if (!name) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
       const createdRole = await prisma.role.create({
         data: {
           name,
           permissions: ['auditing_editor', 'accounting_editor', 'internalControl_editor'],
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       });
       // const { company, ...role } = createdRole;

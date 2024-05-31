@@ -85,6 +85,8 @@ export default async function handler(
         taxCertificateId: '123',
         representativeIdCardId: '123',
       };
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
       const companyKYC: ICompanyKYC = await prisma.companyKYC.create({
         data: {
           company: {
@@ -110,7 +112,8 @@ export default async function handler(
           registrationCertificateId,
           taxCertificateId,
           representativeIdCardId,
-          createdAt: timestampInSeconds(Date.now()),
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       });
       const { httpCode, result } = formatApiResponse<ICompanyKYC>(
