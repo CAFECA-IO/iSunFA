@@ -10,7 +10,7 @@ datasource db {
 model account {
   id        Int        @id @default(autoincrement())
   type      String
-  liquidity String
+  liquidity Boolean
   account   String
   code      String
   name      String
@@ -324,7 +324,7 @@ model payment {
 model paymentRecord {
   id              Int           @id @default(autoincrement())
   companyId       Int           @map("company_id")
-  subscriptionId  Int
+  subscriptionId  Int           @map("subscription_id")
   date            Int
   description     String
   amount          Int
