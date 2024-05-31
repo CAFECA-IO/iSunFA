@@ -19,57 +19,78 @@ beforeEach(async () => {
   } as unknown as jest.Mocked<NextApiResponse>;
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  userCompanyRole = await prisma.userCompanyRole.create({
-    data: {
+  userCompanyRole = (await prisma.userCompanyRole.findFirst({
+    where: {
       user: {
-        connectOrCreate: {
-          where: {
-            credentialId: 'john_tst22',
-          },
-          create: {
-            name: 'John user',
-            credentialId: 'john_tst22',
-            publicKey: 'publicKey',
-            algorithm: 'ES256',
-            imageId: 'imageId',
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        },
-      },
-      role: {
-        connectOrCreate: {
-          where: {
-            name: 'SUPER_ADMIN',
-          },
-          create: {
-            name: 'SUPER_ADMIN',
-            permissions: ['hihi', 'ooo'],
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        },
+        credentialId: 'john_tst22',
       },
       company: {
-        connectOrCreate: {
-          where: {
-            code: 'TST_user1',
-          },
-          create: {
-            code: 'TST_user1',
-            name: 'Test Company',
-            regional: 'TW',
-            startDate: 0,
-            createdAt: 0,
-            updatedAt: 0,
+        code: 'TST_user1',
+      },
+      role: {
+        name: 'SUPER_ADMIN',
+      },
+    },
+  })) as {
+    userId: number;
+    companyId: number;
+    roleId: number;
+    startDate: number;
+  };
+  if (!userCompanyRole) {
+    userCompanyRole = await prisma.userCompanyRole.create({
+      data: {
+        user: {
+          connectOrCreate: {
+            where: {
+              credentialId: 'john_tst22',
+            },
+            create: {
+              name: 'John user',
+              credentialId: 'john_tst22',
+              publicKey: 'publicKey',
+              algorithm: 'ES256',
+              imageId: 'imageId',
+              createdAt: nowTimestamp,
+              updatedAt: nowTimestamp,
+            },
           },
         },
+        role: {
+          connectOrCreate: {
+            where: {
+              name: 'SUPER_ADMIN',
+            },
+            create: {
+              name: 'SUPER_ADMIN',
+              permissions: ['hihi', 'ooo'],
+              createdAt: nowTimestamp,
+              updatedAt: nowTimestamp,
+            },
+          },
+        },
+        company: {
+          connectOrCreate: {
+            where: {
+              code: 'TST_user1',
+            },
+            create: {
+              code: 'TST_user1',
+              name: 'Test Company',
+              regional: 'TW',
+              startDate: 0,
+              createdAt: 0,
+              updatedAt: 0,
+            },
+          },
+        },
+        startDate: 0,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
-      startDate: 0,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    },
-  });
+    });
+  }
+
   req = {
     headers: {},
     body: null,

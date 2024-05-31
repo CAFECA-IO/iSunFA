@@ -47,6 +47,9 @@ export default function handler(
       if (type && liquidity) {
         if (
           (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
+          // ToDo: (20240506 - Jacky)  for murky workaround for the issue of type checking
+          // should check the type of liquidity is boolean or not
+          // !!caution query string is always string
           (liquidity !== 'true' && liquidity !== 'false' && liquidity !== 'na')
         ) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

@@ -38,8 +38,6 @@ async function findUniqueJournalInPrisma(journalId: number | undefined) {
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -57,14 +55,14 @@ async function findFirstAccountInPrisma(accountName: string) {
 
     return result?.id || null;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
 
 // Deprecated: (20240527 - Murky) This function is for demo purpose only
 async function createFakeAccountInPrisma() {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   try {
     const result = await prisma.account.create({
       data: {
@@ -73,7 +71,10 @@ async function createFakeAccountInPrisma() {
         account: '其他費用',
         code: '0100032',
         name: '其他費用',
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
+
       select: {
         id: true,
       },
@@ -81,8 +82,6 @@ async function createFakeAccountInPrisma() {
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -116,8 +115,6 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }

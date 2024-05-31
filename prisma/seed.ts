@@ -1,20 +1,28 @@
-import { PrismaClient } from '@prisma/client'
-import accounts from './seed_json/account.json'
+import { PrismaClient } from '@prisma/client';
+import { timestampInSeconds } from '@/lib/utils/common';
+import accounts from './seed_json/account.json';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 async function main() {
-    for (let account of accounts) {
-        await prisma.account.create({
-          data: account,
-        });
-      }
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  await Promise.all(
+    accounts.map(async (account) => {
+      await prisma.account.create({
+        data: {
+          ...account,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
+        },
+      });
+    })
+  );
 }
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+  .catch(async () => {
+    await prisma.$disconnect();
+    process.exit(1);
+  });
