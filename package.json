@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.4+52",
+  "version": "0.1.4+53",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -27,6 +27,7 @@
     "formidable": "^3.5.1",
     "i18next": "^23.7.16",
     "jest-mock-extended": "^3.0.7",
+    "lodash-es": "^4.17.21",
     "next": "^14.2.3",
     "next-i18next": "^15.2.0",
     "next-session": "^4.0.5",

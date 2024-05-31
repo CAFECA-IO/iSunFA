@@ -69,7 +69,7 @@ module.exports = {
         'react/require-default-props': 'off',
 
         // Info: (murky - 20240530) 讓private function前面可以加上_
-        'no-underscore-dangle': [0, { allow: [] }],
+        "no-underscore-dangle": [0, { allow: [] }],
         '@typescript-eslint/naming-convention': [
           'error',
           {

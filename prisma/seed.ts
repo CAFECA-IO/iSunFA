@@ -22,7 +22,10 @@ main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async () => {
+  .catch(async (e) => {
+    // Info (20240316 - Murky) - Log error and disconnect prisma
+    // eslint-disable-next-line no-console
+    console.error(e);
     await prisma.$disconnect();
     process.exit(1);
   });
