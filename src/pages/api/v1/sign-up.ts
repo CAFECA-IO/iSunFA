@@ -38,16 +38,15 @@ export default async function handler(
 
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);
-    let imageUrl = "" 
-    try{
-      imageUrl = await generateUserIcon(registrationParsed.username)
-    } catch(e){
+    let imageUrl = '';
+    try {
+      imageUrl = await generateUserIcon(registrationParsed.username);
+    } catch (e) {
       // Info: (20240516 - Murky) If the image generation fails, the user will not have an image
-    };
+    }
 
     const newUser = {
       name: registrationParsed.username,
-      // kycStatus: false,
       credentialId: credential.id,
       publicKey: credential.publicKey,
       algorithm: credential.algorithm,

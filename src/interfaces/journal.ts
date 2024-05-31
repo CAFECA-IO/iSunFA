@@ -1,5 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
-import { IVoucher, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { IOCR } from '@/interfaces/ocr';
 import { IInvoiceDataForSavingToDB } from './invoice';
 
