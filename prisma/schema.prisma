@@ -10,7 +10,7 @@ datasource db {
 model account {
   id        Int        @id @default(autoincrement())
   type      String
-  liquidity String
+  liquidity Boolean
   account   String
   code      String
   name      String

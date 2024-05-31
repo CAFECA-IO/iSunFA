@@ -69,7 +69,7 @@ async function createFakeAccountInPrisma() {
     const result = await prisma.account.create({
       data: {
         type: 'expense',
-        liquidity: 'current',
+        liquidity: true,
         account: '其他費用',
         code: '0100032',
         name: '其他費用',

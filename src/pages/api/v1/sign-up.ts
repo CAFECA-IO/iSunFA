@@ -103,6 +103,7 @@ export default async function handler(
   } catch (_error) {
     // Handle errors
     const error = _error as Error;
+    console.error(error);
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
     res.status(httpCode).json(result);
   }

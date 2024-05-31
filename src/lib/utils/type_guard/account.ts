@@ -1,4 +1,5 @@
 import {
+  AccountType,
   EventType,
   PaymentPeriodType,
   PaymentStatusType,
@@ -11,6 +12,11 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
   return Object.values(EventType).includes(data as EventType);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountType(data: any): data is AccountType {
+  return Object.values(AccountType).includes(data as AccountType);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

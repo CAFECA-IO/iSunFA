@@ -88,4 +88,5 @@ export async function generateUserIcon(name: string) {
   const filename = getFileNameFromPath(filepath);
   const url = transformOCRImageIDToURL('invoice', 0, filename);
   return url;
+
 }

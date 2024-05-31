@@ -350,3 +350,20 @@ export const getTodayPeriodInSec = () => {
   );
   return { startTimeStamp, endTimeStamp };
 };
+
+export function isParamNumeric(param: string | string[] | undefined): param is string {
+  if (!param || Array.isArray(param)) {
+    return false;
+  }
+
+  const regex = /^\d+$/;
+  return regex.test(param);
+}
+
+export function isParamString(param: string | string[] | undefined): param is string {
+  if (!param || Array.isArray(param)) {
+    return false;
+  }
+
+  return true;
+}
