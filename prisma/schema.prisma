@@ -300,7 +300,7 @@ model payment {
   paymentMethod      String
   paymentPeriod      String
   installmentPeriod  Int
-  paymentAlreadyDone Int
+  paymentAlreadyDone Int // Info: (Murky - 20240531) Need to change to alreadyPaid
   paymentStatus      String
   progress           Int
   createdAt          DateTime         @default(now()) @map("created_at")

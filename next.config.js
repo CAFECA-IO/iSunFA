@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+const cloneDeep = require('lodash/cloneDeep');
 const { i18n } = require('./next-i18next.config');
 
 const nextConfig = {
@@ -30,13 +31,14 @@ const nextConfig = {
     GITHUB_LINK: process.env.REACT_APP_GITHUB_LINK,
   },
   webpack: (config) => {
+    const newConfig = cloneDeep(config);
     // Info: do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf) (20240502 - Shirley)
     // eslint-disable-next-line no-param-reassign
-    config.resolve.alias.canvas = false;
+    newConfig.resolve.alias.canvas = false;
 
     // Fixes npm packages that depend on `fs` module
-    config.resolve.fallback = { fs: false };
-    return config;
+    newConfig.resolve.fallback = { fs: false };
+    return newConfig;
   },
 };
 

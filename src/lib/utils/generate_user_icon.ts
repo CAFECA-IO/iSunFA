@@ -50,6 +50,7 @@ function generateUserIconSvg(initials:string, backgroundColor:string, darkBackgr
         }
         text {
           fill: #FFFFFF;
+          font-family: sans-serif;
         }
         @media (prefers-color-scheme: dark) {
           circle {
