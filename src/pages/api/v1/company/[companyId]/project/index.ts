@@ -6,7 +6,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import prisma from '@/client';
 import { getSession } from '@/lib/utils/get_session';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,7 +27,7 @@ export default async function handler(
           companyId: companyIdNum,
         },
         include: {
-          workRates: {
+          employeeProjects: {
             include: {
               employee: {
                 select: {
@@ -40,11 +40,11 @@ export default async function handler(
         },
       });
       const projectListWithMembers: IProject[] = projectList.map((project) => {
-        const members = project.workRates.map((workRate) => ({
-          name: workRate.employee.name,
-          imageId: workRate.employee.imageId as string,
+        const members = project.employeeProjects.map((employeeProject) => ({
+          name: employeeProject.employee.name,
+          imageId: employeeProject.employee.imageId as string,
         }));
-        const { workRates, ...projectData } = project;
+        const { employeeProjects, ...projectData } = project;
         return {
           ...projectData,
           members,
@@ -61,20 +61,24 @@ export default async function handler(
       if (!name || !stage || !members) {
         throw new Error('Invalid input parameter');
       }
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
       const newProject = await prisma.project.create({
         data: {
           companyId: companyIdNum,
           name,
           stage,
-          workRates: {
+          employeeProjects: {
             create: members.map((memberId: number) => ({
               employeeId: memberId,
             })),
           },
           completedPercent: 0,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
         include: {
-          workRates: {
+          employeeProjects: {
             include: {
               employee: {
                 select: {
@@ -88,12 +92,12 @@ export default async function handler(
       });
       const newProjectWithMembers = {
         ...newProject,
-        members: newProject.workRates.map((workRate) => ({
-          name: workRate.employee.name,
-          imageId: workRate.employee.imageId as string,
+        members: newProject.employeeProjects.map((employeeProject) => ({
+          name: employeeProject.employee.name,
+          imageId: employeeProject.employee.imageId as string,
         })),
       };
-      const { workRates, ...project } = newProjectWithMembers;
+      const { employeeProjects, ...project } = newProjectWithMembers;
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
       res.status(httpCode).json(result);
     } else {

@@ -64,7 +64,9 @@ export default async function handler(
       if (invitation.hasUsed) {
         return;
       }
-      if (invitation.expiredAt < timestampInSeconds(Date.now())) {
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
+      if (invitation.expiredAt < nowTimestamp) {
         return;
       }
       await prisma.$transaction(async (tx) => {
@@ -85,7 +87,9 @@ export default async function handler(
                 id: invitation.roleId,
               },
             },
-            startDate: timestampInSeconds(Date.now()),
+            startDate: nowTimestamp,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         });
         await tx.invitation.update({

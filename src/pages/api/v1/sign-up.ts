@@ -35,9 +35,9 @@ export default async function handler(
       expected
     )) as IUserAuth;
     const { credential } = registrationParsed;
-
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     let imageUrl = '';
-
     try {
       imageUrl = await generateUserIcon(registrationParsed.username);
     } catch (e) {
@@ -46,11 +46,12 @@ export default async function handler(
 
     const newUser = {
       name: registrationParsed.username,
-      // kycStatus: false,
       credentialId: credential.id,
       publicKey: credential.publicKey,
       algorithm: credential.algorithm,
       imageId: imageUrl, // ToDo: check the interface (20240516 - Luphia)
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     };
     const createdUser: IUser = await prisma.user.create({
       data: newUser,
@@ -72,7 +73,7 @@ export default async function handler(
       if (invitation.hasUsed) {
         return;
       }
-      if (invitation.expiredAt < timestampInSeconds(Date.now())) {
+      if (invitation.expiredAt < nowTimestamp) {
         return;
       }
       await prisma.$transaction(async (tx) => {
@@ -93,7 +94,9 @@ export default async function handler(
                 id: invitation.roleId,
               },
             },
-            startDate: timestampInSeconds(Date.now()),
+            startDate: nowTimestamp,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
           },
         });
         await tx.invitation.update({

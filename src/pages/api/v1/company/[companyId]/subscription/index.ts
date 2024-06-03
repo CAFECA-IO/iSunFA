@@ -5,7 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { SubscriptionPeriod, SubscriptionStatus } from '@/constants/subscription';
-import { ONE_MONTH_IN_MS, ONE_YEAR_IN_MS } from '@/constants/time';
+import { ONE_MONTH_IN_S, ONE_YEAR_IN_S } from '@/constants/time';
 import { checkCompanySession } from '@/lib/utils/session_check';
 
 export default async function handler(
@@ -46,26 +46,21 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const cardIdNum = Number(cardId);
-      const startDateInMillisecond = Date.now();
-      let expireDateInMillisecond: number;
+      const now = Date.now();
+      const startDate = timestampInSeconds(now);
+      let expiredDate: number;
       if (period === SubscriptionPeriod.MONTHLY) {
-        expireDateInMillisecond = startDateInMillisecond + ONE_MONTH_IN_MS;
+        expiredDate = startDate + ONE_MONTH_IN_S;
       } else if (period === SubscriptionPeriod.YEARLY) {
-        expireDateInMillisecond = startDateInMillisecond + ONE_YEAR_IN_MS;
+        expiredDate = startDate + ONE_YEAR_IN_S;
       } else {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const startDate = timestampInSeconds(startDateInMillisecond);
-      const expireDate = timestampInSeconds(expireDateInMillisecond);
       const status = SubscriptionStatus.ACTIVE;
       const createdSubscription = await prisma.subscription.create({
         data: {
           plan,
-          card: {
-            connect: {
-              id: cardIdNum,
-            },
-          },
+          cardId: cardIdNum,
           autoRenew,
           company: {
             connect: {
@@ -73,9 +68,11 @@ export default async function handler(
             },
           },
           startDate,
-          expireDate,
+          expiredDate,
           price,
           status,
+          createdAt: startDate,
+          updatedAt: startDate,
         },
         include: {
           company: {

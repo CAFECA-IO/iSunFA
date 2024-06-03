@@ -14,6 +14,8 @@ beforeEach(async () => {
       credentialId: 'seesiontest',
     },
   });
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!user) {
     user = await prisma.user.create({
       data: {
@@ -22,6 +24,8 @@ beforeEach(async () => {
         publicKey: 'publicKey',
         algorithm: 'ES256',
         imageId: 'imageId',
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
@@ -31,16 +35,14 @@ beforeEach(async () => {
     },
   });
   if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
     company = await prisma.company.create({
       data: {
         code: 'TST_session1',
         name: 'Test Company',
         regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }

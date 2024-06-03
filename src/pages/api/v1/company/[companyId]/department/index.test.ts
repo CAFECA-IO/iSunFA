@@ -26,27 +26,27 @@ beforeEach(async () => {
       code: 'TST_department1',
     },
   });
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   if (!company) {
-    const now = Date.now();
-    const currentTimestamp = timestampInSeconds(now);
     company = await prisma.company.create({
       data: {
         code: 'TST_department1',
         name: 'Test Company',
         regional: 'TW',
-        startDate: currentTimestamp,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
   }
   companyId = company.id;
   await prisma.department.createMany({
     data: [
-      { name: 'HR', companyId },
-      { name: 'Finance', companyId },
-      { name: 'IT', companyId },
-      { name: 'Marketing', companyId },
+      { name: 'HR', companyId, createdAt: nowTimestamp, updatedAt: nowTimestamp },
+      { name: 'Finance', companyId, createdAt: nowTimestamp, updatedAt: nowTimestamp },
+      { name: 'IT', companyId, createdAt: nowTimestamp, updatedAt: nowTimestamp },
+      { name: 'Marketing', companyId, createdAt: nowTimestamp, updatedAt: nowTimestamp },
     ],
   });
   const departments = await prisma.department.findMany({
