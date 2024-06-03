@@ -16,6 +16,7 @@ const DashboardPageBody = () => {
       <p className={selectedCompany?.name ? 'hidden' : 'block'}>world</p>
     </div>
   );
+  // TODO: Loading -> get data from API -> display data or no data (20240603 - Shirley)
   const displayedPageBody = NO_DATA_FOR_DEMO ? <DashboardWithoutData /> : <DashboardWithData />;
 
   return (
