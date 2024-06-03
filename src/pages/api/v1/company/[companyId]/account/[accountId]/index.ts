@@ -6,7 +6,7 @@ import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
 import prisma from '@/client';
 import type { account } from '@prisma/client';
 
-export function _formatParams(
+export function formatParams(
   companyId: string | string[] | undefined,
   accountId: string | string[] | undefined
 ) {
@@ -25,7 +25,7 @@ export function _formatParams(
   };
 }
 
-export async function _getAccountInPrisma(accountId: number) {
+export async function getAccountInPrisma(accountId: number) {
   let account: account | null;
   try {
     account = await prisma.account.findFirst({
@@ -47,7 +47,7 @@ export async function _getAccountInPrisma(accountId: number) {
   return account;
 }
 
-export function _formatAccounts(account: account): IAccount {
+export function formatAccounts(account: account): IAccount {
     return {
       id: account.id,
       type: account.type,
@@ -60,14 +60,14 @@ export function _formatAccounts(account: account): IAccount {
     };
 }
 
-export async function _handleGetRequest(
+export async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccount>>
 ) {
   const { companyId, accountId } = req.query;
-  const { accountIdNumber } = _formatParams(companyId, accountId);
-  const accountFromDb = await _getAccountInPrisma(accountIdNumber);
-  const account = _formatAccounts(accountFromDb);
+  const { accountIdNumber } = formatParams(companyId, accountId);
+  const accountFromDb = await getAccountInPrisma(accountIdNumber);
+  const account = formatAccounts(accountFromDb);
 
   const { httpCode, result } = formatApiResponse<IAccount>(
     STATUS_MESSAGE.SUCCESS,
@@ -76,7 +76,7 @@ export async function _handleGetRequest(
   res.status(httpCode).json(result);
 }
 
-export function _handleErrorResponse(res: NextApiResponse, message: string) {
+export function handleErrorResponse(res: NextApiResponse, message: string) {
   const { httpCode, result } = formatApiResponse<IAccount>(message, {} as IAccount);
   res.status(httpCode).json(result);
 }
@@ -87,7 +87,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      await _handleGetRequest(req, res);
+      await handleGetRequest(req, res);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
@@ -97,6 +97,6 @@ export default async function handler(
     // Info Murky (20240416): Debugging
     // eslint-disable-next-line no-console
     console.error(error.message);
-    _handleErrorResponse(res, error.message);
+    handleErrorResponse(res, error.message);
   }
 }
