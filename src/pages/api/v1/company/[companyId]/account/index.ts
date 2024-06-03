@@ -4,17 +4,18 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, pageToOffset } from '@/lib/utils/common';
 import prisma from '@/client';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import type { account } from '@prisma/client';
 import { AccountType } from '@/constants/account';
 import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
 
-async function _findManyAccountsInPrisma(
+export async function _findManyAccountsInPrisma(
   page: number = DEFAULT_PAGE_OFFSET,
   limit: number = DEFAULT_PAGE_LIMIT,
   type?: AccountType,
   liquidity?: boolean
 ) {
+  try {
   const offset = pageToOffset(page, limit);
   const accounts = await prisma.account.findMany({
     skip: offset,
@@ -26,9 +27,15 @@ async function _findManyAccountsInPrisma(
   });
 
   return accounts;
+  } catch (error) {
+    // Info (20240516 - Murky) - Debugging error
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
 }
 
-function _formatAccounts(accounts: account[]): IAccount[] {
+export function _formatAccounts(accounts: account[]): IAccount[] {
   return accounts.map((account) => {
     return {
       id: account.id,
@@ -37,11 +44,13 @@ function _formatAccounts(accounts: account[]): IAccount[] {
       account: account.account,
       code: account.code,
       name: account.name,
+      createdAt: account.createdAt,
+      updatedAt: account.updatedAt,
     };
   });
 }
 
-function _isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
+export function _isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
   if (Array.isArray(type)) {
     return false;
   }
@@ -53,7 +62,7 @@ function _isTypeValid(type: string | string[] | undefined): type is AccountType 
   return isAccountType(type);
 }
 
-function _isLiquidityValid(
+export function _isLiquidityValid(
   liquidity: string | string[] | undefined
 ): liquidity is string | undefined {
   if (Array.isArray(liquidity)) {
@@ -67,7 +76,7 @@ function _isLiquidityValid(
   return liquidity === 'true' || liquidity === 'false';
 }
 
-function _isPageValid(page: string | string[] | undefined): page is string | undefined {
+export function _isPageValid(page: string | string[] | undefined): page is string | undefined {
   if (Array.isArray(page)) {
     return false;
   }
@@ -79,7 +88,7 @@ function _isPageValid(page: string | string[] | undefined): page is string | und
   return isParamNumeric(page);
 }
 
-function _isLimitValid(limit: string | string[] | undefined): limit is string | undefined {
+export function _isLimitValid(limit: string | string[] | undefined): limit is string | undefined {
   if (Array.isArray(limit)) {
     return false;
   }
@@ -91,7 +100,7 @@ function _isLimitValid(limit: string | string[] | undefined): limit is string | 
   return isParamNumeric(limit);
 }
 
-function _formatParams(
+export function _formatParams(
   companyId: string | string[] | undefined,
   type: string | string[] | undefined,
   liquidity: string | string[] | undefined,
@@ -110,8 +119,8 @@ function _formatParams(
 
   const companyIdNumber = Number(companyId);
   const typeEnum = type ? convertStringToAccountType(type) : undefined;
-  const liquidityBoolean = liquidity ? liquidity === 'true' : false;
-  const pageNumber = Number(page) || DEFAULT_PAGE_OFFSET;
+  const liquidityBoolean = liquidity ? liquidity === 'true' : undefined;
+  const pageNumber = Number(page) || DEFAULT_PAGE_START_AT;
   const limitNumber = Number(limit) || DEFAULT_PAGE_LIMIT;
 
   return {
@@ -123,7 +132,7 @@ function _formatParams(
   };
 }
 
-async function _handleGetRequest(
+export async function _handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccount[]>>
 ) {
@@ -146,7 +155,7 @@ async function _handleGetRequest(
   res.status(httpCode).json(result);
 }
 
-function _handleErrorResponse(res: NextApiResponse, message: string) {
+export function _handleErrorResponse(res: NextApiResponse, message: string) {
   const { httpCode, result } = formatApiResponse<IAccount[]>(message, {} as IAccount[]);
   res.status(httpCode).json(result);
 }
@@ -158,24 +167,6 @@ export default async function handler(
   try {
     if (req.method === 'GET') {
       await _handleGetRequest(req, res);
-    }
-    if (req.method === 'POST') {
-      // ToDo: (20240516 - Murky) - Not done
-      // const { type, liquidity, account, code, name } = req.body;
-      // if (type && liquidity && account && code && name) {
-      //   if (
-      //     (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-      //     (liquidity !== 'current' && liquidity !== 'non-current' && liquidity !== 'na')
-      //   ) {
-      //     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      //   }
-      //   const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
-      //     STATUS_MESSAGE.CREATED,
-      //     responseData
-      //   );
-      //   res.status(httpCode).json(result);
-      // }
-      // throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
   } catch (_error) {
     const error = _error as Error;

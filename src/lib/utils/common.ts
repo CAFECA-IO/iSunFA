@@ -377,7 +377,7 @@ export function isParamNumeric(param: string | string[] | undefined): param is s
     return false;
   }
 
-  const regex = /^\d+$/;
+  const regex = /^-?\d+$/;
   return regex.test(param);
 }
 

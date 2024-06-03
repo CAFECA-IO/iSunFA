@@ -7,6 +7,8 @@ export interface IAccount {
   account: string;
   code: string;
   name: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 // Info Murky (20240416): Interface
@@ -14,5 +16,3 @@ export interface IAccountResultStatus {
   resultId: string;
   status: ProgressStatus;
 }
-
-export type DetailAccountingAccountOrEmpty = IAccount | null;
