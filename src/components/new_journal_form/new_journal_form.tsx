@@ -171,12 +171,12 @@ const NewJournalForm = () => {
         setTaxRate(invoice.payment.taxPercentage);
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
-        setSelectedMethod(invoice.payment.paymentMethod);
+        setSelectedMethod(invoice.payment.method);
         // setInputAccountNumber(invoice.payment.accountNumber);
-        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
         setInputInstallment(invoice.payment.installmentPeriod);
-        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
-        setInputPartialPaid(invoice.payment.paymentAlreadyDone);
+        setPaymentStatus(invoice.payment.status as PaymentStatusType);
+        setInputPartialPaid(invoice.payment.alreadyPaid);
         setSelectedProject(
           projectSelection.find(
             (project) => journal.projectId && project.id === journal.projectId
@@ -219,12 +219,12 @@ const NewJournalForm = () => {
       setTaxRate(OCRResult.payment.taxPercentage);
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
-      setSelectedMethod(OCRResult.payment.paymentMethod);
+      setSelectedMethod(OCRResult.payment.method);
       // setInputAccountNumber(OCRResult.payment.accountNumber);
-      setPaymentPeriod(OCRResult.payment.paymentPeriod);
+      setPaymentPeriod(OCRResult.payment.period);
       setInputInstallment(OCRResult.payment.installmentPeriod);
-      setPaymentStatus(OCRResult.payment.paymentStatus);
-      setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
+      setPaymentStatus(OCRResult.payment.status);
+      setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
         projectSelection[0]
@@ -435,13 +435,13 @@ const NewJournalForm = () => {
         taxPercentage: taxRate,
         hasFee: feeToggle,
         fee: inputFee,
-        paymentMethod: selectedMethod,
+        method: selectedMethod,
         installmentPeriod: inputInstallment,
-        paymentAlreadyDone: inputPartialPaid,
+        alreadyPaid: inputPartialPaid,
         isRevenue: true,
         progress: progressRate,
-        paymentPeriod,
-        paymentStatus,
+        period: paymentPeriod,
+        status: paymentStatus,
       },
     };
 
