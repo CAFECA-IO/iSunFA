@@ -31,7 +31,7 @@ afterEach(() => {
 });
 
 describe('/OCR/index.ts', () => {
-  describe('_readImageFromFilePath', () => {
+  describe('readImageFromFilePath', () => {
     let mockImage: MockProxy<formidable.File>;
     const mockPath = '/test';
     const mockMimetype = 'image/png';
@@ -43,28 +43,28 @@ describe('/OCR/index.ts', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(mockFileContent);
     });
     it('should return Blob', async () => {
-      const blob = await module._readImageFromFilePath(mockImage);
+      const blob = await module.readImageFromFilePath(mockImage);
       expect(fs.readFile).toHaveBeenCalledWith(mockPath);
       expect(blob).toEqual(new Blob([mockFileContent], { type: mockMimetype || undefined }));
     });
   });
 
-  describe('_getImageName', () => {
+  describe('getImageName', () => {
     it('should return true', () => {
       const mockImage: MockProxy<formidable.File> = mock<formidable.File>();
       const mockPath = './test';
       mockImage.filepath = mockPath;
 
-      const imageName = module._getImageName(mockImage);
+      const imageName = module.getImageName(mockImage);
       expect(imageName).toEqual('test');
     });
   });
 
-  describe('_createImageFormData', () => {
+  describe('createImageFormData', () => {
     it('should return FormData', () => {
       const mockBlob = new Blob(['testBlob']);
       const mockName = 'test';
-      const formData = module._createImageFormData(mockBlob, mockName);
+      const formData = module.createImageFormData(mockBlob, mockName);
 
       // Info Murky (20240424) FormData return will be "File" type, so we can't use "toEqual" to compare
       const imageFile = formData.get('image') as File;
@@ -78,7 +78,7 @@ describe('/OCR/index.ts', () => {
     });
   });
 
-  describe('_uploadImageToAICH', () => {
+  describe('uploadImageToAICH', () => {
     const mockBlob = new Blob(['testBlob']);
     const mockName = 'test';
     it('should return Promise', async () => {
@@ -89,7 +89,7 @@ describe('/OCR/index.ts', () => {
 
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      const promiseJson = module._uploadImageToAICH(mockBlob, mockName);
+      const promiseJson = module.uploadImageToAICH(mockBlob, mockName);
 
       expect(promiseJson).toBeInstanceOf(Promise);
 
@@ -101,7 +101,7 @@ describe('/OCR/index.ts', () => {
 
     it('should throw error when fetch failed', async () => {
       (global.fetch as jest.Mock).mockRejectedValue(new Error('fetch failed'));
-      await expect(module._uploadImageToAICH(mockBlob, mockName)).rejects.toThrow(
+      await expect(module.uploadImageToAICH(mockBlob, mockName)).rejects.toThrow(
         STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED
       );
     });
@@ -112,7 +112,7 @@ describe('/OCR/index.ts', () => {
       };
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      await expect(module._uploadImageToAICH(mockBlob, mockName)).rejects.toThrow(
+      await expect(module.uploadImageToAICH(mockBlob, mockName)).rejects.toThrow(
         STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED
       );
     });

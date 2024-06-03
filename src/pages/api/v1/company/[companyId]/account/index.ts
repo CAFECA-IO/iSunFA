@@ -9,7 +9,7 @@ import type { account } from '@prisma/client';
 import { AccountType } from '@/constants/account';
 import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
 
-export async function _findManyAccountsInPrisma(
+export async function findManyAccountsInPrisma(
   page: number = DEFAULT_PAGE_OFFSET,
   limit: number = DEFAULT_PAGE_LIMIT,
   type?: AccountType,
@@ -35,7 +35,7 @@ export async function _findManyAccountsInPrisma(
   }
 }
 
-export function _formatAccounts(accounts: account[]): IAccount[] {
+export function formatAccounts(accounts: account[]): IAccount[] {
   return accounts.map((account) => {
     return {
       id: account.id,
@@ -50,7 +50,7 @@ export function _formatAccounts(accounts: account[]): IAccount[] {
   });
 }
 
-export function _isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
+export function isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
   if (Array.isArray(type)) {
     return false;
   }
@@ -62,7 +62,7 @@ export function _isTypeValid(type: string | string[] | undefined): type is Accou
   return isAccountType(type);
 }
 
-export function _isLiquidityValid(
+export function isLiquidityValid(
   liquidity: string | string[] | undefined
 ): liquidity is string | undefined {
   if (Array.isArray(liquidity)) {
@@ -76,7 +76,7 @@ export function _isLiquidityValid(
   return liquidity === 'true' || liquidity === 'false';
 }
 
-export function _isPageValid(page: string | string[] | undefined): page is string | undefined {
+export function isPageValid(page: string | string[] | undefined): page is string | undefined {
   if (Array.isArray(page)) {
     return false;
   }
@@ -88,7 +88,7 @@ export function _isPageValid(page: string | string[] | undefined): page is strin
   return isParamNumeric(page);
 }
 
-export function _isLimitValid(limit: string | string[] | undefined): limit is string | undefined {
+export function isLimitValid(limit: string | string[] | undefined): limit is string | undefined {
   if (Array.isArray(limit)) {
     return false;
   }
@@ -100,7 +100,7 @@ export function _isLimitValid(limit: string | string[] | undefined): limit is st
   return isParamNumeric(limit);
 }
 
-export function _formatParams(
+export function formatParams(
   companyId: string | string[] | undefined,
   type: string | string[] | undefined,
   liquidity: string | string[] | undefined,
@@ -108,12 +108,12 @@ export function _formatParams(
   limit: string | string[] | undefined
 ) {
   const isCompanyIdValid = isParamNumeric(companyId);
-  const isTypeValid = _isTypeValid(type);
-  const isLiquidityValid = _isLiquidityValid(liquidity);
-  const isPageValid = _isPageValid(page);
-  const isLimitValid = _isLimitValid(limit);
+  const typeIsValid = isTypeValid(type);
+  const liquidityIsValid = isLiquidityValid(liquidity);
+  const pageIsValid = isPageValid(page);
+  const limitIsValid = isLimitValid(limit);
 
-  if (!(isCompanyIdValid && isTypeValid && isLiquidityValid && isPageValid && isLimitValid)) {
+  if (!(isCompanyIdValid && typeIsValid && liquidityIsValid && pageIsValid && limitIsValid)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
@@ -132,30 +132,30 @@ export function _formatParams(
   };
 }
 
-export async function _handleGetRequest(
+export async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccount[]>>
 ) {
   const { companyId, type, liquidity, page, limit } = req.query;
-  const { typeEnum, liquidityBoolean, pageNumber, limitNumber } = _formatParams(
+  const { typeEnum, liquidityBoolean, pageNumber, limitNumber } = formatParams(
     companyId,
     type,
     liquidity,
     page,
     limit
   );
-  const rawAccounts = await _findManyAccountsInPrisma(
+  const rawAccounts = await findManyAccountsInPrisma(
     pageNumber,
     limitNumber,
     typeEnum,
     liquidityBoolean
   );
-  const accounts = _formatAccounts(rawAccounts);
+  const accounts = formatAccounts(rawAccounts);
   const { httpCode, result } = formatApiResponse<IAccount[]>(STATUS_MESSAGE.SUCCESS_GET, accounts);
   res.status(httpCode).json(result);
 }
 
-export function _handleErrorResponse(res: NextApiResponse, message: string) {
+export function handleErrorResponse(res: NextApiResponse, message: string) {
   const { httpCode, result } = formatApiResponse<IAccount[]>(message, {} as IAccount[]);
   res.status(httpCode).json(result);
 }
@@ -166,10 +166,10 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      await _handleGetRequest(req, res);
+      await handleGetRequest(req, res);
     }
   } catch (_error) {
     const error = _error as Error;
-    _handleErrorResponse(res, error.message);
+    handleErrorResponse(res, error.message);
   }
 }
