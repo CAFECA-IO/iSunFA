@@ -32,6 +32,7 @@ const DashboardBookmark = () => {
       containerRef.current.scrollWidth - containerRef.current.scrollLeft <=
       containerRef.current.clientWidth;
     const isAtStart = containerRef.current.scrollLeft === 0;
+
     setIsAtScrollEnd(isAtEnd);
     setIsAtScrollStart(isAtStart);
   };
@@ -44,6 +45,17 @@ const DashboardBookmark = () => {
   };
 
   useEffect(() => {
+    // Info: 如果書籤不夠多，就不需要顯示往右滑的按鈕 (20240603 - Shirley)
+    if (
+      containerRef.current &&
+      containerRef.current.scrollWidth - containerRef.current.scrollLeft <=
+        containerRef.current.clientWidth
+    ) {
+      setIsAtScrollEnd(true);
+    } else {
+      setIsAtScrollEnd(false);
+    }
+
     const handleScroll = () => {
       checkScrollPosition();
     };
@@ -53,7 +65,7 @@ const DashboardBookmark = () => {
     currentContainerRef?.addEventListener('scroll', handleScroll);
 
     return () => currentContainerRef?.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [bookmarkList]); // Info: 如果書籤不夠多，就不需要顯示往右滑的按鈕 (20240603 - Shirley)
 
   const slideLeft = () => slide(-BOOKMARK_SCROLL_STEP);
   const slideRight = () => slide(BOOKMARK_SCROLL_STEP);
@@ -112,10 +124,10 @@ const DashboardBookmark = () => {
           key={key}
           onClick={() => buttonSelectedHandler(bookmarkList[key].name)}
           type="button"
-          className={`${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-full border px-8 py-3.5 max-md:px-5`}
+          className={`flex justify-center gap-2 rounded-full border px-5 py-5 lg:px-8 lg:py-2 ${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'}`}
         >
           <div className="my-auto flex items-center justify-center">{bookmarkList[key].icon}</div>
-          <div className="text-lg font-medium leading-7 tracking-normal">
+          <div className="hidden text-lg font-medium leading-7 tracking-normal lg:inline">
             {bookmarkList[key].name}
           </div>
         </Button>
@@ -276,9 +288,9 @@ const DashboardBookmark = () => {
   );
 
   return (
-    <div className="rounded-full bg-white">
-      <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
-        <div className="relative inline-flex w-300px flex-1 items-center overflow-hidden max-md:w-500px">
+    <div className="w-full rounded-full bg-white">
+      <div className="flex flex-wrap items-center justify-between overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
+        <div className="relative inline-flex h-20 flex-1 items-center overflow-hidden">
           <div
             ref={containerRef}
             className="inline-flex items-center gap-5 overflow-x-auto scroll-smooth px-20px py-14px"
@@ -304,7 +316,7 @@ const DashboardBookmark = () => {
           </button>
         </div>
         {/* Info: remove or add button (20240411 - Shirley) */}
-        <div className="rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px">
+        <div className="w-100px rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px">
           {displayedRemoveOrAddButton}
         </div>
       </div>

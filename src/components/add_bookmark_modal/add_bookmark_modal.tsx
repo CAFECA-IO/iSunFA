@@ -12,10 +12,10 @@ interface IAddBookmarkModal {
 }
 
 const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { bookmarkList, addBookmarks } = useDashboardCtx();
+  const { bookmarkList, addBookmarks, removeBookmark, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
-  const [selectedBookmark, setSelectedBookmark] = useStateRef<string[]>([]);
+  const [selectedBookmark, setSelectedBookmark, selectedBookmarkRef] = useStateRef<string[]>([]);
 
   const {
     targetRef: menuRef,
@@ -49,7 +49,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const addBtnClickHandler = () => {
-    addBookmarks(selectedBookmark);
+    addSelectedBookmarks(selectedBookmarkRef.current);
     addBookmarkModalVisibilityHandler();
   };
 
@@ -92,8 +92,10 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
       </button>
       {/* Info: Bookmark Menu (20240425 - Shirley) */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid max-h-[250px] w-full grid-cols-1 overflow-hidden overflow-y-auto rounded-sm border bg-white pb-2 transition-all duration-300 ease-in-out lg:max-h-[250px] ${
-          isMenuOpen ? 'grid-rows-1 border-gray-300 shadow-xl' : 'grid-rows-0 border-transparent'
+        className={`grid-cols-0 absolute left-0 top-[3.5rem] z-20 grid max-h-[250px] w-full overflow-hidden overflow-y-auto rounded-sm border bg-white pb-2 transition-all duration-300 ease-in-out lg:max-h-[250px] ${
+          isMenuOpen
+            ? 'grid-rows-1 border-gray-300 shadow-xl'
+            : 'pointer-events-none grid-rows-0 overflow-y-hidden border-transparent bg-transparent text-transparent'
         } transition-all duration-300 ease-in-out`}
       >
         <div className="flex w-full flex-col pl-2 pt-2">
@@ -107,9 +109,11 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                     onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
                     type="button"
                     className={`mt-1 flex gap-3 rounded-sm px-3 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white ${
-                      selectedBookmark.includes(key)
-                        ? 'bg-primaryYellow/20'
-                        : 'hover:text-text-brand-primary-lv2'
+                      !isMenuOpen
+                        ? 'hidden'
+                        : selectedBookmark.includes(key)
+                          ? 'bg-primaryYellow/20'
+                          : 'hover:text-text-brand-primary-lv2'
                     }`}
                   >
                     <div className="my-auto flex flex-col justify-center">
