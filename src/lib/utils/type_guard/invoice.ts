@@ -1,12 +1,12 @@
 // Info Murky (20240416): Type Guard
 
-import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
+import { IInvoice } from '@/interfaces/invoice';
 import { isEventType } from '@/lib/utils/type_guard/account';
 import { isIPayment } from '@/lib/utils/type_guard/payment';
 
-export function isIInvoiceDataForSavingToDB(
-  data: IInvoiceDataForSavingToDB
-): data is IInvoiceDataForSavingToDB {
+export function isIInvoice(
+  data: IInvoice
+): data is IInvoice {
   return (
     (typeof data.journalId === 'number' || data.journalId === null) &&
     typeof data.date === 'number' &&

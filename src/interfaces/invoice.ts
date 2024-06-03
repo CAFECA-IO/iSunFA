@@ -2,7 +2,7 @@ import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
 
 // Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
-export interface IInvoiceDataForSavingToDB {
+export interface IInvoice {
   journalId: number | null;
   date: number; // timestamp
   eventType: EventType;

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
-import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
+import { IInvoice } from '@/interfaces/invoice';
+import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
@@ -39,13 +39,13 @@ function formatInvoice(invoice: any) {
     contract: invoice.contract ? invoice.contract : null,
   };
   // Info Murky (20240416): Check if invoices is array and is Invoice type
-  if (Array.isArray(formattedInvoice) || !isIInvoiceDataForSavingToDB(formattedInvoice)) {
+  if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
   return formattedInvoice;
 }
 
-async function uploadInvoiceToAICH(invoice: IInvoiceDataForSavingToDB) {
+async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
 
   try {
@@ -176,7 +176,7 @@ async function findUniqueInvoiceInPrisma(invoiceId: number) {
   return invoice;
 }
 
-async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavingToDB) {
+async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoice) {
   const {
     payment: paymentData,
     project,
@@ -217,7 +217,7 @@ async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoiceDataForSa
 
 async function updateInvoiceInPrisma(
   invoiceIdToBeUpdated: number,
-  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB
+  invoiceDataForSavingToDB: IInvoice
 ) {
   const {
     payment: paymentData,
@@ -366,7 +366,7 @@ async function updateJournalInPrisma(
 
 // Info (20240524 - Murky): Main logics
 async function handlePrismaSavingLogic(
-  formattedInvoice: IInvoiceDataForSavingToDB,
+  formattedInvoice: IInvoice,
   aichResultId: string,
   companyId: number
 ) {

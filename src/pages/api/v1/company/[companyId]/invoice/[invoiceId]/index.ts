@@ -5,14 +5,14 @@ import { IResponseData } from '@/interfaces/response_data';
 // import {  } from '@/constants/STATUS_MESSAGE';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
-import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
+import { IInvoice } from '@/interfaces/invoice';
+import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
 // Depreciate: (20240603 Murky): This route need to be rewrite into get invoice from prisma
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>
+  res: NextApiResponse<IResponseData<IInvoice>>
 ) {
   try {
     const { invoiceId } = req.query;
@@ -29,13 +29,13 @@ export default async function handler(
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
         }
 
-        const ocrResultData: IInvoiceDataForSavingToDB = (await fetchResult.json()).payload;
+        const ocrResultData: IInvoice = (await fetchResult.json()).payload;
 
-        if (!ocrResultData || !isIInvoiceDataForSavingToDB(ocrResultData)) {
+        if (!ocrResultData || !isIInvoice(ocrResultData)) {
           throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
         }
 
-        const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(
+        const { httpCode, result } = formatApiResponse<IInvoice>(
 STATUS_MESSAGE.SUCCESS,
           ocrResultData,
         );
@@ -49,7 +49,7 @@ STATUS_MESSAGE.SUCCESS,
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(error.message, {} as IInvoiceDataForSavingToDB);
+    const { httpCode, result } = formatApiResponse<IInvoice>(error.message, {} as IInvoice);
     res.status(httpCode).json(result);
   }
 }
