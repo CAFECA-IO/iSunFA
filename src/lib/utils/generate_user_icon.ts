@@ -85,6 +85,7 @@ function getFileNameFromPath(filepath: string) {
   return parts[parts.length - 1];
 }
 export async function generateUserIcon(name: string) {
+  let iconUrl = '';
   try {
     await mkUploadFolder();
     const initials = generateInitials(name);
@@ -98,8 +99,12 @@ export async function generateUserIcon(name: string) {
     await saveUserIconToFile(iconSvg, filepath);
     const filename = getFileNameFromPath(filepath);
     const url = transformOCRImageIDToURL('invoice', 0, filename);
-    return url;
+    iconUrl = url;
   } catch (error) {
-    return '';
+    // Info: For debugging purpose
+    // eslint-disable-next-line no-console
+    console.error('Failed to generate user icon', error);
   }
+
+  return iconUrl;
 }

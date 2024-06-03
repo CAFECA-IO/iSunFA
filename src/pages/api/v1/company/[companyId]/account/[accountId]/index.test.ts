@@ -57,24 +57,28 @@ describe("GET account by id", () => {
     req.query = { companyId: '1', accountId: `${testAccountId}` };
     await handler(req, res);
 
+    const paymentExpect = expect.objectContaining({
+      id: expect.any(Number),
+      type: expect.any(String),
+      liquidity: expect.any(Boolean),
+      account: expect.any(String),
+      code: expect.any(String),
+      name: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const jsonExpect = expect.objectContaining({
+      powerby: expect.any(String),
+      success: true,
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: paymentExpect,
+    });
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: true,
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          type: expect.any(String),
-          liquidity: expect.any(Boolean),
-          account: expect.any(String),
-          code: expect.any(String),
-          name: expect.any(String),
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
-        }),
-      })
+      jsonExpect
     );
   });
 
@@ -83,13 +87,16 @@ describe("GET account by id", () => {
     req.query = { companyId: '1', accountId: '-2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
+
+    const jsonExpect = expect.objectContaining({
+      powerby: expect.any(String),
+      success: false,
+      code: expect.stringContaining('404'),
+      message: expect.any(String),
+    });
+
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: false,
-        code: expect.stringContaining('404'),
-        message: expect.any(String),
-      })
+      jsonExpect
     );
   });
 
@@ -98,13 +105,16 @@ describe("GET account by id", () => {
     req.query = { companyId: '1', accountId: 'a' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
+
+    const jsonExpect = expect.objectContaining({
+      powerby: expect.any(String),
+      success: false,
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+    });
+
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: false,
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-      })
+      jsonExpect
     );
   });
 });
