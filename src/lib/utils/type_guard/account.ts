@@ -1,4 +1,5 @@
 import {
+  AccountType,
   EventType,
   PaymentPeriodType,
   PaymentStatusType,
@@ -10,27 +11,38 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
-  return Object.values(EventType).includes(data as EventType);
+  const isValid = Object.values(EventType).includes(data as EventType);
+  return isValid;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAccountType(data: any): data is AccountType {
+  const isValid = Object.values(AccountType).includes(data as AccountType);
+  return isValid;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isVoucherType(data: any): data is VoucherType {
-  return Object.values(VoucherType).includes(data as VoucherType);
+  const isValid = Object.values(VoucherType).includes(data as VoucherType);
+  return isValid;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPaymentStatusType(data: any): data is PaymentStatusType {
-  return Object.values(PaymentStatusType).includes(data as PaymentStatusType);
+  const isValid = Object.values(PaymentStatusType).includes(data as PaymentStatusType);
+  return isValid;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPaymentPeriodType(data: any): data is PaymentPeriodType {
-  return Object.values(PaymentPeriodType).includes(data as PaymentPeriodType);
+  const isValid = Object.values(PaymentPeriodType).includes(data as PaymentPeriodType);
+  return isValid;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isProgressStatus(data: any): data is ProgressStatus {
-  return Object.values(ProgressStatus).includes(data as ProgressStatus);
+  const isValid = Object.values(ProgressStatus).includes(data as ProgressStatus);
+  return isValid;
 }
 
 export function isIAccountResultStatus(value: unknown): value is IAccountResultStatus {
@@ -38,7 +50,8 @@ export function isIAccountResultStatus(value: unknown): value is IAccountResultS
     return false;
   }
   const { resultId, status } = value as IAccountResultStatus;
-  return typeof resultId === 'string' && isProgressStatus(status);
+  const isValid = typeof resultId === 'string' && isProgressStatus(status);
+  return isValid;
 }
 
 // Info: (20240527 - Murky) convert string to EventType:
@@ -68,4 +81,11 @@ export function convertStringToPaymentPeriodType(data: string) {
     throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
   }
   return data as PaymentPeriodType;
+}
+
+export function convertStringToAccountType(data: string) {
+  if (!isAccountType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as AccountType;
 }
