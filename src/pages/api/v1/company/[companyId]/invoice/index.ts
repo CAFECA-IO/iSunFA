@@ -137,11 +137,13 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 }
 
 async function createPaymentInPrisma(paymentData: IPayment) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const payment = await prisma.payment.create({
     data: {
       ...paymentData,
-      createdAt: timestampInSeconds(Date.now()),
-      updatedAt: timestampInSeconds(Date.now()),
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
     select: {
       id: true,
