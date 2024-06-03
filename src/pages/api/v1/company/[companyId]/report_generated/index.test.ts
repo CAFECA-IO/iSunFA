@@ -91,7 +91,7 @@ const dummyGeneratedReportItems = [
 const projects = [
   {
     id: -1,
-    companyId: 3,
+    companyId: -100,
     name: 'iSunFA',
     completedPercent: 30,
     stage: 'Designing',
@@ -101,7 +101,7 @@ const projects = [
   },
   {
     id: -2,
-    companyId: 3,
+    companyId: -100,
     name: 'BAIFA',
     completedPercent: 80,
     stage: 'Beta Testing',
@@ -111,7 +111,7 @@ const projects = [
   },
   {
     id: -3,
-    companyId: 3,
+    companyId: -100,
     name: 'iSunOne',
     completedPercent: 60,
     stage: 'Develop',
@@ -120,6 +120,16 @@ const projects = [
     imageId: 'ISO'
   },
 ];
+
+const company = {
+  id: -100,
+  name: 'Test Company',
+  code: 'TST_company_user-100',
+  regional: 'TW',
+  startDate: 1717143507,
+  createdAt: 1717143507,
+  updatedAt: 1717143507
+};
 
 beforeEach(async () => {
   req = {
@@ -142,6 +152,9 @@ afterEach(async () => {
 
 describe('generatedReports API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
+    await prisma.company.create({
+      data: company,
+    });
     await prisma.project.createMany({
       data: projects,
     });
@@ -198,6 +211,11 @@ describe('generatedReports API Handler Tests', () => {
         id: {
           in: projects.map((project) => project.id),
         },
+      },
+    });
+    await prisma.company.delete({
+      where: {
+        id: company.id,
       },
     });
   });
