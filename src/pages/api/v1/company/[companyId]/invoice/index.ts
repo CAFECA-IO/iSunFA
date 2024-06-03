@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-
-import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
-import { IInvoice, IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
-import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
+import { IInvoice } from '@/interfaces/invoice';
+import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
@@ -41,13 +39,13 @@ function formatInvoice(invoice: any) {
     contract: invoice.contract ? invoice.contract : null,
   };
   // Info Murky (20240416): Check if invoices is array and is Invoice type
-  if (Array.isArray(formattedInvoice) || !isIInvoiceDataForSavingToDB(formattedInvoice)) {
+  if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
   return formattedInvoice;
 }
 
-async function uploadInvoiceToAICH(invoice: IInvoiceDataForSavingToDB) {
+async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
 
   try {
@@ -139,8 +137,14 @@ async function createOrFindCompanyInPrisma(companyId: number) {
 }
 
 async function createPaymentInPrisma(paymentData: IPayment) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const payment = await prisma.payment.create({
-    data: paymentData,
+    data: {
+      ...paymentData,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
+    },
     select: {
       id: true,
     },
@@ -174,7 +178,7 @@ async function findUniqueInvoiceInPrisma(invoiceId: number) {
   return invoice;
 }
 
-async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoiceDataForSavingToDB) {
+async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoice) {
   const {
     payment: paymentData,
     project,
@@ -215,7 +219,7 @@ async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoiceDataForSa
 
 async function updateInvoiceInPrisma(
   invoiceIdToBeUpdated: number,
-  invoiceDataForSavingToDB: IInvoiceDataForSavingToDB
+  invoiceDataForSavingToDB: IInvoice
 ) {
   const {
     payment: paymentData,
@@ -364,7 +368,7 @@ async function updateJournalInPrisma(
 
 // Info (20240524 - Murky): Main logics
 async function handlePrismaSavingLogic(
-  formattedInvoice: IInvoiceDataForSavingToDB,
+  formattedInvoice: IInvoice,
   aichResultId: string,
   companyId: number
 ) {
@@ -465,76 +469,14 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice[] | IPostApiResponseType>>
+  res: NextApiResponse<IResponseData< | IPostApiResponseType>>
 ) {
   try {
     const { companyId } = req.query;
     if (!isCompanyIdValid(companyId)) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
-    if (req.method === 'GET') {
-      // Handle GET request to fetch all invoices
-      const invoices: IInvoice[] = [
-        {
-          date: 21321321,
-          invoiceId: '123123',
-          eventType: EventType.PAYMENT,
-          paymentReason: 'purchase',
-          description: 'description',
-          vendorOrSupplier: 'vender',
-          project: 'ISunFa',
-          contract: 'ISunFa buy',
-          projectId: '123',
-          contractId: '123',
-          payment: {
-            isRevenue: false,
-            price: 1500,
-            hasTax: true,
-            taxPercentage: 10,
-            hasFee: true,
-            fee: 10,
-            paymentMethod: 'transfer',
-            paymentPeriod: PaymentPeriodType.AT_ONCE,
-            installmentPeriod: 0,
-            paymentAlreadyDone: 1500,
-            paymentStatus: PaymentStatusType.PAID,
-            progress: 0,
-          },
-        },
-        {
-          invoiceId: '2',
-          date: 123123123,
-          eventType: EventType.PAYMENT,
-          paymentReason: 'sale',
-          description: 'description',
-          vendorOrSupplier: 'vender',
-          project: 'ISunFa',
-          contract: 'ISunFa buy',
-          projectId: '123',
-          contractId: '123',
-          payment: {
-            isRevenue: false,
-            price: 100,
-            hasTax: true,
-            taxPercentage: 10,
-            hasFee: true,
-            fee: 10,
-            paymentMethod: 'transfer',
-            paymentPeriod: PaymentPeriodType.AT_ONCE,
-            installmentPeriod: 0,
-            paymentAlreadyDone: 110,
-            paymentStatus: PaymentStatusType.PAID,
-            progress: 0,
-          },
-        },
-      ];
-
-      const { httpCode, result } = formatApiResponse<IInvoice[]>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        invoices as IInvoice[]
-      );
-      res.status(httpCode).json(result);
-    } else if (req.method === 'POST') {
+    if (req.method === 'POST') {
       // Handle POST request to create a new invoice
       await handlePostRequest(companyId, req, res);
     } else {

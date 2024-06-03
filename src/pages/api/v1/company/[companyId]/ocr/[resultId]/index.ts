@@ -2,10 +2,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
+import { IInvoice } from '@/interfaces/invoice';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
+import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
@@ -51,16 +51,16 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
     throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   }
 
-  return json.payload as IInvoiceDataForSavingToDB;
+  return json.payload as IInvoice;
 }
 
-function setOCRResultJournalId(ocrResult: IInvoiceDataForSavingToDB, journalId: number | null) {
+function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
   // Info: (20240522 - Murky) This function is used to set journalId to the OCR result
   // eslint-disable-next-line no-param-reassign
   ocrResult.journalId = journalId;
 }
 
-function formatOCRResultDate(ocrResult: IInvoiceDataForSavingToDB) {
+function formatOCRResultDate(ocrResult: IInvoice) {
   // Info: (20240522 - Murky) This function is used to format the date in OCR result
   // eslint-disable-next-line no-param-reassign
   ocrResult.date = timestampInSeconds(ocrResult.date);
@@ -68,20 +68,20 @@ function formatOCRResultDate(ocrResult: IInvoiceDataForSavingToDB) {
 
 async function handleGetRequest(
   resultId: string,
-  res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>
+  res: NextApiResponse<IResponseData<IInvoice>>
 ) {
   const fetchResult = fetchOCRResult(resultId);
 
-  const ocrResult: IInvoiceDataForSavingToDB = await getPayloadFromResponseJSON(fetchResult);
+  const ocrResult: IInvoice = await getPayloadFromResponseJSON(fetchResult);
 
   setOCRResultJournalId(ocrResult, null);
   formatOCRResultDate(ocrResult);
 
-  if (!isIInvoiceDataForSavingToDB(ocrResult)) {
+  if (!isIInvoice(ocrResult)) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
   }
 
-  const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(
+  const { httpCode, result } = formatApiResponse<IInvoice>(
     STATUS_MESSAGE.SUCCESS,
     ocrResult
   );
@@ -90,16 +90,16 @@ async function handleGetRequest(
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IInvoiceDataForSavingToDB>(
+  const { httpCode, result } = formatApiResponse<IInvoice>(
     message,
-    {} as IInvoiceDataForSavingToDB
+    {} as IInvoice
   );
   res.status(httpCode).json(result);
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>
+  res: NextApiResponse<IResponseData<IInvoice>>
 ) {
   try {
     const { resultId } = req.query;

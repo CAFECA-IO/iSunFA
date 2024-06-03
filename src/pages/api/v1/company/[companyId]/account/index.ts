@@ -1,90 +1,175 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import {
-  AccountingAccountOrEmpty,
-  DetailAccountingAccountOrEmpty,
-} from '@/interfaces/accounting_account';
+import { IAccount } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, isParamNumeric, pageToOffset } from '@/lib/utils/common';
+import prisma from '@/client';
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import type { account } from '@prisma/client';
+import { AccountType } from '@/constants/account';
+import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
 
-const responseDataArray: AccountingAccountOrEmpty[] = [
-  {
-    id: 1,
-    code: 1100,
-    account: '現金及約當現金',
-    amount: 30000,
-  },
-  {
-    id: 2,
-    code: 1310,
-    account: '存貨',
-    amount: 2200000,
-  },
-  {
-    id: 3,
-    code: 1180,
-    account: '應收款項',
-    amount: 530000,
-  },
-];
+export async function findManyAccountsInPrisma(
+  page: number = DEFAULT_PAGE_OFFSET,
+  limit: number = DEFAULT_PAGE_LIMIT,
+  type?: AccountType,
+  liquidity?: boolean
+) {
+  try {
+  const offset = pageToOffset(page, limit);
+  const accounts = await prisma.account.findMany({
+    skip: offset,
+    take: limit,
+    where: {
+      type,
+      liquidity,
+    },
+  });
 
-const responseData: DetailAccountingAccountOrEmpty = {
-  id: 1,
-  type: 'asset',
-  liquidity: true,
-  account: 'cash',
-  code: '1103-1',
-  name: 'Taiwan Bank',
-};
+  return accounts;
+  } catch (error) {
+    // Info (20240516 - Murky) - Debugging error
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+}
 
-export default function handler(
+export function formatAccounts(accounts: account[]): IAccount[] {
+  return accounts.map((account) => {
+    return {
+      id: account.id,
+      type: account.type,
+      liquidity: account.liquidity,
+      account: account.account,
+      code: account.code,
+      name: account.name,
+      createdAt: account.createdAt,
+      updatedAt: account.updatedAt,
+    };
+  });
+}
+
+export function isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
+  if (Array.isArray(type)) {
+    return false;
+  }
+
+  if (!type) {
+    return true;
+  }
+
+  return isAccountType(type);
+}
+
+export function isLiquidityValid(
+  liquidity: string | string[] | undefined
+): liquidity is string | undefined {
+  if (Array.isArray(liquidity)) {
+    return false;
+  }
+
+  if (!liquidity) {
+    return true;
+  }
+
+  return liquidity === 'true' || liquidity === 'false';
+}
+
+export function isPageValid(page: string | string[] | undefined): page is string | undefined {
+  if (Array.isArray(page)) {
+    return false;
+  }
+
+  if (!page) {
+    return true;
+  }
+
+  return isParamNumeric(page);
+}
+
+export function isLimitValid(limit: string | string[] | undefined): limit is string | undefined {
+  if (Array.isArray(limit)) {
+    return false;
+  }
+
+  if (!limit) {
+    return true;
+  }
+
+  return isParamNumeric(limit);
+}
+
+export function formatParams(
+  companyId: string | string[] | undefined,
+  type: string | string[] | undefined,
+  liquidity: string | string[] | undefined,
+  page: string | string[] | undefined,
+  limit: string | string[] | undefined
+) {
+  const isCompanyIdValid = isParamNumeric(companyId);
+  const typeIsValid = isTypeValid(type);
+  const liquidityIsValid = isLiquidityValid(liquidity);
+  const pageIsValid = isPageValid(page);
+  const limitIsValid = isLimitValid(limit);
+
+  if (!(isCompanyIdValid && typeIsValid && liquidityIsValid && pageIsValid && limitIsValid)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const companyIdNumber = Number(companyId);
+  const typeEnum = type ? convertStringToAccountType(type) : undefined;
+  const liquidityBoolean = liquidity ? liquidity === 'true' : undefined;
+  const pageNumber = Number(page) || DEFAULT_PAGE_START_AT;
+  const limitNumber = Number(limit) || DEFAULT_PAGE_LIMIT;
+
+  return {
+    companyIdNumber,
+    typeEnum,
+    liquidityBoolean,
+    pageNumber,
+    limitNumber,
+  };
+}
+
+export async function handleGetRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<AccountingAccountOrEmpty[] | DetailAccountingAccountOrEmpty>>
+  res: NextApiResponse<IResponseData<IAccount[]>>
+) {
+  const { companyId, type, liquidity, page, limit } = req.query;
+  const { typeEnum, liquidityBoolean, pageNumber, limitNumber } = formatParams(
+    companyId,
+    type,
+    liquidity,
+    page,
+    limit
+  );
+  const rawAccounts = await findManyAccountsInPrisma(
+    pageNumber,
+    limitNumber,
+    typeEnum,
+    liquidityBoolean
+  );
+  const accounts = formatAccounts(rawAccounts);
+  const { httpCode, result } = formatApiResponse<IAccount[]>(STATUS_MESSAGE.SUCCESS_GET, accounts);
+  res.status(httpCode).json(result);
+}
+
+export function handleErrorResponse(res: NextApiResponse, message: string) {
+  const { httpCode, result } = formatApiResponse<IAccount[]>(message, {} as IAccount[]);
+  res.status(httpCode).json(result);
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAccount[]>>
 ) {
   try {
     if (req.method === 'GET') {
-      const { type, liquidity } = req.query;
-      if (type && liquidity) {
-        if (
-          (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-          // ToDo: (20240506 - Jacky)  for murky workaround for the issue of type checking
-          // should check the type of liquidity is boolean or not
-          // !!caution query string is always string
-          (liquidity !== 'true' && liquidity !== 'false' && liquidity !== 'na')
-        ) {
-          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-        }
-        const { httpCode, result } = formatApiResponse<AccountingAccountOrEmpty[]>(
-          STATUS_MESSAGE.SUCCESS_GET,
-          responseDataArray
-        );
-        res.status(httpCode).json(result);
-      } else {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-    }
-    if (req.method === 'POST') {
-      const { type, liquidity, account, code, name } = req.body;
-      if (type && liquidity !== null && account && code && name) {
-        if (
-          (type !== 'asset' && type !== 'liability' && type !== 'equity') ||
-          typeof liquidity !== 'boolean'
-        ) {
-          throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-        }
-        const { httpCode, result } = formatApiResponse<DetailAccountingAccountOrEmpty>(
-          STATUS_MESSAGE.CREATED,
-          responseData
-        );
-        res.status(httpCode).json(result);
-      }
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      await handleGetRequest(req, res);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<
-      AccountingAccountOrEmpty[] | DetailAccountingAccountOrEmpty
-    >(error.message, {} as AccountingAccountOrEmpty[] | DetailAccountingAccountOrEmpty);
-    res.status(httpCode).json(result);
+    handleErrorResponse(res, error.message);
   }
 }

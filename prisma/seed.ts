@@ -1,8 +1,15 @@
 import { PrismaClient } from '@prisma/client';
-import { timestampInSeconds } from '@/lib/utils/common';
 import accounts from './seed_json/account.json';
 
 const prisma = new PrismaClient();
+
+const timestampInSeconds = (timestamp: number): number => {
+  if (timestamp > 10000000000) {
+    return Math.floor(timestamp / 1000);
+  }
+  return timestamp;
+};
+
 async function main() {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);

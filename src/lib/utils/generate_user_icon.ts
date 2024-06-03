@@ -40,7 +40,11 @@ function generateRandomUUID() {
   return crypto.randomUUID();
 }
 
-function generateUserIconSvg(initials:string, backgroundColor:string, darkBackgroundColor: string) {
+function generateUserIconSvg(
+  initials: string,
+  backgroundColor: string,
+  darkBackgroundColor: string
+) {
   return `
     <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
       <style>
@@ -81,17 +85,26 @@ function getFileNameFromPath(filepath: string) {
   return parts[parts.length - 1];
 }
 export async function generateUserIcon(name: string) {
+  let iconUrl = '';
   try {
     await mkUploadFolder();
     const initials = generateInitials(name);
     const backgroundColor = generateRandomColor();
-    const iconSvg = generateUserIconSvg(initials, backgroundColor.lightMode, backgroundColor.darkMode);
+    const iconSvg = generateUserIconSvg(
+      initials,
+      backgroundColor.lightMode,
+      backgroundColor.darkMode
+    );
     const filepath = await generateSvgSavePath();
     await saveUserIconToFile(iconSvg, filepath);
     const filename = getFileNameFromPath(filepath);
     const url = transformOCRImageIDToURL('invoice', 0, filename);
-    return url;
+    iconUrl = url;
   } catch (error) {
-    return "";
+    // Info: For debugging purpose
+    // eslint-disable-next-line no-console
+    console.error('Failed to generate user icon', error);
   }
+
+  return iconUrl;
 }
