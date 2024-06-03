@@ -112,10 +112,10 @@ const DashboardBookmark = () => {
           key={key}
           onClick={() => buttonSelectedHandler(bookmarkList[key].name)}
           type="button"
-          className={`${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-full border px-8 py-3.5 max-md:px-5`}
+          className={`${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'} flex justify-center gap-2 rounded-full border px-5 py-5 lg:px-8 lg:py-3.5`}
         >
           <div className="my-auto flex items-center justify-center">{bookmarkList[key].icon}</div>
-          <div className="text-lg font-medium leading-7 tracking-normal">
+          <div className="hidden text-lg font-medium leading-7 tracking-normal lg:inline">
             {bookmarkList[key].name}
           </div>
         </Button>
