@@ -345,21 +345,21 @@ model project {
 
 // Todo: (20240530 - Jacky) Should change the name of the variable starts with payment
 model payment {
-  id                 Int      @id @default(autoincrement())
-  isRevenue          Boolean  @map("is_revenue")
-  price              Int
-  hasTax             Boolean  @map("has_tax")
-  taxPercentage      Int      @map("tax_percentage")
-  hasFee             Boolean  @map("has_fee")
-  fee                Int
-  paymentMethod      String   @map("payment_method")
-  paymentPeriod      String   @map("payment_period")
-  installmentPeriod  Int      @map("installment_period")
-  paymentAlreadyDone Int      @map("payment_already_done")
-  paymentStatus      String   @map("payment_status")
-  progress           Int
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                Int     @id @default(autoincrement())
+  isRevenue         Boolean @map("is_revenue")
+  price             Int
+  hasTax            Boolean @map("has_tax")
+  taxPercentage     Int     @map("tax_percentage")
+  hasFee            Boolean @map("has_fee")
+  fee               Int
+  method            String  @map("method")
+  period            String  @map("period")
+  installmentPeriod Int     @map("installment_period")
+  alreadyPaid       Int     @map("already_paid")
+  status            String  @map("status")
+  progress          Int
+  createdAt         Int
+  updatedAt         Int
 
   contractContent contractContent?
   invoice         invoice?

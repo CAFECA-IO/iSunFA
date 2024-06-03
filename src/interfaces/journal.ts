@@ -1,7 +1,7 @@
 import { ProgressStatus } from '@/constants/account';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { IOCR } from '@/interfaces/ocr';
-import { IInvoiceDataForSavingToDB } from './invoice';
+import { IInvoice } from './invoice';
 
 export interface IJournal {
   id: number;
@@ -11,7 +11,7 @@ export interface IJournal {
   projectId: number | null;
   contractId: number | null;
   OCR: IOCR | null;
-  invoice: IInvoiceDataForSavingToDB | null;
+  invoice: IInvoice | null;
   voucher: IVoucherDataForSavingToDB | null;
 }
 
