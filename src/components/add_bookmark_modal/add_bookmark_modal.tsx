@@ -12,10 +12,10 @@ interface IAddBookmarkModal {
 }
 
 const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { bookmarkList, addBookmarks } = useDashboardCtx();
+  const { bookmarkList, addBookmarks, removeBookmark, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
-  const [selectedBookmark, setSelectedBookmark] = useStateRef<string[]>([]);
+  const [selectedBookmark, setSelectedBookmark, selectedBookmarkRef] = useStateRef<string[]>([]);
 
   const {
     targetRef: menuRef,
@@ -49,7 +49,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const addBtnClickHandler = () => {
-    addBookmarks(selectedBookmark);
+    addSelectedBookmarks(selectedBookmarkRef.current);
     addBookmarkModalVisibilityHandler();
   };
 
