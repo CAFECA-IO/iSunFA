@@ -75,6 +75,9 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
+
+  // Info: (20240517 - Murky) To Julian, 在將invoice url改成從ocr取得以後，這個變數就不需要了
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [invoiceIndex, setInvoiceIndex] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
@@ -160,7 +163,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
       };
     });
 
-  const invoicePreviewSrc = `/api/v1/company/1/invoice/${invoiceIndex}/image`;
+  // Info: (20240503 - Murky) To Julian, 如果ocr skip的話=> imageUrl: '', 這樣就不會有圖片 => 原本的位置會變成placeholder
+  const invoicePreviewSrc = journalDetail?.OCR?.imageUrl ?? '';
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);

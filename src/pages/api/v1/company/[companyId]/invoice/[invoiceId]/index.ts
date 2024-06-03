@@ -8,6 +8,8 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
 import { isIInvoiceDataForSavingToDB } from '@/lib/utils/type_guard/invoice';
 
+// Depreciate: (20240603 Murky): This route need to be rewrite into get invoice from prisma
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IInvoiceDataForSavingToDB>>

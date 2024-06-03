@@ -467,7 +467,7 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice[] | IPostApiResponseType>>
+  res: NextApiResponse<IResponseData< | IPostApiResponseType>>
 ) {
   try {
     const { companyId } = req.query;
