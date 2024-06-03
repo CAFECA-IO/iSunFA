@@ -113,9 +113,9 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         setTotalPrice(invoice.payment.price);
         setTax(invoice.payment.taxPercentage);
         setFee(invoice.payment.fee);
-        setPaymentMethod(invoice.payment.paymentMethod);
-        setPaymentPeriod(invoice.payment.paymentPeriod);
-        setPaymentStatus(invoice.payment.paymentStatus);
+        setPaymentMethod(invoice.payment.method);
+        setPaymentPeriod(invoice.payment.period);
+        setPaymentStatus(invoice.payment.status);
         setProject(invoice.project ?? 'None');
         setContract(invoice.contract ?? 'None');
       }
