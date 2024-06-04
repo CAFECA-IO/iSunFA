@@ -288,10 +288,10 @@ const LaborCostChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="flex h-550px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+    <div className="flex h-520px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
-        <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">
+        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+          <div className="lg:flex-1">
             <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -319,7 +319,7 @@ const LaborCostChart = () => {
             </div>
           </div>
 
-          <div className="justify-end">
+          <div className="hidden justify-end lg:flex">
             <Tooltip>
               <p>
                 A message which appears when a cursor is positioned over an icon, image, hyperlink,
