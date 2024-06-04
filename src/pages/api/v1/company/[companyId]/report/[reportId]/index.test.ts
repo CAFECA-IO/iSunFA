@@ -56,23 +56,24 @@ describe('getReportById API Handler Tests', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
 
-    const aa = expect.objectContaining({
+    const payloadData = {
+      reportTypesName: {
+        id: expect.any(String),
+        name: expect.any(String),
+      },
+      tokenContract: expect.any(String),
+      tokenId: expect.any(String),
+      reportLink: expect.any(String),
+    };
+    const resData = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('200'),
       message: expect.any(String),
-      payload: expect.objectContaining({
-        reportTypesName: {
-          id: expect.any(String),
-          name: expect.any(String),
-        },
-        tokenContract: expect.any(String),
-        tokenId: expect.any(String),
-        reportLink: expect.any(String),
-      })
-    });
+      payload: payloadData,
+      });
     expect(res.json).toHaveBeenCalledWith(
-      aa
+      resData
     );
   });
   it('should return error if method is not GET', async () => {
