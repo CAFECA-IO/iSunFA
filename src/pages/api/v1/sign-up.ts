@@ -42,6 +42,9 @@ export default async function handler(
       imageUrl = await generateUserIcon(registrationParsed.username);
     } catch (e) {
       // Info: (20240516 - Murky) If the image generation fails, the user will not have an image
+      // Info: For debugging purpose
+      // eslint-disable-next-line no-console
+      console.error('Failed to generate user icon', e);
     }
 
     const newUser = {

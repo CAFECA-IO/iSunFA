@@ -1,7 +1,8 @@
 import { FORMIDABLE_CONFIG, USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { mkUploadFolder, transformOCRImageIDToURL } from '@/lib/utils/common';
+import { mkUploadFolder } from '@/lib/utils/common';
+import { generateDestinationFileNameInGoogleBucket, uploadGoogleFile } from '@/lib/utils/google_image_upload';
 
 const savePath =
   process.env.VERCEL === '1'
@@ -80,10 +81,12 @@ async function generateSvgSavePath() {
   return filepath;
 }
 
-function getFileNameFromPath(filepath: string) {
-  const parts = filepath.split('/');
-  return parts[parts.length - 1];
-}
+// Deprecated: (20240604 - Murky) This function is not used anymore
+// function getFileNameFromPath(filepath: string) {
+//   const parts = filepath.split('/');
+//   return parts[parts.length - 1];
+// }
+
 export async function generateUserIcon(name: string) {
   let iconUrl = '';
   try {
@@ -97,9 +100,11 @@ export async function generateUserIcon(name: string) {
     );
     const filepath = await generateSvgSavePath();
     await saveUserIconToFile(iconSvg, filepath);
-    const filename = getFileNameFromPath(filepath);
-    const url = transformOCRImageIDToURL('invoice', 0, filename);
-    iconUrl = url;
+
+    const filePathInGoogleBucket = generateDestinationFileNameInGoogleBucket(filepath);
+
+    const uploadGoogle = uploadGoogleFile(filepath, filePathInGoogleBucket);
+    iconUrl = await uploadGoogle();
   } catch (error) {
     // Info: For debugging purpose
     // eslint-disable-next-line no-console

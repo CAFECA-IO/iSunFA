@@ -274,7 +274,6 @@ model Invitation {
   expiredAt     Int     @map("expired_at")
   createdAt     Int     @map("created_at")
   updatedAt     Int     @map("updated_at")
-
   company     Company @relation(fields: [companyId], references: [id])
   createdUser User    @relation(fields: [createdUserId], references: [id])
   role        Role    @relation(fields: [roleId], references: [id])
@@ -396,8 +395,8 @@ model Payment {
   alreadyPaid       Int     @map("already_paid")
   status            String  @map("status")
   progress          Int
-  createdAt         Int
-  updatedAt         Int
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
 
   contractContent ContractContent?
   invoice         Invoice?
