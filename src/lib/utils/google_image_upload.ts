@@ -2,6 +2,7 @@ import { GOOGLE_CREDENTIALS, GOOGLE_PROJECT_ID, GOOGLE_STORAGE_BUCKET_NAME, GOOG
 import { Storage } from "@google-cloud/storage";
 import path from "path";
 
+// Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleStorage = new Storage({
     projectId: GOOGLE_PROJECT_ID,
     credentials: GOOGLE_CREDENTIALS,
@@ -18,8 +19,7 @@ export function generateDestinationFileNameInGoogleBucket(filePath: string) {
   return storePath;
 }
 
-  // eslint-disable-next-line no-console
-console.log(GOOGLE_STORAGE_BUCKET_NAME);
+// Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 /**
  * Uploads a file to Google Cloud Storage, this is an factory function that returns a function that can be called to upload the file
