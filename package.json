@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.4+58",
+  "version": "0.1.4+60",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,6 @@
     "production": "next start -p 80"
   },
   "dependencies": {
-    "@next/swc-darwin-x64": "^15.0.0-rc.0",
     "@passwordless-id/webauthn": "^1.5.0",
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
