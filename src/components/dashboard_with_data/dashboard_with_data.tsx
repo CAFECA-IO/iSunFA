@@ -7,7 +7,7 @@ import LaborCostChart from '@/components/labor_cost_chart/labor_cost_chart';
 
 const DashboardWithData = () => {
   const displayedDataSection = (
-    <div className="lg:mt-10">
+    <div className="md:mt-5 lg:mt-10">
       <div className="grid grid-cols-1 gap-14 lg:grid-cols-2">
         <div>
           <div className="">
