@@ -371,3 +371,20 @@ export async function mkUploadFolder() {
     // Info: (20240329) Murky: Do nothing if /tmp already exist
   }
 }
+
+export function isParamNumeric(param: string | string[] | undefined): param is string {
+  if (!param || Array.isArray(param)) {
+    return false;
+  }
+
+  const regex = /^-?\d+$/;
+  return regex.test(param);
+}
+
+export function isParamString(param: string | string[] | undefined): param is string {
+  if (!param || Array.isArray(param)) {
+    return false;
+  }
+
+  return true;
+}

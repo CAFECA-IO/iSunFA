@@ -42,11 +42,11 @@ type IJournalResponseFromPrisma = {
       taxPercentage: number;
       hasFee: boolean;
       fee: number;
-      paymentMethod: string;
-      paymentPeriod: string;
+      method: string;
+      period: string;
       installmentPeriod: number;
-      paymentAlreadyDone: number;
-      paymentStatus: string;
+      alreadyPaid: number;
+      status: string;
       progress: number;
     };
   } | null;
@@ -94,11 +94,11 @@ async function getJournal(journalId: number) {
                 taxPercentage: true,
                 hasFee: true,
                 fee: true,
-                paymentMethod: true,
-                paymentPeriod: true,
+                method: true,
+                period: true,
                 installmentPeriod: true,
-                paymentAlreadyDone: true,
-                paymentStatus: true,
+                alreadyPaid: true,
+                status: true,
                 progress: true,
               },
             },
@@ -193,11 +193,11 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
         taxPercentage: journalData.invoice.payment.taxPercentage,
         hasFee: journalData.invoice.payment.hasFee,
         fee: journalData.invoice.payment.fee,
-        paymentMethod: journalData.invoice.payment.paymentMethod,
-        paymentPeriod: convertStringToPaymentPeriodType(journalData.invoice.payment.paymentPeriod),
+        method: journalData.invoice.payment.method,
+        period: convertStringToPaymentPeriodType(journalData.invoice.payment.period),
         installmentPeriod: journalData.invoice.payment.installmentPeriod,
-        paymentAlreadyDone: journalData.invoice.payment.paymentAlreadyDone,
-        paymentStatus: convertStringToPaymentStatusType(journalData.invoice.payment.paymentStatus),
+        alreadyPaid: journalData.invoice.payment.alreadyPaid,
+        status: convertStringToPaymentStatusType(journalData.invoice.payment.status),
         progress: journalData.invoice.payment.progress,
       },
     },

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IInvoiceDataForSavingToDB } from '@/interfaces/invoice';
+import { IInvoice } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
 import { firstCharToUpperCase } from '@/lib/utils/common';
@@ -73,7 +73,7 @@ const NewJournalForm = () => {
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoiceDataForSavingToDB>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
+  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
 
   const {
     trigger: createInvoice,
@@ -171,12 +171,12 @@ const NewJournalForm = () => {
         setTaxRate(invoice.payment.taxPercentage);
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
-        setSelectedMethod(invoice.payment.paymentMethod);
+        setSelectedMethod(invoice.payment.method);
         // setInputAccountNumber(invoice.payment.accountNumber);
-        setPaymentPeriod(invoice.payment.paymentPeriod as PaymentPeriodType);
+        setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
         setInputInstallment(invoice.payment.installmentPeriod);
-        setPaymentStatus(invoice.payment.paymentStatus as PaymentStatusType);
-        setInputPartialPaid(invoice.payment.paymentAlreadyDone);
+        setPaymentStatus(invoice.payment.status as PaymentStatusType);
+        setInputPartialPaid(invoice.payment.alreadyPaid);
         setSelectedProject(
           projectSelection.find(
             (project) => journal.projectId && project.id === journal.projectId
@@ -219,12 +219,12 @@ const NewJournalForm = () => {
       setTaxRate(OCRResult.payment.taxPercentage);
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
-      setSelectedMethod(OCRResult.payment.paymentMethod);
+      setSelectedMethod(OCRResult.payment.method);
       // setInputAccountNumber(OCRResult.payment.accountNumber);
-      setPaymentPeriod(OCRResult.payment.paymentPeriod);
+      setPaymentPeriod(OCRResult.payment.period);
       setInputInstallment(OCRResult.payment.installmentPeriod);
-      setPaymentStatus(OCRResult.payment.paymentStatus);
-      setInputPartialPaid(OCRResult.payment.paymentAlreadyDone);
+      setPaymentStatus(OCRResult.payment.status);
+      setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
         projectSelection[0]
@@ -418,7 +418,7 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoiceData: IInvoiceDataForSavingToDB = {
+    const invoiceData: IInvoice = {
       journalId: selectedUnprocessedJournal?.id || invoiceReturn?.journalId || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
@@ -435,13 +435,13 @@ const NewJournalForm = () => {
         taxPercentage: taxRate,
         hasFee: feeToggle,
         fee: inputFee,
-        paymentMethod: selectedMethod,
+        method: selectedMethod,
         installmentPeriod: inputInstallment,
-        paymentAlreadyDone: inputPartialPaid,
+        alreadyPaid: inputPartialPaid,
         isRevenue: true,
         progress: progressRate,
-        paymentPeriod,
-        paymentStatus,
+        period: paymentPeriod,
+        status: paymentStatus,
       },
     };
 

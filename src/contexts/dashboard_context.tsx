@@ -8,6 +8,7 @@ interface DashboardContextType {
   toggleBookmark: (bookmarkName: string[]) => void;
   addBookmarks: (bookmarks: string[]) => void;
   removeBookmark: (bookmarkName: string) => void;
+  addSelectedBookmarks: (bookmarks: string[]) => void;
 }
 
 const initialDashboardContext: DashboardContextType = {
@@ -15,6 +16,7 @@ const initialDashboardContext: DashboardContextType = {
   toggleBookmark: () => {},
   addBookmarks: () => {},
   removeBookmark: () => {},
+  addSelectedBookmarks: () => {},
 };
 
 export interface IDashboardProvider {
@@ -463,7 +465,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
       ...prevBookmarkList,
       [bookmarkName]: {
         ...prevBookmarkList[bookmarkName],
-        added: false,
+        added: true,
       },
     }));
   };
@@ -474,7 +476,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
       Object.entries(updatedBookmarkList).forEach(([key, value]) => {
         updatedBookmarkList[key] = {
           ...value,
-          added: false,
+          added: true,
         };
       });
       bookmarks.forEach((bookmarkName: string) => {
@@ -489,12 +491,33 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     });
   };
 
+  const addSelectedBookmarks = (bookmarks: string[]) => {
+    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
+      const updatedBookmarkList = { ...prevBookmarkList };
+
+      // Info: 將所有書籤的 added 屬性設為 false (20240603 - Shirley)
+      Object.values(updatedBookmarkList).forEach((bookmark: BookmarkItem) => {
+        updatedBookmarkList[bookmark.name] = { ...bookmark, added: false };
+      });
+
+      // Info: 將參數中的書籤的 added 屬性設為 true (20240603 - Shirley)
+      bookmarks.forEach((bookmarkName: string) => {
+        if (updatedBookmarkList[bookmarkName]) {
+          updatedBookmarkList[bookmarkName].added = true;
+        }
+      });
+
+      return updatedBookmarkList;
+    });
+  };
+
   // eslint-disable-next-line react/jsx-no-constructed-context-values
   const value = {
     bookmarkList: bookmarkListRef.current,
     toggleBookmark,
     addBookmarks,
     removeBookmark,
+    addSelectedBookmarks,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

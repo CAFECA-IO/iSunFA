@@ -18,6 +18,15 @@ export enum EventType {
   TRANSFER = 'transfer',
 }
 
+export enum AccountType {
+  ASSET = 'asset',
+  LIABILITY = 'liability',
+  EQUITY = 'equity',
+  INCOME = 'income',
+  EXPENSE = 'expense',
+  OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
+}
+
 export enum VoucherType {
   RECEIVE = 'receive',
   EXPENSE = 'expense',

@@ -264,7 +264,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     } = props;
 
     const bodyStyle =
-      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75 font-barlow';
+      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75 font-barlow pointer-events-auto';
 
     const toastId = id;
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
