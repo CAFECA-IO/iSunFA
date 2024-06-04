@@ -24,8 +24,8 @@ type IJournalResponseFromPrisma = {
     imageName: string;
     imageUrl: string;
     imageSize: number;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: number;
+    updatedAt: number;
   } | null;
   invoice: {
     id: number;
@@ -154,10 +154,10 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
   const contractName = journalData?.contract?.contractContent?.name;
   const { contractId } = journalData;
   const createTimestamp = journalData.ocr
-    ? timestampInSeconds(journalData.ocr.createdAt.getTime())
+    ? timestampInSeconds(journalData.ocr.createdAt)
     : null;
   const updateTimestamp = journalData.ocr
-    ? timestampInSeconds(journalData.ocr.updatedAt.getTime())
+    ? timestampInSeconds(journalData.ocr.updatedAt)
     : null;
 
   return {
