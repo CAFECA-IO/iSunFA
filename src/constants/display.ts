@@ -84,3 +84,9 @@ export enum SortOptions {
 }
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';
+
+export enum DatePickerAlign {
+  LEFT = 'left',
+  RIGHT = 'right',
+  CENTER = 'center',
+}

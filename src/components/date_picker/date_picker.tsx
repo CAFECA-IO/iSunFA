@@ -2,7 +2,7 @@
 import { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { MONTH_ABR_LIST, WEEK_LIST } from '@/constants/display';
+import { DatePickerAlign, MONTH_ABR_LIST, WEEK_LIST } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '@/interfaces/locale';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -41,6 +41,7 @@ interface IDatePickerProps {
   type: DatePickerType;
   period: IDatePeriod;
   setFilteredPeriod: Dispatch<SetStateAction<IDatePeriod>>;
+  alignCalendar?: DatePickerAlign;
   minDate?: Date;
   maxDate?: Date;
   loading?: boolean;
@@ -195,6 +196,7 @@ const DatePicker = ({
   calenderClassName,
   buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
   onClose,
+  alignCalendar,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -509,10 +511,13 @@ const DatePicker = ({
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
           className={cn(
-            'invisible absolute top-16 z-20 grid w-[300px] -translate-y-10 grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
+            'invisible absolute top-16 z-20 grid w-[300px] grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
             calenderClassName,
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
+              'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,
+              '-translate-x-[50%]': alignCalendar === DatePickerAlign.CENTER,
+              '-translate-x-[90%]': alignCalendar === DatePickerAlign.RIGHT,
             }
           )}
         >
