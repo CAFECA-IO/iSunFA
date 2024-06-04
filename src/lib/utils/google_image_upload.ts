@@ -21,7 +21,7 @@ export function generateDestinationFileNameInGoogleBucket(filePath: string) {
 }
 
 /**
- * Uploads a file to Google Cloud Storage
+ * Uploads a file to Google Cloud Storage, this is an factory function that returns a function that can be called to upload the file
  * @param {string} filePath - Path to local file that will be uploaded
  * @param {string} destFileName - the file path(file name included) in the bucket (e.g. 'folder1/folder2/filename.jpg', used to add public view permission)
  * @param {number} [generationMatchPrecondition=0] - the generation number of the file to be uploaded, used to prevent overwriting a file that has been updated since the last download
