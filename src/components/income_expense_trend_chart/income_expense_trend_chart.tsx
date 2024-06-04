@@ -36,7 +36,7 @@ const LineChart = ({ data }: LineChartProps) => {
       const MOBILE_WIDTH = 450;
 
       if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 250;
+        const presentWidth = 290 + (windowWidth - 375) * 1.02;
         const presentHeight = 300;
 
         setChartWidth(presentWidth);
@@ -257,13 +257,10 @@ const IncomeExpenseTrendChart = () => {
   }, [getSuccess, getCode, getError, profitMarginTrendInPeriodData]);
 
   const displayedDataSection = (
-    <div
-      id="displayedDataSection"
-      className="flex h-500px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
-    >
+    <div className="flex h-500px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
-        <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">
+        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+          <div className="lg:flex-1">
             <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -291,11 +288,14 @@ const IncomeExpenseTrendChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>Financial Overview (Income vs. Expenditure)</p>
+              <p>
+                Financial Overview <br className="flex lg:hidden" />
+                (Income vs. Expenditure)
+              </p>
             </div>
           </div>
 
-          <div className="justify-end">
+          <div className="hidden justify-end lg:flex">
             <Tooltip>
               <p>
                 A message which appears when a cursor is positioned over an icon, image, hyperlink,
@@ -307,25 +307,11 @@ const IncomeExpenseTrendChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-0 md:flex-row">
+        <div className="flex flex-row justify-between max-md:space-y-2 md:mx-0 md:flex-row">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             2024
           </div>
-          <div className="flex space-x-2 md:space-x-5">
-            {/* <div className="">
-              <Button
-                variant={'tertiaryOutline'}
-                className={cn(
-                  selectedPeriod === Period.WEEK
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
-                    : ''
-                )}
-                size={'medium'}
-                onClick={() => periodChangeHandler(Period.WEEK)}
-              >
-                Week
-              </Button>
-            </div> */}
+          <div className="flex space-x-5 md:space-x-5">
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
@@ -337,7 +323,10 @@ const IncomeExpenseTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
-                Month
+                <p>
+                  <span className="lg:hidden">M</span>
+                  <span className="hidden lg:inline">Month</span>{' '}
+                </p>
               </Button>
             </div>
             <div className="">
@@ -351,7 +340,10 @@ const IncomeExpenseTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
-                Year
+                <p>
+                  <span className="lg:hidden">Y</span>
+                  <span className="hidden lg:inline">Year</span>{' '}
+                </p>
               </Button>
             </div>
           </div>
