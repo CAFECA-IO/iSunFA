@@ -102,7 +102,9 @@ export async function generateUserIcon(name: string) {
     await saveUserIconToFile(iconSvg, filepath);
 
     const filePathInGoogleBucket = generateDestinationFileNameInGoogleBucket(filepath);
-    iconUrl = await uploadGoogleFile(filepath, filePathInGoogleBucket)();
+
+    const uploadGoogle = uploadGoogleFile(filepath, filePathInGoogleBucket);
+    iconUrl = await uploadGoogle();
   } catch (error) {
     // Info: For debugging purpose
     // eslint-disable-next-line no-console

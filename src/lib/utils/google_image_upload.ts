@@ -1,4 +1,4 @@
-import { GOOGLE_CREDENTIALS, GOOGLE_PROJECT_ID, GOOGLE_STORAGE_BUCKET_NAME, GOOGLE_UPLOAD_FOLDER } from "@/constants/google";
+import { GOOGLE_CREDENTIALS, GOOGLE_PROJECT_ID, GOOGLE_STORAGE_BUCKET_NAME, GOOGLE_STORAGE_BUCKET_URL, GOOGLE_UPLOAD_FOLDER } from "@/constants/google";
 import { Storage } from "@google-cloud/storage";
 import path from "path";
 
@@ -6,8 +6,6 @@ export const googleStorage = new Storage({
     projectId: GOOGLE_PROJECT_ID,
     credentials: GOOGLE_CREDENTIALS,
   });
-
-export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 
 /**
  * Generates a destination file path in Google Cloud Storage
@@ -20,6 +18,9 @@ export function generateDestinationFileNameInGoogleBucket(filePath: string) {
   return storePath;
 }
 
+  // eslint-disable-next-line no-console
+console.log(GOOGLE_STORAGE_BUCKET_NAME);
+export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 /**
  * Uploads a file to Google Cloud Storage, this is an factory function that returns a function that can be called to upload the file
  * @param {string} filePath - Path to local file that will be uploaded
@@ -32,10 +33,16 @@ export function uploadGoogleFile(filePath: string, destFileName: string, generat
       destination: destFileName,
       preconditionOpts: { ifGenerationMatch: generationMatchPrecondition },
   };
-  const url = `${GOOGLE_STORAGE_BUCKET_NAME}${destFileName}`;
+  const url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   return async function uploadFile() {
+    try {
       await googleBucket.upload(filePath, options);
       await googleBucket.file(destFileName).makePublic();
       return url;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to upload file to Google Cloud Storage', error);
+      return '';
+    }
   };
 }
