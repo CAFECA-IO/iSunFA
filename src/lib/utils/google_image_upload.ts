@@ -1,28 +1,41 @@
+import { GOOGLE_CREDENTIALS, GOOGLE_PROJECT_ID, GOOGLE_STORAGE_BUCKET_NAME, GOOGLE_UPLOAD_FOLDER } from "@/constants/google";
 import { Storage } from "@google-cloud/storage";
+import path from "path";
 
 export const googleStorage = new Storage({
-    projectId: process.env.GOOGLE_PROJECT_ID,
-    credentials: JSON.parse(process.env.GOOGLE_SERVICE_KEY || '{}'),
+    projectId: GOOGLE_PROJECT_ID,
+    credentials: GOOGLE_CREDENTIALS,
   });
 
-  export const googleBucket = googleStorage.bucket(process.env.GOOGLE_STORAGE_BUCKET_NAME || '');
+export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 
-  /**
-   * Uploads a file to Google Cloud Storage
-   * @param {string} filePath - Path to local file that will be uploaded
-   * @param {string} destFileName - the file path(file name included) in the bucket (e.g. 'folder1/folder2/filename.jpg', used to add public view permission)
-   * @param {number} [generationMatchPrecondition=0] - the generation number of the file to be uploaded, used to prevent overwriting a file that has been updated since the last download
-   * @returns {string} - the public URL of the uploaded file
-   */
-  export function uploadGoogleFile(filePath: string, destFileName: string, generationMatchPrecondition: number = 0) {
-    const options = {
+/**
+ * Generates a destination file path in Google Cloud Storage
+ * @param {string} filePath - the path to the file that will be uploaded, it can be "path/to/file.jpg" or "file.jpg"
+ * @returns {string} - the destination file path in Google Cloud Storage
+ */
+export function generateDestinationFileNameInGoogleBucket(filePath: string) {
+  const name = path.basename(filePath);
+  const storePath = `${GOOGLE_UPLOAD_FOLDER}/${name}`;
+  return storePath;
+}
+
+/**
+ * Uploads a file to Google Cloud Storage
+ * @param {string} filePath - Path to local file that will be uploaded
+ * @param {string} destFileName - the file path(file name included) in the bucket (e.g. 'folder1/folder2/filename.jpg', used to add public view permission)
+ * @param {number} [generationMatchPrecondition=0] - the generation number of the file to be uploaded, used to prevent overwriting a file that has been updated since the last download
+ * @returns {string} - the public URL of the uploaded file
+ */
+export function uploadGoogleFile(filePath: string, destFileName: string, generationMatchPrecondition: number = 0) {
+  const options = {
       destination: destFileName,
       preconditionOpts: { ifGenerationMatch: generationMatchPrecondition },
-    };
-    const url = `https://storage.googleapis.com/${process.env.GOOGLE_STORAGE_BUCKET_NAME ? process.env.GOOGLE_STORAGE_BUCKET_NAME + '/' : ''}${destFileName}`;
-    return async function uploadFile() {
+  };
+  const url = `${GOOGLE_STORAGE_BUCKET_NAME}${destFileName}`;
+  return async function uploadFile() {
       await googleBucket.upload(filePath, options);
       await googleBucket.file(destFileName).makePublic();
       return url;
-    };
-  }
+  };
+}
