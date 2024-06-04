@@ -331,7 +331,7 @@ const LaborCostChart = () => {
       </div>
 
       <div className="mt-5">
-        <div className="mx-0 flex flex-row justify-center gap-2 max-md:space-y-2 md:flex-row md:justify-start md:gap-5">
+        <div className="mx-0 flex flex-row justify-center gap-3 md:justify-start md:gap-5">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             {displayedDateSection}{' '}
           </div>
@@ -349,7 +349,6 @@ const LaborCostChart = () => {
         </div>
         <div className="relative">
           {' '}
-          {/* Centralized the text */}
           <div className="absolute left-1/2 top-5 -translate-x-1/2 font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
             Onboarding Projects
           </div>

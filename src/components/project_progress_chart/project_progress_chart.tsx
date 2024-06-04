@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { DEFAULT_DISPLAYED_COMPANY_ID, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  DatePickerAlign,
+  MILLISECONDS_IN_A_SECOND,
+} from '@/constants/display';
 // import { TranslateFunction } from '@/interfaces/locale';
 import Tooltip from '@/components/tooltip/tooltip';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
@@ -16,6 +20,7 @@ import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
+import { LayoutAssertion } from '@/interfaces/layout_assertion';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -32,6 +37,8 @@ interface ColumnChartProps {
 }
 
 const ColumnChart = ({ data }: ColumnChartProps) => {
+  const { layoutAssertion } = useGlobalCtx();
+
   const options: ApexOptions = {
     chart: {
       id: 'project-progress-chart',
@@ -44,7 +51,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
     plotOptions: {
       bar: {
-        horizontal: false,
+        horizontal: layoutAssertion === LayoutAssertion.MOBILE,
         columnWidth: '30%',
       },
     },
@@ -163,7 +170,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler, layoutAssertion } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -211,6 +218,9 @@ const ProjectProgressChart = () => {
 
     return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
   })();
+
+  const alignCalendarPart =
+    layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
   useEffect(() => {
     if (listSuccess && projectProgress) {
@@ -294,17 +304,18 @@ const ProjectProgressChart = () => {
       </div>
 
       <div className="mt-5">
-        <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
+        <div className="mx-0 flex flex-row justify-center gap-3 md:justify-start md:gap-5">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
-            {displayedDateSection}
+            {displayedDateSection}{' '}
           </div>
-          <div className="mt-3 lg:mt-0">
+          <div className="w-10">
             <DatePicker
               type={DatePickerType.ICON_CHOOSE_DATE}
               minDate={minDate}
               maxDate={maxDate}
               period={period}
               setFilteredPeriod={setPeriod}
+              alignCalendar={alignCalendarPart}
             />
           </div>
         </div>
