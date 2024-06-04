@@ -1,36 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/account/index';
-import prisma from '@/client';
+import { prismaMock } from '@/prisma_mock';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
 const testAccountId = -1;
-beforeAll(async () => {
-  await prisma.account.create({
-    data:
-      {
-        id: testAccountId,
-        type: 'asset',
-        liquidity: true,
-        account: 'cash',
-        code: '1103-1',
-        name: 'Sun Bank',
-        createdAt: 1000000000,
-        updatedAt: 1000000000,
-      } });
-});
-
-afterAll(async () => {
-  await prisma.account.delete(
-    {
-      where: {
-        id: testAccountId,
-      },
-    }
-  ).catch();
-  await prisma.$disconnect();
-});
 
 beforeEach(() => {
   req = {
@@ -45,6 +20,19 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  prismaMock.account.findMany.mockResolvedValue([
+    {
+      id: testAccountId,
+      type: 'asset',
+      liquidity: true,
+      account: 'cash',
+      code: '1103-1',
+      name: 'Sun Bank',
+      createdAt: 1000000000,
+      updatedAt: 1000000000,
+    },
+  ]);
 });
 
 afterEach(() => {

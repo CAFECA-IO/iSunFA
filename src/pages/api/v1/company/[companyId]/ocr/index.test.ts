@@ -3,6 +3,7 @@ import formidable from 'formidable';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { promises as fs } from 'fs';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { prismaMock } from '@/prisma_mock';
 
 jest.mock('./index', () => {
   return {
@@ -119,13 +120,108 @@ describe('/OCR/index.ts', () => {
   });
 
   // Info Murky (20240424) This function is still editing
-  // describe("_getPayloadFromResponseJSON", () => {
-  //   it("should return payload", async () => {
-  //     const mockResponse = { payload: 'testPayload' };
-  //     const promiseJson = jest.fn().mockResolvedValue(mockResponse);
+  describe("getPayloadFromResponseJSON", () => {
+    it("should return payload", async () => {
+      const mockResponse:{
+        payload?: unknown;
+      } = { payload: 'testPayload' };
+      const promiseJson: Promise<{ payload?: unknown; } | null> = new Promise((resolve) => {
+        resolve(mockResponse);
+      });
 
-  //     // const payload = await module._getPayloadFromResponseJSON(promiseJson);
-  //     expect(payload).toEqual('testPayload');
-  //   })
-  // })
+      const payload = await module.getPayloadFromResponseJSON(promiseJson);
+      expect(payload).toEqual('testPayload');
+    });
+
+    it("should throw error when responseJSON is null", async () => {
+      const promiseJson: Promise<{ payload?: unknown; } | null> = new Promise((resolve) => {
+        resolve(null);
+      });
+
+      await expect(module.getPayloadFromResponseJSON(promiseJson)).rejects.toThrow(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
+    });
+  });
+
+  describe("postImageToAICH", () => {
+    let mockImages: MockProxy<formidable.Files<"image">>;
+    let mockImage: MockProxy<formidable.File>;
+    const mockPath = '/test';
+    const mockMimetype = 'image/png';
+    const mockFileContent = Buffer.from('mock image content');
+    beforeEach(() => {
+      mockImage = mock<formidable.File>();
+      mockImage.filepath = mockPath;
+      mockImage.mimetype = mockMimetype;
+      mockImage.size = 1000;
+      (fs.readFile as jest.Mock).mockResolvedValue(mockFileContent);
+
+      // help me mock formidable.Files<"image">
+
+      mockImages = mock<formidable.Files<"image">>(
+        {
+          image: [mockImage],
+        }
+      );
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("should throw error when images is empty", async () => {
+      mockImages = mock<formidable.Files<"image">>(
+        {
+          image: [],
+        }
+      );
+      await expect(module.postImageToAICH(mockImages)).rejects.toThrow(STATUS_MESSAGE.INVALID_INPUT_FORM_DATA_IMAGE);
+    });
+
+    it("should return resultJson", async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ payload: 'testPayload' }),
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const resultJson = await module.postImageToAICH(mockImages);
+
+      const resultJsonExpect = expect.arrayContaining([
+        expect.objectContaining({
+          resultStatus: expect.any(String),
+          imageUrl: expect.any(String),
+          imageName: expect.any(String),
+          imageSize: expect.any(Number),
+        }),
+      ]);
+
+      expect(resultJson).toEqual(resultJsonExpect);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/ocr/upload'),
+        expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
+      );
+    });
+  });
+
+  describe("createOrFindCompanyInPrisma", () => {
+    it("should create company in prisma", async () => {
+      const companyId = 1;
+      const company = {
+        id: companyId,
+        code: 'TEST_OCR',
+        name: 'Company Name',
+        regional: 'Regional Name',
+        startDate: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      };
+
+      prismaMock.company.findUnique.mockResolvedValue(null);
+      prismaMock.company.create.mockResolvedValue(company);
+
+      await expect(module.createOrFindCompanyInPrisma(companyId)).resolves.toEqual(company);
+    });
+  });
 });

@@ -83,7 +83,7 @@ export async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload
 
 // Info (20240521-Murky) 回傳目前還是array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-async function postImageToAICH(files: formidable.Files): Promise<
+export async function postImageToAICH(files: formidable.Files): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
@@ -117,7 +117,7 @@ async function postImageToAICH(files: formidable.Files): Promise<
   return resultJson;
 }
 
-async function createOrFindCompanyInPrisma(companyId: number) {
+export async function createOrFindCompanyInPrisma(companyId: number) {
   let company = await prisma.company.findUnique({
     where: { id: companyId },
     select: { id: true },
