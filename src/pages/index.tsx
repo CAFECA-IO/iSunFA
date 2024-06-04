@@ -5,9 +5,6 @@ import LandingNavBar from '@/components/landing_nav_bar/landing_nav_bar';
 import { ILocale } from '@/interfaces/locale';
 import LandingPageBody from '@/components/landing_page_body/landing_page_body';
 
-import { GOOGLE_STORAGE_BUCKET_NAME } from '@/constants/google';
-// eslint-disable-next-line no-console
-console.log("GOOGLE_STORAGE_BUCKET_NAME", GOOGLE_STORAGE_BUCKET_NAME);
 function LandingPage() {
   return (
     <>
