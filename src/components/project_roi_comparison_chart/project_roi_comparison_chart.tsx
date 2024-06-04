@@ -5,6 +5,7 @@ import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
 import {
   DEFAULT_DISPLAYED_COMPANY_ID,
+  DatePickerAlign,
   ITEMS_PER_PAGE_ON_DASHBOARD,
   MILLISECONDS_IN_A_SECOND,
 } from '@/constants/display';
@@ -20,6 +21,7 @@ import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
+import { LayoutAssertion } from '@/interfaces/layout_assertion';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -33,6 +35,8 @@ interface ColumnChartProps {
 }
 
 const ColumnChart = ({ data }: ColumnChartProps) => {
+  const { layoutAssertion } = useGlobalCtx();
+
   const options: ApexOptions = {
     chart: {
       id: 'project-ROI-chart',
@@ -45,7 +49,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
     plotOptions: {
       bar: {
-        horizontal: false,
+        horizontal: layoutAssertion === LayoutAssertion.MOBILE,
         columnWidth: '55%',
       },
     },
@@ -54,7 +58,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
     stroke: {
       show: true,
-      width: 2,
+      width: layoutAssertion === LayoutAssertion.MOBILE ? 5 : 2,
       colors: ['transparent'], // Info: 讓每一個欄位裡面的 column 有空隙的方式 (20240419 - Shirley)
     },
 
@@ -160,7 +164,7 @@ const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
   const { selectedCompany } = useUserCtx();
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler, layoutAssertion } = useGlobalCtx();
 
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
@@ -187,6 +191,9 @@ const ProjectRoiComparisonChart = () => {
 
     return startDateStr === endDateStr ? `${startDateStr}` : `${startDateStr} ~ ${endDateStr}`;
   })();
+
+  const alignCalendarPart =
+    layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
   const {
     trigger: listProjectProfitComparison,
@@ -293,10 +300,10 @@ const ProjectRoiComparisonChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="flex h-630px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
+    <div className="flex h-630px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
       <div>
-        <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">
+        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+          <div className="lg:flex-1">
             <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -319,12 +326,14 @@ const ProjectRoiComparisonChart = () => {
                 ></path>
               </svg>
               <p className="text-base lg:text-sm xl:text-base">
-                Project-wise Income vs. Expense Comparison Graph
+                Project-wise <br className="lg:hidden" />
+                <span className="lg:hidden">Income vs. Expense</span>
+                <span className="hidden lg:inline">Income vs. Expense Comparison Graph</span>
               </p>
             </div>
           </div>
 
-          <div className="justify-end">
+          <div className="hidden justify-end lg:flex">
             <Tooltip>
               <p>
                 A message which appears when a cursor is positioned over an icon, image, hyperlink,
@@ -336,20 +345,23 @@ const ProjectRoiComparisonChart = () => {
       </div>
 
       <div className="mt-5">
-        <div className="flex w-full flex-col items-start justify-start md:flex-row md:items-center md:space-x-4">
-          <div className="my-3 flex w-200px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-0 md:my-auto lg:w-fit">
-            {displayedDateSection}
-          </div>
+        <div className="flex w-full flex-col items-start justify-start lg:flex-row lg:items-center lg:space-x-4">
+          <div className="flex w-full flex-row justify-center lg:justify-start">
+            <div className="my-3 flex w-150px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-0 md:my-auto lg:w-fit">
+              {displayedDateSection}
+            </div>
 
-          {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
-          <div className="hidden lg:block">
-            <DatePicker
-              type={DatePickerType.ICON}
-              minDate={minDate}
-              maxDate={maxDate}
-              period={period}
-              setFilteredPeriod={setPeriod}
-            />
+            {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
+            <div className="">
+              <DatePicker
+                type={DatePickerType.ICON}
+                minDate={minDate}
+                maxDate={maxDate}
+                period={period}
+                setFilteredPeriod={setPeriod}
+                alignCalendar={alignCalendarPart}
+              />
+            </div>
           </div>
 
           {/* Info: prev and next button (20240419 - Shirley) */}
@@ -375,7 +387,7 @@ const ProjectRoiComparisonChart = () => {
 
           {/* Info: ----- mobile version (20240419 - Shirley) ----- */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
-            <div>
+            {/* <div>
               <DatePicker
                 type={DatePickerType.ICON}
                 minDate={minDate}
@@ -383,10 +395,11 @@ const ProjectRoiComparisonChart = () => {
                 period={period}
                 setFilteredPeriod={setPeriod}
               />
-            </div>
+            </div> */}
 
             {/* Info: prev and next button (20240419 - Shirley) */}
-            <div className="flex flex-1 justify-end space-x-2">
+            {/* Deprecated: No relevant function in the latest mockup (20240618 - Shirley) */}
+            {/* <div className="flex flex-1 justify-end space-x-2">
               <Button
                 disabled={currentPage === 1}
                 onClick={goToPrevPage}
@@ -404,12 +417,12 @@ const ProjectRoiComparisonChart = () => {
               >
                 <AiOutlineRight size={15} />
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
 
-      <div className="mt-5 max-md:-ml-3 md:mt-5">
+      <div className="mt-0 max-md:-ml-3 lg:mt-5">
         <ColumnChart data={data} />
       </div>
     </div>
