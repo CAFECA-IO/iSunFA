@@ -346,7 +346,7 @@ const ProjectRoiComparisonChart = () => {
 
       <div className="mt-5">
         <div className="flex w-full flex-col items-start justify-start lg:flex-row lg:items-center lg:space-x-4">
-          <div className="flex w-full flex-row justify-center lg:justify-start">
+          <div className="flex w-full flex-row justify-center gap-5 lg:justify-start">
             <div className="my-3 flex w-150px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-0 md:my-auto lg:w-fit">
               {displayedDateSection}
             </div>
