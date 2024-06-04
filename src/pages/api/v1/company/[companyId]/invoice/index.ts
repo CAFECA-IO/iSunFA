@@ -191,12 +191,16 @@ async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoice) {
 
   try {
     const result = await prisma.$transaction(async () => {
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
+
       // Depreciate ( 20240522 - Murky ) For demo purpose, create company if not exist
       const payment = await createPaymentInPrisma(paymentData);
 
+      const date = timestampInSeconds(invoiceData.date);
       const invoice = await prisma.invoice.create({
         data: {
-          date: timestampInSeconds(invoiceData.date),
+          date,
           eventType: invoiceData.eventType,
           paymentReason: invoiceData.paymentReason,
           description: invoiceData.description,
@@ -206,15 +210,17 @@ async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoice) {
               id: payment.id,
             },
           },
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       });
 
-      return invoice.id;
-    });
-    return result;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
+    return invoice.id;
+  });
+  return result;
+} catch (error) {
+  throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+}
 }
 
 async function updateInvoiceInPrisma(
@@ -274,6 +280,8 @@ async function createJournalInPrisma(
   companyId: number
 ) {
   try {
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     const data: Prisma.journalCreateInput = {
       company: {
         connect: {
@@ -286,6 +294,8 @@ async function createJournalInPrisma(
         },
       },
       aichResultId,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     };
 
     if (projectId !== null) {
@@ -469,7 +479,7 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData< | IPostApiResponseType>>
+  res: NextApiResponse<IResponseData<IPostApiResponseType>>
 ) {
   try {
     const { companyId } = req.query;

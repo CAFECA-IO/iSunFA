@@ -153,6 +153,8 @@ async function createOcrInPrisma(aichResult: {
   imageName: string;
   imageSize: number;
 }) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   try {
     const ocrData = await prisma.ocr.create({
       data: {
@@ -160,6 +162,8 @@ async function createOcrInPrisma(aichResult: {
         imageUrl: aichResult.imageUrl,
         imageSize: aichResult.imageSize,
         status: aichResult.resultStatus.status,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
     });
 
@@ -180,6 +184,8 @@ async function upsertJournalInPrisma(
   ocrId: number
 ) {
   try {
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     await prisma.journal.upsert({
       where: {
         aichResultId: aichResult.resultStatus.resultId,
@@ -188,6 +194,8 @@ async function upsertJournalInPrisma(
         companyId,
         ocrId,
         aichResultId: aichResult.resultStatus.resultId,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
       update: {
         ocrId,

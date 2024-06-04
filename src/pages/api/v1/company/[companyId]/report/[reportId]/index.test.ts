@@ -55,22 +55,24 @@ describe('getReportById API Handler Tests', () => {
     req.query = { reportId };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          reportTypesName: {
-            id: expect.any(String),
-            name: expect.any(String),
-          },
-          tokenContract: expect.any(String),
-          tokenId: expect.any(String),
-          reportLink: expect.any(String),
-        })
+
+    const aa = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expect.objectContaining({
+        reportTypesName: {
+          id: expect.any(String),
+          name: expect.any(String),
+        },
+        tokenContract: expect.any(String),
+        tokenId: expect.any(String),
+        reportLink: expect.any(String),
       })
+    });
+    expect(res.json).toHaveBeenCalledWith(
+      aa
     );
   });
   it('should return error if method is not GET', async () => {

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, pageToOffset, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import prisma from '@/client';
@@ -27,7 +27,7 @@ type ApiResponseType = {
 
 type PrismaReturnType = {
   id: number;
-  createdAt: Date;
+  createdAt: number;
   invoice: {
     eventType: string;
     description: string;
@@ -62,8 +62,8 @@ async function getJournals(
   search: string | undefined = undefined,
   sort: string | undefined = undefined
 ) {
-  const startDateInMilliSecond = startDate ? new Date(timestampInMilliSeconds(startDate)) : undefined;
-  const endDateInMilliSecond = endDate ? new Date(timestampInMilliSeconds(endDate)) : undefined;
+  const startDateInMilliSecond = startDate ? timestampInSeconds(startDate) : undefined;
+  const endDateInMilliSecond = endDate ? timestampInSeconds(endDate) : undefined;
 
   const offset = pageToOffset(page, limit);
   try {
@@ -168,7 +168,7 @@ function formatJournals(journalData: PrismaReturnType) {
   const journals = journalData.map((journal) => {
     return {
       id: journal.id,
-      date: timestampInSeconds(journal.createdAt.getTime()),
+      date: journal.createdAt,
       type: journal.invoice?.eventType,
       particulars: journal.invoice?.description,
       fromTo: journal.invoice?.vendorOrSupplier,
