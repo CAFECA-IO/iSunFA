@@ -166,22 +166,24 @@ describe('generatedReports API Handler Tests', () => {
     const responsePayload = res.json.mock.calls[0][0];
     responsePayload.payload.forEach((item: object) => {
       if ('project' in item && item.project !== null) {
-        expect(item.project).toEqual(expect.objectContaining({
+        const projectInfo = {
           id: expect.any(String),
           name: expect.any(String),
           code: expect.any(String),
-        }));
+        };
+        expect(item.project).toEqual(projectInfo);
       }
     });
     expect(res.status).toHaveBeenCalledWith(200);
-    const expectedStructure = {
+    const period = {
+      startTimestamp: expect.any(Number),
+      endTimestamp: expect.any(Number),
+    };
+    const expectedStructure = expect.objectContaining({
       id: expect.any(String),
       name: expect.any(String),
       createdTimestamp: expect.any(Number),
-      period: expect.objectContaining({
-        startTimestamp: expect.any(Number),
-        endTimestamp: expect.any(Number),
-      }),
+      period: expect.objectContaining(period),
       project: expect.anything(),
       reportType: expect.any(String),
       type: expect.any(String),
@@ -189,14 +191,14 @@ describe('generatedReports API Handler Tests', () => {
       downloadLink: expect.any(String),
       blockchainExplorerLink: expect.any(String),
       evidenceId: expect.any(String)
-    };
+    });
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('200'),
         message: expect.any(String),
-        payload: expect.arrayContaining([expect.objectContaining(expectedStructure)]),
+        payload: expect.arrayContaining([expectedStructure]),
       })
     );
     await prisma.report.deleteMany({

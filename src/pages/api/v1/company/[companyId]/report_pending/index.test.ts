@@ -102,26 +102,27 @@ describe('pendingReports API Handler Tests', () => {
     req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    const expectedStructure = {
+    const period = {
+      startTimestamp: expect.any(Number),
+      endTimestamp: expect.any(Number),
+    };
+    const expectedStructure = expect.objectContaining({
       id: expect.any(String),
       name: expect.any(String),
       createdTimestamp: expect.any(Number),
-      period: expect.objectContaining({
-        startTimestamp: expect.any(Number),
-        endTimestamp: expect.any(Number),
-      }),
+      period: expect.objectContaining(period),
       reportType: expect.any(String),
       type: expect.any(String),
       paused: expect.any(Boolean),
       remainingSeconds: expect.any(Number),
-    };
+    });
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
         success: expect.any(Boolean),
         code: expect.stringContaining('200'),
         message: expect.any(String),
-        payload: expect.arrayContaining([expect.objectContaining(expectedStructure)]),
+        payload: expect.arrayContaining([expectedStructure]),
       })
     );
     await prisma.report.deleteMany({
