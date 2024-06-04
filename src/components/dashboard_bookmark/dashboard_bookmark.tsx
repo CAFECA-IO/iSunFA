@@ -124,7 +124,7 @@ const DashboardBookmark = () => {
           key={key}
           onClick={() => buttonSelectedHandler(bookmarkList[key].name)}
           type="button"
-          className={`flex justify-center gap-2 rounded-full border px-5 py-5 lg:px-8 lg:py-2 ${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'}`}
+          className={`flex justify-center gap-2 rounded-full border px-3 py-3 lg:px-8 lg:py-2 ${value.tempSelectedOnSection ? 'border-tertiaryBlue2 bg-lightGray3 text-secondaryBlue hover:bg-tertiaryBlue2/50' : 'border-transparent bg-tertiaryBlue text-white hover:bg-tertiaryBlue2'}`}
         >
           <div className="my-auto flex items-center justify-center">{bookmarkList[key].icon}</div>
           <div className="hidden text-lg font-medium leading-7 tracking-normal lg:inline">
@@ -140,7 +140,7 @@ const DashboardBookmark = () => {
         size={'medium'}
         variant={'tertiaryOutline'}
         onClick={editBtnClickHandler}
-        className="my-auto flex flex-col justify-center rounded-full p-4"
+        className="my-auto flex flex-col justify-center rounded-full p-2 lg:p-4"
       >
         {' '}
         <svg
@@ -165,7 +165,7 @@ const DashboardBookmark = () => {
       <Button
         size={'medium'}
         onClick={removeBtnClickHandler}
-        className={`my-auto flex flex-col justify-center rounded-full border border-solid border-tertiaryBlue bg-tertiaryBlue p-4 text-tertiaryBlue hover:bg-tertiaryBlue/80`}
+        className={`my-auto flex flex-col justify-center rounded-full border border-solid border-tertiaryBlue bg-tertiaryBlue p-2 text-tertiaryBlue hover:bg-tertiaryBlue/80 lg:p-4`}
       >
         <div className="flex items-center justify-center">
           <svg
@@ -219,7 +219,7 @@ const DashboardBookmark = () => {
       <Button
         size={'medium'}
         onClick={addBtnClickHandler}
-        className={`my-auto flex flex-col justify-center rounded-full border border-solid border-tertiaryBlue bg-tertiaryBlue p-4 text-white hover:bg-tertiaryBlue/80`}
+        className={`my-auto flex flex-col justify-center rounded-full border border-solid border-tertiaryBlue bg-tertiaryBlue p-2 text-white hover:bg-tertiaryBlue/80 lg:p-4`}
       >
         <div className="flex items-center justify-center">
           {tempSelectedList.length > 0 ? (
@@ -290,7 +290,7 @@ const DashboardBookmark = () => {
   return (
     <div className="w-full rounded-full bg-white">
       <div className="flex flex-wrap items-center justify-between overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
-        <div className="relative inline-flex h-20 flex-1 items-center overflow-hidden">
+        <div className="relative inline-flex h-16 flex-1 items-center overflow-hidden lg:h-20">
           <div
             ref={containerRef}
             className="inline-flex items-center gap-5 overflow-x-auto scroll-smooth px-20px py-14px"
@@ -316,7 +316,7 @@ const DashboardBookmark = () => {
           </button>
         </div>
         {/* Info: remove or add button (20240411 - Shirley) */}
-        <div className="w-100px rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px">
+        <div className="rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px lg:w-100px">
           {displayedRemoveOrAddButton}
         </div>
       </div>

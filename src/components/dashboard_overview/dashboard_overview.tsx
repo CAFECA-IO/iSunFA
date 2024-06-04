@@ -31,7 +31,7 @@ const DashboardOverview = () => {
       : +dashboardOverview.topProjectRoi < 0
         ? `${dashboardOverview.topProjectRoi}`
         : `0`;
-  const displayedpreLaunchProject = dashboardOverview.preLaunchProject ?? `0`;
+  const displayedPreLaunchProject = dashboardOverview.preLaunchProject ?? `0`;
 
   React.useEffect(() => {
     if (getSuccess && profitInsight) {
@@ -54,7 +54,7 @@ const DashboardOverview = () => {
     <div className="grid grid-cols-3 gap-5 px-0 max-md:max-w-full max-md:grid-cols-1 max-md:gap-0">
       {/* Info: 區塊一 (20240523 - Shirley) */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
-        <div className="flex max-h-84px justify-between rounded-3xl bg-surface-support-soft-maple px-5 py-4 max-md:mt-4 lg:min-h-180px lg:flex-col lg:space-x-2">
+        <div className="flex max-h-84px justify-between gap-2 rounded-3xl bg-surface-support-soft-maple px-5 py-4 max-md:mt-4 lg:min-h-180px lg:flex-col lg:space-x-2">
           <div className="flex items-center gap-2 lg:items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -98,7 +98,7 @@ const DashboardOverview = () => {
 
       {/* Info: 區塊二 (20240523 - Shirley) */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
-        <div className="flex max-h-84px justify-between rounded-3xl bg-surface-support-soft-rose px-5 py-4 max-md:mt-4 lg:min-h-180px lg:flex-col lg:space-x-2">
+        <div className="flex max-h-84px justify-between gap-2 rounded-3xl bg-surface-support-soft-rose px-5 py-4 max-md:mt-4 lg:min-h-180px lg:flex-col lg:space-x-2">
           <div className="flex items-center gap-2 lg:items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -144,7 +144,7 @@ const DashboardOverview = () => {
 
       {/* Info: 區塊三 (20240523 - Shirley) */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
-        <div className="flex max-h-84px justify-between rounded-3xl bg-surface-support-soft-indigo px-5 py-4 max-md:mt-4 lg:min-h-180px lg:flex-col lg:space-x-2">
+        <div className="flex max-h-84px justify-between gap-2 rounded-3xl bg-surface-support-soft-indigo px-5 py-4 max-md:mt-4 lg:min-h-180px lg:flex-col lg:space-x-2">
           <div className="flex items-center gap-1 lg:items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -168,8 +168,8 @@ const DashboardOverview = () => {
               Pre-launch Projects
             </div>
           </div>
-          <div className="mr-12 self-center text-center text-5xl font-semibold leading-52px text-text-neutral-solid-dark md:mr-0 lg:mb-3">
-            {displayedpreLaunchProject}
+          <div className="mr-6 self-center text-center text-5xl font-semibold leading-52px text-text-neutral-solid-dark md:mr-0 lg:mb-3">
+            {displayedPreLaunchProject}
           </div>
         </div>
       </div>
