@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
+  timestampInMilliSeconds,
   timestampInSeconds,
   transformBytesToFileSizeString,
 } from '@/lib/utils/common';
@@ -48,9 +49,9 @@ async function getUnprocessJournal(companyId: number) {
   }
 }
 
-function calculateProgress(createdAt: Date, status: ProgressStatus) {
+function calculateProgress(createdAt: number, status: ProgressStatus) {
   const currentTime = new Date();
-  const diffTime = currentTime.getTime() - createdAt.getTime();
+  const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
   let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
 
   if (process > 99) {
@@ -117,7 +118,7 @@ export default async function handler(
               imageSize: transformBytesToFileSizeString(journalData.ocr.imageSize),
               progress,
               status,
-              createdAt: timestampInSeconds(journalData.createdAt.getTime()),
+              createdAt: timestampInSeconds(journalData.createdAt),
             } as IUnprocessedJournal;
             return result;
           })
