@@ -88,11 +88,11 @@ describe('UpdateAnEmployee API Handler Tests', () => {
     req.body = {
       name: 'Tiger',
       salary: 75000,
-      department: 'Engineering',
-      start_date: '2021-08-10',
+      departmentId: 2,
+      startDate: '2021-08-10',
       bonus: 5100,
-      salary_payment_mode: 'Cash',
-      pay_frequency: 'Monthly',
+      salaryPayMode: 'Cash',
+      payFrequency: 'Monthly',
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);

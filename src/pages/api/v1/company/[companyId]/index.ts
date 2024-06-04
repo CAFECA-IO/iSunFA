@@ -51,7 +51,7 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
-      await prisma.userCompanyRole.deleteMany({
+      await prisma.admin.deleteMany({
         where: {
           companyId: companyIdNum,
         },

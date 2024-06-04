@@ -25,7 +25,7 @@ export default async function handler(
           name: true,
         },
       });
-      const cashflowLists = await prisma.cashflow.groupBy({
+      const cashflowLists = await prisma.incomeExpense.groupBy({
         by: ['projectId'],
         _sum: {
           income: true,

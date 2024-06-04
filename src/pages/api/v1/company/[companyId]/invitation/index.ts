@@ -25,7 +25,8 @@ async function createInvitation(
   roleIdNum: number,
   companyIdNum: number,
   userIdNum: number,
-  code: string
+  code: string,
+  email: string
 ): Promise<IInvitation> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -47,6 +48,7 @@ async function createInvitation(
         },
       },
       code,
+      email,
       hasUsed: false,
       expiredAt: nowTimestamp + ONE_DAY_IN_S,
       createdAt: nowTimestamp,
@@ -99,7 +101,7 @@ export default async function handler(
       //
       for (let i = 0; i < emails.length; i += 1) {
         const code = generateCode();
-        const promise = createInvitation(roleIdNum, companyIdNum, userIdNum, code);
+        const promise = createInvitation(roleIdNum, companyIdNum, userIdNum, code, emails[i]);
         InvitationPromises.push(promise);
       }
       const invitations = await Promise.all(InvitationPromises);

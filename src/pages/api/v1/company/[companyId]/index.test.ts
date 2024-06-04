@@ -1,21 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { IAdmin } from '@/interfaces/admin';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let userCompanyRole: {
-  userId: number;
-  companyId: number;
-  roleId: number;
-  startDate: number;
-};
+let admin: IAdmin;
 
 beforeEach(async () => {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  userCompanyRole = await prisma.userCompanyRole.create({
+  admin = await prisma.admin.create({
     data: {
       user: {
         connectOrCreate: {
@@ -55,12 +51,16 @@ beforeEach(async () => {
             code: 'TST_company_11',
             name: 'Test Company',
             regional: 'TW',
+            kycStatus: false,
+            imageId: 'imageId',
             startDate: nowTimestamp,
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
           },
         },
       },
+      email: 'company_index2_test@test',
+      status: true,
       startDate: nowTimestamp,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
@@ -72,7 +72,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: userCompanyRole.userId },
+    session: { userId: admin.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -87,7 +87,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: userCompanyRole.userId,
+        id: admin.userId,
       },
     });
   } catch (error) {
@@ -96,7 +96,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: userCompanyRole.companyId,
+        id: admin.companyId,
       },
     });
   } catch (error) {
@@ -105,20 +105,16 @@ afterEach(async () => {
   try {
     await prisma.role.delete({
       where: {
-        id: userCompanyRole.roleId,
+        id: admin.roleId,
       },
     });
   } catch (error) {
     /* empty */
   }
   try {
-    await prisma.userCompanyRole.delete({
+    await prisma.admin.delete({
       where: {
-        userId_companyId_roleId: {
-          userId: userCompanyRole.userId,
-          companyId: userCompanyRole.companyId,
-          roleId: userCompanyRole.roleId,
-        },
+        id: admin.id,
       },
     });
   } catch (error) {
@@ -130,7 +126,7 @@ describe('handler', () => {
   it('should handle GET method', async () => {
     req.method = 'GET';
     req.headers = { userid: '123' };
-    req.query = { companyId: userCompanyRole.companyId.toString() };
+    req.query = { companyId: admin.companyId.toString() };
 
     await handler(req, res);
 
@@ -153,7 +149,7 @@ describe('handler', () => {
 
   it('should handle PUT method', async () => {
     req.method = 'PUT';
-    req.query = { companyId: userCompanyRole.companyId.toString() };
+    req.query = { companyId: admin.companyId.toString() };
     req.body = { name: 'Company B', regional: 'US' };
 
     await handler(req, res);
@@ -177,7 +173,7 @@ describe('handler', () => {
   it('should handle DELETE method', async () => {
     req.method = 'DELETE';
     req.headers = { userid: '123' };
-    req.query = { companyId: userCompanyRole.companyId.toString() };
+    req.query = { companyId: admin.companyId.toString() };
 
     await handler(req, res);
 
@@ -201,7 +197,7 @@ describe('handler', () => {
   it('should handle invalid method', async () => {
     req.method = 'POST';
     req.headers = { userid: '123' };
-    req.query = { companyId: userCompanyRole.companyId.toString() };
+    req.query = { companyId: admin.companyId.toString() };
 
     await handler(req, res);
 
@@ -256,7 +252,7 @@ describe('handler', () => {
   it('should handle invalid input parameters for PUT method', async () => {
     req.method = 'PUT';
     req.headers = { userid: '123' };
-    req.query = { companyId: userCompanyRole.companyId.toString() };
+    req.query = { companyId: admin.companyId.toString() };
     req.body = {};
 
     await handler(req, res);

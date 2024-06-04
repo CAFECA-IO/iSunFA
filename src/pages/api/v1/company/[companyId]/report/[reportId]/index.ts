@@ -17,7 +17,7 @@ export default async function handler(
     const reportIdNumber = Number(reportId);
     const reportInfo = await prisma.report.findUnique({
       where: {
-        id: reportIdNumber as number,
+        id: reportIdNumber,
       },
     });
     if (!reportInfo) {
@@ -39,10 +39,7 @@ export default async function handler(
     res.status(httpCode).json(result);
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IReport>(
-      error.message,
-      {} as IReport
-    );
+    const { httpCode, result } = formatApiResponse<IReport>(error.message, {} as IReport);
     res.status(httpCode).json(result);
   }
 }
