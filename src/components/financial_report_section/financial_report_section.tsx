@@ -52,7 +52,7 @@ const FinancialReportSection = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
+  const [datePickerType, setDatePickerType] = useState(DatePickerType.TEXT_DATE);
 
   const {
     targetRef: projectMenuRef,
@@ -126,9 +126,9 @@ const FinancialReportSection = () => {
   useEffect(() => {
     setDatePickerType(() => {
       if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
-        return DatePickerType.CHOOSE_DATE;
+        return DatePickerType.TEXT_DATE;
       } else {
-        return DatePickerType.CHOOSE_PERIOD;
+        return DatePickerType.TEXT_PERIOD;
       }
     });
   }, [selectedReportType]);

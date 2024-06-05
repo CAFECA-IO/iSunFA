@@ -341,7 +341,7 @@ const LaborCostChart = () => {
           <div className="w-10">
             {' '}
             <DatePicker
-              type={DatePickerType.ICON_CHOOSE_DATE}
+              type={DatePickerType.ICON_DATE}
               minDate={minDate}
               maxDate={maxDate}
               period={period}

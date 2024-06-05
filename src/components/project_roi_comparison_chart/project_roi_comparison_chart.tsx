@@ -196,7 +196,7 @@ const ProjectRoiComparisonChart = () => {
     layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
   const customCalendarAlignment =
-    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-75%';
+    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-80%';
 
   const {
     trigger: listProjectProfitComparison,
@@ -357,7 +357,7 @@ const ProjectRoiComparisonChart = () => {
             {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
             <div className="">
               <DatePicker
-                type={DatePickerType.ICON}
+                type={DatePickerType.ICON_PERIOD}
                 minDate={minDate}
                 maxDate={maxDate}
                 period={period}
