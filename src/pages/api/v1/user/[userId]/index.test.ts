@@ -24,7 +24,7 @@ beforeEach(async () => {
         code: 'TST_user1',
       },
       role: {
-        name: 'SUPER_ADMIN',
+        name: 'SUPER_ADMIN2',
       },
     },
   })) as IAdmin;
@@ -120,15 +120,6 @@ afterEach(async () => {
     await prisma.company.delete({
       where: {
         id: admin.companyId,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.roleId,
       },
     });
   } catch (error) {

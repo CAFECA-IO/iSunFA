@@ -124,15 +124,6 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.roleId,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('test user API', () => {
