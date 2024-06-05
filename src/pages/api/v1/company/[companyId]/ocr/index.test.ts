@@ -1,29 +1,29 @@
 import * as module from '@/pages/api/v1/company/[companyId]/ocr/index';
 import formidable from 'formidable';
 import { MockProxy, mock } from 'jest-mock-extended';
-import { promises as fs } from 'fs';
+import fs from 'fs';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { prismaMock } from '@/prisma_mock';
+import prisma from '@/client';
 
-jest.mock('./index', () => {
-  return {
-    __esModule: true, //   Info: (20240524 Murky) <----- this __esModule: true is important
-    ...jest.requireActual('./index'),
-  };
-});
+// jest.mock('fs', () => ({
+//   promises: {
+//     readFile: jest.fn(),
+//   },
+// }));
 
-jest.mock('fs', () => ({
-  promises: {
-    readFile: jest.fn(),
-  },
-}));
+// jest.mock('./index', () => {
+//   return {
+//     __esModule: true, //   Info: (20240524 Murky) <----- this __esModule: true is important
+//     ...jest.requireActual('./index'),
+//   };
+// });
 
-jest.mock('@prisma/client', () => {
-  return {
-    __esModule: true,
-    PrismaClient: jest.fn(),
-  };
-});
+// jest.mock('@prisma/client', () => {
+//   return {
+//     __esModule: true,
+//     PrismaClient: jest.fn(),
+//   };
+// });
 
 global.fetch = jest.fn();
 
@@ -41,11 +41,11 @@ describe('/OCR/index.ts', () => {
       mockImage = mock<formidable.File>();
       mockImage.filepath = mockPath;
       mockImage.mimetype = mockMimetype;
-      (fs.readFile as jest.Mock).mockResolvedValue(mockFileContent);
+      jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
     });
     it('should return Blob', async () => {
       const blob = await module.readImageFromFilePath(mockImage);
-      expect(fs.readFile).toHaveBeenCalledWith(mockPath);
+      expect(fs.promises.readFile).toHaveBeenCalledWith(mockPath);
       expect(blob).toEqual(new Blob([mockFileContent], { type: mockMimetype || undefined }));
     });
   });
@@ -153,7 +153,7 @@ describe('/OCR/index.ts', () => {
       mockImage.filepath = mockPath;
       mockImage.mimetype = mockMimetype;
       mockImage.size = 1000;
-      (fs.readFile as jest.Mock).mockResolvedValue(mockFileContent);
+      jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
 
       // help me mock formidable.Files<"image">
 
@@ -218,8 +218,8 @@ describe('/OCR/index.ts', () => {
         updatedAt: 1,
       };
 
-      prismaMock.company.findUnique.mockResolvedValue(null);
-      prismaMock.company.create.mockResolvedValue(company);
+      jest.spyOn(prisma.company, "findUnique").mockResolvedValue(null);
+      jest.spyOn(prisma.company, "create").mockResolvedValue(company);
 
       await expect(module.createOrFindCompanyInPrisma(companyId)).resolves.toEqual(company);
     });

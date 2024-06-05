@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/account/index';
-import { prismaMock } from '@/prisma_mock';
+import prisma from '@/client';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -21,7 +21,7 @@ beforeEach(() => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  prismaMock.account.findMany.mockResolvedValue([
+  jest.spyOn(prisma.account, 'findMany').mockResolvedValue([
     {
       id: testAccountId,
       type: 'asset',
