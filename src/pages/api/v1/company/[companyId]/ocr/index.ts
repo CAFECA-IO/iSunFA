@@ -147,7 +147,7 @@ export async function createOrFindCompanyInPrisma(companyId: number) {
   return company;
 }
 
-async function createOcrInPrisma(aichResult: {
+export async function createOcrInPrisma(aichResult: {
   resultStatus: IAccountResultStatus;
   imageUrl: string;
   imageName: string;
@@ -173,7 +173,7 @@ async function createOcrInPrisma(aichResult: {
   }
 }
 
-async function upsertJournalInPrisma(
+export async function upsertJournalInPrisma(
   companyId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
@@ -206,7 +206,7 @@ async function upsertJournalInPrisma(
   }
 }
 
-async function createJournalAndOcrInPrisma(
+export async function createJournalAndOcrInPrisma(
   companyId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
@@ -228,7 +228,7 @@ async function createJournalAndOcrInPrisma(
   });
 }
 
-function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
+export function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
   if (
     Array.isArray(companyId) ||
     !companyId ||
@@ -240,7 +240,7 @@ function isCompanyIdValid(companyId: string | string[] | undefined): companyId i
   return true;
 }
 
-async function getImageFileFromFormData(req: NextApiRequest) {
+export async function getImageFileFromFormData(req: NextApiRequest) {
   let files: formidable.Files;
 
   try {
@@ -252,7 +252,7 @@ async function getImageFileFromFormData(req: NextApiRequest) {
   return files;
 }
 
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const { companyId } = req.query;
 
   // Info Murky (20240416): Check if companyId is string
