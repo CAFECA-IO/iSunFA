@@ -1,11 +1,18 @@
-import { GOOGLE_CREDENTIALS, GOOGLE_PROJECT_ID, GOOGLE_STORAGE_BUCKET_NAME, GOOGLE_STORAGE_BUCKET_URL, GOOGLE_UPLOAD_FOLDER } from "@/constants/google";
-import { Storage } from "@google-cloud/storage";
-import path from "path";
+import {
+  GOOGLE_CREDENTIALS,
+  GOOGLE_PROJECT_ID,
+  GOOGLE_STORAGE_BUCKET_NAME,
+  GOOGLE_STORAGE_BUCKET_URL,
+  GOOGLE_UPLOAD_FOLDER,
+} from '@/constants/google';
+import { Storage } from '@google-cloud/storage';
+import path from 'path';
 
+// Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleStorage = new Storage({
-    projectId: GOOGLE_PROJECT_ID,
-    credentials: GOOGLE_CREDENTIALS,
-  });
+  projectId: GOOGLE_PROJECT_ID,
+  credentials: GOOGLE_CREDENTIALS,
+});
 
 /**
  * Generates a destination file path in Google Cloud Storage
@@ -18,8 +25,7 @@ export function generateDestinationFileNameInGoogleBucket(filePath: string) {
   return storePath;
 }
 
-  // eslint-disable-next-line no-console
-console.log(GOOGLE_STORAGE_BUCKET_NAME);
+// Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 /**
  * Uploads a file to Google Cloud Storage, this is an factory function that returns a function that can be called to upload the file
@@ -28,10 +34,14 @@ export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
  * @param {number} [generationMatchPrecondition=0] - the generation number of the file to be uploaded, used to prevent overwriting a file that has been updated since the last download
  * @returns {string} - the public URL of the uploaded file
  */
-export function uploadGoogleFile(filePath: string, destFileName: string, generationMatchPrecondition: number = 0) {
+export function uploadGoogleFile(
+  filePath: string,
+  destFileName: string,
+  generationMatchPrecondition: number = 0
+) {
   const options = {
-      destination: destFileName,
-      preconditionOpts: { ifGenerationMatch: generationMatchPrecondition },
+    destination: destFileName,
+    preconditionOpts: { ifGenerationMatch: generationMatchPrecondition },
   };
   const url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   return async function uploadFile() {
