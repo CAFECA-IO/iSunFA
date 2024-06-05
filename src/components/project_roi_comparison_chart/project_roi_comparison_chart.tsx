@@ -196,7 +196,7 @@ const ProjectRoiComparisonChart = () => {
     layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
   const customCalendarAlignment =
-    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-80%';
+    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-70%';
 
   const {
     trigger: listProjectProfitComparison,
