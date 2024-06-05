@@ -6,6 +6,8 @@ import { formatApiResponse } from '@/lib/utils/common';
 
 const responseDataArray: IAuditReports[] = [
   {
+    id: 1,
+    companyId: 1,
     code: '2330',
     regional: 'TW',
     company: 'TSMC',
@@ -16,6 +18,8 @@ const responseDataArray: IAuditReports[] = [
     link: 'http://www.google.com.br',
   },
   {
+    id: 2,
+    companyId: 2,
     code: '2234',
     regional: 'TW',
     company: 'iSunFa',
@@ -29,6 +33,8 @@ const responseDataArray: IAuditReports[] = [
 
 const responseDataArray2: IAuditReports[] = [
   {
+    id: 3,
+    companyId: 1,
     code: '2330',
     regional: 'TW',
     company: 'TSMC',
@@ -39,6 +45,8 @@ const responseDataArray2: IAuditReports[] = [
     link: 'http://www.google.com.br',
   },
   {
+    id: 4,
+    companyId: 1,
     code: '2330',
     regional: 'TW',
     company: 'TSMC',

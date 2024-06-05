@@ -59,7 +59,9 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-export async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
+export async function getPayloadFromResponseJSON(
+  responseJSON: Promise<{ payload?: unknown } | null>
+) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -133,6 +135,7 @@ async function createOrFindCompanyInPrisma(companyId: number) {
           code: 'TEST_OCR',
           name: 'Company Name',
           regional: 'Regional Name',
+          kycStatus: false,
           startDate: nowTimestamp,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,

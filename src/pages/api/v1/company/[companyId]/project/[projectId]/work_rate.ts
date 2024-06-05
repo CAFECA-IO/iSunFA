@@ -21,19 +21,21 @@ export default async function handler(
       const workRate: IWorkRate[] = [
         {
           id: 1,
-          projectId: 1,
-          name: 'Worker 1',
-          avatar: 'avatar1',
+          employeeProjectId: 1,
           involvementRate: 50,
-          hours: 10,
+          expected_hours: 10,
+          actual_hours: 5,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
         {
           id: 1,
-          projectId: 2,
-          name: 'Worker 2',
-          avatar: 'avatar2',
+          employeeProjectId: 2,
           involvementRate: 50,
-          hours: 10,
+          expected_hours: 10,
+          actual_hours: 5,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ];
       const { httpCode, result } = formatApiResponse<IWorkRate[]>(

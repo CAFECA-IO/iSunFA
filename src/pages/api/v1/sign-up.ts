@@ -80,7 +80,7 @@ export default async function handler(
         return;
       }
       await prisma.$transaction(async (tx) => {
-        await tx.userCompanyRole.create({
+        await tx.admin.create({
           data: {
             user: {
               connect: {
@@ -97,6 +97,8 @@ export default async function handler(
                 id: invitation.roleId,
               },
             },
+            email: createdUser.email || '',
+            status: true,
             startDate: nowTimestamp,
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,

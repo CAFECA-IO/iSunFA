@@ -4,4 +4,6 @@ export interface IClient {
   companyName: string;
   code: string;
   favorite: boolean;
+  createdAt: number;
+  updatedAt: number;
 }

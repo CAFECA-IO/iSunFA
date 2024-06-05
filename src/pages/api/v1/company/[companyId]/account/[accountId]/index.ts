@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
 import prisma from '@/client';
-import type { account } from '@prisma/client';
+import type { Account } from '@prisma/client';
 
 export function formatParams(
   companyId: string | string[] | undefined,
@@ -26,7 +26,7 @@ export function formatParams(
 }
 
 export async function getAccountInPrisma(accountId: number) {
-  let account: account | null;
+  let account: Account | null;
   try {
     account = await prisma.account.findFirst({
       where: {
@@ -47,17 +47,17 @@ export async function getAccountInPrisma(accountId: number) {
   return account;
 }
 
-export function formatAccounts(account: account): IAccount {
-    return {
-      id: account.id,
-      type: account.type,
-      liquidity: account.liquidity,
-      account: account.account,
-      code: account.code,
-      name: account.name,
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt,
-    };
+export function formatAccounts(account: Account): IAccount {
+  return {
+    id: account.id,
+    type: account.type,
+    liquidity: account.liquidity,
+    account: account.account,
+    code: account.code,
+    name: account.name,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt,
+  };
 }
 
 export async function handleGetRequest(
@@ -69,10 +69,7 @@ export async function handleGetRequest(
   const accountFromDb = await getAccountInPrisma(accountIdNumber);
   const account = formatAccounts(accountFromDb);
 
-  const { httpCode, result } = formatApiResponse<IAccount>(
-    STATUS_MESSAGE.SUCCESS,
-    account
-  );
+  const { httpCode, result } = formatApiResponse<IAccount>(STATUS_MESSAGE.SUCCESS, account);
   res.status(httpCode).json(result);
 }
 

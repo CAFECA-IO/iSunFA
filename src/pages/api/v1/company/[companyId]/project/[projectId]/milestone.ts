@@ -25,6 +25,8 @@ export default async function handler(
           status: 'Milestone 1',
           startDate: new Date().getTime() - 150 * ONE_DAY_IN_MS,
           endDate: new Date().getTime() - 100 * ONE_DAY_IN_MS,
+          createdAt: new Date().getTime(),
+          updatedAt: new Date().getTime(),
         },
         {
           id: 2,
@@ -32,6 +34,8 @@ export default async function handler(
           status: 'Milestone 2',
           startDate: new Date().getTime() - 50 * ONE_DAY_IN_MS,
           endDate: new Date().getTime() - 100 * ONE_DAY_IN_MS,
+          createdAt: new Date().getTime(),
+          updatedAt: new Date().getTime(),
         },
         {
           id: 3,
@@ -39,6 +43,8 @@ export default async function handler(
           status: 'Milestone 3',
           startDate: new Date().getTime() - 50 * ONE_DAY_IN_MS,
           endDate: new Date().getTime() - 5 * ONE_DAY_IN_MS,
+          createdAt: new Date().getTime(),
+          updatedAt: new Date().getTime(),
         },
       ];
       const { httpCode, result } = formatApiResponse<IMilestone[]>(

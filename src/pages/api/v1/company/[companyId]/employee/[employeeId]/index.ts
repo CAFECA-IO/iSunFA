@@ -52,20 +52,20 @@ export default function handler(
       const {
         name,
         salary,
-        department,
-        start_date: startDate,
+        departmentId,
+        startDate,
         bonus,
-        salary_payment_mode: salaryPaymentMode,
-        pay_frequency: payFrequency,
+        salaryPayMode,
+        payFrequency,
       }: IEmployee = req.body;
       if (
         !employeeId ||
         !name ||
         !salary ||
-        !department ||
+        !departmentId ||
         !startDate ||
         !bonus ||
-        !salaryPaymentMode ||
+        !salaryPayMode ||
         !payFrequency
       ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

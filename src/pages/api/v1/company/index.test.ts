@@ -2,20 +2,16 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/index';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { IAdmin } from '@/interfaces/admin';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let userCompanyRole: {
-  userId: number;
-  companyId: number;
-  roleId: number;
-  startDate: number;
-};
+let admin: IAdmin;
 
 beforeEach(async () => {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  userCompanyRole = await prisma.userCompanyRole.create({
+  admin = await prisma.admin.create({
     data: {
       user: {
         connectOrCreate: {
@@ -58,9 +54,13 @@ beforeEach(async () => {
             startDate: nowTimestamp,
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
+            kycStatus: false,
+            imageId: 'imageId',
           },
         },
       },
+      email: 'company_index_test@test',
+      status: true,
       startDate: nowTimestamp,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
@@ -72,7 +72,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: userCompanyRole.userId },
+    session: { userId: admin.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -87,7 +87,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: userCompanyRole.userId,
+        id: admin.userId,
       },
     });
   } catch (error) {
@@ -96,7 +96,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: userCompanyRole.companyId,
+        id: admin.companyId,
       },
     });
   } catch (error) {
@@ -105,20 +105,16 @@ afterEach(async () => {
   try {
     await prisma.role.delete({
       where: {
-        id: userCompanyRole.roleId,
+        id: admin.roleId,
       },
     });
   } catch (error) {
     /* empty */
   }
   try {
-    await prisma.userCompanyRole.delete({
+    await prisma.admin.delete({
       where: {
-        userId_companyId_roleId: {
-          userId: userCompanyRole.userId,
-          companyId: userCompanyRole.companyId,
-          roleId: userCompanyRole.roleId,
-        },
+        id: admin.id,
       },
     });
   } catch (error) {
@@ -190,13 +186,9 @@ describe('Company API', () => {
         },
       })
     );
-    await prisma.userCompanyRole.delete({
+    await prisma.admin.deleteMany({
       where: {
-        userId_companyId_roleId: {
-          userId: userCompanyRole.userId,
-          companyId: res.json.mock.calls[0][0].payload.company.id,
-          roleId: res.json.mock.calls[0][0].payload.role.id,
-        },
+        companyId: res.json.mock.calls[0][0].payload.company.id,
       },
     });
     await prisma.company.delete({

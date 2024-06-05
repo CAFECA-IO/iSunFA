@@ -24,6 +24,8 @@ export default async function handler(
           date: '2024-01-01',
           totalSales: 1000,
           comparison: 10,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
         {
           id: 2,
@@ -31,6 +33,8 @@ export default async function handler(
           date: '2024-02-06',
           totalSales: 1000,
           comparison: 10,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
       ];
       const { httpCode, result } = formatApiResponse<ISale[]>(STATUS_MESSAGE.SUCCESS_GET, Sale);

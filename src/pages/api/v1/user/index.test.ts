@@ -1,16 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { IAdmin } from '@/interfaces/admin';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let userCompanyRole: {
-  userId: number;
-  companyId: number;
-  roleId: number;
-  startDate: number;
-};
+let admin: IAdmin;
 
 beforeEach(async () => {
   res = {
@@ -19,7 +15,7 @@ beforeEach(async () => {
   } as unknown as jest.Mocked<NextApiResponse>;
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  userCompanyRole = (await prisma.userCompanyRole.findFirst({
+  admin = (await prisma.admin.findFirst({
     where: {
       user: {
         credentialId: 'john_tst',
@@ -31,14 +27,9 @@ beforeEach(async () => {
         name: 'SUPER_ADMIN',
       },
     },
-  })) as {
-    userId: number;
-    companyId: number;
-    roleId: number;
-    startDate: number;
-  };
-  if (!userCompanyRole) {
-    userCompanyRole = await prisma.userCompanyRole.create({
+  })) as IAdmin;
+  if (!admin) {
+    admin = await prisma.admin.create({
       data: {
         user: {
           connectOrCreate: {
@@ -78,12 +69,16 @@ beforeEach(async () => {
               code: 'TST_user2',
               name: 'Test Company',
               regional: 'TW',
+              kycStatus: false,
+              imageId: 'imageId',
               startDate: nowTimestamp,
               createdAt: nowTimestamp,
               updatedAt: nowTimestamp,
             },
           },
         },
+        email: 'test@email',
+        status: false,
         startDate: nowTimestamp,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
@@ -95,7 +90,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: userCompanyRole.userId },
+    session: { userId: admin.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 });
@@ -103,13 +98,9 @@ beforeEach(async () => {
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.userCompanyRole.delete({
+    await prisma.admin.delete({
       where: {
-        userId_companyId_roleId: {
-          userId: userCompanyRole.userId,
-          companyId: userCompanyRole.companyId,
-          roleId: userCompanyRole.roleId,
-        },
+        id: admin.id,
       },
     });
   } catch (error) {
@@ -118,7 +109,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: userCompanyRole.userId,
+        id: admin.userId,
       },
     });
   } catch (error) {
@@ -127,7 +118,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: userCompanyRole.companyId,
+        id: admin.companyId,
       },
     });
   } catch (error) {
@@ -136,7 +127,7 @@ afterEach(async () => {
   try {
     await prisma.role.delete({
       where: {
-        id: userCompanyRole.roleId,
+        id: admin.roleId,
       },
     });
   } catch (error) {

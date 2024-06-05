@@ -1,5 +1,9 @@
 import { IPayment } from '@/interfaces/payment';
 
+/*
+Todo: (20240603 - Jacky) Should change whole interface to the new format.
+Besides, the contract content should be added.
+*/
 export interface IContract {
   contractId: string;
   contractName: string;

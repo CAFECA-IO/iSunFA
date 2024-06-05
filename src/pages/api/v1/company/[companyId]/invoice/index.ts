@@ -122,6 +122,7 @@ async function createOrFindCompanyInPrisma(companyId: number) {
           code: 'COMP123',
           name: 'Company Name',
           regional: 'Regional Name',
+          kycStatus: false,
           startDate: nowTimestamp,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
@@ -215,12 +216,12 @@ async function createInvoiceInPrisma(invoiceDataForSavingToDB: IInvoice) {
         },
       });
 
-    return invoice.id;
-  });
-  return result;
-} catch (error) {
-  throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-}
+      return invoice.id;
+    });
+    return result;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
 }
 
 async function updateInvoiceInPrisma(
@@ -282,7 +283,7 @@ async function createJournalInPrisma(
   try {
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);
-    const data: Prisma.journalCreateInput = {
+    const data: Prisma.JournalCreateInput = {
       company: {
         connect: {
           id: companyId,
@@ -335,7 +336,7 @@ async function updateJournalInPrisma(
   contractId: number | null
 ) {
   try {
-    const data: Prisma.journalUpdateInput = {
+    const data: Prisma.JournalUpdateInput = {
       invoice: {
         connect: {
           id: invoiceId,
