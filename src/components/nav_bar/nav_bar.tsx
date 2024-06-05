@@ -240,8 +240,10 @@ const NavBar = () => {
     </div>
   );
 
-  const displayedUserMenu = isUserMenuOpen ? (
-    <div className="absolute right-16 top-70px z-100">
+  const displayedUserMenu = (
+    <div
+      className={`${isUserMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute right-16 top-70px z-100 transition-all duration-300 ease-in-out`}
+    >
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
         <Image
           alt="avatar"
@@ -420,7 +422,7 @@ const NavBar = () => {
         </button>
       </div>
     </div>
-  ) : null;
+  );
 
   const displayedCompanyChangeBtn = selectedCompany ? (
     <Link
@@ -443,10 +445,9 @@ const NavBar = () => {
   ) : null;
 
   const displayedLogInBtn = signedIn ? (
-    <div ref={userMenuRef}>
-      <button type="button" onClick={avatarClickHandler}>
+    <div ref={userMenuRef} className="">
+      <button type="button" onClick={avatarClickHandler} className="">
         {/* Info: avatar svg (20240408 - Shirley) */}
-
         <Image
           alt="avatar"
           src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
@@ -680,7 +681,7 @@ const NavBar = () => {
         {/* Info: (20240521 - Julian) Company change button */}
         {displayedCompanyChangeBtn}
 
-        <div className="my-auto">{displayedLogInBtn}</div>
+        {displayedLogInBtn}
       </div>
       {displayedBurgerMenu}
     </div>
