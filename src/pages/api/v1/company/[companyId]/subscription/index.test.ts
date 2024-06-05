@@ -21,6 +21,11 @@ beforeEach(async () => {
         credentialId: 'subscription_index2_test',
       },
     },
+    include: {
+      company: true,
+      user: true,
+      role: true,
+    },
   })) as IAdmin;
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -79,6 +84,11 @@ beforeEach(async () => {
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
+      include: {
+        company: true,
+        user: true,
+        role: true,
+      },
     });
   }
   subscription = await prisma.subscription.create({
@@ -118,16 +128,23 @@ beforeEach(async () => {
       },
     },
   });
-  plan = await prisma.plan.create({
-    data: {
+  plan = (await prisma.plan.findUnique({
+    where: {
       name: 'test2',
-      monthlyFee: 100,
-      annualFee: 1000,
-      description: 'test plan',
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
     },
-  });
+  })) as IPlan;
+  if (!plan) {
+    plan = await prisma.plan.create({
+      data: {
+        name: 'test2',
+        monthlyFee: 100,
+        annualFee: 1000,
+        description: 'test plan',
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    });
+  }
   req = {
     headers: {},
     body: null,
@@ -186,26 +203,54 @@ afterEach(async () => {
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
     await handler(req, res);
+    // 定義 `expectedSubscription` 結構
+    const expectedSubscription = {
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      planId: expect.any(Number),
+      startDate: expect.any(Number),
+      expiredDate: expect.any(Number),
+      status: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    };
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.arrayContaining([
-          expect.objectContaining({
-            id: expect.any(Number),
-            companyId: expect.any(Number),
-            planId: expect.any(Number),
-            startDate: expect.any(Number),
-            expiredDate: expect.any(Number),
-            status: expect.any(Boolean),
-            createdAt: expect.any(Number),
-            updatedAt: expect.any(Number),
-          }),
-        ]),
       })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: expect.any(Boolean),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: expect.stringContaining('200'),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.any(String),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.any(Array),
+      })
+    );
+    // 獨立檢查 `payload` 中每個對象的每個字段
+    (Object.keys(expectedSubscription) as Array<keyof typeof expectedSubscription>).forEach(
+      (key) => {
+        expect(res.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.arrayContaining([
+              expect.objectContaining({ [key]: expectedSubscription[key] }),
+            ]),
+          })
+        );
+      }
     );
   });
 
@@ -216,29 +261,51 @@ describe('test subscription API', () => {
       period: SubscriptionPeriod.MONTHLY,
     };
     await handler(req, res);
+    const expectedSubscription = {
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      planId: expect.any(Number),
+      startDate: expect.any(Number),
+      expiredDate: expect.any(Number),
+      status: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    };
     expect(res.status).toHaveBeenCalledWith(201);
-    await prisma.subscription.delete({
-      where: {
-        id: res.json.mock.calls[0][0].payload.id,
-      },
-    });
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('201'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          companyId: expect.any(Number),
-          planId: expect.any(Number),
-          startDate: expect.any(Number),
-          expiredDate: expect.any(Number),
-          status: expect.any(Boolean),
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
-        }),
       })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: expect.any(Boolean),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: expect.stringContaining('201'),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.any(String),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.any(Object),
+      })
+    );
+    // 獨立檢查 `payload` 中每個對象的每個字段
+    (Object.keys(expectedSubscription) as Array<keyof typeof expectedSubscription>).forEach(
+      (key) => {
+        expect(res.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({ [key]: expectedSubscription[key] }),
+          })
+        );
+      }
     );
   });
 
@@ -251,9 +318,25 @@ describe('test subscription API', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         success: expect.any(Boolean),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         code: expect.stringContaining('405'),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         message: expect.any(String),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         payload: expect.any(Object),
       })
     );
@@ -271,9 +354,25 @@ describe('test subscription API', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         powerby: expect.any(String),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         success: expect.any(Boolean),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         code: expect.stringContaining('401'),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         message: expect.any(String),
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
         payload: expect.any(Object),
       })
     );
