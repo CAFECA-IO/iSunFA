@@ -195,6 +195,9 @@ const ProjectRoiComparisonChart = () => {
   const alignCalendarPart =
     layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
+  const customCalendarAlignment =
+    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-75%';
+
   const {
     trigger: listProjectProfitComparison,
     data: profitComparison,
@@ -300,7 +303,7 @@ const ProjectRoiComparisonChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="flex h-630px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
+    <div className="flex h-580px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
       <div>
         <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
           <div className="lg:flex-1">
@@ -360,6 +363,7 @@ const ProjectRoiComparisonChart = () => {
                 period={period}
                 setFilteredPeriod={setPeriod}
                 alignCalendar={alignCalendarPart}
+                calenderClassName={customCalendarAlignment}
               />
             </div>
           </div>

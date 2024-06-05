@@ -246,6 +246,9 @@ const LaborCostChart = () => {
   const alignCalendarPart =
     layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
+  const customCalendarAlignment =
+    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-65%';
+
   useEffect(() => {
     if (getSuccess && laborCostData) {
       const { series: newSeries, categories: newCategories } = laborCostData;
@@ -331,7 +334,7 @@ const LaborCostChart = () => {
       </div>
 
       <div className="mt-5">
-        <div className="mx-0 flex flex-row justify-center gap-3 lg:justify-start lg:gap-5">
+        <div className="mx-0 flex flex-row justify-center gap-5 lg:justify-start">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             {displayedDateSection}{' '}
           </div>
@@ -344,12 +347,13 @@ const LaborCostChart = () => {
               period={period}
               setFilteredPeriod={setPeriod}
               alignCalendar={alignCalendarPart}
+              calenderClassName={customCalendarAlignment}
             />
           </div>
         </div>
         <div className="relative">
           {' '}
-          <div className="absolute left-1/2 top-5 -translate-x-1/2 font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
+          <div className="absolute left-1/2 top-5 w-150px -translate-x-1/2 text-center font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
             Onboarding Projects
           </div>
           <div className="ml-0 flex pt-16 max-md:ml-0 md:pt-0 lg:pt-5">

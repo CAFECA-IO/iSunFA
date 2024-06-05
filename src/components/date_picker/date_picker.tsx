@@ -42,6 +42,7 @@ interface IDatePickerProps {
   period: IDatePeriod;
   setFilteredPeriod: Dispatch<SetStateAction<IDatePeriod>>;
   alignCalendar?: DatePickerAlign;
+  customCalendarAlignment?: string;
   minDate?: Date;
   maxDate?: Date;
   loading?: boolean;
@@ -512,13 +513,13 @@ const DatePicker = ({
         <div
           className={cn(
             'invisible absolute top-16 z-20 grid w-[300px] grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
-            calenderClassName,
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
               'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,
               '-translate-x-[50%]': alignCalendar === DatePickerAlign.CENTER,
               '-translate-x-[90%]': alignCalendar === DatePickerAlign.RIGHT,
-            }
+            },
+            calenderClassName
           )}
         >
           {/* Info: (20240417 - Shirley) Today button */}

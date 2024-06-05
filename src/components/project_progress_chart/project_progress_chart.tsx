@@ -222,6 +222,9 @@ const ProjectProgressChart = () => {
   const alignCalendarPart =
     layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
+  const customCalendarAlignment =
+    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-65%';
+
   useEffect(() => {
     if (listSuccess && projectProgress) {
       const { series: s, categories: c } = projectProgress;
@@ -304,7 +307,7 @@ const ProjectProgressChart = () => {
       </div>
 
       <div className="mt-5">
-        <div className="mx-0 flex flex-row justify-center gap-3 lg:justify-start lg:gap-5">
+        <div className="mx-0 flex flex-row justify-center gap-5 lg:justify-start">
           <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
             {displayedDateSection}{' '}
           </div>
@@ -316,6 +319,7 @@ const ProjectProgressChart = () => {
               period={period}
               setFilteredPeriod={setPeriod}
               alignCalendar={alignCalendarPart}
+              calenderClassName={customCalendarAlignment}
             />
           </div>
         </div>
