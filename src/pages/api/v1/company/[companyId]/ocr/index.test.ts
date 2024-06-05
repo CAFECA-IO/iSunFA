@@ -4,10 +4,10 @@ import formidable from 'formidable';
 import { MockProxy, mock } from 'jest-mock-extended';
 import fs from 'fs';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import prisma from '@/client';
 import * as parseImageForm from '@/lib/utils/parse_image_form';
 import * as common from '@/lib/utils/common';
 import { ProgressStatus } from '@/constants/account';
+import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
 
 global.fetch = jest.fn();
 
@@ -20,6 +20,14 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),
 }));
+
+jest.mock('./index.repository', () => {
+  return {
+    createOrFindCompanyInPrisma: jest.fn(),
+    createOcrInPrisma: jest.fn(),
+    upsertJournalInPrisma: jest.fn(),
+  };
+});
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -220,26 +228,6 @@ describe('/OCR/index.ts', () => {
     });
   });
 
-  describe("createOrFindCompanyInPrisma", () => {
-    it("should create company in prisma", async () => {
-      const companyId = 1;
-      const company = {
-        id: companyId,
-        code: 'TEST_OCR',
-        name: 'Company Name',
-        regional: 'Regional Name',
-        startDate: 1,
-        createdAt: 1,
-        updatedAt: 1,
-      };
-
-      jest.spyOn(prisma.company, "findUnique").mockResolvedValue(null);
-      jest.spyOn(prisma.company, "create").mockResolvedValue(company);
-
-      await expect(module.createOrFindCompanyInPrisma(companyId)).resolves.toEqual(company);
-    });
-  });
-
   describe("isCompanyIdValid", () => {
     it("should return true if companyId is numeric", () => {
       const companyId = "1";
@@ -297,111 +285,30 @@ describe('/OCR/index.ts', () => {
     });
   });
 
-  describe("createOcrInPrisma", () => {
-    it("should create ocr in prisma", async () => {
-      const mockAichResult = {
-        resultStatus: {
-          resultId: '1',
-          status: ProgressStatus.SUCCESS,
-        },
-        imageUrl: 'testImageUrl',
-        imageName: 'testImageName',
-        imageSize: 1024,
-      };
-
-      const nowTimestamp = 0;
-      jest.spyOn(common, "timestampInSeconds").mockReturnValue(nowTimestamp);
-
-      const mockOcrResult = {
-        id: 1,
-        status: mockAichResult.resultStatus.status,
-        imageUrl: mockAichResult.imageUrl,
-        imageName: mockAichResult.imageName,
-        imageSize: mockAichResult.imageSize,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      };
-
-      jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
-
-      await expect(module.createOcrInPrisma(mockAichResult)).resolves.toEqual(mockOcrResult);
-    });
-  });
-
-  describe("upsertJournalInPrisma", () => {
-    it("should upsert journal in prisma", async () => {
-      const companyId = 1;
-      const ocrId = 1;
-      const mockAichResult = {
-        resultStatus: {
-          resultId: '1',
-          status: ProgressStatus.SUCCESS,
-        },
-        imageUrl: 'testImageUrl',
-        imageName: 'testImageName',
-        imageSize: 1024,
-      };
-
-      const nowTimestamp = 0;
-      jest.spyOn(common, "timestampInSeconds").mockReturnValue(nowTimestamp);
-
-      jest.spyOn(prisma.journal, "upsert").mockResolvedValue({
-        id: 1,
-        tokenContract: null,
-        tokenId: null,
-        ocrId,
-        aichResultId: null,
-        invoiceId: null,
-        voucherId: null,
-        projectId: null,
-        contractId: null,
-        companyId,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      });
-
-      await module.upsertJournalInPrisma(companyId, mockAichResult, 1);
-
-      expect(prisma.journal.upsert).toHaveBeenCalledWith({
-        where: { aichResultId: mockAichResult.resultStatus.resultId },
-        create: {
-          companyId,
-          ocrId,
-          aichResultId: mockAichResult.resultStatus.resultId,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-        update: {
-          ocrId: 1,
-        },
-      });
-    });
-  });
   describe("createJournalAndOcrInPrisma", () => {
-    it("should use transaction to create journal and ocr in prisma", async () => {
+    it('should use transaction to create journal and ocr in prisma', async () => {
       const companyId = 1;
       const ocrId = 2;
 
       const aichResult = {
         resultStatus: {
           resultId: '1',
-          status: ProgressStatus.SUCCESS,
+          status: ProgressStatus.IN_PROGRESS,
         },
         imageUrl: 'testImageUrl',
         imageName: 'testImageName',
         imageSize: 1024,
       };
+      (repository.createOrFindCompanyInPrisma as jest.Mock).mockResolvedValue({ id: companyId });
+      (repository.createOcrInPrisma as jest.Mock).mockResolvedValue({ id: ocrId });
+      (repository.upsertJournalInPrisma as jest.Mock).mockResolvedValue(undefined);
 
-      jest.mock("./index", () => {
-        return {
-          createOrFindCompanyInPrisma: jest.fn().mockResolvedValue({ id: companyId }),
-          createOcrInPrisma: jest.fn().mockResolvedValue({ id: ocrId }),
-          upsertJournalInPrisma: jest.fn(),
-        };
-      });
+      await module.createJournalAndOcrInPrisma(companyId, aichResult);
 
-      const result = module.createJournalAndOcrInPrisma(companyId, aichResult);
-      expect(result).toBeInstanceOf(Promise<void>);
+      expect(repository.createOrFindCompanyInPrisma).toHaveBeenCalledWith(companyId);
+      expect(repository.createOcrInPrisma).toHaveBeenCalledWith(aichResult);
+      expect(repository.upsertJournalInPrisma).toHaveBeenCalledWith(companyId, aichResult, ocrId);
+    });
   });
 
   describe("handlePostRequest", () => {
@@ -443,7 +350,7 @@ describe('/OCR/index.ts', () => {
       jest.mock("./index", () => {
         return {
           postImageToAICH: jest.fn().mockResolvedValue(mockAichReturn),
-          // createOrFindCompanyInPrisma: jest.fn().mockResolvedValue({ id: companyId }),
+          createOrFindCompanyInPrisma: jest.fn().mockResolvedValue({ id: companyId }),
           createJournalAndOcrInPrisma: jest.fn(),
           isCompanyIdValid: jest.fn().mockReturnValue(true),
           getImageFileFromFormData: jest.fn().mockResolvedValue(mockFiles),
@@ -451,15 +358,13 @@ describe('/OCR/index.ts', () => {
       });
 
       req.query.companyId = companyId;
-      // jest.spyOn(module, "isCompanyIdValid").mockReturnValue(true);
-      // jest.spyOn(module, "getImageFileFromFormData").mockResolvedValue(mockFiles);
-      // jest.spyOn(module, "postImageToAICH").mockResolvedValue(mockAichReturn);
-      // jest.spyOn(module, "createJournalAndOcrInPrisma").mockImplementation();
 
       jest.spyOn(parseImageForm, "parseForm").mockResolvedValue({
         fields: mockFields,
         files: mockFiles,
       });
+
+      // Depreciate ( 20240605 - Murky ) - This is not necessary
       jest.spyOn(common, "formatApiResponse").mockReturnValue({ httpCode: 201, result: mockResult });
       jest.spyOn(common, "timestampInSeconds").mockReturnValue(1);
       jest.spyOn(common, "transformOCRImageIDToURL").mockReturnValue("testImageUrl");
@@ -476,5 +381,4 @@ describe('/OCR/index.ts', () => {
       expect(res.json).toHaveBeenCalledWith(mockResult);
     });
   });
-});
 });
