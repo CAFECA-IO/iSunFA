@@ -366,7 +366,7 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-xs border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
           // props control style
           btnClassName,
           // variables control style
@@ -404,7 +404,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          'group flex w-full items-center rounded-xs border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
           btnClassName,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
