@@ -141,6 +141,30 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
   return files;
 }
 
+export async function createJournalsAndOcrFromAichResults(
+  companyId: number,
+  aichResults: {
+    resultStatus: IAccountResultStatus;
+    imageUrl: string;
+    imageName: string;
+    imageSize: number;
+  }[]
+) {
+  const resultJson: IAccountResultStatus[] = [];
+
+  try {
+    await Promise.all(
+      aichResults.map(async (aichResult) => {
+        await createJournalAndOcrInPrisma(companyId, aichResult);
+        resultJson.push(aichResult.resultStatus);
+      })
+    );
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+  return resultJson;
+}
+
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const { companyId } = req.query;
 
@@ -151,18 +175,15 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
 
   const companyIdNumber = Number(companyId);
 
-  const files = await getImageFileFromFormData(req);
+  let resultJson: IAccountResultStatus[];
 
-  const aichReturn = await postImageToAICH(files);
-
-  const resultJson: IAccountResultStatus[] = [];
-
-  await Promise.all(
-    aichReturn.map(async (aichResult) => {
-      await createJournalAndOcrInPrisma(companyIdNumber, aichResult);
-      resultJson.push(aichResult.resultStatus);
-    })
-  );
+  try {
+    const files = await getImageFileFromFormData(req);
+    const aichResults = await postImageToAICH(files);
+    resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
 
   const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
     STATUS_MESSAGE.CREATED,
