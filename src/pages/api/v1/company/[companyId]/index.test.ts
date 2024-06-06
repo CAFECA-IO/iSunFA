@@ -65,6 +65,11 @@ beforeEach(async () => {
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
+    include: {
+      user: true,
+      company: true,
+      role: true,
+    },
   });
 
   req = {
@@ -72,7 +77,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.userId },
+    session: { userId: admin.user.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -87,7 +92,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: admin.userId,
+        id: admin.user.id,
       },
     });
   } catch (error) {
@@ -96,7 +101,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: admin.companyId,
+        id: admin.company.id,
       },
     });
   } catch (error) {
@@ -105,7 +110,7 @@ afterEach(async () => {
   try {
     await prisma.role.delete({
       where: {
-        id: admin.roleId,
+        id: admin.role.id,
       },
     });
   } catch (error) {
@@ -126,91 +131,100 @@ describe('handler', () => {
   it('should handle GET method', async () => {
     req.method = 'GET';
     req.headers = { userid: '123' };
-    req.query = { companyId: admin.companyId.toString() };
+    req.query = { companyId: admin.company.id.toString() };
 
     await handler(req, res);
-
+    const expectedCompany = expect.objectContaining({
+      id: expect.any(Number),
+      code: expect.any(String),
+      name: expect.any(String),
+      regional: expect.any(String),
+      kycStatus: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+    const expectedCompanyList = expect.arrayContaining([expectedCompany]);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedCompanyList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          code: expect.any(String),
-          name: expect.any(String),
-          regional: expect.any(String),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle PUT method', async () => {
     req.method = 'PUT';
-    req.query = { companyId: admin.companyId.toString() };
+    req.query = { companyId: admin.company.id.toString() };
     req.body = { name: 'Company B', regional: 'US' };
 
     await handler(req, res);
+    const expectedCompany = expect.objectContaining({
+      id: expect.any(Number),
+      code: expect.any(String),
+      name: expect.any(String),
+      regional: expect.any(String),
+      kycStatus: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+    const expectedCompanyList = expect.arrayContaining([expectedCompany]);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedCompanyList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          code: expect.any(String),
-          name: expect.any(String),
-          regional: expect.any(String),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle DELETE method', async () => {
     req.method = 'DELETE';
     req.headers = { userid: '123' };
-    req.query = { companyId: admin.companyId.toString() };
+    req.query = { companyId: admin.company.id.toString() };
 
     await handler(req, res);
 
+    const expectedCompany = expect.objectContaining({
+      id: expect.any(Number),
+      code: expect.any(String),
+      name: expect.any(String),
+      regional: expect.any(String),
+      kycStatus: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedCompany,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          code: expect.any(String),
-          name: expect.any(String),
-          regional: expect.any(String),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle invalid method', async () => {
     req.method = 'POST';
     req.headers = { userid: '123' };
-    req.query = { companyId: admin.companyId.toString() };
+    req.query = { companyId: admin.company.id.toString() };
 
     await handler(req, res);
 
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle missing userid header', async () => {
@@ -252,7 +266,7 @@ describe('handler', () => {
   it('should handle invalid input parameters for PUT method', async () => {
     req.method = 'PUT';
     req.headers = { userid: '123' };
-    req.query = { companyId: admin.companyId.toString() };
+    req.query = { companyId: admin.company.id.toString() };
     req.body = {};
 
     await handler(req, res);

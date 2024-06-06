@@ -59,20 +59,21 @@ describe('test role API', () => {
     req.headers.userid = '1';
     req.query = { roleId: role.id.toString() };
     await handler(req, res);
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.arrayContaining([expect.any(String)]),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedRole,
+    });
+
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          permissions: expect.arrayContaining([expect.any(String)]),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should update role successfully', async () => {
@@ -86,20 +87,21 @@ describe('test role API', () => {
       permissions: ['auditing_viewer', 'accounting_editor', 'internalControl_editor'],
     };
     await handler(req, res);
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.arrayContaining([expect.any(String)]),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedRole,
+    });
+
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          permissions: expect.arrayContaining([expect.any(String)]),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should delete role successfully', async () => {
@@ -107,16 +109,21 @@ describe('test role API', () => {
     req.headers.userid = '1';
     req.query = { roleId: role.id.toString() };
     await handler(req, res);
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.arrayContaining([expect.any(String)]),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedRole,
+    });
+
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error for INVALID_INPUT_PARAMETER', async () => {
@@ -131,32 +138,32 @@ describe('test role API', () => {
       accounting: 'editor',
     };
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error for RESOURCE_NOT_FOUND', async () => {
     req.headers.userid = '1';
     req.query = { roleId: '-1' };
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('404'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error for METHOD_NOT_ALLOWED', async () => {
@@ -164,15 +171,15 @@ describe('test role API', () => {
     req.method = 'POST';
     req.query = { roleId: '1' };
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });
