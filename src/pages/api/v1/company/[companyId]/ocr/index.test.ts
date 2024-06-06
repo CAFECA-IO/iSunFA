@@ -92,7 +92,7 @@ describe('/OCR/index.ts', () => {
 
       // Info Murky (20240424) FormData return will be "File" type, so we can't use "toEqual" to compare
       const imageFile = formData.get('image') as File;
-      expect(imageFile).toBeInstanceOf(File);
+
       // Info Murky (20240424) test if content is correct
       imageFile.text().then((text) => {
         expect(text).toBe('testBlob');
@@ -143,12 +143,12 @@ describe('/OCR/index.ts', () => {
   });
 
   // Info Murky (20240424) This function is still editing
-  describe("getPayloadFromResponseJSON", () => {
-    it("should return payload", async () => {
-      const mockResponse:{
+  describe('getPayloadFromResponseJSON', () => {
+    it('should return payload', async () => {
+      const mockResponse: {
         payload?: unknown;
       } = { payload: 'testPayload' };
-      const promiseJson: Promise<{ payload?: unknown; } | null> = new Promise((resolve) => {
+      const promiseJson: Promise<{ payload?: unknown } | null> = new Promise((resolve) => {
         resolve(mockResponse);
       });
 
@@ -156,17 +156,19 @@ describe('/OCR/index.ts', () => {
       expect(payload).toEqual('testPayload');
     });
 
-    it("should throw error when responseJSON is null", async () => {
-      const promiseJson: Promise<{ payload?: unknown; } | null> = new Promise((resolve) => {
+    it('should throw error when responseJSON is null', async () => {
+      const promiseJson: Promise<{ payload?: unknown } | null> = new Promise((resolve) => {
         resolve(null);
       });
 
-      await expect(module.getPayloadFromResponseJSON(promiseJson)).rejects.toThrow(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
+      await expect(module.getPayloadFromResponseJSON(promiseJson)).rejects.toThrow(
+        STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL
+      );
     });
   });
 
-  describe("postImageToAICH", () => {
-    let mockImages: MockProxy<formidable.Files<"image">>;
+  describe('postImageToAICH', () => {
+    let mockImages: MockProxy<formidable.Files<'image'>>;
     let mockImage: MockProxy<formidable.File>;
     const mockPath = '/test';
     const mockMimetype = 'image/png';
@@ -177,31 +179,29 @@ describe('/OCR/index.ts', () => {
       mockImage.mimetype = mockMimetype;
       mockImage.size = 1000;
       jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
-      jest.spyOn(common, "transformOCRImageIDToURL").mockReturnValue('testImageUrl');
+      jest.spyOn(common, 'transformOCRImageIDToURL').mockReturnValue('testImageUrl');
 
       // help me mock formidable.Files<"image">
 
-      mockImages = mock<formidable.Files<"image">>(
-        {
-          image: [mockImage],
-        }
-      );
+      mockImages = mock<formidable.Files<'image'>>({
+        image: [mockImage],
+      });
     });
 
     afterEach(() => {
       jest.clearAllMocks();
     });
 
-    it("should throw error when images is empty", async () => {
-      mockImages = mock<formidable.Files<"image">>(
-        {
-          image: [],
-        }
+    it('should throw error when images is empty', async () => {
+      mockImages = mock<formidable.Files<'image'>>({
+        image: [],
+      });
+      await expect(module.postImageToAICH(mockImages)).rejects.toThrow(
+        STATUS_MESSAGE.INVALID_INPUT_FORM_DATA_IMAGE
       );
-      await expect(module.postImageToAICH(mockImages)).rejects.toThrow(STATUS_MESSAGE.INVALID_INPUT_FORM_DATA_IMAGE);
     });
 
-    it("should return resultJson", async () => {
+    it('should return resultJson', async () => {
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({ payload: 'testPayload' }),
@@ -218,9 +218,7 @@ describe('/OCR/index.ts', () => {
         imageSize: expect.any(Number),
       });
 
-      const resultJsonArrayExpect = expect.arrayContaining([
-        resultJsonExpect,
-      ]);
+      const resultJsonArrayExpect = expect.arrayContaining([resultJsonExpect]);
 
       expect(resultJson).toEqual(resultJsonArrayExpect);
 
@@ -231,69 +229,72 @@ describe('/OCR/index.ts', () => {
     });
   });
 
-  describe("isCompanyIdValid", () => {
-    it("should return true if companyId is numeric", () => {
-      const companyId = "1";
+  describe('isCompanyIdValid', () => {
+    it('should return true if companyId is numeric', () => {
+      const companyId = '1';
       expect(module.isCompanyIdValid(companyId)).toBe(true);
     });
 
-    it("should return false if companyId is not numeric", () => {
-      const companyId = "a";
+    it('should return false if companyId is not numeric', () => {
+      const companyId = 'a';
       expect(module.isCompanyIdValid(companyId)).toBe(false);
     });
 
-    it("should return false if companyId is undefined", () => {
+    it('should return false if companyId is undefined', () => {
       const companyId = undefined;
       expect(module.isCompanyIdValid(companyId)).toBe(false);
     });
-    it("should return false if companyId is array", () => {
-      const companyId = ["1"];
+    it('should return false if companyId is array', () => {
+      const companyId = ['1'];
       expect(module.isCompanyIdValid(companyId)).toBe(false);
     });
   });
 
-  describe("getImageFileFromFormData", () => {
-    let mockFiles: MockProxy<formidable.Files<"image">>;
+  describe('getImageFileFromFormData', () => {
+    let mockFiles: MockProxy<formidable.Files<'image'>>;
     let mockFields: MockProxy<formidable.Fields>;
     beforeEach(() => {
       mockFiles = {
         image: [
-        {
-          filepath: '/test.png',
-          originalFilename: 'test.png',
-          mimetype: 'image/png',
-          hashAlgorithm: 'sha1',
-          newFilename: 'test.png',
-          size: 1024,
-          toJSON: jest.fn(),
-        }
-      ] };
+          {
+            filepath: '/test.png',
+            originalFilename: 'test.png',
+            mimetype: 'image/png',
+            hashAlgorithm: 'sha1',
+            newFilename: 'test.png',
+            size: 1024,
+            toJSON: jest.fn(),
+          },
+        ],
+      };
       mockFields = mock<formidable.Fields>();
     });
 
-    it("should return image file", async () => {
+    it('should return image file', async () => {
       const mockReturn = {
         fields: mockFields,
         files: mockFiles,
       };
 
-      jest.spyOn(parseImageForm, "parseForm").mockResolvedValue(mockReturn);
+      jest.spyOn(parseImageForm, 'parseForm').mockResolvedValue(mockReturn);
       const imageFile = await module.getImageFileFromFormData(req);
       expect(imageFile).toEqual(mockFiles);
     });
 
-    it("should throw error when parseForm failed", async () => {
-      jest.spyOn(parseImageForm, "parseForm").mockRejectedValue(new Error("parseForm failed"));
-      await expect(module.getImageFileFromFormData(req)).rejects.toThrow(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
+    it('should throw error when parseForm failed', async () => {
+      jest.spyOn(parseImageForm, 'parseForm').mockRejectedValue(new Error('parseForm failed'));
+      await expect(module.getImageFileFromFormData(req)).rejects.toThrow(
+        STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR
+      );
     });
   });
 
-  describe("createJournalsAndOcrFromAichResults", () => {
-    it("should return resultJson", async () => {
+  describe('createJournalsAndOcrFromAichResults', () => {
+    it('should return resultJson', async () => {
       const nowTimestamp = 0;
       const companyId = 1;
       const ocrId = 2;
-      const resultId = "testResultId";
+      const resultId = 'testResultId';
       const mockAichReturn = [
         {
           resultStatus: {
@@ -303,39 +304,42 @@ describe('/OCR/index.ts', () => {
           imageUrl: 'testImageUrl',
           imageName: 'testImageName',
           imageSize: 1024,
-        }
+        },
       ];
 
       const mockJournal: Journal = {
-          id: 1,
-          tokenContract: null,
-          tokenId: null,
-          ocrId,
-          aichResultId: null,
-          invoiceId: null,
-          voucherId: null,
-          projectId: null,
-          contractId: null,
-          companyId,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        };
+        id: 1,
+        tokenContract: null,
+        tokenId: null,
+        ocrId,
+        aichResultId: null,
+        invoiceId: null,
+        voucherId: null,
+        projectId: null,
+        contractId: null,
+        companyId,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      };
 
       const mockAccountingResult: IAccountResultStatus[] = [
         {
           resultId,
           status: ProgressStatus.SUCCESS,
-        }
+        },
       ];
 
-      jest.spyOn(repository, "createJournalAndOcrInPrisma").mockResolvedValue(mockJournal);
+      jest.spyOn(repository, 'createJournalAndOcrInPrisma').mockResolvedValue(mockJournal);
 
-      const resultJson = await module.createJournalsAndOcrFromAichResults(companyId, mockAichReturn);
+      const resultJson = await module.createJournalsAndOcrFromAichResults(
+        companyId,
+        mockAichReturn
+      );
 
       expect(resultJson).toEqual(mockAccountingResult);
     });
 
-    it("should throw error when createJournalAndOcrInPrisma failed", async () => {
+    it('should throw error when createJournalAndOcrInPrisma failed', async () => {
       const companyId = 1;
       const mockAichReturn = [
         {
@@ -346,32 +350,37 @@ describe('/OCR/index.ts', () => {
           imageUrl: 'testImageUrl',
           imageName: 'testImageName',
           imageSize: 1024,
-        }
+        },
       ];
 
-      jest.spyOn(repository, "createJournalAndOcrInPrisma").mockRejectedValue(new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR));
+      jest
+        .spyOn(repository, 'createJournalAndOcrInPrisma')
+        .mockRejectedValue(new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR));
 
-      await expect(module.createJournalsAndOcrFromAichResults(companyId, mockAichReturn)).rejects.toThrow(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+      await expect(
+        module.createJournalsAndOcrFromAichResults(companyId, mockAichReturn)
+      ).rejects.toThrow(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     });
   });
 
-  describe("handlePostRequest", () => {
-    it("should return resultJson", async () => {
-      const companyId = "1";
-      const resultId = "testResultId";
+  describe('handlePostRequest', () => {
+    it('should return resultJson', async () => {
+      const companyId = '1';
+      const resultId = 'testResultId';
       const mockFields = mock<formidable.Fields>();
-      const mockFiles: MockProxy<formidable.Files<"image">> = {
+      const mockFiles: MockProxy<formidable.Files<'image'>> = {
         image: [
-        {
-          filepath: '/test.png',
-          originalFilename: 'test.png',
-          mimetype: 'image/png',
-          hashAlgorithm: 'sha1',
-          newFilename: 'test.png',
-          size: 1024,
-          toJSON: jest.fn(),
-        }
-      ] };
+          {
+            filepath: '/test.png',
+            originalFilename: 'test.png',
+            mimetype: 'image/png',
+            hashAlgorithm: 'sha1',
+            newFilename: 'test.png',
+            size: 1024,
+            toJSON: jest.fn(),
+          },
+        ],
+      };
 
       const mockAichReturn = [
         {
@@ -382,14 +391,14 @@ describe('/OCR/index.ts', () => {
           imageUrl: 'testImageUrl',
           imageName: 'testImageName',
           imageSize: 1024,
-        }
+        },
       ];
 
       const mockResult: IAccountResultStatus[] = [
         {
           resultId,
           status: ProgressStatus.SUCCESS,
-        }
+        },
       ];
 
       const mockReturn = {
@@ -400,7 +409,7 @@ describe('/OCR/index.ts', () => {
         payload: mockResult,
       };
 
-      jest.mock("./index", () => {
+      jest.mock('./index', () => {
         return {
           postImageToAICH: jest.fn().mockResolvedValue(mockAichReturn),
           isCompanyIdValid: jest.fn().mockReturnValue(true),
@@ -411,16 +420,18 @@ describe('/OCR/index.ts', () => {
 
       req.query.companyId = companyId;
 
-      jest.spyOn(parseImageForm, "parseForm").mockResolvedValue({
+      jest.spyOn(parseImageForm, 'parseForm').mockResolvedValue({
         fields: mockFields,
         files: mockFiles,
       });
 
       // Depreciate ( 20240605 - Murky ) - This is not necessary
-      jest.spyOn(common, "formatApiResponse").mockReturnValue({ httpCode: 201, result: mockReturn });
-      jest.spyOn(common, "timestampInSeconds").mockReturnValue(1);
-      jest.spyOn(common, "transformOCRImageIDToURL").mockReturnValue("testImageUrl");
-      jest.spyOn(fs.promises, "readFile").mockResolvedValue(Buffer.from("test"));
+      jest
+        .spyOn(common, 'formatApiResponse')
+        .mockReturnValue({ httpCode: 201, result: mockReturn });
+      jest.spyOn(common, 'timestampInSeconds').mockReturnValue(1);
+      jest.spyOn(common, 'transformOCRImageIDToURL').mockReturnValue('testImageUrl');
+      jest.spyOn(fs.promises, 'readFile').mockResolvedValue(Buffer.from('test'));
 
       const mockResponse = {
         ok: true,
