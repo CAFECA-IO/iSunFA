@@ -141,7 +141,7 @@ const JournalListTab = () => {
   const displayedDatePicker = (
     <div className="hidden md:flex">
       <DatePicker
-        type={DatePickerType.TEXT}
+        type={DatePickerType.TEXT_PERIOD}
         period={filteredPeriod}
         setFilteredPeriod={setFilteredPeriod}
       />
