@@ -26,6 +26,7 @@ jest.mock('./index.repository', () => {
     createOrFindCompanyInPrisma: jest.fn(),
     createOcrInPrisma: jest.fn(),
     upsertJournalInPrisma: jest.fn(),
+    createJournalAndOcrInPrisma: jest.fn(),
   };
 });
 
@@ -285,32 +286,6 @@ describe('/OCR/index.ts', () => {
     });
   });
 
-  describe("createJournalAndOcrInPrisma", () => {
-    it('should use transaction to create journal and ocr in prisma', async () => {
-      const companyId = 1;
-      const ocrId = 2;
-
-      const aichResult = {
-        resultStatus: {
-          resultId: '1',
-          status: ProgressStatus.IN_PROGRESS,
-        },
-        imageUrl: 'testImageUrl',
-        imageName: 'testImageName',
-        imageSize: 1024,
-      };
-      (repository.createOrFindCompanyInPrisma as jest.Mock).mockResolvedValue({ id: companyId });
-      (repository.createOcrInPrisma as jest.Mock).mockResolvedValue({ id: ocrId });
-      (repository.upsertJournalInPrisma as jest.Mock).mockResolvedValue(undefined);
-
-      await module.createJournalAndOcrInPrisma(companyId, aichResult);
-
-      expect(repository.createOrFindCompanyInPrisma).toHaveBeenCalledWith(companyId);
-      expect(repository.createOcrInPrisma).toHaveBeenCalledWith(aichResult);
-      expect(repository.upsertJournalInPrisma).toHaveBeenCalledWith(companyId, aichResult, ocrId);
-    });
-  });
-
   describe("handlePostRequest", () => {
     it("should return resultJson", async () => {
       const companyId = "1";
@@ -351,7 +326,6 @@ describe('/OCR/index.ts', () => {
         return {
           postImageToAICH: jest.fn().mockResolvedValue(mockAichReturn),
           createOrFindCompanyInPrisma: jest.fn().mockResolvedValue({ id: companyId }),
-          createJournalAndOcrInPrisma: jest.fn(),
           isCompanyIdValid: jest.fn().mockReturnValue(true),
           getImageFileFromFormData: jest.fn().mockResolvedValue(mockFiles),
         };
@@ -369,6 +343,7 @@ describe('/OCR/index.ts', () => {
       jest.spyOn(common, "timestampInSeconds").mockReturnValue(1);
       jest.spyOn(common, "transformOCRImageIDToURL").mockReturnValue("testImageUrl");
       jest.spyOn(fs.promises, "readFile").mockResolvedValue(Buffer.from("test"));
+
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({ payload: 'testPayload' }),
@@ -377,6 +352,8 @@ describe('/OCR/index.ts', () => {
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
       await module.handlePostRequest(req, res);
+
+      expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockResult);
     });
