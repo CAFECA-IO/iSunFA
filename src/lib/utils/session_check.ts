@@ -30,7 +30,7 @@ export async function checkCompanySession(req: NextApiRequest, res: NextApiRespo
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
   }
-  const companyUser = await prisma.userCompanyRole.findFirst({
+  const companyUser = await prisma.admin.findFirst({
     where: {
       userId,
       companyId,

@@ -9,7 +9,6 @@ import { formatApiResponse, getDomains, timestampInSeconds } from '@/lib/utils/c
 import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
 import { IInvitation } from '@/interfaces/invitation';
 import { getSession } from '@/lib/utils/get_session';
-// import MemoryStore from '@/lib/utils/get_session';
 
 export default async function handler(
   req: NextApiRequest,
@@ -69,8 +68,9 @@ export default async function handler(
       if (invitation.expiredAt < nowTimestamp) {
         return;
       }
+      const email = getUser.email || '';
       await prisma.$transaction(async (tx) => {
-        await tx.userCompanyRole.create({
+        await tx.admin.create({
           data: {
             user: {
               connect: {
@@ -87,6 +87,8 @@ export default async function handler(
                 id: invitation.roleId,
               },
             },
+            email,
+            status: true,
             startDate: nowTimestamp,
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,

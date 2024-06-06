@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { IUser } from '@/interfaces/user';
 import { ONE_DAY_IN_S } from '@/constants/time';
 import handler from './invitation';
 
@@ -30,6 +29,8 @@ beforeEach(async () => {
         code: 'TST_invitation1',
         name: 'Test Company',
         regional: 'TW',
+        kycStatus: false,
+        imageId: 'imageId',
         startDate: nowTimestamp,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
@@ -50,7 +51,9 @@ beforeEach(async () => {
             code: 'TST_invitation3',
             name: 'Test Company',
             regional: 'TW',
-            startDate: 0,
+            kycStatus: false,
+            imageId: 'imageId',
+            startDate: nowTimestamp,
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
           },
@@ -73,7 +76,7 @@ beforeEach(async () => {
           where: { credentialId: 'test_PUT_INVITATION' },
           create: {
             credentialId: 'test_PUT_INVITATION',
-            email: '',
+            email: 'test_PUT_INVITATION@test',
             name: '',
             publicKey: '',
             algorithm: '',
@@ -82,6 +85,8 @@ beforeEach(async () => {
           },
         },
       },
+      email: 'test_PUT_INVITATION@test',
+      phone: '',
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
@@ -89,12 +94,7 @@ beforeEach(async () => {
   invitationCode = invitation.code;
   roleId = invitation.roleId;
   companyId = invitation.companyId;
-  const user = (await prisma.user.findUnique({
-    where: {
-      credentialId: 'test_PUT_INVITATION',
-    },
-  })) as IUser;
-  userId = user.id;
+  userId = invitation.createdUserId;
   req = {
     headers: {},
     body: null,
@@ -108,13 +108,9 @@ beforeEach(async () => {
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.userCompanyRole.delete({
+    await prisma.invitation.delete({
       where: {
-        userId_companyId_roleId: {
-          userId,
-          companyId,
-          roleId,
-        },
+        code: invitationCode,
       },
     });
   } catch (error) {
@@ -124,15 +120,6 @@ afterEach(async () => {
     await prisma.company.delete({
       where: {
         id: companyId,
-      },
-    });
-  } catch (error) {
-    // Info: (20240517 - Jacky) If already deleted, ignore the error.
-  }
-  try {
-    await prisma.invitation.delete({
-      where: {
-        code: invitationCode,
       },
     });
   } catch (error) {

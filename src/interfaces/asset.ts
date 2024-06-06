@@ -2,7 +2,6 @@ export interface Asset {
   id: string;
   name: string;
   projectId: string;
-  projectName: string;
   type: string;
   description: string;
   startDate: string;
@@ -13,4 +12,6 @@ export interface Asset {
   residualValue: string;
   estimatedUsefulLife: number;
   depreciationMethod: string;
+  createdAt: number;
+  updatedAt: number;
 }
