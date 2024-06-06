@@ -39,7 +39,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 
   const options: ApexOptions = {
     chart: {
-      id: 'project-ROI-chart',
+      id: 'project-income-expense-chart',
       toolbar: {
         show: false,
       },
@@ -355,7 +355,7 @@ const ProjectRoiComparisonChart = () => {
             </div>
 
             {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
-            <div className="">
+            <div className="hidden lg:flex">
               <DatePicker
                 type={DatePickerType.ICON_PERIOD}
                 minDate={minDate}
@@ -391,19 +391,19 @@ const ProjectRoiComparisonChart = () => {
 
           {/* Info: ----- mobile version (20240419 - Shirley) ----- */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
-            {/* <div>
+            <div>
               <DatePicker
-                type={DatePickerType.ICON}
+                type={DatePickerType.ICON_PERIOD}
                 minDate={minDate}
                 maxDate={maxDate}
                 period={period}
                 setFilteredPeriod={setPeriod}
               />
-            </div> */}
+            </div>
 
             {/* Info: prev and next button (20240419 - Shirley) */}
             {/* Deprecated: No relevant function in the latest mockup (20240618 - Shirley) */}
-            {/* <div className="flex flex-1 justify-end space-x-2">
+            <div className="flex flex-1 justify-end space-x-2">
               <Button
                 disabled={currentPage === 1}
                 onClick={goToPrevPage}
@@ -421,7 +421,7 @@ const ProjectRoiComparisonChart = () => {
               >
                 <AiOutlineRight size={15} />
               </Button>
-            </div> */}
+            </div>
           </div>
         </div>
       </div>
