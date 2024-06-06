@@ -21,6 +21,11 @@ beforeEach(async () => {
         credentialId: 'subscription_index2_test',
       },
     },
+    include: {
+      company: true,
+      user: true,
+      role: true,
+    },
   })) as IAdmin;
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -79,6 +84,11 @@ beforeEach(async () => {
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
+      include: {
+        company: true,
+        user: true,
+        role: true,
+      },
     });
   }
   subscription = await prisma.subscription.create({
@@ -118,16 +128,23 @@ beforeEach(async () => {
       },
     },
   });
-  plan = await prisma.plan.create({
-    data: {
+  plan = (await prisma.plan.findUnique({
+    where: {
       name: 'test2',
-      monthlyFee: 100,
-      annualFee: 1000,
-      description: 'test plan',
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
     },
-  });
+  })) as IPlan;
+  if (!plan) {
+    plan = await prisma.plan.create({
+      data: {
+        name: 'test2',
+        monthlyFee: 100,
+        annualFee: 1000,
+        description: 'test plan',
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    });
+  }
   req = {
     headers: {},
     body: null,
@@ -186,27 +203,29 @@ afterEach(async () => {
 describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
     await handler(req, res);
+    // 定義 `expectedSubscription` 結構
+    const expectedSubscription = expect.objectContaining({
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      planId: expect.any(Number),
+      startDate: expect.any(Number),
+      expiredDate: expect.any(Number),
+      status: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedSubscriptionList = expect.arrayContaining([expectedSubscription]);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedSubscriptionList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.arrayContaining([
-          expect.objectContaining({
-            id: expect.any(Number),
-            companyId: expect.any(Number),
-            planId: expect.any(Number),
-            startDate: expect.any(Number),
-            expiredDate: expect.any(Number),
-            status: expect.any(Boolean),
-            createdAt: expect.any(Number),
-            updatedAt: expect.any(Number),
-          }),
-        ]),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should create a new subscription', async () => {
@@ -216,30 +235,25 @@ describe('test subscription API', () => {
       period: SubscriptionPeriod.MONTHLY,
     };
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(201);
-    await prisma.subscription.delete({
-      where: {
-        id: res.json.mock.calls[0][0].payload.id,
-      },
+    const expectedSubscription = expect.objectContaining({
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      planId: expect.any(Number),
+      startDate: expect.any(Number),
+      expiredDate: expect.any(Number),
+      status: expect.any(Boolean),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
     });
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('201'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          companyId: expect.any(Number),
-          planId: expect.any(Number),
-          startDate: expect.any(Number),
-          expiredDate: expect.any(Number),
-          status: expect.any(Boolean),
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
-        }),
-      })
-    );
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('201'),
+      message: expect.any(String),
+      payload: expectedSubscription,
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle unsupported HTTP methods', async () => {
@@ -247,16 +261,15 @@ describe('test subscription API', () => {
     req.method = 'PUT';
     req.query.companyId = admin.companyId.toString();
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
   it('should handle unauthorized access', async () => {
     req = {
@@ -267,15 +280,14 @@ describe('test subscription API', () => {
       session: {},
     } as unknown as jest.Mocked<NextApiRequest>;
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('401'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('401'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });

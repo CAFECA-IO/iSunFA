@@ -5,8 +5,8 @@ import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { getSession } from '@/lib/utils/get_session';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
-import { ONE_DAY_IN_MS } from '@/constants/time';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { ONE_DAY_IN_S } from '@/constants/time';
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,34 +17,36 @@ export default async function handler(
     if (!session.userId) {
       throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     if (req.method === 'GET') {
       const Milestone: IMilestone[] = [
         {
           id: 1,
           projectId: 1,
           status: 'Milestone 1',
-          startDate: new Date().getTime() - 150 * ONE_DAY_IN_MS,
-          endDate: new Date().getTime() - 100 * ONE_DAY_IN_MS,
-          createdAt: new Date().getTime(),
-          updatedAt: new Date().getTime(),
+          startDate: nowTimestamp - 150 * ONE_DAY_IN_S,
+          endDate: nowTimestamp - 100 * ONE_DAY_IN_S,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
         {
           id: 2,
           projectId: 1,
           status: 'Milestone 2',
-          startDate: new Date().getTime() - 50 * ONE_DAY_IN_MS,
-          endDate: new Date().getTime() - 100 * ONE_DAY_IN_MS,
-          createdAt: new Date().getTime(),
-          updatedAt: new Date().getTime(),
+          startDate: nowTimestamp - 50 * ONE_DAY_IN_S,
+          endDate: nowTimestamp - 100 * ONE_DAY_IN_S,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
         {
           id: 3,
           projectId: 1,
           status: 'Milestone 3',
-          startDate: new Date().getTime() - 50 * ONE_DAY_IN_MS,
-          endDate: new Date().getTime() - 5 * ONE_DAY_IN_MS,
-          createdAt: new Date().getTime(),
-          updatedAt: new Date().getTime(),
+          startDate: nowTimestamp - 50 * ONE_DAY_IN_S,
+          endDate: nowTimestamp - 5 * ONE_DAY_IN_S,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       ];
       const { httpCode, result } = formatApiResponse<IMilestone[]>(

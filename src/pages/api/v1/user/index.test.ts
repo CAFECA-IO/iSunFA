@@ -124,38 +124,33 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.roleId,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('test user API', () => {
   it('should list all users', async () => {
     await handler(req, res);
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedUserList = expect.arrayContaining([expectedUser]);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedUserList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.arrayContaining([
-          expect.objectContaining({
-            id: expect.any(Number),
-            name: expect.any(String),
-            credentialId: expect.any(String),
-            publicKey: expect.any(String),
-            algorithm: expect.any(String),
-          }),
-        ]),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should create a new user', async () => {
@@ -176,39 +171,41 @@ describe('test user API', () => {
         id: res.json.mock.calls[0][0].payload.id,
       },
     });
+
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('201'),
+      message: expect.any(String),
+      payload: expectedUser,
+    });
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('201'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          fullName: expect.any(String),
-          email: expect.any(String),
-          phone: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
-        }),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'PUT';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });

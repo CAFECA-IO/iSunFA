@@ -79,6 +79,7 @@ export default async function handler(
       if (invitation.expiredAt < nowTimestamp) {
         return;
       }
+      const email = createdUser.email || '';
       await prisma.$transaction(async (tx) => {
         await tx.admin.create({
           data: {
@@ -97,7 +98,7 @@ export default async function handler(
                 id: invitation.roleId,
               },
             },
-            email: createdUser.email || '',
+            email,
             status: true,
             startDate: nowTimestamp,
             createdAt: nowTimestamp,

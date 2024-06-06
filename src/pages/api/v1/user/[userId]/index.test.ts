@@ -24,7 +24,7 @@ beforeEach(async () => {
         code: 'TST_user1',
       },
       role: {
-        name: 'SUPER_ADMIN',
+        name: 'SUPER_ADMIN2',
       },
     },
   })) as IAdmin;
@@ -125,37 +125,32 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.roleId,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('test user API by userid', () => {
   it('should retrieve user by userid', async () => {
     req.query.userId = admin.userId.toString();
     await handler(req, res);
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedUser,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
-        }),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should update user by userid', async () => {
@@ -169,22 +164,26 @@ describe('test user API by userid', () => {
       imageId: 'imageId',
     };
     await handler(req, res);
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedUser,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
-        }),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should delete user by userid', async () => {
@@ -192,80 +191,86 @@ describe('test user API by userid', () => {
     req.method = 'DELETE';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
-        }),
-      })
-    );
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedUser,
+    });
+    expect(res.status).toHaveBeenCalledWith(200);
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle unsupported HTTP methods', async () => {
     req.query.userId = admin.userId.toString();
     req.method = 'POST';
     await handler(req, res);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle missing userid in headers', async () => {
     req.query.userId = '-1';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('404'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle missing userid in query', async () => {
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle invalid userid', async () => {
     req.headers.userid = '-1';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });

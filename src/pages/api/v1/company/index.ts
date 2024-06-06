@@ -60,7 +60,6 @@ export default async function handler(
           role: {
             connectOrCreate: {
               where: {
-                // SUPER_ADMIN
                 name: 'ADMIN',
               },
               create: {
