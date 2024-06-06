@@ -6,7 +6,7 @@ let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
 const companyData = [
-  { id: -2, name: 'ASDF', code: '202406059999', regional: 'Taiwan', kycStatus: false, startDate: 1717558732, createdAt: 1717558732, updatedAt: 1717558732 },
+  { id: -2, name: 'ASDF', code: '2024060599992', regional: 'Taiwan', kycStatus: false, startDate: 1717558732, createdAt: 1717558732, updatedAt: 1717558732 },
 ];
 
 const projectsData = [
