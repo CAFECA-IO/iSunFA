@@ -5,7 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, pageToOffset } from '@/lib/utils/common';
 import prisma from '@/client';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import type { account } from '@prisma/client';
+import type { Account } from '@prisma/client';
 import { AccountType } from '@/constants/account';
 import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
 
@@ -16,17 +16,17 @@ export async function findManyAccountsInPrisma(
   liquidity?: boolean
 ) {
   try {
-  const offset = pageToOffset(page, limit);
-  const accounts = await prisma.account.findMany({
-    skip: offset,
-    take: limit,
-    where: {
-      type,
-      liquidity,
-    },
-  });
+    const offset = pageToOffset(page, limit);
+    const accounts = await prisma.account.findMany({
+      skip: offset,
+      take: limit,
+      where: {
+        type,
+        liquidity,
+      },
+    });
 
-  return accounts;
+    return accounts;
   } catch (error) {
     // Info (20240516 - Murky) - Debugging error
     // eslint-disable-next-line no-console
@@ -35,7 +35,7 @@ export async function findManyAccountsInPrisma(
   }
 }
 
-export function formatAccounts(accounts: account[]): IAccount[] {
+export function formatAccounts(accounts: Account[]): IAccount[] {
   return accounts.map((account) => {
     return {
       id: account.id,

@@ -3,6 +3,6 @@ export interface IOCR {
   imageName: string;
   imageUrl: string;
   imageSize: number;
-  createdAt: number; // timestamp in seconds
-  updatedAt: number; // timestamp in seconds
+  createdAt: number;
+  updatedAt: number;
 }

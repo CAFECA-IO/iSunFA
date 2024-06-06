@@ -15,7 +15,7 @@ async function getPofitChange() {
   const endOfYesterdayTimestamp = timestampInSeconds(
     new Date().setHours(23, 59, 59, 999) - 24 * 60 * 60 * 1000
   );
-  const IncomeExpenseToday = await prisma.cashflow.groupBy({
+  const IncomeExpenseToday = await prisma.incomeExpense.groupBy({
     by: ['createdAt'],
     _sum: {
       income: true,
@@ -33,7 +33,7 @@ async function getPofitChange() {
     // eslint-disable-next-line no-underscore-dangle
     return acc + (today._sum.income! - today._sum.expense!);
   }, 0);
-  const IncomeExpenseYesterday = await prisma.cashflow.groupBy({
+  const IncomeExpenseYesterday = await prisma.incomeExpense.groupBy({
     by: ['createdAt'],
     _sum: {
       income: true,
@@ -67,7 +67,7 @@ export default async function handler(
           stage: 'Beta Testing',
         },
       });
-      const projectsROI = await prisma.cashflow.groupBy({
+      const projectsROI = await prisma.incomeExpense.groupBy({
         by: ['projectId'],
         _sum: {
           income: true,

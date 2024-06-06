@@ -36,6 +36,7 @@ beforeEach(async () => {
         code: 'TST_client2',
         name: 'Test Company',
         regional: 'TW',
+        kycStatus: false,
         startDate: nowTimestamp,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,

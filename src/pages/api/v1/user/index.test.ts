@@ -1,16 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { IAdmin } from '@/interfaces/admin';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let userCompanyRole: {
-  userId: number;
-  companyId: number;
-  roleId: number;
-  startDate: number;
-};
+let admin: IAdmin;
 
 beforeEach(async () => {
   res = {
@@ -19,7 +15,7 @@ beforeEach(async () => {
   } as unknown as jest.Mocked<NextApiResponse>;
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  userCompanyRole = (await prisma.userCompanyRole.findFirst({
+  admin = (await prisma.admin.findFirst({
     where: {
       user: {
         credentialId: 'john_tst',
@@ -31,14 +27,9 @@ beforeEach(async () => {
         name: 'SUPER_ADMIN',
       },
     },
-  })) as {
-    userId: number;
-    companyId: number;
-    roleId: number;
-    startDate: number;
-  };
-  if (!userCompanyRole) {
-    userCompanyRole = await prisma.userCompanyRole.create({
+  })) as IAdmin;
+  if (!admin) {
+    admin = await prisma.admin.create({
       data: {
         user: {
           connectOrCreate: {
@@ -78,12 +69,16 @@ beforeEach(async () => {
               code: 'TST_user2',
               name: 'Test Company',
               regional: 'TW',
+              kycStatus: false,
+              imageId: 'imageId',
               startDate: nowTimestamp,
               createdAt: nowTimestamp,
               updatedAt: nowTimestamp,
             },
           },
         },
+        email: 'test@email',
+        status: false,
         startDate: nowTimestamp,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
@@ -95,7 +90,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: userCompanyRole.userId },
+    session: { userId: admin.userId },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 });
@@ -103,13 +98,9 @@ beforeEach(async () => {
 afterEach(async () => {
   jest.clearAllMocks();
   try {
-    await prisma.userCompanyRole.delete({
+    await prisma.admin.delete({
       where: {
-        userId_companyId_roleId: {
-          userId: userCompanyRole.userId,
-          companyId: userCompanyRole.companyId,
-          roleId: userCompanyRole.roleId,
-        },
+        id: admin.id,
       },
     });
   } catch (error) {
@@ -118,7 +109,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: userCompanyRole.userId,
+        id: admin.userId,
       },
     });
   } catch (error) {
@@ -127,16 +118,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: userCompanyRole.companyId,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: userCompanyRole.roleId,
+        id: admin.companyId,
       },
     });
   } catch (error) {
@@ -147,24 +129,28 @@ afterEach(async () => {
 describe('test user API', () => {
   it('should list all users', async () => {
     await handler(req, res);
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedUserList = expect.arrayContaining([expectedUser]);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedUserList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.arrayContaining([
-          expect.objectContaining({
-            id: expect.any(Number),
-            name: expect.any(String),
-            credentialId: expect.any(String),
-            publicKey: expect.any(String),
-            algorithm: expect.any(String),
-          }),
-        ]),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should create a new user', async () => {
@@ -185,39 +171,41 @@ describe('test user API', () => {
         id: res.json.mock.calls[0][0].payload.id,
       },
     });
+
+    const expectedUser = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      credentialId: expect.any(String),
+      publicKey: expect.any(String),
+      algorithm: expect.any(String),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('201'),
+      message: expect.any(String),
+      payload: expectedUser,
+    });
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('201'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          fullName: expect.any(String),
-          email: expect.any(String),
-          phone: expect.any(String),
-          credentialId: expect.any(String),
-          publicKey: expect.any(String),
-          algorithm: expect.any(String),
-        }),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle unsupported HTTP methods', async () => {
     req.method = 'PUT';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });

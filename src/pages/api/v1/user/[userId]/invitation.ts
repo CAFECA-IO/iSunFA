@@ -42,7 +42,7 @@ export default async function handler(
         });
         const now = Date.now();
         const nowTimestamp = timestampInSeconds(now);
-        const connectedCompany = await tx.userCompanyRole.create({
+        const connectedCompany = await tx.admin.create({
           data: {
             user: {
               connect: {
@@ -62,6 +62,8 @@ export default async function handler(
             startDate: nowTimestamp,
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
+            email: getInvitation.email,
+            status: true,
           },
           select: {
             company: true,

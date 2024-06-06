@@ -20,4 +20,5 @@ export interface ICompanyKYC {
   taxCertificateId: string;
   representativeIdCardId: string;
   createdAt: number;
+  updatedAt: number;
 }
