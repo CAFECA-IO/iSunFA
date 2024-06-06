@@ -5,7 +5,7 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 const report = {
-  id: -100,
+  id: 888886100,
   name: "Balance Sheet-20240423-1",
   tokenContract: "0x00000000219ab540356cBB839Cbe05303d7705Fa",
   tokenId: "37002036",

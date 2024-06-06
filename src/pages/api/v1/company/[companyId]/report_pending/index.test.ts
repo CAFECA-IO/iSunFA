@@ -9,7 +9,7 @@ let res: jest.Mocked<NextApiResponse>;
 
 const dummyPendingReportItems = [
   {
-    id: -1,
+    id: 8888871,
     name: 'Cash Flow Statement-20240420-1',
     from: 1683043200,
     to: 1704067200,
@@ -22,7 +22,7 @@ const dummyPendingReportItems = [
     updatedAt: 1713611226
   },
   {
-    id: -2,
+    id: 8888872,
     name: 'Cash Flow Statement-20240505-1',
     from: 1695609600,
     to: 1698106883,
@@ -35,7 +35,7 @@ const dummyPendingReportItems = [
     updatedAt: 1714897574
   },
   {
-    id: -3,
+    id: 8888873,
     name: 'Comprehensive Income Statement-20240412-1',
     remainingSeconds: 1615,
     paused: false,
@@ -48,7 +48,7 @@ const dummyPendingReportItems = [
     updatedAt: 1712863312
   },
   {
-    id: -4,
+    id: 8888874,
     name: 'Balance Sheet-20240423-1',
     remainingSeconds: 3680,
     paused: false,
@@ -61,7 +61,7 @@ const dummyPendingReportItems = [
     updatedAt: 1713846643
   },
   {
-    id: -5,
+    id: 8888875,
     name: 'Balance Sheet-20240501-1',
     remainingSeconds: 30,
     paused: false,
