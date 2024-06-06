@@ -227,10 +227,11 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
-          type={DatePickerType.CHOOSE_PERIOD}
+          type={DatePickerType.TEXT_PERIOD}
           period={pendingPeriod}
           setFilteredPeriod={setPendingPeriod}
           btnClassName="w-250px"
+          datePickerClassName="lg:w-auto"
         />{' '}
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
@@ -434,10 +435,11 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
-          type={DatePickerType.CHOOSE_PERIOD}
+          type={DatePickerType.TEXT_PERIOD}
           period={historyPeriod}
           setFilteredPeriod={setHistoryPeriod}
           btnClassName="w-250px"
+          datePickerClassName="lg:w-auto"
         />{' '}
         {/* Info: Search bar (20240513 - Shirley) */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">

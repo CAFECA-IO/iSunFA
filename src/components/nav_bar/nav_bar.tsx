@@ -14,6 +14,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
+import I18n from '@/components/i18n/i18n';
 
 const NavBar = () => {
   const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth } = useUserCtx();
@@ -240,8 +241,10 @@ const NavBar = () => {
     </div>
   );
 
-  const displayedUserMenu = isUserMenuOpen ? (
-    <div className="absolute right-16 top-70px z-100">
+  const displayedUserMenu = (
+    <div
+      className={`${isUserMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute right-16 top-70px z-100 transition-all duration-300 ease-in-out`}
+    >
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
         <Image
           alt="avatar"
@@ -249,8 +252,29 @@ const NavBar = () => {
           width={56}
           height={56}
           className="mx-auto aspect-square w-16 self-center"
-        />
-
+        />{' '}
+        <div className="top-1.3rem group absolute inset-0 left-1/2 h-3.3rem w-3.3rem -translate-x-1/2 rounded-full hover:cursor-pointer">
+          {/* Info: black cover (20240605 - Shirley) */}
+          <div className="h-3.3rem w-3.3rem rounded-full bg-black opacity-0 transition-opacity group-hover:opacity-50"></div>
+          {/* Info: edit icon (20240605 - Shirley) */}
+          <div className="absolute left-1/3 top-4 opacity-0 group-hover:opacity-100">
+            {' '}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill="#FCFDFF"
+                fillRule="evenodd"
+                d="M14.712 1.377a2.768 2.768 0 113.914 3.915l-7.969 7.969-.053.052c-.235.236-.46.462-.732.628a2.666 2.666 0 01-.77.32c-.311.074-.63.074-.963.074H6.67a1 1 0 01-1-1v-1.396-.075c0-.333 0-.651.074-.962.065-.272.173-.532.319-.77.167-.273.392-.498.628-.733l.053-.053 7.969-7.969zm2.5 1.415c-.3-.3-.786-.3-1.086 0L8.157 10.76c-.322.321-.363.372-.39.415a.667.667 0 00-.08.193c-.011.05-.018.115-.018.57v.395h.396c.455 0 .52-.006.57-.018a.667.667 0 00.192-.08c.044-.027.094-.068.416-.39l7.969-7.969c.3-.3.3-.786 0-1.085zM5.629 2.334h3.54a1 1 0 110 2h-3.5c-.716 0-1.194.001-1.56.031-.356.03-.518.08-.62.133a1.5 1.5 0 00-.656.655c-.053.103-.104.266-.133.62-.03.368-.03.845-.03 1.561v7c0 .717 0 1.194.03 1.561.029.355.08.518.133.62l-.891.454.89-.454a1.5 1.5 0 00.656.656c.103.052.265.104.62.133.367.03.845.03 1.561.03h7c.717 0 1.194 0 1.56-.03.356-.03.518-.08.621-.133a1.5 1.5 0 00.656-.656c.052-.102.103-.265.132-.62.03-.367.031-.844.031-1.56v-3.5a1 1 0 112 0v3.54c0 .665 0 1.225-.037 1.683-.04.479-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.432.22-.887.305-1.365.344-.458.037-1.018.037-1.684.037H5.63c-.666 0-1.225 0-1.683-.037-.479-.04-.934-.124-1.366-.344a3.5 3.5 0 01-1.53-1.53c-.22-.431-.304-.886-.344-1.365C.67 15.6.67 15.04.67 14.375v-7.08c0-.667 0-1.226.037-1.684.04-.479.125-.934.345-1.366a3.5 3.5 0 011.53-1.53c.431-.22.886-.304 1.365-.343.458-.038 1.017-.038 1.683-.038z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          </div>
+        </div>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
             {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
@@ -260,7 +284,7 @@ const NavBar = () => {
             // TODO: temp disabled (20240517 - Shirley)
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
-            className="flex shrink-0 flex-col justify-center rounded-xs px-2.5 disabled:opacity-50"
+            className="flex shrink-0 flex-col justify-center rounded-xs px-2 disabled:opacity-50"
           >
             <div className="flex items-center justify-center">
               <svg
@@ -399,7 +423,7 @@ const NavBar = () => {
         </button>
       </div>
     </div>
-  ) : null;
+  );
 
   const displayedCompanyChangeBtn = selectedCompany ? (
     <Link
@@ -422,10 +446,9 @@ const NavBar = () => {
   ) : null;
 
   const displayedLogInBtn = signedIn ? (
-    <div ref={userMenuRef}>
-      <button type="button" onClick={avatarClickHandler}>
+    <div ref={userMenuRef} className="">
+      <button type="button" onClick={avatarClickHandler} className="">
         {/* Info: avatar svg (20240408 - Shirley) */}
-
         <Image
           alt="avatar"
           src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
@@ -586,29 +609,9 @@ const NavBar = () => {
         </div>
         {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
-          <button
-            type="button"
-            // TODO: temp disabled (20240517 - Shirley)
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
-            className="disabled:opacity-50"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 22 22"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M3.02388 9.25114C2.90079 9.81491 2.83594 10.4005 2.83594 11.0011C2.83594 11.6018 2.90079 12.1874 3.02388 12.7511H6.47228C6.39399 12.1804 6.34826 11.6031 6.33615 11.022C6.33587 11.0081 6.33587 10.9942 6.33615 10.9803C6.34826 10.3992 6.39399 9.82191 6.47228 9.25114H3.02388ZM3.7459 7.25114H6.8868C7.29111 5.80379 7.91098 4.42273 8.72736 3.15561C6.56065 3.78287 4.76484 5.28338 3.7459 7.25114ZM11.0026 3.39268C10.1114 4.56077 9.4281 5.86623 8.97597 7.25114H13.0292C12.5771 5.86623 11.8938 4.56077 11.0026 3.39268ZM13.5113 9.25114H8.49394C8.40247 9.82741 8.34939 10.412 8.33617 11.0011C8.34939 11.5903 8.40247 12.1749 8.49394 12.7511H13.5113C13.6027 12.1749 13.6558 11.5903 13.669 11.0011C13.6558 10.412 13.6027 9.82741 13.5113 9.25114ZM15.5329 12.7511C15.6112 12.1804 15.6569 11.6031 15.6691 11.022C15.6693 11.0081 15.6693 10.9942 15.6691 10.9803C15.6569 10.3992 15.6112 9.82191 15.5329 9.25114H18.9813C19.1044 9.81491 19.1693 10.4005 19.1693 11.0011C19.1693 11.6018 19.1044 12.1874 18.9813 12.7511H15.5329ZM13.0292 14.7511H8.97597C9.4281 16.136 10.1114 17.4415 11.0026 18.6096C11.8938 17.4415 12.5771 16.136 13.0292 14.7511ZM8.72735 18.8467C7.91098 17.5795 7.29111 16.1985 6.8868 14.7511H3.7459C4.76484 16.7189 6.56065 18.2194 8.72735 18.8467ZM13.2779 18.8467C14.0942 17.5795 14.7141 16.1985 15.1184 14.7511H18.2593C17.2404 16.7189 15.4446 18.2194 13.2779 18.8467ZM18.2593 7.25114H15.1184C14.7141 5.80379 14.0942 4.42273 13.2779 3.15561C15.4446 3.78287 17.2404 5.28338 18.2593 7.25114ZM0.835938 11.0011C0.835938 5.38624 5.38771 0.834473 11.0026 0.834473C16.6175 0.834473 21.1693 5.38624 21.1693 11.0011C21.1693 16.616 16.6175 21.1678 11.0026 21.1678C5.38771 21.1678 0.835938 16.616 0.835938 11.0011Z"
-                fill="#001840"
-              />
-            </svg>
-          </button>
+          <I18n />
+          {/* Info: globe (i18n) (20240605 - Shilrey) */}
+
           <button
             type="button"
             // TODO: temp disabled (20240517 - Shirley)
@@ -659,7 +662,7 @@ const NavBar = () => {
         {/* Info: (20240521 - Julian) Company change button */}
         {displayedCompanyChangeBtn}
 
-        <div className="my-auto">{displayedLogInBtn}</div>
+        {displayedLogInBtn}
       </div>
       {displayedBurgerMenu}
     </div>

@@ -11,6 +11,8 @@ import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
 import Pagination from '@/components/pagination/pagination';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const StepOneTab = () => {
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
@@ -88,6 +90,29 @@ const StepOneTab = () => {
     // ToDo: (20240528 - Julian) 應串接刪除 item 的 API
     const newList = fileList.filter((data) => data.id !== id);
     setFileList(newList);
+  };
+
+  const qrCodeScanClickHandler = () => {
+    if (selectedCompany) {
+      cameraScannerVisibilityHandler();
+    } else {
+      toastHandler({
+        id: 'qrCodeScanClickHandler',
+        content: (
+          <div className="flex items-center justify-between">
+            <p>Please select a company first</p>
+            <Link
+              href={ISUNFA_ROUTE.SELECT_COMPANY}
+              className="font-semibold text-link-text-warning hover:opacity-70"
+            >
+              Go to select
+            </Link>
+          </div>
+        ),
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
   };
 
   const displayedFileList = fileList.map((data) => (
@@ -185,7 +210,7 @@ const StepOneTab = () => {
         {/* Info: (20240422 - Julian) Scan QR code */}
         <button
           type="button"
-          onClick={cameraScannerVisibilityHandler}
+          onClick={qrCodeScanClickHandler}
           className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px"
         >
           <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />

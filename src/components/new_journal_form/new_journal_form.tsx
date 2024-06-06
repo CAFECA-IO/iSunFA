@@ -227,11 +227,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-        projectSelection[0]
+          projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-        contractSelection[0]
+          contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -704,7 +704,7 @@ const NewJournalForm = () => {
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
-              type={DatePickerType.CHOOSE_DATE}
+              type={DatePickerType.TEXT_DATE}
             />
           </div>
 
