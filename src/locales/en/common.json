@@ -11,7 +11,11 @@
     "ABOUT": "About",
     "TRY_NOW": "Try Now",
     "SIGN_OUT": "Sign Out",
-    "REPORTS": "Reports"
+    "REPORTS": "Reports",
+    "DASHBOARD": "Dashboard",
+    "LOGIN": "Login",
+    "MARK_ALL_AS_READ": "Mark all as read",
+    "READ_MORE": "Read more..."
   },
   "USER": {
     "MY_ADDRESS": "My Address page",

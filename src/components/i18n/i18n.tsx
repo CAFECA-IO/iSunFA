@@ -2,15 +2,15 @@ import { useTranslation } from 'next-i18next';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import useOuterClick from '../../lib/hooks/use_outer_click';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 type TranslateFunction = (s: string) => string;
-interface II18nParams {
+interface II18nProps {
   langIsOpen?: boolean;
   setLangIsOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
-const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
+const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const [openMenu, setOpenMenu] =
@@ -45,7 +45,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
         }  rounded-none bg-white shadow-dropmenu transition-all duration-300`}
       >
         <ul
-          className="mx-3 py-1 pb-3 text-base text-button-text-secondary"
+          className="mx-0 py-1 pb-3 text-base text-button-text-secondary"
           aria-labelledby="i18nButton"
         >
           {internationalizationList.map((item) => (
@@ -76,7 +76,10 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
         id="I18nMenuMobile"
         className="absolute left-0 top-28 z-10 h-full w-screen bg-white shadow"
       >
-        <ul className="text-center text-base dark:text-gray-200" aria-labelledby="i18nButton">
+        <ul
+          className="text-center text-base text-button-text-secondary"
+          aria-labelledby="i18nButton"
+        >
           {internationalizationList.map((item) => (
             <li key={item.value} onClick={mobileClickHandler}>
               <Link

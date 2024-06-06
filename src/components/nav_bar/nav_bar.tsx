@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import React from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
@@ -15,8 +16,12 @@ import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/dis
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
+import { TranslateFunction } from '@/interfaces/locale';
+import Notification from '@/components/notification/notification';
 
 const NavBar = () => {
+  const { t }: { t: TranslateFunction } = useTranslation('common');
+
   const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth } = useUserCtx();
   const router = useRouter();
 
@@ -464,8 +469,7 @@ const NavBar = () => {
       {/* Info: desktop version (20240530 - Shirley) */}
       <Button className="hidden h-40px bg-button-surface-strong-primary lg:flex">
         <p className={cn('text-sm leading-6 tracking-normal text-button-text-primary-solid')}>
-          Login
-          {/* {t('login')} */}
+          {t('NAV_BAR.LOGIN')}
         </p>
 
         <svg
@@ -579,7 +583,9 @@ const NavBar = () => {
                   </g>
                 </svg>
               </div>
-              <div className="text-base font-medium leading-6 tracking-normal">Dashboard</div>
+              <div className="text-base font-medium leading-6 tracking-normal">
+                {t('NAV_BAR.DASHBOARD')}
+              </div>
             </Link>
             <Link
               href={ISUNFA_ROUTE.CONTACT_US}
@@ -603,16 +609,19 @@ const NavBar = () => {
                   </g>
                 </svg>
               </div>
-              <div className="text-base font-medium leading-6 tracking-normal">Contact us</div>
+              <div className="text-base font-medium leading-6 tracking-normal">
+                {t('NAV_BAR.CONTACT_US')}
+              </div>
             </Link>
           </div>
         </div>
         {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
+          {/* Info: globe (i18n) (20240605 - Shirley) */}
           <I18n />
-          {/* Info: globe (i18n) (20240605 - Shilrey) */}
-
-          <button
+          {/* Info: notification (20240606 - Shirley) */}
+          <Notification />
+          {/* <button
             type="button"
             // TODO: temp disabled (20240517 - Shirley)
             // eslint-disable-next-line react/jsx-boolean-value
@@ -634,7 +643,8 @@ const NavBar = () => {
                 fill="#001840"
               />
             </svg>
-          </button>
+          </button> */}
+          {/* Info: app menu (20240606 - Shirley) */}
           <button type="button" onClick={appMenuClickHandler}>
             <svg
               width="22"
