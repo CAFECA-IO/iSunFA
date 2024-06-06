@@ -9,7 +9,7 @@ let res: jest.Mocked<NextApiResponse>;
 
 const dummyGeneratedReportItems = [
   {
-    id: -6,
+    id: 10000006,
     name: 'Cash Flow Balance Sheet-20240423-1-20240420-1',
     from: 1715616000,
     to: 1718208000,
@@ -25,11 +25,11 @@ const dummyGeneratedReportItems = [
     updatedAt: 1713815673,
   },
   {
-    id: -7,
+    id: 10000007,
     name: 'Cash Flow Statement-20240420-1',
     from: 1715529600,
     to: 1718121600,
-    projectId: -1,
+    projectId: 8888881,
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
@@ -42,9 +42,9 @@ const dummyGeneratedReportItems = [
     updatedAt: 1713543101,
   },
   {
-    id: -8,
+    id: 10000008,
     name: 'Balance Sheet-20240427-1',
-    projectId: -2,
+    projectId: 8888882,
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
@@ -59,7 +59,7 @@ const dummyGeneratedReportItems = [
     updatedAt: 1714220640,
   },
   {
-    id: -9,
+    id: 10000009,
     name: 'Comprehensive Income Statement-20240422-1',
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000011111111111111111111111117',
     downloadLink: 'https://BFample.com/download/report.pdf',
@@ -75,9 +75,9 @@ const dummyGeneratedReportItems = [
     updatedAt: 1713755682,
   },
   {
-    id: -10,
+    id: 100000010,
     name: 'Balance Sheet-20240429-1',
-    projectId: -3,
+    projectId: 8888883,
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
@@ -95,8 +95,8 @@ const dummyGeneratedReportItems = [
 
 const projects = [
   {
-    id: -1,
-    companyId: -100,
+    id: 8888881,
+    companyId: 888888100,
     name: 'iSunFA',
     completedPercent: 30,
     stage: 'Designing',
@@ -105,8 +105,8 @@ const projects = [
     imageId: 'ISF',
   },
   {
-    id: -2,
-    companyId: -100,
+    id: 8888882,
+    companyId: 888888100,
     name: 'BAIFA',
     completedPercent: 80,
     stage: 'Beta Testing',
@@ -115,8 +115,8 @@ const projects = [
     imageId: 'BF',
   },
   {
-    id: -3,
-    companyId: -100,
+    id: 8888883,
+    companyId: 888888100,
     name: 'iSunOne',
     completedPercent: 60,
     stage: 'Develop',
@@ -127,7 +127,7 @@ const projects = [
 ];
 
 const company = {
-  id: -100,
+  id: 888888100,
   name: 'Test Company',
   code: 'TST_company_user-100',
   regional: 'TW',
