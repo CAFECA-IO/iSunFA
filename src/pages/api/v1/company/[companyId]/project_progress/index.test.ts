@@ -5,15 +5,19 @@ import handler from './index';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
+const companyData = [
+  { id: -4, name: 'ASDF', code: '202406059999', regional: 'Taiwan', kycStatus: false, startDate: 1717558732, createdAt: 1717558732, updatedAt: 1717558732 },
+];
+
 const projectsData = [
-  { id: -11, companyId: 1, name: 'iSunFA', completedPercent: 30, stage: 'Designing', imageId: 'ISF', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -12, companyId: 1, name: 'BAIFA', completedPercent: 80, stage: 'Beta Testing', imageId: 'BF', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -13, companyId: 1, name: 'iSunOne', completedPercent: 60, stage: 'Develop', imageId: 'ISO', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -14, companyId: 1, name: 'TideBit', completedPercent: 98, stage: 'Sold', imageId: 'TB', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -15, companyId: 1, name: 'ProjectE', completedPercent: 95, stage: 'Selling', imageId: 'E', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -16, companyId: 1, name: 'ProjectF', completedPercent: 100, stage: 'Archived', imageId: 'F', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -17, companyId: 1, name: 'ProjectG', completedPercent: 70, stage: 'Develop', imageId: 'G', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -18, companyId: 1, name: 'ProjectH', completedPercent: 85, stage: 'Beta Testing', imageId: 'H', createdAt: 1651368365, updatedAt: 1651368365 }
+  { id: -11, companyId: -4, name: 'iSunFA', completedPercent: 30, stage: 'Designing', imageId: 'ISF', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -12, companyId: -4, name: 'BAIFA', completedPercent: 80, stage: 'Beta Testing', imageId: 'BF', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -13, companyId: -4, name: 'iSunOne', completedPercent: 60, stage: 'Develop', imageId: 'ISO', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -14, companyId: -4, name: 'TideBit', completedPercent: 98, stage: 'Sold', imageId: 'TB', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -15, companyId: -4, name: 'ProjectE', completedPercent: 95, stage: 'Selling', imageId: 'E', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -16, companyId: -4, name: 'ProjectF', completedPercent: 100, stage: 'Archived', imageId: 'F', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -17, companyId: -4, name: 'ProjectG', completedPercent: 70, stage: 'Develop', imageId: 'G', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: -18, companyId: -4, name: 'ProjectH', completedPercent: 85, stage: 'Beta Testing', imageId: 'H', createdAt: 1651368365, updatedAt: 1651368365 }
 ];
 
 const milestones = [
@@ -50,6 +54,7 @@ describe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
     req.query = { date: '2024-03-07' };
+    await prisma.company.createMany({ data: companyData });
     await prisma.project.createMany({ data: projectsData });
     await prisma.milestone.createMany({ data: milestones });
     await handler(req, res);
@@ -80,6 +85,9 @@ describe('Result API Handler Tests', () => {
     );
     await prisma.project.deleteMany(
       { where: { id: { in: projectsData.map((ele) => ele.id) } } }
+    );
+    await prisma.company.deleteMany(
+      { where: { id: { in: companyData.map((ele) => ele.id) } } }
     );
   });
   it('should return error if some query element is missing', async () => {
