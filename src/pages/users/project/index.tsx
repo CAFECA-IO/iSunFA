@@ -25,14 +25,26 @@ const ProjectMainPage = () => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           {/* Info: (2024606 - Julian) Main */}
           <div className="flex min-h-screen w-full bg-gray-100">
-            <div className="mx-120px mt-120px flex flex-1 flex-col gap-y-24px">
+            <div className="mx-16px mt-120px flex flex-1 flex-col gap-y-24px md:mx-120px">
               {/* Info: (2024606 - Julian) Title */}
               <div className="flex items-center justify-between">
-                <h1 className="text-4xl font-semibold text-text-neutral-secondary">Project</h1>
+                <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
+                  Project
+                </h1>
                 <Button
                   type="button"
                   variant="tertiary"
-                  className="flex items-center gap-4px px-4 py-8px"
+                  className="hidden items-center gap-4px px-4 py-8px md:flex"
+                  // ToDo: (2024606 - Julian) Add Project Function
+                >
+                  <FiPlusCircle size={24} />
+                  Add Project
+                </Button>
+                <Button
+                  type="button"
+                  variant="tertiary"
+                  className="hidden items-center gap-4px px-4 py-8px md:flex"
+                  // ToDo: (2024606 - Julian) Add Project Function
                 >
                   <FiPlusCircle size={24} />
                   Add Project
