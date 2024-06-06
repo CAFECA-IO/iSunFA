@@ -16,12 +16,13 @@ const dummyGeneratedReportItems = [
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    blockChainExplorerLink: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    blockChainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     type: ReportKind.financial,
     status: 'generated',
     createdAt: 1713815673,
-    updatedAt: 1713815673
+    updatedAt: 1713815673,
   },
   {
     id: -7,
@@ -32,12 +33,13 @@ const dummyGeneratedReportItems = [
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    blockChainExplorerLink: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    blockChainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
     type: ReportKind.financial,
     status: 'generated',
     createdAt: 1713543101,
-    updatedAt: 1713543101
+    updatedAt: 1713543101,
   },
   {
     id: -8,
@@ -46,14 +48,15 @@ const dummyGeneratedReportItems = [
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    blockChainExplorerLink: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    blockChainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     type: ReportKind.financial,
     from: 1715443200,
     to: 1718035200,
     status: 'generated',
     createdAt: 1714220640,
-    updatedAt: 1714220640
+    updatedAt: 1714220640,
   },
   {
     id: -9,
@@ -61,14 +64,15 @@ const dummyGeneratedReportItems = [
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000011111111111111111111111117',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
-    blockChainExplorerLink: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    blockChainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
     type: ReportKind.financial,
     from: 1715356800,
     to: 1717948800,
     status: 'generated',
     createdAt: 1713755682,
-    updatedAt: 1713755682
+    updatedAt: 1713755682,
   },
   {
     id: -10,
@@ -77,14 +81,15 @@ const dummyGeneratedReportItems = [
     reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
     downloadLink: 'https://BFample.com/download/report.pdf',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
-    blockChainExplorerLink: 'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
+    blockChainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
     reportType: FinancialReportTypesKey.balance_sheet,
     type: ReportKind.financial,
     from: 1715270400,
     to: 1717862400,
     status: 'generated',
     createdAt: 1714331987,
-    updatedAt: 1714331987
+    updatedAt: 1714331987,
   },
 ];
 
@@ -97,7 +102,7 @@ const projects = [
     stage: 'Designing',
     createdAt: 1651368365,
     updatedAt: 1651368365,
-    imageId: 'ISF'
+    imageId: 'ISF',
   },
   {
     id: -2,
@@ -107,7 +112,7 @@ const projects = [
     stage: 'Beta Testing',
     createdAt: 1651368365,
     updatedAt: 1651368365,
-    imageId: 'BF'
+    imageId: 'BF',
   },
   {
     id: -3,
@@ -117,7 +122,7 @@ const projects = [
     stage: 'Develop',
     createdAt: 1651368365,
     updatedAt: 1651368365,
-    imageId: 'ISO'
+    imageId: 'ISO',
   },
 ];
 
@@ -126,9 +131,11 @@ const company = {
   name: 'Test Company',
   code: 'TST_company_user-100',
   regional: 'TW',
+  kycStatus: false,
+  imageId: 'TSTimage',
   startDate: 1717143507,
   createdAt: 1717143507,
-  updatedAt: 1717143507
+  updatedAt: 1717143507,
 };
 
 beforeEach(async () => {
@@ -190,7 +197,7 @@ describe('generatedReports API Handler Tests', () => {
       reportLinkId: expect.any(String),
       downloadLink: expect.any(String),
       blockchainExplorerLink: expect.any(String),
-      evidenceId: expect.any(String)
+      evidenceId: expect.any(String),
     });
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({

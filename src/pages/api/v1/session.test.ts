@@ -40,6 +40,8 @@ beforeEach(async () => {
         code: 'TST_session1',
         name: 'Test Company',
         regional: 'TW',
+        kycStatus: false,
+        imageId: 'imageId',
         startDate: nowTimestamp,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,

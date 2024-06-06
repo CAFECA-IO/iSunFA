@@ -13,7 +13,7 @@ export default async function handler(
   try {
     const session = await checkUserSession(req, res);
     const { userId } = session;
-    const userCompanyRole = await prisma.userCompanyRole.findMany({
+    const admin = await prisma.admin.findMany({
       where: {
         userId,
       },
@@ -21,7 +21,7 @@ export default async function handler(
         role: true,
       },
     });
-    const roleNames: string[] = userCompanyRole.map((item) => item.role.name);
+    const roleNames: string[] = admin.map((item) => item.role.name);
     if (!roleNames.includes('SUPER_ADMIN')) {
       throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
@@ -60,7 +60,7 @@ export default async function handler(
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
       // Handle DELETE request to delete user by userid
-      await prisma.userCompanyRole.deleteMany({
+      await prisma.admin.deleteMany({
         where: {
           userId: userIdNum,
         },

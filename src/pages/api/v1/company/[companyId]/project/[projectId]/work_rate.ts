@@ -5,7 +5,7 @@ import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { getSession } from '@/lib/utils/get_session';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,24 +16,28 @@ export default async function handler(
     if (!session.userId) {
       throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     // Info: (20240419 - Jacky) S010001 - GET /project
     if (req.method === 'GET') {
       const workRate: IWorkRate[] = [
         {
           id: 1,
-          projectId: 1,
-          name: 'Worker 1',
-          avatar: 'avatar1',
+          employeeProjectId: 1,
           involvementRate: 50,
-          hours: 10,
+          expected_hours: 10,
+          actual_hours: 5,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
         {
           id: 1,
-          projectId: 2,
-          name: 'Worker 2',
-          avatar: 'avatar2',
+          employeeProjectId: 2,
           involvementRate: 50,
-          hours: 10,
+          expected_hours: 10,
+          actual_hours: 5,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       ];
       const { httpCode, result } = formatApiResponse<IWorkRate[]>(

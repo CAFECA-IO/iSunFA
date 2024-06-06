@@ -5,7 +5,7 @@ import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { getSession } from '@/lib/utils/get_session';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,6 +16,8 @@ export default async function handler(
     if (!session.userId) {
       throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
     }
+    const now = Date.now();
+    const nowTimestamp = timestampInSeconds(now);
     if (req.method === 'GET') {
       const Sale: ISale[] = [
         {
@@ -24,6 +26,8 @@ export default async function handler(
           date: '2024-01-01',
           totalSales: 1000,
           comparison: 10,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
         {
           id: 2,
@@ -31,6 +35,8 @@ export default async function handler(
           date: '2024-02-06',
           totalSales: 1000,
           comparison: 10,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
         },
       ];
       const { httpCode, result } = formatApiResponse<ISale[]>(STATUS_MESSAGE.SUCCESS_GET, Sale);

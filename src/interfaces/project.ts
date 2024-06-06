@@ -1,6 +1,7 @@
 export interface IProject {
   id: number;
   companyId: number;
+  imageId: string | null;
   name: string;
   completedPercent: number;
   stage: string;
@@ -10,9 +11,11 @@ export interface IProject {
 export interface IMilestone {
   id: number;
   projectId: number;
-  startDate: number; // timestamp
-  endDate: number;
+  startDate: number | null;
+  endDate: number | null;
   status: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface IValue {
@@ -32,15 +35,18 @@ export interface ISale {
   date: string;
   totalSales: number;
   comparison: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface IWorkRate {
   id: number;
-  projectId: number;
-  name: string;
-  avatar: string;
+  employeeProjectId: number;
   involvementRate: number;
-  hours: number;
+  expected_hours: number;
+  actual_hours: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 interface IMember {

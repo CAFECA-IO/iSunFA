@@ -18,7 +18,7 @@ export default async function handler(
     const { userId } = session;
     if (req.method === 'GET') {
       const companyRoleList: Array<{ company: ICompany; role: IRole }> =
-        await prisma.userCompanyRole.findMany({
+        await prisma.admin.findMany({
           where: {
             userId,
           },
@@ -39,47 +39,49 @@ export default async function handler(
       }
       const now = Date.now();
       const nowTimestamp = timestampInSeconds(now);
-      const newCompanyRoleList: { company: ICompany; role: IRole } =
-        await prisma.userCompanyRole.create({
-          data: {
-            user: {
-              connect: {
-                id: userId,
-              },
+      const newCompanyRoleList: { company: ICompany; role: IRole } = await prisma.admin.create({
+        data: {
+          user: {
+            connect: {
+              id: userId,
             },
-            company: {
+          },
+          company: {
+            create: {
+              code,
+              name,
+              regional,
+              kycStatus: false,
+              createdAt: nowTimestamp,
+              updatedAt: nowTimestamp,
+              startDate: nowTimestamp,
+            },
+          },
+          role: {
+            connectOrCreate: {
+              where: {
+                name: 'ADMIN',
+              },
               create: {
-                code,
-                name,
-                regional,
+                name: 'ADMIN',
+                permissions: ['read'],
                 createdAt: nowTimestamp,
                 updatedAt: nowTimestamp,
-                startDate: nowTimestamp,
               },
             },
-            role: {
-              connectOrCreate: {
-                where: {
-                  // SUPER_ADMIN
-                  name: 'ADMIN',
-                },
-                create: {
-                  name: 'ADMIN',
-                  permissions: ['read'],
-                  createdAt: nowTimestamp,
-                  updatedAt: nowTimestamp,
-                },
-              },
-            },
-            startDate: nowTimestamp,
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
           },
-          select: {
-            company: true,
-            role: true,
-          },
-        });
+          // Todo: (20240517 - Jacky) Maybe need to force a email?
+          email: '',
+          status: true,
+          startDate: nowTimestamp,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
+        },
+        select: {
+          company: true,
+          role: true,
+        },
+      });
       const { httpCode, result } = formatApiResponse<{ company: ICompany; role: IRole }>(
         STATUS_MESSAGE.CREATED,
         newCompanyRoleList
