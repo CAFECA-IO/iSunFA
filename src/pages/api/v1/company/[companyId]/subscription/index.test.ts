@@ -204,7 +204,7 @@ describe('test subscription API', () => {
   it('should list all subscriptions', async () => {
     await handler(req, res);
     // 定義 `expectedSubscription` 結構
-    const expectedSubscription = {
+    const expectedSubscription = expect.objectContaining({
       id: expect.any(Number),
       companyId: expect.any(Number),
       planId: expect.any(Number),
@@ -213,45 +213,19 @@ describe('test subscription API', () => {
       status: expect.any(Boolean),
       createdAt: expect.any(Number),
       updatedAt: expect.any(Number),
-    };
+    });
+
+    const expectedSubscriptionList = expect.arrayContaining([expectedSubscription]);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedSubscriptionList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: expect.any(Boolean),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        code: expect.stringContaining('200'),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        payload: expect.any(Array),
-      })
-    );
-    // 獨立檢查 `payload` 中每個對象的每個字段
-    (Object.keys(expectedSubscription) as Array<keyof typeof expectedSubscription>).forEach(
-      (key) => {
-        expect(res.json).toHaveBeenCalledWith(
-          expect.objectContaining({
-            payload: expect.arrayContaining([
-              expect.objectContaining({ [key]: expectedSubscription[key] }),
-            ]),
-          })
-        );
-      }
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should create a new subscription', async () => {
@@ -261,7 +235,7 @@ describe('test subscription API', () => {
       period: SubscriptionPeriod.MONTHLY,
     };
     await handler(req, res);
-    const expectedSubscription = {
+    const expectedSubscription = expect.objectContaining({
       id: expect.any(Number),
       companyId: expect.any(Number),
       planId: expect.any(Number),
@@ -270,43 +244,16 @@ describe('test subscription API', () => {
       status: expect.any(Boolean),
       createdAt: expect.any(Number),
       updatedAt: expect.any(Number),
-    };
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('201'),
+      message: expect.any(String),
+      payload: expectedSubscription,
+    });
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: expect.any(Boolean),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        code: expect.stringContaining('201'),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        payload: expect.any(Object),
-      })
-    );
-    // 獨立檢查 `payload` 中每個對象的每個字段
-    (Object.keys(expectedSubscription) as Array<keyof typeof expectedSubscription>).forEach(
-      (key) => {
-        expect(res.json).toHaveBeenCalledWith(
-          expect.objectContaining({
-            payload: expect.objectContaining({ [key]: expectedSubscription[key] }),
-          })
-        );
-      }
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle unsupported HTTP methods', async () => {
@@ -314,32 +261,15 @@ describe('test subscription API', () => {
     req.method = 'PUT';
     req.query.companyId = admin.companyId.toString();
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: expect.any(Boolean),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        code: expect.stringContaining('405'),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
   it('should handle unauthorized access', async () => {
     req = {
@@ -350,31 +280,14 @@ describe('test subscription API', () => {
       session: {},
     } as unknown as jest.Mocked<NextApiRequest>;
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('401'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: expect.any(Boolean),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        code: expect.stringContaining('401'),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.any(String),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });
