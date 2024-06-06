@@ -5,16 +5,14 @@ import { promises as fs } from 'fs';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
-  timestampInSeconds,
   transformOCRImageIDToURL,
 } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
-import prisma from '@/client';
 
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { ProgressStatus } from '@/constants/account';
+import { createJournalAndOcrInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -85,7 +83,7 @@ export async function getPayloadFromResponseJSON(
 
 // Info (20240521-Murky) 回傳目前還是array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-async function postImageToAICH(files: formidable.Files): Promise<
+export async function postImageToAICH(files: formidable.Files): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
@@ -119,119 +117,7 @@ async function postImageToAICH(files: formidable.Files): Promise<
   return resultJson;
 }
 
-async function createOrFindCompanyInPrisma(companyId: number) {
-  let company = await prisma.company.findUnique({
-    where: { id: companyId },
-    select: { id: true },
-  });
-
-  if (!company) {
-    try {
-      const now = Date.now();
-      const nowTimestamp = timestampInSeconds(now);
-      company = await prisma.company.create({
-        data: {
-          id: companyId,
-          code: 'TEST_OCR',
-          name: 'Company Name',
-          regional: 'Regional Name',
-          kycStatus: false,
-          startDate: nowTimestamp,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-        select: { id: true },
-      });
-    } catch (error) {
-      throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-    }
-  }
-
-  return company;
-}
-
-async function createOcrInPrisma(aichResult: {
-  resultStatus: IAccountResultStatus;
-  imageUrl: string;
-  imageName: string;
-  imageSize: number;
-}) {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  try {
-    const ocrData = await prisma.ocr.create({
-      data: {
-        imageName: aichResult.imageName,
-        imageUrl: aichResult.imageUrl,
-        imageSize: aichResult.imageSize,
-        status: aichResult.resultStatus.status,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      },
-    });
-
-    return ocrData;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-}
-
-async function upsertJournalInPrisma(
-  companyId: number,
-  aichResult: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-  },
-  ocrId: number
-) {
-  try {
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
-    await prisma.journal.upsert({
-      where: {
-        aichResultId: aichResult.resultStatus.resultId,
-      },
-      create: {
-        companyId,
-        ocrId,
-        aichResultId: aichResult.resultStatus.resultId,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      },
-      update: {
-        ocrId,
-      },
-    });
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-}
-
-async function createJournalAndOcrInPrisma(
-  companyId: number,
-  aichResult: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-  }
-): Promise<void> {
-  // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
-  // ToDo: (20240521 - Murky) 重複的圖片一直post貌似會越來越多Journal? 目前沒有檢查重複post的狀況
-  // 如果是AICH已經重複的就不建立了
-  if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
-    return;
-  }
-  await prisma.$transaction(async () => {
-    const company = await createOrFindCompanyInPrisma(companyId);
-    const ocrData = await createOcrInPrisma(aichResult);
-    await upsertJournalInPrisma(company.id, aichResult, ocrData.id);
-  });
-}
-
-function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
+export function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
   if (
     Array.isArray(companyId) ||
     !companyId ||
@@ -243,7 +129,7 @@ function isCompanyIdValid(companyId: string | string[] | undefined): companyId i
   return true;
 }
 
-async function getImageFileFromFormData(req: NextApiRequest) {
+export async function getImageFileFromFormData(req: NextApiRequest) {
   let files: formidable.Files;
 
   try {
@@ -255,7 +141,31 @@ async function getImageFileFromFormData(req: NextApiRequest) {
   return files;
 }
 
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function createJournalsAndOcrFromAichResults(
+  companyId: number,
+  aichResults: {
+    resultStatus: IAccountResultStatus;
+    imageUrl: string;
+    imageName: string;
+    imageSize: number;
+  }[]
+) {
+  const resultJson: IAccountResultStatus[] = [];
+
+  try {
+    await Promise.all(
+      aichResults.map(async (aichResult) => {
+        await createJournalAndOcrInPrisma(companyId, aichResult);
+        resultJson.push(aichResult.resultStatus);
+      })
+    );
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+  return resultJson;
+}
+
+export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const { companyId } = req.query;
 
   // Info Murky (20240416): Check if companyId is string
@@ -265,18 +175,15 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
 
   const companyIdNumber = Number(companyId);
 
-  const files = await getImageFileFromFormData(req);
+  let resultJson: IAccountResultStatus[];
 
-  const aichReturn = await postImageToAICH(files);
-
-  const resultJson: IAccountResultStatus[] = [];
-
-  await Promise.all(
-    aichReturn.map(async (aichResult) => {
-      await createJournalAndOcrInPrisma(companyIdNumber, aichResult);
-      resultJson.push(aichResult.resultStatus);
-    })
-  );
+  try {
+    const files = await getImageFileFromFormData(req);
+    const aichResults = await postImageToAICH(files);
+    resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
 
   const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
     STATUS_MESSAGE.CREATED,

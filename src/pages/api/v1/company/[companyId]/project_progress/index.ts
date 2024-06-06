@@ -1,23 +1,49 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IProjectProgressChartData, generateRandomData } from '@/interfaces/project_progress_chart';
+import { IProjectProgressChartData } from '@/interfaces/project_progress_chart';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import prisma from '@/client';
 
-const responseData: IProjectProgressChartData = generateRandomData();
-
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProjectProgressChartData>>
 ) {
   const { date } = req.query;
   try {
     if (date) {
+      const dateToTimeStamp = timestampInSeconds(
+        new Date((date as string) + 'T00:00:00+08:00').getTime()
+      );
+      const statusNumber = await prisma.milestone.groupBy({
+        by: ['status'],
+        _count: {
+          id: true,
+        },
+        where: {
+          startDate: {
+            lte: dateToTimeStamp,
+          },
+          endDate: {
+            gte: dateToTimeStamp,
+          },
+        },
+      });
+      const responseData: IProjectProgressChartData = {
+        date: dateToTimeStamp,
+        categories: statusNumber.map((status) => status.status),
+        series: [
+          {
+            name: 'Projects',
+            // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
+            // eslint-disable-next-line no-underscore-dangle
+            data: statusNumber.map((status) => status._count.id),
+          },
+        ],
+      };
       const { httpCode, result } = formatApiResponse<IProjectProgressChartData>(
         STATUS_MESSAGE.SUCCESS_GET,
-        {
-          ...responseData,
-        }
+        responseData
       );
       res.status(httpCode).json(result);
     }
