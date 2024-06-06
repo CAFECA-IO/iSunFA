@@ -71,7 +71,7 @@ const Notification = ({ mobileMenuIsOpen, setMobileMenuIsOpen }: INotificationPr
           <Button
             onClick={markAllAsRead}
             variant={'secondaryBorderless'}
-            className="mx-2 my-2 flex w-fit self-end px-2 py-1 hover:text-text-neutral-link"
+            className="mx-2 my-2 flex w-fit self-end px-2 py-1"
           >
             <div className="">
               {' '}
