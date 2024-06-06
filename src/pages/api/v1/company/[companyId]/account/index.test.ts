@@ -5,7 +5,7 @@ import prisma from '@/client';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
-const testAccountId = -1;
+const testAccountId = 100000000;
 
 beforeEach(() => {
   req = {
