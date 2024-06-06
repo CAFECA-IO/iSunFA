@@ -234,7 +234,7 @@ const AuditReport = () => {
         {/* Date Picker */}
         <div>
           <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
+            type={DatePickerType.TEXT_PERIOD}
             period={datePeriod}
             setFilteredPeriod={setDatePeriod}
             btnClassName="w-360px items-center text-left"
@@ -422,7 +422,7 @@ const AuditReport = () => {
         {/* Date Picker */}
         <div>
           <DatePicker
-            type={DatePickerType.ICON}
+            type={DatePickerType.ICON_PERIOD}
             period={datePeriod}
             setFilteredPeriod={setDatePeriod}
             calenderClassName="right-0"

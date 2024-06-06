@@ -147,7 +147,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               <DatePicker
                 period={selectedDate}
                 setFilteredPeriod={setSelectedDate}
-                type={DatePickerType.CHOOSE_DATE}
+                type={DatePickerType.TEXT_DATE}
               />
             </div>
             {/* Info: (20240503 - Julian) purchase price */}
