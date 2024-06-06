@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { FaListUl } from 'react-icons/fa6';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FiGrid, FiSearch } from 'react-icons/fi';
+import { FaChevronDown, FaListUl } from 'react-icons/fa6';
 import { Button } from '../button/button';
 
 enum Layout {
@@ -9,10 +10,19 @@ enum Layout {
   GRID = 'grid',
 }
 
+enum ProjectStage {
+  DESIGNING = 'Designing',
+  DEVELOPING = 'Developing',
+  BETA_TESTING = 'Beta Testing',
+  SELLING = 'Selling',
+  SOLD = 'Sold',
+  ARCHIVED = 'Archived',
+}
+
 interface IProject {
   id: string;
   name: string;
-  status: string;
+  stage: ProjectStage;
   income: number;
   expense: number;
   profit: number;
@@ -27,7 +37,7 @@ const dummyProjects: IProject[] = [
   {
     id: '1',
     name: 'Project 1',
-    status: 'Active',
+    stage: ProjectStage.ARCHIVED,
     income: 1000,
     expense: 500,
     profit: 500,
@@ -50,7 +60,7 @@ const dummyProjects: IProject[] = [
   {
     id: '2',
     name: 'Project 2',
-    status: 'Selling',
+    stage: ProjectStage.SELLING,
     income: 4200,
     expense: 4700,
     profit: -500,
@@ -73,7 +83,7 @@ const dummyProjects: IProject[] = [
   {
     id: '3',
     name: 'Project 3',
-    status: 'Developing',
+    stage: ProjectStage.DEVELOPING,
     income: 2310,
     expense: 2354,
     profit: -44,
@@ -88,7 +98,7 @@ const dummyProjects: IProject[] = [
   {
     id: '4',
     name: 'StellarScape',
-    status: 'Designing',
+    stage: ProjectStage.DESIGNING,
     income: 13940,
     expense: 12480,
     profit: 1460,
@@ -108,27 +118,111 @@ const dummyProjects: IProject[] = [
 
 const ProjectList = () => {
   const [search, setSearch] = useState<string>('');
+  const [filteredStage, setFilteredStage] = useState<string>('ALL');
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
+
+  const {
+    targetRef: stageOptionsRef,
+    componentVisible: isStageOptionsVisible,
+    setComponentVisible: setIsStageOptionsVisible,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const listBtnStyle = currentLayout === Layout.LIST ? 'tertiary' : 'secondaryOutline';
   const gridBtnStyle = currentLayout === Layout.GRID ? 'tertiary' : 'secondaryOutline';
 
   const listLayoutHandler = () => setCurrentLayout(Layout.LIST);
   const gridLayoutHandler = () => setCurrentLayout(Layout.GRID);
+
   const searchHandler = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
 
-  const filteredProjects = dummyProjects.filter((project) => {
-    return (
-      project.name.toLowerCase().includes(search.toLowerCase()) ||
-      project.status.toLowerCase().includes(search.toLowerCase())
-    );
-  });
+  const stageMenuClickHandler = () => setIsStageOptionsVisible(!isStageOptionsVisible);
+  const allClickHandler = () => {
+    setFilteredStage('ALL');
+    setIsStageOptionsVisible(false);
+  };
+  const designClickHandler = () => {
+    setFilteredStage(ProjectStage.DESIGNING);
+    setIsStageOptionsVisible(false);
+  };
+  const developClickHandler = () => {
+    setFilteredStage(ProjectStage.DEVELOPING);
+    setIsStageOptionsVisible(false);
+  };
+  const betaTestingClickHandler = () => {
+    setFilteredStage(ProjectStage.BETA_TESTING);
+    setIsStageOptionsVisible(false);
+  };
+  const sellingClickHandler = () => {
+    setFilteredStage(ProjectStage.SELLING);
+    setIsStageOptionsVisible(false);
+  };
+  const soldClickHandler = () => {
+    setFilteredStage(ProjectStage.SOLD);
+    setIsStageOptionsVisible(false);
+  };
+  const archivedClickHandler = () => {
+    setFilteredStage(ProjectStage.ARCHIVED);
+    setIsStageOptionsVisible(false);
+  };
+
+  const filteredProjects = dummyProjects
+    .filter((project) => {
+      return (
+        project.name.toLowerCase().includes(search.toLowerCase()) ||
+        project.stage.toLowerCase().includes(search.toLowerCase())
+      );
+    })
+    .filter((project) => {
+      if (filteredStage === 'ALL') {
+        return true; // Info: (2024606 - Julian) 選擇全部
+      }
+      return project.stage === filteredStage;
+    });
+
+  const stageColorMap = {
+    [ProjectStage.DESIGNING]: 'bg-surface-support-strong-maple',
+    [ProjectStage.DEVELOPING]: 'bg-surface-support-strong-green',
+    [ProjectStage.BETA_TESTING]: 'bg-surface-support-strong-indigo',
+    [ProjectStage.SELLING]: 'bg-surface-support-strong-taro',
+    [ProjectStage.SOLD]: 'bg-surface-support-strong-rose',
+    [ProjectStage.ARCHIVED]: 'bg-surface-neutral-mute',
+  };
+
+  const displayedStageOptions = (
+    <div
+      ref={stageOptionsRef}
+      className={`absolute right-0 top-12 z-10 ${isStageOptionsVisible ? 'flex' : 'hidden'} w-full flex-col items-start rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px shadow-md`}
+    >
+      <button type="button" className="py-12px" onClick={allClickHandler}>
+        All
+      </button>
+      <button type="button" className="py-12px" onClick={designClickHandler}>
+        Designing
+      </button>
+      <button type="button" className="py-12px" onClick={developClickHandler}>
+        Developing
+      </button>
+      <button type="button" className="py-12px" onClick={betaTestingClickHandler}>
+        Beta Testing
+      </button>
+      <button type="button" className="py-12px" onClick={sellingClickHandler}>
+        Selling
+      </button>
+      <button type="button" className="py-12px" onClick={soldClickHandler}>
+        Sold
+      </button>
+      <button type="button" className="py-12px" onClick={archivedClickHandler}>
+        Archived
+      </button>
+    </div>
+  );
 
   const displayedProjectList =
     filteredProjects.length > 0 ? (
       <div className="my-40px flex w-full flex-col gap-y-16px">
         {filteredProjects.map((project) => {
           // ToDo: (2024606 - Julian) This part should be refactored to a separate component: ProjectCard
+          const stageColor = stageColorMap[project.stage];
           return (
             // ToDo: (2024606 - Julian) Link to project detail page
             <div
@@ -175,8 +269,10 @@ const ProjectList = () => {
                 </div>
               </div>
               {/* Info: (2024606 - Julian) Status */}
-              <div className="absolute -right-4 rounded-xs bg-surface-support-strong-taro py-4px pl-12px pr-28px text-xs text-badge-text-invert">
-                {project.status}
+              <div
+                className={`absolute -right-4 rounded-xs ${stageColor} ${project.stage === ProjectStage.ARCHIVED ? 'text-lightGray4' : 'text-badge-text-invert'} py-4px pl-12px pr-28px text-xs`}
+              >
+                {project.stage}
               </div>
             </div>
           );
@@ -192,14 +288,26 @@ const ProjectList = () => {
   return (
     <div className="flex flex-1 flex-col items-center">
       {/* Info: (2024606 - Julian) Filter */}
-      <div className="flex w-full items-center gap-x-24px">
+      <div className="flex w-full flex-col items-end gap-x-24px gap-y-40px md:flex-row">
+        {/* Info: (2024606 - Julian) Select Stage */}
+        <div className="flex w-full flex-col items-start gap-8px text-input-text-primary md:w-auto">
+          <p className="font-semibold">Stage</p>
+          <div
+            onClick={stageMenuClickHandler}
+            className="relative flex h-44px w-full items-center justify-between rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px hover:cursor-pointer md:w-200px"
+          >
+            {filteredStage}
+            <FaChevronDown />
+            {displayedStageOptions}
+          </div>
+        </div>
         {/* Info: (2024606 - Julian) Search bar */}
-        <div className="flex h-44px flex-1 items-center rounded-xs border border-input-stroke-input bg-input-surface-input-background px-16px text-icon-surface-single-color-primary">
+        <div className="flex w-full flex-1 items-center rounded-xs border border-input-stroke-input bg-input-surface-input-background px-16px text-icon-surface-single-color-primary">
           <input
             id="project-search-bar"
             type="text"
             onChange={searchHandler}
-            className="flex-1 outline-none placeholder:text-input-text-input-placeholder"
+            className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
             placeholder="Search Project"
           />
           <FiSearch size={20} />
