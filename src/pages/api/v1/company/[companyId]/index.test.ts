@@ -143,13 +143,12 @@ describe('handler', () => {
       createdAt: expect.any(Number),
       updatedAt: expect.any(Number),
     });
-    const expectedCompanyList = expect.arrayContaining([expectedCompany]);
     const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('200'),
       message: expect.any(String),
-      payload: expectedCompanyList,
+      payload: expectedCompany,
     });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
@@ -170,13 +169,12 @@ describe('handler', () => {
       createdAt: expect.any(Number),
       updatedAt: expect.any(Number),
     });
-    const expectedCompanyList = expect.arrayContaining([expectedCompany]);
     const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('200'),
       message: expect.any(String),
-      payload: expectedCompanyList,
+      payload: expectedCompany,
     });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
