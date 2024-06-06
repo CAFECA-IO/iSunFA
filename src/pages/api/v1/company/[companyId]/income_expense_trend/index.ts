@@ -1,16 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import {
-  IIncomeExpenseTrendChartData,
-} from '@/interfaces/income_expense_trend_chart';
+import { IIncomeExpenseTrendChartData } from '@/interfaces/income_expense_trend_chart';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { MONTH_FULL_LIST_SHORT } from '@/constants/display';
 import prisma from '@/client';
 
-async function getIncomeExpenseTrendChartData(period: string): Promise<IIncomeExpenseTrendChartData> {
+async function getIncomeExpenseTrendChartData(
+  period: string
+): Promise<IIncomeExpenseTrendChartData> {
   // Info: (20240528 - Gibbs) use raw sql to get data from prisma cashflow groupBy year, month, sum income and expense
-  const incomeExpenseData: { year: string; month: string; total_income: number; total_expense: number; }[] = await prisma.$queryRaw`
+  const incomeExpenseData: {
+    year: string;
+    month: string;
+    total_income: number;
+    total_expense: number;
+  }[] = await prisma.$queryRaw`
       SELECT 
       EXTRACT(YEAR FROM TO_TIMESTAMP("created_at")) AS year, 
       EXTRACT(MONTH FROM TO_TIMESTAMP("created_at")) AS month, 
@@ -79,17 +84,21 @@ async function getIncomeExpenseTrendChartData(period: string): Promise<IIncomeEx
     const categories: string[] = [];
     // Info: (20240528 - Gibbs) get only year data from incomeExpenseData
     incomeExpenseData.forEach((ele) => {
-      const currentYear = (ele.year).toString();
+      const currentYear = ele.year.toString();
       if (!categories.includes(currentYear)) {
         categories.push(currentYear);
       }
     });
     // Info: (20240528 - Gibbs) calculate total income, expense, profit by year using incomeExpenseData
     incomeExpenseData.forEach((ele) => {
-      const currentYear = (ele.year).toString();
+      const currentYear = ele.year.toString();
       const index = categories.indexOf(currentYear);
-      totalIncome[index] = totalIncome[index] ? Number(totalIncome[index]) + Number(ele.total_income) : Number(ele.total_income);
-      totalExpense[index] = totalExpense[index] ? Number(totalExpense[index]) + Number(ele.total_expense) : Number(ele.total_expense);
+      totalIncome[index] = totalIncome[index]
+        ? Number(totalIncome[index]) + Number(ele.total_income)
+        : Number(ele.total_income);
+      totalExpense[index] = totalExpense[index]
+        ? Number(totalExpense[index]) + Number(ele.total_expense)
+        : Number(ele.total_expense);
       totalProfit[index] = totalIncome[index] - totalExpense[index];
     });
     const series = [

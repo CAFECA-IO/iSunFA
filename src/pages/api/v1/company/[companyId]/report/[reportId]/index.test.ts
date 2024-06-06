@@ -6,15 +6,15 @@ let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 const report = {
   id: 888886100,
-  name: "Balance Sheet-20240423-1",
-  tokenContract: "0x00000000219ab540356cBB839Cbe05303d7705Fa",
-  tokenId: "37002036",
-  reportLink: "505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007",
+  name: 'Balance Sheet-20240423-1',
+  tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+  tokenId: '37002036',
+  reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
   from: 1715616000,
   to: 1718208000,
-  reportType: "balance_sheet",
-  type: "financial",
-  status: "generated",
+  reportType: 'balance_sheet',
+  type: 'financial',
+  status: 'generated',
   createdAt: 1713815673,
   updatedAt: 1713815673,
 };
@@ -71,10 +71,8 @@ describe('getReportById API Handler Tests', () => {
       code: expect.stringContaining('200'),
       message: expect.any(String),
       payload: payloadData,
-      });
-    expect(res.json).toHaveBeenCalledWith(
-      resData
-    );
+    });
+    expect(res.json).toHaveBeenCalledWith(resData);
   });
   it('should return error if method is not GET', async () => {
     req.method = 'POST';

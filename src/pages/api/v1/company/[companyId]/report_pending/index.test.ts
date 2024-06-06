@@ -19,7 +19,7 @@ const dummyPendingReportItems = [
     type: ReportKind.financial,
     status: 'pending',
     createdAt: 1713611226,
-    updatedAt: 1713611226
+    updatedAt: 1713611226,
   },
   {
     id: 8888872,
@@ -32,7 +32,7 @@ const dummyPendingReportItems = [
     type: ReportKind.financial,
     status: 'pending',
     createdAt: 1714897574,
-    updatedAt: 1714897574
+    updatedAt: 1714897574,
   },
   {
     id: 8888873,
@@ -45,7 +45,7 @@ const dummyPendingReportItems = [
     to: 1704076800,
     status: 'pending',
     createdAt: 1712863312,
-    updatedAt: 1712863312
+    updatedAt: 1712863312,
   },
   {
     id: 8888874,
@@ -58,7 +58,7 @@ const dummyPendingReportItems = [
     to: 1704096000,
     status: 'pending',
     createdAt: 1713846643,
-    updatedAt: 1713846643
+    updatedAt: 1713846643,
   },
   {
     id: 8888875,
@@ -71,7 +71,7 @@ const dummyPendingReportItems = [
     to: 1714022400,
     status: 'pending',
     createdAt: 1714508675,
-    updatedAt: 1714508675
+    updatedAt: 1714508675,
   },
 ];
 
