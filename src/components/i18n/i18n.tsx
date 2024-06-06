@@ -2,15 +2,15 @@ import { useTranslation } from 'next-i18next';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import useOuterClick from '../../lib/hooks/use_outer_click';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 type TranslateFunction = (s: string) => string;
-interface II18nParams {
+interface II18nProps {
   langIsOpen?: boolean;
   setLangIsOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
-const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
+const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const [openMenu, setOpenMenu] =
@@ -37,7 +37,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
   ];
 
   const displayedDesktopMenu = (
-    <div className="max-w-1920px relative mx-auto hidden lg:flex">
+    <div className="relative mx-auto hidden max-w-1920px lg:flex">
       <div
         id="I18nMenuDesktop"
         className={`absolute -left-16 top-6 z-20 w-150px ${
@@ -45,7 +45,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
         }  rounded-none bg-white shadow-dropmenu transition-all duration-300`}
       >
         <ul
-          className="mx-3 py-1 pb-3 text-base text-button-text-secondary"
+          className="mx-0 py-1 pb-3 text-base text-button-text-secondary"
           aria-labelledby="i18nButton"
         >
           {internationalizationList.map((item) => (
@@ -74,9 +74,12 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
     >
       <div
         id="I18nMenuMobile"
-        className="absolute left-0 top-28 z-10 h-full w-screen bg-white shadow"
+        className="absolute left-0 top-10 z-10 h-310px w-screen bg-white shadow"
       >
-        <ul className="text-center text-base dark:text-gray-200" aria-labelledby="i18nButton">
+        <ul
+          className="text-center text-base text-button-text-secondary"
+          aria-labelledby="i18nButton"
+        >
           {internationalizationList.map((item) => (
             <li key={item.value} onClick={mobileClickHandler}>
               <Link
@@ -116,12 +119,27 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nParams) => {
           </svg>
         </div>
       </div>
+
       <button
         id="NavLanguageMobile"
         onClick={mobileClickHandler}
         type="button"
-        className="inline-flex lg:hidden"
+        className="flex w-screen items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50 lg:hidden"
       >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="none"
+          viewBox="0 0 20 20"
+        >
+          <path
+            className="fill-current"
+            fillRule="evenodd"
+            d="M2.622 8.251a7.605 7.605 0 000 3.5h3.445a13.502 13.502 0 01-.148-1.766 13.5 13.5 0 01.148-1.734H2.622zm.527-1.5h3.233a13.501 13.501 0 011.915-4.14A7.598 7.598 0 003.15 6.75zm6.853-3.926a12 12 0 00-2.06 3.926h4.12a12 12 0 00-2.06-3.926zm2.416 5.426H7.587c-.098.575-.155 1.16-.168 1.75a12 12 0 00.168 1.75h4.83c.099-.575.155-1.16.168-1.75-.013-.59-.069-1.175-.167-1.75zm1.52 3.5a13.51 13.51 0 00.147-1.766 13.508 13.508 0 00-.148-1.734h3.446a7.605 7.605 0 010 3.5h-3.446zm-1.876 1.5h-4.12a12 12 0 002.06 3.926 12 12 0 002.06-3.926zm-3.765 4.141a13.502 13.502 0 01-1.915-4.14H3.149a7.598 7.598 0 005.148 4.14zm3.41 0a13.501 13.501 0 001.916-4.14h3.233a7.598 7.598 0 01-5.149 4.14zm5.149-10.64h-3.233a13.5 13.5 0 00-1.916-4.142 7.598 7.598 0 015.149 4.141zM.919 10.001A9.083 9.083 0 1119.086 10a9.083 9.083 0 01-18.167 0z"
+            clipRule="evenodd"
+          ></path>
+        </svg>
         {t('NAV_BAR.LANGUAGE')}
       </button>
     </>
