@@ -15,7 +15,8 @@
     "DASHBOARD": "Dashboard",
     "LOGIN": "Login",
     "MARK_ALL_AS_READ": "Mark all as read",
-    "READ_MORE": "Read more..."
+    "READ_MORE": "Read more...",
+    "LANGUAGE": "Language"
   },
   "USER": {
     "MY_ADDRESS": "My Address page",

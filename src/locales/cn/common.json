@@ -15,7 +15,8 @@
     "DASHBOARD": "仪表板",
     "LOGIN": "登录",
     "MARK_ALL_AS_READ": "将所有通知标记为已读",
-    "READ_MORE": "继续阅读..."
+    "READ_MORE": "继续阅读...",
+    "LANGUAGE": "语言"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
