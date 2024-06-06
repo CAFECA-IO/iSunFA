@@ -6,29 +6,29 @@ let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
 const companyData = [
-  { id: -4, name: 'ASDF', code: '2024060599994', regional: 'Taiwan', kycStatus: false, startDate: 1717558732, createdAt: 1717558732, updatedAt: 1717558732 },
+  { id: 10000004, name: 'ASDF', code: '2024060599994', regional: 'Taiwan', kycStatus: false, startDate: 1717558732, createdAt: 1717558732, updatedAt: 1717558732 },
 ];
 
 const projectsData = [
-  { id: -11, companyId: -4, name: 'iSunFA', completedPercent: 30, stage: 'Designing', imageId: 'ISF', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -12, companyId: -4, name: 'BAIFA', completedPercent: 80, stage: 'Beta Testing', imageId: 'BF', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -13, companyId: -4, name: 'iSunOne', completedPercent: 60, stage: 'Develop', imageId: 'ISO', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -14, companyId: -4, name: 'TideBit', completedPercent: 98, stage: 'Sold', imageId: 'TB', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -15, companyId: -4, name: 'ProjectE', completedPercent: 95, stage: 'Selling', imageId: 'E', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -16, companyId: -4, name: 'ProjectF', completedPercent: 100, stage: 'Archived', imageId: 'F', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -17, companyId: -4, name: 'ProjectG', completedPercent: 70, stage: 'Develop', imageId: 'G', createdAt: 1651368365, updatedAt: 1651368365 },
-  { id: -18, companyId: -4, name: 'ProjectH', completedPercent: 85, stage: 'Beta Testing', imageId: 'H', createdAt: 1651368365, updatedAt: 1651368365 }
+  { id: 100000011, companyId: 10000004, name: 'iSunFA', completedPercent: 30, stage: 'Designing', imageId: 'ISF', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000012, companyId: 10000004, name: 'BAIFA', completedPercent: 80, stage: 'Beta Testing', imageId: 'BF', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000013, companyId: 10000004, name: 'iSunOne', completedPercent: 60, stage: 'Develop', imageId: 'ISO', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000014, companyId: 10000004, name: 'TideBit', completedPercent: 98, stage: 'Sold', imageId: 'TB', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000015, companyId: 10000004, name: 'ProjectE', completedPercent: 95, stage: 'Selling', imageId: 'E', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000016, companyId: 10000004, name: 'ProjectF', completedPercent: 100, stage: 'Archived', imageId: 'F', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000017, companyId: 10000004, name: 'ProjectG', completedPercent: 70, stage: 'Develop', imageId: 'G', createdAt: 1651368365, updatedAt: 1651368365 },
+  { id: 100000018, companyId: 10000004, name: 'ProjectH', completedPercent: 85, stage: 'Beta Testing', imageId: 'H', createdAt: 1651368365, updatedAt: 1651368365 }
 ];
 
 const milestones = [
-  { projectId: -11, startDate: 1709578219, endDate: 1712256619, status: 'Designing', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -12, startDate: 1709578219, endDate: 1712256619, status: 'Beta Testing', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -13, startDate: 1709578219, endDate: 1712256619, status: 'Develop', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -14, startDate: 1709578219, endDate: 1712256619, status: 'Sold', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -15, startDate: 1709578219, endDate: 1712256619, status: 'Selling', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -16, startDate: 1709578219, endDate: 1712256619, status: 'Archived', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -17, startDate: 1709578219, endDate: 1712256619, status: 'Beta Testing', createdAt: 1709578219, updatedAt: 1709578219 },
-  { projectId: -18, startDate: 1709578219, endDate: 1712256619, status: 'Develop', createdAt: 1709578219, updatedAt: 1709578219 }
+  { projectId: 100000011, startDate: 1709578219, endDate: 1712256619, status: 'Designing', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000012, startDate: 1709578219, endDate: 1712256619, status: 'Beta Testing', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000013, startDate: 1709578219, endDate: 1712256619, status: 'Develop', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000014, startDate: 1709578219, endDate: 1712256619, status: 'Sold', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000015, startDate: 1709578219, endDate: 1712256619, status: 'Selling', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000016, startDate: 1709578219, endDate: 1712256619, status: 'Archived', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000017, startDate: 1709578219, endDate: 1712256619, status: 'Beta Testing', createdAt: 1709578219, updatedAt: 1709578219 },
+  { projectId: 100000018, startDate: 1709578219, endDate: 1712256619, status: 'Develop', createdAt: 1709578219, updatedAt: 1709578219 }
 ];
 
 beforeEach(() => {
