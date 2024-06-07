@@ -65,6 +65,11 @@ beforeEach(async () => {
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
+    include: {
+      company: true,
+      user: true,
+      role: true,
+    },
   });
 
   req = {
@@ -72,7 +77,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.userId },
+    session: { userId: admin.user.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -87,7 +92,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: admin.userId,
+        id: admin.user.id,
       },
     });
   } catch (error) {
@@ -96,7 +101,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: admin.companyId,
+        id: admin.company.id,
       },
     });
   } catch (error) {
@@ -105,7 +110,7 @@ afterEach(async () => {
   try {
     await prisma.role.delete({
       where: {
-        id: admin.roleId,
+        id: admin.role.id,
       },
     });
   } catch (error) {
@@ -157,7 +162,7 @@ describe('Company API', () => {
   it('should create a new company when method is POST and valid data is provided', async () => {
     req.method = 'POST';
     req.body = {
-      code: 'TST_createCompany1',
+      code: 'TST_createCompany6',
       name: 'Company Name',
       regional: 'Regional Name',
     };
@@ -193,7 +198,7 @@ describe('Company API', () => {
     });
     await prisma.company.delete({
       where: {
-        code: 'TST_createCompany1',
+        code: 'TST_createCompany6',
       },
     });
   });
