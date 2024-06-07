@@ -6,14 +6,14 @@ import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { SubscriptionPeriod } from '@/constants/subscription';
 import { ONE_MONTH_IN_S, ONE_YEAR_IN_S } from '@/constants/time';
-import { checkCompanySession } from '@/lib/utils/session_check';
+import { checkAdminSession } from '@/lib/utils/session_check';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ISubscription | ISubscription[]>>
 ) {
   try {
-    const session = await checkCompanySession(req, res);
+    const session = await checkAdminSession(req, res);
     const { companyId } = session;
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {

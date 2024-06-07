@@ -65,6 +65,11 @@ beforeEach(async () => {
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
+    include: {
+      user: true,
+      role: true,
+      company: true,
+    },
   });
 
   req = {
@@ -72,7 +77,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.userId },
+    session: { userId: admin.user.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -87,7 +92,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: admin.userId,
+        id: admin.user.id,
       },
     });
   } catch (error) {
@@ -96,7 +101,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: admin.companyId,
+        id: admin.company.id,
       },
     });
   } catch (error) {
@@ -105,7 +110,7 @@ afterEach(async () => {
   try {
     await prisma.role.delete({
       where: {
-        id: admin.roleId,
+        id: admin.role.id,
       },
     });
   } catch (error) {
@@ -128,64 +133,64 @@ describe('Company API', () => {
 
     await handler(req, res);
 
+    const expectedCompany = expect.objectContaining({
+      id: expect.any(Number),
+      code: expect.any(String),
+      name: expect.any(String),
+      regional: expect.any(String),
+    });
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.any(Array),
+    });
+    const expectedCompanyRole = {
+      company: expectedCompany,
+      role: expectedRole,
+    };
+    const expectedCompanyRoleList = expect.arrayContaining([expectedCompanyRole]);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedCompanyRoleList,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.arrayContaining([
-          expect.objectContaining({
-            company: expect.objectContaining({
-              id: expect.any(Number),
-              code: expect.any(String),
-              name: expect.any(String),
-              regional: expect.any(String),
-            }),
-            role: expect.objectContaining({
-              id: expect.any(Number),
-              name: expect.any(String),
-              permissions: expect.any(Array),
-            }),
-          }),
-        ]),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should create a new company when method is POST and valid data is provided', async () => {
     req.method = 'POST';
     req.body = {
-      code: 'TST_createCompany1',
+      code: 'TST_createCompany6',
       name: 'Company Name',
       regional: 'Regional Name',
     };
 
     await handler(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('201'),
-        message: expect.any(String),
-        payload: {
-          company: expect.objectContaining({
-            id: expect.any(Number),
-            code: expect.any(String),
-            name: expect.any(String),
-            regional: expect.any(String),
-          }),
-          role: expect.objectContaining({
-            id: expect.any(Number),
-            name: expect.any(String),
-            permissions: expect.any(Array),
-          }),
-        },
-      })
-    );
+    const expectedCompany = expect.objectContaining({
+      id: expect.any(Number),
+      code: expect.any(String),
+      name: expect.any(String),
+      regional: expect.any(String),
+    });
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.any(Array),
+    });
+    const expectedCompanyRole = {
+      company: expectedCompany,
+      role: expectedRole,
+    };
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('201'),
+      message: expect.any(String),
+      payload: expectedCompanyRole,
+    });
     await prisma.admin.deleteMany({
       where: {
         companyId: res.json.mock.calls[0][0].payload.company.id,
@@ -193,9 +198,11 @@ describe('Company API', () => {
     });
     await prisma.company.delete({
       where: {
-        code: 'TST_createCompany1',
+        code: 'TST_createCompany6',
       },
     });
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return an error when method is POST and invalid data is provided', async () => {
@@ -207,16 +214,15 @@ describe('Company API', () => {
 
     await handler(req, res);
 
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return an error when method is not allowed', async () => {
@@ -225,16 +231,15 @@ describe('Company API', () => {
 
     await handler(req, res);
 
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return an error when session is UNAUTHORIZED', async () => {
@@ -249,15 +254,14 @@ describe('Company API', () => {
 
     await handler(req, res);
 
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('401'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('401'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });
