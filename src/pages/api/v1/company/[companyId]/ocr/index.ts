@@ -165,7 +165,7 @@ export async function createJournalsAndOcrFromAichResults(
   return resultJson;
 }
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handlePostRequest(req: NextApiRequest) {
   const { companyId } = req.query;
 
   // Info Murky (20240416): Check if companyId is string
@@ -189,8 +189,10 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     STATUS_MESSAGE.CREATED,
     resultJson
   );
-
-  res.status(httpCode).json(result);
+  return {
+    httpCode,
+    result
+  };
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {
@@ -208,7 +210,8 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'POST': {
-        await handlePostRequest(req, res);
+        const { httpCode, result } = await handlePostRequest(req);
+        res.status(httpCode).json(result);
         break;
       }
       default: {

@@ -6,9 +6,7 @@ let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
 const testAccountId = 1;
-beforeAll(() => {
-
-});
+beforeAll(() => {});
 beforeEach(() => {
   req = {
     headers: {},
@@ -28,9 +26,9 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe("GET account by id", () => {
-  it("should return account when account id is provided correctly", async () => {
-    jest.spyOn(prisma.account, "findFirst").mockResolvedValueOnce({
+describe('GET account by id', () => {
+  it('should return account when account id is provided correctly', async () => {
+    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce({
       id: testAccountId,
       type: 'asset',
       liquidity: true,
@@ -55,7 +53,7 @@ describe("GET account by id", () => {
       updatedAt: expect.any(Number),
     });
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: true,
       code: expect.stringContaining('200'),
@@ -64,46 +62,40 @@ describe("GET account by id", () => {
     });
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
-  it("should return an error when account id is not found", async () => {
-    jest.spyOn(prisma.account, "findFirst").mockResolvedValueOnce(null);
+  it('should return an error when account id is not found', async () => {
+    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(null);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: '-2' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: false,
       code: expect.stringContaining('404'),
       message: expect.any(String),
     });
 
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
-  it("should return an error when account id is not a number", async () => {
-    jest.spyOn(prisma.account, "findFirst").mockResolvedValueOnce(null);
+  it('should return an error when account id is not a number', async () => {
+    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(null);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: 'a' };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: false,
       code: expect.stringContaining('422'),
       message: expect.any(String),
     });
 
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });

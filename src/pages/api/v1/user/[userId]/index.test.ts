@@ -27,6 +27,11 @@ beforeEach(async () => {
         name: 'SUPER_ADMIN2',
       },
     },
+    include: {
+      user: true,
+      company: true,
+      role: true,
+    },
   })) as IAdmin;
   if (!admin) {
     admin = await prisma.admin.create({
@@ -83,6 +88,11 @@ beforeEach(async () => {
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
+      include: {
+        user: true,
+        company: true,
+        role: true,
+      },
     });
   }
 
@@ -91,7 +101,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.userId },
+    session: { userId: admin.user.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 });
@@ -110,7 +120,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: admin.userId,
+        id: admin.user.id,
       },
     });
   } catch (error) {
@@ -119,7 +129,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: admin.companyId,
+        id: admin.company.id,
       },
     });
   } catch (error) {
@@ -129,7 +139,7 @@ afterEach(async () => {
 
 describe('test user API by userid', () => {
   it('should retrieve user by userid', async () => {
-    req.query.userId = admin.userId.toString();
+    req.query.userId = admin.user.id.toString();
     await handler(req, res);
     const expectedUser = expect.objectContaining({
       id: expect.any(Number),
@@ -154,7 +164,7 @@ describe('test user API by userid', () => {
   });
 
   it('should update user by userid', async () => {
-    req.query.userId = admin.userId.toString();
+    req.query.userId = admin.user.id.toString();
     req.method = 'PUT';
     req.body = {
       name: 'Jane',
@@ -187,7 +197,7 @@ describe('test user API by userid', () => {
   });
 
   it('should delete user by userid', async () => {
-    req.query.userId = admin.userId.toString();
+    req.query.userId = admin.user.id.toString();
     req.method = 'DELETE';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -214,7 +224,7 @@ describe('test user API by userid', () => {
   });
 
   it('should handle unsupported HTTP methods', async () => {
-    req.query.userId = admin.userId.toString();
+    req.query.userId = admin.user.id.toString();
     req.method = 'POST';
     await handler(req, res);
 

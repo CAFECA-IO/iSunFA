@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import * as module from '@/pages/api/v1/company/[companyId]/ocr/index';
 import formidable from 'formidable';
 import { MockProxy, mock } from 'jest-mock-extended';
@@ -33,7 +33,6 @@ jest.mock('./index.repository', () => {
 });
 
 let req: jest.Mocked<NextApiRequest>;
-let res: jest.Mocked<NextApiResponse>;
 
 beforeEach(() => {
   req = {
@@ -43,11 +42,6 @@ beforeEach(() => {
     json: jest.fn(),
     body: {},
   } as unknown as jest.Mocked<NextApiRequest>;
-
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
 });
 
 afterEach(() => {
@@ -92,7 +86,6 @@ describe('/OCR/index.ts', () => {
 
       // Info Murky (20240424) FormData return will be "File" type, so we can't use "toEqual" to compare
       const imageFile = formData.get('image') as File;
-
       // Info Murky (20240424) test if content is correct
       imageFile.text().then((text) => {
         expect(text).toBe('testBlob');
@@ -440,14 +433,12 @@ describe('/OCR/index.ts', () => {
 
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      await module.handlePostRequest(req, res);
+      const { httpCode, result } = await module.handlePostRequest(req);
 
       expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(201);
 
-      // ToDo: (20240521 - Murky) 這邊應概要去檢查 res 回傳的內容是否正確
-      // 然而因為測試檔的res不是function, 暫時用toHaveBeenCalledWith代替
-      expect(res.json).toHaveBeenCalledWith(mockReturn);
+      expect(httpCode).toBe(201);
+      expect(result).toBe(mockReturn);
     });
   });
 });
