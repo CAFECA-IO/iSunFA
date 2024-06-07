@@ -102,6 +102,7 @@ model Company {
   projects        Project[]
   subscriptions   Subscription[]
   admins          Admin[]
+  incomeExpenses  IncomeExpense[]
 }
 
 model CompanyKYC {
@@ -283,10 +284,12 @@ model IncomeExpense {
   id        Int     @id @default(autoincrement())
   income    Int
   expense   Int
-  projectId Int     @map("project_id")
+  companyId Int     @map("company_id")
+  projectId Int?    @map("project_id")
   createdAt Int     @map("created_at")
   updatedAt Int     @map("updated_at")
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project?   @relation(fields: [projectId], references: [id])
+  company   Company    @relation(fields: [companyId], references: [id])
 
   @@map("income_expense")
 }
