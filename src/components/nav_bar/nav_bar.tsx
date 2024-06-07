@@ -1,9 +1,9 @@
+import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
-import { PiGlobe } from 'react-icons/pi';
 import { GoArrowSwitch } from 'react-icons/go';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
@@ -14,13 +14,17 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
+import I18n from '@/components/i18n/i18n';
+import { TranslateFunction } from '@/interfaces/locale';
+import Notification from '@/components/notification/notification';
 
 const NavBar = () => {
+  const { t }: { t: TranslateFunction } = useTranslation('common');
+
   const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth } = useUserCtx();
   const router = useRouter();
 
-  const burgerButtonStyle =
-    'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
+  const [langIsOpen, setLangIsOpen] = useState(false);
 
   const {
     targetRef: userMenuRef,
@@ -52,7 +56,10 @@ const NavBar = () => {
 
   const appMenuClickHandler = () => setIsAppMenuOpen(!isAppMenuOpen);
   const appMenuMobileClickHandler = () => setIsAppMenuMobileOpen(!isAppMenuMobileOpen);
-  const burgerMenuClickHandler = () => setIsBurgerMenuOpen(!isBurgerMenuOpen);
+  const burgerMenuClickHandler = () => {
+    setIsBurgerMenuOpen(!isBurgerMenuOpen);
+    setLangIsOpen(false);
+  };
 
   const logOutClickHandler = async () => {
     setIsUserMenuOpen(false);
@@ -64,6 +71,9 @@ const NavBar = () => {
     selectCompany(null);
     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
+
+  const burgerButtonStyle =
+    'h-2px rounded-full bg-button-text-secondary transition-all duration-150 ease-in-out';
 
   const displayedAppMenuMobile = (
     <div
@@ -77,16 +87,13 @@ const NavBar = () => {
       >
         <FaChevronLeft />
       </button>
-      <button
-        type="button"
-        // TODO: temp disabled (20240507 - Shirley)
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
+      <Link
+        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
         <p>Project</p>
-      </button>
+      </Link>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -165,19 +172,7 @@ const NavBar = () => {
         </div>
         <FaChevronRight />
       </button>
-      <button
-        // TODO: temp disabled (20240517 - Shirley)
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
-        type="button"
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50"
-      >
-        <div className="flex flex-1 items-center gap-8px">
-          <PiGlobe size={20} />
-          <p>Language</p>
-        </div>
-        <FaChevronRight />
-      </button>
+      <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
       {displayedAppMenuMobile}
     </div>
   );
@@ -188,17 +183,15 @@ const NavBar = () => {
       className={`absolute right-0 top-45px grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Project button */}
-      {/* TODO: temp disabled (20240507 - Shirley) */}
-      <button
-        type="button"
-        // TODO: temp disabled (20240517 - Shirley)
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
-        className="flex flex-col items-center gap-8px px-20px disabled:opacity-50"
+      <Link
+        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+        className="mx-auto"
       >
-        <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-        <p>Project</p>
-      </button>
+        <button type="button" className="flex flex-col items-center gap-8px">
+          <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
+          <p>Project</p>
+        </button>
+      </Link>
       {/* Info: (20240416 - Julian) Account button */}
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
@@ -240,8 +233,10 @@ const NavBar = () => {
     </div>
   );
 
-  const displayedUserMenu = isUserMenuOpen ? (
-    <div className="absolute right-16 top-70px z-100">
+  const displayedUserMenu = (
+    <div
+      className={`${isUserMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute right-16 top-70px z-100 transition-all duration-300 ease-in-out`}
+    >
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
         <Image
           alt="avatar"
@@ -249,8 +244,29 @@ const NavBar = () => {
           width={56}
           height={56}
           className="mx-auto aspect-square w-16 self-center"
-        />
-
+        />{' '}
+        <div className="group absolute inset-0 left-1/2 top-1.3rem h-3.3rem w-3.3rem -translate-x-1/2 rounded-full hover:cursor-pointer">
+          {/* Info: black cover (20240605 - Shirley) */}
+          <div className="h-3.3rem w-3.3rem rounded-full bg-black opacity-0 transition-opacity group-hover:opacity-50"></div>
+          {/* Info: edit icon (20240605 - Shirley) */}
+          <div className="absolute left-1/3 top-4 opacity-0 group-hover:opacity-100">
+            {' '}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill="#FCFDFF"
+                fillRule="evenodd"
+                d="M14.712 1.377a2.768 2.768 0 113.914 3.915l-7.969 7.969-.053.052c-.235.236-.46.462-.732.628a2.666 2.666 0 01-.77.32c-.311.074-.63.074-.963.074H6.67a1 1 0 01-1-1v-1.396-.075c0-.333 0-.651.074-.962.065-.272.173-.532.319-.77.167-.273.392-.498.628-.733l.053-.053 7.969-7.969zm2.5 1.415c-.3-.3-.786-.3-1.086 0L8.157 10.76c-.322.321-.363.372-.39.415a.667.667 0 00-.08.193c-.011.05-.018.115-.018.57v.395h.396c.455 0 .52-.006.57-.018a.667.667 0 00.192-.08c.044-.027.094-.068.416-.39l7.969-7.969c.3-.3.3-.786 0-1.085zM5.629 2.334h3.54a1 1 0 110 2h-3.5c-.716 0-1.194.001-1.56.031-.356.03-.518.08-.62.133a1.5 1.5 0 00-.656.655c-.053.103-.104.266-.133.62-.03.368-.03.845-.03 1.561v7c0 .717 0 1.194.03 1.561.029.355.08.518.133.62l-.891.454.89-.454a1.5 1.5 0 00.656.656c.103.052.265.104.62.133.367.03.845.03 1.561.03h7c.717 0 1.194 0 1.56-.03.356-.03.518-.08.621-.133a1.5 1.5 0 00.656-.656c.052-.102.103-.265.132-.62.03-.367.031-.844.031-1.56v-3.5a1 1 0 112 0v3.54c0 .665 0 1.225-.037 1.683-.04.479-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.432.22-.887.305-1.365.344-.458.037-1.018.037-1.684.037H5.63c-.666 0-1.225 0-1.683-.037-.479-.04-.934-.124-1.366-.344a3.5 3.5 0 01-1.53-1.53c-.22-.431-.304-.886-.344-1.365C.67 15.6.67 15.04.67 14.375v-7.08c0-.667 0-1.226.037-1.684.04-.479.125-.934.345-1.366a3.5 3.5 0 011.53-1.53c.431-.22.886-.304 1.365-.343.458-.038 1.017-.038 1.683-.038z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+          </div>
+        </div>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
             {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
@@ -260,7 +276,7 @@ const NavBar = () => {
             // TODO: temp disabled (20240517 - Shirley)
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
-            className="flex shrink-0 flex-col justify-center rounded-xs px-2.5 disabled:opacity-50"
+            className="flex shrink-0 flex-col justify-center rounded-xs px-2 disabled:opacity-50"
           >
             <div className="flex items-center justify-center">
               <svg
@@ -399,7 +415,7 @@ const NavBar = () => {
         </button>
       </div>
     </div>
-  ) : null;
+  );
 
   const displayedCompanyChangeBtn = selectedCompany ? (
     <Link
@@ -422,10 +438,9 @@ const NavBar = () => {
   ) : null;
 
   const displayedLogInBtn = signedIn ? (
-    <div ref={userMenuRef}>
-      <button type="button" onClick={avatarClickHandler}>
+    <div ref={userMenuRef} className="">
+      <button type="button" onClick={avatarClickHandler} className="">
         {/* Info: avatar svg (20240408 - Shirley) */}
-
         <Image
           alt="avatar"
           src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
@@ -441,8 +456,7 @@ const NavBar = () => {
       {/* Info: desktop version (20240530 - Shirley) */}
       <Button className="hidden h-40px bg-button-surface-strong-primary lg:flex">
         <p className={cn('text-sm leading-6 tracking-normal text-button-text-primary-solid')}>
-          Login
-          {/* {t('login')} */}
+          {t('NAV_BAR.LOGIN')}
         </p>
 
         <svg
@@ -556,7 +570,9 @@ const NavBar = () => {
                   </g>
                 </svg>
               </div>
-              <div className="text-base font-medium leading-6 tracking-normal">Dashboard</div>
+              <div className="text-base font-medium leading-6 tracking-normal">
+                {t('NAV_BAR.DASHBOARD')}
+              </div>
             </Link>
             <Link
               href={ISUNFA_ROUTE.CONTACT_US}
@@ -580,58 +596,19 @@ const NavBar = () => {
                   </g>
                 </svg>
               </div>
-              <div className="text-base font-medium leading-6 tracking-normal">Contact us</div>
+              <div className="text-base font-medium leading-6 tracking-normal">
+                {t('NAV_BAR.CONTACT_US')}
+              </div>
             </Link>
           </div>
         </div>
         {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
-          <button
-            type="button"
-            // TODO: temp disabled (20240517 - Shirley)
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
-            className="disabled:opacity-50"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 22 22"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M3.02388 9.25114C2.90079 9.81491 2.83594 10.4005 2.83594 11.0011C2.83594 11.6018 2.90079 12.1874 3.02388 12.7511H6.47228C6.39399 12.1804 6.34826 11.6031 6.33615 11.022C6.33587 11.0081 6.33587 10.9942 6.33615 10.9803C6.34826 10.3992 6.39399 9.82191 6.47228 9.25114H3.02388ZM3.7459 7.25114H6.8868C7.29111 5.80379 7.91098 4.42273 8.72736 3.15561C6.56065 3.78287 4.76484 5.28338 3.7459 7.25114ZM11.0026 3.39268C10.1114 4.56077 9.4281 5.86623 8.97597 7.25114H13.0292C12.5771 5.86623 11.8938 4.56077 11.0026 3.39268ZM13.5113 9.25114H8.49394C8.40247 9.82741 8.34939 10.412 8.33617 11.0011C8.34939 11.5903 8.40247 12.1749 8.49394 12.7511H13.5113C13.6027 12.1749 13.6558 11.5903 13.669 11.0011C13.6558 10.412 13.6027 9.82741 13.5113 9.25114ZM15.5329 12.7511C15.6112 12.1804 15.6569 11.6031 15.6691 11.022C15.6693 11.0081 15.6693 10.9942 15.6691 10.9803C15.6569 10.3992 15.6112 9.82191 15.5329 9.25114H18.9813C19.1044 9.81491 19.1693 10.4005 19.1693 11.0011C19.1693 11.6018 19.1044 12.1874 18.9813 12.7511H15.5329ZM13.0292 14.7511H8.97597C9.4281 16.136 10.1114 17.4415 11.0026 18.6096C11.8938 17.4415 12.5771 16.136 13.0292 14.7511ZM8.72735 18.8467C7.91098 17.5795 7.29111 16.1985 6.8868 14.7511H3.7459C4.76484 16.7189 6.56065 18.2194 8.72735 18.8467ZM13.2779 18.8467C14.0942 17.5795 14.7141 16.1985 15.1184 14.7511H18.2593C17.2404 16.7189 15.4446 18.2194 13.2779 18.8467ZM18.2593 7.25114H15.1184C14.7141 5.80379 14.0942 4.42273 13.2779 3.15561C15.4446 3.78287 17.2404 5.28338 18.2593 7.25114ZM0.835938 11.0011C0.835938 5.38624 5.38771 0.834473 11.0026 0.834473C16.6175 0.834473 21.1693 5.38624 21.1693 11.0011C21.1693 16.616 16.6175 21.1678 11.0026 21.1678C5.38771 21.1678 0.835938 16.616 0.835938 11.0011Z"
-                fill="#001840"
-              />
-            </svg>
-          </button>
-          <button
-            type="button"
-            // TODO: temp disabled (20240517 - Shirley)
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
-            className="disabled:opacity-50"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 22 22"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M6.40674 2.73828C7.62572 1.51929 9.27902 0.834473 11.0029 0.834473C12.7268 0.834473 14.3801 1.51929 15.5991 2.73828C16.8181 3.95727 17.5029 5.61057 17.5029 7.33447C17.5029 9.98963 18.17 11.7445 18.8648 12.8611L18.8766 12.8801C19.2033 13.4052 19.4628 13.8222 19.6381 14.1263C19.7259 14.2787 19.8072 14.4277 19.8679 14.5613C19.8982 14.6281 19.9328 14.7114 19.9601 14.8028C19.9825 14.8782 20.0266 15.0432 20.0101 15.245C19.9995 15.3742 19.9727 15.6027 19.841 15.8397C19.7094 16.0767 19.5295 16.2202 19.4254 16.2974C19.179 16.4802 18.8981 16.5216 18.8084 16.5348L18.8031 16.5356C18.6634 16.5563 18.5065 16.5664 18.3509 16.5724C18.042 16.5845 17.6152 16.5845 17.0877 16.5845H17.0631H4.94271H4.91814C4.39062 16.5845 3.96386 16.5845 3.65492 16.5724C3.49932 16.5664 3.34242 16.5563 3.2028 16.5356L3.1975 16.5348C3.1078 16.5216 2.82689 16.4802 2.58046 16.2974C2.47634 16.2202 2.29647 16.0767 2.16481 15.8397C2.03315 15.6027 2.00637 15.3742 1.99581 15.245C1.9793 15.0432 2.02334 14.8782 2.0458 14.8028C2.07304 14.7114 2.10764 14.6281 2.13794 14.5613C2.19863 14.4277 2.27993 14.2787 2.36777 14.1263C2.54304 13.8222 2.80258 13.4051 3.12937 12.8799L3.14108 12.8611C3.83589 11.7445 4.50293 9.98963 4.50293 7.33447C4.50293 5.61057 5.18775 3.95726 6.40674 2.73828ZM11.0029 2.83447C9.80946 2.83447 8.66486 3.30858 7.82095 4.15249C6.97704 4.99641 6.50293 6.141 6.50293 7.33447C6.50293 10.3447 5.74084 12.4687 4.83917 13.9178C4.68028 14.1731 4.54302 14.3937 4.42593 14.584C4.57934 14.5844 4.75095 14.5845 4.94271 14.5845H17.0631C17.2549 14.5845 17.4265 14.5844 17.5799 14.584C17.4628 14.3937 17.3256 14.1731 17.1667 13.9178C16.265 12.4687 15.5029 10.3447 15.5029 7.33447C15.5029 6.141 15.0288 4.99641 14.1849 4.15249C13.341 3.30858 12.1964 2.83447 11.0029 2.83447ZM7.82785 18.5894C8.19332 18.1753 8.82526 18.1359 9.23933 18.5014C9.71002 18.9168 10.3259 19.1678 11.0029 19.1678C11.6799 19.1678 12.2958 18.9168 12.7665 18.5014C13.1806 18.1359 13.8125 18.1753 14.178 18.5894C14.5435 19.0035 14.5041 19.6354 14.09 20.0009C13.268 20.7264 12.1858 21.1678 11.0029 21.1678C9.82009 21.1678 8.73791 20.7264 7.91586 20.0009C7.50179 19.6354 7.46239 19.0035 7.82785 18.5894Z"
-                fill="#001840"
-              />
-            </svg>
-          </button>
+          {/* Info: globe (i18n) (20240605 - Shirley) */}
+          <I18n />
+          {/* Info: notification (20240606 - Shirley) */}
+          <Notification />
+          {/* Info: app menu (20240606 - Shirley) */}
           <button type="button" onClick={appMenuClickHandler}>
             <svg
               width="22"
@@ -659,7 +636,7 @@ const NavBar = () => {
         {/* Info: (20240521 - Julian) Company change button */}
         {displayedCompanyChangeBtn}
 
-        <div className="my-auto">{displayedLogInBtn}</div>
+        {displayedLogInBtn}
       </div>
       {displayedBurgerMenu}
     </div>

@@ -5,33 +5,10 @@ import prisma from '@/client';
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
-const testAccountId = -1;
-beforeAll(async () => {
-  await prisma.account.create({
-    data: {
-      id: testAccountId,
-      type: 'asset',
-      liquidity: true,
-      account: 'cash',
-      code: '1103-1',
-      name: 'Sun Bank',
-      createdAt: 1000000000,
-      updatedAt: 1000000000,
-    },
-  });
-});
+const testAccountId = 1;
+beforeAll(() => {
 
-afterAll(async () => {
-  await prisma.account
-    .delete({
-      where: {
-        id: testAccountId,
-      },
-    })
-    .catch();
-  await prisma.$disconnect();
 });
-
 beforeEach(() => {
   req = {
     headers: {},
@@ -51,8 +28,18 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('GET account by id', () => {
-  it('should return account when account id is provided correctly', async () => {
+describe("GET account by id", () => {
+  it("should return account when account id is provided correctly", async () => {
+    jest.spyOn(prisma.account, "findFirst").mockResolvedValueOnce({
+      id: testAccountId,
+      type: 'asset',
+      liquidity: true,
+      account: 'cash',
+      code: '1103-1',
+      name: 'Sun Bank',
+      createdAt: 1000000000,
+      updatedAt: 1000000000,
+    });
     req.method = 'GET';
     req.query = { companyId: '1', accountId: `${testAccountId}` };
     await handler(req, res);
@@ -80,7 +67,8 @@ describe('GET account by id', () => {
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
-  it('should return an error when account id is not found', async () => {
+  it("should return an error when account id is not found", async () => {
+    jest.spyOn(prisma.account, "findFirst").mockResolvedValueOnce(null);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: '-2' };
     await handler(req, res);
@@ -96,7 +84,8 @@ describe('GET account by id', () => {
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
-  it('should return an error when account id is not a number', async () => {
+  it("should return an error when account id is not a number", async () => {
+    jest.spyOn(prisma.account, "findFirst").mockResolvedValueOnce(null);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: 'a' };
     await handler(req, res);

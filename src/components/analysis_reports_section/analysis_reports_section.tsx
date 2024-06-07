@@ -22,7 +22,6 @@ const AnalysisReportSection = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const {
     targetRef: projectMenuRef,
@@ -487,7 +486,7 @@ const AnalysisReportSection = () => {
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
               // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-              type={datePickerType}
+              type={DatePickerType.TEXT_PERIOD}
               period={period}
               setFilteredPeriod={setPeriod}
               btnClassName="px-6"

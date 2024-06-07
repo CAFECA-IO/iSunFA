@@ -28,24 +28,22 @@ describe('Result API Handler Tests', () => {
     req.method = 'GET';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
+    const category = expect.any(String);
+    const aSeries = expect.objectContaining({
+      name: expect.any(String),
+      data: expect.arrayContaining([expect.any(Number)]),
+    });
+    const absolute = expect.objectContaining({
+      absolute: expect.any(Number),
+    });
+    const annotation = expect.objectContaining({
+      name: expect.any(String),
+      data: expect.arrayContaining([absolute]),
+    });
     const expectedPayload = {
-      categories: expect.arrayContaining([expect.any(String)]),
-      series: expect.arrayContaining([
-        expect.objectContaining({
-          name: expect.any(String),
-          data: expect.arrayContaining([expect.any(Number)]),
-        }),
-      ]),
-      annotations: expect.arrayContaining([
-        expect.objectContaining({
-          name: expect.any(String),
-          data: expect.arrayContaining([
-            expect.objectContaining({
-              absolute: expect.any(Number),
-            }),
-          ]),
-        }),
-      ]),
+      categories: expect.arrayContaining([category]),
+      series: expect.arrayContaining([aSeries]),
+      annotations: expect.arrayContaining([annotation]),
     };
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
