@@ -3,9 +3,14 @@ export interface IProject {
   companyId: number;
   imageId: string | null;
   name: string;
-  completedPercent: number;
+  income: number;
+  expense: number;
+  profit: number;
+  contractAmount: number;
   stage: string;
   members: IMember[];
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface IMilestone {
@@ -27,6 +32,8 @@ export interface IValue {
   netProfit: number;
   netProfitGrowthIn30d: number;
   netProfitGrowthInYear: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ISale {
@@ -42,14 +49,15 @@ export interface ISale {
 export interface IWorkRate {
   id: number;
   employeeProjectId: number;
-  involvementRate: number;
-  expected_hours: number;
-  actual_hours: number;
+  member: IMember;
+  involvementRate: number | null;
+  expectedHours: number;
+  actualHours: number;
   createdAt: number;
   updatedAt: number;
 }
 
 interface IMember {
   name: string;
-  imageId: string;
+  imageId: string | null;
 }

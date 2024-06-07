@@ -4,14 +4,14 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { IAdmin } from '@/interfaces/admin';
-import { checkAdminSession } from '@/lib/utils/session_check';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAdmin | IAdmin[]>>
 ) {
   try {
-    const session = await checkAdminSession(req, res);
+    const session = await checkAdmin(req, res);
     const { companyId } = session;
     if (req.method === 'GET') {
       const adminList: IAdmin[] = await prisma.admin.findMany({

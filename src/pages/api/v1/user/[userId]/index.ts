@@ -4,14 +4,14 @@ import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import { checkUserSession } from '@/lib/utils/session_check';
+import { checkUser } from '@/lib/utils/auth_check';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUser>>
 ) {
   try {
-    const session = await checkUserSession(req, res);
+    const session = await checkUser(req, res);
     const { userId } = session;
     const admin = await prisma.admin.findMany({
       where: {
