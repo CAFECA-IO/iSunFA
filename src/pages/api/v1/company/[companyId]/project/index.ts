@@ -48,6 +48,11 @@ export default async function handler(
         return {
           ...projectData,
           members,
+          // ToDo: (20240607 - Julian) For matching the interface
+          income: 0,
+          expense: 0,
+          profit: 0,
+          contractAmount: 0,
         };
       });
       const { httpCode, result } = formatApiResponse<IProject[]>(
@@ -96,6 +101,11 @@ export default async function handler(
           name: employeeProject.employee.name,
           imageId: employeeProject.employee.imageId as string,
         })),
+        // ToDo: (20240607 - Julian) For matching the interface
+        income: 0,
+        expense: 0,
+        profit: 0,
+        contractAmount: 0,
       };
       const { employeeProjects, ...project } = newProjectWithMembers;
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
