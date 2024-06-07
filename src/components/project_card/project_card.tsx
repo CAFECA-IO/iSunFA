@@ -1,7 +1,9 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { ProjectStage, stageColorMap } from '@/constants/project';
 import { IProject } from '@/interfaces/project';
 import { numberWithCommas } from '@/lib/utils/common';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IProjectCardProps {
   project: IProject;
@@ -44,8 +46,10 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
     );
 
   return (
-    // ToDo: (2024606 - Julian) Link to project detail page
-    <div className="relative flex w-full flex-none flex-col gap-y-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv1 p-16px shadow-md">
+    <Link
+      href={`${ISUNFA_ROUTE.PROJECT_LIST}/${project.id}`}
+      className="relative flex w-full flex-none flex-col gap-y-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv1 p-16px shadow-md"
+    >
       <div className="flex items-center gap-x-8px">
         {/* Info: (2024606 - Julian) Title */}
         <h2 className="text-2xl font-bold text-text-neutral-primary">{name}</h2>
@@ -80,7 +84,7 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
       >
         {stage}
       </div>
-    </div>
+    </Link>
   );
 };
 
