@@ -274,4 +274,54 @@ describe('API Handler Tests', () => {
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
+
+  it('should return error when userId is not in session', async () => {
+    req = {
+      headers: {},
+      query: {},
+      method: '',
+      json: jest.fn(),
+      body: {},
+      session: {},
+    } as unknown as jest.Mocked<NextApiRequest>;
+    req.method = 'GET';
+    req.query = { adminId: admin.id.toString() };
+    await handler(req, res);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('401'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
+  });
+
+  it('should return error when companyId is null', async () => {
+    req = {
+      headers: {},
+      query: {},
+      method: '',
+      json: jest.fn(),
+      body: {},
+      session: { userId: admin.user.id },
+    } as unknown as jest.Mocked<NextApiRequest>;
+    req.method = 'GET';
+    req.query = { adminId: admin.id.toString() };
+    await handler(req, res);
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('403'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
+  });
 });

@@ -57,22 +57,22 @@ describe('test role API handler', () => {
   it('should list all roles', async () => {
     req.method = 'GET';
     await handler(req, res);
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.arrayContaining([expect.any(String)]),
+    });
+    const expectedRoleList = expect.arrayContaining([expectedRole]);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedRoleList,
+    });
+
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.arrayContaining([
-          expect.objectContaining({
-            id: expect.any(Number),
-            name: expect.any(String),
-            permissions: expect.arrayContaining([expect.any(String)]),
-          }),
-        ]),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should create role successfully', async () => {
@@ -81,20 +81,21 @@ describe('test role API handler', () => {
       name: 'test_queen',
     };
     await handler(req, res);
+    const expectedRole = expect.objectContaining({
+      id: expect.any(Number),
+      name: expect.any(String),
+      permissions: expect.arrayContaining([expect.any(String)]),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('201'),
+      message: expect.any(String),
+      payload: expectedRole,
+    });
+
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('201'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          permissions: expect.arrayContaining([expect.any(String)]),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
     await prisma.role.delete({
       where: {
         id: res.json.mock.calls[0][0].payload.id,
@@ -108,30 +109,30 @@ describe('test role API handler', () => {
       // name: 'John Doe',
     };
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error for METHOD_NOT_ALLOWED', async () => {
     req.method = 'PUT';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });
