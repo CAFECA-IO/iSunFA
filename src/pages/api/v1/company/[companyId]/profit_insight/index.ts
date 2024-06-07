@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { checkCompanySession } from '@/lib/utils/session_check';
+import { checkAdminSession } from '@/lib/utils/session_check';
 
 async function getProfitChange(targetTime: number, companyId: number) {
   // Info: startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime (20240607 - Gibbs)
@@ -92,7 +92,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const session = await checkCompanySession(req, res);
+      const session = await checkAdminSession(req, res);
       const { companyId } = session;
       const targetTime = new Date().getTime();
       const profitChange = await getProfitChange(targetTime, companyId);
