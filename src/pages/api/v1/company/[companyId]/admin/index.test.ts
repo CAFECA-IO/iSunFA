@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/admin/index';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { ROLE } from '@/constants/role';
 import { IAdmin } from '@/interfaces/admin';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -33,10 +32,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE.OWNER,
+            name: 'admin_test1',
           },
           create: {
-            name: ROLE.OWNER,
+            name: 'admin_test1',
             permissions: ['hihi', 'ooo'],
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
