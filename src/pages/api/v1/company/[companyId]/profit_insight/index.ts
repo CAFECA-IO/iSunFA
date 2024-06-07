@@ -6,7 +6,7 @@ import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 async function getPofitChange() {
-  // Info: (20240524 - Gibbs) startOfTodayTimestamp, endOfTodayTimestamp, startOfYesterdayTimestamp, endOfYesterdayTimestamp
+  // Info: (20240524 - Gibbs) startDayTimeOfTargetTime, endDayTimeOfTargetTime, startDayTimeOfTargetTime, endDayTimeOfTargetTime
   const startOfTodayTimestamp = timestampInSeconds(new Date().setHours(0, 0, 0, 0));
   const endOfTodayTimestamp = timestampInSeconds(new Date().setHours(23, 59, 59, 999));
   const startOfYesterdayTimestamp = timestampInSeconds(
