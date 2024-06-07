@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { ProjectStage, stageColorMap } from '@/constants/project';
 import { IProject } from '@/interfaces/project';
+import { numberWithCommas } from '@/lib/utils/common';
 
 interface IProjectCardProps {
   project: IProject;
@@ -44,7 +45,7 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
 
   return (
     // ToDo: (2024606 - Julian) Link to project detail page
-    <div className="relative flex w-full flex-col gap-y-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv1 p-16px shadow-md">
+    <div className="relative flex w-full flex-none flex-col gap-y-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv1 p-16px shadow-md">
       <div className="flex items-center gap-x-8px">
         {/* Info: (2024606 - Julian) Title */}
         <h2 className="text-2xl font-bold text-text-neutral-primary">{name}</h2>
@@ -60,16 +61,16 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
       <div className="flex flex-col gap-y-14px text-sm">
         <div className="flex items-center gap-x-16px">
           <p className="w-52px text-text-neutral-tertiary">Income</p>
-          <p className="font-semibold text-text-neutral-primary">{income}</p>
+          <p className="font-semibold text-text-neutral-primary">{numberWithCommas(income)}</p>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-16px">
             <p className="w-52px text-text-neutral-tertiary">Expense</p>
-            <p className="font-semibold text-text-neutral-primary">{expense}</p>
+            <p className="font-semibold text-text-neutral-primary">{numberWithCommas(expense)}</p>
           </div>
           <div className="flex items-center gap-x-16px">
             <p className="text-text-neutral-tertiary">Profit</p>
-            <p className="font-semibold text-text-neutral-primary">{profit}</p>
+            <p className="font-semibold text-text-neutral-primary">{numberWithCommas(profit)}</p>
           </div>
         </div>
       </div>
