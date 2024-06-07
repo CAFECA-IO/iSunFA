@@ -2,8 +2,9 @@ import { useTranslation } from 'next-i18next';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { Button } from '@/components/button/button';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { cn } from '@/lib/utils/common';
+import { cn, truncateString } from '@/lib/utils/common';
 import { DUMMY_NOTIFICATION_LIST, INotification } from '@/interfaces/notification';
+import { LIMIT_NOTIFICATION_TITLE } from '@/constants/display';
 
 type TranslateFunction = (s: string) => string;
 interface INotificationProps {
@@ -106,7 +107,7 @@ const Notification = ({ mobileMenuIsOpen, setMobileMenuIsOpen }: INotificationPr
                     : 'hover:cursor-pointer hover:text-text-neutral-link'
                 )}
               >
-                {item.title}
+                {truncateString(item.title, LIMIT_NOTIFICATION_TITLE)}
               </div>
             </li>
           ))}
@@ -194,7 +195,7 @@ const Notification = ({ mobileMenuIsOpen, setMobileMenuIsOpen }: INotificationPr
                     : 'hover:cursor-pointer hover:text-text-neutral-link'
                 )}
               >
-                {item.title}
+                {truncateString(item.title, LIMIT_NOTIFICATION_TITLE)}
               </div>
             </li>
           ))}
