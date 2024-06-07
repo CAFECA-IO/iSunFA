@@ -27,6 +27,11 @@ beforeEach(async () => {
         name: 'SUPER_ADMIN',
       },
     },
+    include: {
+      user: true,
+      company: true,
+      role: true,
+    },
   })) as IAdmin;
   if (!admin) {
     admin = await prisma.admin.create({
@@ -83,6 +88,11 @@ beforeEach(async () => {
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
+      include: {
+        company: true,
+        user: true,
+        role: true,
+      },
     });
   }
   req = {
@@ -90,7 +100,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.userId },
+    session: { userId: admin.user.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 });
@@ -109,7 +119,7 @@ afterEach(async () => {
   try {
     await prisma.user.delete({
       where: {
-        id: admin.userId,
+        id: admin.user.id,
       },
     });
   } catch (error) {
@@ -118,7 +128,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: admin.companyId,
+        id: admin.company.id,
       },
     });
   } catch (error) {
