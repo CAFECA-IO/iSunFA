@@ -39,7 +39,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 
   const options: ApexOptions = {
     chart: {
-      id: 'project-ROI-chart',
+      id: 'project-income-expense-chart',
       toolbar: {
         show: false,
       },
@@ -195,6 +195,9 @@ const ProjectRoiComparisonChart = () => {
   const alignCalendarPart =
     layoutAssertion === LayoutAssertion.DESKTOP ? DatePickerAlign.LEFT : DatePickerAlign.CENTER;
 
+  const customCalendarAlignment =
+    layoutAssertion === LayoutAssertion.DESKTOP ? '' : '-translate-x-70%';
+
   const {
     trigger: listProjectProfitComparison,
     data: profitComparison,
@@ -300,7 +303,7 @@ const ProjectRoiComparisonChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="flex h-630px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
+    <div className="flex h-580px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px">
       <div>
         <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
           <div className="lg:flex-1">
@@ -352,14 +355,15 @@ const ProjectRoiComparisonChart = () => {
             </div>
 
             {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
-            <div className="">
+            <div className="hidden lg:flex">
               <DatePicker
-                type={DatePickerType.ICON}
+                type={DatePickerType.ICON_PERIOD}
                 minDate={minDate}
                 maxDate={maxDate}
                 period={period}
                 setFilteredPeriod={setPeriod}
                 alignCalendar={alignCalendarPart}
+                calenderClassName={customCalendarAlignment}
               />
             </div>
           </div>
@@ -387,19 +391,19 @@ const ProjectRoiComparisonChart = () => {
 
           {/* Info: ----- mobile version (20240419 - Shirley) ----- */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
-            {/* <div>
+            <div>
               <DatePicker
-                type={DatePickerType.ICON}
+                type={DatePickerType.ICON_PERIOD}
                 minDate={minDate}
                 maxDate={maxDate}
                 period={period}
                 setFilteredPeriod={setPeriod}
               />
-            </div> */}
+            </div>
 
             {/* Info: prev and next button (20240419 - Shirley) */}
             {/* Deprecated: No relevant function in the latest mockup (20240618 - Shirley) */}
-            {/* <div className="flex flex-1 justify-end space-x-2">
+            <div className="flex flex-1 justify-end space-x-2">
               <Button
                 disabled={currentPage === 1}
                 onClick={goToPrevPage}
@@ -417,7 +421,7 @@ const ProjectRoiComparisonChart = () => {
               >
                 <AiOutlineRight size={15} />
               </Button>
-            </div> */}
+            </div>
           </div>
         </div>
       </div>

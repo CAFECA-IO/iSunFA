@@ -9,14 +9,14 @@ import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
-function isResultIdValid(resultId: string | string[] | undefined): resultId is string {
+export function isResultIdValid(resultId: string | string[] | undefined): resultId is string {
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
     return false;
   }
   return true;
 }
 
-async function fetchOCRResult(resultId: string) {
+export async function fetchOCRResult(resultId: string) {
   let response: Response;
 
   try {
@@ -32,7 +32,7 @@ async function fetchOCRResult(resultId: string) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
+export async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -54,19 +54,19 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   return json.payload as IInvoice;
 }
 
-function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
+export function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
   // Info: (20240522 - Murky) This function is used to set journalId to the OCR result
   // eslint-disable-next-line no-param-reassign
   ocrResult.journalId = journalId;
 }
 
-function formatOCRResultDate(ocrResult: IInvoice) {
+export function formatOCRResultDate(ocrResult: IInvoice) {
   // Info: (20240522 - Murky) This function is used to format the date in OCR result
   // eslint-disable-next-line no-param-reassign
   ocrResult.date = timestampInSeconds(ocrResult.date);
 }
 
-async function handleGetRequest(
+export async function handleGetRequest(
   resultId: string,
   res: NextApiResponse<IResponseData<IInvoice>>
 ) {

@@ -21,6 +21,7 @@ export const ISUNFA_ROUTE = {
   USERS_FINANCIAL_REPORTS_VIEW: '/users/reports/financials/view',
   USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
   USERS_MY_REPORTS: '/users/reports/my-reports',
+  PROJECT_LIST: '/users/project',
 };
 
 export const EXTERNAL_API = {
