@@ -5,6 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
+import { formatProjectList } from '@/lib/utils/formatter/project.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,7 +15,8 @@ export default async function handler(
     const session = await checkAdmin(req, res);
     const { companyId } = session;
     if (req.method === 'GET') {
-      const projectList: IProject[] = await listProject(companyId);
+      const listedProject = await listProject(companyId);
+      const projectList = await formatProjectList(listedProject);
       const { httpCode, result } = formatApiResponse<IProject[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         projectList

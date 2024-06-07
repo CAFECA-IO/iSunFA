@@ -11,21 +11,10 @@ export async function listProject(companyId: number) {
     include: {
       employeeProjects: {
         select: {
-          employee: {
-            select: {
-              name: true,
-              imageId: true,
-            },
-          },
+          employee: true,
         },
       },
-      values: {
-        select: {
-          totalRevenue: true,
-          totalExpense: true,
-          netProfit: true,
-        },
-      },
+      values: true,
       _count: {
         select: {
           contracts: true,
@@ -33,28 +22,7 @@ export async function listProject(companyId: number) {
       },
     },
   });
-  if (!listedProject) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-  const projectList: IProject[] = listedProject.map((project) => {
-    const { employeeProjects, values, _count, ...rest } = project;
-    const employeeList = employeeProjects.map((employeeProject) => {
-      const { employee, ...restEmployeeProject } = employeeProject;
-      return {
-        ...employee,
-        ...restEmployeeProject,
-      };
-    });
-    return {
-      ...rest,
-      members: employeeList,
-      income: values[values.length - 1].totalExpense,
-      expense: values[values.length - 1].totalRevenue,
-      profit: values[values.length - 1].netProfit,
-      contractAmount: _count.contracts,
-    };
-  });
-  return projectList;
+  return listedProject;
 }
 
 export async function getProjectById(projectId: number): Promise<IProject> {

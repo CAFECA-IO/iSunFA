@@ -1,4 +1,4 @@
-export interface EmployeeProject {
+export interface IEmployeeProject {
   id: number;
   employeeId: number;
   projectId: number;
