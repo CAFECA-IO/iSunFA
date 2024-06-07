@@ -1,8 +1,7 @@
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
-import { FiLayout, FiMail, FiBell } from 'react-icons/fi';
+import { FiLayout, FiMail } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { GoArrowSwitch } from 'react-icons/go';
 import { Button } from '@/components/button/button';
@@ -25,6 +24,7 @@ const NavBar = () => {
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
+  const [notificationIsOpen, setNotificationIsOpen] = useState(false);
 
   const {
     targetRef: userMenuRef,
@@ -59,6 +59,7 @@ const NavBar = () => {
   const burgerMenuClickHandler = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
     setLangIsOpen(false);
+    setNotificationIsOpen(false);
   };
 
   const logOutClickHandler = async () => {
@@ -83,9 +84,22 @@ const NavBar = () => {
       <button
         onClick={appMenuMobileClickHandler}
         type="button"
-        className="p-16px text-button-text-secondary hover:text-primaryYellow"
+        className="p-16px text-button-text-secondary hover:text-button-text-primary"
       >
-        <FaChevronLeft />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            className="fill-current"
+            fillRule="evenodd"
+            d="M15.533 5.47a.75.75 0 010 1.061l-5.47 5.47 5.47 5.47a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z"
+            clipRule="evenodd"
+          ></path>
+        </svg>{' '}
       </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
@@ -128,10 +142,11 @@ const NavBar = () => {
     </div>
   );
 
+  // Info: mobile (20240607 - Shirley)
   const displayedBurgerMenu = (
     <div
       ref={burgerMenuRef}
-      className={`absolute left-0 top-75px flex gap-16px lg:hidden ${isBurgerMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white px-16px py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-75px flex justify-center gap-16px lg:hidden ${isBurgerMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} w-full flex-col items-start bg-white py-30px text-base shadow-xl transition-all duration-300 ease-in-out`}
     >
       <button
         type="button"
@@ -142,7 +157,20 @@ const NavBar = () => {
           <TbGridDots size={20} />
           <p>Applications</p>
         </div>
-        <FaChevronRight />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="none"
+          viewBox="0 0 20 20"
+        >
+          <path
+            className="fill-current"
+            fillRule="evenodd"
+            d="M6.972 4.47a.75.75 0 011.06 0l5 5a.75.75 0 010 1.061l-5 5a.75.75 0 01-1.06-1.06l4.47-4.47-4.47-4.47a.75.75 0 010-1.06z"
+            clipRule="evenodd"
+          ></path>
+        </svg>{' '}
       </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
@@ -159,19 +187,12 @@ const NavBar = () => {
         <FiMail size={20} />
         <p>Contact us</p>
       </Link>
-      <button
-        // TODO: temp disabled (20240517 - Shirley)
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
-        type="button"
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50"
-      >
-        <div className="flex flex-1 items-center gap-8px">
-          <FiBell size={20} />
-          <p>Notification</p>
-        </div>
-        <FaChevronRight />
-      </button>
+
+      <Notification
+        mobileMenuIsOpen={notificationIsOpen}
+        setMobileMenuIsOpen={setNotificationIsOpen}
+      />
+
       <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
       {displayedAppMenuMobile}
     </div>
@@ -517,6 +538,11 @@ const NavBar = () => {
               className={`${burgerButtonStyle} ${isBurgerMenuOpen ? 'w-6/10 -translate-x-1 -translate-y-1 rotate-40' : ' w-full translate-x-0 translate-y-0 rotate-0'}`}
             ></span>
           </button>
+
+          {/* Info: cover when burger menu is open (202400607 - Shirley) */}
+          <div
+            className={`absolute bottom-5 h-7 w-7 bg-transparent ${isBurgerMenuOpen ? 'pointer-events-auto' : 'hidden'} hover:cursor-pointer`}
+          ></div>
         </div>
 
         <div className="flex flex-1 items-center justify-center">
@@ -602,7 +628,7 @@ const NavBar = () => {
             </Link>
           </div>
         </div>
-        {/* Info: icons on mobile are hidden (20240408 - Shirley) */}
+        {/* Info: desktop (20240408 - Shirley) */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
           {/* Info: globe (i18n) (20240605 - Shirley) */}
           <I18n />
