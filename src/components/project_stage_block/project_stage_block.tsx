@@ -1,6 +1,6 @@
 import { FiPlus } from 'react-icons/fi';
 import ProjectCard from '../project_card/project_card';
-import { IProject } from '@/interfaces/project';
+import { IProject } from '../../interfaces/project';
 
 interface IProjectStageBlockProps {
   stage: string;

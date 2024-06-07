@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { FiPlusCircle, FiPlus } from 'react-icons/fi';
-import { FiGrid, FiSearch } from 'react-icons/fi';
-import { FaChevronDown, FaListUl } from 'react-icons/fa6';
+import React, { useState, useEffect } from 'react';
+import { FiGrid, FiSearch, FiPlusCircle, FiPlus } from 'react-icons/fi';
+import { FaChevronDown, FaChevronLeft, FaChevronRight, FaListUl } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IProject } from '@/interfaces/project';
 import { ProjectStage } from '@/constants/project';
@@ -20,7 +19,7 @@ const dummyProjects: IProject[] = [
     companyId: 1,
     imageId: null,
     name: 'Project 1',
-    stage: ProjectStage.ARCHIVED,
+    stage: ProjectStage.BETA_TESTING,
     income: 1000,
     expense: 500,
     profit: 500,
@@ -47,7 +46,7 @@ const dummyProjects: IProject[] = [
     companyId: 2,
     name: 'Project 2',
     imageId: null,
-    stage: 'ProjectStage.SELLING',
+    stage: ProjectStage.SELLING,
     income: 4200,
     expense: 4700,
     profit: -500,
@@ -106,7 +105,7 @@ const dummyProjects: IProject[] = [
     companyId: 3,
     name: 'Project 3',
     imageId: null,
-    stage: ProjectStage.ARCHIVED,
+    stage: ProjectStage.BETA_TESTING,
     income: 2310,
     expense: 2354,
     profit: -44,
@@ -125,7 +124,7 @@ const dummyProjects: IProject[] = [
     companyId: 4,
     imageId: null,
     name: 'StellarScape',
-    stage: ProjectStage.ARCHIVED,
+    stage: ProjectStage.BETA_TESTING,
     income: 13940,
     expense: 12480,
     profit: 1460,
@@ -148,7 +147,7 @@ const dummyProjects: IProject[] = [
     companyId: 5,
     imageId: null,
     name: 'Project 5',
-    stage: ProjectStage.ARCHIVED,
+    stage: ProjectStage.BETA_TESTING,
     income: 23425,
     expense: 12412,
     profit: 11013,
@@ -179,7 +178,7 @@ const dummyProjects: IProject[] = [
 const ProjectPageBody = () => {
   const [search, setSearch] = useState<string>('');
   const [filteredStage, setFilteredStage] = useState<string>('ALL'); // Info: (2024607 - Julian) For list
-  const [currentStage, setCurrentStage] = useState<string>('ALL'); // Info: (2024607 - Julian) For grid
+  const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const totalPages = 10; // ToDo: (2024606 - Julian) Get total page from API
@@ -190,13 +189,43 @@ const ProjectPageBody = () => {
     setComponentVisible: setIsStageOptionsVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const stageList = [
+    ProjectStage.SELLING,
+    ProjectStage.DESIGNING,
+    ProjectStage.DEVELOPING,
+    ProjectStage.BETA_TESTING,
+    ProjectStage.SOLD,
+    ProjectStage.ARCHIVED,
+  ];
+
   const listBtnStyle = currentLayout === Layout.LIST ? 'tertiary' : 'secondaryOutline';
   const gridBtnStyle = currentLayout === Layout.GRID ? 'tertiary' : 'secondaryOutline';
+
+  const currentStageIndex = stageList.findIndex((stage) => stage === currentStage); // Info: (2024607 - Julian) 找到指定 Stage 的 index
 
   const listLayoutHandler = () => setCurrentLayout(Layout.LIST);
   const gridLayoutHandler = () => setCurrentLayout(Layout.GRID);
 
   const searchHandler = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
+
+  // Info: (2024607 - Julian) 移動到上一個 Stage
+  const leftClickHandler = () => {
+    if (currentStageIndex > 0) {
+      setCurrentStage(stageList[currentStageIndex - 1]);
+    } else {
+      // Info: (2024607 - Julian) 如果是第一個 Stage，則跳到最後一個 Stage
+      setCurrentStage(stageList[stageList.length - 1]);
+    }
+  };
+  // Info: (2024607 - Julian) 移動到下一個 Stage
+  const rightClickHandler = () => {
+    if (currentStageIndex < stageList.length - 1) {
+      setCurrentStage(stageList[currentStageIndex + 1]);
+    } else {
+      // Info: (2024607 - Julian) 如果是最後一個 Stage，則跳到第一個 Stage
+      setCurrentStage(stageList[0]);
+    }
+  };
 
   const stageMenuClickHandler = () => setIsStageOptionsVisible(!isStageOptionsVisible);
   const allClickHandler = () => {
@@ -227,6 +256,16 @@ const ProjectPageBody = () => {
     setFilteredStage(ProjectStage.ARCHIVED);
     setIsStageOptionsVisible(false);
   };
+
+  useEffect(() => {
+    if (currentLayout === Layout.GRID) {
+      setCurrentStage(ProjectStage.SELLING);
+    }
+
+    if (currentLayout === Layout.LIST) {
+      setFilteredStage('ALL');
+    }
+  }, [currentLayout]);
 
   const displayedStageOptions = (
     <div
@@ -296,25 +335,52 @@ const ProjectPageBody = () => {
       return project.name.toLowerCase().includes(search.toLowerCase());
     });
 
-  const stageList = [
-    ProjectStage.SELLING,
-    ProjectStage.DESIGNING,
-    ProjectStage.DEVELOPING,
-    ProjectStage.BETA_TESTING,
-    ProjectStage.SOLD,
-    ProjectStage.ARCHIVED,
-  ];
-
-  const projectStageGrid = (
-    <div className="flex items-start gap-12px overflow-x-auto">
+  const projectStageBlocksDesktop = (
+    <div className="hidden items-start gap-12px overflow-x-auto scroll-smooth md:flex">
       {stageList.map((stage) => (
-        <ProjectStageBlock
-          key={stage}
-          stage={stage}
-          projects={dummyProjects.filter((project) => project.stage === stage)}
-        />
+        <ProjectStageBlock key={stage} stage={stage} projects={dummyProjects} />
       ))}
     </div>
+  );
+
+  const projectStageBlocksMobile = (
+    <div className="relative flex items-center">
+      {/* Info: (2024607 - Julian) 為了避免切到 arrow button，所以多加一層 div */}
+      <div className="overflow-hidden">
+        <div
+          className="flex w-full items-start transition-all duration-300 ease-in-out md:hidden"
+          style={{ transform: `translateX(-${currentStageIndex * 100}%)` }} // Info: (2024607 - Julian) 移動到指定 Stage
+        >
+          {stageList.map((stage) => (
+            <ProjectStageBlock key={stage} stage={stage} projects={dummyProjects} />
+          ))}
+        </div>
+      </div>
+      {/* Info: (2024606 - Julian) Arrow Buttons */}
+      <button
+        type="button"
+        className="absolute -left-16px block p-10px md:hidden"
+        onClick={leftClickHandler}
+      >
+        <FaChevronLeft size={16} />
+      </button>
+      <button
+        type="button"
+        className="absolute -right-16px block p-10px md:hidden"
+        onClick={rightClickHandler}
+      >
+        <FaChevronRight size={16} />
+      </button>
+    </div>
+  );
+
+  const projectStageGrid = (
+    <>
+      {/* Info: (2024606 - Julian) Desktop Stage Blocks */}
+      {projectStageBlocksDesktop}
+      {/* Info: (2024606 - Julian) Mobile Stage Blocks */}
+      {projectStageBlocksMobile}
+    </>
   );
 
   // ToDo: (2024606 - Julian) Grid Layout
