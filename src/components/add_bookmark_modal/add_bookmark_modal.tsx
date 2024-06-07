@@ -28,7 +28,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   };
 
   const dropdownMenu =
-    selectedBookmark.length > 0 ? `${selectedBookmark.length} selected` : 'Please select functions';
+    selectedBookmark.length > 0 ? `${selectedBookmark.length} selected` : 'Please select bookmarks';
 
   useEffect(() => {
     const addedBookmark = Object.entries(bookmarkList)
@@ -122,6 +122,85 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                     <p className="justify-center text-sm font-medium leading-5 tracking-normal">
                       {bookmarkList[key].name}
                     </p>
+
+                    <div
+                      className={`${bookmarkList[key].added ? 'flex' : 'hidden'} my-auto h-fit items-center justify-end rounded-xs bg-badge-surface-soft-primary px-2 py-0.1rem text-center text-xs text-badge-text-primary-solid`}
+                    >
+                      on the list{' '}
+                    </div>
+
+                    <div className="flex flex-1 items-center justify-end">
+                      {!bookmarkList[key].added && selectedBookmarkRef.current.includes(key) ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                        >
+                          <g clipPath="url(#clip0_3542_64023)">
+                            <path
+                              stroke="#314362"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1.5"
+                              d="M6.25 10l2.5 2.5 5-5m4.583 2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
+                            ></path>
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_3542_64023">
+                              <path fill="#fff" d="M0 0H20V20H0z"></path>
+                            </clipPath>
+                          </defs>
+                        </svg>
+                      ) : selectedBookmarkRef.current.includes(key) ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                        >
+                          <g clipPath="url(#clip0_3542_38603)">
+                            <path
+                              className="stroke-current"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1.5"
+                              d="M12.5 7.5l-5 5m0-5l5 5m5.833-2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
+                            ></path>
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_3542_38603">
+                              <path fill="#fff" d="M0 0H20V20H0z"></path>
+                            </clipPath>
+                          </defs>
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                        >
+                          <g clipPath="url(#clip0_3542_71722)">
+                            <path
+                              className="stroke-current"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1.5"
+                              d="M10 6.667v6.666M6.667 10h6.666m5 0a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
+                            ></path>
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_3542_71722">
+                              <path fill="#fff" d="M0 0H20V20H0z"></path>
+                            </clipPath>
+                          </defs>
+                        </svg>
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -143,10 +222,10 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
               <div className="justify-center self-center text-xl font-bold leading-8 text-navyBlue2">
-                Add My Favorites
+                Edit My Favorites{' '}
               </div>
               <div className="text-xs leading-5 tracking-normal text-lightGray5">
-                Select frequently used functions to be added to the favorites list.
+                Select a bookmark to add or remove.{' '}
               </div>
             </div>
           </div>
@@ -181,7 +260,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
               Cancel
             </button>{' '}
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
-              Add
+              Save
             </Button>{' '}
           </div>
         </div>
