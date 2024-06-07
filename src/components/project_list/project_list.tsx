@@ -14,7 +14,7 @@ interface IProjectListProps {
 const ProjectList = ({ projects, currentPage, setCurrentPage, totalPages }: IProjectListProps) => {
   const displayedProjectList =
     projects.length > 0 ? (
-      <div className="my-40px flex w-full flex-col items-center gap-y-16px">
+      <div className="flex w-full flex-col items-center gap-y-16px">
         {projects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
