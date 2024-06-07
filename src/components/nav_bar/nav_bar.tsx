@@ -87,16 +87,13 @@ const NavBar = () => {
       >
         <FaChevronLeft />
       </button>
-      <button
-        type="button"
-        // TODO: temp disabled (20240507 - Shirley)
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
+      <Link
+        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
         <p>Project</p>
-      </button>
+      </Link>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -186,17 +183,15 @@ const NavBar = () => {
       className={`absolute right-0 top-45px grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Project button */}
-      {/* TODO: temp disabled (20240507 - Shirley) */}
-      <button
-        type="button"
-        // TODO: temp disabled (20240517 - Shirley)
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
-        className="flex flex-col items-center gap-8px px-20px disabled:opacity-50"
+      <Link
+        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+        className="mx-auto"
       >
-        <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-        <p>Project</p>
-      </button>
+        <button type="button" className="flex flex-col items-center gap-8px">
+          <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
+          <p>Project</p>
+        </button>
+      </Link>
       {/* Info: (20240416 - Julian) Account button */}
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
