@@ -57,18 +57,16 @@ describe('API Handler Tests for Various Query Parameters', () => {
 
     const accountArrayExpect = expect.arrayContaining([accountExpect]);
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('200'),
       message: expect.any(String),
-      payload: accountArrayExpect
+      payload: accountArrayExpect,
     });
     expect(res.status).toHaveBeenCalledWith(200);
 
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error when required query params are missing (only companyId is require)', async () => {
@@ -76,7 +74,7 @@ describe('API Handler Tests for Various Query Parameters', () => {
     req.query = { type: 'asset' }; // Missing companyId
     await handler(req, res);
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('422'),
@@ -86,9 +84,7 @@ describe('API Handler Tests for Various Query Parameters', () => {
 
     expect(res.status).toHaveBeenCalledWith(422);
 
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error when companyId is not a number', async () => {
@@ -96,7 +92,7 @@ describe('API Handler Tests for Various Query Parameters', () => {
     req.query = { companyId: 'abc', type: 'asset', liquidity: 'true', page: '1', limit: '10' };
     await handler(req, res);
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('422'),
@@ -105,16 +101,14 @@ describe('API Handler Tests for Various Query Parameters', () => {
     });
 
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error when type is invalid', async () => {
     req.method = 'GET';
     req.query = { companyId: '1', type: 'invalid', liquidity: 'true', page: '1', limit: '10' };
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('422'),
@@ -124,16 +118,14 @@ describe('API Handler Tests for Various Query Parameters', () => {
 
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error when liquidity is invalid', async () => {
     req.method = 'GET';
     req.query = { companyId: '1', type: 'asset', liquidity: 'invalid', page: '1', limit: '10' };
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('422'),
@@ -143,16 +135,14 @@ describe('API Handler Tests for Various Query Parameters', () => {
 
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error when page is not a number', async () => {
     req.method = 'GET';
     req.query = { companyId: '1', type: 'asset', liquidity: 'true', page: 'abc', limit: '10' };
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('422'),
@@ -162,16 +152,14 @@ describe('API Handler Tests for Various Query Parameters', () => {
 
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should return error when limit is not a number', async () => {
     req.method = 'GET';
     req.query = { companyId: '1', type: 'asset', liquidity: 'true', page: '1', limit: 'abc' };
 
-    const jsonExpect = expect.objectContaining({
+    const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
       success: expect.any(Boolean),
       code: expect.stringContaining('422'),
@@ -181,8 +169,6 @@ describe('API Handler Tests for Various Query Parameters', () => {
 
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      jsonExpect
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });

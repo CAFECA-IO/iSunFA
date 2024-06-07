@@ -95,7 +95,7 @@ beforeEach(async () => {
     data: {
       company: {
         connect: {
-          id: admin.companyId,
+          id: admin.company.id,
         },
       },
       plan: {
@@ -151,7 +151,7 @@ beforeEach(async () => {
     query: {},
     method: 'GET',
     json: jest.fn(),
-    session: { userId: admin.userId, companyId: admin.companyId },
+    session: { userId: admin.user.id, companyId: admin.company.id },
   } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
@@ -183,7 +183,7 @@ afterEach(async () => {
   try {
     await prisma.company.delete({
       where: {
-        id: admin.companyId,
+        id: admin.company.id,
       },
     });
   } catch (error) {
@@ -259,7 +259,7 @@ describe('test subscription API', () => {
   it('should handle unsupported HTTP methods', async () => {
     req.headers.userid = '1';
     req.method = 'PUT';
-    req.query.companyId = admin.companyId.toString();
+    req.query.companyId = admin.company.id.toString();
     await handler(req, res);
     const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
