@@ -200,7 +200,7 @@ const FilterOptionsModal = ({
         </div>
         <div className="flex w-full flex-col space-y-5 bg-white px-5 pt-4 text-base font-medium leading-6 tracking-normal">
           <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
+            type={DatePickerType.TEXT_PERIOD}
             period={period}
             setFilteredPeriod={setPeriod}
             btnClassName=""

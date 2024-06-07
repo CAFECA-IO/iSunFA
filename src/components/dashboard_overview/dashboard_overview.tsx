@@ -24,12 +24,12 @@ const DashboardOverview = () => {
     },
   });
 
-  const displayedProfitChangeRate = `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange}` : dashboardOverview.profitChange < 0 ? `${dashboardOverview.profitChange}` : `0`}`;
+  const displayedProfitChangeRate = `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange < 0 ? `${dashboardOverview.profitChange.toFixed(0)}` : `0`}`;
   const displayedTopProjectRoi =
     +dashboardOverview.topProjectRoi > 0
-      ? `+${dashboardOverview.topProjectRoi}`
+      ? `+${dashboardOverview.topProjectRoi.toFixed(0)}`
       : +dashboardOverview.topProjectRoi < 0
-        ? `${dashboardOverview.topProjectRoi}`
+        ? `${dashboardOverview.topProjectRoi.toFixed(0)}`
         : `0`;
   const displayedPreLaunchProjects = dashboardOverview.preLaunchProject ?? `0`;
 

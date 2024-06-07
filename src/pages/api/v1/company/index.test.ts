@@ -163,7 +163,7 @@ describe('Company API', () => {
   it('should create a new company when method is POST and valid data is provided', async () => {
     req.method = 'POST';
     req.body = {
-      code: 'TST_createCompany4',
+      code: 'TST_createCompany6',
       name: 'Company Name',
       regional: 'Regional Name',
     };
@@ -198,7 +198,7 @@ describe('Company API', () => {
     });
     await prisma.company.delete({
       where: {
-        code: 'TST_createCompany4',
+        code: 'TST_createCompany6',
       },
     });
     expect(res.status).toHaveBeenCalledWith(201);

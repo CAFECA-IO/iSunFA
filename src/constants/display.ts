@@ -90,3 +90,5 @@ export enum DatePickerAlign {
   RIGHT = 'right',
   CENTER = 'center',
 }
+
+export const LIMIT_NOTIFICATION_TITLE = 100;
