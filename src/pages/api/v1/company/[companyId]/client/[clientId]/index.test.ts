@@ -102,22 +102,22 @@ describe('Client API Handler Tests', () => {
     req.headers.userid = '1';
     req.query.clientId = client.id.toString();
     await handler(req, res);
+    const expectedClient = expect.objectContaining({
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      companyName: expect.any(String),
+      code: expect.any(String),
+      favorite: expect.any(Boolean),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedClient,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
-          code: expect.any(String),
-          favorite: expect.any(Boolean),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle PUT requests successfully', async () => {
@@ -129,22 +129,22 @@ describe('Client API Handler Tests', () => {
       code: '5678',
     };
     await handler(req, res);
+    const expectedClient = expect.objectContaining({
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      companyName: expect.any(String),
+      code: expect.any(String),
+      favorite: expect.any(Boolean),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedClient,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
-          code: expect.any(String),
-          favorite: expect.any(Boolean),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle DELETE requests successfully', async () => {
@@ -152,38 +152,37 @@ describe('Client API Handler Tests', () => {
     req.headers.userid = '1';
     req.query.clientId = client.id.toString();
     await handler(req, res);
+    const expectedClient = expect.objectContaining({
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      companyName: expect.any(String),
+      code: expect.any(String),
+      favorite: expect.any(Boolean),
+    });
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedClient,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          companyId: expect.any(Number),
-          companyName: expect.any(String),
-          code: expect.any(String),
-          favorite: expect.any(Boolean),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle requests without userid header', async () => {
     req.method = 'GET';
     delete req.headers.userid;
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('404'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        payload: expect.any(Object),
-        message: expect.any(String),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle requests with INVALID_INPUT_PARAMETER', async () => {
@@ -191,16 +190,15 @@ describe('Client API Handler Tests', () => {
     req.headers.userid = '1';
     req.query.clientId = '';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('422'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('422'),
-        payload: expect.any(Object),
-        message: expect.any(String),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   it('should handle requests with unsupported methods', async () => {
@@ -208,15 +206,14 @@ describe('Client API Handler Tests', () => {
     req.headers.userid = '1';
     req.query.clientId = '1';
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('405'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        payload: expect.any(Object),
-        message: expect.any(String),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 });
