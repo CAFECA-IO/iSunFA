@@ -3,9 +3,14 @@ export interface IProject {
   companyId: number;
   imageId: string | null;
   name: string;
-  completedPercent: number;
+  income: number;
+  expense: number;
+  profit: number;
+  contractAmount: number;
   stage: string;
   members: IMember[];
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface IMilestone {

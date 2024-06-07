@@ -4,115 +4,143 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FiGrid, FiSearch } from 'react-icons/fi';
 import { FaChevronDown, FaListUl } from 'react-icons/fa6';
 import { Button } from '../button/button';
+import { IProject } from '@/interfaces/project';
+import { ProjectStage } from '@/constants/project';
+import ProjectCard from '../project_card/project_card';
 
 enum Layout {
   LIST = 'list',
   GRID = 'grid',
 }
 
-enum ProjectStage {
-  DESIGNING = 'Designing',
-  DEVELOPING = 'Developing',
-  BETA_TESTING = 'Beta Testing',
-  SELLING = 'Selling',
-  SOLD = 'Sold',
-  ARCHIVED = 'Archived',
-}
-
-interface IProject {
-  id: string;
-  name: string;
-  stage: ProjectStage;
-  income: number;
-  expense: number;
-  profit: number;
-  contractCount: number;
-  members: {
-    id: string;
-    avatar: string;
-  }[];
-}
-
 const dummyProjects: IProject[] = [
   {
-    id: '1',
+    id: 1,
+    companyId: 1,
+    imageId: null,
     name: 'Project 1',
     stage: ProjectStage.ARCHIVED,
     income: 1000,
     expense: 500,
     profit: 500,
-    contractCount: 3,
+    contractAmount: 3,
     members: [
       {
-        id: '1',
-        avatar: '/entities/tesla.png',
+        name: 'Sunny',
+        imageId: '/entities/tesla.png',
       },
       {
-        id: '2',
-        avatar: '/entities/tidebit.jpeg',
+        name: 'David',
+        imageId: '/entities/tidebit.jpeg',
       },
       {
-        id: '3',
-        avatar: '/entities/happy.png',
+        name: 'Wendy',
+        imageId: '/entities/happy.png',
       },
     ],
+    createdAt: 1624600000000,
+    updatedAt: 1624600000000,
   },
   {
-    id: '2',
+    id: 2,
+    companyId: 2,
     name: 'Project 2',
+    imageId: null,
     stage: ProjectStage.SELLING,
     income: 4200,
     expense: 4700,
     profit: -500,
-    contractCount: 5,
+    contractAmount: 5,
     members: [
       {
-        id: '1',
-        avatar: '/elements/avatar.png',
+        name: 'Alice',
+        imageId: '/elements/avatar.png',
       },
       {
-        id: '2',
-        avatar: '/entities/isuncloud.png',
+        name: 'Bob',
+        imageId: '/entities/isuncloud.png',
       },
       {
-        id: '3',
-        avatar: '/entities/happy.png',
+        name: 'Cathy',
+        imageId: '/entities/happy.png',
+      },
+      {
+        name: 'Eva',
+        imageId: '/elements/avatar.png',
+      },
+      {
+        name: 'Xavier',
+        imageId: '/entities/tesla.png',
+      },
+      {
+        name: 'Hillary',
+        imageId: '/entities/tidebit.jpeg',
+      },
+      {
+        name: 'Colin',
+        imageId: '/entities/happy.png',
+      },
+      {
+        name: 'Hank',
+        imageId: '/entities/isuncloud.png',
+      },
+      {
+        name: 'Simon',
+        imageId: '/entities/happy.png',
+      },
+      {
+        name: 'Elaine',
+        imageId: '/elements/avatar.png',
+      },
+      {
+        name: 'Austin',
+        imageId: '/entities/happy.png',
       },
     ],
+    createdAt: 1624600000000,
+    updatedAt: 1624600000000,
   },
   {
-    id: '3',
+    id: 3,
+    companyId: 3,
     name: 'Project 3',
+    imageId: null,
     stage: ProjectStage.DEVELOPING,
     income: 2310,
     expense: 2354,
     profit: -44,
-    contractCount: 26,
+    contractAmount: 26,
     members: [
       {
-        id: '1',
-        avatar: '/entities/happy.png',
+        name: 'Zack',
+        imageId: '/entities/happy.png',
       },
     ],
+    createdAt: 1624600000000,
+    updatedAt: 1624600000000,
   },
   {
-    id: '4',
+    id: 4,
+    companyId: 4,
+    imageId: null,
     name: 'StellarScape',
     stage: ProjectStage.DESIGNING,
     income: 13940,
     expense: 12480,
     profit: 1460,
-    contractCount: 8,
+    contractAmount: 8,
     members: [
       {
-        id: '1',
-        avatar: '/elements/avatar.png',
+        name: 'Fiona',
+        imageId: '/elements/avatar.png',
       },
       {
-        id: '2',
-        avatar: '/entities/happy.png',
+        name: 'George',
+        imageId: '/entities/happy.png',
       },
     ],
+    createdAt: 1624600000000,
+    updatedAt: 1624600000000,
   },
 ];
 
@@ -179,39 +207,60 @@ const ProjectList = () => {
       return project.stage === filteredStage;
     });
 
-  const stageColorMap = {
-    [ProjectStage.DESIGNING]: 'bg-surface-support-strong-maple',
-    [ProjectStage.DEVELOPING]: 'bg-surface-support-strong-green',
-    [ProjectStage.BETA_TESTING]: 'bg-surface-support-strong-indigo',
-    [ProjectStage.SELLING]: 'bg-surface-support-strong-taro',
-    [ProjectStage.SOLD]: 'bg-surface-support-strong-rose',
-    [ProjectStage.ARCHIVED]: 'bg-surface-neutral-mute',
-  };
-
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
-      className={`absolute right-0 top-12 z-10 ${isStageOptionsVisible ? 'flex' : 'hidden'} w-full flex-col items-start rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px shadow-md`}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-xs border border-input-stroke-input
+      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
+      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
-      <button type="button" className="py-12px" onClick={allClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={allClickHandler}
+      >
         All
       </button>
-      <button type="button" className="py-12px" onClick={designClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={designClickHandler}
+      >
         Designing
       </button>
-      <button type="button" className="py-12px" onClick={developClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={developClickHandler}
+      >
         Developing
       </button>
-      <button type="button" className="py-12px" onClick={betaTestingClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={betaTestingClickHandler}
+      >
         Beta Testing
       </button>
-      <button type="button" className="py-12px" onClick={sellingClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={sellingClickHandler}
+      >
         Selling
       </button>
-      <button type="button" className="py-12px" onClick={soldClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={soldClickHandler}
+      >
         Sold
       </button>
-      <button type="button" className="py-12px" onClick={archivedClickHandler}>
+      <button
+        type="button"
+        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+        onClick={archivedClickHandler}
+      >
         Archived
       </button>
     </div>
@@ -220,63 +269,9 @@ const ProjectList = () => {
   const displayedProjectList =
     filteredProjects.length > 0 ? (
       <div className="my-40px flex w-full flex-col gap-y-16px">
-        {filteredProjects.map((project) => {
-          // ToDo: (2024606 - Julian) This part should be refactored to a separate component: ProjectCard
-          const stageColor = stageColorMap[project.stage];
-          return (
-            // ToDo: (2024606 - Julian) Link to project detail page
-            <div
-              key={project.id}
-              className="relative flex w-full flex-col gap-y-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv1 p-16px shadow-md"
-            >
-              <div className="flex items-center gap-x-8px">
-                {/* Info: (2024606 - Julian) Title */}
-                <h2 className="text-2xl font-bold text-text-neutral-primary">{project.name}</h2>
-                <div className="flex h-24px w-24px items-center justify-center rounded-full bg-badge-surface-soft-primary text-xs text-badge-text-primary-solid">
-                  {project.contractCount}
-                </div>
-              </div>
-              {/* Info: (2024606 - Julian) Members */}
-              <div className="flex items-center">
-                {project.members.map((member) => (
-                  <Image
-                    src={member.avatar}
-                    width={24}
-                    height={24}
-                    key={member.id}
-                    alt={`${member.id}_icon`}
-                    className="rounded-full border-2 border-avatar-stroke-primary "
-                  />
-                ))}
-              </div>
-              {/* Info: (2024606 - Julian) Divider */}
-              <hr className="border-divider-stroke-lv-4" />
-              {/* Info: (2024606 - Julian) Content */}
-              <div className="flex flex-col gap-y-14px text-sm">
-                <div className="flex items-center gap-x-16px">
-                  <p className="w-52px text-text-neutral-tertiary">Income</p>
-                  <p className="font-semibold text-text-neutral-primary">{project.income}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-x-16px">
-                    <p className="w-52px text-text-neutral-tertiary">Expense</p>
-                    <p className="font-semibold text-text-neutral-primary">{project.expense}</p>
-                  </div>
-                  <div className="flex items-center gap-x-16px">
-                    <p className="text-text-neutral-tertiary">Profit</p>
-                    <p className="font-semibold text-text-neutral-primary">{project.profit}</p>
-                  </div>
-                </div>
-              </div>
-              {/* Info: (2024606 - Julian) Status */}
-              <div
-                className={`absolute -right-4 rounded-xs ${stageColor} ${project.stage === ProjectStage.ARCHIVED ? 'text-lightGray4' : 'text-badge-text-invert'} py-4px pl-12px pr-28px text-xs`}
-              >
-                {project.stage}
-              </div>
-            </div>
-          );
-        })}
+        {filteredProjects.map((project) => (
+          <ProjectCard key={project.id} project={project} />
+        ))}
       </div>
     ) : (
       <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
@@ -294,7 +289,9 @@ const ProjectList = () => {
           <p className="font-semibold">Stage</p>
           <div
             onClick={stageMenuClickHandler}
-            className="relative flex h-44px w-full items-center justify-between rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px hover:cursor-pointer md:w-200px"
+            className={`relative flex h-44px w-full items-center justify-between rounded-xs border bg-input-surface-input-background 
+            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
+            px-12px hover:cursor-pointer md:w-200px`}
           >
             {filteredStage}
             <FaChevronDown />
