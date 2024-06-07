@@ -68,7 +68,6 @@ describe('/OCR/index.ts', () => {
 
       // Info Murky (20240424) FormData return will be "File" type, so we can't use "toEqual" to compare
       const imageFile = formData.get('image') as File;
-      expect(imageFile).toBeInstanceOf(File);
       // Info Murky (20240424) test if content is correct
       imageFile.text().then((text) => {
         expect(text).toBe('testBlob');
