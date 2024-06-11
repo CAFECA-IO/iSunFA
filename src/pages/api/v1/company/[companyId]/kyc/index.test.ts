@@ -137,16 +137,15 @@ describe('test company KYC API', () => {
   it('should handle missing user ID', async () => {
     req.headers.userid = undefined;
     await handler(req, res);
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('404'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   // Info: (20240517 - Jacky) Skip the following test cases because parse form will stuck.

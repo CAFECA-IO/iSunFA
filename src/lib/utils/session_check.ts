@@ -26,11 +26,11 @@ export async function checkUserSession(req: NextApiRequest, res: NextApiResponse
 export async function checkAdminSession(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
   const { companyId, userId } = session;
-  if (!companyId) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
+  if (!companyId) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   const admin: IAdmin = (await prisma.admin.findFirst({
     where: {
@@ -44,7 +44,7 @@ export async function checkAdminSession(req: NextApiRequest, res: NextApiRespons
     },
   })) as IAdmin;
   if (!admin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return session;
 }
@@ -52,11 +52,11 @@ export async function checkAdminSession(req: NextApiRequest, res: NextApiRespons
 export async function checkOwnerSession(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
   const { companyId, userId } = session;
-  if (!companyId) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
   if (!userId) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
+  if (!companyId) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   const admin: IAdmin = (await prisma.admin.findFirst({
     where: {
@@ -73,7 +73,7 @@ export async function checkOwnerSession(req: NextApiRequest, res: NextApiRespons
     },
   })) as IAdmin;
   if (!admin) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return session;
 }
