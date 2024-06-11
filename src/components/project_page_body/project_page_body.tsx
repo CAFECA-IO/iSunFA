@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FiGrid, FiSearch, FiPlusCircle, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaChevronLeft, FaChevronRight, FaListUl } from 'react-icons/fa6';
+import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { IProject } from '@/interfaces/project';
-import { ProjectStage } from '@/constants/project';
+import { dummyProjects } from '@/interfaces/project';
+import { ProjectStage, stageList } from '@/constants/project';
 import { Button } from '@/components/button/button';
 import ProjectList from '@/components/project_list/project_list';
 import ProjectStageBlock from '../project_stage_block/project_stage_block';
@@ -13,171 +14,11 @@ enum Layout {
   GRID = 'grid',
 }
 
-const dummyProjects: IProject[] = [
-  {
-    id: 1,
-    companyId: 1,
-    imageId: '',
-    name: 'Project 1',
-    stage: ProjectStage.BETA_TESTING,
-    income: 1000,
-    expense: 500,
-    profit: 500,
-    contractAmount: 3,
-    members: [
-      {
-        name: 'Sunny',
-        imageId: '/entities/tesla.png',
-      },
-      {
-        name: 'David',
-        imageId: '/entities/tidebit.jpeg',
-      },
-      {
-        name: 'Wendy',
-        imageId: '/entities/happy.png',
-      },
-    ],
-    createdAt: 1624600000000,
-    updatedAt: 1624600000000,
-  },
-  {
-    id: 2,
-    companyId: 2,
-    name: 'Project 2',
-    imageId: '',
-    stage: ProjectStage.SELLING,
-    income: 4200,
-    expense: 4700,
-    profit: -500,
-    contractAmount: 5,
-    members: [
-      {
-        name: 'Alice',
-        imageId: '/elements/avatar.png',
-      },
-      {
-        name: 'Bob',
-        imageId: '/entities/isuncloud.png',
-      },
-      {
-        name: 'Cathy',
-        imageId: '/entities/happy.png',
-      },
-      {
-        name: 'Eva',
-        imageId: '/elements/avatar.png',
-      },
-      {
-        name: 'Xavier',
-        imageId: '/entities/tesla.png',
-      },
-      {
-        name: 'Hillary',
-        imageId: '/entities/tidebit.jpeg',
-      },
-      {
-        name: 'Colin',
-        imageId: '/entities/happy.png',
-      },
-      {
-        name: 'Hank',
-        imageId: '/entities/isuncloud.png',
-      },
-      {
-        name: 'Simon',
-        imageId: '/entities/happy.png',
-      },
-      {
-        name: 'Elaine',
-        imageId: '/elements/avatar.png',
-      },
-      {
-        name: 'Austin',
-        imageId: '/entities/happy.png',
-      },
-    ],
-    createdAt: 1624600000000,
-    updatedAt: 1624600000000,
-  },
-  {
-    id: 3,
-    companyId: 3,
-    name: 'Project 3',
-    imageId: '',
-    stage: ProjectStage.BETA_TESTING,
-    income: 2310,
-    expense: 2354,
-    profit: -44,
-    contractAmount: 26,
-    members: [
-      {
-        name: 'Zack',
-        imageId: '/entities/happy.png',
-      },
-    ],
-    createdAt: 1624600000000,
-    updatedAt: 1624600000000,
-  },
-  {
-    id: 4,
-    companyId: 4,
-    imageId: '',
-    name: 'StellarScape',
-    stage: ProjectStage.BETA_TESTING,
-    income: 13940,
-    expense: 12480,
-    profit: 1460,
-    contractAmount: 8,
-    members: [
-      {
-        name: 'Fiona',
-        imageId: '/elements/avatar.png',
-      },
-      {
-        name: 'George',
-        imageId: '/entities/happy.png',
-      },
-    ],
-    createdAt: 1624600000000,
-    updatedAt: 1624600000000,
-  },
-  {
-    id: 5,
-    companyId: 5,
-    imageId: '',
-    name: 'Project 5',
-    stage: ProjectStage.BETA_TESTING,
-    income: 23425,
-    expense: 12412,
-    profit: 11013,
-    contractAmount: 20,
-    members: [
-      {
-        name: 'Olivia',
-        imageId: '/entities/tidebit.jpeg',
-      },
-      {
-        name: 'Daisy',
-        imageId: '/entities/tesla.png',
-      },
-      {
-        name: 'Rita',
-        imageId: '/elements/avatar.png',
-      },
-      {
-        name: 'Silvia',
-        imageId: '/entities/happy.png',
-      },
-    ],
-    createdAt: 1624600000000,
-    updatedAt: 1624600000000,
-  },
-];
-
 const ProjectPageBody = () => {
+  const { addProjectModalVisibilityHandler } = useGlobalCtx();
+
   const [search, setSearch] = useState<string>('');
-  const [filteredStage, setFilteredStage] = useState<string>('ALL'); // Info: (2024607 - Julian) For list
+  const [filteredStage, setFilteredStage] = useState<string>('All'); // Info: (2024607 - Julian) For list
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -189,19 +30,11 @@ const ProjectPageBody = () => {
     setComponentVisible: setIsStageOptionsVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const stageList = [
-    ProjectStage.SELLING,
-    ProjectStage.DESIGNING,
-    ProjectStage.DEVELOPING,
-    ProjectStage.BETA_TESTING,
-    ProjectStage.SOLD,
-    ProjectStage.ARCHIVED,
-  ];
-
   const listBtnStyle = currentLayout === Layout.LIST ? 'tertiary' : 'secondaryOutline';
   const gridBtnStyle = currentLayout === Layout.GRID ? 'tertiary' : 'secondaryOutline';
 
-  const currentStageIndex = stageList.findIndex((stage) => stage === currentStage); // Info: (2024607 - Julian) 找到指定 Stage 的 index
+  // Info: (2024607 - Julian) 找到指定 Stage 的 index
+  const currentStageIndex = stageList.findIndex((stage) => stage === currentStage);
 
   const listLayoutHandler = () => setCurrentLayout(Layout.LIST);
   const gridLayoutHandler = () => setCurrentLayout(Layout.GRID);
@@ -228,34 +61,6 @@ const ProjectPageBody = () => {
   };
 
   const stageMenuClickHandler = () => setIsStageOptionsVisible(!isStageOptionsVisible);
-  const allClickHandler = () => {
-    setFilteredStage('ALL');
-    setIsStageOptionsVisible(false);
-  };
-  const designClickHandler = () => {
-    setFilteredStage(ProjectStage.DESIGNING);
-    setIsStageOptionsVisible(false);
-  };
-  const developClickHandler = () => {
-    setFilteredStage(ProjectStage.DEVELOPING);
-    setIsStageOptionsVisible(false);
-  };
-  const betaTestingClickHandler = () => {
-    setFilteredStage(ProjectStage.BETA_TESTING);
-    setIsStageOptionsVisible(false);
-  };
-  const sellingClickHandler = () => {
-    setFilteredStage(ProjectStage.SELLING);
-    setIsStageOptionsVisible(false);
-  };
-  const soldClickHandler = () => {
-    setFilteredStage(ProjectStage.SOLD);
-    setIsStageOptionsVisible(false);
-  };
-  const archivedClickHandler = () => {
-    setFilteredStage(ProjectStage.ARCHIVED);
-    setIsStageOptionsVisible(false);
-  };
 
   useEffect(() => {
     if (currentLayout === Layout.GRID) {
@@ -263,72 +68,37 @@ const ProjectPageBody = () => {
     }
 
     if (currentLayout === Layout.LIST) {
-      setFilteredStage('ALL');
+      setFilteredStage('All');
     }
   }, [currentLayout]);
+
+  const stageOptions = ['All', ...stageList]; // Info: (2024611 - Julian) Add All option
 
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
       className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-xs border border-input-stroke-input
-        ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
-        bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
+      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={allClickHandler}
-      >
-        All
-      </button>
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={designClickHandler}
-      >
-        Designing
-      </button>
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={developClickHandler}
-      >
-        Developing
-      </button>
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={betaTestingClickHandler}
-      >
-        Beta Testing
-      </button>
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={sellingClickHandler}
-      >
-        Selling
-      </button>
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={soldClickHandler}
-      >
-        Sold
-      </button>
-      <button
-        type="button"
-        className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={archivedClickHandler}
-      >
-        Archived
-      </button>
+      {stageOptions.map((stage) => (
+        <button
+          key={stage}
+          type="button"
+          className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+          onClick={() => setFilteredStage(stage)}
+        >
+          {stage}
+        </button>
+      ))}
     </div>
   );
 
+  // ToDo: (20240611 - Julian) Replace to real data
   const filteredProjects = dummyProjects
     .filter((project) => {
-      if (filteredStage === 'ALL') return true;
+      // Info: (2024607 - Julian) 如果選擇 All，則顯示所有 Project
+      if (filteredStage === 'All') return true;
       return project.stage === filteredStage;
     })
     .filter((project) => {
@@ -338,7 +108,7 @@ const ProjectPageBody = () => {
   const projectStageBlocksDesktop = (
     <div className="hidden items-start gap-12px overflow-x-auto scroll-smooth md:flex">
       {stageList.map((stage) => (
-        <ProjectStageBlock key={stage} stage={stage} projects={dummyProjects} />
+        <ProjectStageBlock key={stage} stage={stage} projects={filteredProjects} />
       ))}
     </div>
   );
@@ -352,7 +122,7 @@ const ProjectPageBody = () => {
           style={{ transform: `translateX(-${currentStageIndex * 100}%)` }} // Info: (2024607 - Julian) 移動到指定 Stage
         >
           {stageList.map((stage) => (
-            <ProjectStageBlock key={stage} stage={stage} projects={dummyProjects} />
+            <ProjectStageBlock key={stage} stage={stage} projects={filteredProjects} />
           ))}
         </div>
       </div>
@@ -401,11 +171,13 @@ const ProjectPageBody = () => {
       stage === currentStage
         ? 'border-tabs-text-hover text-tabs-text-hover'
         : 'border-tabs-stroke-default text-tabs-text-default';
+    const stageClickHandler = () => setCurrentStage(stage);
+
     return (
       <button
         key={stage}
         type="button"
-        onClick={() => setCurrentStage(stage)}
+        onClick={stageClickHandler}
         className={`border-b-2 ${activeStageStyle} px-12px py-8px hover:border-tabs-text-hover hover:text-tabs-text-hover`}
       >
         {stage}
@@ -428,7 +200,7 @@ const ProjectPageBody = () => {
             type="button"
             variant="tertiary"
             className="hidden items-center gap-4px px-4 py-8px md:flex"
-            // ToDo: (2024606 - Julian) Add Project Function
+            onClick={addProjectModalVisibilityHandler}
           >
             <FiPlusCircle size={24} />
             Add Project
@@ -437,7 +209,7 @@ const ProjectPageBody = () => {
             type="button"
             variant="tertiary"
             className="flex h-46px w-46px items-center justify-center p-0 md:hidden"
-            // ToDo: (2024606 - Julian) Add Project Function
+            onClick={addProjectModalVisibilityHandler}
           >
             <FiPlus size={24} />
           </Button>

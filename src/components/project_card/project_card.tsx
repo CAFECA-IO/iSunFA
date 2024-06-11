@@ -47,7 +47,7 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
 
   return (
     <Link
-      href={`${ISUNFA_ROUTE.PROJECT_LIST}/${project.id}`}
+      href={`${ISUNFA_ROUTE.PROJECT_LIST}/${project.id}/dashboard`}
       className="relative flex w-full flex-none flex-col gap-y-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv1 p-16px shadow-md"
     >
       <div className="flex items-center gap-x-8px">

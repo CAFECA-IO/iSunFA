@@ -1,13 +1,17 @@
 import Head from 'next/head';
+import { FaArrowLeft } from 'react-icons/fa';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { GetServerSideProps } from 'next';
+import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
-interface IProjectDetailPageProps {
+interface IProjectDashboardPageProps {
   projectId: string;
 }
 
-const ProjectDetailPage = ({ projectId }: IProjectDetailPageProps) => {
+const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   return (
     <>
       <Head>
@@ -24,9 +28,24 @@ const ProjectDetailPage = ({ projectId }: IProjectDetailPageProps) => {
         </div>
 
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+          <ProjectSidebar projectId={projectId} />
           <div className="flex min-h-screen bg-gray-100">
-            <div className="mx-16px mt-160px">
-              <h1>{projectId}</h1>
+            <div className="mt-160px md:ml-80px">
+              <div className="flex flex-col px-60px">
+                {/* Info: (20240611 - Julian) Title */}
+                <div className="flex items-center gap-24px">
+                  <Link
+                    href={ISUNFA_ROUTE.PROJECT_LIST}
+                    className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+                  >
+                    <FaArrowLeft />
+                  </Link>
+                  {/* ToDo: (20240611 - Julian) Project Name */}
+                  <h1 className="text-4xl font-semibold text-text-neutral-secondary">
+                    {projectId}
+                  </h1>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -50,4 +69,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default ProjectDetailPage;
+export default ProjectDashboardPage;
