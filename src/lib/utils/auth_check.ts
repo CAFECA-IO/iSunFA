@@ -80,9 +80,9 @@ export async function checkOwner(req: NextApiRequest, res: NextApiResponse) {
 }
 
 export async function checkProjectCompanyMatch(projectId: number, companyId: number) {
-  const project = await getProjectById(projectId);
-  if (project.companyId !== companyId) {
+  const getProject = await getProjectById(projectId);
+  if (getProject.companyId !== companyId) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  return project;
+  return getProject;
 }

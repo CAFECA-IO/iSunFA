@@ -4,6 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
 import { IProject } from '@/interfaces/project';
+import { formatProject } from '@/lib/utils/formatter/project.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,7 +21,8 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const projectIdNum = Number(projectId);
-      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const project = await formatProject(checkedProject);
       // Info: (20240607 - Jacky) check input parameter end
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.SUCCESS_GET, project);
       res.status(httpCode).json(result);

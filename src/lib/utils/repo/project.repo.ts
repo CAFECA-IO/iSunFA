@@ -1,6 +1,7 @@
 import { IProject } from '@/interfaces/project';
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { Employee, Project, Value } from '@prisma/client';
 import { timestampInSeconds } from '../common';
 
 export async function listProject(companyId: number) {
@@ -14,7 +15,7 @@ export async function listProject(companyId: number) {
           employee: true,
         },
       },
-      values: true,
+      value: true,
       _count: {
         select: {
           contracts: true,
@@ -25,29 +26,24 @@ export async function listProject(companyId: number) {
   return listedProject;
 }
 
-export async function getProjectById(projectId: number): Promise<IProject> {
+export async function getProjectById(projectId: number): Promise<
+  Project & {
+    employeeProjects: { employee: Employee }[];
+    value: Value | null;
+    _count: { contracts: number };
+  }
+> {
   const project = await prisma.project.findUnique({
     where: {
       id: projectId,
     },
     include: {
       employeeProjects: {
-        include: {
-          employee: {
-            select: {
-              name: true,
-              imageId: true,
-            },
-          },
-        },
-      },
-      values: {
         select: {
-          totalRevenue: true,
-          totalExpense: true,
-          netProfit: true,
+          employee: true,
         },
       },
+      value: true,
       _count: {
         select: {
           contracts: true,
@@ -58,24 +54,7 @@ export async function getProjectById(projectId: number): Promise<IProject> {
   if (!project) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
-  const { employeeProjects, values, _count, ...rest } = project;
-  const employeeList = employeeProjects.map((employeeProject) => {
-    const { employee, ...restEmployeeProject } = employeeProject;
-    return {
-      ...employee,
-      ...restEmployeeProject,
-      imageId: employee.imageId ?? '',
-    };
-  });
-  const newProject: IProject = {
-    ...rest,
-    members: employeeList,
-    income: values[values.length - 1].totalExpense,
-    expense: values[values.length - 1].totalRevenue,
-    profit: values[values.length - 1].netProfit,
-    contractAmount: _count.contracts,
-  };
-  return newProject;
+  return project;
 }
 
 export async function createProject(
@@ -114,7 +93,7 @@ export async function createProject(
           },
         },
       },
-      values: {
+      value: {
         select: {
           totalRevenue: true,
           totalExpense: true,
@@ -128,16 +107,16 @@ export async function createProject(
       },
     },
   });
-  const { employeeProjects, values, _count, ...rest } = createdProject;
+  const { employeeProjects, value, _count, ...rest } = createdProject;
   const newProject: IProject = {
     ...rest,
     members: createdProject.employeeProjects.map((employeeProject) => ({
       name: employeeProject.employee.name,
       imageId: employeeProject.employee.imageId as string,
     })),
-    income: values[createdProject.values.length - 1].totalExpense,
-    expense: values[createdProject.values.length - 1].totalRevenue,
-    profit: values[createdProject.values.length - 1].netProfit,
+    income: value ? value.totalExpense : 0,
+    expense: value ? value.totalRevenue : 0,
+    profit: value ? value.netProfit : 0,
     contractAmount: _count.contracts,
   };
   return newProject;
