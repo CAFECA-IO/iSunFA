@@ -32,7 +32,7 @@ export async function listWorkRate(employeeProjectIdList: number[]) {
       ...rest,
       member: {
         name: employee.name,
-        imageId: employee.imageId,
+        imageId: employee.imageId ?? '',
       },
     };
     return formattedWorkRate;

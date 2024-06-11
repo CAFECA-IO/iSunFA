@@ -16,6 +16,7 @@ export async function formatProjectList(
       return {
         ...employee,
         ...restEmployeeProject,
+        imageId: employee.imageId ?? '',
       };
     });
     return {
@@ -43,6 +44,7 @@ export async function formatProject(
     return {
       ...employee,
       ...restEmployeeProject,
+      imageId: employee.imageId ?? '',
     };
   });
   const project: IProject = {

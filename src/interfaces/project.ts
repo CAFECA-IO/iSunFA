@@ -59,5 +59,5 @@ export interface IWorkRate {
 
 interface IMember {
   name: string;
-  imageId: string | null;
+  imageId: string;
 }

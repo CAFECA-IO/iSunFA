@@ -64,6 +64,7 @@ export async function getProjectById(projectId: number): Promise<IProject> {
     return {
       ...employee,
       ...restEmployeeProject,
+      imageId: employee.imageId ?? '',
     };
   });
   const newProject: IProject = {
