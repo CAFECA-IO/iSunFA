@@ -1,0 +1,289 @@
+import { useState } from 'react';
+import Image from 'next/image';
+import { RxCross2, RxCrossCircled } from 'react-icons/rx';
+import { FaPlus, FaChevronDown, FaCheck } from 'react-icons/fa6';
+import { LuChevronsUpDown } from 'react-icons/lu';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { Button } from '@/components/button/button';
+import { stageList } from '@/constants/project';
+import { FiSearch } from 'react-icons/fi';
+
+interface IAddProjectModalProps {
+  isModalVisible: boolean;
+  modalVisibilityHandler: () => void;
+}
+
+// ToDo: (20240611 - Julian) get member list from API
+const dummyMemberList = [
+  {
+    name: 'Emily',
+    role: 'Full Stack Engineer',
+    imageUrl: '/elements/yellow_check.svg',
+  },
+  {
+    name: 'Gibbs',
+    role: 'Blockchain Engineer',
+    imageUrl: '/elements/yellow_check.svg',
+  },
+  {
+    name: 'Jacky Fang',
+    role: 'QA Engineer',
+    imageUrl: '/elements/yellow_check.svg',
+  },
+  {
+    name: 'Julian Hsu',
+    role: 'Front-end Engineer',
+    imageUrl: '/elements/yellow_check.svg',
+  },
+  {
+    name: 'Liz',
+    role: 'Front-end Engineer',
+    imageUrl: '/elements/yellow_check.svg',
+  },
+];
+
+const AddProjectModal = ({ isModalVisible, modalVisibilityHandler }: IAddProjectModalProps) => {
+  const [inputName, setInputName] = useState('');
+  const [selectedStage, setSelectedStage] = useState(stageList[0]);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [searchMemberValue, setSearchMemberValue] = useState('');
+
+  const {
+    targetRef: stageOptionsRef,
+    componentVisible: isStageOptionsVisible,
+    setComponentVisible: setStageOptionsVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: membersRef,
+    componentVisible: isMembersVisible,
+    setComponentVisible: setMembersVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const isConfirmValid = inputName !== '' && selectedMembers.length > 0;
+  const membersAmount = selectedMembers.length;
+
+  const stageMenuClickHandler = () => setStageOptionsVisible(!isStageOptionsVisible);
+  const membersMenuClickHandler = () => setMembersVisible(!isMembersVisible);
+
+  const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputName(event.target.value);
+  };
+  const searchMemberChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchMemberValue(event.target.value);
+  };
+
+  const filteredMemberList = dummyMemberList.filter((member) => {
+    return (
+      // Info: (20240611 - Julian) 搜尋條件：名字或職稱
+      member.name.toLowerCase().includes(searchMemberValue.toLowerCase()) ||
+      member.role.toLowerCase().includes(searchMemberValue.toLowerCase())
+    );
+  });
+
+  const displayedStageOptions = (
+    <div
+      ref={stageOptionsRef}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input
+      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
+      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+    >
+      {stageList.map((stage) => (
+        <button
+          key={stage}
+          type="button"
+          className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+          onClick={() => setSelectedStage(stage)}
+        >
+          {stage}
+        </button>
+      ))}
+    </div>
+  );
+
+  const displaySelectedMembers =
+    selectedMembers.length > 0 ? (
+      selectedMembers.map((member) => {
+        const removeMemberHandler = () => {
+          const newMembers = selectedMembers.filter((selectedMember) => selectedMember !== member);
+          setSelectedMembers(newMembers);
+        };
+        return (
+          <div className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary">
+            <Image src="/elements/yellow_check.svg" alt="member_avatar" width={20} height={20} />
+            <p className="whitespace-nowrap">{member}</p>
+            <button type="button" onClick={removeMemberHandler}>
+              <RxCrossCircled size={16} />
+            </button>
+          </div>
+        );
+      })
+    ) : (
+      <p className="text-left text-input-text-input-placeholder">Choose Team Members</p>
+    );
+
+  const displayMemberList = filteredMemberList.map((member) => {
+    const isSelected = selectedMembers.includes(member.name);
+    const memberClickHandler = () => {
+      if (isSelected) {
+        // Info: (20240611 - Julian) 如果已經選取，則移除
+        const newMembers = selectedMembers.filter(
+          (selectedMember) => selectedMember !== member.name
+        );
+        setSelectedMembers(newMembers);
+      } else {
+        // Info: (20240611 - Julian) 如果沒有選取，則加入
+        setSelectedMembers([...selectedMembers, member.name]);
+      }
+    };
+
+    return (
+      <button
+        key={member.name}
+        type="button"
+        className="flex w-full items-center justify-between px-12px py-8px hover:bg-dropdown-surface-item-hover"
+        onClick={memberClickHandler}
+      >
+        <div className="flex flex-1 items-end gap-12px">
+          <Image src={member.imageUrl} alt="member_avatar" width={20} height={20} />
+          <p className="text-sm text-dropdown-text-primary">{member.name}</p>
+          <p className="text-xs text-dropdown-text-secondary">{member.role}</p>
+        </div>
+
+        <FaCheck size={16} className={`${isSelected ? 'block' : 'hidden'}`} />
+      </button>
+    );
+  });
+
+  const displayMembersMenu = (
+    <div
+      ref={membersRef}
+      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px
+      ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
+      `}
+    >
+      <div className="flex flex-col items-start">
+        {/* Info: (20240611 - Julian) search bar */}
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+          <input
+            id="companySearchBar"
+            type="text"
+            placeholder="Search"
+            value={searchMemberValue}
+            onChange={searchMemberChangeHandler}
+            className="w-full outline-none placeholder:text-lightGray4"
+          />
+          <FiSearch size={16} />
+        </div>
+        <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
+          Development department
+        </div>
+        {/* Info: (20240611 - Julian) member list */}
+        <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
+          {displayMemberList}
+        </div>
+      </div>
+    </div>
+  );
+
+  const isDisplayModal = isModalVisible ? (
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="relative flex w-90vw max-w-600px flex-col rounded-sm bg-white py-20px">
+        {/* Info: (20240611 - Julian) title */}
+        <div className="flex flex-col items-start gap-2px whitespace-nowrap border-b px-20px pb-20px">
+          {/* Info: (20240611 - Julian) desktop title */}
+          <h1 className="text-xl font-bold text-card-text-primary">Add New Project</h1>
+          <p className="text-xs text-card-text-secondary">Edit Project Information</p>
+        </div>
+        {/* Info: (20240611 - Julian) close button */}
+        <button
+          type="button"
+          onClick={modalVisibilityHandler}
+          className="absolute right-12px top-12px text-lightGray5"
+        >
+          <RxCross2 size={20} />
+        </button>
+        {/* Info: (20240611 - Julian) content */}
+        <form
+          // onSubmit={addProjectSubmitHandler}
+          className="flex w-full flex-col gap-y-40px text-sm text-navyBlue2"
+        >
+          {/* Info: (20240611 - Julian) input fields */}
+          <div className="flex flex-col items-center gap-x-16px gap-y-50px px-20px pt-40px text-center md:grid-cols-2">
+            {/* Info: (20240611 - Julian) first row */}
+            <div className="flex w-full flex-col items-start justify-between gap-y-20px md:flex-row">
+              {/* Info: (20240611 - Julian) project name */}
+              <div className="flex w-full flex-col items-start gap-y-8px md:w-250px">
+                <p className="font-semibold">Project Name</p>
+                <input
+                  type="text"
+                  placeholder="Name your project"
+                  value={inputName}
+                  onChange={nameChangeHandler}
+                  required
+                  className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
+                />
+              </div>
+              {/* Info: (20240611 - Julian) stage selection */}
+              <div className="flex w-full flex-col items-start gap-y-8px md:w-200px">
+                <p className="font-semibold">Stage</p>
+                <div
+                  onClick={stageMenuClickHandler}
+                  className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
+            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
+            px-12px hover:cursor-pointer md:w-200px`}
+                >
+                  {selectedStage}
+                  <FaChevronDown />
+                  {displayedStageOptions}
+                </div>
+              </div>
+            </div>
+
+            {/* Info: (20240611 - Julian) member selection */}
+            <div className="flex w-full flex-col items-start gap-y-8px">
+              <div className="flex w-full items-end justify-between">
+                <p className="font-semibold">Team Members</p>
+                {/* Info: (20240611 - Julian) amount of selected members */}
+                <p className="text-sm text-input-text-secondary">{membersAmount}</p>
+              </div>
+              <div className="relative flex h-46px w-full items-center rounded-sm border border-input-stroke-input px-12px">
+                <div className="flex w-full flex-1 gap-4px overflow-x-auto">
+                  {displaySelectedMembers}
+                </div>
+                <button type="button" onClick={membersMenuClickHandler}>
+                  <LuChevronsUpDown size={20} />
+                </button>
+
+                {displayMembersMenu}
+              </div>
+            </div>
+          </div>
+          {/* Info: (20240611 - Julian) confirm buttons */}
+          <div className="flex items-center justify-end gap-12px border-t px-20px pt-20px">
+            <Button
+              className="px-16px py-8px"
+              type="button"
+              onClick={modalVisibilityHandler}
+              variant={null}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="px-16px py-8px"
+              type="submit"
+              variant="tertiary"
+              disabled={!isConfirmValid}
+            >
+              <p>Add</p> <FaPlus />
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  ) : null;
+
+  return isDisplayModal;
+};
+
+export default AddProjectModal;

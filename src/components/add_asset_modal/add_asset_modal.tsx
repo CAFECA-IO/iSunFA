@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
+import { FaPlus } from 'react-icons/fa6';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { PiWrenchFill } from 'react-icons/pi';
 import { Button } from '@/components/button/button';
@@ -320,7 +321,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
           </div>
           {/* Info: (20240503 - Julian) confirm buttons */}
-          <div className="flex items-center justify-end gap-24px">
+          <div className="flex items-center justify-end gap-12px">
             <Button
               className="px-16px py-8px"
               type="button"
@@ -335,7 +336,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               variant="tertiary"
               disabled={isAddButtonDisabled}
             >
-              + Add
+              <p>Add</p> <FaPlus />
             </Button>
           </div>
         </form>

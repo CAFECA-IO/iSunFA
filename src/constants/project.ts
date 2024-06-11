@@ -7,6 +7,15 @@ export enum ProjectStage {
   ARCHIVED = 'Archived',
 }
 
+export const stageList = [
+  ProjectStage.SELLING,
+  ProjectStage.DESIGNING,
+  ProjectStage.DEVELOPING,
+  ProjectStage.BETA_TESTING,
+  ProjectStage.SOLD,
+  ProjectStage.ARCHIVED,
+];
+
 // Info: (2024606 - Julian) Stage 顏色對照表
 export const stageColorMap = {
   [ProjectStage.DESIGNING]: 'bg-surface-support-strong-maple',

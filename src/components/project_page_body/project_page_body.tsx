@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FiGrid, FiSearch, FiPlusCircle, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaChevronLeft, FaChevronRight, FaListUl } from 'react-icons/fa6';
+import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { dummyProjects } from '@/interfaces/project';
-import { ProjectStage } from '@/constants/project';
+import { ProjectStage, stageList } from '@/constants/project';
 import { Button } from '@/components/button/button';
 import ProjectList from '@/components/project_list/project_list';
 import ProjectStageBlock from '../project_stage_block/project_stage_block';
@@ -14,6 +15,8 @@ enum Layout {
 }
 
 const ProjectPageBody = () => {
+  const { addProjectModalVisibilityHandler } = useGlobalCtx();
+
   const [search, setSearch] = useState<string>('');
   const [filteredStage, setFilteredStage] = useState<string>('All'); // Info: (2024607 - Julian) For list
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
@@ -26,15 +29,6 @@ const ProjectPageBody = () => {
     componentVisible: isStageOptionsVisible,
     setComponentVisible: setIsStageOptionsVisible,
   } = useOuterClick<HTMLDivElement>(false);
-
-  const stageList = [
-    ProjectStage.SELLING,
-    ProjectStage.DESIGNING,
-    ProjectStage.DEVELOPING,
-    ProjectStage.BETA_TESTING,
-    ProjectStage.SOLD,
-    ProjectStage.ARCHIVED,
-  ];
 
   const listBtnStyle = currentLayout === Layout.LIST ? 'tertiary' : 'secondaryOutline';
   const gridBtnStyle = currentLayout === Layout.GRID ? 'tertiary' : 'secondaryOutline';
@@ -206,7 +200,7 @@ const ProjectPageBody = () => {
             type="button"
             variant="tertiary"
             className="hidden items-center gap-4px px-4 py-8px md:flex"
-            // ToDo: (2024606 - Julian) Add Project Function
+            onClick={addProjectModalVisibilityHandler}
           >
             <FiPlusCircle size={24} />
             Add Project
@@ -215,7 +209,7 @@ const ProjectPageBody = () => {
             type="button"
             variant="tertiary"
             className="flex h-46px w-46px items-center justify-center p-0 md:hidden"
-            // ToDo: (2024606 - Julian) Add Project Function
+            onClick={addProjectModalVisibilityHandler}
           >
             <FiPlus size={24} />
           </Button>
