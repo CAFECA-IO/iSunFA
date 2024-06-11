@@ -72,6 +72,7 @@ export async function formatWorkRateList(
         name: employee.name,
         imageId: employee.imageId ?? '',
       },
+      involvementRate: workRate.involvementRate ?? 0,
     };
     return formattedWorkRate;
   });
