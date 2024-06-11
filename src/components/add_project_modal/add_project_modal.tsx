@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { RxCross2, RxCrossCircled } from 'react-icons/rx';
 import { FaPlus, FaChevronDown, FaCheck } from 'react-icons/fa6';
 import { LuChevronsUpDown } from 'react-icons/lu';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
-import { stageList } from '@/constants/project';
+import { ProjectStage, stageList } from '@/constants/project';
 import { FiSearch } from 'react-icons/fi';
 
 interface IAddProjectModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  defaultStage: ProjectStage;
 }
 
 // ToDo: (20240611 - Julian) get member list from API
@@ -42,9 +43,13 @@ const dummyMemberList = [
   },
 ];
 
-const AddProjectModal = ({ isModalVisible, modalVisibilityHandler }: IAddProjectModalProps) => {
+const AddProjectModal = ({
+  isModalVisible,
+  modalVisibilityHandler,
+  defaultStage,
+}: IAddProjectModalProps) => {
   const [inputName, setInputName] = useState('');
-  const [selectedStage, setSelectedStage] = useState(stageList[0]);
+  const [selectedStage, setSelectedStage] = useState<ProjectStage>(defaultStage);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [searchMemberValue, setSearchMemberValue] = useState('');
 
@@ -72,6 +77,23 @@ const AddProjectModal = ({ isModalVisible, modalVisibilityHandler }: IAddProject
   const searchMemberChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchMemberValue(event.target.value);
   };
+  const addProjectSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // ToDo: (20240611 - Julian) send data to API
+  };
+
+  useEffect(() => {
+    setSelectedStage(defaultStage);
+  }, [defaultStage]);
+
+  useEffect(() => {
+    // Info: (20240611 - Julian) reset input fields when modal is closed
+    if (!isModalVisible) {
+      setInputName('');
+      setSelectedMembers([]);
+      setSearchMemberValue('');
+    }
+  }, [isModalVisible]);
 
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
@@ -205,7 +227,7 @@ const AddProjectModal = ({ isModalVisible, modalVisibilityHandler }: IAddProject
         </button>
         {/* Info: (20240611 - Julian) content */}
         <form
-          // onSubmit={addProjectSubmitHandler}
+          onSubmit={addProjectSubmitHandler}
           className="flex w-full flex-col gap-y-40px text-sm text-navyBlue2"
         >
           {/* Info: (20240611 - Julian) input fields */}

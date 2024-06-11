@@ -43,6 +43,7 @@ import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from './user_context';
 import { useNotificationCtx } from './notification_context';
+import { ProjectStage } from '@/constants/project';
 
 interface IGlobalContext {
   width: number;
@@ -94,6 +95,7 @@ interface IGlobalContext {
 
   isAddProjectModalVisible: boolean;
   addProjectModalVisibilityHandler: () => void;
+  addProjectModalDataHandler: (stage: ProjectStage) => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -163,6 +165,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
   const [isAddProjectModalVisible, setIsAddProjectModalVisible] = useState(false);
+  const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
+    ProjectStage.SELLING
+  );
 
   const { width, height } = windowSize;
 
@@ -243,6 +248,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const addProjectModalVisibilityHandler = () => {
     setIsAddProjectModalVisible(!isAddProjectModalVisible);
+  };
+
+  const addProjectModalDataHandler = (stage: ProjectStage) => {
+    setAddProjectDefaultStage(stage);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -462,6 +471,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     filterOptionsModalVisibilityHandler,
     isAddProjectModalVisible,
     addProjectModalVisibilityHandler,
+    addProjectModalDataHandler,
   };
 
   return (
@@ -548,6 +558,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddProjectModal
         isModalVisible={isAddProjectModalVisible}
         modalVisibilityHandler={addProjectModalVisibilityHandler}
+        defaultStage={addProjectDefaultStage}
       />
 
       {children}
