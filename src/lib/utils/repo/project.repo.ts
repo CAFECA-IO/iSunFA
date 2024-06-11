@@ -74,6 +74,7 @@ export async function getProjectById(projectId: number): Promise<IProject> {
     expense: values[values.length - 1].totalRevenue,
     profit: values[values.length - 1].netProfit,
     contractAmount: _count.contracts,
+    imageId: rest.imageId ?? '',
   };
   return newProject;
 }
@@ -139,6 +140,7 @@ export async function createProject(
     expense: values[createdProject.values.length - 1].totalRevenue,
     profit: values[createdProject.values.length - 1].netProfit,
     contractAmount: _count.contracts,
+    imageId: rest.imageId ?? '',
   };
   return newProject;
 }

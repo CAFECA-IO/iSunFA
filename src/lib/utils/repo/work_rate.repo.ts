@@ -34,6 +34,7 @@ export async function listWorkRate(employeeProjectIdList: number[]) {
         name: employee.name,
         imageId: employee.imageId ?? '',
       },
+      involvementRate: workRate.involvementRate ?? 0,
     };
     return formattedWorkRate;
   });
