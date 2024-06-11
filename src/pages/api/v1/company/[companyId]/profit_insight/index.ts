@@ -5,6 +5,8 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { checkAdminSession } from '@/lib/utils/session_check';
+import { ONE_DAY_IN_MS } from '@/constants/time';
+import { ProjectStage } from '@/constants/project';
 
 async function getProfitChange(targetTime: number, companyId: number) {
   // Info: startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime (20240607 - Gibbs)
@@ -15,10 +17,10 @@ async function getProfitChange(targetTime: number, companyId: number) {
     new Date(targetTime).setHours(23, 59, 59, 999)
   );
   const startPreviousDayTimestampOfTargetTime = timestampInSeconds(
-    new Date(targetTime).setHours(0, 0, 0, 0) - 24 * 60 * 60 * 1000
+    new Date(targetTime).setHours(0, 0, 0, 0) - ONE_DAY_IN_MS
   );
   const endPreviousDayTimestampOfTargetTime = timestampInSeconds(
-    new Date(targetTime).setHours(23, 59, 59, 999) - 24 * 60 * 60 * 1000
+    new Date(targetTime).setHours(23, 59, 59, 999) - ONE_DAY_IN_MS
   );
   const IncomeExpenseToday = await prisma.incomeExpense.findMany({
     select: {
@@ -79,7 +81,7 @@ async function getTopProjectRoi(companyId: number) {
 async function getPreLaunchProject(companyId: number) {
   const preLaunchProject = await prisma.project.count({
     where: {
-      stage: 'Beta Testing',
+      stage: ProjectStage.BETA_TESTING,
       companyId,
     },
   });
