@@ -20,6 +20,7 @@ export async function formatProjectList(
     });
     return {
       ...rest,
+      imageId: rest.imageId ?? '',
       members: employeeList,
       income: value ? value.totalExpense : 0,
       expense: value ? value.totalRevenue : 0,
@@ -53,6 +54,7 @@ export async function formatProject(
     expense: value ? value.totalRevenue : 0,
     profit: value ? value.netProfit : 0,
     contractAmount: _count.contracts,
+    imageId: rest.imageId ?? '',
   };
 }
 

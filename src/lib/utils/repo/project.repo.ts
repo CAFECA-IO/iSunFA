@@ -118,6 +118,7 @@ export async function createProject(
     expense: value ? value.totalRevenue : 0,
     profit: value ? value.netProfit : 0,
     contractAmount: _count.contracts,
+    imageId: rest.imageId ?? '',
   };
   return newProject;
 }
