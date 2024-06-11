@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
-import { listProjectSale } from '@/lib/utils/repo/sale';
+import { listProjectSale } from '@/lib/utils/repo/sale.repo';
 
 export default async function handler(
   req: NextApiRequest,
