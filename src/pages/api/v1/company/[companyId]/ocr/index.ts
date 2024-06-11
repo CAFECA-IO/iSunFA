@@ -12,7 +12,8 @@ import { parseForm } from '@/lib/utils/parse_image_form';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { createJournalAndOcrInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import { createJournalAndOcrInPrisma, createOcrInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import { IUnprocessedOCR } from '@/interfaces/ocr';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -141,6 +142,7 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
   return files;
 }
 
+// Depreciated (20240611 - Murky) This function is not used
 export async function createJournalsAndOcrFromAichResults(
   companyId: number,
   aichResults: {
@@ -165,6 +167,29 @@ export async function createJournalsAndOcrFromAichResults(
   return resultJson;
 }
 
+export async function createOcrFromAichResults(
+  aichResults: {
+    resultStatus: IAccountResultStatus;
+    imageUrl: string;
+    imageName: string;
+    imageSize: number;
+  }[]
+) {
+  const resultJson: IAccountResultStatus[] = [];
+
+  try {
+    await Promise.all(
+      aichResults.map(async (aichResult) => {
+        await createOcrInPrisma(aichResult);
+        resultJson.push(aichResult.resultStatus);
+      })
+    );
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+  return resultJson;
+}
+
 export async function handlePostRequest(req: NextApiRequest) {
   const { companyId } = req.query;
 
@@ -173,14 +198,17 @@ export async function handlePostRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const companyIdNumber = Number(companyId);
+  // Depreciated (20240611 - Murky) This variable is temporary not used
+  // const companyIdNumber = Number(companyId);
 
   let resultJson: IAccountResultStatus[];
 
   try {
     const files = await getImageFileFromFormData(req);
     const aichResults = await postImageToAICH(files);
-    resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+    // Depreciated (20240611 - Murky) This function is not used
+    // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+    resultJson = await createOcrFromAichResults(aichResults);
   } catch (error) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
@@ -193,6 +221,19 @@ export async function handlePostRequest(req: NextApiRequest) {
     httpCode,
     result
   };
+}
+
+export async function handleGetRequest(req: NextApiRequest): Promise<IUnprocessedOCR[]> {
+  // ToDo: (20240611 - Murky) check companyId is valid
+  // Info Murky (20240416): Check if companyId is string
+  const { companyId } = req.query;
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+  const companyIdNumber = Number(companyId);
+  // ToDo: (20240611 - Murky) GET ocr py companyId in Journal from prisma
+  // ToDo: (20240611 - Murky) format prisma ocr to IUnprocessedOCR
+  // ToDo: formatApiResponse
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {

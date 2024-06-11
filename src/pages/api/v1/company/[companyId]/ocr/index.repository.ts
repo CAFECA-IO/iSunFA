@@ -16,6 +16,9 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -25,6 +28,14 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
 
   return company;
 }
+
+// export async function findManyOCRByCompanyIdAndProcessStatusInPrisma(companyId: number, processStatus: ProgressStatus) {
+//   const ocrData = await prisma.ocr.findMany({
+//     where: {
+
+//     }
+//   })
+// }
 
 export async function createOcrInPrisma(aichResult: {
   resultStatus: IAccountResultStatus;
@@ -48,10 +59,14 @@ export async function createOcrInPrisma(aichResult: {
 
     return ocrData;
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
 
+// Depreciated (20240611 - Murky) This function is not used
 export async function createJournalInPrisma(
   companyId: number,
   aichResult: {
@@ -77,10 +92,14 @@ export async function createJournalInPrisma(
 
     return newJournal;
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
 
+// Depreciated (20240611 - Murky) This function is not used
 export async function createJournalAndOcrInPrisma(
   companyId: number,
   aichResult: {

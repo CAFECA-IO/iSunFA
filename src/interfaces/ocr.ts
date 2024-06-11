@@ -1,3 +1,5 @@
+import { ProgressStatus } from "@/constants/account";
+
 export interface IOCR {
   id: number;
   imageName: string;
@@ -5,4 +7,16 @@ export interface IOCR {
   imageSize: number;
   createdAt: number;
   updatedAt: number;
+}
+
+// Info: (20240611 - Murky) To Tzuhan This interface is same structure as IUnprocessedJournal
+export interface IUnprocessedOCR {
+  id: number;
+  aichResultId: string;
+  imageName: string;
+  imageUrl: string;
+  imageSize: string;
+  progress: number; // 0 ~ 100 Float
+  status: ProgressStatus;
+  createdAt: number;
 }

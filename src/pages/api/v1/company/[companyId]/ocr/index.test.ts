@@ -8,7 +8,7 @@ import * as parseImageForm from '@/lib/utils/parse_image_form';
 import * as common from '@/lib/utils/common';
 import { ProgressStatus } from '@/constants/account';
 import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
-import { Journal } from '@prisma/client';
+import { Journal, Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 global.fetch = jest.fn();
@@ -48,7 +48,7 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-describe('/OCR/index.ts', () => {
+describe('POST OCR', () => {
   describe('readImageFromFilePath', () => {
     let mockImage: MockProxy<formidable.File>;
     const mockPath = '/test';
@@ -356,6 +356,46 @@ describe('/OCR/index.ts', () => {
     });
   });
 
+  describe('createOcrFromAichResults', () => {
+    it('should return resultJson', async () => {
+      const resultId = 'testResultId';
+      const mockAichReturn = [
+        {
+          resultStatus: {
+            resultId,
+            status: ProgressStatus.SUCCESS,
+          },
+          imageUrl: 'testImageUrl',
+          imageName: 'testImageName',
+          imageSize: 1024,
+        },
+      ];
+
+      const mockOcrDbResult: Ocr = {
+        id: 1,
+        status: ProgressStatus.SUCCESS,
+        imageUrl: 'testImageUrl',
+        imageName: 'testImageName',
+        imageSize: 1024,
+        createdAt: 0,
+        updatedAt: 0,
+      };
+
+      const expectResult: IAccountResultStatus[] = [
+        {
+          resultId,
+          status: ProgressStatus.SUCCESS,
+        },
+      ];
+
+      jest.spyOn(repository, 'createOcrInPrisma').mockResolvedValue(mockOcrDbResult);
+
+      const resultJson = await module.createOcrFromAichResults(mockAichReturn);
+
+      expect(resultJson).toEqual(expectResult);
+    });
+  });
+
   describe('handlePostRequest', () => {
     it('should return resultJson', async () => {
       const companyId = '1';
@@ -435,10 +475,16 @@ describe('/OCR/index.ts', () => {
 
       const { httpCode, result } = await module.handlePostRequest(req);
 
-      expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
+      // Depreciate ( 20240605 - Murky ) - Use createOcrInPrisma instead
+      // expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
+      expect(repository.createOcrInPrisma).toHaveBeenCalled();
 
       expect(httpCode).toBe(201);
       expect(result).toBe(mockReturn);
     });
   });
+});
+
+describe('GET OCR', () => {
+
 });

@@ -1,3 +1,5 @@
+// Depreciated: 20240611 - Murky
+// This file is not used anymore, use get /OCR instead
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
