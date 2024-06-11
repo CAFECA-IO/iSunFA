@@ -19,27 +19,27 @@ const dummyMemberList = [
   {
     name: 'Emily',
     role: 'Full Stack Engineer',
-    imageUrl: '/elements/yellow_check.svg',
+    imageId: '/elements/yellow_check.svg',
   },
   {
     name: 'Gibbs',
     role: 'Blockchain Engineer',
-    imageUrl: '/elements/yellow_check.svg',
+    imageId: '/elements/yellow_check.svg',
   },
   {
     name: 'Jacky Fang',
     role: 'QA Engineer',
-    imageUrl: '/elements/yellow_check.svg',
+    imageId: '/elements/yellow_check.svg',
   },
   {
     name: 'Julian Hsu',
     role: 'Front-end Engineer',
-    imageUrl: '/elements/yellow_check.svg',
+    imageId: '/elements/yellow_check.svg',
   },
   {
     name: 'Liz',
     role: 'Front-end Engineer',
-    imageUrl: '/elements/yellow_check.svg',
+    imageId: '/elements/yellow_check.svg',
   },
 ];
 
@@ -167,7 +167,7 @@ const AddProjectModal = ({
         onClick={memberClickHandler}
       >
         <div className="flex flex-1 items-end gap-12px">
-          <Image src={member.imageUrl} alt="member_avatar" width={20} height={20} />
+          <Image src={member.imageId} alt="member_avatar" width={20} height={20} />
           <p className="text-sm text-dropdown-text-primary">{member.name}</p>
           <p className="text-xs text-dropdown-text-secondary">{member.role}</p>
         </div>
