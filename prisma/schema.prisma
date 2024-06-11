@@ -9,9 +9,11 @@ datasource db {
 
 model Account {
   id        Int        @id @default(autoincrement())
+  companyId Int        @map("company_id") @default(0)
+  system    String
   type      String
+  debit     Boolean
   liquidity Boolean
-  account   String
   code      String
   name      String
   createdAt Int        @map("created_at")
