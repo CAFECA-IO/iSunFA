@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { useState } from 'react';
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
@@ -94,7 +93,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
   };
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-450px w-90vw max-w-600px flex-col rounded-sm bg-white p-20px md:max-h-90vh">
         {/* Info: (20240503 - Julian) title */}
         <div className="flex items-center gap-6px font-bold text-navyBlue2">
