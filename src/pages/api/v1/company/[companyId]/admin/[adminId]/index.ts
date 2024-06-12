@@ -4,7 +4,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { IAdmin } from '@/interfaces/admin';
-import { checkAdminSession, checkOwnerSession } from '@/lib/utils/session_check';
+import { checkAdmin, checkOwner } from '@/lib/utils/auth_check';
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,7 +14,7 @@ export default async function handler(
     const { adminId } = req.query;
     const adminIdNumber = Number(adminId);
     if (req.method === 'GET') {
-      await checkAdminSession(req, res);
+      await checkAdmin(req, res);
       const admin: IAdmin = (await prisma.admin.findUnique({
         where: {
           id: adminIdNumber,
@@ -32,7 +32,7 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
     } else if (req.method === 'PUT') {
-      const session = await checkOwnerSession(req, res);
+      const session = await checkOwner(req, res);
       const { companyId } = session;
       const { status, roleName } = req.body;
       if (!status && !roleName) {
@@ -79,7 +79,7 @@ export default async function handler(
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
-      const session = await checkOwnerSession(req, res);
+      const session = await checkOwner(req, res);
       const { companyId } = session;
       const getAdmin: IAdmin = (await prisma.admin.findUnique({
         where: {
