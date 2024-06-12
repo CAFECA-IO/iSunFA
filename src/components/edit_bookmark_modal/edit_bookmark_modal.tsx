@@ -109,7 +109,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                     disabled={value.link === ''}
                     onClick={() => menuOptionClickHandler(bookmarkList[key].id)}
                     type="button"
-                    className={`mb-1.5 flex gap-3 rounded-sm px-2 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white ${
+                    className={`mb-1.5 flex items-center gap-3 rounded-sm px-1.5 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white sm:px-2 ${
                       !isMenuOpen
                         ? 'hidden'
                         : selectedBookmark.includes(key)
@@ -120,14 +120,14 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                     <div className="my-auto flex flex-col justify-center">
                       {bookmarkList[key].iconOnModal}
                     </div>
-                    <p className="items-center justify-center text-start text-sm">
+                    <p className="items-center justify-center text-start text-xs sm:text-sm">
                       {bookmarkList[key].name}
                     </p>
 
                     <div
                       className={`${bookmarkList[key].added ? 'flex' : 'hidden'} my-auto h-fit items-center justify-end rounded-xs bg-badge-surface-soft-primary px-2 py-0.1rem text-center text-xs text-badge-text-primary-solid`}
                     >
-                      on the list{' '}
+                      listed{' '}
                     </div>
 
                     <div className="flex flex-1 items-center justify-end">
@@ -218,7 +218,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
 
   const isDisplayedAddBookmarkModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative mx-auto flex flex-col items-center rounded-lg bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+      <div className="relative mx-0 flex w-350px flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="flex gap-2.5 bg-white px-2 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
