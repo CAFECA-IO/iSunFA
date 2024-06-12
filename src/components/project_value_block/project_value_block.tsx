@@ -37,7 +37,7 @@ const ProjectValueBlock = () => {
     thirtyDaysNetProfit > 0 ? <BsGraphUpArrow size={20} /> : <BsGraphDownArrow size={20} />;
 
   return (
-    <div className="flex flex-col gap-y-24px rounded-lg bg-surface-neutral-surface-lv2 p-20px font-medium">
+    <div className="flex h-full flex-col gap-y-24px rounded-lg bg-surface-neutral-surface-lv2 p-20px font-medium">
       <div className="flex flex-col items-center justify-between gap-16px md:flex-row">
         {/* Info: (20240612 - Julian) Title */}
         <div className="flex items-center gap-x-8px text-base text-text-neutral-secondary">
