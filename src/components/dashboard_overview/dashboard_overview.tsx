@@ -89,7 +89,7 @@ const DashboardOverview = () => {
             >
               {displayedProfitChangeRate}
             </div>
-            <div className="self-end text-base leading-6 tracking-normal text-text-neutral-primary md:mb-2 lg:mt-7">
+            <div className="self-end text-base leading-6 tracking-normal text-text-neutral-primary md:mb-2 lg:mt-0">
               %
             </div>
           </div>
@@ -135,7 +135,7 @@ const DashboardOverview = () => {
             >
               <span className="">{displayedTopProjectRoi}</span>
             </div>
-            <div className="self-end text-base leading-6 tracking-normal text-text-neutral-primary md:mb-2 lg:mt-7">
+            <div className="self-end text-base leading-6 tracking-normal text-text-neutral-primary md:mb-2 lg:mt-0">
               %
             </div>
           </div>
