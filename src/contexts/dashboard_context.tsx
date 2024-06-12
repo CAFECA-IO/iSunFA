@@ -109,7 +109,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '',
+    link: '', // TODO: link (20240424 - Shirley)
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -153,7 +153,6 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
     ),
 
     link: '', // TODO: link (20240424 - Shirley)
-
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,

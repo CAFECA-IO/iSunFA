@@ -11,7 +11,7 @@ interface IAddBookmarkModal {
   modalVisibilityHandler: () => void;
 }
 
-const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
+const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
@@ -272,4 +272,4 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   return <div className="font-barlow">{isDisplayedAddBookmarkModal}</div>;
 };
 
-export default AddBookmarkModal;
+export default EditBookmarkModal;
