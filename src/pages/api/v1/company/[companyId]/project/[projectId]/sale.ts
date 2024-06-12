@@ -1,58 +1,37 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
 import { ISale } from '@/interfaces/project';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { getSession } from '@/lib/utils/get_session';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
+import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
+import { listProjectSale } from '@/lib/utils/repo/sale.repo';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ISale | ISale[]>>
 ) {
   try {
-    const session = await getSession(req, res);
-    if (!session.userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
+    // Info: (20240419 - Jacky) S010001 - GET /project
     if (req.method === 'GET') {
-      const Sale: ISale[] = [
-        {
-          id: 1,
-          projectId: 1,
-          date: '2024-01-01',
-          totalSales: 1000,
-          comparison: 10,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-        {
-          id: 2,
-          projectId: 1,
-          date: '2024-02-06',
-          totalSales: 1000,
-          comparison: 10,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-      ];
-      const { httpCode, result } = formatApiResponse<ISale[]>(STATUS_MESSAGE.SUCCESS_GET, Sale);
+      const session = await checkAdmin(req, res);
+      // Info: (20240607 - Jacky) check input parameter start
+      const { companyId } = session;
+      const { projectId } = req.query;
+      if (!projectId) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const projectIdNum = Number(projectId);
+      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      // Info: (20240607 - Jacky) check input parameter end
+      const saleList: ISale[] = await listProjectSale(project.id);
+      const { httpCode, result } = formatApiResponse<ISale[]>(STATUS_MESSAGE.SUCCESS_GET, saleList);
       res.status(httpCode).json(result);
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<ISale>(error.message, {} as ISale);
+    res.status(httpCode).json(result);
   }
 }

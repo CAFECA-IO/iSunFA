@@ -1,48 +1,38 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import version from '@/lib/version';
-import { errorMessageToErrorCode } from '@/lib/utils/error_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { getSession } from '@/lib/utils/get_session';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import prisma from '@/client';
+import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
+import { listProjectProgress } from '@/lib/utils/repo/progress.repo';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<number>>
 ) {
   try {
-    const session = await getSession(req, res);
-    if (!session.userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
     if (req.method === 'GET') {
-      const projectCompletedPercent = await prisma.project.findUnique({
-        where: {
-          id: Number(req.query.projectId),
-        },
-        select: {
-          completedPercent: true,
-        },
-      });
-      if (!projectCompletedPercent) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      const session = await checkAdmin(req, res);
+      // Info: (20240607 - Jacky) check input parameter start
+      const { companyId } = session;
+      const { projectId } = req.query;
+      if (!projectId) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const progress = projectCompletedPercent.completedPercent;
-      const { httpCode, result } = formatApiResponse<number>(STATUS_MESSAGE.SUCCESS_GET, progress);
+      const projectIdNum = Number(projectId);
+      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      // Info: (20240607 - Jacky) check input parameter end
+      const projectProgress: number = await listProjectProgress(project.id);
+      const { httpCode, result } = formatApiResponse<number>(
+        STATUS_MESSAGE.SUCCESS_GET,
+        projectProgress
+      );
       res.status(httpCode).json(result);
     } else {
-      throw new Error('Method Not Allowed');
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const statusCode = errorMessageToErrorCode(error.message);
-    res.status(statusCode).json({
-      powerby: 'ISunFa api ' + version,
-      success: false,
-      code: String(statusCode),
-      payload: {},
-      message: error.message,
-    });
+    const { httpCode, result } = formatApiResponse<number>(error.message, {} as number);
+    res.status(httpCode).json(result);
   }
 }

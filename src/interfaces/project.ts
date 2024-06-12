@@ -1,7 +1,7 @@
 export interface IProject {
   id: number;
   companyId: number;
-  imageId: string | null;
+  imageId: string;
   name: string;
   income: number;
   expense: number;
@@ -16,8 +16,8 @@ export interface IProject {
 export interface IMilestone {
   id: number;
   projectId: number;
-  startDate: number | null;
-  endDate: number | null;
+  startDate: number;
+  endDate: number;
   status: string;
   createdAt: number;
   updatedAt: number;
@@ -32,6 +32,8 @@ export interface IValue {
   netProfit: number;
   netProfitGrowthIn30d: number;
   netProfitGrowthInYear: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ISale {
@@ -47,9 +49,10 @@ export interface ISale {
 export interface IWorkRate {
   id: number;
   employeeProjectId: number;
+  member: IMember;
   involvementRate: number;
-  expected_hours: number;
-  actual_hours: number;
+  expectedHours: number;
+  actualHours: number;
   createdAt: number;
   updatedAt: number;
 }

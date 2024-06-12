@@ -3,7 +3,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IInvitation } from '@/interfaces/invitation';
 import { IResponseData } from '@/interfaces/response_data';
-import { checkUserSession } from '@/lib/utils/session_check';
+import { checkUser } from '@/lib/utils/auth_check';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -14,7 +14,7 @@ export default async function handler(
   try {
     if (req.method === 'PUT') {
       // Extract the necessary data from the request body
-      const session = await checkUserSession(req, res);
+      const session = await checkUser(req, res);
       const { userId } = session;
       const { invitation } = req.body;
       if (!invitation) {
