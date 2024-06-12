@@ -1,6 +1,5 @@
 [
   {
-    "id": 1,
     "income": 500,
     "expense": 400,
     "company_id": 8867,
@@ -9,7 +8,6 @@
     "updated_at": 1682933165
   },
   {
-    "id": 5,
     "income": 1010,
     "expense": 510,
     "company_id": 8867,
@@ -18,7 +16,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 6,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -27,7 +24,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 7,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -36,7 +32,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 8,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -45,7 +40,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 9,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -54,7 +48,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 10,
     "income": 1020,
     "expense": 520,
     "company_id": 8867,
@@ -63,7 +56,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 11,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -72,7 +64,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 12,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -81,7 +72,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 13,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -90,7 +80,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 14,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -99,7 +88,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 15,
     "income": 1030,
     "expense": 530,
     "company_id": 8867,
@@ -108,7 +96,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 16,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -117,7 +104,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 17,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -126,7 +112,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 18,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -135,7 +120,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 19,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -144,7 +128,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 20,
     "income": 1040,
     "expense": 540,
     "company_id": 8867,
@@ -153,7 +136,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 21,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -162,7 +144,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 22,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -171,7 +152,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 23,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -180,7 +160,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 24,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -189,7 +168,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 25,
     "income": 1050,
     "expense": 550,
     "company_id": 8867,
@@ -198,7 +176,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 26,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -207,7 +184,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 27,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -216,7 +192,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 28,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -225,7 +200,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 29,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -234,7 +208,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 30,
     "income": 1060,
     "expense": 560,
     "company_id": 8867,
@@ -243,7 +216,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 31,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -252,7 +224,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 32,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -261,7 +232,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 33,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -270,7 +240,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 34,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -279,7 +248,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 35,
     "income": 1070,
     "expense": 570,
     "company_id": 8867,
@@ -288,7 +256,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 36,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -297,7 +264,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 37,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -306,7 +272,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 38,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -315,7 +280,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 39,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -324,7 +288,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 40,
     "income": 1080,
     "expense": 580,
     "company_id": 8867,
@@ -333,7 +296,6 @@
     "updated_at": 1711911019
   },
   {
-    "id": 41,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -342,7 +304,6 @@
     "updated_at": 1711997419
   },
   {
-    "id": 42,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -351,7 +312,6 @@
     "updated_at": 1712083819
   },
   {
-    "id": 43,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -360,7 +320,6 @@
     "updated_at": 1712170219
   },
   {
-    "id": 44,
     "income": 1000,
     "expense": 500,
     "company_id": 8867,
@@ -369,7 +328,6 @@
     "updated_at": 1712256619
   },
   {
-    "id": 45,
     "income": 1000,
     "expense": 880,
     "company_id": 8867,
@@ -378,7 +336,6 @@
     "updated_at": 1716788550
   },
   {
-    "id": 46,
     "income": 1000,
     "expense": 900,
     "company_id": 8867,
@@ -387,7 +344,6 @@
     "updated_at": 1716702619
   },
   {
-    "id": 47,
     "income": 200,
     "expense": 100,
     "company_id": 8867,
@@ -396,7 +352,6 @@
     "updated_at": 1706766619
   },
   {
-    "id": 48,
     "income": 300,
     "expense": 200,
     "company_id": 8867,
@@ -405,7 +360,6 @@
     "updated_at": 1709272219
   },
   {
-    "id": 49,
     "income": 400,
     "expense": 300,
     "company_id": 8867,
@@ -414,7 +368,6 @@
     "updated_at": 1711963565
   },
   {
-    "id": 50,
     "income": 500,
     "expense": 400,
     "company_id": 8867,
@@ -423,7 +376,6 @@
     "updated_at": 1714555565
   },
   {
-    "id": 52,
     "income": 500,
     "expense": 356,
     "company_id": 8867,
@@ -432,7 +384,6 @@
     "updated_at": 1717738400
   },
   {
-    "id": 51,
     "income": 500,
     "expense": 399,
     "company_id": 8867,
