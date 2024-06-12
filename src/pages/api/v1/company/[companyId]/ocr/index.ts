@@ -205,6 +205,7 @@ export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IUnprocessed
 // Depreciated (20240611 - Murky) This function is not used
 export async function createJournalsAndOcrFromAichResults(
   companyId: number,
+  ocrId: number,
   aichResults: {
     resultStatus: IAccountResultStatus;
     imageUrl: string;
@@ -217,7 +218,7 @@ export async function createJournalsAndOcrFromAichResults(
   try {
     await Promise.all(
       aichResults.map(async (aichResult) => {
-        await createJournalAndOcrInPrisma(companyId, aichResult);
+        await createJournalAndOcrInPrisma(companyId, ocrId, aichResult);
         resultJson.push(aichResult.resultStatus);
       })
     );

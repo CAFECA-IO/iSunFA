@@ -36,7 +36,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(companyId: numbe
     ocrData = await prisma.ocr.findMany({
       where: {
         companyId,
-        journalId: null,
+        journal: null,
       }
     });
   } catch (error) {
@@ -60,6 +60,7 @@ export async function createOcrInPrisma(
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
+
   try {
     const ocrData = await prisma.ocr.create({
       data: {
@@ -86,6 +87,7 @@ export async function createOcrInPrisma(
 // Depreciated (20240611 - Murky) This function is not used
 export async function createJournalInPrisma(
   companyId: number,
+  ocrId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
     imageUrl: string;
@@ -102,6 +104,7 @@ export async function createJournalInPrisma(
         aichResultId: aichResult.resultStatus.resultId,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
+        ocrId
       },
     });
 
@@ -117,6 +120,7 @@ export async function createJournalInPrisma(
 // Depreciated (20240611 - Murky) This function is not used
 export async function createJournalAndOcrInPrisma(
   companyId: number,
+  ocrId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
     imageUrl: string;
@@ -139,7 +143,7 @@ export async function createJournalAndOcrInPrisma(
 
       // Depreciated (20240611 - Murky) This variable is not used
       // const ocrData = await createOcrInPrisma(companyId, aichResult);
-      const newJournal = await createJournalInPrisma(company.id, aichResult);
+      const newJournal = await createJournalInPrisma(company.id, ocrId, aichResult);
       return newJournal;
     });
   } catch (error) {
