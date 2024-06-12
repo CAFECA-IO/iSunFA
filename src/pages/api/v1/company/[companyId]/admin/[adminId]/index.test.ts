@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/admin/[adminId]/index';
 import prisma from '@/client';
-import { ROLE } from '@/constants/role';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -47,10 +47,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.OWNER,
           },
           create: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.OWNER,
             permissions: ['hihi'],
             createdAt: 0,
             updatedAt: 0,
@@ -259,7 +259,7 @@ describe('API Handler Tests', () => {
     req.query = { adminId: '-1' };
     req.body = {
       status: false,
-      roleName: ROLE.VIEWER,
+      roleName: ROLE_NAME.VIEWER,
     };
     await handler(req, res);
 

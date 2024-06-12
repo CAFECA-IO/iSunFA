@@ -26,11 +26,12 @@ async function createInvitation(
   companyIdNum: number,
   userIdNum: number,
   code: string,
-  email: string
+  email: string,
+  phone: string = ''
 ): Promise<IInvitation> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const invitation: IInvitation = await prisma.invitation.create({
+  const invitation: IInvitation = (await prisma.invitation.create({
     data: {
       role: {
         connect: {
@@ -49,12 +50,13 @@ async function createInvitation(
       },
       code,
       email,
+      phone,
       hasUsed: false,
       expiredAt: nowTimestamp + ONE_DAY_IN_S,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
-  });
+  })) as IInvitation;
   return invitation;
 }
 
