@@ -47,10 +47,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.SUPER_ADMIN,
           },
           create: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.SUPER_ADMIN,
             permissions: ['hihi'],
             createdAt: 0,
             updatedAt: 0,
@@ -71,13 +71,13 @@ beforeEach(async () => {
   });
   const role = await prisma.role.findUnique({
     where: {
-      name: 'test_admin',
+      name: ROLE_NAME.SUPER_ADMIN,
     },
   });
   if (!role) {
     await prisma.role.create({
       data: {
-        name: 'test_admin',
+        name: ROLE_NAME.SUPER_ADMIN,
         permissions: ['hihi'],
         createdAt: 0,
         updatedAt: 0,
@@ -137,15 +137,6 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        name: 'test_admin',
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('API Handler Tests', () => {
@@ -181,7 +172,7 @@ describe('API Handler Tests', () => {
     req.method = 'PUT';
     req.body = {
       status: false,
-      roleName: 'test_admin',
+      roleName: ROLE_NAME.SUPER_ADMIN,
     };
     req.query = { adminId: admin.id.toString() };
     await handler(req, res);
