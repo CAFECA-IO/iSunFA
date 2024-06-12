@@ -12,7 +12,7 @@ interface IAddBookmarkModal {
 }
 
 const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { bookmarkList, addBookmarks, removeBookmark, addSelectedBookmarks } = useDashboardCtx();
+  const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
   const [selectedBookmark, setSelectedBookmark, selectedBookmarkRef] = useStateRef<string[]>([]);
@@ -39,6 +39,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
+    console.log('selectedBookmark', selectedBookmarkRef.current);
     setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
         return prevSelected.filter((item) => item !== name);
@@ -106,20 +107,20 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                   <button
                     key={key}
                     disabled={value.link === ''}
-                    onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
+                    onClick={() => menuOptionClickHandler(bookmarkList[key].id)}
                     type="button"
-                    className={`mt-1 flex gap-3 rounded-sm px-3 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white ${
+                    className={`mb-1.5 flex gap-3 rounded-sm px-2 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white ${
                       !isMenuOpen
                         ? 'hidden'
                         : selectedBookmark.includes(key)
-                          ? 'bg-primaryYellow/20'
+                          ? 'bg-dropdown-surface-item-hover'
                           : 'hover:text-text-brand-primary-lv2'
                     }`}
                   >
                     <div className="my-auto flex flex-col justify-center">
-                      {bookmarkList[key].icon}
+                      {bookmarkList[key].iconOnModal}
                     </div>
-                    <p className="justify-center text-sm font-medium leading-5 tracking-normal">
+                    <p className="items-center justify-center text-start text-sm">
                       {bookmarkList[key].name}
                     </p>
 
