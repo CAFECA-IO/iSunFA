@@ -10,6 +10,8 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ProjectStage, stageList } from '@/constants/project';
 import ProjectValueBlock from '@/components/project_value_block/project_value_block';
+import ProjectProgressBlock from '@/components/project_progress_block/project_progress_block';
+import ProjectMilestoneBlock from '@/components/project_milestone_block/project_milestone_block';
 
 interface IProjectDashboardPageProps {
   projectId: string;
@@ -104,7 +106,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                   </div>
                 </div>
                 {/* Info: (20240612 - Julian) Divider */}
-                <hr className="border-1 my-24px border-divider-stroke-lv-4" />
+                <hr className="border-px my-24px border-divider-stroke-lv-4" />
                 {/* Info: (20240612 - Julian) stage selection (mobile) */}
                 <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
                   <p className="font-semibold">Stage</p>
@@ -125,8 +127,14 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                   <div className="md:col-span-2">
                     <ProjectValueBlock />
                   </div>
-                  <div className="border p-20px">Progress Block</div>
-                  <div className="border p-20px md:col-span-3">Milestone Block</div>
+
+                  {/* Info: (20240612 - Julian) Project Progress Block */}
+                  <div className="">
+                    <ProjectProgressBlock />
+                  </div>
+                  <div className="md:col-span-3">
+                    <ProjectMilestoneBlock />
+                  </div>
                   <div className="border p-20px md:col-span-2">Monthly Sales Block</div>
                   <div className="border p-20px">Working Time Ratio Sales Block</div>
                 </div>
