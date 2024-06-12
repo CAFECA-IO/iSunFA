@@ -21,6 +21,8 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   formatApiResponse: jest.fn(),
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),
+  timestampInMilliSeconds: jest.fn(),
+  transformBytesToFileSizeString: jest.fn(),
 }));
 
 jest.mock('./index.repository', () => {
@@ -286,7 +288,6 @@ describe('POST OCR', () => {
     it('should return resultJson', async () => {
       const nowTimestamp = 0;
       const companyId = 1;
-      const ocrId = 2;
       const resultId = 'testResultId';
       const mockAichReturn = [
         {
@@ -304,10 +305,7 @@ describe('POST OCR', () => {
         id: 1,
         tokenContract: null,
         tokenId: null,
-        ocrId,
         aichResultId: null,
-        invoiceId: null,
-        voucherId: null,
         projectId: null,
         contractId: null,
         companyId,
@@ -359,6 +357,7 @@ describe('POST OCR', () => {
   describe('createOcrFromAichResults', () => {
     it('should return resultJson', async () => {
       const resultId = 'testResultId';
+      const companyId = 1;
       const mockAichReturn = [
         {
           resultStatus: {
@@ -373,6 +372,9 @@ describe('POST OCR', () => {
 
       const mockOcrDbResult: Ocr = {
         id: 1,
+        companyId,
+        journalId: null,
+        aichResultId: resultId,
         status: ProgressStatus.SUCCESS,
         imageUrl: 'testImageUrl',
         imageName: 'testImageName',
@@ -390,7 +392,7 @@ describe('POST OCR', () => {
 
       jest.spyOn(repository, 'createOcrInPrisma').mockResolvedValue(mockOcrDbResult);
 
-      const resultJson = await module.createOcrFromAichResults(mockAichReturn);
+      const resultJson = await module.createOcrFromAichResults(companyId, mockAichReturn);
 
       expect(resultJson).toEqual(expectResult);
     });
@@ -486,5 +488,80 @@ describe('POST OCR', () => {
 });
 
 describe('GET OCR', () => {
+  describe('fetchStatus', () => {
+    it('should return resultJson', async () => {
+      const aichResultId = 'testAichResultId';
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ payload: ProgressStatus.SUCCESS }),
+      };
 
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const resultJson = await module.fetchStatus(aichResultId);
+      expect(resultJson).toEqual(ProgressStatus.SUCCESS);
+    });
+  });
+
+  describe('calculateProgress', () => {
+    beforeEach(() => {
+      jest.spyOn(common, 'timestampInMilliSeconds').mockReturnValue(0);
+    });
+    it('should return 100 if success', () => {
+      const mockCreatedAt = 1;
+      const mockStatus = ProgressStatus.SUCCESS;
+
+      const progress = module.calculateProgress(mockCreatedAt, mockStatus);
+      expect(progress).toBe(100);
+    });
+
+    it('should return 0 if not success and not in progress', () => {
+      const mockCreatedAt = 1;
+      const mockStatus = ProgressStatus.INVALID_INPUT;
+
+      const progress = module.calculateProgress(mockCreatedAt, mockStatus);
+      expect(progress).toBe(0);
+    });
+  });
+
+  describe("formatUnprocessedOCR", () => {
+    it("should return IUnprocessedOCR", async () => {
+      const mockAichId = 'testAichId';
+      const mockCompanyId = 1;
+      const mockImageFileSize = "1 MB";
+      const mockOcr: Ocr[] = [{
+        id: 1,
+        aichResultId: mockAichId,
+        companyId: mockCompanyId,
+        journalId: null,
+        status: "success",
+        imageUrl: 'testImageUrl',
+        imageName: 'testImageName',
+        imageSize: 1024,
+        createdAt: 0,
+        updatedAt: 0,
+      }];
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ payload: ProgressStatus.SUCCESS }),
+      });
+      jest.spyOn(common, 'transformBytesToFileSizeString').mockReturnValue(mockImageFileSize);
+      jest.spyOn(common, 'timestampInSeconds').mockReturnValue(0);
+
+      const unprocessedOCR = await module.formatUnprocessedOCR(mockOcr);
+
+      const expectUnprocessedOCR = [{
+        id: 1,
+        aichResultId: mockAichId,
+        imageName: 'testImageName',
+        imageUrl: 'testImageUrl',
+        imageSize: mockImageFileSize,
+        progress: 100,
+        status: ProgressStatus.SUCCESS,
+        createdAt: 0,
+      }];
+      expect(unprocessedOCR).toEqual(expectUnprocessedOCR);
+    });
+  });
 });
