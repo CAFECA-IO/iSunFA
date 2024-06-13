@@ -30,7 +30,7 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           <ProjectSidebar projectId={projectId} />
           <div className="flex min-h-screen bg-gray-100">
-            <div className="mt-160px md:ml-80px">
+            <div className="mt-120px flex-1 md:ml-80px">
               <div className="flex flex-col px-60px">
                 {/* Info: (20240611 - Julian) Title */}
                 <div className="flex items-center gap-24px">
