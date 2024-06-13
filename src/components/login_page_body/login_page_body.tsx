@@ -6,13 +6,24 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
+import { pageQueries } from '@/interfaces/page_query';
 
-const LoginPageBody = () => {
+interface ILoginPageBodyProps {
+  invitation?: string;
+  action?: string;
+}
+
+const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
-  const { registerModalVisibilityHandler, passKeySupportModalVisibilityHandler, toastHandler } =
-    useGlobalCtx();
+  const {
+    registerModalDataHandler,
+    registerModalVisibilityHandler,
+    passKeySupportModalVisibilityHandler,
+    toastHandler,
+  } = useGlobalCtx();
 
   const registerClickHandler = async () => {
+    registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
   };
 
@@ -22,7 +33,7 @@ const LoginPageBody = () => {
 
   const logInClickHandler = async () => {
     try {
-      await signIn();
+      await signIn({ invitation });
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -30,6 +41,15 @@ const LoginPageBody = () => {
       // registerClickHandler();
     }
   };
+
+  useEffect(() => {
+    if (action === pageQueries.loginPage.actions.register) {
+      registerModalDataHandler({ invitation });
+      registerModalVisibilityHandler();
+    } else if (action === pageQueries.loginPage.actions.login) {
+      logInClickHandler();
+    }
+  }, [action]);
 
   useEffect(() => {
     /* Info: possible error code when login & register (20240522 - Shirley)

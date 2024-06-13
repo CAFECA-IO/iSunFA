@@ -11,8 +11,8 @@ interface IAddBookmarkModal {
   modalVisibilityHandler: () => void;
 }
 
-const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { bookmarkList, addBookmarks, removeBookmark, addSelectedBookmarks } = useDashboardCtx();
+const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
+  const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
   const [selectedBookmark, setSelectedBookmark, selectedBookmarkRef] = useStateRef<string[]>([]);
@@ -39,6 +39,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
+    console.log('selectedBookmark', selectedBookmarkRef.current);
     setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
         return prevSelected.filter((item) => item !== name);
@@ -106,27 +107,27 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
                   <button
                     key={key}
                     disabled={value.link === ''}
-                    onClick={() => menuOptionClickHandler(bookmarkList[key].name)}
+                    onClick={() => menuOptionClickHandler(bookmarkList[key].id)}
                     type="button"
-                    className={`mt-1 flex gap-3 rounded-sm px-3 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white ${
+                    className={`mb-1.5 flex items-center gap-3 rounded-sm px-1.5 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white sm:px-2 ${
                       !isMenuOpen
                         ? 'hidden'
                         : selectedBookmark.includes(key)
-                          ? 'bg-primaryYellow/20'
+                          ? 'bg-dropdown-surface-item-hover'
                           : 'hover:text-text-brand-primary-lv2'
                     }`}
                   >
                     <div className="my-auto flex flex-col justify-center">
-                      {bookmarkList[key].icon}
+                      {bookmarkList[key].iconOnModal}
                     </div>
-                    <p className="justify-center text-sm font-medium leading-5 tracking-normal">
+                    <p className="items-center justify-center text-start text-xs sm:text-sm">
                       {bookmarkList[key].name}
                     </p>
 
                     <div
                       className={`${bookmarkList[key].added ? 'flex' : 'hidden'} my-auto h-fit items-center justify-end rounded-xs bg-badge-surface-soft-primary px-2 py-0.1rem text-center text-xs text-badge-text-primary-solid`}
                     >
-                      on the list{' '}
+                      listed{' '}
                     </div>
 
                     <div className="flex flex-1 items-center justify-end">
@@ -217,7 +218,7 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
 
   const isDisplayedAddBookmarkModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative mx-auto flex flex-col items-center rounded-lg bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+      <div className="relative mx-0 flex w-350px flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="flex gap-2.5 bg-white px-2 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
@@ -271,4 +272,4 @@ const AddBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookma
   return <div className="font-barlow">{isDisplayedAddBookmarkModal}</div>;
 };
 
-export default AddBookmarkModal;
+export default EditBookmarkModal;
