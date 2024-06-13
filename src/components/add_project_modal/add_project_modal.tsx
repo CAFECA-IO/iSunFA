@@ -95,6 +95,7 @@ const AddProjectModal = ({
     }
   }, [isModalVisible]);
 
+  // ToDo: (20240612 - Julian) get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱

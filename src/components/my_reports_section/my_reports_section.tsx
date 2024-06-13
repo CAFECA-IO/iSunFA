@@ -32,8 +32,9 @@ const MyReportsSection = () => {
   const {
     toastHandler,
     filterOptionsModalVisibilityHandler,
-    filterOptionsForHistory,
-    filterOptionsForPending,
+    // TODO: get filter options and send to API queries (20240613 - Shirley)
+    // filterOptionsForHistory,
+    // filterOptionsForPending,
   } = useGlobalCtx();
   const {
     data: pendingReports,
@@ -68,19 +69,6 @@ const MyReportsSection = () => {
 
   const pendingTotalPages = 1;
   const historyTotalPages = 1;
-
-  // Deprecated: (20240531 - Shirley)
-  // eslint-disable-next-line no-console
-  console.table({
-    history: {
-      ...filterOptionsForHistory,
-      period: JSON.stringify(filterOptionsForHistory.period),
-    },
-    pending: {
-      ...filterOptionsForPending,
-      period: JSON.stringify(filterOptionsForPending.period),
-    },
-  });
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports) {
