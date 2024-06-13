@@ -6,8 +6,10 @@ export interface RegisterFormModalProps {
 }
 
 export interface BookmarkItem {
+  id: string;
   name: string;
-  icon: JSX.Element;
+  iconOnModal: JSX.Element;
+  iconOnSection: JSX.Element;
   added: boolean;
   link: string;
   tempSelectedOnSection?: boolean;
