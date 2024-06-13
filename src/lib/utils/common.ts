@@ -388,3 +388,13 @@ export function isParamString(param: string | string[] | undefined): param is st
 
   return true;
 }
+
+export function changeDateToTimeStampOfDayEnd(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T23:59:59+08:00').getTime());
+  return dateToTimeStamp;
+}
+
+export function changeDateToTimeStampOfDayStart(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T00:00:00+08:00').getTime());
+  return dateToTimeStamp;
+}
