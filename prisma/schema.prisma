@@ -10,14 +10,15 @@ datasource db {
 model Account {
   id        Int        @id @default(autoincrement())
   companyId Int        @default(0) @map("company_id")
-  system    String
-  type      String
-  debit     Boolean
+  system    String // ex "IFRS" 
+  type      String // ex "Asset"
+  debit     Boolean // true: debit, false: credit
   liquidity Boolean
   code      String
-  name      String
+  name      String // empty if is not sub account
   createdAt Int        @map("created_at")
   updatedAt Int        @map("updated_at")
+  company   Company    @relation(fields: [companyId], references: [id])
   lineItem  LineItem[]
 }
 
@@ -104,6 +105,7 @@ model Company {
   companyKYCs     CompanyKYC[]
   companySettings CompanySetting[]
   incomeExpenses  IncomeExpense[]
+  accounts        Account[]
 }
 
 model CompanyKYC {

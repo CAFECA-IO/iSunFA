@@ -8,18 +8,26 @@ import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
+import { checkAdmin } from '@/lib/utils/auth_check';
+import { AccountSystem, AccountType } from '@/constants/account';
 
 type ApiResponseType = {
   id: number;
+  createdAt: number;
+  updatedAt: number;
+  journalId: number;
+  no: string;
   lineItems: {
-    id: number;
-    amount: number;
-    description: string;
-    debit: boolean;
-    accountId: number;
-    voucherId: number | null;
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
   }[];
-};
+} | null;
 
 async function findUniqueJournalInPrisma(journalId: number | undefined) {
   try {
@@ -65,16 +73,63 @@ async function findFirstAccountInPrisma(accountName: string) {
   }
 }
 
+async function findUniqueVoucherInPrisma(voucherId: number) {
+  let voucherData:{
+    id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
+    lineItems: {
+        id: number;
+        amount: number;
+        description: string;
+        debit: boolean;
+        accountId: number;
+        voucherId: number;
+        createdAt: number;
+        updatedAt: number;
+    }[];
+  } | null = null;
+  try {
+    voucherData = await prisma.voucher.findUnique({
+      where: {
+        id: voucherId,
+      },
+      select: {
+        id: true,
+        journalId: true,
+        no: true,
+        createdAt: true,
+        updatedAt: true,
+        lineItems: true,
+      },
+    });
+  } catch (error) {
+    // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+  return voucherData;
+}
+
 // Deprecated: (20240527 - Murky) This function is for demo purpose only
-async function createFakeAccountInPrisma() {
+async function createFakeAccountInPrisma(companyId: number) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   try {
     const result = await prisma.account.create({
       data: {
-        type: 'expense',
+        company: {
+          connect: {
+            id: companyId,
+          },
+        },
+        system: AccountSystem.IFRS,
+        type: AccountType.EXPENSE,
+        debit: true,
         liquidity: true,
-        account: '其他費用',
         code: '0100032',
         name: '其他費用',
         createdAt: nowTimestamp,
@@ -95,7 +150,7 @@ async function createFakeAccountInPrisma() {
   }
 }
 
-async function createLineItemInPrisma(lineItem: ILineItem) {
+async function createLineItemInPrisma(lineItem: ILineItem, voucherId: number, companyId: number) {
   try {
     let accountId = await findFirstAccountInPrisma(lineItem.account);
 
@@ -103,17 +158,26 @@ async function createLineItemInPrisma(lineItem: ILineItem) {
     if (!accountId) {
       accountId = await findFirstAccountInPrisma('其他費用');
       if (!accountId) {
-        accountId = await createFakeAccountInPrisma();
+        accountId = await createFakeAccountInPrisma(companyId);
       }
     }
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);
     const result = await prisma.lineItem.create({
       data: {
-        accountId,
+        amount: lineItem.amount,
         description: lineItem.description,
         debit: lineItem.debit,
-        amount: lineItem.amount,
+        account: {
+          connect: {
+            id: accountId,
+          },
+        },
+        voucher: {
+          connect: {
+            id: voucherId,
+          },
+        },
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
@@ -165,7 +229,6 @@ async function getLatestVoucherNoInPrisma(companyId: number) {
 async function createVoucherInPrisma(
   newVoucherNo: string,
   journalId: number,
-  lineItemIds: number[]
 ) {
   try {
     const now = Date.now();
@@ -177,11 +240,6 @@ async function createVoucherInPrisma(
           connect: {
             id: journalId,
           },
-        },
-        lineItems: {
-          connect: lineItemIds.map((lineItemId) => ({
-            id: lineItemId,
-          })),
         },
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
@@ -198,24 +256,22 @@ async function createVoucherInPrisma(
   }
 }
 
-async function handleVoucherCreatePrismaLogic(voucher: IVoucherDataForSavingToDB) {
+async function handleVoucherCreatePrismaLogic(voucher: IVoucherDataForSavingToDB, companyId: number) {
   try {
-    const result = await prisma.$transaction(async () => {
-      const journalId = await findUniqueJournalInPrisma(voucher.journalId);
+    const journalId = await findUniqueJournalInPrisma(voucher.journalId);
 
-      const lineItemIds = await Promise.all(
-        voucher.lineItems.map(async (lineItem) => {
-          return createLineItemInPrisma(lineItem);
-        })
-      );
+    const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
+    const voucherData = await createVoucherInPrisma(newVoucherNo, journalId);
+    await Promise.all(
+      voucher.lineItems.map(async (lineItem) => {
+        return createLineItemInPrisma(lineItem, voucherData.id, companyId);
+      })
+    );
 
-      const newVoucherNo = await getLatestVoucherNoInPrisma(journalId);
+    // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
+    const voucherWithLineItems = await findUniqueVoucherInPrisma(voucherData.id);
 
-      const voucherData = await createVoucherInPrisma(newVoucherNo, journalId, lineItemIds);
-
-      return voucherData;
-    });
-    return result;
+    return voucherWithLineItems;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
@@ -235,36 +291,53 @@ function isVoucherValid(
   return true;
 }
 
+export async function handlePostRequest(req: NextApiRequest, companyId: number) {
+  const { voucher } = req.body;
+
+  // Info: （ 20240522 - Murky）body need to provide LineItems and journalId
+  if (!isVoucherValid(voucher)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const result = await handleVoucherCreatePrismaLogic(voucher, companyId);
+
+  const { httpCode, result: response } = formatApiResponse<ApiResponseType>(
+    STATUS_MESSAGE.CREATED,
+    result
+  );
+
+  return { httpCode, response };
+}
+
+export function handleErrorRequest(error: Error) {
+  const { httpCode, result } = formatApiResponse<ApiResponseType>(
+    error.message,
+    {} as ApiResponseType
+  );
+  return { httpCode, result };
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
+  // Depreciated: (20240613 - Murky) Need to replace by type guard after merge
+  if (!companyId || typeof companyId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   try {
     if (req.method === 'POST') {
-      const { voucher } = req.body;
-
-      // Info: （ 20240522 - Murky）body need to provide LineItems and journalId
-      if (!isVoucherValid(voucher)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-
-      const result = await handleVoucherCreatePrismaLogic(voucher);
-
-      const { httpCode, result: response } = formatApiResponse<ApiResponseType>(
-        STATUS_MESSAGE.CREATED,
-        result
-      );
-
+      const { httpCode, response } = await handlePostRequest(req, companyId);
       res.status(httpCode).json(response);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ApiResponseType>(
-      error.message,
-      {} as ApiResponseType
-    );
+    const { httpCode, result } = handleErrorRequest(error);
     res.status(httpCode).json(result);
   }
 }
