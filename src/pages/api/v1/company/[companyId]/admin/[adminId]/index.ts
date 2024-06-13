@@ -45,7 +45,7 @@ export default async function handler(
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
-      const session = await checkRole(req, res, ROLE_NAME.SUPER_ADMIN);
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { companyId } = session;
       const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
       const deletedAdmin: IAdmin = await deleteAdminById(getAdmin.id);
