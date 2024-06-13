@@ -1,14 +1,12 @@
-import { useRouter } from 'next/router';
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 import { BOOKMARK_SCROLL_STEP } from '@/constants/config';
+import Link from 'next/link';
 
 const DashboardBookmark = () => {
-  const router = useRouter();
-
   const { addBookmarkModalVisibilityHandler } = useGlobalCtx();
   const { bookmarkList } = useDashboardCtx();
   const [isAtScrollStart, setIsAtScrollStart] = useState(true);
@@ -67,10 +65,6 @@ const DashboardBookmark = () => {
   const slideLeft = () => slide(-BOOKMARK_SCROLL_STEP);
   const slideRight = () => slide(BOOKMARK_SCROLL_STEP);
 
-  const buttonSelectedHandler = (name: string) => {
-    router.push(bookmarkList[name].link);
-  };
-
   const editBtnClickHandler = () => {
     addBookmarkModalVisibilityHandler();
   };
@@ -79,17 +73,20 @@ const DashboardBookmark = () => {
     .filter(([key]) => bookmarkList[key].added)
     .map(([key]) => {
       return (
-        <Button
-          key={key}
-          type="button"
-          onClick={() => buttonSelectedHandler(bookmarkList[key].name)}
-          className={`flex justify-center gap-2 rounded-full border border-transparent bg-tertiaryBlue px-3 py-3 text-white hover:bg-tertiaryBlue2 lg:px-8 lg:py-2`}
-        >
-          <div className="my-auto flex items-center justify-center">{bookmarkList[key].icon}</div>
-          <div className="hidden text-lg font-medium leading-7 tracking-normal lg:inline">
-            {bookmarkList[key].name}
-          </div>
-        </Button>
+        <Link href={bookmarkList[key].link}>
+          <Button
+            key={key}
+            type="button"
+            className={`flex justify-center gap-2 rounded-full border border-transparent bg-tertiaryBlue px-3 py-3 text-white hover:bg-tertiaryBlue2 lg:px-8 lg:py-2`}
+          >
+            <div className="my-auto flex items-center justify-center">
+              {bookmarkList[key].iconOnSection}
+            </div>
+            <div className="hidden text-lg font-normal leading-7 tracking-normal lg:inline">
+              {bookmarkList[key].name}
+            </div>
+          </Button>
+        </Link>
       );
     });
 
@@ -124,7 +121,7 @@ const DashboardBookmark = () => {
   return (
     <div className="w-full rounded-full bg-white">
       <div className="flex flex-wrap items-center justify-between overflow-hidden rounded-full bg-surface-brand-primary-5 max-lg:flex-wrap">
-        <div className="relative inline-flex h-16 flex-1 items-center overflow-hidden lg:h-20">
+        <div className="relative inline-flex h-16 flex-1 items-center overflow-hidden lg:h-24">
           <div
             ref={containerRef}
             className="inline-flex items-center gap-5 overflow-x-auto scroll-smooth px-20px py-14px"
