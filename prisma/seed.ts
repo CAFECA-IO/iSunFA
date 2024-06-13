@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import accounts from './seed_json/account.json';
-import company from './seed_json/company.json';
+import companies from './seed_json/company.json';
 import admin from './seed_json/admin.json';
 import projects from './seed_json/project.json';
 import IncomeExpenses from './seed_json/income_expense.json';
@@ -27,19 +27,21 @@ async function createAccount(nowTimestamp: number) {
 }
 
 async function createCompany() {
-  await prisma.company.create({
-    data: {
-      id: company.id,
-      name: company.name,
-      code: company.code,
-      regional: company.regional,
-      kycStatus: company.kyc_status,
-      imageId: company.image_id,
-      startDate: company.start_date,
-      createdAt: company.created_at,
-      updatedAt: company.updated_at,
-    },
-  });
+  await Promise.all(companies.map(async (company) => {
+    await prisma.company.create({
+      data: {
+        id: company.id,
+        name: company.name,
+        code: company.code,
+        regional: company.regional,
+        kycStatus: company.kyc_status,
+        imageId: company.image_id,
+        startDate: company.start_date,
+        createdAt: company.created_at,
+        updatedAt: company.updated_at,
+      },
+    });
+  }));
 }
 
 async function createAdmin() {

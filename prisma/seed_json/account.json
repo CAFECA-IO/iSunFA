@@ -2652,7 +2652,7 @@
     "updatedAt": 0
   },
   {
-    "type": "asset",
+    "type": "liability",
     "liquidity": true,
     "account": "進銷成本",
     "code": "0300009",
