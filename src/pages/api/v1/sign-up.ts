@@ -21,9 +21,6 @@ export default async function handler(
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
 
-    // eslint-disable-next-line no-console
-    console.log('invitation in SignUp API', req.query.invitation);
-
     const { registration } = req.body;
 
     const origins = getDomains();

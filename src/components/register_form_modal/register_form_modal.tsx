@@ -18,8 +18,6 @@ const RegisterFormModal = ({
   modalVisibilityHandler,
   data,
 }: IRegisterFormModal) => {
-  // eslint-disable-next-line no-console
-  console.log('data in RegisterFormModal', data);
   const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 

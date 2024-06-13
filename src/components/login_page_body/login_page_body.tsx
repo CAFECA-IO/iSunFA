@@ -6,7 +6,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
-import { pageQueries } from '@/interfaces/url_query';
+import { pageQueries } from '@/interfaces/page_query';
 
 interface ILoginPageBodyProps {
   invitation?: string;

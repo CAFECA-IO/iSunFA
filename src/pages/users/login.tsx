@@ -10,8 +10,6 @@ import { GetServerSideProps } from 'next';
 import { ILoginPageProps } from '@/interfaces/page_props';
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
-  // eslint-disable-next-line no-console
-  console.log('invitation', invitation);
   const router = useRouter();
   const { signedIn } = useUserCtx();
 
