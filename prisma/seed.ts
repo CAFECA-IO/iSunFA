@@ -1,5 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import accounts from './seed_json/account.json';
+import company from './seed_json/company.json';
+import admin from './seed_json/admin.json';
+import projects from './seed_json/project.json';
+import IncomeExpenses from './seed_json/income_expense.json';
 
 const prisma = new PrismaClient();
 
@@ -9,6 +13,83 @@ const timestampInSeconds = (timestamp: number): number => {
   }
   return timestamp;
 };
+
+async function createAccount(nowTimestamp: number) {
+  accounts.map(async (account) => {
+    await prisma.account.create({
+      data: {
+        ...account,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    });
+  });
+}
+
+async function createCompany() {
+  await prisma.company.create({
+    data: {
+      id: company.id,
+      name: company.name,
+      code: company.code,
+      regional: company.regional,
+      kycStatus: company.kyc_status,
+      imageId: company.image_id,
+      startDate: company.start_date,
+      createdAt: company.created_at,
+      updatedAt: company.updated_at,
+    },
+  });
+}
+
+async function createAdmin() {
+  await prisma.admin.create({
+    data: {
+      email: admin.email,
+      status: admin.status,
+      userId: admin.user_id,
+      companyId: admin.company_id,
+      roleId: admin.role_id,
+      startDate: admin.start_date,
+      endDate: admin.end_date,
+      createdAt: admin.created_at,
+      updatedAt: admin.updated_at,
+    },
+  });
+}
+
+async function createProjects() {
+  projects.map(async (project) => {
+    await prisma.project.create({
+      data: {
+        id: project.id,
+        companyId: project.company_id,
+        name: project.name,
+        completedPercent: project.completed_percent,
+        imageId: project.image_id,
+        stage: project.stage,
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      },
+    });
+  });
+}
+
+async function createIncomeExpenses() {
+  IncomeExpenses.map(async (incomeExpense) => {
+    await prisma.incomeExpense.create({
+      data: {
+        income: incomeExpense.income,
+        expense: incomeExpense.expense,
+        projectId: incomeExpense.project_id,
+        companyId: incomeExpense.company_id,
+        createdAt: incomeExpense.created_at,
+        updatedAt: incomeExpense.updated_at,
+      },
+    });
+  });
+}
+
 async function ocr() {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -29,20 +110,17 @@ async function ocr() {
 async function main() {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  await Promise.all(
-    accounts.map(async (account) => {
-      await prisma.account.create({
-        data: {
-          ...account,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-      });
-    })
-  );
+  // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
+  await createAccount(nowTimestamp);
+  await createCompany();
+  await createAdmin();
+  await createProjects();
+  await new Promise((resolve) => { setTimeout(resolve, 5000); });
+  await createIncomeExpenses();
 
   await ocr();
 }
+
 main()
   .then(async () => {
     await prisma.$disconnect();
