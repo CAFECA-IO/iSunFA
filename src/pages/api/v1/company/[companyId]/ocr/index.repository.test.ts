@@ -120,7 +120,7 @@ describe('/ocr/index.repository', () => {
 
       jest.spyOn(prisma.journal, "create").mockResolvedValue(mockJournalCreateResult);
 
-      const createdResult = await module.createJournalInPrisma(companyId, mockAichResult);
+      const createdResult = await module.createJournalInPrisma(companyId, ocrId, mockAichResult);
 
       expect(createdResult).toEqual(mockJournalCreateResult);
     });
@@ -182,7 +182,7 @@ describe('/ocr/index.repository', () => {
       jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
       jest.spyOn(prisma.journal, "create").mockResolvedValue(mockJournalCreate);
 
-      const newJournal = await module.createJournalAndOcrInPrisma(companyId, aichResult);
+      const newJournal = await module.createJournalAndOcrInPrisma(companyId, ocrId, aichResult);
 
       // Info: ( 20240605 - Murky) 測試如果正確執行玩所有步驟是不是會回傳正確的被創造的journal
       expect(newJournal).toEqual(mockJournalCreate);
@@ -206,6 +206,7 @@ describe('/ocr/index.repository', () => {
         data: {
           companyId,
           aichResultId: aichResult.resultStatus.resultId,
+          ocrId,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
         },
@@ -228,7 +229,7 @@ describe('/ocr/index.repository', () => {
       jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
       jest.spyOn(prisma.journal, "create").mockResolvedValue(mockJournalCreate);
 
-      await expect(module.createJournalAndOcrInPrisma(companyId, invalidAichResult)).rejects.toThrow(STATUS_MESSAGE.OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS);
+      await expect(module.createJournalAndOcrInPrisma(companyId, ocrId, invalidAichResult)).rejects.toThrow(STATUS_MESSAGE.OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS);
     });
   });
 });
