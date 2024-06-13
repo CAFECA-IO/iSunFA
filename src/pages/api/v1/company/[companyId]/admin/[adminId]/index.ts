@@ -4,7 +4,7 @@ import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
 import { checkAdmin, checkCompanyAdminMatch, checkRole } from '@/lib/utils/auth_check';
-import { ROLE_NAME } from '@/constants/role_name';
+import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { deleteAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
 
 export default async function handler(
@@ -22,13 +22,23 @@ export default async function handler(
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
     } else if (req.method === 'PUT') {
       const { status, roleName } = req.body;
-      if (!status && !roleName) {
+      if (typeof status !== 'boolean' && !roleName) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { companyId } = session;
       const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
-      const updatedAdmin: IAdmin = await updateAdminById(getAdmin.id, status, roleName);
+      let updatedRoleName;
+      if (!roleName) {
+        updatedRoleName = getAdmin.role.name;
+      } else {
+        updatedRoleName = roleName;
+      }
+      const updatedRoleNameStr = updatedRoleName;
+      if (!Object.values(RoleName).includes(updatedRoleNameStr)) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+      }
+      const updatedAdmin: IAdmin = await updateAdminById(getAdmin.id, status, updatedRoleName);
       const { httpCode, result } = formatApiResponse<IAdmin>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
         updatedAdmin

@@ -172,7 +172,7 @@ describe('API Handler Tests', () => {
     req.method = 'PUT';
     req.body = {
       status: false,
-      roleName: ROLE_NAME.SUPER_ADMIN,
+      // roleName: ROLE_NAME.OWNER,
     };
     req.query = { adminId: admin.id.toString() };
     await handler(req, res);
