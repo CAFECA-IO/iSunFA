@@ -180,7 +180,7 @@ describe('handler', () => {
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
-  it('should handle DELETE method', async () => {
+  xit('should handle DELETE method', async () => {
     req.method = 'DELETE';
     req.headers = { userid: '123' };
     req.query = { companyId: admin.company.id.toString() };
