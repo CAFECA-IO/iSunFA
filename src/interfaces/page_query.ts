@@ -14,7 +14,7 @@ export type IPageQueries = {
 /**
  * Info: (20240613 - Shirley)
  * options 與 page component 的 props 相同，代表該頁面可以接受哪些參數
- * actions 為 props 中 action 的選項之一，代表該頁面可以有哪些行為
+ * actions 為 props 中 action 的選項，代表該頁面可以有哪些行為
  */
 export const pageQueries: IPageQueries = {
   loginPage: {
