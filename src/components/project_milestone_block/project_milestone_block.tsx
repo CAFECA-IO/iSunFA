@@ -2,51 +2,53 @@ import Image from 'next/image';
 import { stageList, stageColorMap, ProjectStage } from '@/constants/project';
 import { IMilestone } from '@/interfaces/project';
 import { timestampToString } from '@/lib/utils/common';
+import MilestoneCalendar from '@/components/milestone_calendar/milestone_calendar';
+import { IDatePeriod } from '@/interfaces/date_period';
 
 const dummyMilestone: IMilestone[] = [
   {
     id: 0,
     projectId: 1,
     status: stageList[0],
-    startDate: 1683524400,
-    endDate: 1703724500,
-    createdAt: 1683524400,
-    updatedAt: 1703724500,
+    startDate: 1699863143,
+    endDate: 1703952000,
+    createdAt: 1699863143,
+    updatedAt: 1703952000,
   },
   {
     id: 1,
     projectId: 1,
     status: stageList[1],
-    startDate: 1703724500,
-    endDate: 1716998400,
-    createdAt: 1703724500,
-    updatedAt: 1716998400,
+    startDate: 1703952000,
+    endDate: 1708617600,
+    createdAt: 1703952000,
+    updatedAt: 1708617600,
   },
   {
     id: 2,
     projectId: 1,
     status: stageList[2],
-    startDate: 1716998400,
-    endDate: 1717689600,
-    createdAt: 1716998400,
-    updatedAt: 1717689600,
+    startDate: 1708617600,
+    endDate: 1712218457,
+    createdAt: 1708617600,
+    updatedAt: 1712218457,
   },
   {
     id: 3,
     projectId: 1,
     status: stageList[3],
-    startDate: 1717689600,
-    endDate: 1718208000,
-    createdAt: 1717689600,
-    updatedAt: 1718208000,
+    startDate: 1712218457,
+    endDate: 1717776000,
+    createdAt: 1712218457,
+    updatedAt: 1717776000,
   },
   {
     id: 4,
     projectId: 1,
     status: stageList[4],
-    startDate: 1718208000,
+    startDate: 1717776000,
     endDate: 0,
-    createdAt: 1718208000,
+    createdAt: 1717776000,
     updatedAt: 0,
   },
   {
@@ -61,6 +63,14 @@ const dummyMilestone: IMilestone[] = [
 ];
 
 const ProjectMilestoneBlock = () => {
+  const getMilestonePeriod = (milestone: IMilestone) => {
+    const result: IDatePeriod = {
+      startTimeStamp: milestone.startDate,
+      endTimeStamp: milestone.endDate,
+    };
+    return result;
+  };
+
   const displayMilestoneDesktop = dummyMilestone.map((item) => {
     const stageColor = stageColorMap[item.status as ProjectStage];
     const numDays =
@@ -149,7 +159,15 @@ const ProjectMilestoneBlock = () => {
         </div>
       </div>
       {/* Info: (20240612 - Julian) Calendar */}
-      <div className="w-300px border py-10px md:px-10px">Calendar</div>
+      <div className="flex w-300px flex-col items-center py-10px md:px-10px">
+        <MilestoneCalendar
+          designingPeriod={getMilestonePeriod(dummyMilestone[0])}
+          developingPeriod={getMilestonePeriod(dummyMilestone[1])}
+          testingPeriod={getMilestonePeriod(dummyMilestone[2])}
+          sellingPeriod={getMilestonePeriod(dummyMilestone[3])}
+          soldPeriod={getMilestonePeriod(dummyMilestone[4])}
+        />
+      </div>
     </div>
   );
 };

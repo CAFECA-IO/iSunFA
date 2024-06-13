@@ -106,7 +106,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                   </div>
                 </div>
                 {/* Info: (20240612 - Julian) Divider */}
-                <hr className="border-px my-24px border-divider-stroke-lv-4" />
+                <hr className="my-24px border border-divider-stroke-lv-4" />
                 {/* Info: (20240612 - Julian) stage selection (mobile) */}
                 <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
                   <p className="font-semibold">Stage</p>
