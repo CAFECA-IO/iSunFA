@@ -74,7 +74,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           <ProjectSidebar projectId={projectId} />
           <div className="flex min-h-screen bg-gray-100">
-            <div className="mt-120px flex-1 md:ml-80px">
+            <div className="mb-60px mt-120px flex-1 md:ml-80px">
               <div className="flex flex-col px-16px md:px-60px">
                 <div className="flex w-full items-center justify-between">
                   {/* Info: (20240611 - Julian) Title */}

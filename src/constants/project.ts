@@ -45,7 +45,7 @@ export const stageColorMap = {
   },
   [ProjectStage.ARCHIVED]: {
     bg: 'bg-surface-neutral-mute',
-    text: 'text-text-neutral-mute',
-    border: 'border-stroke-neutral-mute',
+    text: 'text-surface-neutral-mute',
+    border: 'border-surface-neutral-mute',
   },
 };
