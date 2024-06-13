@@ -4,6 +4,8 @@ import companies from './seed_json/company.json';
 import admin from './seed_json/admin.json';
 import projects from './seed_json/project.json';
 import IncomeExpenses from './seed_json/income_expense.json';
+import roles from './seed_json/role.json';
+import user from './seed_json/user.json';
 
 const prisma = new PrismaClient();
 
@@ -14,11 +16,49 @@ const timestampInSeconds = (timestamp: number): number => {
   return timestamp;
 };
 
+async function createRole() {
+  await Promise.all(roles.map(async (role) => {
+    await prisma.role.create({
+      data: {
+        id: role.id,
+        name: role.name,
+        permissions: role.permissions,
+        createdAt: role.createdAt,
+        updatedAt: role.updatedAt,
+      },
+    });
+  }));
+}
+
+async function createUser() {
+    await prisma.user.create({
+      data: {
+        id: user.id,
+        name: user.name,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        credentialId: user.credentialId,
+        publicKey: user.publicKey,
+        algorithm: user.algorithm,
+        imageId: user.imageId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+  });
+}
+
 async function createAccount(nowTimestamp: number) {
   accounts.map(async (account) => {
     await prisma.account.create({
       data: {
-        ...account,
+        type: account.type,
+        liquidity: account.liquidity,
+        code: account.code,
+        name: account.name,
+        companyId: account.companyId,
+        system: account.system,
+        debit: account.debit,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
@@ -113,8 +153,10 @@ async function main() {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
-  await createAccount(nowTimestamp);
+  await createRole();
+  await createUser();
   await createCompany();
+  await createAccount(nowTimestamp);
   await createAdmin();
   await createProjects();
   await new Promise((resolve) => { setTimeout(resolve, 5000); });

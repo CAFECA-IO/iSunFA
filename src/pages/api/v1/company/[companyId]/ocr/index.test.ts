@@ -285,9 +285,10 @@ describe('POST OCR', () => {
   });
 
   describe('createJournalsAndOcrFromAichResults', () => {
+    const nowTimestamp = 0;
+    const companyId = 1;
+    const ocrId = 2;
     it('should return resultJson', async () => {
-      const nowTimestamp = 0;
-      const companyId = 1;
       const resultId = 'testResultId';
       const mockAichReturn = [
         {
@@ -309,6 +310,7 @@ describe('POST OCR', () => {
         projectId: null,
         contractId: null,
         companyId,
+        ocrId,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       };
@@ -323,6 +325,7 @@ describe('POST OCR', () => {
       jest.spyOn(repository, 'createJournalAndOcrInPrisma').mockResolvedValue(mockJournal);
 
       const resultJson = await module.createJournalsAndOcrFromAichResults(
+        ocrId,
         companyId,
         mockAichReturn
       );
@@ -331,7 +334,6 @@ describe('POST OCR', () => {
     });
 
     it('should throw error when createJournalAndOcrInPrisma failed', async () => {
-      const companyId = 1;
       const mockAichReturn = [
         {
           resultStatus: {
@@ -349,7 +351,7 @@ describe('POST OCR', () => {
         .mockRejectedValue(new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR));
 
       await expect(
-        module.createJournalsAndOcrFromAichResults(companyId, mockAichReturn)
+        module.createJournalsAndOcrFromAichResults(companyId, ocrId, mockAichReturn)
       ).rejects.toThrow(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     });
   });
@@ -373,7 +375,6 @@ describe('POST OCR', () => {
       const mockOcrDbResult: Ocr = {
         id: 1,
         companyId,
-        journalId: null,
         aichResultId: resultId,
         status: ProgressStatus.SUCCESS,
         imageUrl: 'testImageUrl',
@@ -533,7 +534,6 @@ describe('GET OCR', () => {
         id: 1,
         aichResultId: mockAichId,
         companyId: mockCompanyId,
-        journalId: null,
         status: "success",
         imageUrl: 'testImageUrl',
         imageName: 'testImageName',
