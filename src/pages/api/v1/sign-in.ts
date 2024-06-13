@@ -22,7 +22,7 @@ export default async function handler(
     const { authentication, challenge } = req.body;
 
     // eslint-disable-next-line no-console
-    console.log('invitation in SignIn', req.query.invitation);
+    console.log('invitation in SignIn API', req.query.invitation);
 
     const origins = getDomains();
 

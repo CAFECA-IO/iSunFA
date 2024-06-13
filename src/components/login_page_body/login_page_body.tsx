@@ -6,12 +6,14 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
+import { pageQueries } from '@/interfaces/url_query';
 
 interface ILoginPageBodyProps {
   invitation?: string;
+  action?: string;
 }
 
-const LoginPageBody = ({ invitation }: ILoginPageBodyProps) => {
+const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
     registerModalDataHandler,
@@ -39,6 +41,15 @@ const LoginPageBody = ({ invitation }: ILoginPageBodyProps) => {
       // registerClickHandler();
     }
   };
+
+  useEffect(() => {
+    if (action === pageQueries.loginPage.actions.register) {
+      registerModalDataHandler({ invitation });
+      registerModalVisibilityHandler();
+    } else if (action === pageQueries.loginPage.actions.login) {
+      logInClickHandler();
+    }
+  }, [action]);
 
   useEffect(() => {
     /* Info: possible error code when login & register (20240522 - Shirley)

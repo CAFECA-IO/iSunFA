@@ -7,12 +7,9 @@ import LoginPageBody from '@/components/login_page_body/login_page_body';
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { GetServerSideProps } from 'next';
+import { ILoginPageProps } from '@/interfaces/page_props';
 
-interface ILoginPageProps {
-  invitation: string;
-}
-
-const LoginPage = ({ invitation }: ILoginPageProps) => {
+const LoginPage = ({ invitation, action }: ILoginPageProps) => {
   // eslint-disable-next-line no-console
   console.log('invitation', invitation);
   const router = useRouter();
@@ -51,7 +48,7 @@ const LoginPage = ({ invitation }: ILoginPageProps) => {
           <NavBar />
         </div>
         <div className="pt-16">
-          <LoginPageBody invitation={invitation} />
+          <LoginPageBody invitation={invitation} action={action} />
         </div>
       </div>
     </>
@@ -59,10 +56,12 @@ const LoginPage = ({ invitation }: ILoginPageProps) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  const { invitation = '' } = query;
+  const { invitation = '', action = '' } = query;
+
   return {
     props: {
       invitation: invitation as string,
+      action: action as string,
       ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };

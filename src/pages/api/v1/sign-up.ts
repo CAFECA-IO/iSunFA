@@ -22,7 +22,7 @@ export default async function handler(
     }
 
     // eslint-disable-next-line no-console
-    console.log('invitation in SignUp', req.query.invitation);
+    console.log('invitation in SignUp API', req.query.invitation);
 
     const { registration } = req.body;
 
