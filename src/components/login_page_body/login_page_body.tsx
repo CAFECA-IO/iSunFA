@@ -7,12 +7,21 @@ import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
 
-const LoginPageBody = () => {
+interface ILoginPageBodyProps {
+  invitation?: string;
+}
+
+const LoginPageBody = ({ invitation }: ILoginPageBodyProps) => {
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
-  const { registerModalVisibilityHandler, passKeySupportModalVisibilityHandler, toastHandler } =
-    useGlobalCtx();
+  const {
+    registerModalDataHandler,
+    registerModalVisibilityHandler,
+    passKeySupportModalVisibilityHandler,
+    toastHandler,
+  } = useGlobalCtx();
 
   const registerClickHandler = async () => {
+    registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
   };
 
@@ -22,7 +31,7 @@ const LoginPageBody = () => {
 
   const logInClickHandler = async () => {
     try {
-      await signIn();
+      await signIn({ invitation });
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console

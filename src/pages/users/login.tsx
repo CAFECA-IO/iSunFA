@@ -4,11 +4,17 @@ import React, { useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import LoginPageBody from '@/components/login_page_body/login_page_body';
-import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { GetServerSideProps } from 'next';
 
-const LoginPage = () => {
+interface ILoginPageProps {
+  invitation: string;
+}
+
+const LoginPage = ({ invitation }: ILoginPageProps) => {
+  // eslint-disable-next-line no-console
+  console.log('invitation', invitation);
   const router = useRouter();
   const { signedIn } = useUserCtx();
 
@@ -45,19 +51,21 @@ const LoginPage = () => {
           <NavBar />
         </div>
         <div className="pt-16">
-          <LoginPageBody />
+          <LoginPageBody invitation={invitation} />
         </div>
       </div>
     </>
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common'])),
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
+export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
+  const { invitation = '' } = query;
+  return {
+    props: {
+      invitation: invitation as string,
+      ...(await serverSideTranslations(locale as string, ['common'])),
+    },
+  };
+};
 
 export default LoginPage;

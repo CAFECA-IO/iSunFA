@@ -127,7 +127,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    username: '',
+    invitation: '',
   });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
@@ -484,6 +484,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <RegisterFormModal
         isModalVisible={isRegisterModalVisible}
         modalVisibilityHandler={registerModalVisibilityHandler}
+        data={registerModalData}
       />
 
       <AddBookmarkModal

@@ -2,7 +2,7 @@ import { SortOptions } from '@/constants/display';
 import { AllReportTypesKey } from '@/interfaces/report_type';
 
 export interface RegisterFormModalProps {
-  username: string;
+  invitation?: string;
 }
 
 export interface BookmarkItem {
