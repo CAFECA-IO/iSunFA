@@ -4,10 +4,16 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IUser } from '@/interfaces/user';
 import { IAdmin } from '@/interfaces/admin';
 import { RoleName } from '@/constants/role_name';
+import { ICompany } from '@/interfaces/company';
 import { getSession } from './get_session';
 import { getProjectById } from './repo/project.repo';
 import { timestampInSeconds } from './common';
 import { getInvitationByCode } from './repo/invitation.repo';
+import {
+  getAdminByCompanyIdAndUserId,
+  getAdminByCompanyIdAndUserIdAndRoleName,
+  getAdminById,
+} from './repo/admin.repo';
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
@@ -35,17 +41,10 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   if (!companyId) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const admin: IAdmin = (await prisma.admin.findFirst({
-    where: {
-      userId,
-      companyId,
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  })) as IAdmin;
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin: IAdmin = await getAdminByCompanyIdAndUserId(companyId, userId);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -61,24 +60,33 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   if (!companyId) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const admin: IAdmin = (await prisma.admin.findFirst({
-    where: {
-      userId,
-      companyId,
-      role: {
-        name: roleName,
-      },
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  })) as IAdmin;
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin: IAdmin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return session;
+}
+
+export async function checkCompanyUserMatch(companyId: number, userId: number): Promise<ICompany> {
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  if (!admin) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  return admin.company;
+}
+
+export async function checkCompanyAdminMatch(companyId: number, adminId: number): Promise<IAdmin> {
+  const admin = await getAdminById(adminId);
+  if (admin.company.id !== companyId) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  return admin;
 }
 
 export async function checkProjectCompanyMatch(projectId: number, companyId: number) {

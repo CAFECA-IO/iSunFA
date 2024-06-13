@@ -71,13 +71,13 @@ beforeEach(async () => {
   });
   const role = await prisma.role.findUnique({
     where: {
-      name: ROLE_NAME.SUPER_ADMIN,
+      name: ROLE_NAME.OWNER,
     },
   });
   if (!role) {
     await prisma.role.create({
       data: {
-        name: ROLE_NAME.SUPER_ADMIN,
+        name: ROLE_NAME.OWNER,
         permissions: ['hihi'],
         createdAt: 0,
         updatedAt: 0,
