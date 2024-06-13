@@ -134,7 +134,7 @@ const Notification = ({ mobileMenuIsOpen, setMobileMenuIsOpen }: INotificationPr
           : 'invisible -translate-y-36rem opacity-0'
       } lg:hidden`}
     >
-      <div className="absolute left-0 top-14 z-10 h-450px w-screen bg-white shadow">
+      <div className="absolute left-0 top-14 z-10 h-screen w-screen bg-white shadow sm:h-450px">
         <div className="flex w-full items-center justify-between p-5">
           <button
             onClick={mobileClickHandler}
