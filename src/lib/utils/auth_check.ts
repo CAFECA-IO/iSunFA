@@ -13,7 +13,7 @@ import {
   getAdminByCompanyIdAndUserId,
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
-} from './repo/admin.repo';
+} from '@/lib/utils/repo/admin.repo';
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
