@@ -3,6 +3,7 @@ import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
 import { ROLE_NAME } from '@/constants/role_name';
+import { deleteClientById } from '@/lib/utils/repo/client.repo';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -156,7 +157,7 @@ describe('Client API Handler Tests', () => {
     req.method = 'POST';
     req.headers.userid = '1';
     req.body = {
-      name: 'Test Client22',
+      name: 'Test Client me',
       taxId: '12345600',
       favorite: false,
     };
@@ -177,6 +178,7 @@ describe('Client API Handler Tests', () => {
       message: expect.any(String),
       payload: expectedClient,
     });
+    await deleteClientById((res.json as jest.Mock).mock.calls[0][0].payload.id);
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
