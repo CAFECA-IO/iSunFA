@@ -1,10 +1,11 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/client';
 import { IAdmin } from '@/interfaces/admin';
-import { checkAdmin, checkOwner } from '@/lib/utils/auth_check';
+import { checkAdmin, checkCompanyAdminMatch, checkRole } from '@/lib/utils/auth_check';
+import { ROLE_NAME, RoleName } from '@/constants/role_name';
+import { deleteAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,104 +13,42 @@ export default async function handler(
 ) {
   try {
     const { adminId } = req.query;
-    const adminIdNumber = Number(adminId);
+    const adminIdNum = await convertStringToNumber(adminId);
     if (req.method === 'GET') {
-      await checkAdmin(req, res);
-      const admin: IAdmin = (await prisma.admin.findUnique({
-        where: {
-          id: adminIdNumber,
-        },
-        include: {
-          user: true,
-          company: true,
-          role: true,
-        },
-      })) as IAdmin;
-      if (!admin) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
+      const { companyId } = await checkAdmin(req, res);
+      const admin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_GET, admin);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
     } else if (req.method === 'PUT') {
-      const session = await checkOwner(req, res);
-      const { companyId } = session;
       const { status, roleName } = req.body;
-      if (!status && !roleName) {
+      if (typeof status !== 'boolean' && !roleName) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const getAdmin: IAdmin = (await prisma.admin.findUnique({
-        where: {
-          id: adminIdNumber,
-        },
-        include: {
-          user: true,
-          company: true,
-          role: true,
-        },
-      })) as IAdmin;
-      if (!getAdmin) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
+      const { companyId } = session;
+      const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
+      let updatedRoleName;
+      if (!roleName) {
+        updatedRoleName = getAdmin.role.name;
+      } else {
+        updatedRoleName = roleName;
       }
-      if (getAdmin.company.id !== companyId) {
-        throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+      const updatedRoleNameStr = updatedRoleName;
+      if (!Object.values(RoleName).includes(updatedRoleNameStr)) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
       }
-      const updatedAdmin: IAdmin = (await prisma.admin.update({
-        where: {
-          id: adminIdNumber,
-        },
-        data: {
-          status,
-          role: {
-            connect: {
-              name: roleName,
-            },
-          },
-        },
-        include: {
-          user: true,
-          company: true,
-          role: true,
-        },
-      })) as IAdmin;
-
+      const updatedAdmin: IAdmin = await updateAdminById(getAdmin.id, status, updatedRoleName);
       const { httpCode, result } = formatApiResponse<IAdmin>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
         updatedAdmin
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
-      const session = await checkOwner(req, res);
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { companyId } = session;
-      const getAdmin: IAdmin = (await prisma.admin.findUnique({
-        where: {
-          id: adminIdNumber,
-        },
-        include: {
-          user: true,
-          company: true,
-          role: true,
-        },
-      })) as IAdmin;
-      if (!getAdmin) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-      if (getAdmin.company.id !== companyId) {
-        throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-      }
-      const deletedAdmin: IAdmin = (await prisma.admin.delete({
-        where: {
-          id: adminIdNumber,
-        },
-        include: {
-          user: true,
-          company: true,
-          role: true,
-        },
-      })) as IAdmin;
-      if (!deletedAdmin) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
+      const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
+      const deletedAdmin: IAdmin = await deleteAdminById(getAdmin.id);
       const { httpCode, result } = formatApiResponse<IAdmin>(
         STATUS_MESSAGE.SUCCESS_DELETE,
         deletedAdmin

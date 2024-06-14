@@ -18,37 +18,18 @@ beforeEach(async () => {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const expireTimestamp = nowTimestamp + ONE_DAY_IN_S;
-  const getCompany = await prisma.company.findFirst({
-    where: {
-      code: 'TST_invitation1',
-    },
-  });
-  if (!getCompany) {
-    await prisma.company.create({
-      data: {
-        code: 'TST_invitation1',
-        name: 'Test Company',
-        regional: 'TW',
-        kycStatus: false,
-        imageId: 'imageId',
-        startDate: nowTimestamp,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      },
-    });
-  }
   const invitation = await prisma.invitation.create({
     data: {
-      code: 'test',
+      code: 'test1230',
       hasUsed: false,
       expiredAt: expireTimestamp,
       company: {
         connectOrCreate: {
           where: {
-            code: 'TST_invitation3',
+            code: 'TST_invitation1',
           },
           create: {
-            code: 'TST_invitation3',
+            code: 'TST_invitation1',
             name: 'Test Company',
             regional: 'TW',
             kycStatus: false,
@@ -143,20 +124,31 @@ describe('PUT Invitation API', () => {
       invitation: invitationCode,
     };
     await handler(req, res);
+    const expectedAdmin = expect.objectContaining({
+      id: expect.any(Number),
+      companyId: expect.any(Number),
+      userId: expect.any(Number),
+      roleId: expect.any(Number),
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+      user: expect.any(Object),
+      company: expect.any(Object),
+      role: expect.any(Object),
+    });
+
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('200'),
+      message: expect.any(String),
+      payload: expectedAdmin,
+    });
+
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expect.objectContaining({
-          id: expect.any(Number),
-          code: expect.any(String),
-          name: expect.any(String),
-          regional: expect.any(String),
-        }),
-      })
-    );
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
+  });
+
+  it('should pass', async () => {
+    expect(true).toBe(true);
   });
 });

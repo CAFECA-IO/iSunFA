@@ -1,9 +1,10 @@
-import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompanyKYC } from '@/interfaces/company_kyc';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { checkAdmin } from '@/lib/utils/auth_check';
+import { formatApiResponse } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
+import { createCompanyKYC } from '@/lib/utils/repo/company_kyc';
 import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -21,10 +22,8 @@ export default async function handler(
   try {
     // Info: (20240419 - Jacky) K012001 - POST /kyc/entity
     if (req.method === 'POST') {
-      if (!req.headers.userid) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-      const companyIdNum = Number(req.query.companyId);
+      const session = await checkAdmin(req, res);
+      const { companyId } = session;
       let files: formidable.Files;
       let fields: formidable.Fields;
       try {
@@ -85,37 +84,27 @@ export default async function handler(
         taxCertificateId: '123',
         representativeIdCardId: '123',
       };
-      const now = Date.now();
-      const nowTimestamp = timestampInSeconds(now);
-      const companyKYC: ICompanyKYC = await prisma.companyKYC.create({
-        data: {
-          company: {
-            connect: {
-              id: companyIdNum,
-            },
-          },
-          legalName: legalName[0],
-          country: country[0],
-          city: city[0],
-          address: address[0],
-          zipCode: zipCode[0],
-          representativeName: representativeName[0],
-          structure: structure[0],
-          registrationNumber: registrationNumber[0],
-          registrationDate: registrationDate[0],
-          industry: industry[0],
-          contactPerson: contactPerson[0],
-          contactPhone: contactPhone[0],
-          contactEmail: contactEmail[0],
-          website: website[0],
-          representativeIdType: representativeIdType[0],
-          registrationCertificateId,
-          taxCertificateId,
-          representativeIdCardId,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-      });
+      const companyKYC: ICompanyKYC = await createCompanyKYC(
+        companyId,
+        legalName[0],
+        country[0],
+        city[0],
+        address[0],
+        zipCode[0],
+        representativeName[0],
+        structure[0],
+        registrationNumber[0],
+        registrationDate[0],
+        industry[0],
+        contactPerson[0],
+        contactPhone[0],
+        contactEmail[0],
+        website[0],
+        representativeIdType[0],
+        registrationCertificateId,
+        taxCertificateId,
+        representativeIdCardId
+      );
       const { httpCode, result } = formatApiResponse<ICompanyKYC>(
         STATUS_MESSAGE.CREATED,
         companyKYC

@@ -1,10 +1,11 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/client';
-import { checkUser } from '@/lib/utils/auth_check';
+import { checkRole } from '@/lib/utils/auth_check';
+import { ROLE_NAME } from '@/constants/role_name';
+import { createUser, listUser } from '@/lib/utils/repo/user.repo';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,22 +13,9 @@ export default async function handler(
 ) {
   try {
     // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
-    const session = await checkUser(req, res);
-    const { userId } = session;
-    const admin = await prisma.admin.findMany({
-      where: {
-        userId,
-      },
-      select: {
-        role: true,
-      },
-    });
-    const roleNames: string[] = admin.map((item) => item.role.name);
-    if (!roleNames.includes('SUPER_ADMIN')) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
+    await checkRole(req, res, ROLE_NAME.SUPER_ADMIN);
     if (req.method === 'GET') {
-      const userList: IUser[] = await prisma.user.findMany();
+      const userList: IUser[] = await listUser();
       const { httpCode, result } = formatApiResponse<IUser[]>(
         STATUS_MESSAGE.SUCCESS_LIST,
         userList
@@ -37,23 +25,19 @@ export default async function handler(
       // Handle POST request to create a new user
       const { name, fullName, email, phone, credentialId, publicKey, algorithm, imageId } =
         req.body;
-      const now = Date.now();
-      const nowTimestamp = timestampInSeconds(now);
-      const createdUser: IUser = await prisma.user.create({
-        data: {
-          name,
-          fullName,
-          email,
-          phone,
-          credentialId,
-          publicKey,
-          algorithm,
-          imageId,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-      });
-
+      if (!name || !credentialId || !publicKey || !algorithm) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
+      const createdUser: IUser = await createUser(
+        name,
+        credentialId,
+        publicKey,
+        algorithm,
+        imageId,
+        fullName,
+        email,
+        phone
+      );
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
       res.status(httpCode).json(result);
     } else {

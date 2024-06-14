@@ -1,4 +1,4 @@
-enum Role {
+export enum RoleName {
   SUPER_ADMIN = 'Super Admin',
   ADMIN = 'Admin',
   OWNER = 'Owner',
@@ -8,4 +8,4 @@ enum Role {
   VIEWER = 'Viewer',
 }
 
-export const ROLE = Role;
+export const ROLE_NAME = RoleName;

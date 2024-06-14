@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { checkAdminSession } from '@/lib/utils/session_check';
+import { checkAdmin } from '@/lib/utils/auth_check';
 import { ONE_DAY_IN_MS } from '@/constants/time';
 import { ProjectStage } from '@/constants/project';
 
@@ -94,7 +94,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const session = await checkAdminSession(req, res);
+      const session = await checkAdmin(req, res);
       const { companyId } = session;
       const targetTime = new Date().getTime();
       const profitChange = await getProfitChange(targetTime, companyId);

@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/admin/[adminId]/index';
 import prisma from '@/client';
-import { ROLE } from '@/constants/role';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -47,10 +47,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.OWNER,
           },
           create: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.OWNER,
             permissions: ['hihi'],
             createdAt: 0,
             updatedAt: 0,
@@ -71,13 +71,13 @@ beforeEach(async () => {
   });
   const role = await prisma.role.findUnique({
     where: {
-      name: 'test_admin',
+      name: ROLE_NAME.OWNER,
     },
   });
   if (!role) {
     await prisma.role.create({
       data: {
-        name: 'test_admin',
+        name: ROLE_NAME.OWNER,
         permissions: ['hihi'],
         createdAt: 0,
         updatedAt: 0,
@@ -92,7 +92,6 @@ beforeEach(async () => {
     body: {},
     session: { userId: admin.user.id, companyId: admin.company.id },
   } as unknown as jest.Mocked<NextApiRequest>;
-
   res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
@@ -137,15 +136,6 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        name: 'test_admin',
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('API Handler Tests', () => {
@@ -180,8 +170,8 @@ describe('API Handler Tests', () => {
   it('should update admin when PUT method is used and valid data is provided', async () => {
     req.method = 'PUT';
     req.body = {
-      status: false,
-      roleName: 'test_admin',
+      status: true,
+      roleName: ROLE_NAME.OWNER,
     };
     req.query = { adminId: admin.id.toString() };
     await handler(req, res);
@@ -259,7 +249,7 @@ describe('API Handler Tests', () => {
     req.query = { adminId: '-1' };
     req.body = {
       status: false,
-      roleName: ROLE.VIEWER,
+      roleName: ROLE_NAME.VIEWER,
     };
     await handler(req, res);
 
