@@ -3,6 +3,7 @@ import handler from '@/pages/api/v1/company/index';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -11,7 +12,7 @@ let admin: IAdmin;
 beforeEach(async () => {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  admin = await prisma.admin.create({
+  const createdAdmin = await prisma.admin.create({
     data: {
       user: {
         connectOrCreate: {
@@ -71,6 +72,7 @@ beforeEach(async () => {
       company: true,
     },
   });
+  admin = await formatAdmin(createdAdmin);
 
   req = {
     headers: {},

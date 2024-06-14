@@ -3,13 +3,14 @@ import handler from '@/pages/api/v1/company/[companyId]/admin/[adminId]/index';
 import prisma from '@/client';
 import { IAdmin } from '@/interfaces/admin';
 import { ROLE_NAME } from '@/constants/role_name';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let admin: IAdmin;
 
 beforeEach(async () => {
-  admin = await prisma.admin.create({
+  const createdAdmin = await prisma.admin.create({
     data: {
       user: {
         connectOrCreate: {
@@ -69,6 +70,7 @@ beforeEach(async () => {
       role: true,
     },
   });
+  admin = await formatAdmin(createdAdmin);
   const role = await prisma.role.findUnique({
     where: {
       name: ROLE_NAME.OWNER,
