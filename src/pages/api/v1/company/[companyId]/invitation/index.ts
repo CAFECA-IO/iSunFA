@@ -1,13 +1,12 @@
-import prisma from '@/client';
+import { ROLE_NAME } from '@/constants/role_name';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ONE_DAY_IN_S } from '@/constants/time';
-import { ICompany } from '@/interfaces/company';
 import { IInvitation } from '@/interfaces/invitation';
 import { IResponseData } from '@/interfaces/response_data';
-import { IUser } from '@/interfaces/user';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
-import { getSession } from '@/lib/utils/get_session';
+import { checkRole } from '@/lib/utils/auth_check';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import MailService from '@/lib/utils/mail_service';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { createInvitation } from '@/lib/utils/repo/invitation.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { SendMailOptions } from 'nodemailer';
 
@@ -21,77 +20,17 @@ function generateCode() {
   return invitationCode;
 }
 
-async function createInvitation(
-  roleIdNum: number,
-  companyIdNum: number,
-  userIdNum: number,
-  code: string,
-  email: string
-): Promise<IInvitation> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  const invitation: IInvitation = await prisma.invitation.create({
-    data: {
-      role: {
-        connect: {
-          id: roleIdNum,
-        },
-      },
-      company: {
-        connect: {
-          id: companyIdNum,
-        },
-      },
-      createdUser: {
-        connect: {
-          id: userIdNum,
-        },
-      },
-      code,
-      email,
-      hasUsed: false,
-      expiredAt: nowTimestamp + ONE_DAY_IN_S,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    },
-  });
-  return invitation;
-}
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IInvitation | IInvitation[]>>
 ) {
   try {
     if (req.method === 'POST') {
-      // Extract the necessary data from the request body
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { roleId, emails } = req.body;
-      const session = await getSession(req, res);
-      const { companyId } = session;
-      const { userId } = session;
-
-      const userIdNum = Number(userId);
-      const companyIdNum = Number(companyId);
-      const roleIdNum = Number(roleId);
-      // Perform any necessary validation on the data
-      const user: IUser = (await prisma.user.findUnique({
-        where: {
-          id: userIdNum,
-        },
-      })) as IUser;
-      if (!user) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-      const company: ICompany = (await prisma.company.findUnique({
-        where: {
-          id: companyIdNum,
-        },
-      })) as ICompany;
-      if (!company) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-      // Todo: (20240520 - Jacky) Check the user has the necessary permissions to create an invitation code
-      // If the user does not have the necessary permissions, return a 403 Forbidden response
+      const { userId, companyId } = session;
+      const roleIdNum = await convertStringToNumber(roleId);
+      const company = await getCompanyById(companyId);
       if (!emails) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
@@ -101,7 +40,7 @@ export default async function handler(
       //
       for (let i = 0; i < emails.length; i += 1) {
         const code = generateCode();
-        const promise = createInvitation(roleIdNum, companyIdNum, userIdNum, code, emails[i]);
+        const promise = createInvitation(roleIdNum, companyId, userId, code, emails[i]);
         InvitationPromises.push(promise);
       }
       const invitations = await Promise.all(InvitationPromises);

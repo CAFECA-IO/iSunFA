@@ -24,89 +24,174 @@ export interface IDashboardProvider {
 }
 
 export const BookmarkAvailableList: Record<string, BookmarkItem> = {
-  Schedule: {
-    name: 'Schedule',
-    icon: (
+  addNewContract: {
+    id: 'addNewContract',
+    name: 'Add New Contract',
+    iconOnModal: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
+        width="22"
+        height="22"
         fill="none"
-        viewBox="0 0 16 16"
+        viewBox="0 0 22 22"
       >
-        <g clipPath="url(#clip0_385_88467)">
-          <g clipPath="url(#clip1_385_88467)">
-            <path
-              fill="#002462"
-              fillRule="evenodd"
-              d="M4 0c.631 0 1.143.512 1.143 1.143v1.143h5.714V1.143a1.143 1.143 0 012.286 0v1.143h1.143C15.233 2.286 16 3.053 16 4v1.143H0V4c0-.947.768-1.714 1.714-1.714h1.143V1.143C2.857.512 3.37 0 4 0z"
-              clipRule="evenodd"
-            ></path>
-            <path
-              fill="#002462"
-              d="M0 5.143h16v9.143c0 .947-.768 1.714-1.714 1.714H1.714A1.714 1.714 0 010 14.286V5.143z"
-            ></path>
-            <path
-              fill="#FFA502"
-              d="M8.29 6.938a.572.572 0 00-.808.245L6.633 8.89l-.001.002-1.889.277H4.74a.572.572 0 00-.316.967l.006.006 1.365 1.307a.288.288 0 00-.007.03l-.315 1.872a.572.572 0 00.844.609l1.664-.881a.051.051 0 01.032 0l1.664.88a.572.572 0 00.844-.604l-.265-1.87a.282.282 0 00-.02-.071l1.326-1.26a.573.573 0 00-.314-.985l-1.885-.287H9.36L8.51 7.17l-.003-.004a.572.572 0 00-.215-.228z"
-            ></path>
-          </g>
+        <g>
+          <path
+            stroke="#314362"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M12.833 2.08v3.787c0 .513 0 .77.1.966a.917.917 0 00.4.4c.197.1.454.1.967.1h3.786M11 16.5V11m-2.75 2.75h5.5m-.917-11.917H8.067c-1.54 0-2.31 0-2.899.3a2.75 2.75 0 00-1.202 1.202c-.3.588-.3 1.358-.3 2.898v9.534c0 1.54 0 2.31.3 2.898a2.75 2.75 0 001.202 1.202c.588.3 1.359.3 2.899.3h5.866c1.54 0 2.31 0 2.899-.3a2.75 2.75 0 001.202-1.202c.3-.588.3-1.358.3-2.898V7.333l-5.5-5.5z"
+          ></path>
         </g>
-        <defs>
-          <clipPath id="clip0_385_88467">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88467">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="22"
+        height="22"
+        fill="none"
+        viewBox="0 0 22 22"
+      >
+        <g>
+          <path
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M12.833 2.08v3.787c0 .513 0 .77.1.966a.917.917 0 00.4.4c.197.1.454.1.967.1h3.786M11 16.5V11m-2.75 2.75h5.5m-.917-11.917H8.067c-1.54 0-2.31 0-2.899.3a2.75 2.75 0 00-1.202 1.202c-.3.588-.3 1.358-.3 2.898v9.534c0 1.54 0 2.31.3 2.898a2.75 2.75 0 001.202 1.202c.588.3 1.359.3 2.899.3h5.866c1.54 0 2.31 0 2.899-.3a2.75 2.75 0 001.202-1.202c.3-.588.3-1.358.3-2.898V7.333l-5.5-5.5z"
+          ></path>
+        </g>
+      </svg>
+    ),
+
+    link: ISUNFA_ROUTE.PROJECT_LIST,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  addNewEmployees: {
+    id: 'addNewEmployees',
+    name: 'Add New Employees',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#314362"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M15.833 17.5v-5m-2.5 2.5h5M10 12.5H6.667c-1.553 0-2.33 0-2.943.254a3.334 3.334 0 00-1.804 1.804c-.253.612-.253 1.389-.253 2.942m11.25-14.758a3.334 3.334 0 010 6.182m-1.667-3.09a3.333 3.333 0 11-6.667 0 3.333 3.333 0 016.667 0z"
+        ></path>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#fff"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M15.833 17.5v-5m-2.5 2.5h5M10 12.5H6.667c-1.553 0-2.33 0-2.943.254a3.334 3.334 0 00-1.804 1.804c-.253.612-.253 1.389-.253 2.942m11.25-14.758a3.334 3.334 0 010 6.182m-1.667-3.09a3.333 3.333 0 11-6.667 0 3.333 3.333 0 016.667 0z"
+        ></path>
       </svg>
     ),
 
     link: '', // TODO: link (20240424 - Shirley)
-
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
-  'Accounting Event': {
-    name: 'Accounting Event',
-    icon: (
+  addNewPayroll: {
+    id: 'addNewPayroll',
+    name: 'Add New Payroll',
+    iconOnModal: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
+        width="20"
+        height="20"
         fill="none"
-        viewBox="0 0 16 16"
+        viewBox="0 0 20 20"
       >
-        <g clipPath="url(#clip0_385_88490)">
-          <g fillRule="evenodd" clipPath="url(#clip1_385_88490)" clipRule="evenodd">
-            <path
-              fill="#FFA502"
-              d="M13.143 0H8v8H0v5.143A2.857 2.857 0 002.857 16H8V8h8V2.857A2.857 2.857 0 0013.143 0z"
-            ></path>
-            <path
-              fill="#002462"
-              d="M2.857 0A2.857 2.857 0 000 2.857V8h8v8h5.143A2.857 2.857 0 0016 13.143V8H8V0H2.857z"
-            ></path>
-            <path
-              fill="#FFA502"
-              d="M4.466 2.4a.714.714 0 00-1.428 0v.714h-.715a.714.714 0 000 1.428h.715v.715a.714.714 0 101.428 0v-.715h.714a.714.714 0 000-1.428h-.714v-.715zm6.563 7.922a.714.714 0 100 1.43h2.286a.714.714 0 100-1.43h-2.286zm-.714 3c0-.394.32-.714.714-.714h2.286a.714.714 0 110 1.429h-2.286a.714.714 0 01-.714-.715z"
-            ></path>
-            <path
-              fill="#002462"
-              d="M10.315 3.828c0-.394.32-.714.714-.714h2.286a.714.714 0 010 1.428h-2.286a.714.714 0 01-.714-.714zm-8.28 6.704a.714.714 0 011.01 0l.707.706.706-.706a.714.714 0 011.01 1.01l-.706.706.706.707a.714.714 0 01-1.01 1.01l-.706-.707-.707.707a.715.715 0 01-1.01-1.01l.706-.707-.706-.706a.714.714 0 010-1.01z"
-            ></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_88490">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88490">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
+        <path
+          stroke="#314362"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M10 14.167a4.167 4.167 0 108.333 0 4.167 4.167 0 00-8.333 0zm0 0c0-.938.31-1.804.833-2.5v-7.5m-.833 10c0 .688.167 1.336.462 1.908-.702.593-2.324 1.008-4.212 1.008-2.531 0-4.583-.746-4.583-1.666V4.167m9.166 0c0 .92-2.052 1.666-4.583 1.666s-4.583-.746-4.583-1.666m9.166 0c0-.92-2.052-1.667-4.583-1.667s-4.583.746-4.583 1.667m0 7.5c0 .92 2.052 1.666 4.583 1.666 1.824 0 3.4-.387 4.137-.948m.446-4.468c0 .92-2.052 1.666-4.583 1.666s-4.583-.746-4.583-1.666"
+        ></path>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#fff"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M10 14.167a4.167 4.167 0 108.333 0 4.167 4.167 0 00-8.333 0zm0 0c0-.938.31-1.804.833-2.5v-7.5m-.833 10c0 .688.167 1.336.462 1.908-.702.593-2.324 1.008-4.212 1.008-2.531 0-4.583-.746-4.583-1.666V4.167m9.166 0c0 .92-2.052 1.666-4.583 1.666s-4.583-.746-4.583-1.666m9.166 0c0-.92-2.052-1.667-4.583-1.667s-4.583.746-4.583 1.667m0 7.5c0 .92 2.052 1.666 4.583 1.666 1.824 0 3.4-.387 4.137-.948m.446-4.468c0 .92-2.052 1.666-4.583 1.666s-4.583-.746-4.583-1.666"
+        ></path>
+      </svg>
+    ),
+
+    link: '', // TODO: link (20240424 - Shirley)
+    added: false,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  addNewJournal: {
+    id: 'addNewJournal',
+    name: 'Add New Journal',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#314362"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M6.667 6.667v-.834m0 4.584v-.834m0 4.584v-.834m-1 3.334h8.666c1.4 0 2.1 0 2.635-.273a2.5 2.5 0 001.093-1.092c.272-.535.272-1.235.272-2.635V7.333c0-1.4 0-2.1-.272-2.635a2.5 2.5 0 00-1.093-1.092c-.535-.273-1.235-.273-2.635-.273H5.667c-1.4 0-2.1 0-2.635.273a2.5 2.5 0 00-1.093 1.092c-.272.535-.272 1.235-.272 2.635v5.334c0 1.4 0 2.1.272 2.635a2.5 2.5 0 001.093 1.092c.534.273 1.235.273 2.635.273z"
+        ></path>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#fff"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M6.667 6.667v-.834m0 4.584v-.834m0 4.584v-.834m-1 3.334h8.666c1.4 0 2.1 0 2.635-.273a2.5 2.5 0 001.093-1.092c.272-.535.272-1.235.272-2.635V7.333c0-1.4 0-2.1-.272-2.635a2.5 2.5 0 00-1.093-1.092c-.535-.273-1.235-.273-2.635-.273H5.667c-1.4 0-2.1 0-2.635.273a2.5 2.5 0 00-1.093 1.092c-.272.535-.272 1.235-.272 2.635v5.334c0 1.4 0 2.1.272 2.635a2.5 2.5 0 001.093 1.092c.534.273 1.235.273 2.635.273z"
+        ></path>
       </svg>
     ),
 
@@ -115,323 +200,428 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
-  Milestone: {
-    name: 'Milestone',
-    icon: (
+  cameraScanner: {
+    id: 'cameraScanner',
+    name: 'Camera Scanner',
+    iconOnModal: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
+        width="20"
+        height="20"
         fill="none"
-        viewBox="0 0 16 16"
+        viewBox="0 0 20 20"
       >
         <path
-          fill="#002462"
-          fillRule="evenodd"
-          d="M3.302.128a.571.571 0 10-.511 1.022l.256.128v8.914l-.256.128a.571.571 0 10.511 1.022l10.193-5.096a.571.571 0 000-1.022L3.302.128z"
-          clipRule="evenodd"
-        ></path>
-        <path
-          fill="#FFA502"
-          fillRule="evenodd"
-          d="M3.047.05c.473 0 .857.385.857.858v14.184a.857.857 0 11-1.715 0V.908c0-.473.384-.857.858-.857z"
-          clipRule="evenodd"
+          stroke="#314362"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M18.333 9.583v2.584c0 1.867 0 2.8-.363 3.513a3.334 3.334 0 01-1.457 1.457c-.713.363-1.646.363-3.513.363H7c-1.867 0-2.8 0-3.513-.363A3.333 3.333 0 012.03 15.68c-.363-.713-.363-1.646-.363-3.513V7.833c0-1.866 0-2.8.363-3.513.32-.627.83-1.137 1.457-1.457C4.2 2.5 5.133 2.5 7 2.5h3.417m5.416 4.167v-5m-2.5 2.5h5m-5 5.833a3.333 3.333 0 11-6.666 0 3.333 3.333 0 016.666 0z"
         ></path>
       </svg>
     ),
-
-    link: '', // TODO: link (20240424 - Shirley)
-
-    added: false,
-    tempSelectedOnSection: false,
-    tempSelectedOnModal: false,
-  },
-  'Employees List': {
-    name: 'Employees List',
-    icon: (
+    iconOnSection: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
+        width="20"
+        height="20"
         fill="none"
-        viewBox="0 0 16 16"
+        viewBox="0 0 20 20"
       >
-        <g clipPath="url(#clip0_385_88536)">
-          <g fillRule="evenodd" clipPath="url(#clip1_385_88536)" clipRule="evenodd">
-            <path fill="#002462" d="M8 0a8 8 0 110 16A8 8 0 018 0z"></path>
-            <path
-              fill="#FFA502"
-              d="M10 15.748c-.639.164-1.31.252-2 .252a7.995 7.995 0 01-6.8-3.785C2.161 10.87 3.503 9.93 5.223 9.93c2.956 0 4.514 2.436 4.737 5.11.02.23.035.47.04.709zm4.942-3.77a8.032 8.032 0 01-3.785 3.375c.033-.143.045-.292.032-.443-.123-1.47-.617-2.966-1.583-4.124a5.838 5.838 0 00-.16-.182 4.278 4.278 0 014.796.638l.7.737zM7.97 6.273a2.566 2.566 0 10-5.132 0 2.566 2.566 0 005.132 0zm3.387-1.38a2.126 2.126 0 110 4.25 2.126 2.126 0 010-4.25z"
-            ></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_88536">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88536">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
+        <path
+          stroke="#fff"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M18.333 9.583v2.584c0 1.867 0 2.8-.363 3.513a3.334 3.334 0 01-1.457 1.457c-.713.363-1.646.363-3.513.363H7c-1.867 0-2.8 0-3.513-.363A3.333 3.333 0 012.03 15.68c-.363-.713-.363-1.646-.363-3.513V7.833c0-1.866 0-2.8.363-3.513.32-.627.83-1.137 1.457-1.457C4.2 2.5 5.133 2.5 7 2.5h3.417m5.416 4.167v-5m-2.5 2.5h5m-5 5.833a3.333 3.333 0 11-6.666 0 3.333 3.333 0 016.666 0z"
+        ></path>
       </svg>
     ),
 
-    link: '', // TODO: link (20240424 - Shirley)
-
-    added: false,
-    tempSelectedOnSection: false,
-    tempSelectedOnModal: false,
-  },
-  'Salary Book': {
-    name: 'Salary Book',
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="none"
-        viewBox="0 0 16 16"
-      >
-        <g clipPath="url(#clip0_385_96589)">
-          <g clipPath="url(#clip1_385_96589)">
-            <path
-              fill="#002462"
-              fillRule="evenodd"
-              d="M.657 2.349a.714.714 0 00-.42.919c.325.871.933 1.507 1.516 1.938a.714.714 0 10.85-1.148c-.437-.324-.827-.754-1.027-1.29a.714.714 0 00-.92-.42z"
-              clipRule="evenodd"
-            ></path>
-            <path
-              fill="#002462"
-              fillRule="evenodd"
-              d="M11.773.441C10.892.401 9.21.805 8.4 2.378c-1.949-.066-3.45.216-4.589.762-1.228.588-2.003 1.468-2.454 2.468-1.045 2.314-.316 4.74.076 6.047l.006.017c.058.194.11.36.151.486l.023.072c.02.06.033.105.043.137v1.963c0 .632.512 1.142 1.142 1.142h2.018c.632 0 1.143-.511 1.143-1.143v-.464h2.447v.554c0 .63.511 1.143 1.143 1.143h2c.63 0 1.142-.512 1.142-1.143v-.728c1.318-.517 2.428-1.244 3.054-2.591a.571.571 0 00.053-.24V8.322a.571.571 0 00-.208-.441l-.795-.653c-.017-.759-.115-1.5-.44-2.158-.328-.67-.863-1.206-1.664-1.608V1.459c0-.428-.284-.99-.917-1.018z"
-              clipRule="evenodd"
-            ></path>
-            <path
-              fill="#FFA502"
-              fillRule="evenodd"
-              d="M8.43 5.602c0 .395-.32.715-.715.715h-2.12a.714.714 0 110-1.43h2.12c.394 0 .714.32.714.715z"
-              clipRule="evenodd"
-            ></path>
-            <path fill="#FFA502" d="M12.113 7.033a.875.875 0 11-1.75 0 .875.875 0 011.75 0z"></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_96589">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_96589">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
-      </svg>
-    ),
-
-    link: '', // TODO: link (20240424 - Shirley)
-
-    added: false,
-    tempSelectedOnSection: false,
-    tempSelectedOnModal: false,
-  },
-  'Account Title': {
-    name: 'Account Title',
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="none"
-        viewBox="0 0 16 16"
-      >
-        <g clipPath="url(#clip0_385_88587)">
-          <g clipPath="url(#clip1_385_88587)">
-            <path
-              fill="#FFA502"
-              d="M8 .571c.631 0 1.143.512 1.143 1.143V8c0 .631-.512 1.143-1.143 1.143H1.636A1.143 1.143 0 01.493 8V1.714c0-.63.512-1.143 1.143-1.143H8z"
-            ></path>
-            <path
-              fill="#002462"
-              fillRule="evenodd"
-              d="M15.429 1.143a.571.571 0 00-.572-.572H11.43a.571.571 0 00-.572.572v2.571c0 .316.256.572.572.572h3.428a.571.571 0 00.572-.572V1.143zm-.572 4.286c.316 0 .572.255.572.571v2.571a.571.571 0 01-.572.572H11.43a.571.571 0 01-.572-.572V6c0-.316.256-.571.572-.571h3.428zm-.571 5.428c.63 0 1.143.512 1.143 1.143v2.286c0 .63-.512 1.143-1.143 1.143H1.714a1.143 1.143 0 01-1.143-1.143V12c0-.631.512-1.143 1.143-1.143h12.572z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_88587">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88587">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
-      </svg>
-    ),
-
-    link: '',
-    added: false,
-    tempSelectedOnSection: false,
-    tempSelectedOnModal: false,
-  },
-  'Client List': {
-    name: 'Client List',
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="none"
-        viewBox="0 0 16 16"
-      >
-        <g clipPath="url(#clip0_385_88609)">
-          <g clipPath="url(#clip1_385_88609)">
-            <path
-              fill="#FFA502"
-              fillRule="evenodd"
-              d="M4.3.608A2 2 0 015.714.023h4.572a2 2 0 012 2v2.285a.857.857 0 11-1.715 0V2.023a.286.286 0 00-.285-.286H5.714a.286.286 0 00-.285.286v2.285a.857.857 0 01-1.715 0V2.023A2 2 0 014.3.608z"
-              clipRule="evenodd"
-            ></path>
-            <path
-              fill="#002462"
-              d="M1.714 3.429C.768 3.429 0 4.196 0 5.143v9.143C0 15.232.768 16 1.714 16h12.572c.947 0 1.714-.768 1.714-1.714V5.143c0-.947-.768-1.714-1.714-1.714H1.714z"
-            ></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_88609">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88609">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
-      </svg>
-    ),
-
-    link: '', // TODO: link (20240424 - Shirley)
-
-    added: false,
-    tempSelectedOnSection: false,
-    tempSelectedOnModal: false,
-  },
-  Administrator: {
-    name: 'Administrator',
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="none"
-        viewBox="0 0 16 16"
-      >
-        <g clipPath="url(#clip0_385_88631)">
-          <g clipPath="url(#clip1_385_88631)">
-            <path
-              fill="#FFA502"
-              d="M8 9.702a7.989 7.989 0 00-7.607 5.55.571.571 0 00.544.745h14.126a.571.571 0 00.544-.746A7.988 7.988 0 008 9.702z"
-            ></path>
-            <path
-              fill="#002462"
-              d="M8 .003a5.406 5.406 0 100 10.811A5.406 5.406 0 008 .003z"
-            ></path>
-            <path
-              fill="#FFA502"
-              fillRule="evenodd"
-              d="M2.854 3.777a5.41 5.41 0 0110.456.64.571.571 0 01-.557.68h-.037a5.27 5.27 0 01-3.532-1.353 5.27 5.27 0 01-3.532 1.353 5.267 5.267 0 01-2.528-.642.571.571 0 01-.27-.678zm3.243 2.618a.714.714 0 01.96.313c.105.205.436.416.943.416.507 0 .839-.21.943-.416a.714.714 0 011.273.648C9.774 8.226 8.8 8.552 8 8.552c-.799 0-1.774-.327-2.216-1.196a.714.714 0 01.313-.96z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_88631">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88631">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
-      </svg>
-    ),
-
-    link: '', // TODO: link (20240424 - Shirley)
-
-    added: false,
-    tempSelectedOnSection: false,
-    tempSelectedOnModal: false,
-  },
-  Journal: {
-    name: 'Journal',
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="none"
-        viewBox="0 0 16 16"
-      >
-        <g clipPath="url(#clip0_385_88654)">
-          <g clipPath="url(#clip1_385_88654)">
-            <path
-              fill="#002462"
-              d="M1.71.205C4.714.56 7.358 1.745 8 2.386c.642-.642 3.286-1.824 6.29-2.18.94-.112 1.71.662 1.71 1.61v9.142c0 .947-.774 1.701-1.705 1.87-2.104.382-3.854 1.391-4.97 2.189-.77.55-1.88.55-2.65-.001-1.117-.797-2.866-1.806-4.97-2.188C.774 12.66 0 11.905 0 10.958V1.815C0 .868.77.093 1.71.205z"
-            ></path>
-            <path
-              fill="#FFA502"
-              d="M7.286 15.32V1.889c.42.235 1.008.235 1.428 0v13.43c-.46.147-.968.146-1.428 0z"
-            ></path>
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_385_88654">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-          <clipPath id="clip1_385_88654">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
-          </clipPath>
-        </defs>
-      </svg>
-    ),
-
-    link: ISUNFA_ROUTE.JOURNAL_LIST,
+    link: ISUNFA_ROUTE.ACCOUNTING,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
-  'View Voucher': {
-    name: 'View Voucher',
-    icon: (
+  balanceSheet: {
+    id: 'balanceSheet',
+    name: 'Balance Sheet',
+    iconOnModal: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
+        width="18"
+        height="18"
         fill="none"
-        viewBox="0 0 16 16"
+        viewBox="0 0 18 18"
       >
-        <g clipPath="url(#clip0_385_88677)">
-          <g clipPath="url(#clip1_385_88677)">
+        <path
+          stroke="#314362"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M6.5 4.833H2.833c-.466 0-.7 0-.878.091a.833.833 0 00-.364.364c-.091.179-.091.412-.091.879v9c0 .466 0 .7.09.878.08.157.208.284.365.364.178.091.412.091.878.091H6.5m0 0h5m-5 0V2.833c0-.466 0-.7.09-.878a.833.833 0 01.365-.364c.178-.091.412-.091.878-.091h2.334c.466 0 .7 0 .878.09.157.08.284.208.364.365.091.178.091.412.091.878V16.5m0-8.333h3.667c.466 0 .7 0 .878.09.157.08.284.208.364.365.091.178.091.411.091.878v5.667c0 .466 0 .7-.09.878a.833.833 0 01-.365.364c-.178.091-.412.091-.878.091H11.5"
+        ></path>
+      </svg>
+    ),
+
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        fill="none"
+        viewBox="0 0 18 18"
+      >
+        <path
+          stroke="#fff"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M6.5 4.833H2.833c-.466 0-.7 0-.878.091a.833.833 0 00-.364.364c-.091.179-.091.412-.091.879v9c0 .466 0 .7.09.878.08.157.208.284.365.364.178.091.412.091.878.091H6.5m0 0h5m-5 0V2.833c0-.466 0-.7.09-.878a.833.833 0 01.365-.364c.178-.091.412-.091.878-.091h2.334c.466 0 .7 0 .878.09.157.08.284.208.364.365.091.178.091.412.091.878V16.5m0-8.333h3.667c.466 0 .7 0 .878.09.157.08.284.208.364.365.091.178.091.411.091.878v5.667c0 .466 0 .7-.09.878a.833.833 0 01-.365.364c-.178.091-.412.091-.878.091H11.5"
+        ></path>
+      </svg>
+    ),
+
+    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  incomeStatement: {
+    id: 'incomeStatement',
+    name: 'Income Statement',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#314362"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M14.167 7.5l-4.529 4.529c-.165.165-.247.247-.343.278a.417.417 0 01-.257 0c-.095-.03-.178-.113-.343-.278L7.138 10.47c-.165-.165-.247-.247-.343-.278a.417.417 0 00-.257 0c-.095.03-.178.113-.343.278L2.5 14.167M14.167 7.5h-3.334m3.334 0v3.333M6.5 17.5h7c1.4 0 2.1 0 2.635-.273a2.5 2.5 0 001.092-1.092c.273-.535.273-1.235.273-2.635v-7c0-1.4 0-2.1-.273-2.635a2.5 2.5 0 00-1.092-1.093C15.6 2.5 14.9 2.5 13.5 2.5h-7c-1.4 0-2.1 0-2.635.272a2.5 2.5 0 00-1.093 1.093C2.5 4.4 2.5 5.1 2.5 6.5v7c0 1.4 0 2.1.272 2.635a2.5 2.5 0 001.093 1.092C4.4 17.5 5.1 17.5 6.5 17.5z"
+        ></path>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          stroke="#fff"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          d="M14.167 7.5l-4.529 4.529c-.165.165-.247.247-.343.278a.417.417 0 01-.257 0c-.095-.03-.178-.113-.343-.278L7.138 10.47c-.165-.165-.247-.247-.343-.278a.417.417 0 00-.257 0c-.095.03-.178.113-.343.278L2.5 14.167M14.167 7.5h-3.334m3.334 0v3.333M6.5 17.5h7c1.4 0 2.1 0 2.635-.273a2.5 2.5 0 001.092-1.092c.273-.535.273-1.235.273-2.635v-7c0-1.4 0-2.1-.273-2.635a2.5 2.5 0 00-1.092-1.093C15.6 2.5 14.9 2.5 13.5 2.5h-7c-1.4 0-2.1 0-2.635.272a2.5 2.5 0 00-1.093 1.093C2.5 4.4 2.5 5.1 2.5 6.5v7c0 1.4 0 2.1.272 2.635a2.5 2.5 0 001.093 1.092C4.4 17.5 5.1 17.5 6.5 17.5z"
+        ></path>
+      </svg>
+    ),
+
+    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  cashFlowStatement: {
+    id: 'cashFlowStatement',
+    name: 'Cash Flow Statement',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72069)">
+          <g clipPath="url(#clip1_3640_72069)">
             <path
-              fill="#FFA502"
-              d="M8.03 3.496a.548.548 0 00-.67-.387L.406 4.97a.548.548 0 00-.388.671l2.668 9.951a.548.548 0 00.671.388l6.953-1.862a.548.548 0 00.387-.671L8.03 3.496z"
-            ></path>
-            <path
-              fill="#002462"
-              d="M7.97.765a.548.548 0 01.67-.388l6.954 1.862a.548.548 0 01.387.672l-2.668 9.951a.548.548 0 01-.671.387l-6.953-1.862a.548.548 0 01-.387-.671L7.97.765z"
+              stroke="#314362"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M11.275 6.96a2.917 2.917 0 11.784-3.92M5 16.74h2.175c.284 0 .566.033.84.1l2.3.56a3.562 3.562 0 001.521.035l2.541-.495a3.504 3.504 0 001.773-.923l1.798-1.749a1.253 1.253 0 000-1.807 1.342 1.342 0 00-1.717-.12l-2.096 1.53c-.3.22-.665.337-1.04.337H11.07h1.288c.726 0 1.314-.572 1.314-1.278v-.256c0-.586-.41-1.097-.995-1.24l-1.988-.482a4.187 4.187 0 00-.987-.119c-.804 0-2.26.666-2.26.666L5 12.521m11.667-7.104a2.917 2.917 0 11-5.834 0 2.917 2.917 0 015.834 0zm-15 6.75V17c0 .467 0 .7.09.878.08.157.208.285.365.364.178.091.411.091.878.091h.667c.466 0 .7 0 .878-.09a.833.833 0 00.364-.365C5 17.7 5 17.467 5 17v-4.833c0-.467 0-.7-.09-.879a.833.833 0 00-.365-.364c-.178-.09-.412-.09-.878-.09H3c-.467 0-.7 0-.878.09a.833.833 0 00-.365.364c-.09.179-.09.412-.09.879z"
             ></path>
           </g>
         </g>
         <defs>
-          <clipPath id="clip0_385_88677">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
+          <clipPath id="clip0_3640_72069">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
           </clipPath>
-          <clipPath id="clip1_385_88677">
-            <path fill="#fff" d="M0 0H16V16H0z"></path>
+          <clipPath id="clip1_3640_72069">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72069)">
+          <g clipPath="url(#clip1_3640_72069)">
+            <path
+              stroke="#fff"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M11.275 6.96a2.917 2.917 0 11.784-3.92M5 16.74h2.175c.284 0 .566.033.84.1l2.3.56a3.562 3.562 0 001.521.035l2.541-.495a3.504 3.504 0 001.773-.923l1.798-1.749a1.253 1.253 0 000-1.807 1.342 1.342 0 00-1.717-.12l-2.096 1.53c-.3.22-.665.337-1.04.337H11.07h1.288c.726 0 1.314-.572 1.314-1.278v-.256c0-.586-.41-1.097-.995-1.24l-1.988-.482a4.187 4.187 0 00-.987-.119c-.804 0-2.26.666-2.26.666L5 12.521m11.667-7.104a2.917 2.917 0 11-5.834 0 2.917 2.917 0 015.834 0zm-15 6.75V17c0 .467 0 .7.09.878.08.157.208.285.365.364.178.091.411.091.878.091h.667c.466 0 .7 0 .878-.09a.833.833 0 00.364-.365C5 17.7 5 17.467 5 17v-4.833c0-.467 0-.7-.09-.879a.833.833 0 00-.365-.364c-.178-.09-.412-.09-.878-.09H3c-.467 0-.7 0-.878.09a.833.833 0 00-.365.364c-.09.179-.09.412-.09.879z"
+            ></path>
+          </g>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72069">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+          <clipPath id="clip1_3640_72069">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
           </clipPath>
         </defs>
       </svg>
     ),
 
-    link: '', // TODO: link (20240424 - Shirley)
+    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  financialPerformance: {
+    id: 'financialPerformance',
+    name: 'Financial Performance',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72123)">
+          <path
+            stroke="#314362"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M13.281 13.281A5.835 5.835 0 106.72 6.72m-.469 4.114L7.5 10v4.583m-1.25 0h2.5m4.583-2.083a5.833 5.833 0 11-11.666 0 5.833 5.833 0 0111.666 0z"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72123">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72123)">
+          <path
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M13.281 13.281A5.835 5.835 0 106.72 6.72m-.469 4.114L7.5 10v4.583m-1.25 0h2.5m4.583-2.083a5.833 5.833 0 11-11.666 0 5.833 5.833 0 0111.666 0z"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72123">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
 
-    added: false,
+    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  costAnalysis: {
+    id: 'costAnalysis',
+    name: 'Cost Analysis',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72176)">
+          <path
+            stroke="#314362"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M10 1.667c.493 0 .976.043 1.446.125M10 1.667a8.333 8.333 0 100 16.666m0-16.666v16.666m4.782-15.159a8.38 8.38 0 012.046 2.047m1.38 3.334a8.384 8.384 0 010 2.89m-1.384 3.339a8.38 8.38 0 01-2.043 2.042m-3.337 1.383a8.39 8.39 0 01-1.444.124"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72176">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72176)">
+          <path
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M10 1.667c.493 0 .976.043 1.446.125M10 1.667a8.333 8.333 0 100 16.666m0-16.666v16.666m4.782-15.159a8.38 8.38 0 012.046 2.047m1.38 3.334a8.384 8.384 0 010 2.89m-1.384 3.339a8.38 8.38 0 01-2.043 2.042m-3.337 1.383a8.39 8.39 0 01-1.444.124"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72176">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+
+    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  hrUtilization: {
+    id: 'hrUtilization',
+    name: 'HR Utilization',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72235)">
+          <path
+            stroke="#314362"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M15.833 6.667l2.5-2.5m0 0l-2.5-2.5m2.5 2.5h-5m5 5.833v4.333c0 1.4 0 2.1-.272 2.635a2.5 2.5 0 01-1.093 1.093c-.535.272-1.235.272-2.635.272H5.667c-1.4 0-2.1 0-2.635-.272a2.5 2.5 0 01-1.093-1.093c-.272-.534-.272-1.235-.272-2.635V5.667c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093c.534-.272 1.235-.272 2.635-.272H10M1.788 16.605A3.335 3.335 0 015 14.167h5.833c.775 0 1.162 0 1.484.064a3.333 3.333 0 012.619 2.619c.064.322.064.709.064 1.483M11.667 7.917a3.333 3.333 0 11-6.667 0 3.333 3.333 0 016.667 0z"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72235">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72235)">
+          <path
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M15.833 6.667l2.5-2.5m0 0l-2.5-2.5m2.5 2.5h-5m5 5.833v4.333c0 1.4 0 2.1-.272 2.635a2.5 2.5 0 01-1.093 1.093c-.535.272-1.235.272-2.635.272H5.667c-1.4 0-2.1 0-2.635-.272a2.5 2.5 0 01-1.093-1.093c-.272-.534-.272-1.235-.272-2.635V5.667c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093c.534-.272 1.235-.272 2.635-.272H10M1.788 16.605A3.335 3.335 0 015 14.167h5.833c.775 0 1.162 0 1.484.064a3.333 3.333 0 012.619 2.619c.064.322.064.709.064 1.483M11.667 7.917a3.333 3.333 0 11-6.667 0 3.333 3.333 0 016.667 0z"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72235">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+
+    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: true,
+    tempSelectedOnSection: false,
+    tempSelectedOnModal: false,
+  },
+  forecastReport: {
+    id: 'forecastReport',
+    name: 'Forecast Report',
+    iconOnModal: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72287)">
+          <path
+            stroke="#314362"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M11.667 9.167h-5M8.333 12.5H6.667m6.666-6.667H6.667m10 2.917V5.667c0-1.4 0-2.1-.273-2.635a2.5 2.5 0 00-1.092-1.093c-.535-.272-1.235-.272-2.635-.272H7.333c-1.4 0-2.1 0-2.635.272a2.5 2.5 0 00-1.092 1.093c-.273.534-.273 1.235-.273 2.635v8.666c0 1.4 0 2.1.273 2.635a2.5 2.5 0 001.092 1.093c.535.272 1.235.272 2.635.272h2.25m8.75 0l-1.25-1.25M17.917 15a2.917 2.917 0 11-5.834 0 2.917 2.917 0 015.834 0z"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72287">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+    iconOnSection: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <g clipPath="url(#clip0_3640_72287)">
+          <path
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            d="M11.667 9.167h-5M8.333 12.5H6.667m6.666-6.667H6.667m10 2.917V5.667c0-1.4 0-2.1-.273-2.635a2.5 2.5 0 00-1.092-1.093c-.535-.272-1.235-.272-2.635-.272H7.333c-1.4 0-2.1 0-2.635.272a2.5 2.5 0 00-1.092 1.093c-.273.534-.273 1.235-.273 2.635v8.666c0 1.4 0 2.1.273 2.635a2.5 2.5 0 001.092 1.093c.535.272 1.235.272 2.635.272h2.25m8.75 0l-1.25-1.25M17.917 15a2.917 2.917 0 11-5.834 0 2.917 2.917 0 015.834 0z"
+          ></path>
+        </g>
+        <defs>
+          <clipPath id="clip0_3640_72287">
+            <path fill="#fff" d="M0 0H20V20H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    ),
+
+    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -497,7 +687,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
 
       // Info: 將所有書籤的 added 屬性設為 false (20240603 - Shirley)
       Object.values(updatedBookmarkList).forEach((bookmark: BookmarkItem) => {
-        updatedBookmarkList[bookmark.name] = { ...bookmark, added: false };
+        updatedBookmarkList[bookmark.id] = { ...bookmark, added: false };
       });
 
       // Info: 將參數中的書籤的 added 屬性設為 true (20240603 - Shirley)

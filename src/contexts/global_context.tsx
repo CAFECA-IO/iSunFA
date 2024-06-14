@@ -11,7 +11,6 @@ import {
 } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
-import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
@@ -44,6 +43,7 @@ import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from './user_context';
 import { useNotificationCtx } from './notification_context';
 import { ProjectStage } from '@/constants/project';
+import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 
 interface IGlobalContext {
   width: number;
@@ -127,7 +127,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    username: '',
+    invitation: '',
   });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
@@ -484,9 +484,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <RegisterFormModal
         isModalVisible={isRegisterModalVisible}
         modalVisibilityHandler={registerModalVisibilityHandler}
+        data={registerModalData}
       />
 
-      <AddBookmarkModal
+      <EditBookmarkModal
         isModalVisible={isAddBookmarkModalVisible}
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />

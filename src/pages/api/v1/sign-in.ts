@@ -1,19 +1,19 @@
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, getDomains, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
-import { IInvitation } from '@/interfaces/invitation';
 import { getSession } from '@/lib/utils/get_session';
+import { getUserByCredential } from '@/lib/utils/repo/user.repo';
+import { checkInvitation } from '@/lib/utils/auth_check';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUser>>
-) {
+): Promise<void> {
   try {
     if (req.method !== 'POST') {
       throw new Error('Only POST requests are allowed');
@@ -29,11 +29,7 @@ export default async function handler(
       userVerified: true,
     };
 
-    const getUser = (await prisma.user.findUnique({
-      where: {
-        credentialId: authentication.credentialId,
-      },
-    })) as IUser;
+    const getUser = await getUserByCredential(authentication.credentialId);
 
     const typeOfAlgorithm = getUser.algorithm === 'ES256' ? 'ES256' : 'RS256';
 
@@ -45,65 +41,14 @@ export default async function handler(
 
     await server.verifyAuthentication(authentication, registeredCredential, expected);
     const session = await getSession(req, res);
-    // const memoryStore = new MemoryStore();
     session.userId = getUser.id;
-    // memoryStore.set(session.id, session);
     const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
     res.status(httpCode).json(result);
-    if (req.query.invitation) {
-      // update user
-      const invitation = (await prisma.invitation.findUnique({
-        where: {
-          code: req.query.invitation as string,
-        },
-      })) as IInvitation;
-      if (!invitation) {
-        return;
-      }
-      if (invitation.hasUsed) {
-        return;
-      }
-      const now = Date.now();
-      const nowTimestamp = timestampInSeconds(now);
-      if (invitation.expiredAt < nowTimestamp) {
-        return;
-      }
-      const email = getUser.email || '';
-      await prisma.$transaction(async (tx) => {
-        await tx.admin.create({
-          data: {
-            user: {
-              connect: {
-                id: session.userId,
-              },
-            },
-            company: {
-              connect: {
-                id: invitation.companyId,
-              },
-            },
-            role: {
-              connect: {
-                id: invitation.roleId,
-              },
-            },
-            email,
-            status: true,
-            startDate: nowTimestamp,
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        });
-        await tx.invitation.update({
-          where: {
-            code: req.query.invitation as string,
-          },
-          data: {
-            hasUsed: true,
-          },
-        });
-      });
+    if (!req.query.invitation) {
+      return;
     }
+    const invitation = await checkInvitation(req.query.invitation as string);
+    await createAdminByInvitation(getUser.id, invitation);
   } catch (_error) {
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);

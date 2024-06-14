@@ -45,3 +45,6 @@ next-env.d.ts
 
 # backup
 *.backup
+
+# migrations
+prisma/migrations/

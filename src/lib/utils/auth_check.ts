@@ -3,9 +3,17 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IUser } from '@/interfaces/user';
 import { IAdmin } from '@/interfaces/admin';
-import { ROLE } from '@/constants/role';
-import { getSession } from './get_session';
-import { getProjectById } from './repo/project.repo';
+import { RoleName } from '@/constants/role_name';
+import { ICompany } from '@/interfaces/company';
+import { getSession } from '@/lib/utils/get_session';
+import { getProjectById } from '@/lib/utils/repo/project.repo';
+import { timestampInSeconds } from '@/lib/utils/common';
+import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
+import {
+  getAdminByCompanyIdAndUserId,
+  getAdminByCompanyIdAndUserIdAndRoleName,
+  getAdminById,
+} from '@/lib/utils/repo/admin.repo';
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
@@ -33,24 +41,17 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   if (!companyId) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const admin: IAdmin = (await prisma.admin.findFirst({
-    where: {
-      userId,
-      companyId,
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  })) as IAdmin;
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin: IAdmin = await getAdminByCompanyIdAndUserId(companyId, userId);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return session;
 }
 
-export async function checkOwner(req: NextApiRequest, res: NextApiResponse) {
+export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
   const session = await getSession(req, res);
   const { companyId, userId } = session;
   if (!userId) {
@@ -59,24 +60,33 @@ export async function checkOwner(req: NextApiRequest, res: NextApiResponse) {
   if (!companyId) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
-  const admin: IAdmin = (await prisma.admin.findFirst({
-    where: {
-      userId,
-      companyId,
-      role: {
-        name: ROLE.OWNER,
-      },
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  })) as IAdmin;
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin: IAdmin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return session;
+}
+
+export async function checkCompanyUserMatch(companyId: number, userId: number): Promise<ICompany> {
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  if (!admin) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  return admin.company;
+}
+
+export async function checkCompanyAdminMatch(companyId: number, adminId: number): Promise<IAdmin> {
+  const admin = await getAdminById(adminId);
+  if (admin.company.id !== companyId) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  return admin;
 }
 
 export async function checkProjectCompanyMatch(projectId: number, companyId: number) {
@@ -85,4 +95,20 @@ export async function checkProjectCompanyMatch(projectId: number, companyId: num
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return project;
+}
+
+export async function checkInvitation(invitationCode: string) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const invitation = await getInvitationByCode(invitationCode);
+  if (!invitation) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+  if (invitation.hasUsed) {
+    throw new Error(STATUS_MESSAGE.INVITATION_HAS_USED);
+  }
+  if (invitation.expiredAt < nowTimestamp) {
+    throw new Error(STATUS_MESSAGE.CONFLICT);
+  }
+  return invitation;
 }

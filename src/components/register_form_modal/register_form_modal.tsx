@@ -8,15 +8,22 @@ import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 interface IRegisterFormModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  data: {
+    invitation?: string;
+  };
 }
 
-const RegisterFormModal = ({ isModalVisible, modalVisibilityHandler }: IRegisterFormModal) => {
+const RegisterFormModal = ({
+  isModalVisible,
+  modalVisibilityHandler,
+  data,
+}: IRegisterFormModal) => {
   const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const registerClickHandler = async () => {
     const name = inputRef.current?.value || DEFAULT_DISPLAYED_USER_NAME;
-    signUp({ username: name });
+    signUp({ username: name, invitation: data.invitation });
     inputRef.current?.value && (inputRef.current.value = '');
     modalVisibilityHandler();
   };
