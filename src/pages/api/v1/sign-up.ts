@@ -11,6 +11,7 @@ import { generateUserIcon } from '@/lib/utils/generate_user_icon';
 import { checkInvitation } from '@/lib/utils/auth_check';
 import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
 import { createUser } from '@/lib/utils/repo/user.repo';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,16 +45,17 @@ export default async function handler(
       console.error('Failed to generate user icon', e);
     }
 
-    const createdUser: IUser = await createUser(
+    const createdUser = await createUser(
       registrationParsed.username,
       registrationParsed.credential.id,
       registrationParsed.credential.publicKey,
       registrationParsed.credential.algorithm,
       imageUrl
     );
+    const user = await formatUser(createdUser);
     const session = await getSession(req, res);
     session.userId = createdUser.id;
-    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
+    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
     res.status(httpCode).json(result);
     if (!req.query.invitation) {
       return;

@@ -6,6 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { checkRole } from '@/lib/utils/auth_check';
 import { ROLE_NAME } from '@/constants/role_name';
 import { createUser, listUser } from '@/lib/utils/repo/user.repo';
+import { formatUser, formatUserList } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +16,8 @@ export default async function handler(
     // Todo: (20240419 - Jacky) add query like cursor, limit, etc.
     await checkRole(req, res, ROLE_NAME.SUPER_ADMIN);
     if (req.method === 'GET') {
-      const userList: IUser[] = await listUser();
+      const listedUser = await listUser();
+      const userList: IUser[] = await formatUserList(listedUser);
       const { httpCode, result } = formatApiResponse<IUser[]>(
         STATUS_MESSAGE.SUCCESS_LIST,
         userList
@@ -28,7 +30,7 @@ export default async function handler(
       if (!name || !credentialId || !publicKey || !algorithm) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const createdUser: IUser = await createUser(
+      const createdUser = await createUser(
         name,
         credentialId,
         publicKey,
@@ -38,7 +40,8 @@ export default async function handler(
         email,
         phone
       );
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
+      const user = await formatUser(createdUser);
+      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
       res.status(httpCode).json(result);
     } else {
       // Handle unsupported HTTP methods

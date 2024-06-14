@@ -2,12 +2,13 @@ import prisma from '@/client';
 import { IInvitation } from '@/interfaces/invitation';
 import { IAdmin } from '@/interfaces/admin';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 export async function createAdminByInvitation(userId: number, invitation: IInvitation) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const admin = await prisma.$transaction(async (tx) => {
-    const createdAdmin: IAdmin = await tx.admin.create({
+    const createdAdmin = await tx.admin.create({
       data: {
         user: {
           connect: {
@@ -44,7 +45,8 @@ export async function createAdminByInvitation(userId: number, invitation: IInvit
         hasUsed: true,
       },
     });
-    return createdAdmin;
+    const formatedAdmin: IAdmin = await formatAdmin(createdAdmin);
+    return formatedAdmin;
   });
   return admin;
 }

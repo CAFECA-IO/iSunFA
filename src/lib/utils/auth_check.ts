@@ -4,7 +4,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IUser } from '@/interfaces/user';
 import { IAdmin } from '@/interfaces/admin';
 import { RoleName } from '@/constants/role_name';
-import { ICompany } from '@/interfaces/company';
 import { getSession } from '@/lib/utils/get_session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { timestampInSeconds } from '@/lib/utils/common';
@@ -14,6 +13,7 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
@@ -44,7 +44,7 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   if (typeof companyId !== 'number' || typeof userId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  const admin: IAdmin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -63,29 +63,19 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   if (typeof companyId !== 'number' || typeof userId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  const admin: IAdmin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return session;
 }
 
-export async function checkCompanyUserMatch(companyId: number, userId: number): Promise<ICompany> {
-  if (typeof companyId !== 'number' || typeof userId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
-  }
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
-  if (!admin) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  return admin.company;
-}
-
 export async function checkCompanyAdminMatch(companyId: number, adminId: number): Promise<IAdmin> {
-  const admin = await getAdminById(adminId);
-  if (admin.company.id !== companyId) {
+  const getAdmin = await getAdminById(adminId);
+  if (getAdmin.companyId !== companyId) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
+  const admin = await formatAdmin(getAdmin);
   return admin;
 }
 
