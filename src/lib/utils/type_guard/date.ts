@@ -1,3 +1,5 @@
+import { ONE_SECOND_IN_MS } from '@/constants/time';
+
 export function isDateFormatYYYYMMDD(date: string): date is string {
   // Info: 正則表達式來檢查格式是否為 yyyy-mm-dd (20240612 - Gibbs)
   const regex = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,14 +21,10 @@ export function isDateFormatYYYYMMDD(date: string): date is string {
 
 export function isTimestamp(timestampOfDate: string): boolean {
   if (typeof timestampOfDate === 'string') {
-    const num = Number(timestampOfDate);
-    if (!Number.isNaN(num) && Number.isInteger(num) && num > 0) {
-      const maxTimestampInSeconds = 8640000000;
-      if (num <= maxTimestampInSeconds) {
-        const date = new Date(num * 1000);
-        return !Number.isNaN(date.getTime());
-      }
-    }
+    const num = Number(timestampOfDate) * ONE_SECOND_IN_MS;
+    const timeNum = new Date(num).getTime();
+    const result = num === timeNum;
+    return result;
   }
   return false;
 }
