@@ -1,29 +1,35 @@
 import prisma from '@/client';
-import { IUser } from '@/interfaces/user';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
-export async function listUser(): Promise<IUser[]> {
+export async function listUser(): Promise<User[]> {
   const userList = await prisma.user.findMany();
-  return userList as IUser[];
+  return userList;
 }
 
-export async function getUserById(userId: number): Promise<IUser> {
+export async function getUserById(userId: number): Promise<User> {
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
     },
   });
-  return user as IUser;
+  if (!user) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+  return user;
 }
 
-export async function getUserByCredential(credentialId: string): Promise<IUser> {
+export async function getUserByCredential(credentialId: string): Promise<User> {
   const user = await prisma.user.findUnique({
     where: {
       credentialId,
     },
   });
-  return user as IUser;
+  if (!user) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+  return user;
 }
 
 export async function createUser(
@@ -35,7 +41,7 @@ export async function createUser(
   fullName?: string,
   email?: string,
   phone?: string
-): Promise<IUser> {
+): Promise<User> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
@@ -52,7 +58,7 @@ export async function createUser(
     updatedAt: nowTimestamp,
   };
 
-  const createdUser: IUser = await prisma.user.create({
+  const createdUser = await prisma.user.create({
     data: newUser,
   });
 
@@ -66,7 +72,7 @@ export async function updateUserById(
   email?: string,
   phone?: string,
   imageUrl?: string
-): Promise<IUser> {
+): Promise<User> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
@@ -86,14 +92,14 @@ export async function updateUserById(
     data: updatedUser,
   });
 
-  return user as IUser;
+  return user;
 }
 
-export async function deleteUserById(userId: number): Promise<IUser> {
+export async function deleteUserById(userId: number): Promise<User> {
   const user = await prisma.user.delete({
     where: {
       id: userId,
     },
   });
-  return user as IUser;
+  return user;
 }

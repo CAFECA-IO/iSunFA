@@ -1,15 +1,14 @@
-import { IAdmin } from '@/interfaces/admin';
-import { IInvitation } from '@/interfaces/invitation';
 import prisma from '@/client';
-import { ICompany } from '@/interfaces/company';
-import { IRole } from '@/interfaces/role';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { Admin, Company, Role, User } from '@prisma/client';
 
-export async function listAdminByCompanyId(companyId: number): Promise<IAdmin[]> {
-  const adminList: IAdmin[] = await prisma.admin.findMany({
+export async function listAdminByCompanyId(
+  companyId: number
+): Promise<(Admin & { company: Company; user: User; role: Role })[]> {
+  const listedAdmin = await prisma.admin.findMany({
     where: {
       companyId,
     },
@@ -19,11 +18,13 @@ export async function listAdminByCompanyId(companyId: number): Promise<IAdmin[]>
       role: true,
     },
   });
-  return adminList;
+  return listedAdmin;
 }
 
-export async function getAdminById(adminId: number): Promise<IAdmin> {
-  const admin: IAdmin = (await prisma.admin.findUnique({
+export async function getAdminById(
+  adminId: number
+): Promise<Admin & { company: Company; user: User; role: Role }> {
+  const admin = await prisma.admin.findUnique({
     where: {
       id: adminId,
     },
@@ -32,15 +33,17 @@ export async function getAdminById(adminId: number): Promise<IAdmin> {
       company: true,
       role: true,
     },
-  })) as IAdmin;
+  });
   if (!admin) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
   return admin;
 }
 
-export async function getAdminByUserId(userId: number): Promise<IAdmin> {
-  const admin: IAdmin = (await prisma.admin.findFirst({
+export async function getAdminByUserId(
+  userId: number
+): Promise<Admin & { company: Company; user: User; role: Role }> {
+  const admin = await prisma.admin.findFirst({
     where: {
       userId,
     },
@@ -49,7 +52,7 @@ export async function getAdminByUserId(userId: number): Promise<IAdmin> {
       company: true,
       role: true,
     },
-  })) as IAdmin;
+  });
   if (!admin) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -59,11 +62,11 @@ export async function getAdminByUserId(userId: number): Promise<IAdmin> {
 export async function getAdminByCompanyIdAndUserId(
   companyId: number,
   userId: number
-): Promise<IAdmin> {
+): Promise<Admin & { company: Company; user: User; role: Role }> {
   if (typeof companyId !== 'number' || typeof userId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const admin: IAdmin = (await prisma.admin.findFirst({
+  const admin = await prisma.admin.findFirst({
     where: {
       userId,
       companyId,
@@ -73,7 +76,7 @@ export async function getAdminByCompanyIdAndUserId(
       company: true,
       role: true,
     },
-  })) as IAdmin;
+  });
   if (!admin) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -84,11 +87,11 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
   companyId: number,
   userId: number,
   roleName: RoleName
-): Promise<IAdmin> {
+): Promise<Admin & { company: Company; user: User; role: Role }> {
   if (typeof companyId !== 'number' || typeof userId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const admin: IAdmin = (await prisma.admin.findFirst({
+  const admin = await prisma.admin.findFirst({
     where: {
       userId,
       companyId,
@@ -101,14 +104,18 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
       company: true,
       role: true,
     },
-  })) as IAdmin;
+  });
   if (!admin) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
   return admin;
 }
 
-export async function createAdmin(userId: number, invitation: IInvitation): Promise<IAdmin> {
+export async function createAdmin(
+  userId: number,
+  companyId: number,
+  roleId: number
+): Promise<Admin & { company: Company; user: User; role: Role }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const createdAdmin = await prisma.admin.create({
@@ -120,15 +127,15 @@ export async function createAdmin(userId: number, invitation: IInvitation): Prom
       },
       company: {
         connect: {
-          id: invitation.companyId,
+          id: companyId,
         },
       },
       role: {
         connect: {
-          id: invitation.roleId,
+          id: roleId,
         },
       },
-      email: invitation.email,
+      email: '',
       status: true,
       startDate: nowTimestamp,
       createdAt: nowTimestamp,
@@ -147,8 +154,8 @@ export async function updateAdminById(
   adminId: number,
   status: boolean,
   roleName: RoleName
-): Promise<IAdmin> {
-  const updatedAdmin: IAdmin = await prisma.admin.update({
+): Promise<Admin & { company: Company; user: User; role: Role }> {
+  const updatedAdmin = await prisma.admin.update({
     where: {
       id: adminId,
     },
@@ -169,8 +176,10 @@ export async function updateAdminById(
   return updatedAdmin;
 }
 
-export async function deleteAdminById(adminId: number): Promise<IAdmin> {
-  const deletedAdmin: IAdmin = await prisma.admin.delete({
+export async function deleteAdminById(
+  adminId: number
+): Promise<Admin & { company: Company; user: User; role: Role }> {
+  const deletedAdmin = await prisma.admin.delete({
     where: {
       id: adminId,
     },
@@ -194,8 +203,8 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
 
 export async function listCompanyAndRole(
   userId: number
-): Promise<Array<{ company: ICompany; role: IRole }>> {
-  const companyRoleList: Array<{ company: ICompany; role: IRole }> = await prisma.admin.findMany({
+): Promise<Array<{ company: Company; role: Role }>> {
+  const listedCompanyRole: Array<{ company: Company; role: Role }> = await prisma.admin.findMany({
     where: {
       userId,
     },
@@ -204,7 +213,7 @@ export async function listCompanyAndRole(
       role: true,
     },
   });
-  return companyRoleList;
+  return listedCompanyRole;
 }
 
 export async function createCompanyAndRole(
@@ -212,10 +221,10 @@ export async function createCompanyAndRole(
   code: string,
   name: string,
   regional: string
-): Promise<{ company: ICompany; role: IRole }> {
+): Promise<{ company: Company; role: Role }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const newCompanyRoleList: { company: ICompany; role: IRole } = await prisma.admin.create({
+  const newCompanyRoleList: { company: Company; role: Role } = await prisma.admin.create({
     data: {
       user: {
         connect: {

@@ -10,7 +10,7 @@ export interface IAdmin {
   email: string;
   status: boolean;
   startDate: number;
-  endDate: number | null;
+  endDate: number;
   createdAt: number;
   updatedAt: number;
 }

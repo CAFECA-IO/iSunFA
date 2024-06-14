@@ -1,13 +1,13 @@
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompany } from '@/interfaces/company';
+import { Company } from '@prisma/client';
 
-export async function getCompanyById(companyId: number): Promise<ICompany> {
-  const company: ICompany = (await prisma.company.findUnique({
+export async function getCompanyById(companyId: number): Promise<Company> {
+  const company = await prisma.company.findUnique({
     where: {
       id: companyId,
     },
-  })) as ICompany;
+  });
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -19,8 +19,8 @@ export async function updateCompanyById(
   code: string,
   name: string,
   regional: string
-): Promise<ICompany> {
-  const company: ICompany = await prisma.company.update({
+): Promise<Company> {
+  const company = await prisma.company.update({
     where: {
       id: companyId,
     },
@@ -33,8 +33,8 @@ export async function updateCompanyById(
   return company;
 }
 
-export async function deleteCompanyById(companyId: number): Promise<ICompany> {
-  const company: ICompany = await prisma.company.delete({
+export async function deleteCompanyById(companyId: number): Promise<Company> {
+  const company = await prisma.company.delete({
     where: {
       id: companyId,
     },

@@ -3,6 +3,7 @@ import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
 import { ROLE_NAME } from '@/constants/role_name';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -35,7 +36,7 @@ beforeEach(async () => {
     },
   })) as IAdmin;
   if (!admin) {
-    admin = await prisma.admin.create({
+    const createdAdmin = await prisma.admin.create({
       data: {
         user: {
           connectOrCreate: {
@@ -95,6 +96,7 @@ beforeEach(async () => {
         role: true,
       },
     });
+    admin = await formatAdmin(createdAdmin);
   }
   req = {
     headers: {},
