@@ -1,7 +1,7 @@
 import { IAdmin } from '@/interfaces/admin';
 import { IInvitation } from '@/interfaces/invitation';
 import prisma from '@/client';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function createAdmin(userId: number, invitation: IInvitation): Promise<IAdmin> {
   const now = Date.now();
