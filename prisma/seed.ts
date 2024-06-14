@@ -7,6 +7,8 @@ import incomeExpenses from './seed_json/income_expense.json';
 import milestones from './seed_json/milestone.json';
 import generatedReports from './seed_json/generated_report.json';
 import pendingReports from './seed_json/pending_report.json';
+import user from './seed_json/user.json';
+import role from './seed_json/role.json';
 
 const prisma = new PrismaClient();
 
@@ -28,6 +30,31 @@ const prisma = new PrismaClient();
 //     });
 //   });
 // }
+async function createUser() {
+  await prisma.user.create({
+    data: {
+      id: user.id,
+      name: user.name,
+      credentialId: user.credential_id,
+      publicKey: user.public_key,
+      algorithm: user.algorithm,
+      imageId: user.image_id,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
+    },
+  });
+}
+
+async function createRole() {
+  await prisma.role.create({
+    data: {
+      id: role.id,
+      name: role.name,
+      createdAt: role.created_at,
+      updatedAt: role.updated_at,
+    },
+  });
+}
 
 async function createCompany() {
   await prisma.company.create({
@@ -159,6 +186,8 @@ async function main() {
   // const nowTimestamp = timestampInSeconds(now);
   // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
   // await createAccount(nowTimestamp);
+  await createUser();
+  await createRole();
   await createCompany();
   await createAdmin();
   await createProjects();
