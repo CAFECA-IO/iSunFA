@@ -2,8 +2,8 @@ import { IAdmin } from '@/interfaces/admin';
 import { Admin, Company, Role, User } from '@prisma/client';
 import { ICompany } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
-import { formatUser } from './user.formatter';
-import { formatCompany } from './company.formatter';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
+import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 
 export async function formatAdminList(
   listedAdmin: (Admin & { company: Company; user: User; role: Role })[]
