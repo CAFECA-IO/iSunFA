@@ -12,7 +12,7 @@ interface IProjectCardProps {
 const ProjectCard = ({ project }: IProjectCardProps) => {
   const { name, contractAmount, income, expense, profit, stage, members } = project;
 
-  const stageColor = stageColorMap[stage as ProjectStage] ?? 'bg-surface-neutral-mute';
+  const stageColor = stageColorMap[stage as ProjectStage].bg ?? 'bg-surface-neutral-mute';
 
   // Info: (2024607 - Julian) 最多顯示 7 位成員，超過的部分用「+n」表示
   const displayMembers =
