@@ -13,7 +13,7 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import { formatAdmin } from './formatter/admin.formatter';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
