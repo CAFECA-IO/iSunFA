@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -55,10 +56,10 @@ beforeEach(async () => {
         role: {
           connectOrCreate: {
             where: {
-              name: 'SUPER_ADMIN',
+              name: ROLE_NAME.SUPER_ADMIN,
             },
             create: {
-              name: 'SUPER_ADMIN',
+              name: ROLE_NAME.SUPER_ADMIN,
               permissions: ['hihi', 'ooo'],
               createdAt: nowTimestamp,
               updatedAt: nowTimestamp,
@@ -100,7 +101,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.user.id },
+    session: { userId: admin.user.id, companyId: admin.company.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 });

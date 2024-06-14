@@ -2,8 +2,80 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IProjectROIComparisonChartDataWithPagination } from '@/interfaces/project_roi_comparison_chart';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import prisma from '@/client';
+import { isTimestamp } from '@/lib/utils/type_guard/date';
+import { checkAdmin } from '@/lib/utils/auth_check';
+import { Prisma } from '@prisma/client';
+
+async function getProjectLists(companyId: number) {
+  return prisma.project.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    where: {
+      companyId,
+    },
+  });
+}
+
+async function getIncomeExpenses(
+  startDateToTimeStamp: number,
+  endDateToTimeStamp: number,
+  companyId: number
+) {
+  return prisma.incomeExpense.groupBy({
+    by: ['projectId'],
+    _sum: {
+      income: true,
+      expense: true,
+    },
+    where: {
+      createdAt: {
+        gte: startDateToTimeStamp,
+        lte: endDateToTimeStamp,
+      },
+      companyId,
+    },
+  });
+}
+
+async function matchProjectListsAndIncomeExpenses(
+  projectLists: {
+    id: number;
+    name: string;
+  }[],
+  incomeExpensesLists: (Prisma.PickEnumerable<
+    Prisma.IncomeExpenseGroupByOutputType,
+    'projectId'[]
+  > & {
+    _sum: {
+      income: number | null;
+      expense: number | null;
+    };
+  })[]
+) {
+  const categories: string[] = [];
+  const income: number[] = [];
+  const expense: number[] = [];
+
+  projectLists.forEach((project) => {
+    const match = incomeExpensesLists.find(
+      (incomeExpense) => incomeExpense.projectId === project.id
+    );
+    if (match) {
+      categories.push(project.name);
+      // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
+      // eslint-disable-next-line no-underscore-dangle
+      income.push(match._sum.income!);
+      // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
+      // eslint-disable-next-line no-underscore-dangle
+      expense.push(match._sum.expense!);
+    }
+  });
+  return { categories, income, expense };
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,54 +83,33 @@ export default async function handler(
 ) {
   const { startDate, endDate, currentPage = 1, itemsPerPage = 10 } = req.query;
   try {
-    if (startDate && endDate && currentPage && itemsPerPage) {
-      // Info: (20240527 - Gibbs) transfer startDate to timestamp, using local time
-      const startDateToTimeStamp = timestampInSeconds(
-        new Date(startDate + 'T00:00:00+08:00').getTime()
+    if (
+      startDate &&
+      endDate &&
+      currentPage &&
+      itemsPerPage &&
+      isTimestamp(startDate as string) &&
+      isTimestamp(endDate as string)
+    ) {
+      const session = await checkAdmin(req, res);
+      const { companyId } = session;
+      const startDateTimeStampToNumber = Number(startDate);
+      const endDateTimeStampToNumber = Number(endDate);
+      const projectLists = await getProjectLists(companyId);
+      const incomeExpensesLists = await getIncomeExpenses(
+        startDateTimeStampToNumber,
+        endDateTimeStampToNumber,
+        companyId
       );
-      const endDateToTimeStamp = timestampInSeconds(
-        new Date(endDate + 'T00:00:00+08:00').getTime()
+      const { categories, income, expense } = await matchProjectListsAndIncomeExpenses(
+        projectLists,
+        incomeExpensesLists
       );
-      const projectLists = await prisma.project.findMany({
-        select: {
-          id: true,
-          name: true,
-        },
-      });
-      const cashflowLists = await prisma.incomeExpense.groupBy({
-        by: ['projectId'],
-        _sum: {
-          income: true,
-          expense: true,
-        },
-        where: {
-          createdAt: {
-            gte: startDateToTimeStamp,
-            lte: endDateToTimeStamp,
-          },
-        },
-      });
-      const categories: string[] = [];
-      const income: number[] = [];
-      const expense: number[] = [];
-
-      projectLists.forEach((project) => {
-        const match = cashflowLists.find((cashflow) => cashflow.projectId === project.id);
-        if (match) {
-          categories.push(project.name);
-          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
-          // eslint-disable-next-line no-underscore-dangle
-          income.push(match._sum.income!);
-          // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
-          // eslint-disable-next-line no-underscore-dangle
-          expense.push(match._sum.expense!);
-        }
-      });
       const { httpCode, result } = formatApiResponse<IProjectROIComparisonChartDataWithPagination>(
         STATUS_MESSAGE.SUCCESS_GET,
         {
-          startDate: startDateToTimeStamp,
-          endDate: endDateToTimeStamp,
+          startDate: startDateTimeStampToNumber,
+          endDate: endDateTimeStampToNumber,
           categories,
           series: [income, expense],
           currentPage: Number(currentPage),
