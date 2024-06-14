@@ -495,13 +495,6 @@ const ViewFinancialSection = ({
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       }
-
-      // Deprecated: (20240531 - Shirley)
-      // eslint-disable-next-line no-console
-      console.table({
-        windowWidth,
-        chartWidth: chartWidthRef.current,
-      });
     };
 
     handleResize();
@@ -803,7 +796,7 @@ const ViewFinancialSection = ({
                   pageNumber={pageNumber}
                   width={chartWidth}
                   height={chartHeight}
-                  className="left-8% iphonese:left-11% iphonexr:left-14% sm:left-35% md:left-35% absolute top-1/3 w-full -translate-x-1/2 -translate-y-1/2 sm:top-1/2"
+                  className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
                 />
               </Document>
             </div>
