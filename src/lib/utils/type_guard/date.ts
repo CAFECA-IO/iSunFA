@@ -20,11 +20,8 @@ export function isDateFormatYYYYMMDD(date: string): date is string {
 }
 
 export function isTimestamp(timestampOfDate: string): boolean {
-  if (typeof timestampOfDate === 'string') {
-    const num = Number(timestampOfDate) * ONE_SECOND_IN_MS;
-    const timeNum = new Date(num).getTime();
-    const result = num === timeNum;
-    return result;
-  }
-  return false;
+  const num = Number(timestampOfDate) * ONE_SECOND_IN_MS;
+  const timeNum = new Date(num).getTime();
+  const result = num === timeNum;
+  return result;
 }
