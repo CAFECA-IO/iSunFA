@@ -3,7 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import company from './seed_json/company.json';
 import admin from './seed_json/admin.json';
 import projects from './seed_json/project.json';
-import IncomeExpenses from './seed_json/income_expense.json';
+import incomeExpenses from './seed_json/income_expense.json';
+import milestones from './seed_json/milestone.json';
+import generatedReports from './seed_json/generated_report.json';
+import pendingReports from './seed_json/pending_report.json';
 
 const prisma = new PrismaClient();
 
@@ -78,7 +81,7 @@ async function createProjects() {
 }
 
 async function createIncomeExpenses() {
-  IncomeExpenses.map(async (incomeExpense) => {
+  incomeExpenses.map(async (incomeExpense) => {
     await prisma.incomeExpense.create({
       data: {
         income: incomeExpense.income,
@@ -92,6 +95,65 @@ async function createIncomeExpenses() {
   });
 }
 
+async function createMilestones() {
+  milestones.map(async (milestone) => {
+    await prisma.milestone.create({
+      data: {
+        id: milestone.id,
+        projectId: milestone.project_id,
+        startDate: milestone.start_date,
+        endDate: milestone.end_date,
+        status: milestone.status,
+        createdAt: milestone.created_at,
+        updatedAt: milestone.updated_at,
+      },
+    });
+  });
+}
+
+async function createGeneratedReports() {
+  generatedReports.map(async (generatedReport) => {
+    await prisma.report.create({
+      data: {
+        id: generatedReport.id,
+        name: generatedReport.name,
+        from: generatedReport.from,
+        to: generatedReport.to,
+        type: generatedReport.type,
+        reportType: generatedReport.reportType,
+        status: generatedReport.status,
+        projectId: generatedReport?.projectId,
+        reportLink: generatedReport.reportLink,
+        downloadLink: generatedReport.downloadLink,
+        blockChainExplorerLink: generatedReport.blockChainExplorerLink,
+        evidenceId: generatedReport.evidenceId,
+        createdAt: generatedReport.createdAt,
+        updatedAt: generatedReport.updatedAt,
+      },
+    });
+  });
+}
+
+async function createPendingReports() {
+  pendingReports.map(async (pendingReport) => {
+    await prisma.report.create({
+      data: {
+        id: pendingReport.id,
+        name: pendingReport.name,
+        from: pendingReport.from,
+        to: pendingReport.to,
+        type: pendingReport.type,
+        reportType: pendingReport.reportType,
+        status: pendingReport.status,
+        remainingSeconds: pendingReport.remainingSeconds,
+        paused: pendingReport.paused,
+        createdAt: pendingReport.createdAt,
+        updatedAt: pendingReport.updatedAt,
+      },
+    });
+  });
+}
+
 async function main() {
   // const now = Date.now();
   // const nowTimestamp = timestampInSeconds(now);
@@ -100,8 +162,25 @@ async function main() {
   await createCompany();
   await createAdmin();
   await createProjects();
-  await new Promise((resolve) => { setTimeout(resolve, 5000); });
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
   await createIncomeExpenses();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createMilestones();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createGeneratedReports();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createPendingReports();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
 }
 
 main()
