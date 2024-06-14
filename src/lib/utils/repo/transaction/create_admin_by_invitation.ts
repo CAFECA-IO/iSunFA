@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { IInvitation } from '@/interfaces/invitation';
 import { IAdmin } from '@/interfaces/admin';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { formatAdmin } from '../../formatter/admin.formatter';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 export async function createAdminByInvitation(userId: number, invitation: IInvitation) {
   const now = Date.now();
