@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IClient } from '@/interfaces/client';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function listClient(companyId: number): Promise<IClient[]> {
   const listedClient = await prisma.client.findMany({

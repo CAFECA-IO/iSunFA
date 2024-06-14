@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { ONE_DAY_IN_S } from '@/constants/time';
 import { IInvitation } from '@/interfaces/invitation';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function getInvitationByCode(code: string): Promise<IInvitation> {
   const invitation = (await prisma.invitation.findUnique({

@@ -5,10 +5,10 @@ import { IUser } from '@/interfaces/user';
 import { IAdmin } from '@/interfaces/admin';
 import { RoleName } from '@/constants/role_name';
 import { ICompany } from '@/interfaces/company';
-import { getSession } from './get_session';
-import { getProjectById } from './repo/project.repo';
-import { timestampInSeconds } from './common';
-import { getInvitationByCode } from './repo/invitation.repo';
+import { getSession } from '@/lib/utils/get_session';
+import { getProjectById } from '@/lib/utils/repo/project.repo';
+import { timestampInSeconds } from '@/lib/utils/common';
+import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 import {
   getAdminByCompanyIdAndUserId,
   getAdminByCompanyIdAndUserIdAndRoleName,

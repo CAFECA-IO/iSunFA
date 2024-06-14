@@ -6,7 +6,7 @@ import { IRole } from '@/interfaces/role';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { IUser } from '@/interfaces/user';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function listAdminByCompanyId(companyId: number): Promise<IAdmin[]> {
   const adminList: IAdmin[] = await prisma.admin.findMany({

@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
 import { Prisma } from '@prisma/client';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function listUser(): Promise<IUser[]> {
   const userList = await prisma.user.findMany();

@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { ICompanyKYC } from '@/interfaces/company_kyc';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function createCompanyKYC(
   companyId: number,
