@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -32,10 +33,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: 'COMPANY_ADMIN2',
+            name: ROLE_NAME.OWNER,
           },
           create: {
-            name: 'COMPANY_ADMIN2',
+            name: ROLE_NAME.OWNER,
             permissions: ['hihi', 'ooo'],
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
@@ -77,7 +78,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.user.id },
+    session: { userId: admin.user.id, companyId: admin.company.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 
@@ -127,7 +128,7 @@ afterEach(async () => {
   }
 });
 
-describe('handler', () => {
+describe('companyId handler', () => {
   it('should handle GET method', async () => {
     req.method = 'GET';
     req.headers = { userid: '123' };

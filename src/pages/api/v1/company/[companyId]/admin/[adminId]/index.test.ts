@@ -47,10 +47,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE_NAME.SUPER_ADMIN,
+            name: ROLE_NAME.OWNER,
           },
           create: {
-            name: ROLE_NAME.SUPER_ADMIN,
+            name: ROLE_NAME.OWNER,
             permissions: ['hihi'],
             createdAt: 0,
             updatedAt: 0,
@@ -71,13 +71,13 @@ beforeEach(async () => {
   });
   const role = await prisma.role.findUnique({
     where: {
-      name: ROLE_NAME.SUPER_ADMIN,
+      name: ROLE_NAME.OWNER,
     },
   });
   if (!role) {
     await prisma.role.create({
       data: {
-        name: ROLE_NAME.SUPER_ADMIN,
+        name: ROLE_NAME.OWNER,
         permissions: ['hihi'],
         createdAt: 0,
         updatedAt: 0,
@@ -92,7 +92,6 @@ beforeEach(async () => {
     body: {},
     session: { userId: admin.user.id, companyId: admin.company.id },
   } as unknown as jest.Mocked<NextApiRequest>;
-
   res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
@@ -171,8 +170,8 @@ describe('API Handler Tests', () => {
   it('should update admin when PUT method is used and valid data is provided', async () => {
     req.method = 'PUT';
     req.body = {
-      status: false,
-      roleName: ROLE_NAME.SUPER_ADMIN,
+      status: true,
+      roleName: ROLE_NAME.OWNER,
     };
     req.query = { adminId: admin.id.toString() };
     await handler(req, res);

@@ -1,6 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkUser } from '@/lib/utils/auth_check';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -10,10 +10,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'PUT') {
-      if (!req.query.companyId) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const companyIdNum = Number(req.query.companyId);
+      const companyIdNum = convertStringToNumber(req.query.companyId);
       const session = await checkUser(req, res);
       session.companyId = companyIdNum;
       const { httpCode, result } = formatApiResponse<string>(
