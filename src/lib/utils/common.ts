@@ -40,8 +40,10 @@ export const timestampToString = (timestamp: number | undefined) => {
       day: '-',
       tomorrow: '-',
       month: '-',
-      monthAndDay: '-',
+      monthString: '-',
+      monthShortName: '-',
       monthFullName: '-',
+      monthAndDay: '-',
       year: '-',
       lastYear: '-',
       lastYearDate: '-',
@@ -110,6 +112,7 @@ export const timestampToString = (timestamp: number | undefined) => {
       .padStart(2, '0')}`, // e.g. 2021-01-02
     month: `${month}`.padStart(2, '0'), // e.g. 01
     monthString: `${monthString}`, // e.g. January (with i18n)
+    monthShortName: `${monthNameShort}`, // e.g. Jan.
     monthFullName: `${monthName}`, // e.g. January
     monthAndDay: `${monthNameShort} ${day}`, // e.g. Jan. 01
     year: `${year}`, // e.g. 2021
@@ -400,4 +403,14 @@ export function isParamString(param: string | string[] | undefined): param is st
   }
 
   return true;
+}
+
+export function changeDateToTimeStampOfDayEnd(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T23:59:59+08:00').getTime());
+  return dateToTimeStamp;
+}
+
+export function changeDateToTimeStampOfDayStart(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T00:00:00+08:00').getTime());
+  return dateToTimeStamp;
 }

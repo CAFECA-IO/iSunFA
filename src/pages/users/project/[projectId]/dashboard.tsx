@@ -74,7 +74,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           <ProjectSidebar projectId={projectId} />
           <div className="flex min-h-screen bg-gray-100">
-            <div className="mt-120px flex-1 md:ml-80px">
+            <div className="mb-60px mt-120px flex-1 md:ml-80px">
               <div className="flex flex-col px-16px md:px-60px">
                 <div className="flex w-full items-center justify-between">
                   {/* Info: (20240611 - Julian) Title */}
@@ -106,7 +106,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                   </div>
                 </div>
                 {/* Info: (20240612 - Julian) Divider */}
-                <hr className="border-px my-24px border-divider-stroke-lv-4" />
+                <hr className="my-24px border border-divider-stroke-lv-4" />
                 {/* Info: (20240612 - Julian) stage selection (mobile) */}
                 <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
                   <p className="font-semibold">Stage</p>
