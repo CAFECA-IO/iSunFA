@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/admin/[adminId]/index';
 import prisma from '@/client';
-import { ROLE } from '@/constants/role';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -47,10 +47,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.SUPER_ADMIN,
           },
           create: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.SUPER_ADMIN,
             permissions: ['hihi'],
             createdAt: 0,
             updatedAt: 0,
@@ -71,13 +71,13 @@ beforeEach(async () => {
   });
   const role = await prisma.role.findUnique({
     where: {
-      name: 'test_admin',
+      name: ROLE_NAME.SUPER_ADMIN,
     },
   });
   if (!role) {
     await prisma.role.create({
       data: {
-        name: 'test_admin',
+        name: ROLE_NAME.SUPER_ADMIN,
         permissions: ['hihi'],
         createdAt: 0,
         updatedAt: 0,
@@ -137,15 +137,6 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        name: 'test_admin',
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('API Handler Tests', () => {
@@ -181,7 +172,7 @@ describe('API Handler Tests', () => {
     req.method = 'PUT';
     req.body = {
       status: false,
-      roleName: 'test_admin',
+      roleName: ROLE_NAME.SUPER_ADMIN,
     };
     req.query = { adminId: admin.id.toString() };
     await handler(req, res);
@@ -259,7 +250,7 @@ describe('API Handler Tests', () => {
     req.query = { adminId: '-1' };
     req.body = {
       status: false,
-      roleName: ROLE.VIEWER,
+      roleName: ROLE_NAME.VIEWER,
     };
     await handler(req, res);
 

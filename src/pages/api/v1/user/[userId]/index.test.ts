@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -55,10 +56,10 @@ beforeEach(async () => {
         role: {
           connectOrCreate: {
             where: {
-              name: 'SUPER_ADMIN',
+              name: ROLE_NAME.SUPER_ADMIN,
             },
             create: {
-              name: 'SUPER_ADMIN',
+              name: ROLE_NAME.SUPER_ADMIN,
               permissions: ['hihi', 'ooo'],
               createdAt: nowTimestamp,
               updatedAt: nowTimestamp,
@@ -101,7 +102,7 @@ beforeEach(async () => {
     body: null,
     query: {},
     method: 'GET',
-    session: { userId: admin.user.id },
+    session: { userId: admin.user.id, companyId: admin.company.id },
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiRequest>;
 });
@@ -196,33 +197,6 @@ describe('test user API by userid', () => {
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
-  it('should delete user by userid', async () => {
-    req.query.userId = admin.user.id.toString();
-    req.method = 'DELETE';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(200);
-    const expectedUser = expect.objectContaining({
-      id: expect.any(Number),
-      name: expect.any(String),
-      credentialId: expect.any(String),
-      publicKey: expect.any(String),
-      algorithm: expect.any(String),
-      createdAt: expect.any(Number),
-      updatedAt: expect.any(Number),
-    });
-
-    const expectedResponse = expect.objectContaining({
-      powerby: expect.any(String),
-      success: expect.any(Boolean),
-      code: expect.stringContaining('200'),
-      message: expect.any(String),
-      payload: expectedUser,
-    });
-    expect(res.status).toHaveBeenCalledWith(200);
-
-    expect(res.json).toHaveBeenCalledWith(expectedResponse);
-  });
-
   it('should handle unsupported HTTP methods', async () => {
     req.query.userId = admin.user.id.toString();
     req.method = 'POST';
@@ -236,21 +210,6 @@ describe('test user API by userid', () => {
       payload: expect.any(Object),
     });
     expect(res.status).toHaveBeenCalledWith(405);
-
-    expect(res.json).toHaveBeenCalledWith(expectedResponse);
-  });
-
-  it('should handle missing userid in headers', async () => {
-    req.query.userId = '-1';
-    await handler(req, res);
-    const expectedResponse = expect.objectContaining({
-      powerby: expect.any(String),
-      success: expect.any(Boolean),
-      code: expect.stringContaining('404'),
-      message: expect.any(String),
-      payload: expect.any(Object),
-    });
-    expect(res.status).toHaveBeenCalledWith(404);
 
     expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });

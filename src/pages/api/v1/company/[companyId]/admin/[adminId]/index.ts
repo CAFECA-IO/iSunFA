@@ -4,7 +4,8 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { IAdmin } from '@/interfaces/admin';
-import { checkAdmin, checkOwner } from '@/lib/utils/auth_check';
+import { checkAdmin, checkRole } from '@/lib/utils/auth_check';
+import { ROLE_NAME } from '@/constants/role_name';
 
 export default async function handler(
   req: NextApiRequest,
@@ -32,7 +33,7 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
     } else if (req.method === 'PUT') {
-      const session = await checkOwner(req, res);
+      const session = await checkRole(req, res, ROLE_NAME.SUPER_ADMIN);
       const { companyId } = session;
       const { status, roleName } = req.body;
       if (!status && !roleName) {
@@ -79,7 +80,7 @@ export default async function handler(
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
-      const session = await checkOwner(req, res);
+      const session = await checkRole(req, res, ROLE_NAME.SUPER_ADMIN);
       const { companyId } = session;
       const getAdmin: IAdmin = (await prisma.admin.findUnique({
         where: {
