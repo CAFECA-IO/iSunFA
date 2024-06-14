@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -13,11 +13,18 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { IRole } from '@/interfaces/role';
+import { cn } from '@/lib/utils/common';
 
 const SelectCompanyPageBody = () => {
-  const { signedIn, username, selectCompany, isSelectCompany } = useUserCtx();
-  const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
-    useGlobalCtx();
+  const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
+    useUserCtx();
+  const {
+    toastHandler,
+    companyInvitationModalVisibilityHandler,
+    createCompanyModalVisibilityHandler,
+  } = useGlobalCtx();
 
   const router = useRouter();
 
@@ -28,45 +35,67 @@ const SelectCompanyPageBody = () => {
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
-    data: companyData,
-    success: companyDataSuccess,
-    isLoading: isCompanyDataLoading,
-  } = APIHandler<ICompany[]>(APIName.COMPANY_LIST, {});
+    trigger: listCompany,
+    data: companyAndRoleList,
+    success: companyAndRoleListSuccess,
+    isLoading: iscompanyAndRoleListLoading,
+  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST, {}, false, false);
 
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
-  const [companyList, setCompanyList] = useState<ICompany[]>([]);
-  const [filteredCompanyList, setFilteredCompanyList] = useState<ICompany[]>([]);
+  const [companyList, setCompanyList] = useState<Array<{ company: ICompany; role: IRole }>>([]);
+  const [filteredCompanyList, setFilteredCompanyList] = useState<
+    Array<{ company: ICompany; role: IRole }>
+  >([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedCompanyName = selectedCompany || 'Select an Company';
+  const selectedCompanyName = selectedCompany?.name ?? 'Select an Company';
 
-  const menuOpenHandler = () => setIsCompanyMenuOpen(!isCompanyMenuOpen);
+  const menuOpenHandler = () => {
+    listCompany({
+      header: {
+        userid: username || DEFAULT_DISPLAYED_USER_NAME,
+      },
+    });
+    setIsCompanyMenuOpen(!isCompanyMenuOpen);
+  };
 
   const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(event.target.value);
   };
 
   const selectCompanyClickHandler = () => {
+    if (selectedCompany === null) return;
     selectCompany(selectedCompany);
-
-    if (isSelectCompany) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-    }
   };
 
   useEffect(() => {
-    if (companyDataSuccess && companyData) {
-      setCompanyList(companyData);
-      setFilteredCompanyList(companyData);
+    if (successSelectCompany) {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    } else if (successSelectCompany === false) {
+      toastHandler({
+        id: `companySelectError_${errorCode}`,
+        type: ToastType.ERROR,
+        content: `Failed to select company: ${errorCode}`,
+        closeable: true,
+      });
     }
-  }, [companyDataSuccess, companyData]);
+  }, [successSelectCompany, errorCode]);
+
+  useEffect(() => {
+    if (companyAndRoleListSuccess && companyAndRoleList) {
+      setCompanyList(companyAndRoleList);
+      setFilteredCompanyList(companyAndRoleList);
+    }
+  }, [companyAndRoleListSuccess, companyAndRoleList]);
 
   useEffect(() => {
     if (searchValue !== '') {
       const filteredList = companyList.filter(
-        (company) => company.name.toLowerCase().includes(searchValue.toLowerCase())
-        // ToDo: (20240516 - Julian) role
+        (companyAndRole) =>
+          // eslint-disable-next-line implicit-arrow-linebreak
+          companyAndRole.company.name.toLowerCase().includes(searchValue.toLowerCase())
+        // eslint-disable-next-line implicit-arrow-linebreak
       );
       setFilteredCompanyList(filteredList);
     } else {
@@ -74,28 +103,31 @@ const SelectCompanyPageBody = () => {
     }
   }, [searchValue]);
 
-  const displayCompanyList = !isCompanyDataLoading ? (
-    filteredCompanyList.map((company) => {
+  const displayCompanyList = !iscompanyAndRoleListLoading ? (
+    filteredCompanyList.map((companyAndRole) => {
       const companyClickHandler = () => {
-        setSelectedCompany(company.name);
+        setSelectedCompany(companyAndRole.company);
         setIsCompanyMenuOpen(false);
       };
       return (
         <button
-          key={company.id}
+          key={companyAndRole.company.id}
           onClick={companyClickHandler}
           type="button"
           className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
         >
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
-            {/* ToDo: (20240516 - Julian) icon */}
-            <Image alt={company.name} src={'/entities/happy.png'} width={20} height={20} />
+            <Image
+              alt={companyAndRole.company.name}
+              src={'/entities/happy.png'}
+              width={20}
+              height={20}
+            />
           </div>
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
-            {company.name}
+            {companyAndRole.company.name}
           </p>
-          {/* ToDo: (20240516 - Julian) role */}
-          <p className="text-xs text-lightGray5">{'my role'}</p>
+          <p className="text-xs text-lightGray5">{companyAndRole.role.name}</p>
         </button>
       );
     })
@@ -155,10 +187,15 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) company selection */}
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
-          <div className="relative flex w-200px items-center justify-center py-4">
-            <Image alt="avatar" src="/elements/avatar.png" width={200} height={200} />
+          <div className="relative flex w-200px items-center justify-center py-0">
+            <Image
+              alt="avatar"
+              src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+              width={200}
+              height={200}
+            />
             {/* Info: (20240513 - Julian) green dot */}
-            <div className="absolute bottom-4 right-4">
+            <div className={cn('absolute right-4', userAuth?.imageId ? 'bottom-4' : 'bottom-0')}>
               <svg
                 width="41"
                 height="40"
@@ -197,9 +234,8 @@ const SelectCompanyPageBody = () => {
               </button>
               <div className="w-px self-stretch bg-slate-300" />
               <button
-                // ToDo: (20240514 - Julian) select company function
                 type="button"
-                disabled={selectedCompany === ''}
+                disabled={selectedCompany === null}
                 className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
                 onClick={selectCompanyClickHandler}
               >

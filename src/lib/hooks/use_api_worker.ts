@@ -41,11 +41,16 @@ const useAPIWorker = <Data>(
     requestIdRef.current = requestId;
 
     setIsLoading(true);
+    setSuccess(undefined);
+    setCode(undefined);
+    setError(null);
+    setData(undefined);
 
     worker.postMessage({
       apiConfig,
       options: {
         ...options,
+        header: input?.header || options.header,
         params: input?.params || options.params,
         query: input?.query || options.query,
         body: input?.body || options.body,

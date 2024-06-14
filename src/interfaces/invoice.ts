@@ -1,16 +1,17 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
 
+// Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
 export interface IInvoice {
-  invoiceId: string;
+  journalId: number | null;
   date: number; // timestamp
   eventType: EventType;
   paymentReason: string;
   description: string;
-  venderOrSupplyer: string;
-  projectId: string | null; // Info: TO Murky project id is nullable (20240515 - tzuhan)
-  project: string; // Info: TO Murky if project is null then it will be string 'None' (20240515 - tzuhan)
-  contractId: string | null; // Info: TO Murky contract id is nullable (20240515 - tzuhan)
-  contract: string; // Info: TO Murky if contract is null then it will be string 'None' (20240515 - tzuhan)
+  vendorOrSupplier: string;
+  projectId: number | null;
+  project: string | null;
+  contractId: number | null;
+  contract: string | null;
   payment: IPayment;
 }

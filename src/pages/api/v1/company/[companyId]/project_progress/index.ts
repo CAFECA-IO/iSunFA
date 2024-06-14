@@ -1,58 +1,72 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IProjectProgress } from '@/interfaces/progress';
+import { IProjectProgressChartData } from '@/interfaces/project_progress_chart';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, changeDateToTimeStampOfDayEnd } from '@/lib/utils/common';
+import prisma from '@/client';
+import { checkAdmin } from '@/lib/utils/auth_check';
+import { isDateFormatYYYYMMDD } from '@/lib/utils/type_guard/date';
+import { stageList } from '@/constants/project';
 
-const responseDataArray: IProjectProgress = {
-  date: new Date('2024-03-01'),
-  progress: [
-    {
-      progress: 'Designing',
-      project: ['Project1', 'Project2'],
+async function getStatusNumber(dateToTimeStamp: number, companyId: number) {
+  const statusNumber = await prisma.milestone.groupBy({
+    by: ['status'],
+    _count: {
+      id: true,
     },
-    {
-      progress: 'Beta Testing',
-      project: ['Project3', 'Project14', 'Project5'],
+    where: {
+      startDate: {
+        lte: dateToTimeStamp,
+      },
+      endDate: {
+        gte: dateToTimeStamp,
+      },
+      project: {
+        companyId,
+      },
     },
-    {
-      progress: 'Develop',
-      project: ['Project6', 'Project7'],
-    },
-    {
-      progress: 'Sold',
-      project: ['Project8', 'Project9', 'Project10'],
-    },
-    {
-      progress: 'Selling',
-      project: ['Project11', 'Project12'],
-    },
-    {
-      progress: 'Archived',
-      project: ['Project13'],
-    },
-  ],
-};
+  });
+  return statusNumber;
+}
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProjectProgress>>
+  res: NextApiResponse<IResponseData<IProjectProgressChartData>>
 ) {
   const { date } = req.query;
   try {
-    if (date) {
-      const { httpCode, result } = formatApiResponse<IProjectProgress>(STATUS_MESSAGE.SUCCESS_GET, {
-        ...responseDataArray,
-        date: new Date(date as string),
-      });
+    if (date && isDateFormatYYYYMMDD(date as string)) {
+      const session = await checkAdmin(req, res);
+      const { companyId } = session;
+      const dateToTimeStamp = changeDateToTimeStampOfDayEnd(date as string);
+      const statusNumber = await getStatusNumber(dateToTimeStamp, companyId);
+      const responseData: IProjectProgressChartData = {
+        date: dateToTimeStamp,
+        categories: stageList,
+        series: [
+          {
+            name: 'Projects',
+            data: stageList.map((stage) => {
+              const match = statusNumber.find((status) => status.status === stage);
+              // Info: (20240612 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
+              // eslint-disable-next-line no-underscore-dangle
+              return match ? match._count.id : 0;
+            }) as number[],
+          },
+        ],
+      };
+      const { httpCode, result } = formatApiResponse<IProjectProgressChartData>(
+        STATUS_MESSAGE.SUCCESS_GET,
+        responseData
+      );
       res.status(httpCode).json(result);
     }
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IProjectProgress>(
+    const { httpCode, result } = formatApiResponse<IProjectProgressChartData>(
       error.message,
-      {} as IProjectProgress
+      {} as IProjectProgressChartData
     );
     res.status(httpCode).json(result);
   }

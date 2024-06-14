@@ -3,4 +3,9 @@ export interface ICompany {
   code: string;
   regional: string;
   name: string;
+  kycStatus: boolean;
+  imageId: string;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
 }

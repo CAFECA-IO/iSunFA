@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
@@ -11,13 +11,15 @@ import { GetServerSideProps } from 'next';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { timestampToString } from '@/lib/utils/common';
 import { MessageType } from '@/interfaces/message_modal';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { ILineItem } from '@/interfaces/line_item';
 
 interface IJournalDetailPageProps {
   journalId: string;
@@ -40,7 +42,7 @@ enum VoucherItem {
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const router = useRouter();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     previewInvoiceModalDataHandler,
     previewInvoiceModalVisibilityHandler,
@@ -54,15 +56,33 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     success,
     code,
   } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
-    params: { companyId, journalId },
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
   });
+
+  const [contractId, setContractId] = useState<string>('');
+  const [journalTokenId, setJournalTokenId] = useState<string>('');
+  const [type, setType] = useState<string>('');
+  const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [reason, setReason] = useState<string>('');
+  const [vendor, setVendor] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [tax, setTax] = useState<number>(0);
+  const [fee, setFee] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentPeriod, setPaymentPeriod] = useState<string>('');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
+  const [project, setProject] = useState<string>('');
+  const [contract, setContract] = useState<string>('');
+
+  // Info: (20240517 - Murky) To Julian, 在將invoice url改成從ocr取得以後，這個變數就不需要了
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [invoiceIndex, setInvoiceIndex] = useState<string>('');
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
   useEffect(() => {
     if (success === false && isLoading === false) {
-      // TODO: Error handling @Julian (20240509 - Tzuhan)
-      // eslint-disable-next-line no-console
-      // console.log('getJournalDetail error', error, 'code: ', code);
-
       // Info: (20240517 - Julian) If get journal detail failed, show error message modal
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -79,30 +99,34 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     }
   }, [success, isLoading]);
 
-  const tokenContract = journalDetail ? journalDetail.tokenContract : '';
-  const tokenId: string = journalDetail ? journalDetail.tokenId : '';
-  const type: string = journalDetail ? journalDetail.metadatas[0].voucherType : '';
-  const dateTimestamp: number = journalDetail ? journalDetail.metadatas[0].date / 1000 : 0;
-  const reason: string = journalDetail ? journalDetail.metadatas[0].reason : '';
-  const vendor: string = journalDetail ? journalDetail.metadatas[0].companyName : '';
-  const description: string = journalDetail ? journalDetail.metadatas[0].description : '';
-  const totalPrice: number = journalDetail ? journalDetail.metadatas[0].payment.price : 0; // Info Murky Edit (20240509)
-  const tax: number = journalDetail ? journalDetail.metadatas[0].payment.taxPercentage : 0; // Info Murky Edit (20240509)
-  const fee: number = journalDetail ? journalDetail.metadatas[0].payment.fee : 0; // Info Murky Edit (20240509)
-  const paymentMethod: string = journalDetail
-    ? journalDetail.metadatas[0].payment.paymentMethod
-    : ''; // Info Murky Edit (20240509)
-  const paymentPeriod: string = journalDetail
-    ? journalDetail.metadatas[0].payment.paymentPeriod
-    : ''; // Info Murky Edit (20240509)
-  const paymentStatus: string = journalDetail
-    ? journalDetail.metadatas[0].payment.paymentStatus
-    : ''; // Info Murky Edit (20240509)
-  const project: string = journalDetail ? journalDetail.metadatas[0].project : '';
-  const contract: string = journalDetail ? journalDetail.metadatas[0].contract : '';
-  const invoiceIndex: string = journalDetail ? journalDetail.invoiceIndex : '';
+  useEffect(() => {
+    if (journalDetail) {
+      const { tokenContract, tokenId, invoice, voucher } = journalDetail;
 
-  const lineItems = journalDetail ? journalDetail.lineItems : [];
+      setContractId(tokenContract ?? '-');
+      setJournalTokenId(tokenId ?? '-');
+      setInvoiceIndex(`${journalDetail.id}`);
+
+      if (invoice) {
+        setType(invoice.eventType);
+        setDateTimestamp(invoice.date);
+        // setReason(invoice.reason); ToDo: (20240503 - Julian) interface lacks reason
+        setVendor(invoice.vendorOrSupplier);
+        setDescription(invoice.description);
+        setTotalPrice(invoice.payment.price);
+        setTax(invoice.payment.taxPercentage);
+        setFee(invoice.payment.fee);
+        setPaymentMethod(invoice.payment.method);
+        setPaymentPeriod(invoice.payment.period);
+        setPaymentStatus(invoice.payment.status);
+        setProject(invoice.project ?? 'None');
+        setContract(invoice.contract ?? 'None');
+      }
+      if (voucher) {
+        setLineItems(voucher.lineItems);
+      }
+    }
+  }, [journalDetail]);
 
   const voucherList: IVoucherItem[] = lineItems.map((lineItem) => {
     return {
@@ -139,13 +163,14 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
       };
     });
 
-  const invoicePreviewSrc = `/api/v1/company/1/invoice/${invoiceIndex}/image`;
+  // Info: (20240503 - Murky) To Julian, 如果ocr skip的話=> imageUrl: '', 這樣就不會有圖片 => 原本的位置會變成placeholder
+  const invoicePreviewSrc = journalDetail?.OCR?.imageUrl ?? '';
 
   const copyTokenContractHandler = () => {
-    navigator.clipboard.writeText(tokenContract);
+    navigator.clipboard.writeText(contractId);
   };
   const copyTokenIdHandler = () => {
-    navigator.clipboard.writeText(tokenId);
+    navigator.clipboard.writeText(journalTokenId);
   };
 
   const invoicePreviewClickHandler = () => {
@@ -276,7 +301,10 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
               ? voucher.debit
               : voucher.credit;
       return (
-        <div key={voucher.id} className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+        <div
+          key={voucher.id}
+          className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px"
+        >
           <p className="w-9/10 whitespace-nowrap">{str}</p>
         </div>
       );
@@ -334,21 +362,21 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
-          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Particulars</p>
-          <div className="w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Debit</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.debit}</p>
           </div>
         </div>
@@ -362,21 +390,21 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Accounting</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Particulars</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">Credit</p>
-          <div className="overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.credit}</p>
           </div>
         </div>
@@ -470,7 +498,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                           </button>
                         </div>
 
-                        <p className="break-all text-darkBlue">{tokenContract}</p>
+                        <p className="break-all text-darkBlue">{contractId}</p>
                       </div>
                       <button
                         type="button"
@@ -493,7 +521,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
                             <PiCopySimpleBold size={16} />
                           </button>
                         </div>
-                        <p className=" text-darkBlue">{tokenId}</p>
+                        <p className=" text-darkBlue">{journalTokenId}</p>
                       </div>
                       <button
                         type="button"

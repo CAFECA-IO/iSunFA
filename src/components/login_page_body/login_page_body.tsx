@@ -1,20 +1,29 @@
 /* eslint-disable */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
-import Image from 'next/image';
+import { ToastType } from '@/interfaces/toastify';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import Link from 'next/link';
+import { pageQueries } from '@/interfaces/page_query';
 
-const LoginPageBody = () => {
-  const { signUp, signIn } = useUserCtx();
+interface ILoginPageBodyProps {
+  invitation?: string;
+  action?: string;
+}
+
+const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
+  const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
-    registerModalData,
-    registerModalVisibilityHandler,
     registerModalDataHandler,
+    registerModalVisibilityHandler,
     passKeySupportModalVisibilityHandler,
+    toastHandler,
   } = useGlobalCtx();
 
   const registerClickHandler = async () => {
+    registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
   };
 
@@ -24,19 +33,77 @@ const LoginPageBody = () => {
 
   const logInClickHandler = async () => {
     try {
-      await signIn();
+      await signIn({ invitation });
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
       console.error('signIn error in loginClickHandler:', error);
-      registerClickHandler();
+      // registerClickHandler();
     }
   };
+
+  useEffect(() => {
+    if (action === pageQueries.loginPage.actions.register) {
+      registerModalDataHandler({ invitation });
+      registerModalVisibilityHandler();
+    } else if (action === pageQueries.loginPage.actions.login) {
+      logInClickHandler();
+    }
+  }, [action]);
+
+  useEffect(() => {
+    /* Info: possible error code when login & register (20240522 - Shirley)
+       沒有註冊資料: 511ISF0001
+       伺服器錯誤: 500ISF0000
+    */
+
+    if (!signedIn && isSignInError) {
+      const toastType = errorCode === `511ISF0001` ? ToastType.WARNING : ToastType.ERROR;
+      const toastContent =
+        errorCode === `511ISF0001` ? (
+          <div>
+            <div>
+              Please{' '}
+              <button
+                onClick={registerClickHandler}
+                type="button"
+                className="text-base text-link-text-primary hover:opacity-70"
+              >
+                <div className="justify-center rounded-sm">register your device.</div>
+              </button>
+              <span className="pl-3">({errorCode})</span>
+            </div>
+          </div>
+        ) : (
+          <div className="">
+            <p className="">
+              Oops! Something went wrong. Please try again or contact customer support. ({errorCode}
+              )
+              <span className="pl-3">
+                <Link href={ISUNFA_ROUTE.CONTACT_US} className="font-bold text-link-text-warning">
+                  Help
+                </Link>
+              </span>
+            </p>
+          </div>
+        );
+
+      toastHandler({
+        id: `${errorCode}`,
+        type: toastType,
+        content: toastContent,
+        closeable: true,
+        onClose: toggleIsSignInError,
+        autoClose: false,
+      });
+    }
+  }, [errorCode, signedIn, isSignInError]);
+
   return (
     <div>
-      <div className="bg-surface-neutral-main-background">
+      <div className="bg-surface-neutral-main-background pb-36 lg:pb-0">
         <div className="flex gap-5 max-lg:flex-col max-lg:gap-0">
-          <div className="order-2 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1">
+          <div className="order-2 hidden w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1 lg:flex">
             <div className="pointer-events-none -mt-[20px] flex grow flex-col justify-start max-lg:max-w-full md:-mt-[50px] lg:-mt-[65px]">
               <div className="relative flex h-full w-full flex-col overflow-hidden py-0 max-lg:max-w-full">
                 <img src="/elements/login_bg.svg" className="size-full object-cover" />
@@ -45,20 +112,20 @@ const LoginPageBody = () => {
           </div>
           <div className="order-1 ml-5 flex w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-2">
             <div className="flex grow flex-col justify-center pb-20 max-lg:max-w-full">
-              <div className="mt-16 flex flex-col items-center px-20 max-lg:mt-20 max-lg:max-w-full max-lg:px-5">
+              <div className="mt-12 flex flex-col items-center px-20 max-lg:max-w-full max-lg:px-5 lg:mt-20">
                 <div className="flex flex-col items-center justify-center self-stretch px-20 max-lg:max-w-full max-lg:px-5">
-                  <div className="text-5xl font-bold leading-[51.84px] text-amber-400 max-lg:text-4xl">
+                  <div className="text-2xl font-bold leading-[51.84px] text-amber-400 lg:text-5xl">
                     Log In
                   </div>
-                  <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
+                  <div className="mt-5 text-center text-xs leading-6 tracking-normal text-slate-600 lg:mt-2 lg:text-base lg:font-medium">
                     Register your device → <br />
                     Scan the QR code with the device you registered with{' '}
                   </div>
                 </div>
-                <div className="mt-10 flex max-w-full flex-col justify-center max-lg:mt-10">
-                  <div className="flex flex-col justify-center rounded-[999px] max-lg:mx-2.5">
+                <div className="mt-2 flex max-w-full flex-col justify-center lg:mt-10">
+                  <div className="flex flex-col justify-center rounded-full max-lg:mx-2.5">
                     <div className="flex aspect-square flex-col items-center justify-center px-16 max-lg:px-5">
-                      <div className="flex items-center justify-center max-lg:mx-2">
+                      <div className="mx-2 flex hidden items-center justify-center lg:flex">
                         {/* Info: anonymous avatar (20240422 - Shirley) */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -90,14 +157,47 @@ const LoginPageBody = () => {
                           </defs>
                         </svg>
                       </div>
+
+                      <div className="mx-2 flex flex items-center justify-center lg:hidden">
+                        {/* Info: anonymous avatar (20240422 - Shirley) */}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="100"
+                          height="100"
+                          fill="none"
+                          viewBox="0 0 201 200"
+                        >
+                          <path
+                            fill="#CDD1D9"
+                            d="M.5 100C.5 44.772 45.272 0 100.5 0s100 44.772 100 100-44.772 100-100 100S.5 155.228.5 100z"
+                          ></path>
+                          <g clipPath="url(#clip0_13_13411)">
+                            <path
+                              fill="#7F8A9D"
+                              fillRule="evenodd"
+                              d="M100.5 68.013c-11.942 0-21.623 9.68-21.623 21.622 0 8.151 4.51 15.249 11.17 18.934a31.953 31.953 0 00-19.976 20.439 2.286 2.286 0 002.177 2.984h56.503a2.284 2.284 0 002.176-2.984 31.956 31.956 0 00-19.975-20.439c6.661-3.685 11.171-10.782 11.171-18.934 0-11.942-9.681-21.622-21.623-21.622z"
+                              clipRule="evenodd"
+                            ></path>
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_13_13411">
+                              <path
+                                fill="#fff"
+                                d="M0 0H64V64H0z"
+                                transform="translate(68.5 68)"
+                              ></path>
+                            </clipPath>
+                          </defs>
+                        </svg>
+                      </div>
                     </div>
                   </div>
                   <Button
                     variant={'tertiary'}
                     onClick={logInClickHandler}
-                    className="mx-auto mt-0 flex max-w-[400px] justify-center gap-2 py-3.5"
+                    className="mx-auto mt-0 flex max-w-[400px] justify-center px-4 py-1 lg:gap-2 lg:space-x-2 lg:px-6 lg:py-3.5"
                   >
-                    <div className="text-lg font-medium leading-7 tracking-normal">
+                    <div className="text-sm leading-7 tracking-normal lg:text-lg lg:font-medium">
                       Log in with Device
                     </div>
                     <svg
@@ -121,7 +221,7 @@ const LoginPageBody = () => {
                   <button
                     onClick={registerClickHandler}
                     type="button"
-                    className="mt-10 flex max-w-full flex-col justify-center self-center text-base font-semibold leading-6 tracking-normal text-darkBlue hover:opacity-70"
+                    className="mt-5 flex max-w-full flex-col justify-center self-center text-sm font-semibold leading-6 tracking-normal text-link-text-primary hover:opacity-70 lg:mt-10 lg:text-base"
                   >
                     <div className="justify-center rounded-sm">Register my Device</div>
                   </button>
@@ -129,7 +229,7 @@ const LoginPageBody = () => {
                 <button
                   type="button"
                   onClick={showPassKeySupport}
-                  className="mt-10 flex justify-center gap-1 rounded-sm px-4 py-2 hover:opacity-70 max-lg:mt-10"
+                  className="mt-5 flex justify-center gap-1 rounded-sm px-4 hover:opacity-70 lg:mt-10 lg:py-2"
                 >
                   <div
                     onClick={showPassKeySupport}

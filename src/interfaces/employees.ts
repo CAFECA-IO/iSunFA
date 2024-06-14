@@ -25,12 +25,20 @@ export interface IEmployeeData {
   insurance_payments: number;
   additional_of_total: number;
 }
+
 export interface IEmployee {
+  id: number;
   name: string;
+  imageId: string;
+  departmentId: number;
+  companyId: number;
   salary: number;
-  department: string;
-  start_date: Date;
+  insurancePayment: number;
   bonus: number;
-  salary_payment_mode: string;
-  pay_frequency: string;
+  salaryPayMode: string;
+  payFrequency: string;
+  startDate: number;
+  endDate: number;
+  createdAt: number;
+  updatedAt: number;
 }

@@ -234,10 +234,10 @@ const AuditReport = () => {
         {/* Date Picker */}
         <div>
           <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
+            type={DatePickerType.TEXT_PERIOD}
             period={datePeriod}
             setFilteredPeriod={setDatePeriod}
-            className="w-360px items-center text-left"
+            btnClassName="w-360px items-center text-left"
           />
         </div>
         {/* Search */}
@@ -422,11 +422,11 @@ const AuditReport = () => {
         {/* Date Picker */}
         <div>
           <DatePicker
-            type={DatePickerType.ICON}
+            type={DatePickerType.ICON_PERIOD}
             period={datePeriod}
             setFilteredPeriod={setDatePeriod}
             calenderClassName="right-0"
-            className="rounded-xs border border-stroke-neutral-solid-light bg-inherit p-2.5 text-neutral-white"
+            btnClassName="rounded-xs border border-stroke-neutral-solid-light bg-inherit p-2.5 text-neutral-white"
             buttonStyleAfterDateSelected="border-stroke-neutral-solid-light text-primaryYellow"
           />
         </div>

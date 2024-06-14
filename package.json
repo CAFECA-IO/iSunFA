@@ -1,13 +1,13 @@
 {
   "name": "iSunFA",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
     "generate": "prisma generate",
     "start": "next start",
-    "lint": "next lint && eslint --fix --ext .js,.jsx,.tx,.tsx .",
+    "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "jest",
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
@@ -15,6 +15,7 @@
     "production": "next start -p 80"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.11.1",
     "@passwordless-id/webauthn": "^1.5.0",
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
@@ -26,8 +27,11 @@
     "eslint-config-airbnb": "^19.0.4",
     "formidable": "^3.5.1",
     "i18next": "^23.7.16",
+    "jest-mock-extended": "^3.0.7",
+    "lodash-es": "^4.17.21",
     "next": "^14.2.3",
     "next-i18next": "^15.2.0",
+    "next-session": "^4.0.5",
     "nodemailer": "^6.9.8",
     "prettier": "^3.1.1",
     "react": "^18",
@@ -71,7 +75,7 @@
     "prettier-plugin-tailwindcss": "^0.5.9",
     "prisma": "^5.14.0",
     "tailwindcss": "^3.4.0",
-    "ts-jest": "^29.1.1",
+    "ts-jest": "^29.1.4",
     "typescript": "^5"
   },
   "husky": {
@@ -81,5 +85,8 @@
   },
   "engines": {
     "node": ">=18.17.1"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

@@ -1,11 +1,18 @@
+import { promises as fs } from 'fs';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ALLOWED_ORIGINS } from '@/constants/config';
+import {
+  ALLOWED_ORIGINS,
+  DEFAULT_PAGE_LIMIT,
+  DEFAULT_PAGE_START_AT,
+  FORMIDABLE_CONFIG,
+} from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
+import path from 'path';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -33,8 +40,10 @@ export const timestampToString = (timestamp: number | undefined) => {
       day: '-',
       tomorrow: '-',
       month: '-',
-      monthAndDay: '-',
+      monthString: '-',
+      monthShortName: '-',
       monthFullName: '-',
+      monthAndDay: '-',
       year: '-',
       lastYear: '-',
       lastYearDate: '-',
@@ -103,6 +112,7 @@ export const timestampToString = (timestamp: number | undefined) => {
       .padStart(2, '0')}`, // e.g. 2021-01-02
     month: `${month}`.padStart(2, '0'), // e.g. 01
     monthString: `${monthString}`, // e.g. January (with i18n)
+    monthShortName: `${monthNameShort}`, // e.g. Jan.
     monthFullName: `${monthName}`, // e.g. January
     monthAndDay: `${monthNameShort} ${day}`, // e.g. Jan. 01
     year: `${year}`, // e.g. 2021
@@ -261,8 +271,23 @@ export const firstCharToUpperCase = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+/** Info: (20240521 - Shirley)
+ * Convert timestamp in milliseconds to timestamp in seconds
+ * @param timestamp in milliseconds
+ * @returns timestamp in seconds
+ */
 export const timestampInSeconds = (timestamp: number): number => {
-  return Math.floor(timestamp / 1000);
+  if (timestamp > 10000000000) {
+    return Math.floor(timestamp / 1000);
+  }
+  return timestamp;
+};
+
+export const timestampInMilliSeconds = (timestamp: number): number => {
+  if (timestamp < 10000000000) {
+    return Math.floor(timestamp * 1000);
+  }
+  return timestamp;
 };
 
 export const countdown = (remainingSeconds: number) => {
@@ -298,4 +323,94 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
     return false;
   }
   return Object.values(value).every((v) => typeof v === 'number');
+}
+
+export function transformOCRImageIDToURL(
+  documentType: string,
+  companyId: number,
+  imageID: string
+): string {
+  return `/api/v1/company/${companyId}/${documentType}/${imageID}/image`;
+}
+
+export function transformBytesToFileSizeString(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const size = parseFloat((bytes / k ** i).toFixed(2));
+  return `${size} ${sizes[i]}`;
+}
+
+// page, limit to offset
+export function pageToOffset(
+  page: number = DEFAULT_PAGE_START_AT,
+  limit: number = DEFAULT_PAGE_LIMIT
+): number {
+  return (page - 1) * limit;
+}
+
+export const getTodayPeriodInSec = () => {
+  const today = new Date();
+  const startTimeStamp = timestampInSeconds(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  );
+  const endTimeStamp = timestampInSeconds(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).getTime()
+  );
+  return { startTimeStamp, endTimeStamp };
+};
+
+// Info Murky (20240531): This function can only be used in the server side
+export async function mkUploadFolder() {
+  const uploadFolder =
+    process.env.VERCEL === '1'
+      ? FORMIDABLE_CONFIG.uploadDir
+      : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+
+  try {
+    await fs.mkdir(uploadFolder, { recursive: false });
+  } catch (error) {
+    // Info: (20240329) Murky: Do nothing if /tmp already exist
+  }
+}
+
+export function isParamNumeric(param: string | string[] | undefined): param is string {
+  if (!param || Array.isArray(param)) {
+    return false;
+  }
+
+  const regex = /^-?\d+$/;
+  return regex.test(param);
+}
+
+export async function convertStringToNumber(param: string | string[] | undefined): Promise<number> {
+  if (typeof param !== 'string' || param.trim() === '') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+
+  const num = +param;
+  if (Number.isNaN(num)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  return num;
+}
+
+export function isParamString(param: string | string[] | undefined): param is string {
+  if (!param || Array.isArray(param)) {
+    return false;
+  }
+
+  return true;
+}
+
+export function changeDateToTimeStampOfDayEnd(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T23:59:59+08:00').getTime());
+  return dateToTimeStamp;
+}
+
+export function changeDateToTimeStampOfDayStart(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T00:00:00+08:00').getTime());
+  return dateToTimeStamp;
 }

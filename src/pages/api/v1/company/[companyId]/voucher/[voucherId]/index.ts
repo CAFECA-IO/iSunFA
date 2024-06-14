@@ -39,19 +39,19 @@ export default async function handler(
       }
 
       // Depreciate: AICH需要match這邊的type
-      // const { voucherIndex, metadatas, lineItems } = rawVoucher;
-      // const { venderOrSupplyer, paymentReason, invoiceId, ...rawMetadata } = metadatas[0];
-      // const trueMetadatas: IVoucherMetaData = {
+      // const { voucherIndex, metaData, lineItems } = rawVoucher;
+      // const {vendorOrSupplier, paymentReason, invoiceId, ...rawMetadata } = metaData[0];
+      // const truemetaData: IVoucherMetaData = {
       //   ...rawMetadata,
       //   companyId: '810af23',
-      //   companyName: venderOrSupplyer,
+      //   companyName:vendorOrSupplier,
       //   reason: paymentReason,
       //   contract: 'ISunFa開發',
       //   project: 'ISunFa',
       // };
       // const voucher: IVoucher = {
       //   voucherIndex,
-      //   metadatas: [trueMetadatas],
+      //   metaData: [truemetaData],
       //   lineItems,
       //   invoiceIndex: invoiceId,
       // };

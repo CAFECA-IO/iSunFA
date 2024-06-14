@@ -1,7 +1,7 @@
-/* eslint-disable */
 import { useState } from 'react';
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
+import { FaPlus } from 'react-icons/fa6';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { PiWrenchFill } from 'react-icons/pi';
 import { Button } from '@/components/button/button';
@@ -94,7 +94,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
   };
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-450px w-90vw max-w-600px flex-col rounded-sm bg-white p-20px md:max-h-90vh">
         {/* Info: (20240503 - Julian) title */}
         <div className="flex items-center gap-6px font-bold text-navyBlue2">
@@ -147,7 +147,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               <DatePicker
                 period={selectedDate}
                 setFilteredPeriod={setSelectedDate}
-                type={DatePickerType.CHOOSE_DATE}
+                type={DatePickerType.TEXT_DATE}
               />
             </div>
             {/* Info: (20240503 - Julian) purchase price */}
@@ -321,7 +321,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
           </div>
           {/* Info: (20240503 - Julian) confirm buttons */}
-          <div className="flex items-center justify-end gap-24px">
+          <div className="flex items-center justify-end gap-12px">
             <Button
               className="px-16px py-8px"
               type="button"
@@ -336,7 +336,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               variant="tertiary"
               disabled={isAddButtonDisabled}
             >
-              + Add
+              <p>Add</p> <FaPlus />
             </Button>
           </div>
         </form>

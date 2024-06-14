@@ -1,55 +1,34 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/client';
-import { ICard } from '@/interfaces/card';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-let card: ICard;
 
 beforeEach(async () => {
   req = {
-    headers: {},
-    body: null,
-    query: {},
-    method: '',
+    body: {},
+    method: 'POST',
     json: jest.fn(),
+    headers: {},
+    query: {},
+    session: { companyId: 5, userId: 1 },
   } as unknown as jest.Mocked<NextApiRequest>;
 
   res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
-  card = await prisma.card.create({
-    data: {
-      type: 'VISA',
-      no: '1234-1234-1234-1234',
-      expireYear: '29',
-      expireMonth: '01',
-      cvc: '330',
-      name: 'Taiwan Bank',
-    },
-  });
 });
 
 afterEach(async () => {
   jest.clearAllMocks();
-  try {
-    await prisma.card.delete({
-      where: {
-        id: card.id,
-      },
-    });
-  } catch (error) {
-    // Info: (20240515 - Jacky) If already deleted, ignore the error.
-  }
 });
 
 describe('Payment API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
     req.headers.userid = '1';
-    req.query.cardId = card.id.toString();
+    req.query.cardId = '5';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -74,7 +53,7 @@ describe('Payment API Handler Tests', () => {
   it('should handle PUT requests successfully', async () => {
     req.method = 'PUT';
     req.headers.userid = '1';
-    req.query.cardId = card.id.toString();
+    req.query.cardId = '5';
     req.body = {
       type: 'MASTERCARD',
       no: '5678-5678-5678-5678',
@@ -108,7 +87,7 @@ describe('Payment API Handler Tests', () => {
     await handler(req, res);
     req.method = 'DELETE';
     req.headers.userid = '1';
-    req.query.cardId = card.id.toString();
+    req.query.cardId = '5';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -132,7 +111,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle missing userid in headers for GET requests', async () => {
     req.method = 'GET';
-    req.query.cardId = card.id.toString();
+    req.query.cardId = '5';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -148,7 +127,7 @@ describe('Payment API Handler Tests', () => {
 
   it('should handle missing id in query for GET requests', async () => {
     req.method = 'GET';
-    req.headers.userid = card.id.toString();
+    req.headers.userid = '1';
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
     expect(res.json).toHaveBeenCalledWith(

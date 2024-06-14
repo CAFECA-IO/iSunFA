@@ -67,6 +67,14 @@ module.exports = {
         'import/no-extraneous-dependencies': 'off',
         'no-nested-ternary': 'off',
         'react/require-default-props': 'off',
+        '@typescript-eslint/naming-convention': [
+          'error',
+          {
+            selector: 'function',
+            format: ['camelCase', 'PascalCase'],
+            leadingUnderscore: 'allow',
+          },
+        ],
       },
     },
   ],

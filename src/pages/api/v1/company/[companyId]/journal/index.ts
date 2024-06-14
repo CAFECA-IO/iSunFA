@@ -1,153 +1,240 @@
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
-import { IJournal } from '@/interfaces/journal';
-import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { isIVoucher } from '@/lib/utils/type_guard/voucher';
 
-export const journalArray: IJournal[] = [
-  {
-    id: '1',
-    tokenContract: '0xd38E5c25935291fFD51C9d66C3B7384494bb099A',
-    tokenId: '8978922',
-    voucherIndex: '20240402299',
-    invoiceIndex: '20240402299',
-    metadatas: [
-      {
-        date: 1713139200000,
-        voucherType: VoucherType.EXPENSE,
-        companyId: '1',
-        companyName: '文中資訊股份有限公司',
-        description:
-          'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-        reason: '記帳系統',
-        projectId: '0',
-        project: 'baifa',
-        contractId: '3',
-        contract: 'asus',
-        payment: {
-          isRevenue: false,
-          price: 109725,
-          hasTax: true,
-          taxPercentage: 5,
-          hasFee: false,
-          fee: 0,
-          paymentMethod: 'transfer',
-          paymentPeriod: PaymentPeriodType.AT_ONCE,
-          installmentPeriod: 0,
-          paymentAlreadyDone: 0,
-          paymentStatus: PaymentStatusType.UNPAID,
-          progress: 0,
+import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
+
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import prisma from '@/client';
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+
+type ApiResponseType = {
+  id: number;
+  date: number;
+  type: string | undefined;
+  particulars: string | undefined;
+  fromTo: string | undefined;
+  account: {
+    id:number;
+    debit: boolean;
+    account: string;
+    amount: number;
+  }[] | undefined;
+  projectName: string | undefined;
+  projectImageId: string | null | undefined;
+  voucherId: number | undefined;
+  voucherNo: string | undefined;
+}[];
+
+type PrismaReturnType = {
+  id: number;
+  createdAt: number;
+  invoice: {
+    eventType: string;
+    description: string;
+    vendorOrSupplier: string;
+  } | null;
+  project: {
+    name: string;
+    id: number;
+    imageId: string | null;
+  } | null;
+  voucher: {
+    id: number;
+    no: string;
+    lineItems: {
+      id: number;
+      amount: number;
+      debit: boolean;
+      account: {
+        name: string;
+      };
+    }[];
+  } | null
+}[];
+
+async function getJournals(
+  companyId: number,
+  page: number = DEFAULT_PAGE_START_AT,
+  limit: number = DEFAULT_PAGE_LIMIT,
+  eventType: string | undefined = undefined,
+  startDate: number | undefined = undefined,
+  endDate: number | undefined = undefined,
+  search: string | undefined = undefined,
+  sort: string | undefined = undefined
+) {
+  const startDateInMilliSecond = startDate ? timestampInSeconds(startDate) : undefined;
+  const endDateInMilliSecond = endDate ? timestampInSeconds(endDate) : undefined;
+
+  const offset = pageToOffset(page, limit);
+  try {
+    const journalData = await prisma.journal.findMany({
+      orderBy: {
+        createdAt: sort === 'asc' ? 'asc' : 'desc'
+      },
+      skip: offset,
+      take: limit,
+      where: {
+        // Info: (Murky - 20240527) 目前為了要讓使用者可以update journal，所以先不要限制未完成invoice或voucher
+        // NOT: {
+        //   OR: [
+        //     {
+        //       invoiceId: {
+        //         equals: null
+        //       },
+        //     },
+        //     {
+        //       voucherId: {
+        //         equals: null
+        //       },
+        //     },
+        //   ],
+        // },
+        companyId,
+        createdAt: {
+          gte: startDateInMilliSecond,
+          lte: endDateInMilliSecond
         },
-      },
-    ],
-    lineItems: [
-      {
-        lineItemIndex: '20240402001',
-        account: '購買軟體',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: true,
-        amount: 10450,
-      },
-      {
-        lineItemIndex: '20240402002',
-        account: '銀行存款',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: false,
-        amount: 10450,
-      },
-    ],
-  },
-  {
-    id: '2',
-    tokenContract: '0xd38E5c25935291fFD51C9d66C3B7384494bb099A',
-    tokenId: '8978922',
-    voucherIndex: '20240402299',
-    invoiceIndex: '20240402299',
-    metadatas: [
-      {
-        date: 1713139200000,
-        voucherType: VoucherType.EXPENSE,
-        companyId: '1',
-        companyName: '文中資訊股份有限公司',
-        description:
-          'WSTP會計師工作輔助幫手: 88725, 文中網路版主機授權費用: 8400, 文中工作站授權費用: 6300',
-        reason: '記帳系統',
-        projectId: '0',
-        project: 'baifa',
-        contractId: '3',
-        contract: 'asus',
-        payment: {
-          isRevenue: false,
-          price: 109725,
-          hasTax: true,
-          taxPercentage: 5,
-          hasFee: false,
-          fee: 0,
-          paymentMethod: 'transfer',
-          paymentPeriod: PaymentPeriodType.AT_ONCE,
-          installmentPeriod: 0,
-          paymentAlreadyDone: 0,
-          paymentStatus: PaymentStatusType.UNPAID,
-          progress: 0,
+        invoice: {
+          eventType,
         },
+        OR: [
+          {
+            invoice: {
+              vendorOrSupplier: {
+                contains: search
+              }
+            }
+          },
+          {
+            invoice: {
+              description: {
+                contains: search
+              }
+            }
+          },
+          {
+            voucher: {
+              no: {
+                contains: search
+              }
+            }
+          }
+        ]
       },
-    ],
-    lineItems: [
-      {
-        lineItemIndex: '20240402001',
-        account: '購買軟體',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: true,
-        amount: 10450,
+      select: {
+        id: true,
+        createdAt: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+            imageId: true,
+          }
+        },
+        invoice: {
+          select: {
+            eventType: true,
+            description: true,
+            vendorOrSupplier: true,
+          }
+        },
+        voucher: {
+          select: {
+            id: true,
+            no: true,
+            lineItems: {
+              select: {
+                id: true,
+                amount: true,
+                debit: true,
+                account: {
+                  select: {
+                    name: true,
+                  }
+                }
+            }
+          }
+        }
+
       },
-      {
-        lineItemIndex: '20240402002',
-        account: '銀行存款',
-        description:
-          'WSTP會計師工作輔助幫手: 88,725, 文中網路版主機授權費用: 8,400, 文中工作站授權費用: 6,300',
-        debit: false,
-        amount: 10450,
-      },
-    ],
-  },
-];
+    } });
+    return journalData;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+}
+
+function formatJournals(journalData: PrismaReturnType) {
+  const journals = journalData.map((journal) => {
+    return {
+      id: journal.id,
+      date: journal.createdAt,
+      type: journal.invoice?.eventType,
+      particulars: journal.invoice?.description,
+      fromTo: journal.invoice?.vendorOrSupplier,
+      account: journal.voucher?.lineItems.map((lineItem) => {
+        return {
+          id: lineItem.id,
+          debit: lineItem.debit,
+          account: lineItem.account.name,
+          amount: lineItem.amount,
+        };
+      }),
+      projectName: journal.project?.name,
+      projectImageId: journal.project?.imageId,
+      voucherId: journal.voucher?.id,
+      voucherNo: journal.voucher?.no,
+    };
+  });
+  return journals;
+}
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournal | IJournal[]>>
+  res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
   try {
     if (req.method === 'GET') {
-      if (!journalArray) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      const {
+        companyId,
+        page, // can be undefined
+        limit,
+        eventType,
+        startDate,
+        endDate,
+        search,
+        sort
+      } = req.query;
+      // help me check type
+
+      if (
+         Array.isArray(companyId) ||
+        !companyId ||
+        typeof companyId !== 'string' ||
+        !Number.isInteger(Number(companyId)) ||
+        (page && !Number.isInteger(Number(page))) ||
+        (limit && !Number.isInteger(Number(limit))) ||
+        (eventType && typeof eventType !== 'string') ||
+        (startDate && !Number.isInteger(Number(startDate))) ||
+        (endDate && !Number.isInteger(Number(endDate))) ||
+        (search && typeof search !== 'string') ||
+        (sort && typeof sort !== 'string')) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
-      const { httpCode, result } = formatApiResponse<IJournal[]>(
+      const companyIdNumber = Number(companyId);
+      const pageInt = page ? Number(page) : DEFAULT_PAGE_START_AT;
+      const limitInt = limit ? Number(limit) : DEFAULT_PAGE_LIMIT;
+      const startDateInt = startDate ? Number(startDate) : undefined;
+      const endDateInt = endDate ? Number(endDate) : undefined;
+
+      const journalData = await getJournals(companyIdNumber, pageInt, limitInt, eventType, startDateInt, endDateInt, search, sort);
+      const journals = formatJournals(journalData);
+
+      const { httpCode, result } = formatApiResponse<ApiResponseType>(
         STATUS_MESSAGE.SUCCESS_LIST,
-        journalArray
+        journals
       );
-
-      res.status(httpCode).json(result);
-    } else if (req.method === 'POST') {
-      const { voucher } = req.body;
-      if (!voucher || !isIVoucher(voucher)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
-      }
-
-      // combine voucher to journal
-      const journal: IJournal = {
-        id: '3',
-        tokenContract: '0xd38E5c25935291fFD51C9d66C3B7384494bb099A',
-        tokenId: '8978922',
-        ...voucher,
-      };
-      journalArray.push(journal);
-
-      const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.CREATED, journal);
 
       res.status(httpCode).json(result);
     } else {
@@ -155,7 +242,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IJournal>(error.message, {} as IJournal);
+    const { httpCode, result } = formatApiResponse<ApiResponseType>(error.message, {} as ApiResponseType);
     res.status(httpCode).json(result);
   }
 }

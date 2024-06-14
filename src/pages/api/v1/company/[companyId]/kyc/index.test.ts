@@ -32,13 +32,31 @@ beforeEach(async () => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
+  let company = await prisma.company.findFirst({
+    where: {
+      code: 'TST_kyc1',
+    },
+  });
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        code: 'TST_kyc1',
+        name: 'Test Company',
+        regional: 'TW',
+        kycStatus: false,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    });
+  }
   companyKYC = await prisma.companyKYC.create({
     data: {
       company: {
-        create: {
-          name: 'ABC Company',
-          code: '123',
-          regional: 'TW',
+        connect: {
+          id: company.id,
         },
       },
       legalName: 'ABC Company',
@@ -59,7 +77,8 @@ beforeEach(async () => {
       registrationCertificateId: 'ABC123',
       taxCertificateId: 'DEF456',
       representativeIdCardId: 'GHI789',
-      createdAt: timestampInSeconds(Date.now()),
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
     },
   });
 });
@@ -116,18 +135,16 @@ describe('test company KYC API', () => {
   // });
 
   it('should handle missing user ID', async () => {
-    req.headers.userid = undefined;
     await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('404'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+    const expectedResponse = expect.objectContaining({
+      powerby: expect.any(String),
+      success: expect.any(Boolean),
+      code: expect.stringContaining('401'),
+      message: expect.any(String),
+      payload: expect.any(Object),
+    });
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(expectedResponse);
   });
 
   // Info: (20240517 - Jacky) Skip the following test cases because parse form will stuck.

@@ -10,7 +10,7 @@ const Toast = () => {
       pauseOnHover
       theme="light"
       limit={5}
-      style={{ width: 'max-content', marginTop: '80px' }}
+      style={{ width: 'max-content', marginTop: '80px', pointerEvents: 'none' }}
     />
   );
 };

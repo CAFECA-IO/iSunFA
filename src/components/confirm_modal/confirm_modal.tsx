@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
@@ -6,156 +7,325 @@ import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
-import { IJournal } from '@/interfaces/journal';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
-import { IConfirmModal } from '@/interfaces/confirm_modal';
-import { checkboxStyle } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, checkboxStyle } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import { ILineItem } from '@/interfaces/line_item';
+import { ILineItem } from '@/interfaces/line_item';
 import AccountingVoucherRow, {
   AccountingVoucherRowMobile,
 } from '@/components/accounting_voucher_row/accounting_voucher_row';
 import { Button } from '@/components/button/button';
-import { PaymentPeriodType, PaymentStatusType, VoucherType } from '@/constants/account';
+// ToDo: (20240527 - Luphia) Fix me
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
+import { IJournal } from '@/interfaces/journal';
+import { ProgressStatus } from '@/constants/account';
+import { IConfirmModal } from '@/interfaces/confirm_modal';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  confirmModalData: IConfirmModal;
+  confirmData: IConfirmModal;
 }
 
 const ConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
-  // confirmModalData,
+  confirmData,
 }: IConfirmModalProps) => {
-  const { companyId, voucherPreview } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
+  const {
+    accountingVoucher,
+    addVoucherRowHandler,
+    changeVoucherAmountHandler,
+    clearVoucherHandler,
+    totalCredit,
+    totalDebit,
+    selectJournalHandler,
+  } = useAccountingCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+
+  const { journalId, askAIId } = confirmData;
+
+  // Info: (20240527 - Julian) Get journal by id (上半部資料)
+  const {
+    trigger: getJournalById,
+    success: getJournalSuccess,
+    data: journal,
+    code: getJournalCode,
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
 
   const {
-    trigger: uploadJournal,
-    data: journal,
-    success: uploadSuccess,
-    code: uploadCode,
-    error: uploadError,
-  } = APIHandler<IJournal>(
-    APIName.VOUCHER_GENERATE,
-    {
-      params: { companyId },
-    },
-    false,
-    false
-  );
+    trigger: createVoucher,
+    data: result,
+    success: createSuccess,
+    code: createCode,
+  } = APIHandler<{
+    id: number;
+    lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number | null;
+    }[];
+  }>(APIName.VOUCHER_CREATE, {}, false, false);
+
+  const {
+    trigger: getAIStatus,
+    data: status,
+    success: statusSuccess,
+    error: statusError,
+    code: statusCode,
+  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
+
+  const {
+    trigger: getAIResult,
+    data: AIResult,
+    success: AIResultSuccess,
+    code: AIResultCode,
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
 
   const router = useRouter();
 
-  const [voucherType, setVoucherType] = useState<VoucherType>(VoucherType.EXPENSE);
-  const [date, setDate] = useState<number>(0);
-  const [reason, setReason] = useState<string>('');
+  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
+
+  const [eventType, setEventType] = useState<string>('');
+  const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  // const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [taxPercentage, setTaxPercentage] = useState<number>(0);
   const [fee, setFee] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.PAID);
+  const [paymentPeriod, setPaymentPeriod] = useState<string>('');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  // const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+
+  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
+
+  const hasAIResult = AIResultSuccess && AIResult && AIResult.lineItems.length > 0;
 
   useEffect(() => {
-    if (voucherPreview) {
-      setVoucherType(voucherPreview.metadatas[0].voucherType);
-      setDate(voucherPreview.metadatas[0].date);
-      setReason(voucherPreview.metadatas[0].reason);
-      setCompanyName(voucherPreview.metadatas[0].companyName);
-      setDescription(voucherPreview.metadatas[0].description);
-      setTotalPrice(voucherPreview.metadatas[0].payment.price);
-      setTaxPercentage(voucherPreview.metadatas[0].payment.taxPercentage);
-      setFee(voucherPreview.metadatas[0].payment.fee);
-      setPaymentMethod(voucherPreview.metadatas[0].payment.paymentMethod);
-      setPaymentPeriod(voucherPreview.metadatas[0].payment.paymentPeriod);
-      setPaymentStatus(voucherPreview.metadatas[0].payment.paymentStatus);
-      setProject(voucherPreview.metadatas[0].project);
-      setContract(voucherPreview.metadatas[0].contract);
+    if (journalId !== undefined) {
+      getJournalById({
+        params: { companyId, journalId },
+      });
     }
-  }, [voucherPreview]);
+  }, [journalId]);
 
-  const { accountingVoucher, addVoucherRowHandler, clearVoucherHandler, totalCredit, totalDebit } =
-    useAccountingCtx();
+  useEffect(() => {
+    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    clearVoucherHandler();
+    // Info: (20240528 - Julian) Reset AI status
+    setIsAskAILoading(true);
+    // Info: (20240528 - Julian) Call AI API first time
+    getAIStatus({
+      params: {
+        companyId,
+        resultId: askAIId,
+      },
+    });
+  }, [isModalVisible]);
 
-  // ToDo: (20240503 - Julian) Get real journalId from API
-  // const journalId = `${new Date().getFullYear()}${new Date().getMonth() < 10 ? `0${new Date().getMonth() + 1}` : new Date().getMonth() + 1}${new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate()}-001`;
-
-  // ToDo: (20240503 - Julian) 串接 API
-  const confirmHandler = () => {
-    if (voucherPreview) {
-      const voucher: IVoucher = {
-        voucherIndex: voucherPreview.voucherIndex,
-        invoiceIndex: voucherPreview.invoiceIndex,
-        metadatas: [
-          {
-            date,
-            voucherType: voucherType!,
-            companyId: companyId!,
-            companyName,
-            description,
-            reason,
-            projectId: voucherPreview.metadatas[0].projectId,
-            project: voucherPreview.metadatas[0].project,
-            contractId: voucherPreview.metadatas[0].contractId,
-            contract: voucherPreview.metadatas[0].contract,
-            payment: {
-              ...voucherPreview.metadatas[0].payment, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-              price: totalPrice,
-              taxPercentage,
-              fee,
-              paymentMethod,
-              paymentPeriod,
-              paymentStatus,
-            },
+  // ToDo: (20240528 - Julian) Error handling
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (askAIId && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      interval = setInterval(() => {
+        getAIStatus({
+          params: {
+            companyId,
+            resultId: askAIId,
           },
-        ],
-        lineItems: voucherPreview.lineItems, // TODO: replace with user Input @Julian (20240515 - tzuhan)
-      };
-      uploadJournal({ body: { voucher } });
+        });
+      }, 2000);
     }
-    // TODO: 等待 API 回傳結果時，顯示 Loading 畫面 @Julian (20240510 - tzuhan)
+    if (statusSuccess && status === ProgressStatus.SUCCESS) {
+      getAIResult({
+        params: {
+          companyId,
+          resultId: askAIId,
+        },
+      });
+      setIsAskAILoading(false);
+    }
+    if (statusError && statusCode) {
+      setIsAskAILoading(false);
+    }
+    return () => clearInterval(interval);
+  }, [askAIId, statusSuccess, status, statusError, statusCode]);
+
+  useEffect(() => {
+    if (journal && getJournalSuccess) {
+      const { invoice, voucher } = journal;
+      if (invoice) {
+        setDateTimestamp(invoice.date);
+        // setReason(invoice.paymentReason);
+        setEventType(invoice.eventType);
+        setCompanyName(invoice.vendorOrSupplier);
+        setDescription(invoice.description);
+        setTotalPrice(invoice.payment.price);
+        setTaxPercentage(invoice.payment.taxPercentage);
+        setFee(invoice.payment.fee);
+        setPaymentMethod(invoice.payment.method);
+        setPaymentPeriod(invoice.payment.period);
+        setPaymentStatus(invoice.payment.status);
+        setProject(invoice.project ?? 'None');
+        setContract(invoice.contract ?? 'None');
+      }
+      if (voucher) {
+        setLineItems(voucher.lineItems);
+      }
+    }
+    if (getJournalSuccess === false) {
+      messageModalDataHandler({
+        title: 'Get Journal Failed',
+        subMsg: 'Please try again later',
+        content: `Error code: ${getJournalCode}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [journal, getJournalSuccess, getJournalCode]);
+
+  // Info: (20240527 - Julian) 送出 Voucher
+  const confirmHandler = () => {
+    if (journal && journal.invoice && lineItems) {
+      const voucher: IVoucherDataForSavingToDB = {
+        journalId: journal.id,
+        lineItems,
+      };
+      createVoucher({
+        params: { companyId },
+        body: { voucher },
+      });
+    }
   };
 
   const addRowHandler = () => addVoucherRowHandler();
   const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
 
+  const importVoucherHandler = () => {
+    const AILineItems = AIResult?.lineItems ?? [];
+
+    // Info: (20240529 - Julian) 清空 accountingVoucher
+    clearVoucherHandler();
+
+    // Info: (20240529 - Julian) 先加入空白列，再寫入資料
+    AILineItems.forEach((lineItem, index) => {
+      addRowHandler();
+      changeVoucherAmountHandler(
+        index,
+        lineItem.amount,
+        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
+        lineItem.description
+      );
+    });
+  };
+
+  const analysisBtnClickHandler = () => {
+    // Info: (20240605 - Julian) Show warning message after clicking the button
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Replace Input',
+      subMsg: 'Are you sure you want to use Ai information?',
+      content: 'The text you entered will be replaced.',
+      submitBtnStr: 'Confirm',
+      submitBtnFunction: importVoucherHandler,
+      backBtnStr: 'Cancel',
+    });
+    messageModalVisibilityHandler();
+  };
+
   useEffect(() => {
-    if (uploadSuccess && journal) {
-      modalVisibilityHandler(); // Info: (20240503 - Julian) 關閉 Modal
-      clearVoucherHandler(); // Info: (20240503 - Julian) 清空 Voucher
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`); // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
-    } else {
-      // TODO: Error handling @Julian (20240510 - Tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`Failed to generate voucher: `, uploadCode, `error: `, uploadError);
+    // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
+    const newLineItems = accountingVoucher.map((voucher) => {
+      const isDebit = voucher.debit !== 0;
+      const debitAmount = voucher.debit ?? 0;
+      const creditAmount = voucher.credit ?? 0;
+
+      return {
+        lineItemIndex: `${voucher.id}`,
+        account: voucher.accountTitle,
+        description: voucher.particulars,
+        debit: isDebit,
+        amount: isDebit ? debitAmount : creditAmount,
+      };
+    });
+
+    setLineItems(newLineItems);
+  }, [accountingVoucher]);
+
+  useEffect(() => {
+    if (createSuccess && result && journal) {
+      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
+      modalVisibilityHandler();
+      clearVoucherHandler();
+      setIsAskAILoading(true);
+      selectJournalHandler(undefined);
+
+      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`);
+      // Info: (20240527 - Julian) Toast notification
+      toastHandler({
+        id: `createVoucher-${result.id}`,
+        type: ToastType.SUCCESS,
+        content: (
+          <div className="flex items-center justify-between">
+            <p>Uploaded successfully.</p>
+            <Link
+              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
+              className="font-semibold text-link-text-success hover:opacity-70"
+            >
+              Go check it !
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
     }
-  }, [uploadSuccess]);
+    if (createSuccess === false) {
+      messageModalDataHandler({
+        title: 'Create Voucher Failed',
+        subMsg: 'Please try again later',
+        content: `Error code: ${createCode}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [createSuccess, createCode]);
 
   const disableConfirmButton = totalCredit !== totalDebit;
 
-  const displayType = <p className="text-lightRed">{voucherType}</p>;
+  const displayType = <p className="text-lightRed">{eventType}</p>;
 
-  const displayDate = <p>{timestampToString(date).date}</p>;
+  const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  const displayReason = (
-    <div className="flex flex-col items-center gap-x-12px md:flex-row">
-      <p>{reason}</p>
-      <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
-        <LuTag size={14} />
-        Printer
+  const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
+    (
+      <div className="flex flex-col items-center gap-x-12px md:flex-row">
+        <p>reason</p>
+        <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+          <LuTag size={14} />
+          Printer
+        </div>
       </div>
-    </div>
-  );
+    );
 
   const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
 
@@ -179,27 +349,28 @@ const ConfirmModal = ({
 
   const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
 
+  const projectName = project; // ToDo: (20240527 - Julian) Get project name from somewhere
   // Info: (20240430 - Julian) Get first letter of each word
-  const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
+  const projectCode = projectName.split(' ').reduce((acc, word) => acc + word[0], '');
+
   const displayProject =
-    project !== 'None' ? (
+    projectName !== 'None' ? (
       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
         <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
           {projectCode}
         </div>
-        <p>{project}</p>
+        <p>{projectName}</p>
       </div>
     ) : (
       <p className="font-semibold text-navyBlue2">None</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>; // ToDo: (20240527 - Julian) Get contract name from somewhere
 
   const accountingVoucherRow = accountingVoucher.map((voucher) => (
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
   ));
 
-  // ToDo: (20240429 - Julian) mobile version
   const displayAccountingVoucher = (
     <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
       {/* Info: (20240429 - Julian) Divider */}
@@ -231,11 +402,11 @@ const ConfirmModal = ({
   );
 
   const debitListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.debit)
+    .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
     .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
 
   const creditListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.credit)
+    .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
     .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
 
   const displayAccountingVoucherMobile = (
@@ -290,6 +461,21 @@ const ConfirmModal = ({
     </div>
   );
 
+  const displayedHint = isAskAILoading ? (
+    <p className="text-slider-surface-bar">
+      AI technology processing
+      <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+      <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+      <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+    </p>
+  ) : hasAIResult ? (
+    <p className="text-successGreen">AI Analysis Complete</p>
+  ) : AIResultSuccess === false && AIResultCode ? (
+    <p className="text-text-neutral-secondary">AI Detection Error, error code: {AIResultCode}</p>
+  ) : (
+    <p className="text-slider-surface-bar">There are no recommendations from AI</p>
+  );
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
@@ -312,6 +498,7 @@ const ConfirmModal = ({
           <RxCross2 size={20} />
         </button>
 
+        {/* Info: (20240527 - Julian) Body */}
         <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px pb-20px md:bg-white">
           {/* Info: (20240429 - Julian) content */}
           <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
@@ -376,14 +563,45 @@ const ConfirmModal = ({
           {displayAccountingVoucher}
           {displayAccountingVoucherMobile}
 
-          {/* Info: (20240430 - Julian) Add Button */}
-          <button
-            type="button"
-            onClick={addRowHandler}
-            className="mx-auto mt-24px hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
-          >
-            <FiPlus size={20} />
-          </button>
+          <div className="relative mt-24px">
+            {/* Info: (20240605 - Julian) AI analysis result */}
+            <div className="mt-40px flex flex-col items-center md:mt-0 md:flex-row md:gap-x-16px">
+              {/* Info: (20240605 - Julian) button */}
+              <button
+                type="button"
+                disabled={!hasAIResult}
+                onClick={analysisBtnClickHandler}
+                className="flex h-44px w-44px items-center justify-center rounded-xs bg-button-surface-strong-secondary text-button-text-invert hover:cursor-pointer hover:opacity-70 disabled:bg-button-surface-strong-disable disabled:text-button-text-disable hover:disabled:cursor-default hover:disabled:opacity-100"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    className="fill-current"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M14.0386 0.980903C14.3002 -0.213858 16.0014 -0.221295 16.2734 0.971135L16.2861 1.02753L16.2889 1.03999C16.2965 1.07371 16.3037 1.10547 16.3115 1.13843C16.6248 2.47284 17.7048 3.49249 19.0567 3.72766C20.3028 3.94446 20.3028 5.73337 19.0567 5.95016C17.6977 6.1866 16.6134 7.21587 16.3067 8.56079L16.2734 8.70669C16.0014 9.89913 14.3002 9.89169 14.0386 8.69693L14.0112 8.57173C13.7157 7.22187 12.633 6.18494 11.2716 5.9481C10.0277 5.7317 10.0277 3.94613 11.2716 3.72973C12.6282 3.49372 13.7082 2.46316 14.0081 1.1202L14.0283 1.02808L14.0386 0.980903ZM13.1782 10.314C13.701 10.8751 14.4381 11.1541 15.1737 11.15C16.1554 12.552 16.8828 13.9378 17.2611 15.1747C17.6709 16.515 17.7815 18.0855 16.7517 19.1155C16.0839 19.7833 15.1749 19.965 14.3111 19.9131C13.4455 19.8611 12.4932 19.5721 11.5281 19.1334C10.6558 18.737 9.72899 18.198 8.78581 17.5374C7.84264 18.198 6.91581 18.737 6.04361 19.1334C5.07848 19.5721 4.12612 19.8611 3.26058 19.9131C2.39669 19.965 1.48776 19.7831 0.820076 19.1155C0.152394 18.4478 -0.0294329 17.5388 0.022494 16.675C0.0745208 15.8094 0.363472 14.8571 0.802166 13.892C1.19862 13.0198 1.73767 12.0929 2.39821 11.1498C1.73767 10.2066 1.19862 9.27974 0.802166 8.40754C0.363472 7.44242 0.0745205 6.49006 0.0224938 5.62452C-0.0294328 4.76063 0.152394 3.85169 0.820076 3.18402C1.85002 2.15407 3.42058 2.2647 4.76092 2.67453C5.99811 3.05283 7.38425 3.78049 8.78654 4.76264C8.76682 5.50659 9.03604 6.2583 9.59419 6.79002C9.57945 6.80692 9.56411 6.82343 9.54817 6.83953C9.50519 6.88316 9.45911 6.92243 9.41057 6.95729C8.55998 7.59959 7.69078 8.35392 6.84039 9.2043C6.19525 9.84944 5.60742 10.5033 5.08275 11.1498C5.60742 11.7962 6.19525 12.4501 6.84039 13.0952C7.48552 13.7403 8.13941 14.3281 8.78581 14.8528C9.43224 14.3281 10.0861 13.7403 10.7313 13.0952C11.582 12.2445 12.3366 11.3749 12.979 10.524C13.0116 10.4788 13.0479 10.4358 13.0881 10.3954C13.1168 10.3663 13.1469 10.3392 13.1782 10.314ZM4.13434 4.72373C4.95632 4.97507 5.93844 5.45292 7.00162 6.14289C6.43871 6.62036 5.87719 7.13704 5.32517 7.68907C4.77442 8.23981 4.25754 8.80133 3.77896 9.36557C3.35982 8.71974 3.01561 8.09866 2.75295 7.52083C2.37638 6.69239 2.19219 6.00667 2.16149 5.49594C2.13069 4.98354 2.25656 4.77799 2.33531 4.69924C2.46414 4.5704 2.93942 4.35836 4.13434 4.72373ZM2.75295 14.7787C3.01561 14.2008 3.35982 13.5798 3.77895 12.9339C4.25754 13.4982 4.77442 14.0597 5.32517 14.6104C5.87589 15.1611 6.43739 15.678 7.00162 16.1565C6.35579 16.5757 5.73472 16.92 5.15689 17.1827C4.32845 17.5591 3.64274 17.7434 3.13201 17.7741C2.61961 17.8048 2.41405 17.679 2.33531 17.6003C2.25656 17.5215 2.13069 17.316 2.16149 16.8035C2.19219 16.2928 2.37638 15.6071 2.75295 14.7787ZM12.4148 17.1827C11.8369 16.92 11.2158 16.5757 10.57 16.1565C11.1342 15.678 11.6958 15.1611 12.2465 14.6104C12.7985 14.0584 13.3152 13.4969 13.7927 12.9339C14.4827 13.9971 14.9605 14.9793 15.2118 15.8013C15.5772 16.9961 15.3652 17.4714 15.2364 17.6003C15.1577 17.679 14.9521 17.8048 14.4397 17.7741C13.9289 17.7434 13.2432 17.5593 12.4148 17.1827ZM8.78578 9.72174C7.99681 9.72174 7.35721 10.3613 7.35721 11.1503C7.35721 11.9393 7.99681 12.5789 8.78578 12.5789C9.57477 12.5789 10.2144 11.9393 10.2144 11.1503C10.2144 10.3613 9.57477 9.72174 8.78578 9.72174Z"
+                    fill="#7F8A9D"
+                  />
+                </svg>
+              </button>
+              {displayedHint}
+            </div>
+
+            {/* Info: (20240430 - Julian) Add Button */}
+            <button
+              type="button"
+              onClick={addRowHandler}
+              className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
+            >
+              <FiPlus size={20} />
+            </button>
+          </div>
+
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
@@ -397,6 +615,7 @@ const ConfirmModal = ({
             </label>
           </div>
         </div>
+
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button

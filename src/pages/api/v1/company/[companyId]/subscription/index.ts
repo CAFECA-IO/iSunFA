@@ -4,26 +4,22 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { SubscriptionPeriod, SubscriptionStatus } from '@/constants/subscription';
-import { ONE_MONTH_IN_MS, ONE_YEAR_IN_MS } from '@/constants/time';
+import { SubscriptionPeriod } from '@/constants/subscription';
+import { ONE_MONTH_IN_S, ONE_YEAR_IN_S } from '@/constants/time';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ISubscription | ISubscription[]>>
 ) {
   try {
-    if (!req.query.companyId) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-    const companyIdNum = Number(req.query.companyId);
-    if (!req.headers.userid) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-    }
+    const session = await checkAdmin(req, res);
+    const { companyId } = session;
     // Info: (20240419 - Jacky) S010001 - GET /subscription
     if (req.method === 'GET') {
-      const listedSubscription = await prisma.subscription.findMany({
+      const subscriptionList: ISubscription[] = await prisma.subscription.findMany({
         where: {
-          companyId: companyIdNum,
+          companyId,
         },
         include: {
           company: {
@@ -33,11 +29,6 @@ export default async function handler(
           },
         },
       });
-      const subscriptionList: ISubscription[] = listedSubscription.map((subscription) => ({
-        ...subscription,
-        companyName: subscription.company.name,
-        company: null,
-      }));
       const { httpCode, result } = formatApiResponse<ISubscription[]>(
         STATUS_MESSAGE.SUCCESS_LIST,
         subscriptionList
@@ -45,44 +36,40 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010002 - POST /subscription
     } else if (req.method === 'POST') {
-      const { plan, cardId, autoRenew, price, period } = req.body;
-      if (!plan || !autoRenew || !companyIdNum || !price || !period) {
+      const { plan, period } = req.body;
+      if (!plan || !period) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const cardIdNum = Number(cardId);
-      const startDateInMillisecond = Date.now();
-      let expireDateInMillisecond: number;
+      // TODO: (20240604 - Jacky) Check if the company already has a subscription
+      // TODO: (20240604 - Jacky) Check if the plan is valid
+      const now = Date.now();
+      const startDate = timestampInSeconds(now);
+      let expiredDate: number;
       if (period === SubscriptionPeriod.MONTHLY) {
-        expireDateInMillisecond = startDateInMillisecond + ONE_MONTH_IN_MS;
+        expiredDate = startDate + ONE_MONTH_IN_S;
       } else if (period === SubscriptionPeriod.YEARLY) {
-        expireDateInMillisecond = startDateInMillisecond + ONE_YEAR_IN_MS;
+        expiredDate = startDate + ONE_YEAR_IN_S;
       } else {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const startDate = timestampInSeconds(startDateInMillisecond);
-      const expireDate = timestampInSeconds(expireDateInMillisecond);
-      const status = SubscriptionStatus.ACTIVE;
-      if (!companyIdNum) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const createdSubscription = await prisma.subscription.create({
+      const status = false;
+      const subscription: ISubscription = await prisma.subscription.create({
         data: {
-          plan,
-          card: {
+          plan: {
             connect: {
-              id: cardIdNum,
+              name: plan,
             },
           },
-          autoRenew,
           company: {
             connect: {
-              id: companyIdNum,
+              id: companyId,
             },
           },
           startDate,
-          expireDate,
-          price,
+          expiredDate,
           status,
+          createdAt: startDate,
+          updatedAt: startDate,
         },
         include: {
           company: {
@@ -92,10 +79,6 @@ export default async function handler(
           },
         },
       });
-      const subscription: ISubscription = {
-        ...createdSubscription,
-        companyName: createdSubscription.company.name,
-      };
       const { httpCode, result } = formatApiResponse<ISubscription>(
         STATUS_MESSAGE.CREATED,
         subscription

@@ -1,14 +1,18 @@
-/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { MILLISECONDS_IN_A_SECOND, default30DayPeriodInSec } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  MILLISECONDS_IN_A_SECOND,
+  default30DayPeriodInSec,
+} from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -16,10 +20,11 @@ import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
+import { useUserCtx } from '@/contexts/user_context';
 
 const FinancialReportSection = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { companyId } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const {
     trigger: generateFinancialReport,
     // data: generatedResult,
@@ -28,38 +33,11 @@ const FinancialReportSection = () => {
     isLoading: generatedLoading,
     success: generatedSuccess,
   } = APIHandler<IAccountResultStatus>(
-    APIName.FINANCIAL_REPORT_GENERATE,
+    APIName.REPORT_GENERATE_FINANCIAL,
     {
-      params: { companyId },
-    },
-    false,
-    false
-  );
-  const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trigger: listFinancialReportsProgress, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    data: progress, // Info: 這邊預計得到 IFinancialReportsProgreseStatusResponse[] (20240513 - Tzuahan)
-    // code: progressCodee,
-    // success: getProgressSuccess,
-  } = APIHandler<IAccountResultStatus[]>(
-    APIName.FINANCIAL_REPORT_LIST_PROGRESS_STATUS,
-    {
-      params: { companyId },
-    },
-    false,
-    false
-  );
-  const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trigger: getFinancialReport, // TODO: 需要在合適的部份使用 @Shirley (20240513 - Tzuhan)
-    // data: report,
-    // code: reportCodee,
-    // success: getReportSuccess,
-  } = APIHandler<IFinancialReport>(
-    APIName.FINANCIAL_REPORT_GET_BY_ID,
-    {
-      params: { companyId, reportId: 'reportId' },
+      params: {
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      },
     },
     false,
     false
@@ -74,7 +52,7 @@ const FinancialReportSection = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_DATE);
+  const [datePickerType, setDatePickerType] = useState(DatePickerType.TEXT_DATE);
 
   const {
     targetRef: projectMenuRef,
@@ -146,11 +124,11 @@ const FinancialReportSection = () => {
   };
 
   useEffect(() => {
-    setDatePickerType((prev) => {
+    setDatePickerType(() => {
       if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
-        return DatePickerType.CHOOSE_DATE;
+        return DatePickerType.TEXT_DATE;
       } else {
-        return DatePickerType.CHOOSE_PERIOD;
+        return DatePickerType.TEXT_PERIOD;
       }
     });
   }, [selectedReportType]);
@@ -225,6 +203,7 @@ const FinancialReportSection = () => {
         </div>
 
         <button
+          type="button"
           className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
         >
@@ -255,6 +234,7 @@ const FinancialReportSection = () => {
 
       {/* Info: Project Menu (20240425 - Shirley) */}
       <div
+        // eslint-disable-next-line tailwindcss/no-arbitrary-value, tailwindcss/no-unnecessary-arbitrary-value
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
@@ -294,16 +274,22 @@ const FinancialReportSection = () => {
 
           <div className="mt-2 max-h-14rem w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
-              .filter((project) =>
-                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
+              .filter(
+                (project) =>
+                  // eslint-disable-next-line implicit-arrow-linebreak
+                  DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+                // eslint-disable-next-line function-paren-newline
               )
               .map((project) => (
                 <li
                   key={project}
-                  onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                  onClick={
+                    () =>
+                      // eslint-disable-next-line implicit-arrow-linebreak
+                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                    // eslint-disable-next-line react/jsx-curly-newline
                   }
                   className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
@@ -333,6 +319,7 @@ const FinancialReportSection = () => {
   const displayedReportTypeMenu = (
     <div ref={typeMenuRef} className="relative flex w-full">
       <button
+        type="button"
         className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
           isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
@@ -362,6 +349,7 @@ const FinancialReportSection = () => {
       </button>
       {/* Info: Report Type Menu (20240425 - Shirley) */}
       <div
+        // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
@@ -386,6 +374,7 @@ const FinancialReportSection = () => {
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
+        type="button"
         className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
@@ -421,6 +410,7 @@ const FinancialReportSection = () => {
       </button>
       {/* Info: Language Menu (20240425 - Shirley) */}
       <div
+        // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
@@ -512,7 +502,7 @@ const FinancialReportSection = () => {
         </div>
       </div>
       {/* Info: options for generation (20240513 - Shirley) */}
-      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
+      <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -591,15 +581,15 @@ const FinancialReportSection = () => {
               type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
-              className=""
+              btnClassName="px-6"
             />
           </div>
         </div>
         <div className="my-10 flex flex-col justify-center">
           <p>
-            Attention: The report will take approximately 30 to 40 minutes to generate. Once
+            {`Attention: The report will take approximately 30 to 40 minutes to generate. Once
             completed, it will be stored in "My Reports." Please check back later. Thank you for
-            your patience.
+            your patience.`}
           </p>
         </div>
         {displayedButtonOrLink}{' '}

@@ -11,7 +11,12 @@
     "ABOUT": "關於",
     "TRY_NOW": "立即嘗試",
     "SIGN_OUT": "登出",
-    "REPORTS": "報告"
+    "REPORTS": "報告",
+    "DASHBOARD": "儀表板",
+    "LOGIN": "登入",
+    "MARK_ALL_AS_READ": "將所有通知標記為已讀",
+    "READ_MORE": "繼續閱讀...",
+    "LANGUAGE": "語言"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",

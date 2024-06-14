@@ -3,17 +3,20 @@ import React, { useState, useContext, createContext, useMemo, useCallback, useEf
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import { RegisterFormModalProps } from '@/interfaces/modals';
+import {
+  DUMMY_FILTER_OPTIONS,
+  FilterOptionsModalType,
+  IFilterOptions,
+  RegisterFormModalProps,
+} from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
-import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
-import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
@@ -26,12 +29,21 @@ import Toast from '@/components/toast/toast';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
-import { useNotificationCtx } from './notification_context';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { useUserCtx } from './user_context';
 import { useRouter } from 'next/router';
+import LoadingModal from '@/components/loading_modal/loading_modal';
+import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
+import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+import AddProjectModal from '@/components/add_project_modal/add_project_modal';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { AllReportTypesKey } from '@/interfaces/report_type';
+import { useUserCtx } from './user_context';
+import { useNotificationCtx } from './notification_context';
+import { ProjectStage } from '@/constants/project';
+import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 
 interface IGlobalContext {
   width: number;
@@ -56,6 +68,7 @@ interface IGlobalContext {
 
   isConfirmModalVisible: boolean;
   confirmModalVisibilityHandler: () => void;
+  confirmModalData: IConfirmModal;
   confirmModalDataHandler: (data: IConfirmModal) => void;
 
   isAddAssetModalVisible: boolean;
@@ -77,8 +90,23 @@ interface IGlobalContext {
   isCreateCompanyModalVisible: boolean;
   createCompanyModalVisibilityHandler: () => void;
 
+  isLoadingModalVisible: boolean;
+  loadingModalVisibilityHandler: () => void;
+
+  isAddProjectModalVisible: boolean;
+  addProjectModalVisibilityHandler: () => void;
+  addProjectModalDataHandler: (stage: ProjectStage) => void;
+
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
+
+  filterOptionsForHistory: IFilterOptions;
+  filterOptionsForPending: IFilterOptions;
+  getFilterOptionsForHistory: (options: IFilterOptions) => void;
+  getFilterOptionsForPending: (options: IFilterOptions) => void;
+  isFilterOptionsModalForHistoryVisible: boolean;
+  isFilterOptionsModalForPendingVisible: boolean;
+  filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
 }
 
 export interface IGlobalProvider {
@@ -99,7 +127,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    username: '',
+    invitation: '',
   });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
@@ -124,6 +152,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isCompanyInvitationModalVisible, setIsCompanyInvitationModalVisible] = useState(false);
 
   const [isCreateCompanyModalVisible, setIsCreateCompanyModalVisible] = useState(false);
+
+  const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
+
+  const [isFilterOptionsModalForHistoryVisible, setIsFilterOptionsModalForHistoryVisible] =
+    useState(false);
+  const [isFilterOptionsModalForPendingVisible, setIsFilterOptionsModalForPendingVisible] =
+    useState(false);
+  const [filterOptionsForHistory, setFilterOptionsForHistory] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+  const [filterOptionsForPending, setFilterOptionsForPending] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+
+  const [isAddProjectModalVisible, setIsAddProjectModalVisible] = useState(false);
+  const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
+    ProjectStage.SELLING
+  );
 
   const { width, height } = windowSize;
 
@@ -190,6 +234,42 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsCreateCompanyModalVisible(!isCreateCompanyModalVisible);
   };
 
+  const loadingModalVisibilityHandler = () => {
+    setIsLoadingModalVisible(!isLoadingModalVisible);
+  };
+
+  const filterOptionsModalVisibilityHandlerForHistory = () => {
+    setIsFilterOptionsModalForHistoryVisible(!isFilterOptionsModalForHistoryVisible);
+  };
+
+  const filterOptionsModalVisibilityHandlerForPending = () => {
+    setIsFilterOptionsModalForPendingVisible(!isFilterOptionsModalForPendingVisible);
+  };
+
+  const addProjectModalVisibilityHandler = () => {
+    setIsAddProjectModalVisible(!isAddProjectModalVisible);
+  };
+
+  const addProjectModalDataHandler = (stage: ProjectStage) => {
+    setAddProjectDefaultStage(stage);
+  };
+
+  const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
+    if (filterType === FilterOptionsModalType.history) {
+      filterOptionsModalVisibilityHandlerForHistory();
+    } else if (filterType === FilterOptionsModalType.pending) {
+      filterOptionsModalVisibilityHandlerForPending();
+    }
+  };
+
+  const getFilterOptionsForHistory = (options: IFilterOptions) => {
+    setFilterOptionsForHistory(options);
+  };
+
+  const getFilterOptionsForPending = (options: IFilterOptions) => {
+    setFilterOptionsForPending(options);
+  };
+
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
     const {
@@ -199,12 +279,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       closeable,
       autoClose: isAutoClose,
       position: toastPosition,
-      onClose,
-      onOpen,
+      onClose = () => {},
+      onOpen = () => {},
     } = props;
 
     const bodyStyle =
-      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75';
+      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75 text-sm font-barlow pointer-events-auto';
 
     const toastId = id;
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
@@ -212,8 +292,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
     const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
-    const closeOnClick = closeable ? true : false; // Info:(20240513 - Julian) default closeOnClick true
-    const draggable = closeable ? true : false; // Info:(20240513 - Julian) default draggable true
+    const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
+    const draggable = closeable; // Info:(20240513 - Julian) default draggable true
     const closeButton = closeable
       ? () => (
           <div className="h-20px w-20px">
@@ -307,9 +387,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id: 'latest-report-generated',
         closeable: true,
         content: (
-          <div className="flex items-center space-x-10">
+          <div className="flex items-center space-x-5">
             <p>Your report is done</p>
-            <Link href={ISUNFA_ROUTE.USERS_MY_REPORTS} className="text-link-text-success">
+            <Link
+              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
+              className="font-semibold text-link-text-success hover:opacity-70"
+            >
               Go check it !
             </Link>
           </div>
@@ -322,21 +405,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    if (reportPendingStatus) {
-      toastHandler({
-        type: ToastType.INFO,
-        id: 'report-generating',
-        closeable: false,
-        content: (
-          <div className="flex items-center space-x-2">
-            <span>Generating the report</span>
-            <LoadingSVG />
-          </div>
-        ),
-        position: ToastPosition.BOTTOM_RIGHT,
-        autoClose: false,
-      });
-    }
+    // TODO: Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // if (reportPendingStatus) {
+    //   toastHandler({
+    //     type: ToastType.INFO,
+    //     id: 'report-generating',
+    //     closeable: false,
+    //     content: (
+    //       <div className="flex items-center space-x-2">
+    //         <span>Generating the report</span>
+    //         <LoadingSVG />
+    //       </div>
+    //     ),
+    //     position: ToastPosition.BOTTOM_RIGHT,
+    //     autoClose: false,
+    //   });
+    // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
@@ -358,6 +442,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     messageModalDataHandler,
     isConfirmModalVisible,
     confirmModalVisibilityHandler,
+    confirmModalData,
     confirmModalDataHandler,
     isAddAssetModalVisible,
     addAssetModalVisibilityHandler,
@@ -372,8 +457,21 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     companyInvitationModalVisibilityHandler,
     isCreateCompanyModalVisible,
     createCompanyModalVisibilityHandler,
+    isLoadingModalVisible,
+    loadingModalVisibilityHandler,
     toastHandler,
     eliminateToast,
+
+    filterOptionsForHistory,
+    filterOptionsForPending,
+    getFilterOptionsForHistory,
+    getFilterOptionsForPending,
+    isFilterOptionsModalForHistoryVisible,
+    isFilterOptionsModalForPendingVisible,
+    filterOptionsModalVisibilityHandler,
+    isAddProjectModalVisible,
+    addProjectModalVisibilityHandler,
+    addProjectModalDataHandler,
   };
 
   return (
@@ -386,9 +484,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <RegisterFormModal
         isModalVisible={isRegisterModalVisible}
         modalVisibilityHandler={registerModalVisibilityHandler}
+        data={registerModalData}
       />
 
-      <AddBookmarkModal
+      <EditBookmarkModal
         isModalVisible={isAddBookmarkModalVisible}
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />
@@ -402,7 +501,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ConfirmModal
         isModalVisible={isConfirmModalVisible}
         modalVisibilityHandler={confirmModalVisibilityHandler}
-        confirmModalData={confirmModalData}
+        confirmData={confirmModalData}
       />
 
       <AddAssetModal
@@ -437,7 +536,32 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         toastHandler={toastHandler}
       />
 
+      <LoadingModal
+        isModalVisible={isLoadingModalVisible}
+        modalVisibilityHandler={loadingModalVisibilityHandler}
+      />
+
       <Toast />
+
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalForPendingVisible}
+        filterType={FilterOptionsModalType.pending}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForPending}
+        getFilterOptions={getFilterOptionsForPending}
+      />
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalForHistoryVisible}
+        filterType={FilterOptionsModalType.history}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForHistory}
+        getFilterOptions={getFilterOptionsForHistory}
+      />
+
+      <AddProjectModal
+        isModalVisible={isAddProjectModalVisible}
+        modalVisibilityHandler={addProjectModalVisibilityHandler}
+        defaultStage={addProjectDefaultStage}
+      />
+
       {children}
     </GlobalContext.Provider>
   );

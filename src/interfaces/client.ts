@@ -1,7 +1,9 @@
 export interface IClient {
   id: number;
   companyId: number;
-  companyName: string;
-  code: string;
+  name: string;
+  taxId: string;
   favorite: boolean;
+  createdAt: number;
+  updatedAt: number;
 }

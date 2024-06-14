@@ -1,19 +1,16 @@
-import prisma from '@/client';
-import { ErrorMessage, SuccessMessage } from '@/constants/status_code';
-import { ONE_DAY_IN_MS } from '@/constants/time';
-import { ICompany } from '@/interfaces/company';
+import { ROLE_NAME } from '@/constants/role_name';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvitation } from '@/interfaces/invitation';
 import { IResponseData } from '@/interfaces/response_data';
-import { IUser } from '@/interfaces/user';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { checkRole } from '@/lib/utils/auth_check';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import MailService from '@/lib/utils/mail_service';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { createInvitation } from '@/lib/utils/repo/invitation.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { SendMailOptions } from 'nodemailer';
 
 function generateCode() {
-  // Implement your logic to generate a unique invitation code here
-  // You can use any algorithm or library of your choice
-  // For example, you can generate a random alphanumeric code
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const codeLength = 8;
   let invitationCode = '';
@@ -23,73 +20,19 @@ function generateCode() {
   return invitationCode;
 }
 
-async function createInvitation(
-  roleIdNum: number,
-  companyIdNum: number,
-  userIdNum: number,
-  code: string
-): Promise<IInvitation> {
-  const invitation: IInvitation = await prisma.invitation.create({
-    data: {
-      role: {
-        connect: {
-          id: roleIdNum,
-        },
-      },
-      company: {
-        connect: {
-          id: companyIdNum,
-        },
-      },
-      createdUser: {
-        connect: {
-          id: userIdNum,
-        },
-      },
-      code,
-      hasUsed: false,
-      expiredAt: timestampInSeconds(Date.now() + ONE_DAY_IN_MS),
-    },
-  });
-  return invitation;
-}
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IInvitation | IInvitation[]>>
 ) {
   try {
     if (req.method === 'POST') {
-      // Extract the necessary data from the request body
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { roleId, emails } = req.body;
-      const { companyId } = req.query;
-      const { userid } = req.headers;
-
-      const userIdNum = Number(userid);
-      const companyIdNum = Number(companyId);
-      const roleIdNum = Number(roleId);
-      // Perform any necessary validation on the data
-      const user: IUser = (await prisma.user.findUnique({
-        where: {
-          id: userIdNum,
-        },
-      })) as IUser;
-      if (!user) {
-        throw new Error(ErrorMessage.RESOURCE_NOT_FOUND);
-      }
-      const company: ICompany = (await prisma.company.findUnique({
-        where: {
-          id: companyIdNum,
-        },
-      })) as ICompany;
-      if (!company) {
-        throw new Error(ErrorMessage.RESOURCE_NOT_FOUND);
-      }
-      // Make sure the user has the necessary permissions to create an invitation code
-      // For example, you can check if the user is an admin of the company
-      // If the user does not have the necessary permissions, return a 403 Forbidden response
+      const { userId, companyId } = session;
+      const roleIdNum = await convertStringToNumber(roleId);
+      const company = await getCompanyById(companyId);
       if (!emails) {
-        throw new Error(ErrorMessage.INVALID_INPUT_PARAMETER);
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const errors: string[] = [];
       const InvitationPromises: Promise<IInvitation>[] = [];
@@ -97,7 +40,7 @@ export default async function handler(
       //
       for (let i = 0; i < emails.length; i += 1) {
         const code = generateCode();
-        const promise = createInvitation(roleIdNum, companyIdNum, userIdNum, code);
+        const promise = createInvitation(roleIdNum, companyId, userId, code, emails[i]);
         InvitationPromises.push(promise);
       }
       const invitations = await Promise.all(InvitationPromises);
@@ -119,15 +62,15 @@ export default async function handler(
         }
       }
       if (errors.length > 0) {
-        throw new Error(ErrorMessage.INTERNAL_SERVICE_ERROR);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
       const { httpCode, result } = formatApiResponse<IInvitation[]>(
-        SuccessMessage.CREATED,
+        STATUS_MESSAGE.CREATED,
         invitations
       );
       res.status(httpCode).json(result);
     } else {
-      throw new Error(ErrorMessage.METHOD_NOT_ALLOWED);
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;

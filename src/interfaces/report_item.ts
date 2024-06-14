@@ -1,6 +1,11 @@
 import { timestampToString } from '@/lib/utils/common';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
+export enum ReportKind {
+  analysis = 'analysis',
+  financial = 'financial',
+}
+
 export interface IBasicReportItem {
   id: string;
   name: string;
@@ -9,6 +14,7 @@ export interface IBasicReportItem {
     startTimestamp: number;
     endTimestamp: number;
   };
+  type: ReportKind;
   reportType: FinancialReportTypesKey;
 }
 
@@ -59,6 +65,7 @@ export const generateRandomPendingReportItem = (daysAgo: number): IPendingReport
     remainingSeconds: remainingSec,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
+    type: ReportKind.financial,
   };
 };
 
@@ -77,6 +84,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 10,
     paused: false,
     reportType: FinancialReportTypesKey.cash_flow_statement,
+    type: ReportKind.financial,
   },
   {
     id: 'sclika',
@@ -86,15 +94,17 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 250,
     paused: true,
     reportType: FinancialReportTypesKey.cash_flow_statement,
+    type: ReportKind.financial,
   },
   {
     id: 'qxh66j',
     name: 'Comprehensive Income Statement-20240412-1',
     createdTimestamp: 1712863312,
     period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
-    remainingSeconds: 380000,
-    paused: true,
+    remainingSeconds: 1615,
+    paused: false,
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
+    type: ReportKind.financial,
   },
   {
     id: '4ruh5k',
@@ -104,6 +114,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 3680,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
+    type: ReportKind.financial,
   },
   {
     id: 'wyt0mi',
@@ -113,6 +124,7 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 30,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
+    type: ReportKind.financial,
   },
 ];
 
@@ -152,6 +164,7 @@ export const generateRandomGeneratedReportItem = (daysAgo: number): IGeneratedRe
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c10900000000000000000000000000000000000000007',
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
   };
 };
 
@@ -174,6 +187,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
   },
   {
     id: 'y11ggs',
@@ -187,6 +201,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
   },
   {
     id: 'uiz7oa',
@@ -200,6 +215,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
   },
   {
     id: '6pa0sq',
@@ -213,6 +229,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
   },
   {
     id: 'c353qc',
@@ -226,5 +243,6 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
   },
 ];

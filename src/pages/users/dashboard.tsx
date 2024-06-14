@@ -15,10 +15,8 @@ import DashboardPageBody from '@/components/dashboard_page_body/dashboard_page_b
 const DashboardPage = () => {
   const router = useRouter();
 
-  const { signedIn, isSelectCompany } = useUserCtx();
+  const { signedIn, selectedCompany } = useUserCtx();
   const { toastHandler, eliminateToast } = useGlobalCtx();
-
-  // ToDo: (20240513 - Julian) If the user is not select any company, show a toast to remind the user that this is a trial mode
 
   useEffect(() => {
     if (!signedIn) {
@@ -27,7 +25,7 @@ const DashboardPage = () => {
   }, [signedIn]);
 
   useEffect(() => {
-    if (!isSelectCompany) {
+    if (!selectedCompany) {
       // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
       toastHandler({
         id: ToastId.TRIAL,
@@ -48,7 +46,7 @@ const DashboardPage = () => {
     } else {
       eliminateToast(ToastId.TRIAL);
     }
-  }, [isSelectCompany]);
+  }, [selectedCompany]);
 
   return (
     <>

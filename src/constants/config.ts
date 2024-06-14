@@ -3,6 +3,8 @@ export const copyright = 'iSunFA @ 2024. All rights reserved.';
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
 export const SCROLL_END = 530;
 
+export const BOOKMARK_SCROLL_STEP = 200;
+
 export const massiveDataContent = [
   {
     icon: '/icons/wallet.svg',
@@ -139,3 +141,39 @@ export const FORMIDABLE_CONFIG = {
 };
 
 export const AICH_URI = process.env.AICH_URI as string;
+
+export const DEFAULT_PAGE_START_AT = 1;
+export const DEFAULT_PAGE_LIMIT = 10;
+export const DEFAULT_PAGE_OFFSET = 0;
+
+export const USER_ICON_BACKGROUND_COLORS = [
+  // Info: (20230814 - Murky) color from surface/support/strong/Light_Mode and Dark_Mode
+  {
+    lightMode: "#FD853A",
+    darkMode: "#EC4A0A",
+  },
+  {
+    lightMode: "#9B8AFB",
+    darkMode: "#6938EF",
+  },
+  {
+    lightMode: "#FD6F8E",
+    darkMode: "#E31B54",
+  },
+  {
+    lightMode: "#F670C7",
+    darkMode: "#DD2590",
+  },
+  {
+    lightMode: "#8098F9",
+    darkMode: "#444CE7",
+  },
+  {
+    lightMode: "#53B1FD",
+    darkMode: "#1570EF",
+  },
+  {
+    lightMode: "#6CDEA0",
+    darkMode: "#29B368",
+  },
+];

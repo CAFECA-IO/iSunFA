@@ -3,13 +3,13 @@ import { pdfjs, Document, Page } from 'react-pdf';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
-
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { EXTERNAL_API } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
-
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { ToastType } from '@/interfaces/toastify';
+import useStateRef from 'react-usestateref';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -336,8 +336,8 @@ const ViewFinancialSection = ({
 }: IViewReportSectionProps) => {
   const globalCtx = useGlobalCtx();
 
-  const [chartWidth, setChartWidth] = React.useState(580);
-  const [chartHeight, setChartHeight] = React.useState(250);
+  const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
+  const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
@@ -370,12 +370,26 @@ const ViewFinancialSection = ({
 
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
-    window.alert(`Token contract ${tokenContract} copied to clipboard!`);
+
+    globalCtx.toastHandler({
+      type: ToastType.SUCCESS,
+      id: 'token-copied',
+      closeable: true,
+      content: 'Copied',
+      autoClose: 500,
+    });
   };
 
   const copyTokenId = () => {
     navigator.clipboard.writeText(tokenId);
-    window.alert(`Token ID ${tokenId} copied to clipboard!`);
+
+    globalCtx.toastHandler({
+      type: ToastType.SUCCESS,
+      id: 'token-copied',
+      closeable: true,
+      content: 'Copied',
+      autoClose: 500,
+    });
   };
 
   const copyTokenContractClickHandler = () => {
@@ -456,13 +470,14 @@ const ViewFinancialSection = ({
       const MOBILE_WIDTH = 500;
 
       if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 200;
+        const presentWidth = 350 + (windowWidth - 375);
         const presentHeight = 150;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth <= TABLET_WIDTH) {
-        const presentWidth = 370;
+        // Info: 為了讓 ipad mini 跟 ipad air 可以在 left:x 參數不改動的情況下置中，以 ipad mini 去水平跟垂直置中，超過 ipad mini (768 px) 的部分就變大，以維持比例 (20240529 - Shirley)
+        const presentWidth = 650 + (windowWidth - 768);
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
@@ -487,7 +502,7 @@ const ViewFinancialSection = ({
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
-    <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
+    <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
       {/* Info: financial title, print button and share button (20240426 - Shirley) */}
       <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
@@ -743,11 +758,12 @@ const ViewFinancialSection = ({
         </div>
 
         {pdfFile ? (
-          <div className="flex flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
+          <div className="flex w-screen flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
+            {/* Info: prev button (20240529 - Shirley) */}
             <button
               onClick={prevClickHandler}
               disabled={pageNumber <= 1}
-              className="absolute bottom-20 left-0 z-10 m-4 iphonese:bottom-1/5 iphone12pro:bottom-96 md:bottom-56 lg:hidden"
+              className="absolute left-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -765,27 +781,31 @@ const ViewFinancialSection = ({
               </svg>
             </button>
 
+            {/* Info: PDF 本體 for desktop (20240529 - Shirley) */}
             <div className="hidden lg:flex">
               <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
                 <Page scale={1} pageNumber={pageNumber} />
               </Document>
             </div>
-            <div className="flex h-screen lg:hidden">
+
+            {/* Info: PDF 本體 for mobile (20240529 - Shirley) */}
+            <div className="flex h-screen md:mt-20 lg:hidden">
               <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
                 <Page
                   scale={1}
                   pageNumber={pageNumber}
                   width={chartWidth}
                   height={chartHeight}
-                  className="absolute left-1/5 top-2 w-full -translate-x-1/2 -translate-y-1/2 iphonese:top-1/5 sm:left-1/2 sm:top-1/2"
+                  className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
                 />
               </Document>
             </div>
 
+            {/* Info: next button (20240529 - Shirley) */}
             <button
               onClick={nextClickHandler}
               disabled={pageNumber >= numPages}
-              className="absolute bottom-20 right-0 z-10 m-4 iphonese:bottom-1/5 iphone12pro:bottom-96 md:bottom-56 lg:hidden"
+              className="absolute right-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

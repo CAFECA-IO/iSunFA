@@ -7,12 +7,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import {
-  AnalysisReportTypesKey,
-  AnalysisReportTypesMap,
-  FinancialReportTypesKey,
-  FinancialReportTypesMap,
-} from '@/interfaces/report_type';
+import { AnalysisReportTypesKey, AnalysisReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 
@@ -27,7 +22,6 @@ const AnalysisReportSection = () => {
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.CHOOSE_PERIOD);
 
   const {
     targetRef: projectMenuRef,
@@ -77,7 +71,8 @@ const AnalysisReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
+  // TODO: 這邊要改成申請 report 然後顯示成功 / 失敗的 modal (20240524 - Shirley)
+  const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}/REPORT_ID?project=${DUMMY_PROJECTS_MAP[selectedProjectName].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   useEffect(() => {
     // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
@@ -414,7 +409,7 @@ const AnalysisReportSection = () => {
         </div>
       </div>
       {/* Info: options for generation (20240513 - Shirley) */}
-      <div className="mt-16 flex w-600px max-w-full flex-col space-y-16 self-center px-5 max-md:mt-3">
+      <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
@@ -491,10 +486,10 @@ const AnalysisReportSection = () => {
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
               // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-              type={datePickerType}
+              type={DatePickerType.TEXT_PERIOD}
               period={period}
               setFilteredPeriod={setPeriod}
-              className=""
+              btnClassName="px-6"
             />
           </div>
         </div>

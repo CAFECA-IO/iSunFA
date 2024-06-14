@@ -2,7 +2,7 @@
 import { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { MONTH_ABR_LIST, WEEK_LIST } from '@/constants/display';
+import { DatePickerAlign, MONTH_ABR_LIST, WEEK_LIST } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '@/interfaces/locale';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -28,11 +28,12 @@ interface IPopulateDatesParams {
   type: DatePickerType;
 }
 
+// TODO: refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE (20240529 - Shirley)
 export enum DatePickerType {
-  ICON = 'ICON',
-  TEXT = 'TEXT',
-  CHOOSE_DATE = 'CHOOSE_DATE',
-  CHOOSE_PERIOD = 'CHOOSE_PERIOD',
+  ICON_PERIOD = 'ICON_PERIOD', // ICON_PERIOD
+  TEXT_DATE = 'TEXT_DATE', // TEXT_DATE
+  TEXT_PERIOD = 'TEXT_PERIOD', // TEXT_PERIOD 🐨
+  ICON_DATE = 'ICON_DATE', // ICON_DATE
 }
 
 interface IDatePickerProps {
@@ -43,10 +44,13 @@ interface IDatePickerProps {
   maxDate?: Date;
   loading?: boolean;
   datePickerHandler?: (start: number, end: number) => Promise<void>;
-  className?: string;
+  btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
   onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
+  alignCalendar?: DatePickerAlign;
+  customCalendarAlignment?: string;
+  datePickerClassName?: string;
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -119,8 +123,8 @@ const PopulateDates = ({
       if (el?.date && !el?.disable) {
         // Info: (20240417 - Shirley) elTemp 是點擊的日期
         const elTime = new Date(`${selectedYear}/${selectedMonth}/${el.date} 00:00:00`).getTime();
-        // If DatePickerType is CHOOSE_PERIOD, select the date and close the component
-        if (type === DatePickerType.CHOOSE_DATE) {
+        // Info: (20240605 - Shirley) If DatePickerType is allowed for single date, select the date and close the component
+        if (type === DatePickerType.TEXT_DATE || type === DatePickerType.ICON_DATE) {
           selectDateOne({ date: el.date, time: elTime, disable: el.disable });
           selectDateTwo({ date: el.date, time: elTime, disable: el.disable });
           setComponentVisible(false);
@@ -189,10 +193,12 @@ const DatePicker = ({
   period,
   setFilteredPeriod,
   loading,
-  className,
+  btnClassName,
   calenderClassName,
   buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
   onClose,
+  alignCalendar,
+  datePickerClassName,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -240,11 +246,17 @@ const DatePicker = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateOne, dateTwo]);
 
+  // TODO: 在不讓 parent component re-render 造成多次 API call 的情況下，將 period 從一段期間改成一個日期 (20240527 - Shirley)
   // Info: If type changed, reset the date (20240425 - Shirley)
-  useEffect(() => {
-    setDateOne(null);
-    setDateTwo(null);
-  }, [type]);
+  // useEffect(() => {
+  //   if (type === DatePickerType.CHOOSE_PERIOD || type === DatePickerType.ICON) {
+  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //     setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //   } else {
+  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //     setDateTwo(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //   }
+  // }, [type]);
 
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {
@@ -328,23 +340,14 @@ const DatePicker = ({
   };
 
   const defaultPeriodText =
-    type === DatePickerType.CHOOSE_DATE
+    type === DatePickerType.TEXT_DATE
       ? t('DATE_PICKER.SELECT_DATE')
       : t('DATE_PICKER.SELECT_PERIOD');
 
   // Info: (20240417 - Shirley) 顯示時間區間
   const displayedPeriod =
-    // dateOne && dateTwo
-    //   ? dateOne.getTime() !== 0 && dateTwo.getTime() !== 0
-    //     ? type === DatePickerType.CHOOSE_DATE
-    //       ? `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date}`
-    //       : `${timestampToString(dateOne.getTime() / MILLISECONDS_IN_A_SECOND).date} ${t(
-    //           'DATE_PICKER.TO'
-    //         )} ${timestampToString(dateTwo.getTime() / MILLISECONDS_IN_A_SECOND).date}`
-    //     : defaultPeriodText
-    //   : defaultPeriodText;
     period.startTimeStamp !== 0 && period.endTimeStamp !== 0 // Info: (20240510 - Julian) edited
-      ? type === DatePickerType.CHOOSE_DATE
+      ? type === DatePickerType.TEXT_DATE || type === DatePickerType.ICON_DATE
         ? `${timestampToString(period.startTimeStamp).date}`
         : `${timestampToString(period.startTimeStamp).date} ${t(
             'DATE_PICKER.TO'
@@ -356,16 +359,16 @@ const DatePicker = ({
   const displayedMonth = `${t(MONTH_ABR_LIST[selectedMonth - 1])}`;
 
   const displayedButtonContent =
-    type === DatePickerType.ICON ? (
+    type === DatePickerType.ICON_PERIOD || type === DatePickerType.ICON_DATE ? (
       <Button
         type="button"
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-lightGray3 hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-xs border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
           // props control style
-          className,
+          btnClassName,
           // variables control style
           {
             [buttonStyleAfterDateSelected]: isDateSelected,
@@ -395,14 +398,14 @@ const DatePicker = ({
           </defs>
         </svg>{' '}
       </Button>
-    ) : type === DatePickerType.TEXT || type === DatePickerType.CHOOSE_PERIOD ? (
+    ) : type === DatePickerType.TEXT_PERIOD || type === DatePickerType.TEXT_DATE ? (
       <Button
         type="button"
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
-          className,
+          'group flex w-full items-center rounded-xs border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          btnClassName,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
             'text-secondaryBlue': isDateSelected,
@@ -411,54 +414,7 @@ const DatePicker = ({
       >
         <p
           className={cn(
-            'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
-            {
-              'text-primaryYellow': componentVisible,
-              [buttonStyleAfterDateSelected]: isDateSelected,
-            }
-          )}
-        >
-          {displayedPeriod}
-        </p>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="none"
-          viewBox="0 0 16 16"
-        >
-          <g clipPath="url(#clip0_653_75494)">
-            <path
-              className="fill-current"
-              fillRule="evenodd"
-              d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-          <defs>
-            <clipPath id="clip0_653_75494">
-              <path fill="#fff" d="M0 0H16V16H0z"></path>
-            </clipPath>
-          </defs>
-        </svg>
-      </Button>
-    ) : type === DatePickerType.CHOOSE_DATE ? (
-      <Button
-        type="button"
-        variant={'tertiaryOutline'}
-        onClick={openCalenderHandler}
-        className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-6 py-3 hover:cursor-pointer',
-          className,
-          {
-            'border-primaryYellow text-primaryYellow': componentVisible,
-            'text-secondaryBlue': isDateSelected,
-          }
-        )}
-      >
-        <p
-          className={cn(
-            'flex-1 whitespace-nowrap text-start text-sm text-lightGray3 group-hover:text-primaryYellow',
+            'flex-1 whitespace-nowrap text-start text-sm text-input-text-input-placeholder group-hover:text-primaryYellow',
             {
               'text-primaryYellow': componentVisible,
               [buttonStyleAfterDateSelected]: isDateSelected,
@@ -492,7 +448,7 @@ const DatePicker = ({
     ) : null;
 
   return (
-    <div className="relative flex w-full flex-col max-md:max-w-full lg:w-auto">
+    <div className={cn('relative flex w-full flex-col max-md:max-w-full', datePickerClassName)}>
       {/* Info: (20240417 - Shirley) Select Period button */}
 
       <div ref={targetRef}>
@@ -501,11 +457,14 @@ const DatePicker = ({
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
           className={cn(
-            'invisible absolute top-16 z-20 grid w-[300px] -translate-y-10 grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
-            calenderClassName,
+            'invisible absolute top-16 z-20 grid w-[300px] grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
-            }
+              'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,
+              '-translate-x-[50%]': alignCalendar === DatePickerAlign.CENTER,
+              '-translate-x-[90%]': alignCalendar === DatePickerAlign.RIGHT,
+            },
+            calenderClassName
           )}
         >
           {/* Info: (20240417 - Shirley) Today button */}

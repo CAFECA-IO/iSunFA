@@ -1,7 +1,11 @@
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '@/constants/display';
+import {
+  SortOptions,
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+} from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
@@ -12,31 +16,87 @@ import {
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
-
-enum SortingType {
-  NEWEST = 'Newest',
-  OLDEST = 'Oldest',
-}
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
+import { useUserCtx } from '@/contexts/user_context';
+import { FilterOptionsModalType } from '@/interfaces/modals';
 
 const MyReportsSection = () => {
+  const { selectedCompany } = useUserCtx();
+  // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
+  // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
+  // eslint-disable-next-line no-unused-vars
+  const {
+    toastHandler,
+    filterOptionsModalVisibilityHandler,
+    // TODO: get filter options and send to API queries (20240613 - Shirley)
+    // filterOptionsForHistory,
+    // filterOptionsForPending,
+  } = useGlobalCtx();
+  const {
+    data: pendingReports,
+    code: listPendingCode,
+    success: listPendingSuccess,
+  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+  });
+  const {
+    data: generatedReports,
+    code: listGeneratedCode,
+    success: listGeneratedSuccess,
+  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+  });
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
-  const [filteredPendingSort, setFilteredPendingSort] = useState<SortingType>(SortingType.NEWEST);
+  const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
-  const [filteredHistorySort, setFilteredHistorySort] = useState<SortingType>(SortingType.NEWEST);
+  const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
   const isPendingDataLoading = false;
   const isHistoryDataLoading = false;
-  const pendingData: IPendingReportItem[] = FIXED_DUMMY_PENDING_REPORT_ITEMS;
-  const historyData: IGeneratedReportItem[] = FIXED_DUMMY_GENERATED_REPORT_ITEMS;
+
   const pendingTotalPages = 1;
   const historyTotalPages = 1;
+
+  useEffect(() => {
+    if (listPendingSuccess && pendingReports) {
+      setPendingData(pendingReports);
+    } else if (listPendingSuccess === false) {
+      toastHandler({
+        id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
+        closeable: true,
+      });
+      setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
+    }
+  }, [listPendingSuccess, listPendingCode, pendingReports]);
+
+  useEffect(() => {
+    if (listGeneratedSuccess && generatedReports) {
+      setHistoryData(generatedReports);
+    } else if (listGeneratedSuccess === false) {
+      toastHandler({
+        id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
+        type: ToastType.ERROR,
+        content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
+        closeable: true,
+      });
+      setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
+    }
+  }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
   const {
     targetRef: pendingSortMenuRef,
@@ -98,7 +158,7 @@ const MyReportsSection = () => {
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isPendingSortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {Object.values(SortingType).map((sorting: SortingType) => (
+          {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
@@ -142,10 +202,65 @@ const MyReportsSection = () => {
     </div>
   );
 
+  const displayedPendingFilterOptionsSection = (
+    <div>
+      {/* Info: desktop (20240527 - Shirley) */}
+      <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
+        <div className="flex flex-col space-y-2 self-stretch">
+          <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+            Sort by
+          </div>
+          {/* Info: sort menu (20240513 - Shirley) */}
+          {displayedPendingSortMenu}
+        </div>
+        {/* Info: date picker (20240513 - Shirley) */}
+        <DatePicker
+          type={DatePickerType.TEXT_PERIOD}
+          period={pendingPeriod}
+          setFilteredPeriod={setPendingPeriod}
+          btnClassName="w-250px"
+          datePickerClassName="lg:w-auto"
+        />{' '}
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedPendingSearchBar}
+        </div>
+      </div>
+
+      {/* Info: mobile (20240527 - Shirley) */}
+      <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedPendingSearchBar}
+        </div>
+        <Button
+          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)}
+          className="px-3 py-3"
+          variant={'secondaryOutline'}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            viewBox="0 0 16 16"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M3.335 1.251a.75.75 0 01.75.75v2.667a.75.75 0 01-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v2.056a2.084 2.084 0 11-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75zM8.002 5.418a.583.583 0 100 1.166.583.583 0 000-1.166zM3.335 8.084a.583.583 0 100 1.167.583.583 0 000-1.167zm-2.083.584a2.083 2.083 0 112.833 1.944v3.39a.75.75 0 01-1.5 0v-3.39a2.084 2.084 0 01-1.333-1.944zm11.417.75a.583.583 0 100 1.166.583.583 0 000-1.166zM10.585 10a2.083 2.083 0 112.834 1.944v2.056a.75.75 0 01-1.5 0v-2.056a2.084 2.084 0 01-1.334-1.944zm-2.583-.75a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+      </div>
+    </div>
+  );
+
   const displayedPendingDataSection = isPendingDataLoading ? (
     <div>Loading...</div>
   ) : pendingData.length !== 0 ? (
-    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-12 max-md:max-w-full max-md:pl-5 lg:mt-0">
+    <div className="flex flex-col max-md:max-w-full">
       {' '}
       <PendingReportList reports={pendingData} />
       <div className="mt-4 flex justify-center">
@@ -251,7 +366,7 @@ const MyReportsSection = () => {
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {Object.values(SortingType).map((sorting: SortingType) => (
+          {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
@@ -295,10 +410,65 @@ const MyReportsSection = () => {
     </div>
   );
 
+  const displayedHistoryFilterOptionsSection = (
+    <div>
+      {/* Info: desktop (20240527 - Shirley) */}
+      <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
+        <div className="flex flex-col space-y-2 self-stretch">
+          <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+            Sort by
+          </div>
+          {/* Info: sort menu (20240513 - Shirley) */}
+          {displayedHistorySortMenu}
+        </div>
+        {/* Info: date picker (20240513 - Shirley) */}
+        <DatePicker
+          type={DatePickerType.TEXT_PERIOD}
+          period={historyPeriod}
+          setFilteredPeriod={setHistoryPeriod}
+          btnClassName="w-250px"
+          datePickerClassName="lg:w-auto"
+        />{' '}
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedHistorySearchBar}
+        </div>
+      </div>
+
+      {/* Info: mobile (20240527 - Shirley) */}
+      <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
+        {/* Info: Search bar (20240513 - Shirley) */}
+        <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
+          {displayedHistorySearchBar}
+        </div>
+        <Button
+          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)}
+          className="px-3 py-3"
+          variant={'secondaryOutline'}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            viewBox="0 0 16 16"
+          >
+            <path
+              className="fill-current"
+              fillRule="evenodd"
+              d="M3.335 1.251a.75.75 0 01.75.75v2.667a.75.75 0 01-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v2.056a2.084 2.084 0 11-1.5 0V2a.75.75 0 01.75-.75zm4.667 0a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75zM8.002 5.418a.583.583 0 100 1.166.583.583 0 000-1.166zM3.335 8.084a.583.583 0 100 1.167.583.583 0 000-1.167zm-2.083.584a2.083 2.083 0 112.833 1.944v3.39a.75.75 0 01-1.5 0v-3.39a2.084 2.084 0 01-1.333-1.944zm11.417.75a.583.583 0 100 1.166.583.583 0 000-1.166zM10.585 10a2.083 2.083 0 112.834 1.944v2.056a.75.75 0 01-1.5 0v-2.056a2.084 2.084 0 01-1.334-1.944zm-2.583-.75a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-4a.75.75 0 01.75-.75z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+      </div>
+    </div>
+  );
+
   const displayedHistoryDataSection = isHistoryDataLoading ? (
     <div>Loading...</div>
   ) : historyData.length !== 0 ? (
-    <div className="mx-0 mt-0 flex flex-col overflow-x-auto pl-0 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-0">
+    <div className="flex flex-col max-md:max-w-full">
       <ReportsHistoryList reports={historyData} />
 
       <div className="mt-4 flex justify-center">
@@ -379,7 +549,7 @@ const MyReportsSection = () => {
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">My Reports</div>
+            <div className="w-full justify-center px-10 md:px-16 lg:px-28">My Reports</div>
           </div>
           {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
@@ -397,7 +567,8 @@ const MyReportsSection = () => {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
+          {/* Info: Divider beneath Heading (20240528 - Shirley) */}
+          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:pl-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
             </div>
@@ -406,27 +577,8 @@ const MyReportsSection = () => {
       </div>
 
       {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
-      <div className="mx-10 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5">
-        <div className="flex flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:space-x-5">
-          <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
-              Sort by
-            </div>
-            {/* Info: sort menu (20240513 - Shirley) */}
-            {displayedPendingSortMenu}
-          </div>
-          {/* Info: date picker (20240513 - Shirley) */}
-          <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
-            period={pendingPeriod}
-            setFilteredPeriod={setPendingPeriod}
-            className="w-250px"
-          />{' '}
-          {/* Info: Search bar (20240513 - Shirley) */}
-          <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
-            {displayedPendingSearchBar}
-          </div>
-        </div>
+      <div className="mt-5 flex flex-col px-6 max-md:mt-0 max-md:max-w-full md:px-16 lg:mx-10 lg:pl-20 lg:pr-5">
+        {displayedPendingFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
           <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">
@@ -453,36 +605,15 @@ const MyReportsSection = () => {
             <div>Pending</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
-
         {displayedPendingDataSection}
       </div>
 
       {/* Info: ----- reports history (20240513 - Shirley) ----- */}
-      <div className="mx-10 mt-20 flex flex-col pl-20 pr-5 max-md:max-w-full max-md:pl-5 lg:mt-20">
-        {/* <div className="mx-10 mt-5 flex flex-col pl-20 pr-5 max-md:mt-10 max-md:max-w-full max-md:pl-5"> */}
-        <div className="flex flex-wrap items-end justify-between space-y-2 pr-14 max-md:pr-5 lg:space-x-5">
-          <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
-              Sort by
-            </div>
-            {/* Info: sort menu (20240513 - Shirley) */}
-            {displayedHistorySortMenu}
-          </div>
-          {/* Info: date picker (20240513 - Shirley) */}
-          <DatePicker
-            type={DatePickerType.CHOOSE_PERIOD}
-            period={historyPeriod}
-            setFilteredPeriod={setHistoryPeriod}
-            className="w-250px"
-          />{' '}
-          {/* Info: Search bar (20240513 - Shirley) */}
-          <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
-            {displayedHistorySearchBar}
-          </div>
-        </div>
+      <div className="mt-10 flex flex-col px-6 max-md:max-w-full md:px-16 lg:mx-10 lg:pl-20 lg:pr-5">
+        {displayedHistoryFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
           <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">
@@ -505,7 +636,7 @@ const MyReportsSection = () => {
             <div>Reports History</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-10 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
           </div>
         </div>
         {displayedHistoryDataSection}

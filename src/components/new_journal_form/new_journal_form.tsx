@@ -5,27 +5,24 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IInvoice } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import {
-  PaymentPeriodType,
-  PaymentStatusType,
-  EventType,
-  ProgressStatus,
-} from '@/constants/account';
+import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
 import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import {
+  DEFAULT_DISPLAYED_COMPANY_ID,
+  default30DayPeriodInSec,
+  radioButtonStyle,
+} from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
-import { ToastType } from '@/interfaces/toastify';
-import { IVoucher } from '@/interfaces/voucher';
-
-// Info: (20240425 - Julian) dummy data, will be replaced by API data
+import { IJournal } from '@/interfaces/journal';
+import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
 const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
@@ -35,101 +32,78 @@ const ficSelection: string[] = [
   '006 Taiwan Cooperative Bank',
   '007 First Commercial Bank',
 ];
-// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 
-const projectSelection: { id: string | null; name: string }[] = [
+// Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
+const projectSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'None' },
-  { id: 'project_a', name: 'Project A' },
-  { id: 'project_b', name: 'Project B' },
-  { id: 'project_c', name: 'Project C' },
+  { id: 1, name: 'Project A' },
+  { id: 2, name: 'Project B' },
+  { id: 3, name: 'Project C' },
 ];
-const contractSelection: { id: string | null; name: string }[] = [
+const contractSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'None' },
-  { id: 'contract_a', name: 'Contract A' },
-  { id: 'contract_b', name: 'Contract B' },
-  { id: 'contract_c', name: 'Contract C' },
+  { id: 1, name: 'Contract A' },
+  { id: 2, name: 'Contract B' },
+  { id: 3, name: 'Contract C' },
 ];
 
 const NewJournalForm = () => {
+  const { selectedCompany } = useUserCtx();
   // Info: (20240428 - Julian) get values from context
   const {
-    toastHandler,
     messageModalVisibilityHandler,
     messageModalDataHandler,
     confirmModalVisibilityHandler,
     addAssetModalVisibilityHandler,
+    confirmModalDataHandler,
   } = useGlobalCtx();
 
-  const {
-    companyId,
-    invoiceId,
-    voucherId,
-    setInvoiceIdHandler,
-    setVoucherIdHandler,
-    setVoucherPreviewHandler,
-  } = useAccountingCtx();
+  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
+    useAccountingCtx();
 
-  // Info: (20240508 - Julian) call API to get invoice data
   const {
-    isLoading,
-    success: getInvoiceSuccess,
-    trigger: getInvoice, // TO Murky (20240516 - tzuhan) with invoiceId return IInvoice maybe better than IInvoice[]
-    data: invoices,
-  } = APIHandler<IInvoice[]>(
-    APIName.INVOCIE_GET_BY_ID,
-    {
-      params: { companyId, invoiceId },
-    },
+    trigger: getJournalById,
+    success: getJournalSuccess,
+    data: journal,
+    code: getJournalCode,
+  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: getOCRResult,
+    success: getSuccess,
+    data: OCRResult,
+    code: getCode,
+  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: createInvoice,
+    data: invoiceReturn,
+    success: createSuccess,
+    code: createCode,
+  } = APIHandler<{ journalId: number; resultStatus: IAccountResultStatus }>(
+    APIName.INVOICE_CREATE,
+    {},
     false,
     false
   );
 
-  const {
-    trigger: voucherUpload,
-    data: result,
-    success: uploadSuccess,
-    code: uploadCode,
-    error: uploadError,
-  } = APIHandler<IAccountResultStatus>(
-    APIName.JOURNAL_GENERATE,
-    {
-      params: { companyId },
-    },
-    false,
-    false
-  );
+  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
 
-  useEffect(() => {
-    if (
-      invoiceId !== undefined &&
-      (!invoices || invoices.length === 0)
-      // || (invoiceId !== undefined && invoices && invoices.length > 0 && invoices[0].invoiceId !== invoiceId)
-    ) {
-      setTimeout(
-        () => {
-          getInvoice({ params: { companyId, invoiceId } });
-        },
-        getInvoiceSuccess ? 2000 : 0
-      );
-    }
-  }, [invoiceId, invoices]);
-
+  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
   const {
-    isLoading: isStatusLoading,
-    trigger: getVoucherStatus,
+    trigger: getAIStatus,
     data: status,
     success: statusSuccess,
     code: statusCode,
-    error: statusError,
-  } = APIHandler<ProgressStatus>(APIName.JOURNAL_GET_PROGRESS_STATUS, {}, false, false);
+  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
 
   const {
-    trigger: getVoucherPreview,
-    data: preview,
-    success: previewSuccess,
-    code: previewCode,
-    error: previewError,
-  } = APIHandler<IVoucher>(APIName.JOURNAL_GET_PREVIEW_BY_ID, {}, false, false);
+    trigger: getAIResult,
+    data: AIResult,
+    success: AIResultSuccess,
+    code: AIResultCode,
+  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
+  */
 
   // Info: (20240425 - Julian) check if form has changed
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -157,37 +131,125 @@ const NewJournalForm = () => {
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
-  const [selectedProject, setSelectedProject] = useState<{ id: string | null; name: string }>(
+  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>(
     projectSelection[0]
   );
-  const [selectedContract, setSelectedContract] = useState<{ id: string | null; name: string }>(
+  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>(
     contractSelection[0]
   );
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
   useEffect(() => {
-    if (invoices && invoices.length > 0) {
-      const invoice = invoices
-        // .filter((inv) => inv.invoiceId === invoiceId)
-        .pop();
-      if (invoice) {
-        // Info: (20240506 - Julian) 設定表單的預設值
-        setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
-        setSelectedEventType(invoice.eventType);
-        setInputPaymentReason(invoice.paymentReason);
+    if (selectedUnprocessedJournal !== undefined) {
+      getJournalById({
+        params: { companyId, journalId: selectedUnprocessedJournal.id },
+      });
+    }
+  }, [selectedUnprocessedJournal]);
+
+  useEffect(() => {
+    if (selectedUnprocessedJournal && getJournalSuccess && journal) {
+      selectJournalHandler(journal);
+      if (journal.invoice === null) {
+        getOCRResult({
+          params: {
+            companyId,
+            resultId: selectedUnprocessedJournal.aichResultId,
+          },
+        }); // selectedUnprocessedJournal.aichResultId
+      } else {
+        const { invoice } = journal;
+        // Info: update form data with journal data (20240524 - tzuhan)
+        // setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+        // setInputPaymentReason(invoice.paymentReason);
+        setSelectedEventType(invoice.eventType as EventType);
         setInputDescription(invoice.description);
-        setInputVendor(invoice.venderOrSupplyer);
+        setInputVendor(invoice.vendorOrSupplier);
         setInputTotalPrice(invoice.payment.price);
         setTaxToggle(invoice.payment.hasTax);
         setTaxRate(invoice.payment.taxPercentage);
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
-        // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
-        setInvoiceIdHandler('');
+        setSelectedMethod(invoice.payment.method);
+        // setInputAccountNumber(invoice.payment.accountNumber);
+        setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
+        setInputInstallment(invoice.payment.installmentPeriod);
+        setPaymentStatus(invoice.payment.status as PaymentStatusType);
+        setInputPartialPaid(invoice.payment.alreadyPaid);
+        setSelectedProject(
+          projectSelection.find(
+            (project) => journal.projectId && project.id === journal.projectId
+          ) || projectSelection[0]
+        );
+        setSelectedContract(
+          contractSelection.find(
+            (contract) => journal.contractId && contract.id === journal.contractId
+          ) || contractSelection[0]
+        );
+        setProgressRate(invoice.payment.progress);
       }
+      // if (journal.voucher) {
+      //   confirmModalVisibilityHandler();
+      // }
     }
-  }, [isLoading, invoices]);
+    if (getJournalSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Journal Failed',
+        content: `Get Journal failed: ${getJournalCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [getJournalSuccess, journal, selectedUnprocessedJournal]);
+
+  // TODO: update with backend data (20240523 - tzuhan)
+  useEffect(() => {
+    if (getSuccess && OCRResult) {
+      // Info: (20240506 - Julian) 設定表單的預設值
+      setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
+      setSelectedEventType(OCRResult.eventType);
+      setInputPaymentReason(OCRResult.paymentReason);
+      setInputDescription(OCRResult.description);
+      setInputVendor(OCRResult.vendorOrSupplier);
+      setInputTotalPrice(OCRResult.payment.price);
+      setTaxToggle(OCRResult.payment.hasTax);
+      setTaxRate(OCRResult.payment.taxPercentage);
+      setFeeToggle(OCRResult.payment.hasFee);
+      setInputFee(OCRResult.payment.fee);
+      setSelectedMethod(OCRResult.payment.method);
+      // setInputAccountNumber(OCRResult.payment.accountNumber);
+      setPaymentPeriod(OCRResult.payment.period);
+      setInputInstallment(OCRResult.payment.installmentPeriod);
+      setPaymentStatus(OCRResult.payment.status);
+      setInputPartialPaid(OCRResult.payment.alreadyPaid);
+      setSelectedProject(
+        projectSelection.find((project) => project.id === OCRResult.projectId) ||
+          projectSelection[0]
+      );
+      setSelectedContract(
+        contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
+          contractSelection[0]
+      );
+      setProgressRate(OCRResult.payment.progress);
+    }
+  }, [getSuccess, OCRResult]);
+
+  useEffect(() => {
+    // Info: (20240527 - Julian) 顯示錯誤須分開處理，避免閃現
+    if (getSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get OCR result Failed',
+        content: `Get OCR result failed: ${getCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [getSuccess]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
   useEffect(() => {
@@ -334,6 +396,8 @@ const NewJournalForm = () => {
     setSelectedContract(contractSelection[0]);
     setProgressRate(0);
     setInputEstimatedCost(0);
+    // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
+    selectUnprocessedJournalHandler(undefined);
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -352,15 +416,15 @@ const NewJournalForm = () => {
   };
 
   // Info: (20240429 - Julian) 上傳日記帳資料
-  const uploadJournalHandler = async (event: React.FormEvent<HTMLFormElement>) => {
+  const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoice: IInvoice = {
-      invoiceId: invoiceId!,
+    const invoiceData: IInvoice = {
+      journalId: selectedUnprocessedJournal?.id || invoiceReturn?.journalId || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,
       description: inputDescription,
-      venderOrSupplyer: inputVendor,
+      vendorOrSupplier: inputVendor,
       project: selectedProject.name,
       projectId: selectedProject.id,
       contract: selectedContract.name,
@@ -371,99 +435,128 @@ const NewJournalForm = () => {
         taxPercentage: taxRate,
         hasFee: feeToggle,
         fee: inputFee,
-        paymentMethod: selectedMethod,
+        method: selectedMethod,
         installmentPeriod: inputInstallment,
-        paymentAlreadyDone: inputPartialPaid,
+        alreadyPaid: inputPartialPaid,
         isRevenue: true,
-        progress: 0,
-        paymentPeriod,
-        paymentStatus,
+        progress: progressRate,
+        period: paymentPeriod,
+        status: paymentStatus,
       },
     };
 
-    voucherUpload({ body: { invoices: [invoice] } });
+    createInvoice({
+      params: { companyId },
+      body: { invoice: invoiceData },
+    });
   };
 
   useEffect(() => {
-    if (uploadSuccess && result) {
-      const { resultId } = result;
-      setVoucherIdHandler(resultId);
-    } else if (uploadSuccess === false) {
-      // TODO: error handling @Julian (20240510 - tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`uploadError: `, uploadError);
-      toastHandler({
-        id: `UploadJournalFailed_${uploadCode}_${(Math.random() * 100000).toFixed(5)}`,
-        type: ToastType.ERROR,
-        content: `Upload journal failed: ${uploadCode}`,
-        closeable: true,
+    if (createSuccess && invoiceReturn?.journalId && invoiceReturn?.resultStatus) {
+      confirmModalDataHandler({
+        journalId: invoiceReturn.journalId,
+        askAIId: invoiceReturn.resultStatus.resultId,
       });
+      confirmModalVisibilityHandler();
+      // const { resultId } = result;
+      // getAIStatus({
+      //   params: {
+      //     companyId,
+      //     resultId,
+      //   },
+      // });
+    } else if (createSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Create Invoice Failed',
+        content: `Create Invoice failed: ${createCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
     }
-  }, [uploadSuccess, result]);
+  }, [createSuccess, invoiceReturn, createCode]);
 
+  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
   useEffect(() => {
-    if (!!voucherId && !isStatusLoading && (!status || status === ProgressStatus.IN_PROGRESS)) {
-      setTimeout(
-        () => {
-          getVoucherStatus({
-            params: {
-              companyId,
-              voucherId,
-            },
-          });
-        },
-        statusSuccess === undefined ? 0 : 2000
-      );
-    }
-    if (statusSuccess && status && status !== ProgressStatus.IN_PROGRESS) {
-      if (
-        voucherId &&
-        (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)
-      ) {
-        getVoucherPreview({
+    let interval: NodeJS.Timeout | undefined;
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      interval = setInterval(() => {
+        getAIStatus({
           params: {
             companyId,
-            voucherId,
+            resultId: result.resultId,
           },
         });
+      }, 2000);
+    }
+    if (statusSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal failed: ${statusCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+    if (
+      status === ProgressStatus.INVALID_INPUT ||
+      status === ProgressStatus.LLM_ERROR ||
+      status === ProgressStatus.SYSTEM_ERROR ||
+      status === ProgressStatus.NOT_FOUND ||
+      status === ProgressStatus.PAUSED
+    ) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Upload Journal Failed',
+        content: `Upload journal status: ${status}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
+      if (journal?.id) {
+        getJournalById({ params: { companyId, journalId: journal?.id } });
       } else {
-        // TODO: Error handling @Julian (20240514 - Tzuhan)
-        toastHandler({
-          id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
-          type: ToastType.ERROR,
-          content: `ProgressStatus: ${ProgressStatus}`,
-          closeable: true,
+        getAIResult({
+          params: {
+            companyId,
+            resultId: result.resultId,
+          },
         });
       }
-    } else if (statusSuccess === false) {
-      // TODO: Error handling @Julian (20240514 - Tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`status error: ${statusError}`);
-      toastHandler({
-        id: `GetVoucherStatusFailed_${statusCode}_${(Math.random() * 100000).toFixed(5)}`,
-        type: ToastType.ERROR,
-        content: `Get voucher status failed: ${statusCode}`,
-        closeable: true,
-      });
     }
-  }, [voucherId, isStatusLoading, status, statusSuccess, statusCode, statusError]);
+    return () => clearInterval(interval);
+  }, [result, statusSuccess, status]);
 
   useEffect(() => {
-    if (previewSuccess && preview) {
-      setVoucherPreviewHandler(preview);
-      confirmModalVisibilityHandler();
-    } else if (previewSuccess === false) {
-      // TODO: Error handling @Julian (20240514 - Tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`preview error: ${previewError}`);
-      toastHandler({
-        id: `GetVoucherPreviewFailed_${previewCode}_${(Math.random() * 100000).toFixed(5)}`,
-        type: ToastType.ERROR,
-        content: `Get voucher preview failed: ${previewCode}`,
-        closeable: true,
-      });
+    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      loadingModalVisibilityHandler();
     }
-  }, [previewSuccess, preview]);
+    if (status === ProgressStatus.SUCCESS) {
+      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
+      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
+    }
+  }, [statusSuccess, status]);
+
+  useEffect(() => {
+    if (AIResultSuccess && AIResult) {
+      getJournalById({ params: { companyId, journalId } });
+    }
+    if (AIResultSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Get Voucher Preview Failed',
+        content: `Get voucher preview failed: ${AIResultCode}`,
+        submitBtnStr: 'Close',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  }, [AIResultSuccess, AIResult, AIResultCode]);
+  */
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === 'Transfer';
@@ -554,7 +647,7 @@ const NewJournalForm = () => {
   });
 
   const displayProjectDropmenu = projectSelection.map(
-    (project: { id: string | null; name: string }) => {
+    (project: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
         setSelectedProject(project);
       };
@@ -572,7 +665,7 @@ const NewJournalForm = () => {
   );
 
   const displayContractDropmenu = contractSelection.map(
-    (contract: { id: string | null; name: string }) => {
+    (contract: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
         setSelectedContract(contract);
       };
@@ -611,7 +704,7 @@ const NewJournalForm = () => {
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
-              type={DatePickerType.CHOOSE_DATE}
+              type={DatePickerType.TEXT_DATE}
             />
           </div>
 
@@ -744,6 +837,7 @@ const NewJournalForm = () => {
                 onChange={totalPriceChangeHandler}
                 required
                 className="flex-1 bg-transparent px-10px outline-none"
+                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                 <Image
@@ -805,7 +899,7 @@ const NewJournalForm = () => {
               />
             </div>
             <div
-              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
             >
               <input
                 id="feeInput"
@@ -815,6 +909,7 @@ const NewJournalForm = () => {
                 value={inputFee}
                 onChange={feeChangeHandler}
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                 <Image
@@ -1145,60 +1240,55 @@ const NewJournalForm = () => {
 
   return (
     <div>
-      {status && status === ProgressStatus.IN_PROGRESS ? (
-        <p>Loading...</p>
-      ) : (
-        <form
-          onSubmit={uploadJournalHandler}
-          onChange={formChangedHandler}
-          className="flex flex-col gap-8px"
-        >
-          {/* Info: (20240423 - Julian) Basic Info */}
-          {displayedBasicInfo}
+      <form
+        onSubmit={createInvoiceHandler}
+        onChange={formChangedHandler}
+        className="flex flex-col gap-8px"
+      >
+        {/* Info: (20240423 - Julian) Basic Info */}
+        {displayedBasicInfo}
 
-          {/* Info: (20240423 - Julian) Payment */}
-          {displayedPayment}
+        {/* Info: (20240423 - Julian) Payment */}
+        {displayedPayment}
 
-          {/* Info: (20240423 - Julian) Project */}
-          {displayedProject}
-          {/* ToDo: (20240429 - Julian) Progress Bar */}
+        {/* Info: (20240423 - Julian) Project */}
+        {displayedProject}
 
-          {/* Info: (20240423 - Julian) Buttons */}
-          <div className="ml-auto flex items-center gap-24px">
-            <button
-              id="clearJournalFormBtn"
-              type="button"
-              onClick={clearAllClickHandler}
-              className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+        {/* Info: (20240423 - Julian) Buttons */}
+        <div className="ml-auto flex items-center gap-24px">
+          <button
+            id="clearJournalFormBtn"
+            type="button"
+            onClick={clearAllClickHandler}
+            className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+          >
+            Clear all
+          </button>
+          <Button
+            id="uploadBtn"
+            type="submit"
+            className="px-16px py-8px"
+            disabled={isUploadDisabled}
+          >
+            <p>Upload</p>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              Clear all
-            </button>
-            <Button
-              id="uploadBtn"
-              type="submit"
-              className="px-16px py-8px"
-              disabled={isUploadDisabled}
-            >
-              <p>Upload</p>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  className="fill-current"
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
-                  fill="#996301"
-                />
-              </svg>
-            </Button>
-          </div>
-        </form>
-      )}
+              <path
+                className="fill-current"
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M10.0025 2.41797C5.81436 2.41797 2.41919 5.81314 2.41919 10.0013C2.41919 12.8073 3.94278 15.2583 6.2114 16.5706C6.56995 16.778 6.69247 17.2368 6.48506 17.5953C6.27765 17.9539 5.81886 18.0764 5.46031 17.869C2.74726 16.2996 0.919189 13.3644 0.919189 10.0013C0.919189 4.98472 4.98593 0.917969 10.0025 0.917969C15.0191 0.917969 19.0859 4.98471 19.0859 10.0013C19.0859 13.5056 17.1013 16.5451 14.1982 18.0595C14.1867 18.0655 14.1751 18.0715 14.1635 18.0776C13.8925 18.2192 13.6009 18.3714 13.2694 18.4579C12.8996 18.5543 12.5243 18.5611 12.0662 18.499C11.6557 18.4434 11.202 18.2326 10.8434 18.0152C10.4848 17.7978 10.0881 17.4931 9.84892 17.1548C9.25119 16.3095 9.25174 15.5048 9.25247 14.4473C9.2525 14.4101 9.25252 14.3725 9.25252 14.3346V8.47863L7.19952 10.5316C6.90663 10.8245 6.43175 10.8245 6.13886 10.5316C5.84597 10.2387 5.84597 9.76387 6.13886 9.47097L9.47219 6.13764C9.61285 5.99699 9.80361 5.91797 10.0025 5.91797C10.2014 5.91797 10.3922 5.99699 10.5329 6.13764L13.8662 9.47097C14.1591 9.76386 14.1591 10.2387 13.8662 10.5316C13.5733 10.8245 13.0984 10.8245 12.8055 10.5316L10.7525 8.47863V14.3346C10.7525 15.539 10.7749 15.8663 11.0737 16.2888C11.1393 16.3816 11.3338 16.5584 11.621 16.7325C11.9082 16.9066 12.1549 16.9973 12.2676 17.0126C12.5969 17.0572 12.7647 17.0393 12.8909 17.0064C13.041 16.9673 13.1873 16.895 13.5045 16.7296C15.9316 15.4635 17.5859 12.9249 17.5859 10.0013C17.5859 5.81314 14.1907 2.41797 10.0025 2.41797Z"
+                fill="#996301"
+              />
+            </svg>
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

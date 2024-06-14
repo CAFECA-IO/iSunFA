@@ -1,4 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
+import { IJournal, IUnprocessedJournal } from '@/interfaces/journal';
 import { IVoucher } from '@/interfaces/voucher';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
@@ -38,7 +39,11 @@ interface IAccountingContext {
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
 
-  companyId: string | undefined;
+  selectedUnprocessedJournal: IUnprocessedJournal | undefined;
+  selectUnprocessedJournalHandler: (journal: IUnprocessedJournal | undefined) => void;
+  selectedJournal: IJournal | undefined;
+  selectJournalHandler: (journal: IJournal | undefined) => void;
+
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
   voucherId: string | undefined;
@@ -50,7 +55,12 @@ interface IAccountingContext {
   addVoucherRowHandler: (type?: VoucherRowType) => void;
   deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
-  changeVoucherAmountHandler: (index: number, value: number | null, type: VoucherRowType) => void;
+  changeVoucherAmountHandler: (
+    index: number,
+    value: number | null,
+    type: VoucherRowType,
+    description?: string
+  ) => void;
   clearVoucherHandler: () => void;
 
   totalDebit: number;
@@ -63,7 +73,11 @@ const initialAccountingContext: IAccountingContext = {
   // duplicateTempJournal: () => {},
   // removeTempJournal: () => {},
 
-  companyId: undefined,
+  selectedUnprocessedJournal: undefined,
+  selectUnprocessedJournalHandler: () => { },
+  selectedJournal: undefined,
+  selectJournalHandler: () => { },
+
   invoiceId: '1',
   setInvoiceIdHandler: () => { },
   voucherId: undefined,
@@ -85,7 +99,10 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
-  const [companyId, setCompanyId] = useState<string | undefined>('1'); // TODO: Dummy data for companyId, need to replace with real data @Julian (20240509 - Tzuhan)
+  const [selectedUnprocessedJournal, setEditingJournal] = useState<IUnprocessedJournal | undefined>(
+    undefined
+  );
+  const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
@@ -100,39 +117,33 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // Info: (20240430 - Julian) 新增日記帳列
   const addVoucherRowHandler = useCallback(
     (type?: VoucherRowType) => {
-      if (type === VoucherRowType.DEBIT) {
-        setAccountingVoucher((prev) => [
-          ...prev,
-          {
-            id: prev[prev.length - 1].id + 1,
-            accountTitle: '',
-            particulars: '',
-            debit: 1,
-            credit: 0,
-          },
-        ]);
-      } else if (type === VoucherRowType.CREDIT) {
-        setAccountingVoucher((prev) => [
-          ...prev,
-          {
-            id: prev[prev.length - 1].id + 1,
-            accountTitle: '',
-            particulars: '',
-            debit: 0,
-            credit: 1,
-          },
-        ]);
-      } else {
-        setAccountingVoucher((prev) => [
-          ...prev,
-          {
-            id: prev[prev.length - 1].id + 1,
-            accountTitle: '',
-            particulars: '',
-            debit: 0,
-            credit: 0,
-          },
-        ]);
+      // Info: (20240530 - Julian) 檢查 accountingVoucher 是否有列
+      const isVoucherEmpty = !!accountingVoucher && accountingVoucher.length > 0;
+      // Info: (20240530 - Julian) 若 accountingVoucher 為空，則新增 id = 0，否則最後一列 id + 1
+      const newId = isVoucherEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
+
+      switch (type) {
+        // Info: (20240530 - Julian) 新增借方列
+        case VoucherRowType.DEBIT:
+          setAccountingVoucher((prev) => [
+            ...prev,
+            { id: newId, accountTitle: '', particulars: '', debit: 1, credit: 0 },
+          ]);
+          break;
+        // Info: (20240530 - Julian) 新增貸方列
+        case VoucherRowType.CREDIT:
+          setAccountingVoucher((prev) => [
+            ...prev,
+            { id: newId, accountTitle: '', particulars: '', debit: 0, credit: 1 },
+          ]);
+          break;
+        // Info: (20240530 - Julian) 新增空白列
+        default:
+          setAccountingVoucher((prev) => [
+            ...prev,
+            { id: newId, accountTitle: '', particulars: '', debit: 0, credit: 0 },
+          ]);
+          break;
       }
     },
     [accountingVoucher]
@@ -166,16 +177,27 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   // Info: (20240430 - Julian) 將 debit/credit 值寫入 state
   const changeVoucherAmountHandler = useCallback(
-    (index: number, value: number | null, type: VoucherRowType) => {
+    (index: number, value: number | null, type: VoucherRowType, description?: string) => {
       setAccountingVoucher((prev) => {
-        const newVoucher = [...prev]; // Info: (20240430 - Julian) 複製現有的傳票
-        const newAmount = value || 0; // Info: (20240430 - Julian) 若 value 為 null 則預設為 0
-        const targetId = prev.findIndex((voucher) => voucher.id === index); // Info: (20240430 - Julian) 找到要寫入的傳票 id
+        // Info: (20240430 - Julian) 複製現有的傳票
+        const newVoucher = [...prev];
+
+        // Info: (20240430 - Julian) 新的 amount 值，若 value 為 null 則預設為 0
+        const newAmount = value || 0;
+
+        // Info: (20240430 - Julian) 找到要寫入的傳票 id
+        const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index;
+
         if (type === VoucherRowType.CREDIT) {
-          newVoucher[targetId].credit = newAmount; // Info: (20240430 - Julian) 寫入新的 credit 值
+          // Info: (20240430 - Julian) credit 的處理：寫入 amount 值，如果 description 有值則寫入，否則不動作
+          newVoucher[targetId].credit = newAmount;
+          if (description) newVoucher[targetId].particulars = description;
         } else if (type === VoucherRowType.DEBIT) {
-          newVoucher[targetId].debit = newAmount; // Info: (20240430 - Julian) 寫入新的 debit 值
+          // Info: (20240430 - Julian) debit 的處理：寫入 amount 值，如果 description 有值則寫入，否則不動作
+          newVoucher[targetId].debit = newAmount;
+          if (description) newVoucher[targetId].particulars = description;
         }
+
         return newVoucher;
       });
     },
@@ -189,7 +211,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
     changeVoucherStringHandler(0, '', VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
     changeVoucherStringHandler(0, '', VoucherString.PARTICULARS); // Info: (20240503 - Julian) 清空摘要 input
-    // Info: 清空欄位資料 @Julian 需要幫忙檢查 (20240515 - Tzuhan)
+    // Info: (20240515 - Julian) 清空欄位資料
     setInvoiceId('');
     setVoucherId(undefined);
     setVoucherStatus(undefined);
@@ -204,11 +226,18 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalCredit(credit);
   }, [accountingVoucher]);
 
-  // Info: (20240430 - Julian) 設定 OCR 回傳的結果 id
-  const setCompanyIdHandler = useCallback((id: string | undefined) => setCompanyId(id), [companyId]);
-  const setInvoiceIdHandler = useCallback((id: string | undefined) => setInvoiceId(id), [invoiceId]);
-  const setVoucherIdHandler = useCallback((id: string | undefined) => setVoucherId(id), [voucherId]);
-  const setVoucherPreviewHandler = useCallback((voucher: IVoucher | undefined) => setVoucherPreview(voucher), [voucherPreview]);
+  const setInvoiceIdHandler = useCallback(
+    (id: string | undefined) => setInvoiceId(id),
+    [invoiceId]
+  );
+  const setVoucherIdHandler = useCallback(
+    (id: string | undefined) => setVoucherId(id),
+    [voucherId]
+  );
+  const setVoucherPreviewHandler = useCallback(
+    (voucher: IVoucher | undefined) => setVoucherPreview(voucher),
+    [voucherPreview]
+  );
 
   // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
@@ -244,6 +273,16 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   //   [tempJournalList]
   // );
 
+  const selectUnprocessedJournalHandler = useCallback(
+    (journal: IUnprocessedJournal | undefined) => setEditingJournal(journal),
+    [selectedUnprocessedJournal]
+  );
+
+  const selectJournalHandler = useCallback(
+    (journal: IJournal | undefined) => setSelectedJournal(journal),
+    [selectedJournal]
+  );
+
   const value = useMemo(
     () => ({
       accountingVoucher,
@@ -255,14 +294,17 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       totalDebit,
       totalCredit,
 
-      companyId,
-      setCompanyIdHandler,
       invoiceId,
       setInvoiceIdHandler,
       voucherId,
       setVoucherIdHandler,
       voucherPreview,
       setVoucherPreviewHandler,
+
+      selectedUnprocessedJournal,
+      selectUnprocessedJournalHandler,
+      selectedJournal,
+      selectJournalHandler,
     }),
     [
       accountingVoucher,
@@ -273,11 +315,14 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearVoucherHandler,
       totalDebit,
       totalCredit,
-      companyId,
       invoiceId,
       voucherId,
       voucherStatus,
       voucherPreview,
+      selectedUnprocessedJournal,
+      selectUnprocessedJournalHandler,
+      selectedJournal,
+      selectJournalHandler,
     ]
   );
 

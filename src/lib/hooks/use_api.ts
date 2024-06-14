@@ -40,28 +40,44 @@ export async function fetchData<Data>(
 
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console
-  console.log(`fetchData(${apiConfig.name}), path:`, path, `options:`, options, apiConfig);
+  console.log(
+    `fetchData(${apiConfig.name}), path:`,
+    path,
+    `options:`,
+    options,
+    `apiConfig:`,
+    apiConfig
+  );
 
-  if (apiConfig.method !== HttpMethod.GET && options.body) {
-    if (options.body instanceof FormData) {
-      fetchOptions.body = options.body;
-    } else {
-      fetchOptions.body = JSON.stringify(options.body);
-      fetchOptions.headers = {
-        ...DEFAULT_HEADERS,
-        ...(options.header || {}),
-      };
+  if (apiConfig.method !== HttpMethod.GET) {
+    if (options.body) {
+      if (options.body instanceof FormData) {
+        fetchOptions.body = options.body;
+      } else {
+        fetchOptions.body = JSON.stringify(options.body);
+        fetchOptions.headers = {
+          ...DEFAULT_HEADERS,
+          ...(options.header || {}),
+        };
+      }
     }
+  } else {
+    fetchOptions.headers = {
+      ...DEFAULT_HEADERS,
+      ...(options.header || {}),
+    };
   }
   // Deprecated: debug log (20240510 - Tzuahan)
   // eslint-disable-next-line no-console
   console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
   const result = (await response.json()) as IResponseData<Data>;
+
+  // Deprecated: debug log (20240523 - Tzuahan)
+  // eslint-disable-next-line no-console
+  console.log(`fetchData response: `, response, `result: `, result);
+
   return result;
 }
 
@@ -84,11 +100,16 @@ const useAPI = <Data>(
   const fetchDataCallback = useCallback(
     async (input?: IAPIInput, signal?: AbortSignal) => {
       setIsLoading(true);
+      setSuccess(undefined);
+      setCode(undefined);
+      setError(null);
+      setData(undefined);
       try {
         const response = await fetchData<Data>(
           apiConfig,
           {
             ...options,
+            header: input?.header || options.header,
             params: input?.params || options.params,
             query: input?.query || options.query,
             body: input?.body || options.body,
@@ -96,14 +117,14 @@ const useAPI = <Data>(
           signal
         );
         setCode(response.code);
-        if (!response.success) {
-          throw new Error(response.message ?? 'Unknown error');
-        }
         setData(response.payload as Data);
-        setSuccess(true);
+        setSuccess(response.success);
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
+        // Deprecated: debug log (20240523 - Tzuahan)
+        // eslint-disable-next-line no-console
+        console.log(`setCode: ${setCode}`, e);
         setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
       } finally {
         setIsLoading(false);

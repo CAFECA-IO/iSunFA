@@ -1,4 +1,3 @@
-/* eslint-disable */
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import React, { useEffect } from 'react';
@@ -6,12 +5,16 @@ import Tooltip from '@/components/tooltip/tooltip';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { Period } from '@/interfaces/chart_unit';
 import {
   DUMMY_INCOME_EXPENSE_TREND_CHART_DATA,
   IIncomeExpenseTrendChartData,
 } from '@/interfaces/income_expense_trend_chart';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { useUserCtx } from '@/contexts/user_context';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -33,25 +36,25 @@ const LineChart = ({ data }: LineChartProps) => {
       const MOBILE_WIDTH = 450;
 
       if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 250;
-        const presentHeight = 250;
+        const presentWidth = 290 + (windowWidth - 375) * 1.02;
+        const presentHeight = 300;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (windowWidth <= TABLET_WIDTH) {
+      } else if (windowWidth < TABLET_WIDTH) {
         const presentWidth = 370;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
       } else if (windowWidth > DESKTOP_WIDTH) {
-        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 10;
+        const presentWidth = 400 + (windowWidth - DESKTOP_WIDTH) / 2.5;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
         setChartHeight(presentHeight);
-      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 580;
+      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth >= TABLET_WIDTH) {
+        const presentWidth = 650 + (windowWidth - TABLET_WIDTH) / 1.05;
         const presentHeight = 250;
 
         setChartWidth(presentWidth);
@@ -92,8 +95,8 @@ const LineChart = ({ data }: LineChartProps) => {
       },
     },
     yaxis: {
-      min: -15, // Adjust according to your data range
-      max: 65, // Adjust according to your data range
+      // min: -15, // Adjust according to your data range
+      // max: 65, // Adjust according to your data range
       forceNiceScale: false, // Turn off nice scale to use exact min/max values
       labels: {
         style: {
@@ -112,7 +115,7 @@ const LineChart = ({ data }: LineChartProps) => {
       fontFamily: 'Barlow',
       fontWeight: 500,
       markers: {
-        fillColors: ['#6DDBA8', '#FB7A7A'],
+        fillColors: ['#4BD394', '#FB5C5C', '#FFA502'],
         width: 20, // 標記的寬度
         height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
@@ -139,7 +142,7 @@ const LineChart = ({ data }: LineChartProps) => {
     },
     stroke: {
       curve: 'straight',
-      colors: ['#6DDBA8', '#FB7A7A'],
+      colors: ['#4BD394', '#FB5C5C', '#FFA502'],
       width: 2,
     },
     grid: {
@@ -173,7 +176,13 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`,
       },
       y: {
-        formatter: (value) => `${value}%`,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        formatter: (value, { series, seriesIndex, dataPointIndex }) => {
+          const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
+          const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
+
+          return `${formattedAbsoluteValue}`;
+        },
       },
       marker: {
         show: false,
@@ -188,7 +197,10 @@ const LineChart = ({ data }: LineChartProps) => {
   return (
     <Chart
       options={options}
-      series={data.series}
+      series={data.annotations.map((item) => ({
+        name: item.name,
+        data: item.data.map((point) => point.absolute),
+      }))}
       type="line"
       width={chartWidth}
       height={chartHeight}
@@ -197,25 +209,93 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
+  const { toastHandler } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
-  const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
+  const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.MONTH);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
+
+  const {
+    trigger: getProfitMarginTrendInPeriod,
+    data: profitMarginTrendInPeriodData,
+    success: getSuccess,
+    code: getCode,
+    error: getError,
+  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD, {
+    params: {
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+    },
+    query: {
+      period: selectedPeriod,
+    },
+  });
 
   const periodChangeHandler = (period: Period) => {
     setSelectedPeriod(period);
-    setData(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA[period]);
+    getProfitMarginTrendInPeriod({
+      params: {
+        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      },
+      query: {
+        period,
+      },
+    });
   };
 
-  const displayedDataSection = (
-    <div
-      id="displayedDataSection"
-      className="dashboardCardShadow flex h-450px flex-col rounded-3xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px"
-    >
-      <div>
-        <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">Income vs. Expense Trend Chart</div>
+  useEffect(() => {
+    if (getSuccess && profitMarginTrendInPeriodData) {
+      setData(profitMarginTrendInPeriodData);
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `income_expense_trend-${getCode}`,
+        content: `Failed to get income/expense trend. Error code: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [getSuccess, getCode, getError, profitMarginTrendInPeriodData]);
 
-          <div className="justify-end">
+  const displayedDataSection = (
+    <div className="flex h-500px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+      <div>
+        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+          <div className="lg:flex-1">
+            <div className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="#002462"
+                  fillRule="evenodd"
+                  d="M9.568 10.293a1.286 1.286 0 011.817-.064l2.786 2.599a1.286 1.286 0 01-1.754 1.88L9.631 12.11a1.286 1.286 0 01-.063-1.817zM19.413 6.265c.667.243 1.01.98.768 1.648l-2.01 5.518a1.286 1.286 0 11-2.415-.88l2.009-5.518a1.286 1.286 0 011.648-.768z"
+                  clipRule="evenodd"
+                ></path>
+                <path
+                  fill="#002462"
+                  fillRule="evenodd"
+                  d="M2.571 1.286a1.286 1.286 0 00-2.571 0v21.428C0 23.424.576 24 1.286 24h21.428a1.286 1.286 0 000-2.571H2.571v-4.95l3.998-4.268a1.286 1.286 0 10-1.877-1.758l-2.12 2.264V1.287z"
+                  clipRule="evenodd"
+                ></path>
+                <path
+                  fill="#FFA502"
+                  fillRule="evenodd"
+                  d="M4.429 9.652a3.424 3.424 0 106.848 0 3.424 3.424 0 00-6.848 0zM16.427 4.563a3.426 3.426 0 106.852 0 3.426 3.426 0 00-6.852 0zM12.192 15.74a3.429 3.429 0 106.857 0 3.429 3.429 0 00-6.857 0z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+              <p>
+                Financial Overview <br className="flex lg:hidden" />
+                (Income vs. Expenditure)
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden justify-end lg:flex">
             <Tooltip>
               <p>
                 A message which appears when a cursor is positioned over an icon, image, hyperlink,
@@ -227,23 +307,11 @@ const IncomeExpenseTrendChart = () => {
       </div>
 
       <div className="mt-2">
-        <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
-          <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
-          <div className="flex space-x-2 md:space-x-5">
-            <div className="">
-              <Button
-                variant={'tertiaryOutline'}
-                className={cn(
-                  selectedPeriod === Period.WEEK
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
-                    : ''
-                )}
-                size={'medium'}
-                onClick={() => periodChangeHandler(Period.WEEK)}
-              >
-                Week
-              </Button>
-            </div>
+        <div className="flex flex-row justify-between max-md:space-y-2 md:mx-0 md:flex-row">
+          <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
+            2024
+          </div>
+          <div className="flex space-x-5 md:space-x-5">
             <div className="">
               <Button
                 variant={'tertiaryOutline'}
@@ -255,7 +323,10 @@ const IncomeExpenseTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
-                Month
+                <p>
+                  <span className="lg:hidden">M</span>
+                  <span className="hidden lg:inline">Month</span>{' '}
+                </p>
               </Button>
             </div>
             <div className="">
@@ -269,7 +340,10 @@ const IncomeExpenseTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
-                Year
+                <p>
+                  <span className="lg:hidden">Y</span>
+                  <span className="hidden lg:inline">Year</span>{' '}
+                </p>
               </Button>
             </div>
           </div>

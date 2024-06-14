@@ -9,12 +9,22 @@ export enum ProgressStatus {
   INVALID_INPUT = 'invalidInput',
   LLM_ERROR = 'llmError',
   SYSTEM_ERROR = 'systemError',
+  PAUSED = 'paused',
 }
 
 export enum EventType {
   INCOME = 'income',
   PAYMENT = 'payment',
   TRANSFER = 'transfer',
+}
+
+export enum AccountType {
+  ASSET = 'asset',
+  LIABILITY = 'liability',
+  EQUITY = 'equity',
+  INCOME = 'income',
+  EXPENSE = 'expense',
+  OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
 }
 
 export enum VoucherType {

@@ -25,7 +25,7 @@ export default async function handler(
     const subscriptionIdNum = Number(subscriptionId);
     const companyIdNum = Number(companyId);
     if (method === 'GET') {
-      const getSubscription = await prisma.subscription.findUnique({
+      const subscription: ISubscription = (await prisma.subscription.findUnique({
         where: {
           id: subscriptionIdNum,
         },
@@ -36,14 +36,10 @@ export default async function handler(
             },
           },
         },
-      });
-      if (!getSubscription) {
+      })) as ISubscription;
+      if (!subscription) {
         throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
-      const subscription: ISubscription = {
-        ...getSubscription,
-        companyName: getSubscription.company.name,
-      };
       const { httpCode, result } = formatApiResponse<ISubscription>(
         STATUS_MESSAGE.SUCCESS_GET,
         subscription
@@ -51,26 +47,20 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
     } else if (method === 'PUT') {
-      const { plan, cardId, autoRenew, price, period } = req.body;
-      if (!plan && !cardId && !autoRenew && !companyIdNum && !price && !period) {
+      const { plan, period } = req.body;
+      if (!plan && !companyIdNum && !period) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const cardIdNum = Number(cardId);
-      const updatedSubscription = await prisma.subscription.update({
+      const subscription: ISubscription = await prisma.subscription.update({
         where: {
           id: subscriptionIdNum,
         },
         data: {
-          plan,
-          card: cardIdNum
-            ? {
-                connect: {
-                  id: cardIdNum,
-                },
-              }
-            : undefined,
-          autoRenew,
-          price,
+          plan: {
+            connect: {
+              name: plan,
+            },
+          },
         },
         include: {
           company: {
@@ -80,10 +70,6 @@ export default async function handler(
           },
         },
       });
-      const subscription: ISubscription = {
-        ...updatedSubscription,
-        companyName: updatedSubscription.company.name,
-      };
       const { httpCode, result } = formatApiResponse<ISubscription>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
         subscription
@@ -91,7 +77,7 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010004 - DELETE /subscription/:id
     } else if (method === 'DELETE') {
-      const daletedSubscription = await prisma.subscription.delete({
+      const subscription: ISubscription = await prisma.subscription.delete({
         where: {
           id: subscriptionIdNum,
         },
@@ -103,10 +89,6 @@ export default async function handler(
           },
         },
       });
-      const subscription: ISubscription = {
-        ...daletedSubscription,
-        companyName: daletedSubscription.company.name,
-      };
       const { httpCode, result } = formatApiResponse<ISubscription>(
         STATUS_MESSAGE.SUCCESS_DELETE,
         subscription
