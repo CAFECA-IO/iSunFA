@@ -45,8 +45,6 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // eslint-disable-next-line no-console
-    console.log('🚀 ~ error:', error);
     const { httpCode, result } = formatApiResponse<{ user: IUser; company: ICompany }>(
       error.message,
       {} as { user: IUser; company: ICompany }
