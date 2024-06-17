@@ -6,7 +6,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IUnprocessedJournal } from '@/interfaces/journal';
+import { IUnprocessedOCR } from '@/interfaces/ocr';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
@@ -17,19 +17,19 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 const StepOneTab = () => {
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const { selectUnprocessedJournalHandler } = useAccountingCtx();
+  const { selectOCRHandler } = useAccountingCtx();
   const [load, setLoad] = useState(true);
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUnprocessedJournal[]>([]);
+  const [fileList, setFileList] = useState<IUnprocessedOCR[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
 
   const {
-    trigger: listUnprocessedJournal,
-    data: unprocessJournals,
+    trigger: listUnprocessedOCR,
+    data: unprocessOCRs,
     error: listError,
     success: listSuccess,
     code: listCode,
-  } = APIHandler<IUnprocessedJournal[]>(APIName.JOURNAL_LIST_UNPROCESSED, {
+  } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {
     params: { companyId: selectedCompany?.id || '1' },
   });
 
@@ -37,12 +37,12 @@ const StepOneTab = () => {
     let interval: NodeJS.Timeout | undefined;
     if (load) {
       interval = setInterval(() => {
-        listUnprocessedJournal();
+        listUnprocessedOCR();
       }, 2000);
       if (listSuccess === false) {
         toastHandler({
-          id: `listUnprocessedJournal-${listCode}`,
-          content: `Failed to list unprocessed journals: ${listCode}`,
+          id: `listUnprocessedOCR-${listCode}`,
+          content: `Failed to list unprocessed OCRs: ${listCode}`,
           type: ToastType.ERROR,
           closeable: true,
         });
@@ -53,18 +53,18 @@ const StepOneTab = () => {
     return () => clearInterval(interval);
   }, [listError, listSuccess, listCode]);
 
-  const handleJournalClick = (unprocessJournal: IUnprocessedJournal) => {
-    if (unprocessJournal.status === ProgressStatus.SUCCESS) {
-      selectUnprocessedJournalHandler(unprocessJournal);
+  const handleOCRClick = (unprocessOCR: IUnprocessedOCR) => {
+    if (unprocessOCR.status === ProgressStatus.SUCCESS) {
+      selectOCRHandler(unprocessOCR);
     }
   };
 
   useEffect(() => {
-    if (listSuccess && unprocessJournals) {
-      // const newList = dummyFileList.concat(unprocessJournals);
-      setFileList(unprocessJournals);
+    if (listSuccess && unprocessOCRs) {
+      // const newList = dummyFileList.concat(unprocessOCRs);
+      setFileList(unprocessOCRs);
     }
-  }, [listSuccess, unprocessJournals]);
+  }, [listSuccess, unprocessOCRs]);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));
@@ -121,7 +121,7 @@ const StepOneTab = () => {
       itemData={data}
       pauseHandler={fileItemPauseHandler}
       deleteHandler={fileItemDeleteHandler}
-      clickHandler={handleJournalClick}
+      clickHandler={handleOCRClick}
     />
   ));
 

@@ -58,8 +58,7 @@ const NewJournalForm = () => {
     confirmModalDataHandler,
   } = useGlobalCtx();
 
-  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
-    useAccountingCtx();
+  const { selectedOCR, selectOCRHandler, selectJournalHandler } = useAccountingCtx();
 
   const {
     trigger: getJournalById,
@@ -141,23 +140,23 @@ const NewJournalForm = () => {
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
   useEffect(() => {
-    if (selectedUnprocessedJournal !== undefined) {
+    if (selectedOCR !== undefined) {
       getJournalById({
-        params: { companyId, journalId: selectedUnprocessedJournal.id },
+        params: { companyId, journalId: selectedOCR.id },
       });
     }
-  }, [selectedUnprocessedJournal]);
+  }, [selectedOCR]);
 
   useEffect(() => {
-    if (selectedUnprocessedJournal && getJournalSuccess && journal) {
+    if (selectedOCR && getJournalSuccess && journal) {
       selectJournalHandler(journal);
       if (journal.invoice === null) {
         getOCRResult({
           params: {
             companyId,
-            resultId: selectedUnprocessedJournal.aichResultId,
+            resultId: selectedOCR.aichResultId,
           },
-        }); // selectedUnprocessedJournal.aichResultId
+        }); // selectedOCR.aichResultId
       } else {
         const { invoice } = journal;
         // Info: update form data with journal data (20240524 - tzuhan)
@@ -203,7 +202,7 @@ const NewJournalForm = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [getJournalSuccess, journal, selectedUnprocessedJournal]);
+  }, [getJournalSuccess, journal, selectedOCR]);
 
   // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
@@ -397,7 +396,7 @@ const NewJournalForm = () => {
     setProgressRate(0);
     setInputEstimatedCost(0);
     // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
-    selectUnprocessedJournalHandler(undefined);
+    selectOCRHandler(undefined);
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -419,7 +418,7 @@ const NewJournalForm = () => {
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoiceData: IInvoice = {
-      journalId: selectedUnprocessedJournal?.id || invoiceReturn?.journalId || null,
+      journalId: selectedOCR?.id || invoiceReturn?.journalId || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
       paymentReason: inputPaymentReason,

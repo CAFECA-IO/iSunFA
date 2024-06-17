@@ -1,4 +1,4 @@
-import { ProgressStatus } from "@/constants/account";
+import { ProgressStatus } from '@/constants/account';
 
 export interface IOCR {
   id: number;
@@ -9,7 +9,6 @@ export interface IOCR {
   updatedAt: number;
 }
 
-// Info: (20240611 - Murky) To Tzuhan This interface is same structure as IUnprocessedJournal
 export interface IUnprocessedOCR {
   id: number;
   aichResultId: string;
