@@ -7,6 +7,7 @@ export interface IProjectProgressChartData {
     name: string;
     data: number[];
   }[];
+  empty: boolean;
 }
 
 export const DUMMY_CATEGORIES = [
@@ -35,6 +36,7 @@ export function generateRandomData(): IProjectProgressChartData {
         ],
       },
     ],
+    empty: false,
   };
 }
 
