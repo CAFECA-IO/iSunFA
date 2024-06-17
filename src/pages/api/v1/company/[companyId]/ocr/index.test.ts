@@ -1,4 +1,4 @@
-import { NextApiRequest } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import * as module from '@/pages/api/v1/company/[companyId]/ocr/index';
 import formidable from 'formidable';
 import { MockProxy, mock } from 'jest-mock-extended';
@@ -10,6 +10,7 @@ import { ProgressStatus } from '@/constants/account';
 import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
 import { Journal, Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import * as authCheck from '@/lib/utils/auth_check';
 
 global.fetch = jest.fn();
 
@@ -34,7 +35,12 @@ jest.mock('./index.repository', () => {
   };
 });
 
+jest.mock('../../../../../../lib/utils/auth_check', () => ({
+  checkAdmin: jest.fn(),
+}));
+
 let req: jest.Mocked<NextApiRequest>;
+let res: jest.Mocked<NextApiResponse>;
 
 beforeEach(() => {
   req = {
@@ -44,6 +50,10 @@ beforeEach(() => {
     json: jest.fn(),
     body: {},
   } as unknown as jest.Mocked<NextApiRequest>;
+  res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  } as unknown as jest.Mocked<NextApiResponse>;
 });
 
 afterEach(() => {
@@ -456,6 +466,10 @@ describe('POST OCR', () => {
 
       req.query.companyId = companyId;
 
+      // Info Murky (20240424) This is for mock session
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue({ companyId } as any);
+
       jest.spyOn(parseImageForm, 'parseForm').mockResolvedValue({
         fields: mockFields,
         files: mockFiles,
@@ -476,7 +490,7 @@ describe('POST OCR', () => {
 
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      const { httpCode, result } = await module.handlePostRequest(req);
+      const { httpCode, result } = await module.handlePostRequest(req, res);
 
       // Depreciate ( 20240605 - Murky ) - Use createOcrInPrisma instead
       // expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();

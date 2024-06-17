@@ -20,6 +20,7 @@ import { IUnprocessedOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -252,8 +253,9 @@ export async function createOcrFromAichResults(
   return resultJson;
 }
 
-export async function handlePostRequest(req: NextApiRequest) {
-  const { companyId } = req.query;
+export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
 
   // Info Murky (20240416): Check if companyId is string
   if (!isCompanyIdValid(companyId)) {
@@ -285,10 +287,11 @@ export async function handlePostRequest(req: NextApiRequest) {
   };
 }
 
-export async function handleGetRequest(req: NextApiRequest) {
+export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
-  const { companyId } = req.query;
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
   if (!isCompanyIdValid(companyId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -332,12 +335,12 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
-        const { httpCode, result } = await handleGetRequest(req);
+        const { httpCode, result } = await handleGetRequest(req, res);
         res.status(httpCode).json(result);
         break;
       }
       case 'POST': {
-        const { httpCode, result } = await handlePostRequest(req);
+        const { httpCode, result } = await handlePostRequest(req, res);
         res.status(httpCode).json(result);
         break;
       }
