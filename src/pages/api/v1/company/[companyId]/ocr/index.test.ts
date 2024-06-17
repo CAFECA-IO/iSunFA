@@ -235,12 +235,12 @@ describe('POST OCR', () => {
   });
 
   describe('isCompanyIdValid', () => {
-    it('should return true if companyId is numeric', () => {
-      const companyId = '1';
+    it('should return true if companyId is number', () => {
+      const companyId = 1;
       expect(module.isCompanyIdValid(companyId)).toBe(true);
     });
 
-    it('should return false if companyId is not numeric', () => {
+    it('should return false if companyId is not number', () => {
       const companyId = 'a';
       expect(module.isCompanyIdValid(companyId)).toBe(false);
     });
@@ -411,7 +411,7 @@ describe('POST OCR', () => {
 
   describe('handlePostRequest', () => {
     it('should return resultJson', async () => {
-      const companyId = '1';
+      const companyId = 1;
       const resultId = 'testResultId';
       const mockFields = mock<formidable.Fields>();
       const mockFiles: MockProxy<formidable.Files<'image'>> = {

@@ -125,12 +125,13 @@ export async function postImageToAICH(files: formidable.Files): Promise<
   return resultJson;
 }
 
-export function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
+// ToDo: (20240617 - Murky) Need to use function in type guard instead
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isCompanyIdValid(companyId: any): companyId is number {
   if (
     Array.isArray(companyId) ||
     !companyId ||
-    typeof companyId !== 'string' ||
-    !Number.isInteger(Number(companyId))
+    typeof companyId !== 'number'
   ) {
     return false;
   }
