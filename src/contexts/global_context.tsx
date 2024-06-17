@@ -44,6 +44,7 @@ import { useUserCtx } from './user_context';
 import { useNotificationCtx } from './notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 
 interface IGlobalContext {
   width: number;
@@ -96,6 +97,9 @@ interface IGlobalContext {
   isAddProjectModalVisible: boolean;
   addProjectModalVisibilityHandler: () => void;
   addProjectModalDataHandler: (stage: ProjectStage) => void;
+
+  profileUploadModalVisible: boolean;
+  profileUploadModalVisibilityHandler: () => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -168,6 +172,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
     ProjectStage.SELLING
   );
+
+  const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -252,6 +258,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const addProjectModalDataHandler = (stage: ProjectStage) => {
     setAddProjectDefaultStage(stage);
+  };
+
+  const profileUploadModalVisibilityHandler = () => {
+    setProfileUploadModalVisible(!profileUploadModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -472,6 +482,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isAddProjectModalVisible,
     addProjectModalVisibilityHandler,
     addProjectModalDataHandler,
+    profileUploadModalVisible,
+    profileUploadModalVisibilityHandler,
   };
 
   return (
@@ -560,6 +572,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isAddProjectModalVisible}
         modalVisibilityHandler={addProjectModalVisibilityHandler}
         defaultStage={addProjectDefaultStage}
+      />
+
+      <ProfileUploadModal
+        isModalVisible={profileUploadModalVisible}
+        modalVisibilityHandler={profileUploadModalVisibilityHandler}
       />
 
       {children}
