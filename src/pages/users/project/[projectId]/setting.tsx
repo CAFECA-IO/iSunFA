@@ -1,20 +1,197 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import { FaArrowLeft } from 'react-icons/fa';
-import { FiEdit } from 'react-icons/fi';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import NavBar from '@/components/nav_bar/nav_bar';
 import { GetServerSideProps } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import React, { useState } from 'react';
+import { FaArrowLeft, FaCheck, FaChevronDown } from 'react-icons/fa';
+import { FiEdit, FiSearch } from 'react-icons/fi';
+import { RxCrossCircled } from 'react-icons/rx';
+import { LuChevronsUpDown } from 'react-icons/lu';
+import { useGlobalCtx } from '@/contexts/global_context';
+import NavBar from '@/components/nav_bar/nav_bar';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { Button } from '@/components/button/button';
+import { stageList } from '@/constants/project';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { IMember, dummyMemberList } from '@/interfaces/member';
 
 interface IProjectSettingPageProps {
   projectId: string;
 }
 
 const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
+  // ToDo: (20240617 - Julian) Replace with real data
+  const projectName = 'BAIFA';
+  const projectImageSrc = '/entities/happy.png';
+  const projectStage = stageList[0];
+  const projectMembers = dummyMemberList;
+
+  const { profileUploadModalVisibilityHandler } = useGlobalCtx();
+
+  const [changedProjectName, setChangedProjectName] = useState(projectName);
+  const [changedStage, setChangedStage] = useState(projectStage);
+  const [selectedMembers, setSelectedMembers] = useState<IMember[]>(projectMembers);
+  const [searchMemberValue, setSearchMemberValue] = useState('');
+
+  const {
+    targetRef: stageOptionsRef,
+    componentVisible: isStageOptionsVisible,
+    setComponentVisible: setStageOptionsVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: membersRef,
+    componentVisible: isMembersVisible,
+    setComponentVisible: setMembersVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20240617 - Julian) 停用 Save 按鈕的條件：
+  const isSaveInvalid =
+    // Info: (20240617 - Julian) 專案名稱 & 階段 & 成員皆未變更
+    (changedProjectName === projectName &&
+      changedStage === projectStage &&
+      selectedMembers === projectMembers) ||
+    // Info: (20240617 - Julian) 專案名稱/成員為空
+    changedProjectName === '' ||
+    selectedMembers.length === 0;
+
+  const membersAmount = selectedMembers.length;
+
+  const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChangedProjectName(event.target.value);
+  };
+  const searchMemberChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchMemberValue(event.target.value);
+  };
+  const backClickHandler = () => window.history.back();
+
+  const stageMenuClickHandler = () => setStageOptionsVisible(!isStageOptionsVisible);
+  const membersMenuClickHandler = () => setMembersVisible(!isMembersVisible);
+
+  const saveClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
+
+  // ToDo: (20240612 - Julian) get member list from API
+  const filteredMemberList = dummyMemberList.filter((member) => {
+    return (
+      // Info: (20240611 - Julian) 搜尋條件：名字或職稱
+      member.name.toLowerCase().includes(searchMemberValue.toLowerCase()) ||
+      member.role.toLowerCase().includes(searchMemberValue.toLowerCase())
+    );
+  });
+
+  const displaySelectedMembers =
+    selectedMembers.length > 0 ? (
+      selectedMembers.map((member) => {
+        const removeMemberHandler = () => {
+          const newMembers = selectedMembers.filter((selectedMember) => selectedMember !== member);
+          setSelectedMembers(newMembers);
+        };
+        return (
+          <div className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary">
+            <Image src="/elements/yellow_check.svg" alt="member_avatar" width={20} height={20} />
+            <p className="whitespace-nowrap">{member.name}</p>
+            <button type="button" onClick={removeMemberHandler}>
+              <RxCrossCircled size={16} />
+            </button>
+          </div>
+        );
+      })
+    ) : (
+      <p className="text-left text-input-text-input-placeholder">Choose Team Members</p>
+    );
+
+  const displayedStageOptions = (
+    <div
+      ref={stageOptionsRef}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input
+      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
+      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+    >
+      {stageList.map((stage) => {
+        const clickHandler = () => {
+          setChangedStage(stage);
+          setStageOptionsVisible(false);
+        };
+        return (
+          <button
+            key={stage}
+            type="button"
+            className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+            onClick={clickHandler}
+          >
+            {stage}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const displayMemberList = filteredMemberList.map((member) => {
+    const isSelected = selectedMembers.includes(member);
+    const memberClickHandler = () => {
+      if (isSelected) {
+        // Info: (20240611 - Julian) 如果已經選取，則移除
+        const newMembers = selectedMembers.filter(
+          (selectedMember) => selectedMember.name !== member.name
+        );
+        setSelectedMembers(newMembers);
+      } else {
+        // Info: (20240611 - Julian) 如果沒有選取，則加入
+        setSelectedMembers([...selectedMembers, member]);
+      }
+    };
+
+    return (
+      <button
+        key={member.name}
+        type="button"
+        className="flex w-full items-center justify-between px-12px py-8px hover:bg-dropdown-surface-item-hover"
+        onClick={memberClickHandler}
+      >
+        <div className="flex flex-1 items-end gap-12px">
+          <Image src={member.imageId} alt="member_avatar" width={20} height={20} />
+          <p className="text-sm text-dropdown-text-primary">{member.name}</p>
+          <p className="text-xs text-dropdown-text-secondary">{member.role}</p>
+        </div>
+
+        <FaCheck size={16} className={`${isSelected ? 'block' : 'hidden'}`} />
+      </button>
+    );
+  });
+
+  const displayMembersMenu = (
+    <div
+      ref={membersRef}
+      className={`absolute bottom-full left-0 mb-10px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px md:bottom-auto md:top-50px md:mb-0
+      ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
+      `}
+    >
+      <div className="flex flex-col items-start">
+        {/* Info: (20240611 - Julian) search bar */}
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+          <input
+            id="companySearchBar"
+            type="text"
+            placeholder="Search"
+            value={searchMemberValue}
+            onChange={searchMemberChangeHandler}
+            className="w-full outline-none placeholder:text-lightGray4"
+          />
+          <FiSearch size={16} />
+        </div>
+        <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
+          Development department
+        </div>
+        {/* Info: (20240611 - Julian) member list */}
+        <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
+          {displayMemberList}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Head>
@@ -37,12 +214,13 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
               <div className="flex flex-col px-16px md:px-60px">
                 {/* Info: (20240611 - Julian) Title */}
                 <div className="flex items-center gap-24px">
-                  <Link
-                    href={ISUNFA_ROUTE.PROJECT_LIST}
+                  <button
+                    type="button"
+                    onClick={backClickHandler}
                     className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
                   >
                     <FaArrowLeft />
-                  </Link>
+                  </button>
                   {/* ToDo: (20240611 - Julian) Project Name */}
                   <h1 className="text-4xl font-semibold text-text-neutral-secondary">
                     {projectId} - Setting
@@ -51,16 +229,20 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                 {/* Info: (20240617 - Julian) Divider */}
                 <hr className="my-24px border border-divider-stroke-lv-4" />
                 {/* Info: (20240617 - Julian) Project Setting Form */}
-                <form className="flex flex-1 flex-col gap-y-36px py-40px text-input-text-primary">
-                  <div className="flex items-center gap-x-40px">
+                <form
+                  onSubmit={saveClickHandler}
+                  className="flex flex-1 flex-col gap-y-36px py-40px text-input-text-primary"
+                >
+                  <div className="flex flex-col items-center gap-40px md:flex-row">
                     {/* ToDo: (20240617 - Julian) open profile update modal */}
                     <button
                       type="button"
+                      onClick={profileUploadModalVisibilityHandler}
                       className="group relative flex items-center justify-center overflow-hidden rounded-full"
                     >
                       <Image
-                        src={'/entities/happy.png'} // ToDo: (20240617 - Julian) Project icon
-                        alt={`${projectId}_icon`}
+                        src={projectImageSrc}
+                        alt={`${projectName}_icon`}
                         width={150}
                         height={150}
                         className="group-hover:brightness-50"
@@ -70,39 +252,68 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                         size={40}
                       />
                     </button>
-                    <div className="grid flex-1 grid-cols-2 gap-x-40px gap-y-36px">
+                    <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                       {/* Info: (20240617 - Julian) Project Name */}
                       <div className="flex w-full flex-col items-start gap-y-8px">
                         <p className="font-semibold">Project Name</p>
                         <input
+                          id="changedProjectName"
                           type="text"
-                          className="h-44px w-full rounded-sm border border-input-stroke-input px-12px"
-                          placeholder="Project Name"
+                          className="h-44px w-full rounded-sm border border-input-stroke-input px-12px outline-none"
+                          placeholder="Enter New Project Name"
+                          value={changedProjectName}
+                          onChange={nameChangeHandler}
+                          required
                         />
                       </div>
                       {/* Info: (20240617 - Julian) Stage */}
                       <div className="flex w-full flex-col items-start gap-y-8px">
                         <p className="font-semibold">Stage</p>
-                        <input
-                          type="text"
-                          className="h-44px w-full rounded-sm border border-input-stroke-input px-12px"
-                          placeholder="Project Name"
-                        />
+                        <div
+                          onClick={stageMenuClickHandler}
+                          className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
+            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
+            px-12px hover:cursor-pointer`}
+                        >
+                          {changedStage}
+                          <FaChevronDown />
+                          {displayedStageOptions}
+                        </div>
                       </div>
                       {/* Info: (20240617 - Julian) Team Members */}
-                      <div className="col-span-2 flex w-full flex-col items-start gap-y-8px">
-                        <p className="font-semibold">Team Members</p>
-                        <input
-                          type="text"
-                          className="h-44px w-full rounded-sm border border-input-stroke-input px-12px"
-                          placeholder="Project Name"
-                        />
+                      <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+                        <div className="flex w-full flex-col items-start gap-y-8px">
+                          <div className="flex w-full items-end justify-between">
+                            <p className="font-semibold">Team Members</p>
+                            {/* Info: (20240611 - Julian) amount of selected members */}
+                            <p className="text-sm text-input-text-secondary">{membersAmount}</p>
+                          </div>
+                          <div className="relative flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-6px md:h-46px">
+                            <div className="flex w-full flex-1 flex-wrap gap-4px md:flex-nowrap md:overflow-x-auto">
+                              {displaySelectedMembers}
+                            </div>
+                            <button
+                              id="membersMenuButton"
+                              type="button"
+                              onClick={membersMenuClickHandler}
+                            >
+                              <LuChevronsUpDown size={20} />
+                            </button>
+
+                            {displayMembersMenu}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                   {/* Info: (20240617 - Julian) submit button */}
-                  <div className="ml-auto">
-                    <Button type="submit" variant="default">
+                  <div className="w-full md:ml-auto md:w-fit">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      variant="default"
+                      disabled={isSaveInvalid}
+                    >
                       <p>Save</p>
                       <svg
                         width="20"
