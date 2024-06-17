@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'PUT') {
-      const companyIdNum = convertStringToNumber(req.query.companyId);
+      const companyIdNum: number = await convertStringToNumber(req.query.companyId);
       const session = await checkUser(req, res);
       session.companyId = companyIdNum;
       const { httpCode, result } = formatApiResponse<string>(

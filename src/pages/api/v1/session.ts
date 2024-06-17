@@ -17,17 +17,18 @@ export default async function handler(
       const session = await getSession(req, res);
       let user: IUser = {} as IUser;
       let company: ICompany = {} as ICompany;
-      if (session.userId) {
+      const { userId, companyId } = session;
+      if (userId) {
         user = (await prisma.user.findUnique({
           where: {
-            id: session.userId,
+            id: userId,
           },
         })) as IUser;
       }
-      if (session.companyId) {
+      if (companyId) {
         company = (await prisma.company.findUnique({
           where: {
-            id: +session.companyId,
+            id: companyId,
           },
         })) as ICompany;
       }
@@ -45,6 +46,8 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+    // eslint-disable-next-line no-console
+    console.log('🚀 ~ error:', error);
     const { httpCode, result } = formatApiResponse<ISessionData>(error.message, {} as ISessionData);
     res.status(httpCode).json(result);
   }
