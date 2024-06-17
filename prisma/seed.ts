@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import accounts from './seed_json/account.json';
-import companies from './seed_json/company.json';
-import admin from './seed_json/admin.json';
-import projects from './seed_json/project.json';
-import IncomeExpenses from './seed_json/income_expense.json';
-import roles from './seed_json/role.json';
-import user from './seed_json/user.json';
+import accounts from '@/seed_json/account.json';
+import companies from '@/seed_json/company.json';
+import admin from '@/seed_json/admin.json';
+import projects from '@/seed_json/project.json';
+import IncomeExpenses from '@/seed_json/income_expense.json';
+import roles from '@/seed_json/role.json';
+import user from '@/seed_json/user.json';
 
 const prisma = new PrismaClient();
 
