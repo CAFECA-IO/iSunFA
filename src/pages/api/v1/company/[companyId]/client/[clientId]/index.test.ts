@@ -20,11 +20,11 @@ beforeEach(async () => {
       user: {
         connectOrCreate: {
           where: {
-            credentialId: 'company_index2_test',
+            credentialId: 'client_index2_test',
           },
           create: {
             name: 'John',
-            credentialId: 'company_index2_test',
+            credentialId: 'client_index2_test',
             publicKey: 'publicKey',
             algorithm: 'ES256',
             imageId: 'imageId',
@@ -49,10 +49,10 @@ beforeEach(async () => {
       company: {
         connectOrCreate: {
           where: {
-            code: 'TST_company_11',
+            code: 'TST_client_11',
           },
           create: {
-            code: 'TST_company_11',
+            code: 'TST_client_11',
             name: 'Test Company',
             regional: 'TW',
             kycStatus: false,
@@ -63,7 +63,7 @@ beforeEach(async () => {
           },
         },
       },
-      email: 'company_index2_test@test',
+      email: 'client_index2_test@test',
       status: true,
       startDate: nowTimestamp,
       createdAt: nowTimestamp,
@@ -109,6 +109,15 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
+  try {
+    await prisma.admin.delete({
+      where: {
+        id: admin.id,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
   try {
     await prisma.client.delete({
       where: {
