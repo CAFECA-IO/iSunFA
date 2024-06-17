@@ -13,7 +13,7 @@ import { AccountingStep } from '@/interfaces/stepper_string';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const AccountingPage = () => {
-  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler } = useAccountingCtx();
+  const { selectedOCR, selectOCRHandler } = useAccountingCtx();
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
@@ -21,7 +21,7 @@ const AccountingPage = () => {
   // Info: (20240422 - Julian) Back button -> 回到上一步
   const backClickHandler = () => {
     setCurrentStep(AccountingStep.STEP_ONE);
-    selectUnprocessedJournalHandler(undefined);
+    selectOCRHandler(undefined);
   };
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
   const skipClickHandler = () => setCurrentStep(AccountingStep.STEP_TWO);
@@ -30,10 +30,10 @@ const AccountingPage = () => {
 
   useEffect(() => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
-    if (selectedUnprocessedJournal) {
+    if (selectedOCR) {
       setCurrentStep(AccountingStep.STEP_TWO);
     }
-  }, [selectedUnprocessedJournal]);
+  }, [selectedOCR]);
 
   // Info: (20240422 - Julian) 第一步不會顯示 back button
   const displayBackButton = isStepOne ? null : (
