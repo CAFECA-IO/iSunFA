@@ -263,7 +263,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Depreciated (20240611 - Murky) This variable is temporary not used
+  // Depreciated (20240611 - Murky) This convert is not needed
   const companyIdNumber = Number(companyId);
 
   let resultJson: IAccountResultStatus[];
@@ -297,6 +297,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
+  // Depreciated (20240611 - Murky) This convert is not needed
   const companyIdNumber = Number(companyId);
 
   // ToDo: (20240611 - Murky) GET ocr by companyId in Journal from prisma
