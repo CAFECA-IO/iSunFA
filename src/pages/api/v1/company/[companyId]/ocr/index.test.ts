@@ -464,8 +464,6 @@ describe('POST OCR', () => {
         };
       });
 
-      req.query.companyId = companyId;
-
       // Info Murky (20240424) This is for mock session
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue({ companyId } as any);
