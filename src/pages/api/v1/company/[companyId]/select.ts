@@ -6,14 +6,14 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<string>>
+  res: NextApiResponse<IResponseData<number>>
 ) {
   try {
     if (req.method === 'PUT') {
-      const companyIdNum = convertStringToNumber(req.query.companyId);
+      const companyIdNum = await convertStringToNumber(req.query.companyId);
       const session = await checkUser(req, res);
       session.companyId = companyIdNum;
-      const { httpCode, result } = formatApiResponse<string>(
+      const { httpCode, result } = formatApiResponse<number>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
         session.companyId
       );
@@ -23,7 +23,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<string>(error.message, '');
+    const { httpCode, result } = formatApiResponse<number>(error.message, {} as number);
     res.status(httpCode).json(result);
   }
 }
