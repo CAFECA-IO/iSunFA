@@ -26,8 +26,34 @@ describe('/ocr/index.repository', () => {
     });
   });
 
+  describe("findManyOCRByCompanyIdWithoutUsedInPrisma", () => {
+    it("should find many ocr by companyId without journalId in prisma", async () => {
+      const companyId = 1;
+
+      const mockResult = [
+        {
+          id: 1,
+          companyId,
+          journalId: null,
+          aichResultId: '1',
+          status: ProgressStatus.SUCCESS,
+          imageUrl: 'testImageUrl',
+          imageName: 'testImageName',
+          imageSize: 1024,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      ];
+
+      jest.spyOn(prisma.ocr, "findMany").mockResolvedValue(mockResult);
+
+      await expect(module.findManyOCRByCompanyIdWithoutUsedInPrisma(companyId)).resolves.toEqual(mockResult);
+    });
+  });
+
   describe("createOcrInPrisma", () => {
     it("should create ocr in prisma", async () => {
+      const companyId = 1;
       const mockAichResult = {
         resultStatus: {
           resultId: '1',
@@ -43,6 +69,9 @@ describe('/ocr/index.repository', () => {
 
       const mockOcrResult = {
         id: 1,
+        companyId,
+        journalId: null,
+        aichResultId: mockAichResult.resultStatus.resultId,
         status: mockAichResult.resultStatus.status,
         imageUrl: mockAichResult.imageUrl,
         imageName: mockAichResult.imageName,
@@ -53,7 +82,7 @@ describe('/ocr/index.repository', () => {
 
       jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
 
-      await expect(module.createOcrInPrisma(mockAichResult)).resolves.toEqual(mockOcrResult);
+      await expect(module.createOcrInPrisma(companyId, mockAichResult)).resolves.toEqual(mockOcrResult);
     });
   });
 
@@ -91,7 +120,7 @@ describe('/ocr/index.repository', () => {
 
       jest.spyOn(prisma.journal, "create").mockResolvedValue(mockJournalCreateResult);
 
-      const createdResult = await module.createJournalInPrisma(companyId, mockAichResult, 1);
+      const createdResult = await module.createJournalInPrisma(companyId, ocrId, mockAichResult);
 
       expect(createdResult).toEqual(mockJournalCreateResult);
     });
@@ -118,6 +147,9 @@ describe('/ocr/index.repository', () => {
 
     const mockOcrResult = {
       id: ocrId,
+      companyId,
+      journalId: null,
+      aichResultId: aichResult.resultStatus.resultId,
       status: aichResult.resultStatus.status,
       imageUrl: aichResult.imageUrl,
       imageName: aichResult.imageName,
@@ -150,7 +182,7 @@ describe('/ocr/index.repository', () => {
       jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
       jest.spyOn(prisma.journal, "create").mockResolvedValue(mockJournalCreate);
 
-      const newJournal = await module.createJournalAndOcrInPrisma(companyId, aichResult);
+      const newJournal = await module.createJournalAndOcrInPrisma(companyId, ocrId, aichResult);
 
       // Info: ( 20240605 - Murky) 測試如果正確執行玩所有步驟是不是會回傳正確的被創造的journal
       expect(newJournal).toEqual(mockJournalCreate);
@@ -167,28 +199,14 @@ describe('/ocr/index.repository', () => {
         select: { id: true },
       });
 
-      // ToDo: (20240605 - Murky) 這裡原本想測試是否有正確呼叫createOcrInPrisma，
-      // 但是因為createOcrInPrisma和createOrFindCompanyInPrisma是同一個file(module)，所以無法測試
-      // 暫時用toHaveBeenCalledTimes()代替
-      expect(prisma.ocr.create).toHaveBeenCalledWith({
-        data: {
-          imageName: aichResult.imageName,
-          imageUrl: aichResult.imageUrl,
-          imageSize: aichResult.imageSize,
-          status: aichResult.resultStatus.status,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-      });
-
       // ToDo: (20240605 - Murky) 這裡原本想測試是否有正確呼叫 createJournalInPrisma，
       // 但是因為 createJournalInPrisma和createOrFindCompanyInPrisma是同一個file(module)，所以無法測試
       // 暫時用toHaveBeenCalledTimes()代替
       expect(prisma.journal.create).toHaveBeenCalledWith({
         data: {
           companyId,
-          ocrId,
           aichResultId: aichResult.resultStatus.resultId,
+          ocrId,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
         },
@@ -211,7 +229,7 @@ describe('/ocr/index.repository', () => {
       jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
       jest.spyOn(prisma.journal, "create").mockResolvedValue(mockJournalCreate);
 
-      await expect(module.createJournalAndOcrInPrisma(companyId, invalidAichResult)).rejects.toThrow(STATUS_MESSAGE.OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS);
+      await expect(module.createJournalAndOcrInPrisma(companyId, ocrId, invalidAichResult)).rejects.toThrow(STATUS_MESSAGE.OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS);
     });
   });
 });

@@ -1,0 +1,13 @@
+{
+    "id": 1,
+    "name": "Test_User",
+    "fullName": "Test User",
+    "email": "test@gmail.com",
+    "phone": "1234567890",
+    "credentialId": "test_credential_id",
+    "publicKey": "test_public_key",
+    "algorithm": "test_algorithm",
+    "imageId": "1",
+    "createdAt": 1,
+    "updatedAt": 1
+}

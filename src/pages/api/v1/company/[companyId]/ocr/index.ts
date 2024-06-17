@@ -5,6 +5,9 @@ import { promises as fs } from 'fs';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
+  timestampInMilliSeconds,
+  timestampInSeconds,
+  transformBytesToFileSizeString,
   transformOCRImageIDToURL,
 } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
@@ -12,7 +15,11 @@ import { parseForm } from '@/lib/utils/parse_image_form';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { createJournalAndOcrInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import { createJournalAndOcrInPrisma, createOcrInPrisma, findManyOCRByCompanyIdWithoutUsedInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import { IUnprocessedOCR } from '@/interfaces/ocr';
+import type { Ocr } from '@prisma/client';
+import { ProgressStatus } from '@/constants/account';
+import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -141,7 +148,87 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
   return files;
 }
 
+export async function fetchStatus(aichResultId: string) {
+  try {
+    const result = await fetch(`${AICH_URI}/api/v1/ocr/${aichResultId}/process_status`);
+
+    if (!result.ok) {
+      throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    }
+
+    const status: ProgressStatus = (await result.json()).payload;
+    return status;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+  }
+}
+
+export function calculateProgress(createdAt: number, status: ProgressStatus) {
+  const currentTime = new Date();
+  const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
+  let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
+
+  if (process > 99) {
+    process = 99;
+  }
+
+  if (status === ProgressStatus.SUCCESS) {
+    process = 100;
+  } else if (status !== ProgressStatus.IN_PROGRESS) {
+    process = 0;
+  }
+  return process;
+}
+
+export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IUnprocessedOCR[]> {
+  const unprocessedOCRs = await Promise.all(ocrData.map(async (ocr) => {
+    const status = await fetchStatus(ocr.aichResultId);
+    const progress = calculateProgress(ocr.createdAt, status);
+    const imageSize = transformBytesToFileSizeString(ocr.imageSize);
+    const createdAt = timestampInSeconds(ocr.createdAt);
+    const unprocessedOCR: IUnprocessedOCR = {
+      id: ocr.id,
+      aichResultId: ocr.aichResultId,
+      imageUrl: ocr.imageUrl,
+      imageName: ocr.imageName,
+      imageSize,
+      status,
+      progress,
+      createdAt,
+    };
+
+    return unprocessedOCR;
+  }));
+  return unprocessedOCRs;
+}
+
+// Depreciated (20240611 - Murky) This function is not used
 export async function createJournalsAndOcrFromAichResults(
+  companyId: number,
+  ocrId: number,
+  aichResults: {
+    resultStatus: IAccountResultStatus;
+    imageUrl: string;
+    imageName: string;
+    imageSize: number;
+  }[]
+) {
+  const resultJson: IAccountResultStatus[] = [];
+
+  try {
+    await Promise.all(
+      aichResults.map(async (aichResult) => {
+        await createJournalAndOcrInPrisma(companyId, ocrId, aichResult);
+        resultJson.push(aichResult.resultStatus);
+      })
+    );
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+  return resultJson;
+}
+
+export async function createOcrFromAichResults(
   companyId: number,
   aichResults: {
     resultStatus: IAccountResultStatus;
@@ -155,7 +242,7 @@ export async function createJournalsAndOcrFromAichResults(
   try {
     await Promise.all(
       aichResults.map(async (aichResult) => {
-        await createJournalAndOcrInPrisma(companyId, aichResult);
+        await createOcrInPrisma(companyId, aichResult);
         resultJson.push(aichResult.resultStatus);
       })
     );
@@ -173,6 +260,7 @@ export async function handlePostRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
+  // Depreciated (20240611 - Murky) This variable is temporary not used
   const companyIdNumber = Number(companyId);
 
   let resultJson: IAccountResultStatus[];
@@ -180,7 +268,9 @@ export async function handlePostRequest(req: NextApiRequest) {
   try {
     const files = await getImageFileFromFormData(req);
     const aichResults = await postImageToAICH(files);
-    resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+    // Depreciated (20240611 - Murky) This function is not used
+    // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+    resultJson = await createOcrFromAichResults(companyIdNumber, aichResults);
   } catch (error) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
@@ -189,6 +279,38 @@ export async function handlePostRequest(req: NextApiRequest) {
     STATUS_MESSAGE.CREATED,
     resultJson
   );
+  return {
+    httpCode,
+    result
+  };
+}
+
+export async function handleGetRequest(req: NextApiRequest) {
+  // ToDo: (20240611 - Murky) check companyId is valid
+  // Info Murky (20240416): Check if companyId is string
+  const { companyId } = req.query;
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const companyIdNumber = Number(companyId);
+
+  // ToDo: (20240611 - Murky) GET ocr by companyId in Journal from prisma
+
+  let ocrData: Ocr[];
+
+  try {
+    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyIdNumber);
+  } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
+
+  // ToDo: (20240611 - Murky) format prisma ocr to IUnprocessedOCR
+  const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
+  // ToDo: formatApiResponse
+  const { httpCode, result } = formatApiResponse<IUnprocessedOCR[]>(STATUS_MESSAGE.SUCCESS_GET, unprocessedOCRs);
   return {
     httpCode,
     result
@@ -205,10 +327,15 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountResultStatus[]>>
+  res: NextApiResponse<IResponseData<IAccountResultStatus[] | IUnprocessedOCR[]>>
 ) {
   try {
     switch (req.method) {
+      case 'GET': {
+        const { httpCode, result } = await handleGetRequest(req);
+        res.status(httpCode).json(result);
+        break;
+      }
       case 'POST': {
         const { httpCode, result } = await handlePostRequest(req);
         res.status(httpCode).json(result);

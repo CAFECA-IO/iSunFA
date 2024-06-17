@@ -44,6 +44,11 @@ export enum PaymentPeriodType {
   INSTALLMENT = 'installment',
 }
 
+export enum AccountSystem {
+  IFRS = 'IFRS',
+  US_GAAP = 'US_GAAP',
+}
+
 export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [key in EventType]: VoucherType;
 } = {

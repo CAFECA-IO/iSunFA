@@ -3,7 +3,7 @@ import { ProgressStatus } from "@/constants/account";
 import { STATUS_MESSAGE } from "@/constants/status_code";
 import { IAccountResultStatus } from "@/interfaces/accounting_account";
 import { timestampInSeconds } from "@/lib/utils/common";
-import { Journal } from "@prisma/client";
+import { Journal, Ocr } from "@prisma/client";
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -16,6 +16,9 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -26,17 +29,43 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
   return company;
 }
 
-export async function createOcrInPrisma(aichResult: {
+export async function findManyOCRByCompanyIdWithoutUsedInPrisma(companyId: number) {
+  let ocrData: Ocr[];
+
+  try {
+    ocrData = await prisma.ocr.findMany({
+      where: {
+        companyId,
+        journal: null,
+      }
+    });
+  } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+
+  return ocrData;
+}
+
+export async function createOcrInPrisma(
+  companyId: number,
+  aichResult: {
   resultStatus: IAccountResultStatus;
   imageUrl: string;
   imageName: string;
   imageSize: number;
-}) {
+}
+) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
+
   try {
     const ocrData = await prisma.ocr.create({
       data: {
+        companyId,
+        aichResultId: aichResult.resultStatus.resultId,
         imageName: aichResult.imageName,
         imageUrl: aichResult.imageUrl,
         imageSize: aichResult.imageSize,
@@ -48,19 +77,23 @@ export async function createOcrInPrisma(aichResult: {
 
     return ocrData;
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
 
+// Depreciated (20240611 - Murky) This function is not used
 export async function createJournalInPrisma(
   companyId: number,
+  ocrId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
     imageUrl: string;
     imageName: string;
     imageSize: number;
-  },
-  ocrId: number
+  }
 ) {
   try {
     const now = Date.now();
@@ -68,21 +101,26 @@ export async function createJournalInPrisma(
     const newJournal = await prisma.journal.create({
       data: {
         companyId,
-        ocrId,
         aichResultId: aichResult.resultStatus.resultId,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
+        ocrId
       },
     });
 
     return newJournal;
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
 
+// Depreciated (20240611 - Murky) This function is not used
 export async function createJournalAndOcrInPrisma(
   companyId: number,
+  ocrId: number,
   aichResult: {
     resultStatus: IAccountResultStatus;
     imageUrl: string;
@@ -102,8 +140,10 @@ export async function createJournalAndOcrInPrisma(
     // ToDo (20240605 - Murky) 改版後這裡不應該要有transaction, 並且不要有OCR
     journal = await prisma.$transaction(async () => {
       const company = await findUniqueCompanyInPrisma(companyId);
-      const ocrData = await createOcrInPrisma(aichResult);
-      const newJournal = await createJournalInPrisma(company.id, aichResult, ocrData.id);
+
+      // Depreciated (20240611 - Murky) This variable is not used
+      // const ocrData = await createOcrInPrisma(companyId, aichResult);
+      const newJournal = await createJournalInPrisma(company.id, ocrId, aichResult);
       return newJournal;
     });
   } catch (error) {

@@ -8,7 +8,7 @@ import * as parseImageForm from '@/lib/utils/parse_image_form';
 import * as common from '@/lib/utils/common';
 import { ProgressStatus } from '@/constants/account';
 import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
-import { Journal } from '@prisma/client';
+import { Journal, Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 global.fetch = jest.fn();
@@ -21,6 +21,8 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   formatApiResponse: jest.fn(),
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),
+  timestampInMilliSeconds: jest.fn(),
+  transformBytesToFileSizeString: jest.fn(),
 }));
 
 jest.mock('./index.repository', () => {
@@ -48,7 +50,7 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-describe('/OCR/index.ts', () => {
+describe('POST OCR', () => {
   describe('readImageFromFilePath', () => {
     let mockImage: MockProxy<formidable.File>;
     const mockPath = '/test';
@@ -283,10 +285,10 @@ describe('/OCR/index.ts', () => {
   });
 
   describe('createJournalsAndOcrFromAichResults', () => {
+    const nowTimestamp = 0;
+    const companyId = 1;
+    const ocrId = 2;
     it('should return resultJson', async () => {
-      const nowTimestamp = 0;
-      const companyId = 1;
-      const ocrId = 2;
       const resultId = 'testResultId';
       const mockAichReturn = [
         {
@@ -304,13 +306,11 @@ describe('/OCR/index.ts', () => {
         id: 1,
         tokenContract: null,
         tokenId: null,
-        ocrId,
         aichResultId: null,
-        invoiceId: null,
-        voucherId: null,
         projectId: null,
         contractId: null,
         companyId,
+        ocrId,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       };
@@ -325,6 +325,7 @@ describe('/OCR/index.ts', () => {
       jest.spyOn(repository, 'createJournalAndOcrInPrisma').mockResolvedValue(mockJournal);
 
       const resultJson = await module.createJournalsAndOcrFromAichResults(
+        ocrId,
         companyId,
         mockAichReturn
       );
@@ -333,7 +334,6 @@ describe('/OCR/index.ts', () => {
     });
 
     it('should throw error when createJournalAndOcrInPrisma failed', async () => {
-      const companyId = 1;
       const mockAichReturn = [
         {
           resultStatus: {
@@ -351,8 +351,51 @@ describe('/OCR/index.ts', () => {
         .mockRejectedValue(new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR));
 
       await expect(
-        module.createJournalsAndOcrFromAichResults(companyId, mockAichReturn)
+        module.createJournalsAndOcrFromAichResults(companyId, ocrId, mockAichReturn)
       ).rejects.toThrow(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    });
+  });
+
+  describe('createOcrFromAichResults', () => {
+    it('should return resultJson', async () => {
+      const resultId = 'testResultId';
+      const companyId = 1;
+      const mockAichReturn = [
+        {
+          resultStatus: {
+            resultId,
+            status: ProgressStatus.SUCCESS,
+          },
+          imageUrl: 'testImageUrl',
+          imageName: 'testImageName',
+          imageSize: 1024,
+        },
+      ];
+
+      const mockOcrDbResult: Ocr = {
+        id: 1,
+        companyId,
+        aichResultId: resultId,
+        status: ProgressStatus.SUCCESS,
+        imageUrl: 'testImageUrl',
+        imageName: 'testImageName',
+        imageSize: 1024,
+        createdAt: 0,
+        updatedAt: 0,
+      };
+
+      const expectResult: IAccountResultStatus[] = [
+        {
+          resultId,
+          status: ProgressStatus.SUCCESS,
+        },
+      ];
+
+      jest.spyOn(repository, 'createOcrInPrisma').mockResolvedValue(mockOcrDbResult);
+
+      const resultJson = await module.createOcrFromAichResults(companyId, mockAichReturn);
+
+      expect(resultJson).toEqual(expectResult);
     });
   });
 
@@ -435,10 +478,90 @@ describe('/OCR/index.ts', () => {
 
       const { httpCode, result } = await module.handlePostRequest(req);
 
-      expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
+      // Depreciate ( 20240605 - Murky ) - Use createOcrInPrisma instead
+      // expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
+      expect(repository.createOcrInPrisma).toHaveBeenCalled();
 
       expect(httpCode).toBe(201);
       expect(result).toBe(mockReturn);
+    });
+  });
+});
+
+describe('GET OCR', () => {
+  describe('fetchStatus', () => {
+    it('should return resultJson', async () => {
+      const aichResultId = 'testAichResultId';
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ payload: ProgressStatus.SUCCESS }),
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const resultJson = await module.fetchStatus(aichResultId);
+      expect(resultJson).toEqual(ProgressStatus.SUCCESS);
+    });
+  });
+
+  describe('calculateProgress', () => {
+    beforeEach(() => {
+      jest.spyOn(common, 'timestampInMilliSeconds').mockReturnValue(0);
+    });
+    it('should return 100 if success', () => {
+      const mockCreatedAt = 1;
+      const mockStatus = ProgressStatus.SUCCESS;
+
+      const progress = module.calculateProgress(mockCreatedAt, mockStatus);
+      expect(progress).toBe(100);
+    });
+
+    it('should return 0 if not success and not in progress', () => {
+      const mockCreatedAt = 1;
+      const mockStatus = ProgressStatus.INVALID_INPUT;
+
+      const progress = module.calculateProgress(mockCreatedAt, mockStatus);
+      expect(progress).toBe(0);
+    });
+  });
+
+  describe("formatUnprocessedOCR", () => {
+    it("should return IUnprocessedOCR", async () => {
+      const mockAichId = 'testAichId';
+      const mockCompanyId = 1;
+      const mockImageFileSize = "1 MB";
+      const mockOcr: Ocr[] = [{
+        id: 1,
+        aichResultId: mockAichId,
+        companyId: mockCompanyId,
+        status: "success",
+        imageUrl: 'testImageUrl',
+        imageName: 'testImageName',
+        imageSize: 1024,
+        createdAt: 0,
+        updatedAt: 0,
+      }];
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ payload: ProgressStatus.SUCCESS }),
+      });
+      jest.spyOn(common, 'transformBytesToFileSizeString').mockReturnValue(mockImageFileSize);
+      jest.spyOn(common, 'timestampInSeconds').mockReturnValue(0);
+
+      const unprocessedOCR = await module.formatUnprocessedOCR(mockOcr);
+
+      const expectUnprocessedOCR = [{
+        id: 1,
+        aichResultId: mockAichId,
+        imageName: 'testImageName',
+        imageUrl: 'testImageUrl',
+        imageSize: mockImageFileSize,
+        progress: 100,
+        status: ProgressStatus.SUCCESS,
+        createdAt: 0,
+      }];
+      expect(unprocessedOCR).toEqual(expectUnprocessedOCR);
     });
   });
 });

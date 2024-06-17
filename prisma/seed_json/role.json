@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "name": "Super Admin",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 2,
+        "name": "Admin",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 3,
+        "name": "Owner",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 4,
+        "name": "Viewer",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    }
+]
