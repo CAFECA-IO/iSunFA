@@ -20,6 +20,7 @@ import { IUnprocessedOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -124,12 +125,13 @@ export async function postImageToAICH(files: formidable.Files): Promise<
   return resultJson;
 }
 
-export function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
+// ToDo: (20240617 - Murky) Need to use function in type guard instead
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isCompanyIdValid(companyId: any): companyId is number {
   if (
     Array.isArray(companyId) ||
     !companyId ||
-    typeof companyId !== 'string' ||
-    !Number.isInteger(Number(companyId))
+    typeof companyId !== 'number'
   ) {
     return false;
   }
@@ -252,15 +254,16 @@ export async function createOcrFromAichResults(
   return resultJson;
 }
 
-export async function handlePostRequest(req: NextApiRequest) {
-  const { companyId } = req.query;
+export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
 
   // Info Murky (20240416): Check if companyId is string
   if (!isCompanyIdValid(companyId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Depreciated (20240611 - Murky) This variable is temporary not used
+  // Depreciated (20240611 - Murky) This convert is not needed
   const companyIdNumber = Number(companyId);
 
   let resultJson: IAccountResultStatus[];
@@ -285,14 +288,16 @@ export async function handlePostRequest(req: NextApiRequest) {
   };
 }
 
-export async function handleGetRequest(req: NextApiRequest) {
+export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
-  const { companyId } = req.query;
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
   if (!isCompanyIdValid(companyId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
+  // Depreciated (20240611 - Murky) This convert is not needed
   const companyIdNumber = Number(companyId);
 
   // ToDo: (20240611 - Murky) GET ocr by companyId in Journal from prisma
@@ -332,12 +337,12 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
-        const { httpCode, result } = await handleGetRequest(req);
+        const { httpCode, result } = await handleGetRequest(req, res);
         res.status(httpCode).json(result);
         break;
       }
       case 'POST': {
-        const { httpCode, result } = await handlePostRequest(req);
+        const { httpCode, result } = await handlePostRequest(req, res);
         res.status(httpCode).json(result);
         break;
       }
