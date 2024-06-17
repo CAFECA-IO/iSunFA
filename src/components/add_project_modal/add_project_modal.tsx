@@ -7,41 +7,13 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import { ProjectStage, stageList } from '@/constants/project';
 import { FiSearch } from 'react-icons/fi';
+import { IMember, dummyMemberList } from '@/interfaces/member';
 
 interface IAddProjectModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
   defaultStage: ProjectStage;
 }
-
-// ToDo: (20240611 - Julian) get member list from API
-const dummyMemberList = [
-  {
-    name: 'Emily',
-    role: 'Full Stack Engineer',
-    imageId: '/elements/yellow_check.svg',
-  },
-  {
-    name: 'Gibbs',
-    role: 'Blockchain Engineer',
-    imageId: '/elements/yellow_check.svg',
-  },
-  {
-    name: 'Jacky Fang',
-    role: 'QA Engineer',
-    imageId: '/elements/yellow_check.svg',
-  },
-  {
-    name: 'Julian Hsu',
-    role: 'Front-end Engineer',
-    imageId: '/elements/yellow_check.svg',
-  },
-  {
-    name: 'Liz',
-    role: 'Front-end Engineer',
-    imageId: '/elements/yellow_check.svg',
-  },
-];
 
 const AddProjectModal = ({
   isModalVisible,
@@ -50,7 +22,7 @@ const AddProjectModal = ({
 }: IAddProjectModalProps) => {
   const [inputName, setInputName] = useState('');
   const [selectedStage, setSelectedStage] = useState<ProjectStage>(defaultStage);
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<IMember[]>([]);
   const [searchMemberValue, setSearchMemberValue] = useState('');
 
   const {
@@ -134,7 +106,7 @@ const AddProjectModal = ({
         return (
           <div className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary">
             <Image src="/elements/yellow_check.svg" alt="member_avatar" width={20} height={20} />
-            <p className="whitespace-nowrap">{member}</p>
+            <p className="whitespace-nowrap">{member.name}</p>
             <button type="button" onClick={removeMemberHandler}>
               <RxCrossCircled size={16} />
             </button>
@@ -146,17 +118,17 @@ const AddProjectModal = ({
     );
 
   const displayMemberList = filteredMemberList.map((member) => {
-    const isSelected = selectedMembers.includes(member.name);
+    const isSelected = selectedMembers.includes(member);
     const memberClickHandler = () => {
       if (isSelected) {
         // Info: (20240611 - Julian) 如果已經選取，則移除
         const newMembers = selectedMembers.filter(
-          (selectedMember) => selectedMember !== member.name
+          (selectedMember) => selectedMember.name !== member.name
         );
         setSelectedMembers(newMembers);
       } else {
         // Info: (20240611 - Julian) 如果沒有選取，則加入
-        setSelectedMembers([...selectedMembers, member.name]);
+        setSelectedMembers([...selectedMembers, member]);
       }
     };
 
