@@ -1,3 +1,4 @@
+import { ISessionData } from '@/interfaces/session_data';
 import nextSession from 'next-session';
 
 const options = {
@@ -8,4 +9,4 @@ const options = {
   },
 };
 
-export const getSession = nextSession(options);
+export const getSession = nextSession<ISessionData>(options);

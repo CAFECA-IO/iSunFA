@@ -2,7 +2,6 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
-import { ISessionData } from '@/interfaces/session_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/get_session';
@@ -10,7 +9,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ISessionData>>
+  res: NextApiResponse<IResponseData<{ user: IUser; company: ICompany }>>
 ) {
   try {
     if (req.method === 'GET') {
@@ -32,11 +31,11 @@ export default async function handler(
           },
         })) as ICompany;
       }
-      const sessionData: ISessionData = {
+      const sessionData: { user: IUser; company: ICompany } = {
         user,
         company,
       };
-      const { httpCode, result } = formatApiResponse<ISessionData>(
+      const { httpCode, result } = formatApiResponse<{ user: IUser; company: ICompany }>(
         STATUS_MESSAGE.SUCCESS_GET,
         sessionData
       );
@@ -48,7 +47,10 @@ export default async function handler(
     const error = _error as Error;
     // eslint-disable-next-line no-console
     console.log('🚀 ~ error:', error);
-    const { httpCode, result } = formatApiResponse<ISessionData>(error.message, {} as ISessionData);
+    const { httpCode, result } = formatApiResponse<{ user: IUser; company: ICompany }>(
+      error.message,
+      {} as { user: IUser; company: ICompany }
+    );
     res.status(httpCode).json(result);
   }
 }
