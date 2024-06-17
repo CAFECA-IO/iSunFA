@@ -9,6 +9,7 @@ import { getSession } from '@/lib/utils/get_session';
 import { getUserByCredential } from '@/lib/utils/repo/user.repo';
 import { checkInvitation } from '@/lib/utils/auth_check';
 import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -30,6 +31,7 @@ export default async function handler(
     };
 
     const getUser = await getUserByCredential(authentication.credentialId);
+    const user = await formatUser(getUser);
 
     const typeOfAlgorithm = getUser.algorithm === 'ES256' ? 'ES256' : 'RS256';
 
@@ -42,7 +44,7 @@ export default async function handler(
     await server.verifyAuthentication(authentication, registeredCredential, expected);
     const session = await getSession(req, res);
     session.userId = getUser.id;
-    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, getUser);
+    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
     res.status(httpCode).json(result);
     if (!req.query.invitation) {
       return;

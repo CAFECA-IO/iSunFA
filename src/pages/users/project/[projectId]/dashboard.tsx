@@ -12,6 +12,8 @@ import { ProjectStage, stageList } from '@/constants/project';
 import ProjectValueBlock from '@/components/project_value_block/project_value_block';
 import ProjectProgressBlock from '@/components/project_progress_block/project_progress_block';
 import ProjectMilestoneBlock from '@/components/project_milestone_block/project_milestone_block';
+import WorkingTimeRatioBlock from '@/components/working_time_ratio_block/working_time_ratio_block';
+import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/project_monthly_sales_block';
 
 interface IProjectDashboardPageProps {
   projectId: string;
@@ -127,16 +129,22 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                   <div className="md:col-span-2">
                     <ProjectValueBlock />
                   </div>
-
                   {/* Info: (20240612 - Julian) Project Progress Block */}
                   <div className="">
                     <ProjectProgressBlock />
                   </div>
+                  {/* Info: (20240614 - Julian) Project Milestone Block */}
                   <div className="md:col-span-3">
                     <ProjectMilestoneBlock />
                   </div>
-                  <div className="border p-20px md:col-span-2">Monthly Sales Block</div>
-                  <div className="border p-20px">Working Time Ratio Sales Block</div>
+                  {/* Info: (20240614 - Julian) Project Monthly Sales Block */}
+                  <div className="md:col-span-2">
+                    <ProjectMonthlySalesBlock />
+                  </div>
+                  {/* Info: (20240614 - Julian) Working Time Ratio Block */}
+                  <div className="">
+                    <WorkingTimeRatioBlock />
+                  </div>
                 </div>
               </div>
             </div>

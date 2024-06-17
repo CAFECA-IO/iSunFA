@@ -146,7 +146,7 @@ const ProjectMilestoneBlock = () => {
   return (
     <div className="flex flex-col justify-between gap-32px rounded-lg bg-surface-neutral-surface-lv2 p-20px font-medium md:flex-row">
       {/* Info: (20240612 - Julian) Main Content */}
-      <div className="flex flex-1 flex-col gap-y-16px">
+      <div className="flex flex-1 flex-col items-center gap-y-16px md:items-stretch">
         <div className="flex items-center gap-8px text-text-neutral-secondary">
           <Image src="/icons/milestone.svg" alt="Milestone Block" width={24} height={24} />
           <p>Milestone</p>
@@ -154,7 +154,7 @@ const ProjectMilestoneBlock = () => {
         <div className="hidden grid-cols-3 gap-16px border-t border-divider-stroke-lv-4 p-10px md:grid">
           {displayMilestoneDesktop}
         </div>
-        <div className="flex flex-col gap-16px border-t border-divider-stroke-lv-4 py-16px md:hidden">
+        <div className="flex w-full flex-col justify-between gap-16px border-t border-divider-stroke-lv-4 py-16px md:hidden">
           {displayMilestoneMobile}
         </div>
       </div>

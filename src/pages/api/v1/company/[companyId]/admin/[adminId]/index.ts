@@ -6,6 +6,7 @@ import { IAdmin } from '@/interfaces/admin';
 import { checkAdmin, checkCompanyAdminMatch, checkRole } from '@/lib/utils/auth_check';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { deleteAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -38,21 +39,17 @@ export default async function handler(
       if (!Object.values(RoleName).includes(updatedRoleNameStr)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
       }
-      const updatedAdmin: IAdmin = await updateAdminById(getAdmin.id, status, updatedRoleName);
-      const { httpCode, result } = formatApiResponse<IAdmin>(
-        STATUS_MESSAGE.SUCCESS_UPDATE,
-        updatedAdmin
-      );
+      const updatedAdmin = await updateAdminById(getAdmin.id, status, updatedRoleName);
+      const admin = await formatAdmin(updatedAdmin);
+      const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_UPDATE, admin);
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
       const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { companyId } = session;
       const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
-      const deletedAdmin: IAdmin = await deleteAdminById(getAdmin.id);
-      const { httpCode, result } = formatApiResponse<IAdmin>(
-        STATUS_MESSAGE.SUCCESS_DELETE,
-        deletedAdmin
-      );
+      const deletedAdmin = await deleteAdminById(getAdmin.id);
+      const admin = await formatAdmin(deletedAdmin);
+      const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_DELETE, admin);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);

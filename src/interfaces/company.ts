@@ -4,7 +4,7 @@ export interface ICompany {
   regional: string;
   name: string;
   kycStatus: boolean;
-  imageId: string | null;
+  imageId: string;
   startDate: number;
   createdAt: number;
   updatedAt: number;

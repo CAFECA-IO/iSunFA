@@ -15,7 +15,7 @@ let companyId: number;
 beforeEach(async () => {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  admin = await prisma.admin.create({
+  const createdAdmin = await prisma.admin.create({
     data: {
       user: {
         connectOrCreate: {
@@ -75,6 +75,10 @@ beforeEach(async () => {
       role: true,
     },
   });
+  admin = {
+    ...createdAdmin,
+    endDate: 0,
+  };
   const createdClient = await prisma.client.create({
     data: {
       company: {
