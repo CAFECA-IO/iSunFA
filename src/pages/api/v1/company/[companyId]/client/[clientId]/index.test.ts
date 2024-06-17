@@ -36,10 +36,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.ACCOUNTANT,
           },
           create: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.ACCOUNTANT,
             permissions: ['hihi', 'ooo'],
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
@@ -83,7 +83,7 @@ beforeEach(async () => {
           id: admin.company.id,
         },
       },
-      name: 'Test Client',
+      name: 'Test Client33',
       taxId: '12345678',
       favorite: false,
       createdAt: nowTimestamp,

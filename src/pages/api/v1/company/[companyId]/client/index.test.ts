@@ -37,10 +37,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.FINANCE,
           },
           create: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.FINANCE,
             permissions: ['hihi', 'ooo'],
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
