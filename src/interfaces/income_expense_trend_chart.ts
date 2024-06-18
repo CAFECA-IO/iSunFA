@@ -12,6 +12,7 @@ export interface IIncomeExpenseTrendChartData {
       absolute: number;
     }[];
   }[];
+  empty: boolean;
 }
 
 export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpenseTrendChartData> = {
@@ -69,6 +70,7 @@ export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpens
         ],
       },
     ],
+    empty: false,
   },
   month: {
     categories: [
@@ -152,6 +154,7 @@ export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpens
         ],
       },
     ],
+    empty: false,
   },
   year: {
     categories: ['2020', '2021', '2022', '2023', '2024'],
@@ -201,5 +204,6 @@ export const DUMMY_INCOME_EXPENSE_TREND_CHART_DATA: Record<Period, IIncomeExpens
         ],
       },
     ],
+    empty: false,
   },
 };

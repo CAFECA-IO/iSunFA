@@ -39,6 +39,9 @@ const DashboardOverview = () => {
         profitChange: profitInsight.profitChange * 100,
         topProjectRoi: profitInsight.topProjectRoi * 100, // TODO: (20240524 - tzuhan) ask backend to return string instead of number -> the interface used in frontend is the same as backend so the data format for now is good (20240528 - Shirley)
         preLaunchProject: profitInsight.preLaunchProject,
+        emptyProfitChange: profitInsight.emptyProfitChange,
+        emptyTopProjectRoi: profitInsight.emptyTopProjectRoi,
+        emptyPreLaunchProject: profitInsight.emptyPreLaunchProject,
       });
     } else if (getSuccess === false) {
       toastHandler({
