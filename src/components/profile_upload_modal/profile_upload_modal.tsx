@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
-import { Button } from '../button/button';
+import { Button } from '@/components/button/button';
 
 interface IProfileUploadModalProps {
   isModalVisible: boolean;

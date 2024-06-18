@@ -8,7 +8,7 @@ import { ProjectStage, stageList } from '@/constants/project';
 import { Button } from '@/components/button/button';
 import ProjectList from '@/components/project_list/project_list';
 import { Layout } from '@/constants/layout';
-import ProjectStageBlock from '../project_stage_block/project_stage_block';
+import ProjectStageBlock from '@/components/project_stage_block/project_stage_block';
 
 const ProjectPageBody = () => {
   const { addProjectModalVisibilityHandler } = useGlobalCtx();

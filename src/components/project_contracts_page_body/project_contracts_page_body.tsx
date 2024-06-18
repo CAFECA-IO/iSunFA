@@ -5,8 +5,8 @@ import { Layout } from '@/constants/layout';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec } from '@/constants/display';
-import DatePicker, { DatePickerType } from '../date_picker/date_picker';
-import { Button } from '../button/button';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { Button } from '@/components/button/button';
 
 enum ContractStatus {
   VALID = 'Valid',
