@@ -51,6 +51,7 @@ export enum APIName {
   REPORT_GENERATE_FINANCIAL = 'REPORT_GENERATE_FINANCIAL',
   REPORT_GENERATE_ANALYSIS = 'REPORT_GENERATE_ANALYSIS',
   SESSION_GET = 'SESSION_GET',
+  ACCOUNT_LIST = 'ACCOUNT_LIST',
 }
 
 export enum APIPath {
@@ -91,6 +92,7 @@ export enum APIPath {
   REPORT_GENERATE_FINANCIAL = `${apiPrefix}/company/:companyId/report_financial`,
   REPORT_GENERATE_ANALYSIS = `${apiPrefix}/company/:companyId/report_analysis`,
   SESSION_GET = `${apiPrefix}/session`,
+  ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
@@ -567,6 +569,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.SESSION_GET,
     method: HttpMethod.GET,
     path: APIPath.SESSION_GET,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.ACCOUNT_LIST]: {
+    name: APIName.ACCOUNT_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.ACCOUNT_LIST,
     input: {
       header: {},
       body: {},
