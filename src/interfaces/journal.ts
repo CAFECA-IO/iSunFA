@@ -3,14 +3,14 @@ import { IInvoice } from './invoice';
 
 export interface IJournal {
   id: number;
-  tokenContract: string | null;
-  tokenId: string | null;
-  aichResultId: string | null;
-  projectId: number | null;
-  contractId: number | null;
-  imageUrl: string | null;
-  invoice: IInvoice | null;
-  voucher: IVoucherDataForSavingToDB | null;
+  tokenContract: string;
+  tokenId: string;
+  aichResultId: string;
+  projectId: number;
+  contractId: number;
+  imageUrl: string;
+  invoice: IInvoice;
+  voucher: IVoucherDataForSavingToDB;
 }
 
 // ToDo: (20240528 - Julian) 根據 Murky 寫在 src/pages/api/v1/company/[companyId]/journal/index.ts
