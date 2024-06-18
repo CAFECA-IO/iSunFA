@@ -5,6 +5,7 @@ export interface IProjectROIComparisonChartData {
   series: number[][];
   startDate: number;
   endDate: number;
+  empty: boolean;
 }
 
 export interface IProjectROIComparisonChartDataWithPagination
@@ -38,6 +39,7 @@ export function generateRandomData(): IProjectROIComparisonChartData {
     endDate,
     categories: DUMMY_CATEGORIES,
     series: newSeries,
+    empty: false,
   };
 }
 
@@ -75,6 +77,7 @@ export function generateRandomPaginatedData(
     series: paginatedSeriesData,
     currentPage,
     totalPages,
+    empty: false,
   };
 }
 
