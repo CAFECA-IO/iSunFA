@@ -8,9 +8,9 @@ import {
   VoucherRowType,
   VoucherString,
 } from '@/contexts/accounting_context';
-
-// ToDo: (20240530 - Julian) account title list
-const accountingList = ['1441- Machinery', '1113- Cash in banks'];
+import APIHandler from '@/lib/utils/api_handler';
+import { IAccount } from '@/interfaces/accounting_account';
+import { APIName } from '@/constants/api_connection';
 
 interface IAccountingVoucherRow {
   accountingVoucher: IAccountingVoucher;
@@ -21,12 +21,23 @@ interface IAccountingVoucherRowMobile {
   accountingVoucher: IAccountingVoucher;
 }
 
+const gernateTitle = (account: IAccount) => account.code.substring(0, 4) + ' - ' + account.name;
+
 const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
+  const {
+    // trigger: listAccount,
+    // success: successListAccount,
+    data: accountList,
+    // code: listAccountCode,
+  } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {});
+
   const { id, particulars, debit, credit } = accountingVoucher;
   const { deleteVoucherRowHandler, changeVoucherStringHandler, changeVoucherAmountHandler } =
     useAccountingCtx();
 
-  const [selectAccountTitle, setSelectAccountTitle] = useState<string>(accountingList[0]);
+  const [selectAccountTitle, setSelectAccountTitle] = useState<string>(
+    !!accountList && accountList.length > 0 ? gernateTitle(accountList[0]) : 'Account Title'
+  );
 
   const {
     targetRef: accountingRef,
@@ -52,7 +63,8 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   };
   const deleteClickHandler = () => deleteVoucherRowHandler(id);
 
-  const displayAccountingDropmenu = accountingList.map((title: string) => {
+  const displayAccountingDropmenu = (accountList ?? []).map((account: IAccount) => {
+    const title = gernateTitle(account);
     // Info: (20240430 - Julian) 點擊選單選項
     const clickHandler = () => {
       setSelectAccountTitle(title);
@@ -146,6 +158,7 @@ export const AccountingVoucherRowMobile = ({
   type,
   accountingVoucher,
 }: IAccountingVoucherRowMobile) => {
+  const { data: accountList } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {});
   const isDebit = type === 'Debit';
 
   const { id, accountTitle, particulars, debit, credit } = accountingVoucher;
@@ -187,11 +200,14 @@ export const AccountingVoucherRowMobile = ({
           onChange={selectAccountTitleHandler}
           className={`relative flex h-46px w-full cursor-pointer items-center justify-between rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none hover:border-primaryYellow hover:text-primaryYellow hover:outline-none`}
         >
-          {accountingList.map((title: string) => (
-            <option key={title} value={title}>
-              {title}
-            </option>
-          ))}
+          {(accountList ?? []).map((account: IAccount) => {
+            const title = gernateTitle(account);
+            return (
+              <option key={title} value={title}>
+                {title}
+              </option>
+            );
+          })}
         </select>
       </div>
       {/* Info: (20240508 - Julian) Particulars */}
