@@ -431,6 +431,7 @@ const ProjectRoiComparisonChart = () => {
             {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
             <div className="hidden lg:flex">
               <DatePicker
+                disabled={isNoData}
                 type={DatePickerType.ICON_PERIOD}
                 minDate={minDate}
                 maxDate={maxDate}
