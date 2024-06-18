@@ -32,6 +32,7 @@ describe('Result API Handler Tests', () => {
       date: expect.any(Number),
       categories: expect.arrayContaining([expect.any(String)]),
       series: expect.arrayContaining([expect.any(Number)]),
+      empty: expect.any(Boolean),
     };
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
