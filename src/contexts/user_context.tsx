@@ -215,6 +215,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!company) {
       setSelectedCompany(null);
       setSuccessSelectCompany(undefined);
+      // Info: (20240618 - Julian) 如果取消選擇公司，就把 companyId 設為 0
+      selectCompanyAPI({
+        params: {
+          companyId: 0,
+        },
+      });
       return;
     }
     setSelectedCompany(company);
