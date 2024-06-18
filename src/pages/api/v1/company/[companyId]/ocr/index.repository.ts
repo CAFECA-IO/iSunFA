@@ -3,7 +3,7 @@ import { ProgressStatus } from "@/constants/account";
 import { STATUS_MESSAGE } from "@/constants/status_code";
 import { IAccountResultStatus } from "@/interfaces/accounting_account";
 import { timestampInSeconds } from "@/lib/utils/common";
-import { Journal, Ocr } from "@prisma/client";
+import { Ocr } from "@prisma/client";
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -36,7 +36,9 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(companyId: numbe
     ocrData = await prisma.ocr.findMany({
       where: {
         companyId,
-        journal: null,
+        status: {
+          not: ProgressStatus.HAS_BEEN_USED,
+        },
       }
     });
   } catch (error) {
@@ -82,76 +84,4 @@ export async function createOcrInPrisma(
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
-}
-
-// Depreciated (20240611 - Murky) This function is not used
-export async function createJournalInPrisma(
-  companyId: number,
-  ocrId: number,
-  aichResult: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-  }
-) {
-  try {
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
-    const newJournal = await prisma.journal.create({
-      data: {
-        companyId,
-        aichResultId: aichResult.resultStatus.resultId,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-        ocrId
-      },
-    });
-
-    return newJournal;
-  } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-}
-
-// Depreciated (20240611 - Murky) This function is not used
-export async function createJournalAndOcrInPrisma(
-  companyId: number,
-  ocrId: number,
-  aichResult: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-  }
-) {
-  // ToDo: (20240521 - Murky) companyId 要檢查是否存在該公司
-  // ToDo: (20240521 - Murky) 重複的圖片一直post貌似會越來越多Journal? 目前沒有檢查重複post的狀況
-  // 如果是AICH已經重複的就不建立了
-  if (aichResult.resultStatus.status !== ProgressStatus.IN_PROGRESS) {
-    throw new Error(STATUS_MESSAGE.OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS);
-  }
-  let journal: Journal;
-
-  try {
-    // ToDo (20240605 - Murky) 改版後這裡不應該要有transaction, 並且不要有OCR
-    journal = await prisma.$transaction(async () => {
-      const company = await findUniqueCompanyInPrisma(companyId);
-
-      // Depreciated (20240611 - Murky) This variable is not used
-      // const ocrData = await createOcrInPrisma(companyId, aichResult);
-      const newJournal = await createJournalInPrisma(company.id, ocrId, aichResult);
-      return newJournal;
-    });
-  } catch (error) {
-    // Depreciated (20240621 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-
-  return journal;
 }

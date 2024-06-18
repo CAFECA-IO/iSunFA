@@ -10,6 +10,7 @@ export enum ProgressStatus {
   LLM_ERROR = 'llmError',
   SYSTEM_ERROR = 'systemError',
   PAUSED = 'paused',
+  HAS_BEEN_USED = 'hasBeenUsed',
 }
 
 export enum EventType {
