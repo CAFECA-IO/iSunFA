@@ -4,6 +4,7 @@ import { timestampInSeconds } from '@/lib/utils/common';
 import { IAdmin } from '@/interfaces/admin';
 import { ROLE_NAME } from '@/constants/role_name';
 import { deleteClientById } from '@/lib/utils/repo/client.repo';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
@@ -20,11 +21,11 @@ beforeEach(async () => {
       user: {
         connectOrCreate: {
           where: {
-            credentialId: 'company_index2_test',
+            credentialId: 'TST_client_22',
           },
           create: {
             name: 'John',
-            credentialId: 'company_index2_test',
+            credentialId: 'TST_client_22',
             publicKey: 'publicKey',
             algorithm: 'ES256',
             imageId: 'imageId',
@@ -36,10 +37,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.FINANCE,
           },
           create: {
-            name: ROLE_NAME.OWNER,
+            name: ROLE_NAME.FINANCE,
             permissions: ['hihi', 'ooo'],
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
@@ -49,10 +50,10 @@ beforeEach(async () => {
       company: {
         connectOrCreate: {
           where: {
-            code: 'TST_company_11',
+            code: 'TST_client_22',
           },
           create: {
-            code: 'TST_company_11',
+            code: 'TST_client_22',
             name: 'Test Company',
             regional: 'TW',
             kycStatus: false,
@@ -63,7 +64,7 @@ beforeEach(async () => {
           },
         },
       },
-      email: 'company_index2_test@test',
+      email: 'company_index11_test@test',
       status: true,
       startDate: nowTimestamp,
       createdAt: nowTimestamp,
@@ -75,10 +76,7 @@ beforeEach(async () => {
       role: true,
     },
   });
-  admin = {
-    ...createdAdmin,
-    endDate: 0,
-  };
+  admin = await formatAdmin(createdAdmin);
   const createdClient = await prisma.client.create({
     data: {
       company: {
@@ -112,6 +110,15 @@ beforeEach(async () => {
 
 afterEach(async () => {
   jest.clearAllMocks();
+  try {
+    await prisma.admin.delete({
+      where: {
+        id: admin.id,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
   try {
     await prisma.client.delete({
       where: {

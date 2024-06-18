@@ -19,8 +19,8 @@ export default async function handler(
       if (!invitation) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const invitationinstance = await checkInvitation(invitation);
-      const admin = await createAdminByInvitation(userId, invitationinstance);
+      const invitationInstance = await checkInvitation(invitation, userId);
+      const admin = await createAdminByInvitation(userId, invitationInstance);
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS, admin);
       res.status(httpCode).json(result);
     } else {

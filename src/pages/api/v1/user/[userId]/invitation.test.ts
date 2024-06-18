@@ -89,6 +89,17 @@ beforeEach(async () => {
 afterEach(async () => {
   jest.clearAllMocks();
   try {
+    await prisma.admin.deleteMany({
+      where: {
+        userId,
+        companyId,
+        roleId,
+      },
+    });
+  } catch (error) {
+    // Info: (20240517 - Jacky) If already deleted, ignore the error.
+  }
+  try {
     await prisma.invitation.delete({
       where: {
         code: invitationCode,
