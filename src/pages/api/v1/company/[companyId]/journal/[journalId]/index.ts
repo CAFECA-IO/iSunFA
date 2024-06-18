@@ -9,6 +9,7 @@ import {
   convertStringToPaymentStatusType,
 } from '@/lib/utils/type_guard/account';
 import { IJournal } from '@/interfaces/journal';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 type IJournalResponseFromPrisma = {
   id: number;
@@ -60,11 +61,12 @@ type IJournalResponseFromPrisma = {
   } | null;
 };
 
-async function getJournal(journalId: number) {
+async function getJournal(journalId: number, companyId: number) {
   try {
     const journal = await prisma.journal.findUnique({
       where: {
         id: journalId,
+        companyId
       },
       select: {
         id: true,
@@ -205,15 +207,36 @@ function isJournalIdValid(journalId: string | string[] | undefined): journalId i
   return !!journalId && !Array.isArray(journalId) && typeof journalId === 'string';
 }
 
+// ToDo: (20240617 - Murky) Need to use function in type guard instead
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isCompanyIdValid(companyId: any): companyId is number {
+  if (
+    Array.isArray(companyId) ||
+    !companyId ||
+    typeof companyId !== 'number'
+  ) {
+    return false;
+  }
+  return true;
+}
+
 async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IJournal>>
 ) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   const { journalId } = req.query;
   if (!isJournalIdValid(journalId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const journalData = await getJournal(Number(journalId));
+
+  const journalIdNumber = Number(journalId);
+  const journalData = await getJournal(journalIdNumber, companyId);
   const journal = formatJournal(journalData);
   const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.SUCCESS, journal);
 

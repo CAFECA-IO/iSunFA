@@ -6,6 +6,7 @@ import { formatApiResponse, pageToOffset, timestampInSeconds } from '@/lib/utils
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import prisma from '@/client';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 type ApiResponseType = {
   id: number;
@@ -189,14 +190,31 @@ function formatJournals(journalData: PrismaReturnType) {
   return journals;
 }
 
+// ToDo: (20240617 - Murky) Need to use function in type guard instead
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isCompanyIdValid(companyId: any): companyId is number {
+  if (
+    Array.isArray(companyId) ||
+    !companyId ||
+    typeof companyId !== 'number'
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
   try {
     if (req.method === 'GET') {
       const {
-        companyId,
         page, // can be undefined
         limit,
         eventType,
@@ -208,10 +226,6 @@ export default async function handler(
       // help me check type
 
       if (
-         Array.isArray(companyId) ||
-        !companyId ||
-        typeof companyId !== 'string' ||
-        !Number.isInteger(Number(companyId)) ||
         (page && !Number.isInteger(Number(page))) ||
         (limit && !Number.isInteger(Number(limit))) ||
         (eventType && typeof eventType !== 'string') ||
@@ -222,13 +236,12 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
-      const companyIdNumber = Number(companyId);
       const pageInt = page ? Number(page) : DEFAULT_PAGE_START_AT;
       const limitInt = limit ? Number(limit) : DEFAULT_PAGE_LIMIT;
       const startDateInt = startDate ? Number(startDate) : undefined;
       const endDateInt = endDate ? Number(endDate) : undefined;
 
-      const journalData = await getJournals(companyIdNumber, pageInt, limitInt, eventType, startDateInt, endDateInt, search, sort);
+      const journalData = await getJournals(companyId, pageInt, limitInt, eventType, startDateInt, endDateInt, search, sort);
       const journals = formatJournals(journalData);
 
       const { httpCode, result } = formatApiResponse<ApiResponseType>(

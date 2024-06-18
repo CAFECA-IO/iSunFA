@@ -8,7 +8,6 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { handlePrismaSavingLogic } from '@/pages/api/v1/company/[companyId]/invoice/invoice.repository';
-import { isParamOrQueryNumericString } from '@/lib/utils/type_guard/common';
 import { checkAdmin } from '@/lib/utils/auth_check';
 
 interface IPostApiResponseType {
@@ -47,7 +46,8 @@ function formatOcrId(ocrId: any): number | undefined {
     return undefined;
   }
 
-  if (!isParamOrQueryNumericString(ocrId)) {
+  // ToDo (20240618 - Murky) Need to use type guard instead
+  if (typeof ocrId !== "number") {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const ocrIdNumber = Number(ocrId);

@@ -8,7 +8,7 @@ import * as parseImageForm from '@/lib/utils/parse_image_form';
 import * as common from '@/lib/utils/common';
 import { ProgressStatus } from '@/constants/account';
 import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
-import { Journal, Ocr } from '@prisma/client';
+import { Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import * as authCheck from '@/lib/utils/auth_check';
 
@@ -291,78 +291,6 @@ describe('POST OCR', () => {
       await expect(module.getImageFileFromFormData(req)).rejects.toThrow(
         STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR
       );
-    });
-  });
-
-  describe('createJournalsAndOcrFromAichResults', () => {
-    const nowTimestamp = 0;
-    const companyId = 1;
-    const ocrId = 2;
-    it('should return resultJson', async () => {
-      const resultId = 'testResultId';
-      const mockAichReturn = [
-        {
-          resultStatus: {
-            resultId,
-            status: ProgressStatus.SUCCESS,
-          },
-          imageUrl: 'testImageUrl',
-          imageName: 'testImageName',
-          imageSize: 1024,
-        },
-      ];
-
-      const mockJournal: Journal = {
-        id: 1,
-        tokenContract: null,
-        tokenId: null,
-        aichResultId: null,
-        projectId: null,
-        contractId: null,
-        companyId,
-        ocrId,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      };
-
-      const mockAccountingResult: IAccountResultStatus[] = [
-        {
-          resultId,
-          status: ProgressStatus.SUCCESS,
-        },
-      ];
-
-      jest.spyOn(repository, 'createJournalAndOcrInPrisma').mockResolvedValue(mockJournal);
-
-      const resultJson = await module.createJournalsAndOcrFromAichResults(
-        ocrId,
-        companyId,
-        mockAichReturn
-      );
-
-      expect(resultJson).toEqual(mockAccountingResult);
-    });
-
-    it('should throw error when createJournalAndOcrInPrisma failed', async () => {
-      const mockAichReturn = [
-        {
-          resultStatus: {
-            resultId: '1',
-            status: ProgressStatus.LLM_ERROR,
-          },
-          imageUrl: 'testImageUrl',
-          imageName: 'testImageName',
-          imageSize: 1024,
-        },
-      ];
-
-      jest
-        .spyOn(repository, 'createJournalAndOcrInPrisma')
-        .mockRejectedValue(new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR));
-
-      await expect(
-        module.createJournalsAndOcrFromAichResults(companyId, ocrId, mockAichReturn)
-      ).rejects.toThrow(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     });
   });
 

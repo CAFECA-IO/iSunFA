@@ -249,6 +249,9 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyIdNumber, aichResults);
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -326,6 +329,9 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     handleErrorResponse(res, error.message);
   }
 }
