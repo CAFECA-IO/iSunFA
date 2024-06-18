@@ -767,6 +767,8 @@ module.exports = {
         reportCover: 'url("/documents/cover.svg")',
         contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
         headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
+
+        spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
       },
       zIndex: {
         '-10': '-10',
