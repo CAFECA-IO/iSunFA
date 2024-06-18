@@ -1,5 +1,4 @@
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { IOCR } from '@/interfaces/ocr';
 import { IInvoice } from './invoice';
 
 export interface IJournal {
@@ -9,7 +8,7 @@ export interface IJournal {
   aichResultId: string | null;
   projectId: number | null;
   contractId: number | null;
-  OCR: IOCR | null;
+  imageUrl: string | null;
   invoice: IInvoice | null;
   voucher: IVoucherDataForSavingToDB | null;
 }

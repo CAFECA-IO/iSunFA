@@ -1,6 +1,6 @@
 import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
@@ -12,6 +12,8 @@ import { IJournal } from '@/interfaces/journal';
 
 type IJournalResponseFromPrisma = {
   id: number;
+  createdAt: number;
+  updatedAt: number;
   tokenContract: string | null;
   tokenId: string | null;
   aichResultId: string | null;
@@ -19,14 +21,6 @@ type IJournalResponseFromPrisma = {
   project: { name: string | null } | null;
   contractId: number | null;
   contract: { contractContent: { name: string | null } | null } | null;
-  ocr: {
-    id: number;
-    imageName: string;
-    imageUrl: string;
-    imageSize: number;
-    createdAt: number;
-    updatedAt: number;
-  } | null;
   invoice: {
     id: number;
     date: number;
@@ -34,6 +28,7 @@ type IJournalResponseFromPrisma = {
     eventType: string;
     description: string;
     vendorOrSupplier: string;
+    imageUrl: string;
     payment: {
       id: number;
       isRevenue: boolean;
@@ -75,8 +70,9 @@ async function getJournal(journalId: number) {
         id: true,
         tokenContract: true,
         tokenId: true,
-        ocr: true,
         aichResultId: true,
+        createdAt: true,
+        updatedAt: true,
         invoice: {
           select: {
             id: true,
@@ -85,6 +81,7 @@ async function getJournal(journalId: number) {
             paymentReason: true,
             description: true,
             vendorOrSupplier: true,
+            imageUrl: true,
             payment: {
               select: {
                 id: true,
@@ -153,12 +150,7 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
   const { projectId } = journalData;
   const contractName = journalData?.contract?.contractContent?.name;
   const { contractId } = journalData;
-  const createTimestamp = journalData.ocr
-    ? timestampInSeconds(journalData.ocr.createdAt)
-    : null;
-  const updateTimestamp = journalData.ocr
-    ? timestampInSeconds(journalData.ocr.updatedAt)
-    : null;
+  const imageUrl = journalData.invoice?.imageUrl || null;
 
   return {
     id: journalData.id,
@@ -167,14 +159,7 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
     aichResultId: journalData.aichResultId,
     projectId,
     contractId,
-    OCR: journalData.ocr && {
-      id: journalData.ocr.id,
-      imageName: journalData.ocr.imageName,
-      imageUrl: journalData.ocr.imageUrl,
-      imageSize: journalData.ocr.imageSize,
-      createdAt: createTimestamp as number,
-      updatedAt: updateTimestamp as number,
-    },
+    imageUrl,
     invoice: journalData.invoice && {
       journalId: journalData.id,
       date: journalData.invoice.date,
