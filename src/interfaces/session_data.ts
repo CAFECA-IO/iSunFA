@@ -1,7 +1,6 @@
-import { ICompany } from '@/interfaces/company';
-import { IUser } from '@/interfaces/user';
+import { SessionData } from 'node_modules/next-session/lib/types';
 
-export interface ISessionData {
-  user: IUser;
-  company: ICompany;
+export interface ISessionData extends SessionData {
+  userId: number;
+  companyId: number;
 }
