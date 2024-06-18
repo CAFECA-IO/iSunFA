@@ -1,25 +1,35 @@
 // Info (20240526 - Murky): Prisma
 
 import prisma from "@/client";
-import { NO_OCR_DEFAULT_ID } from "@/constants/ocr";
+import { ProgressStatus } from "@/constants/account";
 import { STATUS_MESSAGE } from "@/constants/status_code";
 import { IInvoice } from "@/interfaces/invoice";
 import { IPayment } from "@/interfaces/payment";
 import { timestampInSeconds } from "@/lib/utils/common";
-import { Prisma } from "@prisma/client";
+import { Ocr, Prisma } from "@prisma/client";
 
-export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<number> {
+export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<{
+  id: number;
+  imageUrl: string;
+} | null> {
   if (!ocrId) {
-    return NO_OCR_DEFAULT_ID;
+    return null;
   }
-  let ocrIdInDB: number;
+  let ocrIdInDB: {
+    id: number;
+    imageUrl: string;
+  } | null;
 
   try {
-    const ocrData = await prisma.ocr.findUnique({
-      where: { id: ocrId },
-      select: { id: true },
+    ocrIdInDB = await prisma.ocr.findUnique({
+      where: {
+        id: ocrId,
+      },
+      select: {
+        id: true,
+        imageUrl: true,
+      },
     });
-    ocrIdInDB = ocrData?.id ? ocrData.id : NO_OCR_DEFAULT_ID;
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
@@ -28,6 +38,33 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
   }
 
   return ocrIdInDB;
+}
+
+export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressStatus) {
+  const now = Date.now();
+  const updatedAt = timestampInSeconds(now);
+
+  let ocr: Ocr;
+
+  try {
+    ocr = await prisma.ocr.update({
+      where: {
+        id: ocrId,
+      },
+      data: {
+        status,
+        updatedAt,
+      },
+
+    });
+  } catch (error) {
+    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+  }
+
+  return ocr;
 }
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
@@ -159,7 +196,7 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number) {
   return invoice;
 }
 
-export async function createInvoiceInPrisma(invoiceData: IInvoice, paymentId: number, journalId: number) {
+export async function createInvoiceInPrisma(invoiceData: IInvoice, paymentId: number, journalId: number, imageUrl: string | undefined) {
   let invoice: {
     id: number;
   };
@@ -175,6 +212,7 @@ export async function createInvoiceInPrisma(invoiceData: IInvoice, paymentId: nu
         paymentReason: invoiceData.paymentReason,
         description: invoiceData.description,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
+        imageUrl,
         payment: {
           connect: {
             id: paymentId,
@@ -202,14 +240,14 @@ export async function createInvoiceInPrisma(invoiceData: IInvoice, paymentId: nu
   return invoice;
 }
 
-export async function createInvoiceAndPaymentInPrisma(invoiceData: IInvoice, journalId: number) {
+export async function createInvoiceAndPaymentInPrisma(invoiceData: IInvoice, journalId: number, imageUrl: string | undefined) {
   const paymentData = invoiceData.payment;
 
   let createdInvoiceId: number;
   try {
     createdInvoiceId = await prisma.$transaction(async () => {
       const payment = await createPaymentInPrisma(paymentData);
-      const invoice = await createInvoiceInPrisma(invoiceData, payment.id, journalId);
+      const invoice = await createInvoiceInPrisma(invoiceData, payment.id, journalId, imageUrl);
       return invoice.id;
     });
   } catch (error) {
@@ -219,7 +257,7 @@ export async function createInvoiceAndPaymentInPrisma(invoiceData: IInvoice, jou
   return createdInvoiceId;
 }
 
-export async function updateInvoiceInPrisma(invoiceId: number, paymentId: number, invoiceData: IInvoice, journalId: number) {
+export async function updateInvoiceInPrisma(invoiceId: number, paymentId: number, invoiceData: IInvoice, journalId: number, imageUrl: string | undefined) {
   let invoice: {
     id: number;
   };
@@ -240,6 +278,7 @@ export async function updateInvoiceInPrisma(invoiceId: number, paymentId: number
         description: invoiceData.description,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
         updatedAt,
+        imageUrl,
         payment: {
           connect: {
             id: paymentId,
@@ -265,7 +304,8 @@ export async function updateInvoiceInPrisma(invoiceId: number, paymentId: number
 export async function updateInvoiceAndPaymentInPrisma(
     invoiceIdToBeUpdated: number,
     invoiceData: IInvoice,
-    journalId: number
+    journalId: number,
+    imageUrl: string | undefined
   ) {
     const paymentData = invoiceData.payment;
 
@@ -280,7 +320,7 @@ export async function updateInvoiceAndPaymentInPrisma(
         }
 
         const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
-        const invoice = await updateInvoiceInPrisma(invoiceIdToBeUpdated, payment.id, invoiceData, journalId);
+        const invoice = await updateInvoiceInPrisma(invoiceIdToBeUpdated, payment.id, invoiceData, journalId, imageUrl);
 
         return invoice.id;
       });
@@ -295,7 +335,6 @@ export async function createJournalInPrisma(
     aichResultId: string,
     contractId: number | null,
     companyId: number,
-    ocrId: number
   ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -304,11 +343,6 @@ export async function createJournalInPrisma(
       connect: {
         id: companyId,
       },
-    },
-    ocr: {
-      connect: {
-        id: ocrId,
-      }
     },
     aichResultId,
     createdAt: nowTimestamp,
@@ -414,20 +448,20 @@ export async function handlePrismaSavingLogic(
 
     let journalIdBeCreateOrUpdate: number;
 
+    const ocrIdInDB = await findUniqueOcrInPrisma(ocrId);
+
     if (!journalId) {
       // Info Murky (20240416): 如果不存在journalId，則代表是新的invoice，需要新增
       // 拉出去
       const company = await findUniqueCompanyInPrisma(companyId);
-      const ocrIdInDB = await findUniqueOcrInPrisma(ocrId);
       journalIdBeCreateOrUpdate = await createJournalInPrisma(
         projectId,
         aichResultId,
         contractId,
         company.id,
-        ocrIdInDB
       );
 
-      await createInvoiceAndPaymentInPrisma(formattedInvoice, journalIdBeCreateOrUpdate);
+      await createInvoiceAndPaymentInPrisma(formattedInvoice, journalIdBeCreateOrUpdate, ocrIdInDB?.imageUrl);
     } else {
       // Depreciate ( 20240522 - Murky ) 拉到put invoice
       const journalInDB = await findUniqueJournalInPrisma(journalId);
@@ -441,7 +475,7 @@ export async function handlePrismaSavingLogic(
         throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
 
-      await updateInvoiceAndPaymentInPrisma(invoiceIdToBeUpdated, formattedInvoice, journalId);
+      await updateInvoiceAndPaymentInPrisma(invoiceIdToBeUpdated, formattedInvoice, journalId, ocrIdInDB?.imageUrl);
 
       journalIdBeCreateOrUpdate = await updateJournalInPrisma(
         journalId,
@@ -449,6 +483,11 @@ export async function handlePrismaSavingLogic(
         projectId,
         contractId
       );
+    }
+
+    // Info (20240524 - Murky): 更新ocr的狀態, 等到其他db操作都沒有錯誤後才更新
+    if (ocrIdInDB?.id) {
+      await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
     }
 
     return journalIdBeCreateOrUpdate;

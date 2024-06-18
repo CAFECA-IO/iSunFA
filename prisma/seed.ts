@@ -132,23 +132,6 @@ async function createIncomeExpenses() {
   });
 }
 
-async function ocr() {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  await prisma.ocr.create({
-    data: {
-      id: 1,
-      imageUrl: '',
-      imageName: 'no_ocr.jpg',
-      imageSize: 0,
-      aichResultId: 'no_aich_result_id',
-      status: 'SUCCESS',
-      companyId: 1,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    },
-  });
-}
 async function main() {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -161,8 +144,6 @@ async function main() {
   await createProjects();
   await new Promise((resolve) => { setTimeout(resolve, 5000); });
   await createIncomeExpenses();
-
-  await ocr();
 }
 
 main()

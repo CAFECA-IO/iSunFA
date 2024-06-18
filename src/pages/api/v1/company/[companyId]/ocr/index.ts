@@ -15,7 +15,7 @@ import { parseForm } from '@/lib/utils/parse_image_form';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { createJournalAndOcrInPrisma, createOcrInPrisma, findManyOCRByCompanyIdWithoutUsedInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import { createOcrInPrisma, findManyOCRByCompanyIdWithoutUsedInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
@@ -204,32 +204,6 @@ export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IUnprocessed
   return unprocessedOCRs;
 }
 
-// Depreciated (20240611 - Murky) This function is not used
-export async function createJournalsAndOcrFromAichResults(
-  companyId: number,
-  ocrId: number,
-  aichResults: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-  }[]
-) {
-  const resultJson: IAccountResultStatus[] = [];
-
-  try {
-    await Promise.all(
-      aichResults.map(async (aichResult) => {
-        await createJournalAndOcrInPrisma(companyId, ocrId, aichResult);
-        resultJson.push(aichResult.resultStatus);
-      })
-    );
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-  return resultJson;
-}
-
 export async function createOcrFromAichResults(
   companyId: number,
   aichResults: {
@@ -275,6 +249,9 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyIdNumber, aichResults);
   } catch (error) {
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -352,6 +329,9 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+    // Depreciated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     handleErrorResponse(res, error.message);
   }
 }

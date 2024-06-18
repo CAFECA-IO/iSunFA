@@ -1,6 +1,6 @@
 import { IResponseData } from '@/interfaces/response_data';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
@@ -9,9 +9,14 @@ import {
   convertStringToPaymentStatusType,
 } from '@/lib/utils/type_guard/account';
 import { IJournal } from '@/interfaces/journal';
+import { checkAdmin } from '@/lib/utils/auth_check';
+import { IInvoice } from '@/interfaces/invoice';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 
 type IJournalResponseFromPrisma = {
   id: number;
+  createdAt: number;
+  updatedAt: number;
   tokenContract: string | null;
   tokenId: string | null;
   aichResultId: string | null;
@@ -19,14 +24,6 @@ type IJournalResponseFromPrisma = {
   project: { name: string | null } | null;
   contractId: number | null;
   contract: { contractContent: { name: string | null } | null } | null;
-  ocr: {
-    id: number;
-    imageName: string;
-    imageUrl: string;
-    imageSize: number;
-    createdAt: number;
-    updatedAt: number;
-  } | null;
   invoice: {
     id: number;
     date: number;
@@ -34,6 +31,7 @@ type IJournalResponseFromPrisma = {
     eventType: string;
     description: string;
     vendorOrSupplier: string;
+    imageUrl: string;
     payment: {
       id: number;
       isRevenue: boolean;
@@ -65,18 +63,20 @@ type IJournalResponseFromPrisma = {
   } | null;
 };
 
-async function getJournal(journalId: number) {
+async function getJournal(journalId: number, companyId: number) {
   try {
     const journal = await prisma.journal.findUnique({
       where: {
         id: journalId,
+        companyId
       },
       select: {
         id: true,
         tokenContract: true,
         tokenId: true,
-        ocr: true,
         aichResultId: true,
+        createdAt: true,
+        updatedAt: true,
         invoice: {
           select: {
             id: true,
@@ -85,6 +85,7 @@ async function getJournal(journalId: number) {
             paymentReason: true,
             description: true,
             vendorOrSupplier: true,
+            imageUrl: true,
             payment: {
               select: {
                 id: true,
@@ -153,66 +154,58 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
   const { projectId } = journalData;
   const contractName = journalData?.contract?.contractContent?.name;
   const { contractId } = journalData;
-  const createTimestamp = journalData.ocr
-    ? timestampInSeconds(journalData.ocr.createdAt)
-    : null;
-  const updateTimestamp = journalData.ocr
-    ? timestampInSeconds(journalData.ocr.updatedAt)
-    : null;
+  const imageUrl = journalData.invoice?.imageUrl || null;
+
+  const invoice: IInvoice = journalData.invoice ? {
+    journalId: journalData.id,
+    date: journalData.invoice.date,
+    eventType: convertStringToEventType(journalData.invoice.eventType),
+    paymentReason: journalData.invoice.paymentReason,
+    description: journalData.invoice.description,
+    vendorOrSupplier: journalData.invoice.vendorOrSupplier,
+    projectId,
+    project: projectName || null,
+    contractId,
+    contract: contractName || null,
+    payment: {
+      isRevenue: journalData.invoice.payment.isRevenue,
+      price: journalData.invoice.payment.price,
+      hasTax: journalData.invoice.payment.hasTax,
+      taxPercentage: journalData.invoice.payment.taxPercentage,
+      hasFee: journalData.invoice.payment.hasFee,
+      fee: journalData.invoice.payment.fee,
+      method: journalData.invoice.payment.method,
+      period: convertStringToPaymentPeriodType(journalData.invoice.payment.period),
+      installmentPeriod: journalData.invoice.payment.installmentPeriod,
+      alreadyPaid: journalData.invoice.payment.alreadyPaid,
+      status: convertStringToPaymentStatusType(journalData.invoice.payment.status),
+      progress: journalData.invoice.payment.progress,
+    },
+  } : {} as IInvoice;
+
+  const voucher: IVoucherDataForSavingToDB = journalData.voucher ? {
+    journalId: journalData.id,
+    lineItems: journalData.voucher.lineItems.map((lineItem) => {
+      return {
+        lineItemIndex: lineItem.id.toString(),
+        amount: lineItem.amount,
+        debit: lineItem.debit,
+        account: lineItem.account.name,
+        description: lineItem.description,
+      };
+    }),
+  } : {} as IVoucherDataForSavingToDB;
 
   return {
     id: journalData.id,
-    tokenContract: journalData.tokenContract,
-    tokenId: journalData.tokenId,
-    aichResultId: journalData.aichResultId,
-    projectId,
-    contractId,
-    OCR: journalData.ocr && {
-      id: journalData.ocr.id,
-      imageName: journalData.ocr.imageName,
-      imageUrl: journalData.ocr.imageUrl,
-      imageSize: journalData.ocr.imageSize,
-      createdAt: createTimestamp as number,
-      updatedAt: updateTimestamp as number,
-    },
-    invoice: journalData.invoice && {
-      journalId: journalData.id,
-      date: journalData.invoice.date,
-      eventType: convertStringToEventType(journalData.invoice.eventType),
-      paymentReason: journalData.invoice.paymentReason,
-      description: journalData.invoice.description,
-      vendorOrSupplier: journalData.invoice.vendorOrSupplier,
-      projectId,
-      project: projectName || null,
-      contractId,
-      contract: contractName || null,
-      payment: {
-        isRevenue: journalData.invoice.payment.isRevenue,
-        price: journalData.invoice.payment.price,
-        hasTax: journalData.invoice.payment.hasTax,
-        taxPercentage: journalData.invoice.payment.taxPercentage,
-        hasFee: journalData.invoice.payment.hasFee,
-        fee: journalData.invoice.payment.fee,
-        method: journalData.invoice.payment.method,
-        period: convertStringToPaymentPeriodType(journalData.invoice.payment.period),
-        installmentPeriod: journalData.invoice.payment.installmentPeriod,
-        alreadyPaid: journalData.invoice.payment.alreadyPaid,
-        status: convertStringToPaymentStatusType(journalData.invoice.payment.status),
-        progress: journalData.invoice.payment.progress,
-      },
-    },
-    voucher: journalData.voucher && {
-      journalId: journalData.id,
-      lineItems: journalData.voucher.lineItems.map((lineItem) => {
-        return {
-          lineItemIndex: lineItem.id.toString(),
-          amount: lineItem.amount,
-          debit: lineItem.debit,
-          account: lineItem.account.name,
-          description: lineItem.description,
-        };
-      }),
-    },
+    tokenContract: journalData.tokenContract || "",
+    tokenId: journalData.tokenId || "",
+    aichResultId: journalData.aichResultId || "",
+    projectId: projectId || 0,
+    contractId: contractId || 0,
+    imageUrl: imageUrl || "",
+    invoice,
+    voucher
   };
 }
 
@@ -220,15 +213,36 @@ function isJournalIdValid(journalId: string | string[] | undefined): journalId i
   return !!journalId && !Array.isArray(journalId) && typeof journalId === 'string';
 }
 
+// ToDo: (20240617 - Murky) Need to use function in type guard instead
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isCompanyIdValid(companyId: any): companyId is number {
+  if (
+    Array.isArray(companyId) ||
+    !companyId ||
+    typeof companyId !== 'number'
+  ) {
+    return false;
+  }
+  return true;
+}
+
 async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IJournal>>
 ) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   const { journalId } = req.query;
   if (!isJournalIdValid(journalId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-  const journalData = await getJournal(Number(journalId));
+
+  const journalIdNumber = Number(journalId);
+  const journalData = await getJournal(journalIdNumber, companyId);
   const journal = formatJournal(journalData);
   const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.SUCCESS, journal);
 
