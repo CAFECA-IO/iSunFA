@@ -223,7 +223,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                   </button>
                   {/* ToDo: (20240611 - Julian) Project Name */}
                   <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                    {projectId} - Setting
+                    {projectName} - Setting
                   </h1>
                 </div>
                 {/* Info: (20240617 - Julian) Divider */}
