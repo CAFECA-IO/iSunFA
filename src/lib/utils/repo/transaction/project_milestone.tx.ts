@@ -2,13 +2,14 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IMilestone } from '@/interfaces/project';
 import { Project } from '@prisma/client';
+import { Milestone } from '@/constants/milestone';
 import { timestampInSeconds } from '../../common';
 import { listProjectMilestone } from '../milestone.repo';
 import { formatMilestoneList } from '../../formatter/milestone.formatter';
 
 function adjustMilestoneList(
   milestoneList: IMilestone[],
-  updateStage: string,
+  updateStage: Milestone,
   startDate: number
 ): IMilestone[] {
   const updatedMilestoneList = [...milestoneList];
@@ -43,7 +44,7 @@ function findLastMilestoneWithStartDate(milestoneList: IMilestone[]): IMilestone
       return milestoneList[i];
     }
   }
-  throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 }
 
 /**
@@ -66,7 +67,7 @@ function calculateProjectCompletion(milestoneList: IMilestone[], currentStage: s
 
 export async function updateProjectMilestone(
   projectId: number,
-  updateStage: string,
+  updateStage: Milestone,
   startDate?: number
 ): Promise<{ project: Project; updatedMilestoneList: IMilestone[] }> {
   const listedMilestone = await listProjectMilestone(projectId);
@@ -83,7 +84,15 @@ export async function updateProjectMilestone(
     },
     data: {
       milestones: {
-        set: updatedMilestoneList,
+        update: updatedMilestoneList.map((milestone) => ({
+          where: {
+            id: milestone.id,
+          },
+          data: {
+            startDate: milestone.startDate,
+            updatedAt: nowTimestamp,
+          },
+        })),
       },
       stage: projectStage.status,
       completedPercent,
