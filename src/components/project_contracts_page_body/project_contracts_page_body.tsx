@@ -8,7 +8,7 @@ import { default30DayPeriodInSec } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
 import { dummyContracts } from '@/interfaces/contract';
-import ContractCard from '../contract_card/contract_card';
+import ContractCard from '@/components/contract_card/contract_card';
 
 enum ContractStatus {
   VALID = 'Valid',
