@@ -8,7 +8,7 @@ import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
 import { getSession } from '@/lib/utils/get_session';
 import { getUserByCredential } from '@/lib/utils/repo/user.repo';
 import { checkInvitation } from '@/lib/utils/auth_check';
-import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(

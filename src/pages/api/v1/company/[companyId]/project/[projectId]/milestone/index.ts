@@ -5,6 +5,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
 import { IMilestone } from '@/interfaces/project';
 import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
+import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,7 +24,8 @@ export default async function handler(
       const projectIdNum = Number(projectId);
       const project = await checkProjectCompanyMatch(projectIdNum, companyId);
       // Info: (20240607 - Jacky) check input parameter end
-      const milestoneList: IMilestone[] = await listProjectMilestone(project.id);
+      const listedMilestone = await listProjectMilestone(project.id);
+      const milestoneList = formatMilestoneList(listedMilestone);
       const { httpCode, result } = formatApiResponse<IMilestone[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         milestoneList

@@ -9,7 +9,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { getSession } from '@/lib/utils/get_session';
 import { generateUserIcon } from '@/lib/utils/generate_user_icon';
 import { checkInvitation } from '@/lib/utils/auth_check';
-import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { createUser } from '@/lib/utils/repo/user.repo';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
