@@ -4,6 +4,7 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { AccountSystem, AccountType } from '@/constants/account';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
 export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   try {
@@ -29,7 +30,7 @@ export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   }
 }
 
-export async function findFirstAccountInPrisma(accountName: string) {
+export async function findFirstAccountByNameInPrisma(accountName: string) {
   try {
     const result = await prisma.account.findFirst({
       where: {
@@ -41,6 +42,35 @@ export async function findFirstAccountInPrisma(accountName: string) {
     });
 
     return result?.id || null;
+  } catch (error) {
+    // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
+    console.error(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+}
+
+export async function findFirstAccountBelongsToCompanyInPrisma(id: string, companyId: number) {
+  try {
+    const result = await prisma.account.findFirst({
+      where: {
+        id: Number(id),
+        OR: [
+          {
+            company: {
+              id: companyId,
+            },
+          },
+          {
+            company: {
+              id: PUBLIC_COMPANY_ID,
+            },
+          },
+        ]
+      }
+    });
+
+    return result;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
@@ -128,15 +158,34 @@ export async function createFakeAccountInPrisma(companyId: number) {
 
 export async function createLineItemInPrisma(lineItem: ILineItem, voucherId: number, companyId: number) {
   try {
-    let accountId = await findFirstAccountInPrisma(lineItem.account);
+    // Deprecated: (20240527 - Murky) LineItem has accountId
+    // let accountId = await findFirstAccountInPrisma(lineItem.account);
 
-    // Deprecated: (20240527 - Murky) This is for demo purpose only
-    if (!accountId) {
-      accountId = await findFirstAccountInPrisma('其他費用');
-      if (!accountId) {
-        accountId = await createFakeAccountInPrisma(companyId);
-      }
+    // Deprecated: (20240527 - Murky) LineItem has accountId
+    // if (!accountId) {
+    //   accountId = await findFirstAccountInPrisma('其他費用');
+    //   if (!accountId) {
+    //     accountId = await createFakeAccountInPrisma(companyId);
+    //   }
+    // }
+
+    // Deprecated: (20240619 - Murky) LineItem has accountId, no need to check
+    if (!lineItem.accountId) {
+      // Deprecated: (20240527 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(`LineItem ${lineItem.account} does not have accountId`);
+      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
+
+    const accountBelongsToCompany = await findFirstAccountBelongsToCompanyInPrisma(String(lineItem.accountId), companyId);
+
+    if (!accountBelongsToCompany) {
+      // Deprecated: (20240527 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(`LineItem ${lineItem.account} does not belong to company ${companyId}`);
+      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+    }
+
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);
     const result = await prisma.lineItem.create({
@@ -146,7 +195,7 @@ export async function createLineItemInPrisma(lineItem: ILineItem, voucherId: num
         debit: lineItem.debit,
         account: {
           connect: {
-            id: accountId,
+            id: lineItem.accountId,
           },
         },
         voucher: {
@@ -198,6 +247,9 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
 
     return `${localTodayStrip}${newVoucherNo}`;
   } catch (error) {
+    // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -228,6 +280,9 @@ export async function createVoucherInPrisma(
 
     return voucherData;
   } catch (error) {
+    // Info: （ 20240522 - Murky）I want to log the error message
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
