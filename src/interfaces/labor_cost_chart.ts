@@ -4,6 +4,7 @@ export interface ILaborCostChartData {
   date: number;
   categories: string[];
   series: number[];
+  empty: boolean;
 }
 
 export function generateRandomLaborCostData(items: number): ILaborCostChartData {
@@ -42,6 +43,7 @@ export function generateRandomLaborCostData(items: number): ILaborCostChartData 
     date,
     categories,
     series,
+    empty: false,
   };
 }
 
