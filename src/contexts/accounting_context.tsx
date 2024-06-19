@@ -1,7 +1,10 @@
 import { ProgressStatus } from '@/constants/account';
+import { APIName } from '@/constants/api_connection';
+import { IAccount } from '@/interfaces/accounting_account';
 import { IJournal } from '@/interfaces/journal';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
+import APIHandler from '@/lib/utils/api_handler';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 interface IAccountingProvider {
@@ -21,6 +24,7 @@ export enum VoucherString {
 export interface IAccountingVoucher {
   id: number;
   accountTitle: string;
+  accountId: number;
   particulars: string;
   debit: number | null;
   credit: number | null;
@@ -28,6 +32,7 @@ export interface IAccountingVoucher {
 
 const defaultAccountingVoucher: IAccountingVoucher = {
   id: 0,
+  accountId: 0,
   accountTitle: '',
   particulars: '',
   debit: 0,
@@ -39,6 +44,13 @@ interface IAccountingContext {
   // addTempJournal: (journal: IJournal) => void;
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
+  OCRList: IUnprocessedOCR[];
+  OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
+  updateOCRListHandler: (companyId: number, update: boolean) => void;
+  accountList: IAccount[];
+  getAIStatus: (companyId: number, askAIId: string) => void;
+  AIStatus: ProgressStatus;
+  isAskAILoading: boolean;
 
   selectedOCR: IUnprocessedOCR | undefined;
   selectOCRHandler: (journal: IUnprocessedOCR | undefined) => void;
@@ -74,6 +86,13 @@ const initialAccountingContext: IAccountingContext = {
   // duplicateTempJournal: () => {},
   // removeTempJournal: () => {},
 
+  OCRList: [],
+  OCRListStatus: { listSuccess: undefined, listCode: undefined },
+  updateOCRListHandler: () => {},
+  accountList: [],
+  getAIStatus: () => {},
+  AIStatus: ProgressStatus.IN_PROGRESS,
+  isAskAILoading: false,
   selectedOCR: undefined,
   selectOCRHandler: () => {},
   selectedJournal: undefined,
@@ -100,6 +119,34 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
+  const { data: accountList } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {});
+  const {
+    trigger: getAIStatus,
+    data: status,
+    success: statusSuccess,
+    error: statusError,
+  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
+  const [askAIParams, setAskAIParams] = useState<
+    { companyId: number; askAIId: string } | undefined
+  >(undefined);
+  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
+
+  const {
+    trigger: listUnprocessedOCR,
+    data: unprocessOCRs,
+    error: listError,
+    success: listSuccess,
+    code: listCode,
+  } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {}, false, false);
+  const [isUpdateOCRList, setIsUpdateOCRList] = useState<boolean>(false);
+  const [OCRList, setOCRList] = useState<IUnprocessedOCR[]>([]);
+  const [OCRListStatus, setOCRLisStatus] = useState<{
+    listSuccess: boolean | undefined;
+    listCode: string | undefined;
+  }>({
+    listSuccess: undefined,
+    listCode: undefined,
+  });
   const [selectedOCR, setSelectedOCR] = useState<IUnprocessedOCR | undefined>(undefined);
   const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
@@ -107,11 +154,75 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
   const [voucherPreview, setVoucherPreview] = useState<IVoucher | undefined>(undefined);
 
+  const [AIStatus, setAIStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
     defaultAccountingVoucher,
   ]);
   const [totalDebit, setTotalDebit] = useState<number>(0); // Info: (20240430 - Julian) 計算總借方
   const [totalCredit, setTotalCredit] = useState<number>(0); // Info: (20240430 - Julian) 計算總貸方
+
+  const getAIStatusHandler = (companyId: number, askAIId: string) => {
+    setAskAIParams({ companyId, askAIId });
+    // Info: (20240528 - Julian) Reset AI status
+    setIsAskAILoading(true);
+    getAIStatus({
+      params: {
+        companyId,
+        resultId: askAIId,
+      },
+    });
+  };
+
+  const updateOCRListHandler = (companyId: number, update: boolean) => {
+    setIsUpdateOCRList(update);
+    listUnprocessedOCR({
+      params: {
+        companyId,
+      },
+    });
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (isUpdateOCRList) {
+      interval = setInterval(() => {
+        listUnprocessedOCR();
+      }, 2000);
+      if (OCRListStatus.listSuccess !== listSuccess || OCRListStatus.listCode !== listCode) {
+        setOCRLisStatus({
+          listSuccess,
+          listCode,
+        });
+      }
+      if (listSuccess && unprocessOCRs) {
+        setOCRList(unprocessOCRs);
+      }
+      if (listSuccess === false) {
+        setIsUpdateOCRList(false);
+      }
+    }
+    return () => clearInterval(interval);
+  }, [listError, listSuccess, listCode, unprocessOCRs]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (askAIParams && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+      interval = setInterval(() => {
+        getAIStatus({
+          params: {
+            companyId: askAIParams.companyId,
+            resultId: askAIParams.askAIId,
+          },
+        });
+      }, 2000);
+    }
+    if ((statusSuccess && status === ProgressStatus.SUCCESS) || statusError) {
+      setAIStatus(status ?? ProgressStatus.LLM_ERROR);
+      setAskAIParams(undefined);
+      setIsAskAILoading(false);
+    }
+    return () => clearInterval(interval);
+  }, [askAIParams, status, statusSuccess, statusError]);
 
   // Info: (20240430 - Julian) 新增日記帳列
   const addVoucherRowHandler = useCallback(
@@ -126,21 +237,21 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         case VoucherRowType.DEBIT:
           setAccountingVoucher((prev) => [
             ...prev,
-            { id: newId, accountTitle: '', particulars: '', debit: 1, credit: 0 },
+            { id: newId, accountId: 0, accountTitle: '', particulars: '', debit: 1, credit: 0 },
           ]);
           break;
         // Info: (20240530 - Julian) 新增貸方列
         case VoucherRowType.CREDIT:
           setAccountingVoucher((prev) => [
             ...prev,
-            { id: newId, accountTitle: '', particulars: '', debit: 0, credit: 1 },
+            { id: newId, accountId: 0, accountTitle: '', particulars: '', debit: 0, credit: 1 },
           ]);
           break;
         // Info: (20240530 - Julian) 新增空白列
         default:
           setAccountingVoucher((prev) => [
             ...prev,
-            { id: newId, accountTitle: '', particulars: '', debit: 0, credit: 0 },
+            { id: newId, accountId: 0, accountTitle: '', particulars: '', debit: 0, credit: 0 },
           ]);
           break;
       }
@@ -284,6 +395,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const value = useMemo(
     () => ({
+      OCRList,
+      OCRListStatus,
+      updateOCRListHandler,
+      isAskAILoading,
+      accountList: accountList ?? [],
+      getAIStatus: getAIStatusHandler,
+      AIStatus,
       accountingVoucher,
       addVoucherRowHandler,
       deleteVoucherRowHandler,
@@ -306,6 +424,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectJournalHandler,
     }),
     [
+      OCRList,
+      OCRListStatus,
+      isAskAILoading,
+      AIStatus,
+      accountList,
       accountingVoucher,
       addVoucherRowHandler,
       deleteVoucherRowHandler,

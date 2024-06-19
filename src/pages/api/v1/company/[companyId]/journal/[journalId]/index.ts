@@ -57,6 +57,7 @@ type IJournalResponseFromPrisma = {
       debit: boolean;
       description: string;
       account: {
+        id: number;
         name: string;
       };
     }[];
@@ -68,7 +69,7 @@ async function getJournal(journalId: number, companyId: number) {
     const journal = await prisma.journal.findUnique({
       where: {
         id: journalId,
-        companyId
+        companyId,
       },
       select: {
         id: true,
@@ -117,6 +118,7 @@ async function getJournal(journalId: number, companyId: number) {
                 description: true,
                 account: {
                   select: {
+                    id: true,
                     name: true,
                   },
                 },
@@ -156,56 +158,61 @@ function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
   const { contractId } = journalData;
   const imageUrl = journalData.invoice?.imageUrl || null;
 
-  const invoice: IInvoice = journalData.invoice ? {
-    journalId: journalData.id,
-    date: journalData.invoice.date,
-    eventType: convertStringToEventType(journalData.invoice.eventType),
-    paymentReason: journalData.invoice.paymentReason,
-    description: journalData.invoice.description,
-    vendorOrSupplier: journalData.invoice.vendorOrSupplier,
-    projectId,
-    project: projectName || null,
-    contractId,
-    contract: contractName || null,
-    payment: {
-      isRevenue: journalData.invoice.payment.isRevenue,
-      price: journalData.invoice.payment.price,
-      hasTax: journalData.invoice.payment.hasTax,
-      taxPercentage: journalData.invoice.payment.taxPercentage,
-      hasFee: journalData.invoice.payment.hasFee,
-      fee: journalData.invoice.payment.fee,
-      method: journalData.invoice.payment.method,
-      period: convertStringToPaymentPeriodType(journalData.invoice.payment.period),
-      installmentPeriod: journalData.invoice.payment.installmentPeriod,
-      alreadyPaid: journalData.invoice.payment.alreadyPaid,
-      status: convertStringToPaymentStatusType(journalData.invoice.payment.status),
-      progress: journalData.invoice.payment.progress,
-    },
-  } : {} as IInvoice;
+  const invoice: IInvoice = journalData.invoice
+    ? {
+        journalId: journalData.id,
+        date: journalData.invoice.date,
+        eventType: convertStringToEventType(journalData.invoice.eventType),
+        paymentReason: journalData.invoice.paymentReason,
+        description: journalData.invoice.description,
+        vendorOrSupplier: journalData.invoice.vendorOrSupplier,
+        projectId,
+        project: projectName || null,
+        contractId,
+        contract: contractName || null,
+        payment: {
+          isRevenue: journalData.invoice.payment.isRevenue,
+          price: journalData.invoice.payment.price,
+          hasTax: journalData.invoice.payment.hasTax,
+          taxPercentage: journalData.invoice.payment.taxPercentage,
+          hasFee: journalData.invoice.payment.hasFee,
+          fee: journalData.invoice.payment.fee,
+          method: journalData.invoice.payment.method,
+          period: convertStringToPaymentPeriodType(journalData.invoice.payment.period),
+          installmentPeriod: journalData.invoice.payment.installmentPeriod,
+          alreadyPaid: journalData.invoice.payment.alreadyPaid,
+          status: convertStringToPaymentStatusType(journalData.invoice.payment.status),
+          progress: journalData.invoice.payment.progress,
+        },
+      }
+    : ({} as IInvoice);
 
-  const voucher: IVoucherDataForSavingToDB = journalData.voucher ? {
-    journalId: journalData.id,
-    lineItems: journalData.voucher.lineItems.map((lineItem) => {
-      return {
-        lineItemIndex: lineItem.id.toString(),
-        amount: lineItem.amount,
-        debit: lineItem.debit,
-        account: lineItem.account.name,
-        description: lineItem.description,
-      };
-    }),
-  } : {} as IVoucherDataForSavingToDB;
+  const voucher: IVoucherDataForSavingToDB = journalData.voucher
+    ? {
+        journalId: journalData.id,
+        lineItems: journalData.voucher.lineItems.map((lineItem) => {
+          return {
+            lineItemIndex: lineItem.id.toString(),
+            amount: lineItem.amount,
+            debit: lineItem.debit,
+            account: lineItem.account.name,
+            description: lineItem.description,
+            accountId: lineItem.account.id,
+          };
+        }),
+      }
+    : ({} as IVoucherDataForSavingToDB);
 
   return {
     id: journalData.id,
-    tokenContract: journalData.tokenContract || "",
-    tokenId: journalData.tokenId || "",
-    aichResultId: journalData.aichResultId || "",
+    tokenContract: journalData.tokenContract || '',
+    tokenId: journalData.tokenId || '',
+    aichResultId: journalData.aichResultId || '',
     projectId: projectId || 0,
     contractId: contractId || 0,
-    imageUrl: imageUrl || "",
+    imageUrl: imageUrl || '',
     invoice,
-    voucher
+    voucher,
   };
 }
 
@@ -216,11 +223,7 @@ function isJournalIdValid(journalId: string | string[] | undefined): journalId i
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isCompanyIdValid(companyId: any): companyId is number {
-  if (
-    Array.isArray(companyId) ||
-    !companyId ||
-    typeof companyId !== 'number'
-  ) {
+  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
     return false;
   }
   return true;

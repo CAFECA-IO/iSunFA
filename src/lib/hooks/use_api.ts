@@ -67,16 +67,9 @@ export async function fetchData<Data>(
       ...(options.header || {}),
     };
   }
-  // Deprecated: debug log (20240510 - Tzuahan)
-  // eslint-disable-next-line no-console
-  console.log('fetchData, fetchOptions:', fetchOptions);
 
   const response = await fetch(path, fetchOptions);
   const result = (await response.json()) as IResponseData<Data>;
-
-  // Deprecated: debug log (20240523 - Tzuahan)
-  // eslint-disable-next-line no-console
-  console.log(`fetchData response: `, response, `result: `, result);
 
   return result;
 }

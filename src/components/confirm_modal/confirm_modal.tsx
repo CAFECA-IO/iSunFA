@@ -40,12 +40,15 @@ const ConfirmModal = ({
 }: IConfirmModalProps) => {
   const { selectedCompany } = useUserCtx();
   const {
+    getAIStatus,
+    AIStatus,
+    isAskAILoading,
     accountingVoucher,
     addVoucherRowHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
-    totalCredit,
-    totalDebit,
+    // totalCredit,
+    // totalDebit,
     selectJournalHandler,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
@@ -78,14 +81,6 @@ const ConfirmModal = ({
   }>(APIName.VOUCHER_CREATE, {}, false, false);
 
   const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    error: statusError,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
-
-  const {
     trigger: getAIResult,
     data: AIResult,
     success: AIResultSuccess,
@@ -94,11 +89,9 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
-  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
-
   const [eventType, setEventType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // const [reason, setReason] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -126,51 +119,30 @@ const ConfirmModal = ({
   useEffect(() => {
     if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     clearVoucherHandler();
-    // Info: (20240528 - Julian) Reset AI status
-    setIsAskAILoading(true);
+
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatus({
-      params: {
-        companyId,
-        resultId: askAIId,
-      },
-    });
+    getAIStatus(companyId, askAIId!);
   }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (askAIId && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: askAIId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess && status === ProgressStatus.SUCCESS) {
+    if (isAskAILoading === false && AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
           companyId,
           resultId: askAIId,
         },
       });
-      setIsAskAILoading(false);
     }
-    if (statusError && statusCode) {
-      setIsAskAILoading(false);
-    }
-    return () => clearInterval(interval);
-  }, [askAIId, statusSuccess, status, statusError, statusCode]);
+    return () => {};
+  }, [AIStatus, isAskAILoading]);
 
   useEffect(() => {
     if (journal && getJournalSuccess) {
       const { invoice, voucher } = journal;
       if (invoice) {
         setDateTimestamp(invoice.date);
-        // setReason(invoice.paymentReason);
+        setReason(invoice.paymentReason);
         setEventType(invoice.eventType);
         setCompanyName(invoice.vendorOrSupplier);
         setDescription(invoice.description);
@@ -258,6 +230,7 @@ const ConfirmModal = ({
       const creditAmount = voucher.credit ?? 0;
 
       return {
+        accountId: voucher.accountId,
         lineItemIndex: `${voucher.id}`,
         account: voucher.accountTitle,
         description: voucher.particulars,
@@ -274,7 +247,6 @@ const ConfirmModal = ({
       // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
       modalVisibilityHandler();
       clearVoucherHandler();
-      setIsAskAILoading(true);
       selectJournalHandler(undefined);
 
       // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
@@ -310,7 +282,7 @@ const ConfirmModal = ({
     }
   }, [createSuccess, createCode]);
 
-  const disableConfirmButton = totalCredit !== totalDebit;
+  const disableConfirmButton = false; // ToDo: (20240619 - tzuhan) totalCredit !== totalDebit;
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
 
@@ -319,7 +291,7 @@ const ConfirmModal = ({
   const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
     (
       <div className="flex flex-col items-center gap-x-12px md:flex-row">
-        <p>reason</p>
+        <p>{reason}</p>
         <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
           <LuTag size={14} />
           Printer
@@ -461,20 +433,21 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayedHint = isAskAILoading ? (
-    <p className="text-slider-surface-bar">
-      AI technology processing
-      <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-      <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-      <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
-    </p>
-  ) : hasAIResult ? (
-    <p className="text-successGreen">AI Analysis Complete</p>
-  ) : AIResultSuccess === false && AIResultCode ? (
-    <p className="text-text-neutral-secondary">AI Detection Error, error code: {AIResultCode}</p>
-  ) : (
-    <p className="text-slider-surface-bar">There are no recommendations from AI</p>
-  );
+  const displayedHint =
+    AIResultSuccess === undefined ? (
+      <p className="text-slider-surface-bar">
+        AI technology processing
+        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+      </p>
+    ) : hasAIResult ? (
+      <p className="text-successGreen">AI Analysis Complete</p>
+    ) : AIResultSuccess === false && AIResultCode ? (
+      <p className="text-text-neutral-secondary">AI Detection Error, error code: {AIResultCode}</p>
+    ) : (
+      <p className="text-slider-surface-bar">There are no recommendations from AI</p>
+    );
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
