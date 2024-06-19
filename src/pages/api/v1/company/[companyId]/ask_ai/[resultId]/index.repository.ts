@@ -6,11 +6,12 @@ export async function fuzzySearchAccountByName(name: string) {
   let account: Account | null = null;
 
   try {
-    account = await prisma.$queryRaw`
-      SELECT * FROM account
+    const accounts: Account[] = await prisma.$queryRaw`
+      SELECT * FROM public."Account"
       ORDER BY SIMILARITY(name, ${name}) DESC
       LIMIT 1;
     `;
+    [account] = accounts;
   } catch (error) {
     // Deprecated: （ 20240619 - Murky）Debugging purpose
     // eslint-disable-next-line no-console

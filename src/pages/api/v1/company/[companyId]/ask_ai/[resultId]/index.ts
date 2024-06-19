@@ -69,7 +69,7 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
 
       const resultAccount = {
         lineItemIndex,
-        account,
+        account: accountInDB?.name || account,
         description,
         debit,
         amount,
@@ -88,44 +88,56 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
   return lineItems;
 }
 
+export async function handleGetRequest(req: NextApiRequest) {
+  const { resultId, aiApi = "vouchers" } = req.query;
+
+  // Info Murky (20240416): Check if resultId is string
+  if (!isParamString(resultId) || !isParamString(aiApi)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const fetchResult = fetchResultFromAICH(aiApi, resultId);
+
+  const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
+    lineItems: ILineItemFromAICH[]
+  };
+
+  const lineItems = await formatLineItemsFromAICH(rawLineItems);
+  const voucher = {
+    lineItems,
+  } as IVoucherDataForSavingToDB;
+
+  if (!isIVoucherDataForSavingToDB(voucher)) {
+    // Deprecated: （ 20240522 - Murky）Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('Voucher is not valid');
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
+
+  const { httpCode, result } = formatApiResponse<ApiResponseType>(
+    STATUS_MESSAGE.SUCCESS_GET,
+    voucher
+  );
+
+  return { httpCode, result };
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
   try {
     if (req.method === 'GET') {
-      const { resultId, aiApi = "vouchers" } = req.query;
-
-      // Info Murky (20240416): Check if resultId is string
-      if (!isParamString(resultId) || !isParamString(aiApi)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-
-      const fetchResult = fetchResultFromAICH(aiApi, resultId);
-
-      const rawLineItems: ILineItemFromAICH[] = (await getPayloadFromResponseJSON(fetchResult)) as ILineItemFromAICH[];
-      const lineItems = await formatLineItemsFromAICH(rawLineItems);
-      const voucher = {
-        lineItems,
-      } as IVoucherDataForSavingToDB;
-
-      if (!isIVoucherDataForSavingToDB(voucher)) {
-        // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('Voucher is not valid');
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-      }
-
-      const { httpCode, result } = formatApiResponse<ApiResponseType>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        voucher
-      );
+      const { httpCode, result } = await handleGetRequest(req);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
+    // Deprecated: （ 20240522 - Murky）Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     const { httpCode, result } = formatApiResponse<ApiResponseType>(error.message, {} as ApiResponseType);
     res.status(httpCode).json(result);
   }
