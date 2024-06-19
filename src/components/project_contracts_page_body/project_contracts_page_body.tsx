@@ -7,6 +7,8 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
+import { dummyContracts } from '@/interfaces/contract';
+import ContractCard from '../contract_card/contract_card';
 
 enum ContractStatus {
   VALID = 'Valid',
@@ -104,10 +106,18 @@ const ProjectContractsPageBody = () => {
     </div>
   );
 
+  const displayContracts = (
+    <div className="flex w-full flex-col gap-20px">
+      {dummyContracts.map((contract) => (
+        <ContractCard key={contract.contractId} contract={contract} />
+      ))}
+    </div>
+  );
+
   return (
-    <div className="flex flex-1 flex-col items-center">
+    <div className="flex flex-1 flex-col items-center gap-y-24px">
       {/* Info: (20240618 - Julian) Filter */}
-      <div className="flex w-full flex-col items-center gap-x-24px gap-y-40px md:h-80px md:flex-row md:items-end">
+      <div className="flex w-full items-end gap-x-24px gap-y-40px">
         {/* Info: (20240618 - Julian) Status filter */}
         <div className="flex flex-col items-start gap-y-8px">
           <p className="font-semibold text-input-text-primary">Status</p>
@@ -171,6 +181,8 @@ const ProjectContractsPageBody = () => {
           </Button>
         </div>
       </div>
+      {/* Info: (2024619 - Julian) Contracts */}
+      {displayContracts}
     </div>
   );
 };
