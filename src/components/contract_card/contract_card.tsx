@@ -42,7 +42,7 @@ const ContractCard = ({ contract }: IContractCardProps) => {
 
   return (
     <div className="relative flex flex-col gap-26px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-40px py-24px">
-      <div className="grid grid-cols-3 items-center">
+      <div className="grid grid-cols-1 items-center md:grid-cols-3">
         {/* Info: (20240619 - Julian) Contract name */}
         <div className="flex items-center gap-x-8px">
           <p className="text-2xl font-semibold text-text-brand-secondary-lv2">{contractName}</p>
