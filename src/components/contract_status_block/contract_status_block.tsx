@@ -1,7 +1,7 @@
 import { ContractStatus } from '@/constants/contract';
 import { IContract } from '@/interfaces/contract';
 import { Layout } from '@/constants/layout';
-import ContractCard from '../contract_card/contract_card';
+import ContractCard from '@/components/contract_card/contract_card';
 
 interface IContractStatusBlockProps {
   status: ContractStatus;

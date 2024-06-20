@@ -11,7 +11,7 @@ import { dummyContracts } from '@/interfaces/contract';
 import { ContractStatus } from '@/constants/contract';
 import ProjectContractList from '@/components/project_contract_list/project_contract_list';
 import { RxCross2 } from 'react-icons/rx';
-import ContractStatusBlock from '../contract_status_block/contract_status_block';
+import ContractStatusBlock from '@/components/contract_status_block/contract_status_block';
 
 const ProjectContractsPageBody = () => {
   // Info: (20240618 - Julian) add 'ALL' to the list

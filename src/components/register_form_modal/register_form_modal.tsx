@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
@@ -19,6 +19,8 @@ const RegisterFormModal = ({
   const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [registerValid, setRegisterValid] = useState(true);
+
   const registerClickHandler = async () => {
     const name = inputRef.current?.value || DEFAULT_DISPLAYED_USER_NAME;
     signUp({ username: name, invitation: data.invitation });
@@ -28,8 +30,13 @@ const RegisterFormModal = ({
     modalVisibilityHandler();
   };
 
+  // Info: (20240620 - Julian) 輸入中文的過程中，暫停標籤的添加
+  const handleCompositionStart = () => setRegisterValid(false);
+  // Info: (20240620 - Julian) 輸入完成後，恢復標籤的添加
+  const handleCompositionEnd = () => setRegisterValid(true);
+  // Info: (20240620 - Julian) when value is not empty, press enter to register
   const onEnterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && registerValid) {
       registerClickHandler();
     }
   };
@@ -102,8 +109,9 @@ const RegisterFormModal = ({
                   type="text"
                   className="mx-2 w-full bg-white px-1 py-2.5 text-base text-navyBlue2 placeholder:text-lightGray4 focus:outline-none"
                   placeholder="Username"
-                  // Info: (20240620 - Julian) when value is not empty, press enter to register
                   onKeyDown={onEnterPress}
+                  onCompositionStart={handleCompositionStart}
+                  onCompositionEnd={handleCompositionEnd}
                 />
               </div>
             </div>
