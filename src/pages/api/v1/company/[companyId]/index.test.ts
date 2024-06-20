@@ -119,15 +119,6 @@ afterEach(async () => {
   } catch (error) {
     /* empty */
   }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.role.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
 });
 
 describe('companyId handler', () => {

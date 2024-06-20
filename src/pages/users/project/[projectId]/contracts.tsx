@@ -37,7 +37,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
           <ProjectSidebar projectId={projectId} />
           <div className="flex min-h-screen bg-gray-100">
             <div className="mt-120px flex-1 md:ml-80px">
-              <div className="flex flex-col px-60px">
+              <div className="flex flex-col px-16px md:px-60px">
                 <div className="flex w-full items-center justify-between">
                   {/* Info: (2024618 - Julian) Title */}
                   <div className="flex items-center gap-24px">
@@ -53,10 +53,23 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                       {projectName} - Contracts
                     </h1>
                   </div>
-                  {/* Info: (20240618 - Julian) stage selection (desktop) */}
-                  <Button type="button" variant="tertiary">
+                  {/* Info: (20240618 - Julian) Add new contract button (desktop) */}
+
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    className="hidden items-center gap-4px px-4 py-8px md:flex"
+                  >
                     <FiPlus size={24} />
-                    <p>Add new contract</p>
+                    Add new contract
+                  </Button>
+                  {/* Info: (20240619 - Julian) Add new contract button (mobile) */}
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    className="flex h-46px w-46px items-center justify-center p-0 md:hidden"
+                  >
+                    <FiPlus size={24} />
                   </Button>
                 </div>
                 {/* Info: (20240618 - Julian) Divider */}
