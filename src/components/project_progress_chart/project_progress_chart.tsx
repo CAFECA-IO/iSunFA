@@ -272,7 +272,7 @@ const ProjectProgressChart = () => {
     <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
       <ColumnChart data={data} />
       <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-        <p className="text-text-neutral-mute text-xl font-bold">No Data</p>
+        <p className="text-xl font-bold text-text-neutral-mute">No Data</p>
       </div>
     </div>
   ) : (

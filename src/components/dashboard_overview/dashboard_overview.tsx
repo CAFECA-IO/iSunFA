@@ -119,7 +119,7 @@ const DashboardOverview = () => {
                   ? 'text-4xl text-text-state-success-solid lg:text-5xl lg:leading-52px'
                   : dashboardOverview.profitChange < 0
                     ? 'text-4xl text-text-state-error-solid lg:text-5xl lg:leading-52px'
-                    : 'text-text-neutral-mute text-base lg:text-xl'
+                    : 'text-base text-text-neutral-mute lg:text-xl'
               )}
             >
               {displayedProfitChangeRate}
@@ -172,7 +172,7 @@ const DashboardOverview = () => {
                   ? 'text-4xl text-text-state-success-solid lg:text-5xl lg:leading-52px'
                   : +dashboardOverview.topProjectRoi < 0
                     ? 'text-end text-4xl text-text-state-error-solid lg:text-5xl lg:leading-52px'
-                    : 'text-text-neutral-mute text-base lg:text-xl'
+                    : 'text-base text-text-neutral-mute lg:text-xl'
               )}
             >
               <span className="">{displayedTopProjectRoi}</span>
@@ -215,7 +215,7 @@ const DashboardOverview = () => {
               'mb-0 mr-2 space-y-0 self-center text-center text-4xl font-semibold text-text-neutral-solid-dark md:mr-0 lg:mb-3 lg:leading-52px',
               dashboardOverview.preLaunchProject
                 ? 'text-4xl font-semibold text-text-neutral-solid-dark lg:text-5xl lg:leading-52px'
-                : 'text-text-neutral-mute text-base lg:text-xl'
+                : 'text-base text-text-neutral-mute lg:text-xl'
             )}
           >
             {displayedPreLaunchProjects}
