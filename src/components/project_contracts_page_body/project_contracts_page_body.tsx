@@ -140,7 +140,7 @@ const ProjectContractsPageBody = () => {
           <div
             ref={sortRef}
             onClick={sortClickHandler}
-            className={`relative flex w-200px items-center justify-between rounded-xs border border-input-stroke-input 
+            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input 
             ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
             bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
@@ -151,7 +151,7 @@ const ProjectContractsPageBody = () => {
           </div>
         </div>
         {/* Info: (20240618 - Julian) Date picker */}
-        <div className="w-280px">
+        <div className="w-200px">
           <DatePicker
             type={DatePickerType.TEXT_PERIOD}
             period={filterPeriod}
@@ -159,7 +159,7 @@ const ProjectContractsPageBody = () => {
           />
         </div>
         {/* Info: (20240618 - Julian) Search bar */}
-        <div className="flex w-full flex-1 items-center rounded-xs border border-input-stroke-input bg-input-surface-input-background px-16px text-icon-surface-single-color-primary">
+        <div className="flex flex-1 items-center rounded-xs border border-input-stroke-input bg-input-surface-input-background px-16px text-icon-surface-single-color-primary">
           <input
             id="project-search-bar"
             type="text"

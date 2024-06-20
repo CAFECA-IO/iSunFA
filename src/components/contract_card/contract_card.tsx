@@ -41,11 +41,13 @@ const ContractCard = ({ contract }: IContractCardProps) => {
   const statusStyle = status === 'Expired' ? 'bg-badge-stroke-error' : 'bg-surface-brand-secondary';
 
   return (
-    <div className="relative flex flex-col gap-26px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-40px py-24px">
-      <div className="grid grid-cols-1 items-center md:grid-cols-3">
+    <div className="relative flex flex-col items-stretch gap-26px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-16px py-24px md:px-40px">
+      <div className="grid grid-cols-1 items-center justify-items-center gap-y-8px md:grid-cols-3 md:justify-items-start">
         {/* Info: (20240619 - Julian) Contract name */}
         <div className="flex items-center gap-x-8px">
-          <p className="text-2xl font-semibold text-text-brand-secondary-lv2">{contractName}</p>
+          <p className="text-lg font-semibold text-text-brand-secondary-lv2 md:text-2xl">
+            {contractName}
+          </p>
           {/* Info: (20240619 - Julian) Project name */}
           <div className="flex items-center gap-4px rounded-xs bg-badge-surface-soft-primary px-6px py-4px">
             <div className="flex h-14px w-14px items-center justify-center rounded-full bg-avatar-surface-background-indigo text-xxs text-avatar-text-in-dark-background">
@@ -83,7 +85,7 @@ const ContractCard = ({ contract }: IContractCardProps) => {
 
       {/* Info: (2024619 - Julian) Status */}
       <div
-        className={`absolute -right-4 rounded-xs py-4px pl-12px pr-28px text-xs text-badge-text-invert ${statusStyle}`}
+        className={`absolute -right-4 hidden rounded-xs py-4px pl-12px pr-28px text-xs text-badge-text-invert md:block ${statusStyle}`}
       >
         {status}
       </div>
