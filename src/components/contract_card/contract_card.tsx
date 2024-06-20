@@ -1,9 +1,33 @@
 import { IContract } from '@/interfaces/contract';
 import { timestampToString } from '@/lib/utils/common';
+import { ContractStatus } from '@/constants/contract';
 
 interface IContractCardProps {
   contract: IContract;
 }
+
+const StatusMainColorMap = {
+  [ContractStatus.VALID]: {
+    mainBg: 'bg-surface-brand-secondary',
+    text: 'text-text-neutral-primary',
+    progressBar: 'bg-surface-brand-secondary-moderate',
+  },
+  [ContractStatus.EXPIRED]: {
+    mainBg: 'bg-badge-stroke-error',
+    text: 'text-text-state-error',
+    progressBar: 'bg-surface-state-error-soft',
+  },
+  [ContractStatus.COMPLETED]: {
+    mainBg: 'bg-surface-state-success',
+    text: 'text-text-state-success-solid',
+    progressBar: 'bg-surface-state-success-soft',
+  },
+  [ContractStatus.IN_WARRANTY]: {
+    mainBg: 'bg-surface-support-strong-taro',
+    text: 'text-text-support-taro',
+    progressBar: 'bg-surface-support-strong-taro',
+  },
+};
 
 const ContractCard = ({ contract }: IContractCardProps) => {
   const { contractName, projectName, period, signatory, progress, payment, status } = contract;
@@ -33,12 +57,9 @@ const ContractCard = ({ contract }: IContractCardProps) => {
   const paymentPercentage = (alreadyPaid / price) * 100;
 
   const progressStr = `Progress: ${progress}%`;
+  const statusStr = status === ContractStatus.VALID ? 'In Process' : status;
 
-  const progressBarStyle =
-    status === 'Expired' ? 'bg-surface-state-error-soft' : 'bg-surface-brand-secondary-moderate';
-  const strStyle = status === 'Expired' ? 'text-text-state-error' : 'text-text-neutral-primary';
-
-  const statusStyle = status === 'Expired' ? 'bg-badge-stroke-error' : 'bg-surface-brand-secondary';
+  const statusMainColor = StatusMainColorMap[status as ContractStatus];
 
   return (
     <div className="relative flex flex-col items-stretch gap-26px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-16px py-24px md:px-40px">
@@ -68,26 +89,30 @@ const ContractCard = ({ contract }: IContractCardProps) => {
       <div className="flex flex-col gap-y-12px">
         <div className="relative flex h-20px w-full items-center overflow-hidden rounded-xs bg-surface-neutral-mute">
           <div
-            className={`absolute h-full ${progressBarStyle}`}
+            className={`absolute h-full ${statusMainColor.progressBar}`}
             style={{ width: `${paymentPercentage}%` }}
           ></div>
-          <p className={`absolute w-full text-center text-xs ${strStyle}`}>{paymentStr}</p>
+          <p className={`absolute w-full text-center text-xs ${statusMainColor.text}`}>
+            {paymentStr}
+          </p>
         </div>
 
-        <div className="relative flex h-20px w-full items-center overflow-hidden rounded-xs bg-surface-neutral-mute">
+        <div className="relative flex h-20px w-full items-center justify-end overflow-hidden rounded-xs bg-surface-neutral-mute">
           <div
-            className={`absolute h-full ${progressBarStyle}`}
+            className={`absolute h-full ${statusMainColor.progressBar}`}
             style={{ width: `${progress}%` }}
           ></div>
-          <p className={`absolute w-full text-center text-xs ${strStyle}`}>{progressStr}</p>
+          <p className={`absolute w-full text-center text-xs ${statusMainColor.text}`}>
+            {progressStr}
+          </p>
         </div>
       </div>
 
       {/* Info: (2024619 - Julian) Status */}
       <div
-        className={`absolute -right-4 hidden rounded-xs py-4px pl-12px pr-28px text-xs text-badge-text-invert md:block ${statusStyle}`}
+        className={`absolute -right-4 hidden rounded-xs py-4px pl-12px pr-28px text-xs text-badge-text-invert md:block ${statusMainColor.mainBg}`}
       >
-        {status}
+        {statusStr}
       </div>
     </div>
   );

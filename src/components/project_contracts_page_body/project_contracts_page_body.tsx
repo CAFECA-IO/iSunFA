@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown, FaListUl } from 'react-icons/fa';
 import { FiGrid, FiSearch } from 'react-icons/fi';
 import { Layout } from '@/constants/layout';
@@ -8,14 +8,8 @@ import { default30DayPeriodInSec } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
 import { dummyContracts } from '@/interfaces/contract';
-import ContractCard from '@/components/contract_card/contract_card';
-
-enum ContractStatus {
-  VALID = 'Valid',
-  IN_WARRANTY = 'In Warranty',
-  EXPIRED = 'Expired',
-  COMPLETED = 'Completed',
-}
+import { ContractStatus } from '@/constants/contract';
+import ProjectContractList from '@/components/project_contract_list/project_contract_list';
 
 enum ContractSort {
   NEWEST = 'Newest',
@@ -23,15 +17,55 @@ enum ContractSort {
 }
 
 const ProjectContractsPageBody = () => {
-  // Info: (2024618 - Julian) add 'ALL' to the list
+  // Info: (20240618 - Julian) add 'ALL' to the list
   const statusList = ['All', ...Object.values(ContractStatus)];
 
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [filterStatus, setFilterStatus] = useState<string>(statusList[0]);
   const [sort, setSort] = useState<string>(ContractSort.NEWEST);
   const [filterPeriod, setFilterPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filteredContracts, setFilteredContracts] = useState(dummyContracts);
+
+  useEffect(() => {
+    const filtered = dummyContracts
+      .filter((contract) => {
+        const { contractName, projectName } = contract;
+        return (
+          contractName.toLowerCase().includes(search.toLowerCase()) ||
+          projectName.toLowerCase().includes(search.toLowerCase())
+        );
+      })
+      .filter((contract) => {
+        if (filterStatus === 'All') return true;
+        return contract.status === filterStatus;
+      })
+      .filter((contract) => {
+        const { contractDuration } = contract.period;
+        const contractDurationStart = parseInt(contractDuration.start, 10);
+        if (filterPeriod.startTimeStamp === 0 && filterPeriod.endTimeStamp === 0) return true;
+        return (
+          contractDurationStart >= filterPeriod.startTimeStamp &&
+          contractDurationStart <= filterPeriod.endTimeStamp
+        );
+      })
+      .sort((a, b) => {
+        if (sort === ContractSort.NEWEST) {
+          return (
+            parseInt(b.period.contractDuration.start, 10) -
+            parseInt(a.period.contractDuration.start, 10)
+          );
+        }
+        return (
+          parseInt(a.period.contractDuration.start, 10) -
+          parseInt(b.period.contractDuration.start, 10)
+        );
+      });
+    setFilteredContracts(filtered);
+  }, [search, filterStatus, filterPeriod, sort]);
+
+  const totalPages = Math.ceil(dummyContracts.length / 10); // ToDo: (20240620 - Julian) Replace with actual data
 
   const {
     targetRef: statusRef,
@@ -106,13 +140,15 @@ const ProjectContractsPageBody = () => {
     </div>
   );
 
-  const displayContracts = (
-    <div className="flex w-full flex-col gap-20px">
-      {dummyContracts.map((contract) => (
-        <ContractCard key={contract.contractId} contract={contract} />
-      ))}
-    </div>
-  );
+  const displayContracts =
+    currentLayout === Layout.LIST ? (
+      <ProjectContractList
+        contracts={filteredContracts}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalPages={totalPages}
+      />
+    ) : null;
 
   return (
     <div className="flex flex-1 flex-col items-center gap-y-24px">
@@ -227,8 +263,14 @@ const ProjectContractsPageBody = () => {
           </Button>
         </div>
       </div>
-      {/* Info: (2024619 - Julian) Contracts */}
+      {/* Info: (20240619 - Julian) Contracts */}
       {displayContracts}
+      {/* Info: (20240620 - Julian) Filter Modal for mobile */}
+      <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-black/50 md:hidden">
+        <div className="w-250px rounded-sm bg-surface-neutral-surface-lv1 px-20px py-16px">
+          Filter
+        </div>
+      </div>
     </div>
   );
 };
