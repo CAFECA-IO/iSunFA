@@ -122,7 +122,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         setProject(invoice.project ?? 'None');
         setContract(invoice.contract ?? 'None');
       }
-      if (voucher) {
+      if (voucher && voucher.lineItems) {
         setLineItems(voucher.lineItems);
       }
     }

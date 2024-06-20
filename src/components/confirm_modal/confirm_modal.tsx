@@ -40,8 +40,13 @@ const ConfirmModal = ({
 }: IConfirmModalProps) => {
   const { selectedCompany } = useUserCtx();
   const {
+    getAIStatusHandler,
+    accountList,
+    AIStatus,
+    generateAccountTitle,
     accountingVoucher,
     addVoucherRowHandler,
+    changeVoucherAccountHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
     totalCredit,
@@ -67,23 +72,21 @@ const ConfirmModal = ({
     code: createCode,
   } = APIHandler<{
     id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
     lineItems: {
       id: number;
       amount: number;
       description: string;
       debit: boolean;
       accountId: number;
-      voucherId: number | null;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
     }[];
-  }>(APIName.VOUCHER_CREATE, {}, false, false);
-
-  const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    error: statusError,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
+  } | null>(APIName.VOUCHER_CREATE, {}, false, false);
 
   const {
     trigger: getAIResult,
@@ -94,11 +97,9 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
-  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
-
   const [eventType, setEventType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // const [reason, setReason] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -126,51 +127,30 @@ const ConfirmModal = ({
   useEffect(() => {
     if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     clearVoucherHandler();
-    // Info: (20240528 - Julian) Reset AI status
-    setIsAskAILoading(true);
+
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatus({
-      params: {
-        companyId,
-        resultId: askAIId,
-      },
-    });
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (askAIId && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: askAIId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess && status === ProgressStatus.SUCCESS) {
+    if (AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
           companyId,
           resultId: askAIId,
         },
       });
-      setIsAskAILoading(false);
     }
-    if (statusError && statusCode) {
-      setIsAskAILoading(false);
-    }
-    return () => clearInterval(interval);
-  }, [askAIId, statusSuccess, status, statusError, statusCode]);
+    return () => getAIStatusHandler(undefined, false);
+  }, [AIStatus]);
 
   useEffect(() => {
     if (journal && getJournalSuccess) {
       const { invoice, voucher } = journal;
       if (invoice) {
         setDateTimestamp(invoice.date);
-        // setReason(invoice.paymentReason);
+        setReason(invoice.paymentReason);
         setEventType(invoice.eventType);
         setCompanyName(invoice.vendorOrSupplier);
         setDescription(invoice.description);
@@ -214,6 +194,11 @@ const ConfirmModal = ({
     }
   };
 
+  const closeHandler = () => {
+    modalVisibilityHandler();
+    getAIStatusHandler(undefined, false);
+  };
+
   const addRowHandler = () => addVoucherRowHandler();
   const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
@@ -227,6 +212,8 @@ const ConfirmModal = ({
     // Info: (20240529 - Julian) 先加入空白列，再寫入資料
     AILineItems.forEach((lineItem, index) => {
       addRowHandler();
+      const account = accountList.find((acc) => acc.id === lineItem.accountId);
+      changeVoucherAccountHandler(index, account);
       changeVoucherAmountHandler(
         index,
         lineItem.amount,
@@ -246,25 +233,29 @@ const ConfirmModal = ({
       submitBtnStr: 'Confirm',
       submitBtnFunction: importVoucherHandler,
       backBtnStr: 'Cancel',
+      backBtnFunction: () => getAIStatusHandler(undefined, false),
     });
     messageModalVisibilityHandler();
   };
 
   useEffect(() => {
     // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
-    const newLineItems = accountingVoucher.map((voucher) => {
-      const isDebit = voucher.debit !== 0;
-      const debitAmount = voucher.debit ?? 0;
-      const creditAmount = voucher.credit ?? 0;
+    const newLineItems = accountingVoucher
+      .filter((voucher) => voucher.account)
+      .map((voucher) => {
+        const isDebit = voucher.debit !== 0;
+        const debitAmount = voucher.debit ?? 0;
+        const creditAmount = voucher.credit ?? 0;
 
-      return {
-        lineItemIndex: `${voucher.id}`,
-        account: voucher.accountTitle,
-        description: voucher.particulars,
-        debit: isDebit,
-        amount: isDebit ? debitAmount : creditAmount,
-      };
-    });
+        return {
+          accountId: voucher.account!.id,
+          lineItemIndex: `${voucher.id}`,
+          account: generateAccountTitle(voucher.account),
+          description: voucher.particulars,
+          debit: isDebit,
+          amount: isDebit ? debitAmount : creditAmount,
+        };
+      });
 
     setLineItems(newLineItems);
   }, [accountingVoucher]);
@@ -272,9 +263,8 @@ const ConfirmModal = ({
   useEffect(() => {
     if (createSuccess && result && journal) {
       // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
-      modalVisibilityHandler();
+      closeHandler();
       clearVoucherHandler();
-      setIsAskAILoading(true);
       selectJournalHandler(undefined);
 
       // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
@@ -319,7 +309,7 @@ const ConfirmModal = ({
   const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
     (
       <div className="flex flex-col items-center gap-x-12px md:flex-row">
-        <p>reason</p>
+        <p>{reason}</p>
         <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
           <LuTag size={14} />
           Printer
@@ -461,20 +451,21 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayedHint = isAskAILoading ? (
-    <p className="text-slider-surface-bar">
-      AI technology processing
-      <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-      <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-      <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
-    </p>
-  ) : hasAIResult ? (
-    <p className="text-successGreen">AI Analysis Complete</p>
-  ) : AIResultSuccess === false && AIResultCode ? (
-    <p className="text-text-neutral-secondary">AI Detection Error, error code: {AIResultCode}</p>
-  ) : (
-    <p className="text-slider-surface-bar">There are no recommendations from AI</p>
-  );
+  const displayedHint =
+    AIResultSuccess === undefined ? (
+      <p className="text-slider-surface-bar">
+        AI technology processing
+        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+      </p>
+    ) : hasAIResult ? (
+      <p className="text-successGreen">AI Analysis Complete</p>
+    ) : AIResultSuccess === false && AIResultCode ? (
+      <p className="text-text-neutral-secondary">AI Detection Error, error code: {AIResultCode}</p>
+    ) : (
+      <p className="text-slider-surface-bar">There are no recommendations from AI</p>
+    );
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -492,7 +483,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) close button */}
         <button
           type="button"
-          onClick={modalVisibilityHandler}
+          onClick={closeHandler}
           className="absolute right-20px top-20px text-lightGray5"
         >
           <RxCross2 size={20} />
@@ -620,7 +611,7 @@ const ConfirmModal = ({
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button
             type="button"
-            onClick={modalVisibilityHandler}
+            onClick={closeHandler}
             className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
           >
             Cancel

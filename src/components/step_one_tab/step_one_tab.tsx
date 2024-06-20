@@ -4,8 +4,6 @@ import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
@@ -17,54 +15,38 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 const StepOneTab = () => {
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const { selectOCRHandler } = useAccountingCtx();
-  const [load, setLoad] = useState(true);
+  const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler } = useAccountingCtx();
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUnprocessedOCR[]>([]);
+  const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const {
-    trigger: listUnprocessedOCR,
-    data: unprocessOCRs,
-    error: listError,
-    success: listSuccess,
-    code: listCode,
-  } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {
-    params: { companyId: selectedCompany?.id || '1' },
-  });
+  useEffect(() => {
+    updateOCRListHandler(selectedCompany!.id, true);
+
+    return () => updateOCRListHandler(selectedCompany!.id, false);
+  }, []);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (load) {
-      interval = setInterval(() => {
-        listUnprocessedOCR();
-      }, 2000);
-      if (listSuccess === false) {
-        toastHandler({
-          id: `listUnprocessedOCR-${listCode}`,
-          content: `Failed to list unprocessed OCRs: ${listCode}`,
-          type: ToastType.ERROR,
-          closeable: true,
-        });
-        setLoad(false);
-      }
+    if (OCRListStatus.listSuccess === false) {
+      toastHandler({
+        id: `listUnprocessedOCR-${OCRListStatus.listCode}`,
+        content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+    if (OCRListStatus.listSuccess) {
+      setFileList(OCRList);
     }
 
-    return () => clearInterval(interval);
-  }, [listError, listSuccess, listCode]);
+    return () => {};
+  }, [OCRList, OCRListStatus]);
 
   const handleOCRClick = (unprocessOCR: IUnprocessedOCR) => {
     if (unprocessOCR.status === ProgressStatus.SUCCESS) {
       selectOCRHandler(unprocessOCR);
     }
   };
-
-  useEffect(() => {
-    if (listSuccess && unprocessOCRs) {
-      // const newList = dummyFileList.concat(unprocessOCRs);
-      setFileList(unprocessOCRs);
-    }
-  }, [listSuccess, unprocessOCRs]);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));

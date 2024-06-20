@@ -32,13 +32,17 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
     amount: 0,
   };
 
-  const debitItem = lineItems ? lineItems.filter((item) => item.debit)[0] : defaultItem;
+  const debitItem = lineItems
+    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    : defaultItem;
   const debit = {
     account: debitItem.account,
     amount: numberWithCommas(debitItem.amount),
   };
 
-  const creditItem = lineItems ? lineItems.filter((item) => !item.debit)[0] : defaultItem;
+  const creditItem = lineItems
+    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    : defaultItem;
   const credit = {
     account: creditItem.account,
     amount: numberWithCommas(creditItem.amount),
