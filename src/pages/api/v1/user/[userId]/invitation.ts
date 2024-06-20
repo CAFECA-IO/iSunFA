@@ -3,7 +3,7 @@ import { IAdmin } from '@/interfaces/admin';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkInvitation, checkUser } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
-import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(

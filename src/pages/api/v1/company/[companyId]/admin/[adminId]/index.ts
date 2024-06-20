@@ -14,7 +14,7 @@ export default async function handler(
 ) {
   try {
     const { adminId } = req.query;
-    const adminIdNum = await convertStringToNumber(adminId);
+    const adminIdNum = convertStringToNumber(adminId);
     if (req.method === 'GET') {
       const { companyId } = await checkAdmin(req, res);
       const admin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);

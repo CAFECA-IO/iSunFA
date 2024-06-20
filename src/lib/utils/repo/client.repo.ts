@@ -30,6 +30,8 @@ export async function updateClientById(
   taxId: string,
   favorite: boolean
 ): Promise<IClient> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const updatedClient = await prisma.client.update({
     where: {
       id: clientId,
@@ -38,6 +40,7 @@ export async function updateClientById(
       name,
       taxId,
       favorite,
+      updatedAt: nowTimestamp,
     },
   });
   return updatedClient;

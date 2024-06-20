@@ -25,28 +25,22 @@ const DashboardOverview = () => {
     },
   });
 
-  // TODO: i18n (20240618 - Shirley)
-  // const displayedProfitChangeRate = `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange < 0 ? `${dashboardOverview.profitChange.toFixed(0)}` : `No Data`}`;
-  // const displayedTopProjectRoi =
-  //   +dashboardOverview.topProjectRoi > 0
-  //     ? `+${dashboardOverview.topProjectRoi.toFixed(0)}`
-  //     : +dashboardOverview.topProjectRoi < 0
-  //       ? `${dashboardOverview.topProjectRoi.toFixed(0)}`
-  //       : `No Data`;
-  // const displayedPreLaunchProjects = dashboardOverview.preLaunchProject ?? `No Data`;
-
+  // TODO: i18n (20240620 - Shirley)
   const displayedProfitChangeRate =
-    dashboardOverview.emptyProfitChange || !dashboardOverview.profitChange
+    dashboardOverview.emptyProfitChange ||
+    (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)
       ? 'No Data'
       : `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange.toFixed(0)}`;
 
   const displayedTopProjectRoi =
-    dashboardOverview.emptyTopProjectRoi || !dashboardOverview.topProjectRoi
+    dashboardOverview.emptyTopProjectRoi ||
+    (!dashboardOverview.topProjectRoi && dashboardOverview.topProjectRoi !== 0)
       ? 'No Data'
       : `${dashboardOverview.topProjectRoi > 0 ? `+${dashboardOverview.topProjectRoi.toFixed(0)}` : dashboardOverview.topProjectRoi.toFixed(0)}`;
 
   const displayedPreLaunchProjects =
-    dashboardOverview.emptyPreLaunchProject || !dashboardOverview.preLaunchProject
+    dashboardOverview.emptyPreLaunchProject ||
+    (!dashboardOverview.preLaunchProject && dashboardOverview.preLaunchProject !== 0)
       ? 'No Data'
       : dashboardOverview.preLaunchProject;
 
@@ -61,14 +55,6 @@ const DashboardOverview = () => {
         emptyPreLaunchProject: profitInsight.emptyPreLaunchProject,
       });
     } else if (getSuccess === false) {
-      // setDashboardOverview({
-      //   profitChange: 5,
-      //   topProjectRoi: 5,
-      //   preLaunchProject: 5,
-      //   emptyProfitChange: false,
-      //   emptyTopProjectRoi: false,
-      //   emptyPreLaunchProject: false,
-      // });
       toastHandler({
         id: `profit_insight-${getCode}`,
         content: `Failed to get profit insight. Error code: ${getCode}`,
@@ -119,7 +105,7 @@ const DashboardOverview = () => {
                   ? 'text-4xl text-text-state-success-solid lg:text-5xl lg:leading-52px'
                   : dashboardOverview.profitChange < 0
                     ? 'text-4xl text-text-state-error-solid lg:text-5xl lg:leading-52px'
-                    : 'text-text-neutral-mute text-base lg:text-xl'
+                    : 'text-base text-text-neutral-mute lg:text-xl'
               )}
             >
               {displayedProfitChangeRate}
@@ -172,7 +158,7 @@ const DashboardOverview = () => {
                   ? 'text-4xl text-text-state-success-solid lg:text-5xl lg:leading-52px'
                   : +dashboardOverview.topProjectRoi < 0
                     ? 'text-end text-4xl text-text-state-error-solid lg:text-5xl lg:leading-52px'
-                    : 'text-text-neutral-mute text-base lg:text-xl'
+                    : 'text-base text-text-neutral-mute lg:text-xl'
               )}
             >
               <span className="">{displayedTopProjectRoi}</span>
@@ -215,7 +201,7 @@ const DashboardOverview = () => {
               'mb-0 mr-2 space-y-0 self-center text-center text-4xl font-semibold text-text-neutral-solid-dark md:mr-0 lg:mb-3 lg:leading-52px',
               dashboardOverview.preLaunchProject
                 ? 'text-4xl font-semibold text-text-neutral-solid-dark lg:text-5xl lg:leading-52px'
-                : 'text-text-neutral-mute text-base lg:text-xl'
+                : 'text-base text-text-neutral-mute lg:text-xl'
             )}
           >
             {displayedPreLaunchProjects}

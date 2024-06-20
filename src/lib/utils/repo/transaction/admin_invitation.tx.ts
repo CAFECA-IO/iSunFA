@@ -43,6 +43,7 @@ export async function createAdminByInvitation(userId: number, invitation: IInvit
       },
       data: {
         hasUsed: true,
+        updatedAt: nowTimestamp,
       },
     });
     const formatedAdmin: IAdmin = await formatAdmin(createdAdmin);
