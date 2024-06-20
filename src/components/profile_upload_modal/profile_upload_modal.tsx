@@ -35,7 +35,8 @@ const ProfileUploadModal = ({
   const handleDrop = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
-    if (file) {
+    // Info: (20240618 - Julian) 須檢查是否為圖檔
+    if (file && file.type.includes('image')) {
       setUploadedImage(file);
     }
   };
