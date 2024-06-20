@@ -40,15 +40,17 @@ const ConfirmModal = ({
 }: IConfirmModalProps) => {
   const { selectedCompany } = useUserCtx();
   const {
-    getAIStatus,
+    getAIStatusHandler,
+    accountList,
     AIStatus,
-    isAskAILoading,
+    generateAccountTitle,
     accountingVoucher,
     addVoucherRowHandler,
+    changeVoucherAccountHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
-    // totalCredit,
-    // totalDebit,
+    totalCredit,
+    totalDebit,
     selectJournalHandler,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
@@ -70,15 +72,21 @@ const ConfirmModal = ({
     code: createCode,
   } = APIHandler<{
     id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
     lineItems: {
       id: number;
       amount: number;
       description: string;
       debit: boolean;
       accountId: number;
-      voucherId: number | null;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
     }[];
-  }>(APIName.VOUCHER_CREATE, {}, false, false);
+  } | null>(APIName.VOUCHER_CREATE, {}, false, false);
 
   const {
     trigger: getAIResult,
@@ -121,12 +129,12 @@ const ConfirmModal = ({
     clearVoucherHandler();
 
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatus(companyId, askAIId!);
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
-    if (isAskAILoading === false && AIStatus === ProgressStatus.SUCCESS) {
+    if (AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
           companyId,
@@ -134,8 +142,8 @@ const ConfirmModal = ({
         },
       });
     }
-    return () => {};
-  }, [AIStatus, isAskAILoading]);
+    return () => getAIStatusHandler(undefined, false);
+  }, [AIStatus]);
 
   useEffect(() => {
     if (journal && getJournalSuccess) {
@@ -186,6 +194,11 @@ const ConfirmModal = ({
     }
   };
 
+  const closeHandler = () => {
+    modalVisibilityHandler();
+    getAIStatusHandler(undefined, false);
+  };
+
   const addRowHandler = () => addVoucherRowHandler();
   const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
@@ -199,6 +212,8 @@ const ConfirmModal = ({
     // Info: (20240529 - Julian) 先加入空白列，再寫入資料
     AILineItems.forEach((lineItem, index) => {
       addRowHandler();
+      const account = accountList.find((acc) => acc.id === lineItem.accountId);
+      changeVoucherAccountHandler(index, account);
       changeVoucherAmountHandler(
         index,
         lineItem.amount,
@@ -218,26 +233,29 @@ const ConfirmModal = ({
       submitBtnStr: 'Confirm',
       submitBtnFunction: importVoucherHandler,
       backBtnStr: 'Cancel',
+      backBtnFunction: () => getAIStatusHandler(undefined, false),
     });
     messageModalVisibilityHandler();
   };
 
   useEffect(() => {
     // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
-    const newLineItems = accountingVoucher.map((voucher) => {
-      const isDebit = voucher.debit !== 0;
-      const debitAmount = voucher.debit ?? 0;
-      const creditAmount = voucher.credit ?? 0;
+    const newLineItems = accountingVoucher
+      .filter((voucher) => voucher.account)
+      .map((voucher) => {
+        const isDebit = voucher.debit !== 0;
+        const debitAmount = voucher.debit ?? 0;
+        const creditAmount = voucher.credit ?? 0;
 
-      return {
-        accountId: voucher.accountId,
-        lineItemIndex: `${voucher.id}`,
-        account: voucher.accountTitle,
-        description: voucher.particulars,
-        debit: isDebit,
-        amount: isDebit ? debitAmount : creditAmount,
-      };
-    });
+        return {
+          accountId: voucher.account!.id,
+          lineItemIndex: `${voucher.id}`,
+          account: generateAccountTitle(voucher.account),
+          description: voucher.particulars,
+          debit: isDebit,
+          amount: isDebit ? debitAmount : creditAmount,
+        };
+      });
 
     setLineItems(newLineItems);
   }, [accountingVoucher]);
@@ -245,7 +263,7 @@ const ConfirmModal = ({
   useEffect(() => {
     if (createSuccess && result && journal) {
       // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
-      modalVisibilityHandler();
+      closeHandler();
       clearVoucherHandler();
       selectJournalHandler(undefined);
 
@@ -282,7 +300,7 @@ const ConfirmModal = ({
     }
   }, [createSuccess, createCode]);
 
-  const disableConfirmButton = false; // ToDo: (20240619 - tzuhan) totalCredit !== totalDebit;
+  const disableConfirmButton = totalCredit !== totalDebit;
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
 
@@ -465,7 +483,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) close button */}
         <button
           type="button"
-          onClick={modalVisibilityHandler}
+          onClick={closeHandler}
           className="absolute right-20px top-20px text-lightGray5"
         >
           <RxCross2 size={20} />
@@ -593,7 +611,7 @@ const ConfirmModal = ({
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button
             type="button"
-            onClick={modalVisibilityHandler}
+            onClick={closeHandler}
             className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
           >
             Cancel

@@ -23,8 +23,7 @@ export enum VoucherString {
 
 export interface IAccountingVoucher {
   id: number;
-  accountTitle: string;
-  accountId: number;
+  account: IAccount | null;
   particulars: string;
   debit: number | null;
   credit: number | null;
@@ -32,8 +31,7 @@ export interface IAccountingVoucher {
 
 const defaultAccountingVoucher: IAccountingVoucher = {
   id: 0,
-  accountId: 0,
-  accountTitle: '',
+  account: null,
   particulars: '',
   debit: 0,
   credit: 0,
@@ -48,9 +46,11 @@ interface IAccountingContext {
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number, update: boolean) => void;
   accountList: IAccount[];
-  getAIStatus: (companyId: number, askAIId: string) => void;
+  getAIStatusHandler: (
+    params: { companyId: number; askAIId: string } | undefined,
+    update: boolean
+  ) => void;
   AIStatus: ProgressStatus;
-  isAskAILoading: boolean;
 
   selectedOCR: IUnprocessedOCR | undefined;
   selectOCRHandler: (journal: IUnprocessedOCR | undefined) => void;
@@ -66,6 +66,7 @@ interface IAccountingContext {
 
   accountingVoucher: IAccountingVoucher[];
   addVoucherRowHandler: (type?: VoucherRowType) => void;
+  changeVoucherAccountHandler: (index: number, account: IAccount | undefined) => void;
   deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
   changeVoucherAmountHandler: (
@@ -78,6 +79,8 @@ interface IAccountingContext {
 
   totalDebit: number;
   totalCredit: number;
+
+  generateAccountTitle: (account: IAccount | null) => string;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -90,9 +93,8 @@ const initialAccountingContext: IAccountingContext = {
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
   updateOCRListHandler: () => {},
   accountList: [],
-  getAIStatus: () => {},
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
-  isAskAILoading: false,
   selectedOCR: undefined,
   selectOCRHandler: () => {},
   selectedJournal: undefined,
@@ -109,11 +111,14 @@ const initialAccountingContext: IAccountingContext = {
   addVoucherRowHandler: () => {},
   deleteVoucherRowHandler: () => {},
   changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
   changeVoucherAmountHandler: () => {},
   clearVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
+
+  generateAccountTitle: () => 'Account Title',
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -126,11 +131,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     success: statusSuccess,
     error: statusError,
   } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
-  const [askAIParams, setAskAIParams] = useState<
-    { companyId: number; askAIId: string } | undefined
-  >(undefined);
-  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
-
   const {
     trigger: listUnprocessedOCR,
     data: unprocessOCRs,
@@ -138,7 +138,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     success: listSuccess,
     code: listCode,
   } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {}, false, false);
-  const [isUpdateOCRList, setIsUpdateOCRList] = useState<boolean>(false);
+  const [OCRListParams, setOCRListParams] = useState<
+    { companyId: number; update: boolean } | undefined
+  >(undefined);
   const [OCRList, setOCRList] = useState<IUnprocessedOCR[]>([]);
   const [OCRListStatus, setOCRLisStatus] = useState<{
     listSuccess: boolean | undefined;
@@ -154,6 +156,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
   const [voucherPreview, setVoucherPreview] = useState<IVoucher | undefined>(undefined);
 
+  const [askAIParams, setAskAIParams] = useState<{
+    params: { companyId: number; askAIId: string } | undefined;
+    update: boolean;
+  }>({ params: undefined, update: false });
   const [AIStatus, setAIStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
     defaultAccountingVoucher,
@@ -161,32 +167,29 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [totalDebit, setTotalDebit] = useState<number>(0); // Info: (20240430 - Julian) 計算總借方
   const [totalCredit, setTotalCredit] = useState<number>(0); // Info: (20240430 - Julian) 計算總貸方
 
-  const getAIStatusHandler = (companyId: number, askAIId: string) => {
-    setAskAIParams({ companyId, askAIId });
-    // Info: (20240528 - Julian) Reset AI status
-    setIsAskAILoading(true);
-    getAIStatus({
-      params: {
-        companyId,
-        resultId: askAIId,
-      },
-    });
+  const getAIStatusHandler = (
+    params: { companyId: number; askAIId: string } | undefined,
+    update: boolean
+  ) => {
+    setAskAIParams({ params, update });
   };
 
   const updateOCRListHandler = (companyId: number, update: boolean) => {
-    setIsUpdateOCRList(update);
-    listUnprocessedOCR({
-      params: {
-        companyId,
-      },
+    setOCRListParams({
+      companyId,
+      update,
     });
   };
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
-    if (isUpdateOCRList) {
+    if (OCRListParams && OCRListParams.update) {
       interval = setInterval(() => {
-        listUnprocessedOCR();
+        listUnprocessedOCR({
+          params: {
+            companyId: OCRListParams.companyId,
+          },
+        });
       }, 2000);
       if (OCRListStatus.listSuccess !== listSuccess || OCRListStatus.listCode !== listCode) {
         setOCRLisStatus({
@@ -198,31 +201,35 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         setOCRList(unprocessOCRs);
       }
       if (listSuccess === false) {
-        setIsUpdateOCRList(false);
+        setOCRListParams((prev) => (prev ? { ...prev, update: false } : prev));
       }
     }
     return () => clearInterval(interval);
-  }, [listError, listSuccess, listCode, unprocessOCRs]);
+  }, [OCRListParams, listError, listSuccess, listCode, unprocessOCRs]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
-    if (askAIParams && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
+    if (askAIParams.params !== undefined && askAIParams.update) {
       interval = setInterval(() => {
         getAIStatus({
           params: {
-            companyId: askAIParams.companyId,
-            resultId: askAIParams.askAIId,
+            companyId: askAIParams.params!.companyId,
+            resultId: askAIParams.params!.askAIId,
           },
         });
       }, 2000);
     }
     if ((statusSuccess && status === ProgressStatus.SUCCESS) || statusError) {
       setAIStatus(status ?? ProgressStatus.LLM_ERROR);
-      setAskAIParams(undefined);
-      setIsAskAILoading(false);
+      setAskAIParams((prev) => (prev ? { ...prev, update: false } : prev));
     }
     return () => clearInterval(interval);
   }, [askAIParams, status, statusSuccess, statusError]);
+
+  const generateAccountTitle = (account: IAccount | null) => {
+    if (account) return account.code.substring(0, 4) + ' - ' + account.name;
+    return 'Account Title';
+  };
 
   // Info: (20240430 - Julian) 新增日記帳列
   const addVoucherRowHandler = useCallback(
@@ -231,27 +238,40 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       const isVoucherEmpty = !!accountingVoucher && accountingVoucher.length > 0;
       // Info: (20240530 - Julian) 若 accountingVoucher 為空，則新增 id = 0，否則最後一列 id + 1
       const newId = isVoucherEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
+      const account = accountList && accountList.length > 0 ? accountList[0] : null;
 
       switch (type) {
         // Info: (20240530 - Julian) 新增借方列
         case VoucherRowType.DEBIT:
           setAccountingVoucher((prev) => [
             ...prev,
-            { id: newId, accountId: 0, accountTitle: '', particulars: '', debit: 1, credit: 0 },
+            {
+              id: newId,
+              account,
+              particulars: '',
+              debit: 1,
+              credit: 0,
+            },
           ]);
           break;
         // Info: (20240530 - Julian) 新增貸方列
         case VoucherRowType.CREDIT:
           setAccountingVoucher((prev) => [
             ...prev,
-            { id: newId, accountId: 0, accountTitle: '', particulars: '', debit: 0, credit: 1 },
+            {
+              id: newId,
+              account,
+              particulars: '',
+              debit: 0,
+              credit: 1,
+            },
           ]);
           break;
         // Info: (20240530 - Julian) 新增空白列
         default:
           setAccountingVoucher((prev) => [
             ...prev,
-            { id: newId, accountId: 0, accountTitle: '', particulars: '', debit: 0, credit: 0 },
+            { id: newId, account: null, particulars: '', debit: 0, credit: 0 },
           ]);
           break;
       }
@@ -267,6 +287,18 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [accountingVoucher]
   );
 
+  const changeVoucherAccountHandler = useCallback(
+    (index: number, account: IAccount | undefined) => {
+      setAccountingVoucher((prev) => {
+        const newVoucher = [...prev];
+        const targetId = prev.findIndex((voucher) => voucher.id === index);
+        newVoucher[targetId].account = account ?? null;
+        return newVoucher;
+      });
+    },
+    [accountingVoucher]
+  );
+
   // Info: (20240430 - Julian) 將 account title/particulars 值寫入 state
   const changeVoucherStringHandler = useCallback(
     (index: number, value: string | undefined, type: VoucherString) => {
@@ -274,9 +306,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         const newVoucher = [...prev]; // Info: (20240430 - Julian) 複製現有的傳票
         const newStr = value || ''; // Info: (20240430 - Julian) 若 value 為 undefined 則預設為空字串
         const targetId = prev.findIndex((voucher) => voucher.id === index); // Info: (20240430 - Julian) 找到要寫入的傳票 id
-        if (type === VoucherString.ACCOUNT_TITLE) {
-          newVoucher[targetId].accountTitle = newStr; // Info: (20240430 - Julian) 寫入新的 account title 值
-        } else if (type === VoucherString.PARTICULARS) {
+        if (type === VoucherString.PARTICULARS) {
           newVoucher[targetId].particulars = newStr; // Info: (20240430 - Julian) 寫入新的 particulars 值
         }
         return newVoucher;
@@ -316,6 +346,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   // Info: (20240503 - Julian) 清空傳票
   const clearVoucherHandler = useCallback(() => {
+    setAskAIParams((prev) => (prev ? { ...prev, update: false } : prev));
     setAccountingVoucher([defaultAccountingVoucher]); // Info: (20240503 - Julian) 清空傳票列表
     changeVoucherAmountHandler(0, 0, VoucherRowType.DEBIT); // Info: (20240503 - Julian) 清空借方 input
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
@@ -398,9 +429,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       OCRList,
       OCRListStatus,
       updateOCRListHandler,
-      isAskAILoading,
       accountList: accountList ?? [],
-      getAIStatus: getAIStatusHandler,
+      getAIStatusHandler,
       AIStatus,
       accountingVoucher,
       addVoucherRowHandler,
@@ -422,11 +452,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectOCRHandler,
       selectedJournal,
       selectJournalHandler,
+
+      generateAccountTitle,
+      changeVoucherAccountHandler,
     }),
     [
       OCRList,
       OCRListStatus,
-      isAskAILoading,
       AIStatus,
       accountList,
       accountingVoucher,

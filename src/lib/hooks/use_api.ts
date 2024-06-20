@@ -38,17 +38,6 @@ export async function fetchData<Data>(
   };
   const path = getAPIPath(apiConfig, options);
 
-  // Deprecated: debug log (20240510 - Tzuahan)
-  // eslint-disable-next-line no-console
-  console.log(
-    `fetchData(${apiConfig.name}), path:`,
-    path,
-    `options:`,
-    options,
-    `apiConfig:`,
-    apiConfig
-  );
-
   if (apiConfig.method !== HttpMethod.GET) {
     if (options.body) {
       if (options.body instanceof FormData) {
