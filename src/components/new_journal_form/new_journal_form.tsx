@@ -398,37 +398,45 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoiceData: IInvoice = {
-      journalId: selectedJournal?.id || null,
-      date: datePeriod.startTimeStamp,
-      eventType: selectedEventType,
-      paymentReason: inputPaymentReason,
-      description: inputDescription,
-      vendorOrSupplier: inputVendor,
-      project: selectedProject.name,
-      projectId: selectedProject.id,
-      contract: selectedContract.name,
-      contractId: selectedContract.id,
-      payment: {
-        price: inputTotalPrice,
-        hasTax: taxToggle,
-        taxPercentage: taxRate,
-        hasFee: feeToggle,
-        fee: inputFee,
-        method: selectedMethod,
-        installmentPeriod: inputInstallment,
-        alreadyPaid: inputPartialPaid,
-        isRevenue: true,
-        progress: progressRate,
-        period: paymentPeriod,
-        status: paymentStatus,
-      },
-    };
+    if (!createSuccess || !invoiceReturn) {
+      const invoiceData: IInvoice = {
+        journalId: selectedJournal?.id || null,
+        date: datePeriod.startTimeStamp,
+        eventType: selectedEventType,
+        paymentReason: inputPaymentReason,
+        description: inputDescription,
+        vendorOrSupplier: inputVendor,
+        project: selectedProject.name,
+        projectId: selectedProject.id,
+        contract: selectedContract.name,
+        contractId: selectedContract.id,
+        payment: {
+          price: inputTotalPrice,
+          hasTax: taxToggle,
+          taxPercentage: taxRate,
+          hasFee: feeToggle,
+          fee: inputFee,
+          method: selectedMethod,
+          installmentPeriod: inputInstallment,
+          alreadyPaid: inputPartialPaid,
+          isRevenue: true,
+          progress: progressRate,
+          period: paymentPeriod,
+          status: paymentStatus,
+        },
+      };
 
-    createInvoice({
-      params: { companyId },
-      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
-    });
+      createInvoice({
+        params: { companyId },
+        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+      });
+    } else {
+      confirmModalDataHandler({
+        journalId: invoiceReturn.journalId,
+        askAIId: invoiceReturn.resultStatus.resultId,
+      });
+      confirmModalVisibilityHandler();
+    }
   };
 
   useEffect(() => {
