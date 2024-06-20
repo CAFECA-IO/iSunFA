@@ -420,5 +420,8 @@
     "CASH_FLOW_STATEMENT": "現金流量表",
     "RED_FLAG_ANALYSIS": "風險分析",
     "POWERED_BY": "技術支持"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "審計報告"
   }
 }

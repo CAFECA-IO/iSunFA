@@ -422,5 +422,32 @@
     "CASH_FLOW_STATEMENT": "Cash Flow Statement",
     "RED_FLAG_ANALYSIS": "Red Flag Analysis",
     "POWERED_BY": "Powered by"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "Audit Report",
+    "SHOW_DESIGNATED_REGIONAL_COMPANIES": "Show Designated Regional Companies",
+    "US": "US",
+    "HK": "HK",
+    "TW": "TW",
+    "CODE": "Code",
+    "REGIONAL": "Regional",
+    "COMPANY": "Company",
+    "INFORMATION_YEAR": "Information Year",
+    "DETAILED_INFORMATION": "Detailed Information",
+    "CREDIT_RATING": "Credit rating",
+    "DATE_OF_UPLOAD": "Date of Upload",
+    "LINK": "LINK",
+    "REGION": "Region",
+    "SHOW_DAILY_REPORTS": "Show daily reports",
+    "CARD_LIST": "Card List",
+    "ISUNFA_AUDIT_REPORT": "iSunFA - Audit Report",
+    "COMPANY_CODE_OR ABBREVIATION": "Company Code or Abbreviation",
+    "OF_100": "of 100"
+  },
+  "REPORTS_SIDEBAR": {
+    "REPORT": "Report",
+    "GET_EMBED_CODE": "Get Embed Code",
+    "FINANCIAL_REPORTS":"Financial Reports",
+    "ANALYSIS_REPORTS":"Analysis Reports"
   }
 }
