@@ -15,7 +15,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
-import { getTodayPeriodInSec } from '@/lib/utils/common';
+import { cn, getTodayPeriodInSec } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 
@@ -199,6 +199,7 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 const LaborCostChart = () => {
   const { layoutAssertion } = useGlobalCtx();
 
+  // TODO: 改成 company startDate (20240618 - Shirley)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
@@ -225,6 +226,8 @@ const LaborCostChart = () => {
     false,
     false
   );
+
+  const isNoData = laborCostData?.empty || !laborCostData || !getSuccess;
 
   const displayedYear = maxDate.getFullYear();
 
@@ -281,6 +284,39 @@ const LaborCostChart = () => {
     series,
   };
 
+  const displayedChart = isNoData ? (
+    <div className="flex w-full flex-col items-center justify-between gap-5 font-barlow lg:flex-row lg:items-start lg:gap-0">
+      <div className="mt-3 lg:mt-10">
+        <p className="font-semibold text-text-brand-secondary-lv1">Onboarding Projects</p>
+      </div>
+      <div className="lg:mr-10">
+        {' '}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="200"
+          height="200"
+          fill="none"
+          viewBox="0 0 200 200"
+        >
+          <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+          <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+            No Data
+          </text>
+        </svg>
+      </div>
+    </div>
+  ) : (
+    <div className="relative">
+      {' '}
+      <div className="absolute left-1/2 top-5 w-150px -translate-x-1/2 text-center font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
+        Onboarding Projects
+      </div>
+      <div className="ml-0 flex pt-16 max-md:ml-0 md:pt-0 lg:pt-5">
+        <PieChart data={data} />
+      </div>
+    </div>
+  );
+
   const displayedDateSection = (
     <div className="my-auto text-xl font-bold leading-5 tracking-normal text-text-brand-primary-lv2">
       {displayedYear}{' '}
@@ -291,7 +327,12 @@ const LaborCostChart = () => {
   );
 
   const displayedDataSection = (
-    <div className="flex h-520px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+    <div
+      className={cn(
+        'flex flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px',
+        isNoData ? 'h-400px' : 'h-520px'
+      )}
+    >
       <div>
         <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
           <div className="lg:flex-1">
@@ -341,6 +382,7 @@ const LaborCostChart = () => {
           <div className="w-10">
             {' '}
             <DatePicker
+              disabled={isNoData}
               type={DatePickerType.ICON_DATE}
               minDate={minDate}
               maxDate={maxDate}
@@ -351,15 +393,7 @@ const LaborCostChart = () => {
             />
           </div>
         </div>
-        <div className="relative">
-          {' '}
-          <div className="absolute left-1/2 top-5 w-150px -translate-x-1/2 text-center font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
-            Onboarding Projects
-          </div>
-          <div className="ml-0 flex pt-16 max-md:ml-0 md:pt-0 lg:pt-5">
-            <PieChart data={data} />
-          </div>
-        </div>
+        {displayedChart}
       </div>
     </div>
   );

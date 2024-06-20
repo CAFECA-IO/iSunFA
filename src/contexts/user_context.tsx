@@ -12,7 +12,6 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
-import { ISessionData } from '@/interfaces/session_data';
 
 interface SignUpProps {
   username?: string;
@@ -118,7 +117,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     trigger: selectCompanyAPI,
     success: companySelectSuccess,
     code: companySelectCode,
-  } = APIHandler<string>(APIName.COMPANY_SELECT, {}, false, false);
+  } = APIHandler<number>(APIName.COMPANY_SELECT, {}, false, false);
 
   const {
     trigger: getUserSessionData,
@@ -126,7 +125,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     success: getUserSessionSuccess,
     isLoading: isGetUserSessionLoading,
     code: getUserSessionCode,
-  } = APIHandler<ISessionData>(APIName.SESSION_GET, {}, false, false);
+  } = APIHandler<{ user: IUser; company: ICompany }>(APIName.SESSION_GET, {}, false, false);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -216,6 +215,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!company) {
       setSelectedCompany(null);
       setSuccessSelectCompany(undefined);
+      // Info: (20240618 - Julian) 如果取消選擇公司，就把 companyId 設為 0
+      selectCompanyAPI({
+        params: {
+          companyId: 0,
+        },
+      });
       return;
     }
     setSelectedCompany(company);

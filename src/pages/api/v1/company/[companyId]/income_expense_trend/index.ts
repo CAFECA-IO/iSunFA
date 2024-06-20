@@ -74,7 +74,10 @@ async function getIncomeExpenseTrendChartData(
     const categories = MONTH_FULL_LIST_SHORT;
     // Info: (20240528 - Gibbs) use 0 if no data found in month
     categories.forEach((_, index) => {
-      const data = incomeExpenseData.find((ele) => Number(ele.month) === index + 1);
+      const targetYear = new Date().getFullYear();
+      const data = incomeExpenseData.find(
+        (ele) => Number(ele.year) === targetYear && Number(ele.month) === index + 1
+      );
       if (data) {
         totalIncome.push(Number(data.total_income));
         totalExpense.push(Number(data.total_expense));
@@ -90,10 +93,14 @@ async function getIncomeExpenseTrendChartData(
       totalExpense,
       totalProfit
     );
+    const emptyTotalIncome = totalIncome.every((ele) => ele === 0);
+    const emptyTotalExpense = totalExpense.every((ele) => ele === 0);
+    const empty = emptyTotalIncome && emptyTotalExpense;
     const IncomeExpenseTrendChartData: IIncomeExpenseTrendChartData = {
       categories,
       series,
       annotations,
+      empty,
     };
     return IncomeExpenseTrendChartData;
   }
@@ -123,10 +130,12 @@ async function getIncomeExpenseTrendChartData(
       totalExpense,
       totalProfit
     );
+    const empty = categories.length === 0;
     const IncomeExpenseTrendChartData: IIncomeExpenseTrendChartData = {
       categories,
       series,
       annotations,
+      empty,
     };
     return IncomeExpenseTrendChartData;
   }

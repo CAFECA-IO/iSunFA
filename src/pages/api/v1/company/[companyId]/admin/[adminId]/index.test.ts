@@ -71,21 +71,6 @@ beforeEach(async () => {
     },
   });
   admin = await formatAdmin(createdAdmin);
-  const role = await prisma.role.findUnique({
-    where: {
-      name: ROLE_NAME.OWNER,
-    },
-  });
-  if (!role) {
-    await prisma.role.create({
-      data: {
-        name: ROLE_NAME.OWNER,
-        permissions: ['hihi'],
-        createdAt: 0,
-        updatedAt: 0,
-      },
-    });
-  }
   req = {
     headers: {},
     query: {},
@@ -124,15 +109,6 @@ afterEach(async () => {
     await prisma.user.delete({
       where: {
         id: admin.user.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.role.id,
       },
     });
   } catch (error) {

@@ -1,7 +1,6 @@
 import { IProject } from '@/interfaces/project';
 import { Employee, Project, Value } from '@prisma/client';
 
-// const listedProject = listProject(1);
 export async function formatProjectList(
   listedProject: (Project & {
     employeeProjects: { employee: Employee }[];

@@ -1,14 +1,14 @@
 import { server } from '@passwordless-id/webauthn';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IUser } from '@/interfaces/user';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_MESSAGE, SuccessMessage } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
 import { getSession } from '@/lib/utils/get_session';
 import { getUserByCredential } from '@/lib/utils/repo/user.repo';
 import { checkInvitation } from '@/lib/utils/auth_check';
-import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(
@@ -44,13 +44,19 @@ export default async function handler(
     await server.verifyAuthentication(authentication, registeredCredential, expected);
     const session = await getSession(req, res);
     session.userId = getUser.id;
-    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
-    res.status(httpCode).json(result);
-    if (!req.query.invitation) {
-      return;
+    let successMessage: SuccessMessage = STATUS_MESSAGE.SUCCESS_GET;
+    if (req.query.invitation) {
+      try {
+        const invitation = await checkInvitation(req.query.invitation as string, getUser.id);
+        await createAdminByInvitation(getUser.id, invitation);
+        successMessage = STATUS_MESSAGE.CREATED_INVITATION;
+      } catch (error) {
+        // TODO: (20240617 - Jacky): Log error in future
+        successMessage = STATUS_MESSAGE.SUCCESS_GET_WITH_INVALID_INVITATION;
+      }
     }
-    const invitation = await checkInvitation(req.query.invitation as string);
-    await createAdminByInvitation(getUser.id, invitation);
+    const { httpCode, result } = formatApiResponse<IUser>(successMessage, user);
+    res.status(httpCode).json(result);
   } catch (_error) {
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);

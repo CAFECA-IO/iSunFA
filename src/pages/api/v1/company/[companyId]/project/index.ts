@@ -24,11 +24,11 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010002 - POST /project
     } else if (req.method === 'POST') {
-      const { name, stage, members } = req.body;
-      if (!name || !stage || !members) {
+      const { name, stage, memberIdList } = req.body;
+      if (!name || !stage || !memberIdList) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const project: IProject = await createProject(companyId, name, stage, members);
+      const project: IProject = await createProject(companyId, name, stage, memberIdList);
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
       res.status(httpCode).json(result);
     } else {
