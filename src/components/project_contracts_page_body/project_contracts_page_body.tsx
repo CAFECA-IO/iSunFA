@@ -4,25 +4,23 @@ import { FiGrid, FiSearch } from 'react-icons/fi';
 import { Layout } from '@/constants/layout';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { default30DayPeriodInSec, SortOptions } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
 import { dummyContracts } from '@/interfaces/contract';
 import { ContractStatus } from '@/constants/contract';
 import ProjectContractList from '@/components/project_contract_list/project_contract_list';
-
-enum ContractSort {
-  NEWEST = 'Newest',
-  OLDEST = 'Oldest',
-}
+import { RxCross2 } from 'react-icons/rx';
+import ContractStatusBlock from '../contract_status_block/contract_status_block';
 
 const ProjectContractsPageBody = () => {
   // Info: (20240618 - Julian) add 'ALL' to the list
-  const statusList = ['All', ...Object.values(ContractStatus)];
+  const statusList = Object.values(ContractStatus);
+  const statusListWithAll = ['All', ...statusList];
 
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
-  const [filterStatus, setFilterStatus] = useState<string>(statusList[0]);
-  const [sort, setSort] = useState<string>(ContractSort.NEWEST);
+  const [filterStatus, setFilterStatus] = useState<string>(statusListWithAll[0]);
+  const [sort, setSort] = useState<string>(SortOptions.newest);
   const [filterPeriod, setFilterPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [search, setSearch] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -51,7 +49,7 @@ const ProjectContractsPageBody = () => {
         );
       })
       .sort((a, b) => {
-        if (sort === ContractSort.NEWEST) {
+        if (sort === SortOptions.newest) {
           return (
             parseInt(b.period.contractDuration.start, 10) -
             parseInt(a.period.contractDuration.start, 10)
@@ -79,11 +77,23 @@ const ProjectContractsPageBody = () => {
     setComponentVisible: setSortVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: filterRef,
+    componentVisible: filterVisible,
+    setComponentVisible: setFilterVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
   const listBtnStyle = currentLayout === Layout.LIST ? 'tertiary' : 'secondaryOutline';
   const gridBtnStyle = currentLayout === Layout.GRID ? 'tertiary' : 'secondaryOutline';
 
   const searchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
+  };
+  const selectStatusHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterStatus(event.target.value);
+  };
+  const selectSortHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSort(event.target.value);
   };
 
   const listLayoutHandler = () => setCurrentLayout(Layout.LIST);
@@ -91,6 +101,7 @@ const ProjectContractsPageBody = () => {
 
   const statusClickHandler = () => setStatusVisible(!statusVisible);
   const sortClickHandler = () => setSortVisible(!sortVisible);
+  const filterClickHandler = () => setFilterVisible(!filterVisible);
 
   const statusDropdown = (
     <div
@@ -98,7 +109,7 @@ const ProjectContractsPageBody = () => {
       ${statusVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
       z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
-      {statusList.map((status) => {
+      {statusListWithAll.map((status) => {
         const clickHandler = () => {
           setFilterStatus(status);
           setStatusVisible(false);
@@ -126,16 +137,16 @@ const ProjectContractsPageBody = () => {
       <button
         type="button"
         className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={() => setSort(ContractSort.NEWEST)}
+        onClick={() => setSort(SortOptions.newest)}
       >
-        {ContractSort.NEWEST}
+        {SortOptions.newest}
       </button>
       <button
         type="button"
         className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={() => setSort(ContractSort.OLDEST)}
+        onClick={() => setSort(SortOptions.oldest)}
       >
-        {ContractSort.OLDEST}
+        {SortOptions.oldest}
       </button>
     </div>
   );
@@ -148,7 +159,68 @@ const ProjectContractsPageBody = () => {
         setCurrentPage={setCurrentPage}
         totalPages={totalPages}
       />
-    ) : null;
+    ) : (
+      <div className="grid w-full grid-cols-2 grid-rows-2 gap-x-35px gap-y-24px">
+        {statusList.map((status) => (
+          <ContractStatusBlock key={status} status={status} contracts={filteredContracts} />
+        ))}
+      </div>
+    );
+
+  const filterModal = filterVisible ? (
+    <div className="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/50 md:hidden">
+      <div
+        ref={filterRef}
+        className="relative flex w-250px flex-col rounded-sm bg-surface-neutral-surface-lv1 px-20px py-16px"
+      >
+        {/* Info: (20240620 - Julian) Title */}
+        <p className="text-xl font-bold text-card-text-primary">Filter</p>
+        {/* Info: (20240620 - Julian) close button */}
+        <button type="button" className="absolute right-12px top-12px text-lightGray5">
+          <RxCross2 size={20} />
+        </button>
+        {/* Info: (20240620 - Julian) Content */}
+        <div className="flex flex-col items-stretch gap-y-8px py-20px">
+          <DatePicker
+            type={DatePickerType.TEXT_PERIOD}
+            period={filterPeriod}
+            setFilteredPeriod={setFilterPeriod}
+          />
+          <div className="flex flex-col items-start gap-8px">
+            <p className="font-semibold text-input-text-primary">Status</p>
+            {/* Info: (20240620 - Julian) Status dropdown */}
+            <select
+              id="selectStatus"
+              name="selectStatus"
+              onChange={selectStatusHandler}
+              value={filterStatus}
+              className="flex w-full items-center justify-between rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px py-10px outline-none"
+            >
+              {statusListWithAll.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col items-start gap-8px">
+            <p className="font-semibold text-input-text-primary">Sort by</p>
+            {/* Info: (20240620 - Julian) Sort dropdown */}
+            <select
+              id="selectSort"
+              name="selectSort"
+              onChange={selectSortHandler}
+              value={sort}
+              className="flex w-full items-center justify-between rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px py-10px outline-none"
+            >
+              <option value={SortOptions.newest}>{SortOptions.newest}</option>
+              <option value={SortOptions.oldest}>{SortOptions.oldest}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <div className="flex flex-1 flex-col items-center gap-y-24px">
@@ -232,8 +304,12 @@ const ProjectContractsPageBody = () => {
             <FiSearch size={20} />
           </div>
           {/* Info: (20240619 - Julian) filter button */}
-          {/* ToDo: (20240619 - Julian) filter modal */}
-          <Button type="button" variant="tertiaryOutline" className="p-3">
+          <Button
+            type="button"
+            variant="tertiaryOutline"
+            className="p-3"
+            onClick={filterClickHandler}
+          >
             <svg
               width="20"
               height="20"
@@ -266,11 +342,7 @@ const ProjectContractsPageBody = () => {
       {/* Info: (20240619 - Julian) Contracts */}
       {displayContracts}
       {/* Info: (20240620 - Julian) Filter Modal for mobile */}
-      <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-black/50 md:hidden">
-        <div className="w-250px rounded-sm bg-surface-neutral-surface-lv1 px-20px py-16px">
-          Filter
-        </div>
-      </div>
+      {filterModal}
     </div>
   );
 };

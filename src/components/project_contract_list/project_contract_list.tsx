@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { IContract } from '@/interfaces/contract';
 import ContractCard from '@/components/contract_card/contract_card';
 import Pagination from '@/components/pagination/pagination';
+import { Layout } from '@/constants/layout';
 
 interface IProjectContractListProps {
   contracts: IContract[];
@@ -21,7 +22,7 @@ const ProjectContractList = ({
     contracts.length > 0 ? (
       <div className="flex w-full flex-col gap-20px">
         {contracts.map((contract) => (
-          <ContractCard key={contract.contractId} contract={contract} />
+          <ContractCard key={contract.contractId} style={Layout.LIST} contract={contract} />
         ))}
         <div className="mx-auto mt-50px">
           <Pagination
