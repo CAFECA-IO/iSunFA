@@ -72,11 +72,11 @@ model Admin {
 model Client {
   id        Int     @id @default(autoincrement())
   companyId Int     @map("company_id")
+  name      String
+  taxId     String  @map("tax_id")
   favorite  Boolean
   createdAt Int     @map("created_at")
   updatedAt Int     @map("updated_at")
-  name      String
-  taxId     String  @map("tax_id")
   company   Company @relation(fields: [companyId], references: [id])
 }
 
@@ -364,6 +364,7 @@ model Project {
   income_expenses  IncomeExpense[]
 }
 
+// ToDo: Should change the name of the variable starts with payment (20240530 - Jacky)
 model Payment {
   id                Int              @id @default(autoincrement())
   isRevenue         Boolean          @map("is_revenue")
@@ -387,12 +388,13 @@ model Payment {
 model PaymentRecord {
   id             Int          @id @default(autoincrement())
   subscriptionId Int          @map("subscription_id")
+  // Info: Third party payment transaction id (20240604 - Jacky)
   transactionId  String       @map("transaction_id")
   date           Int
   description    String
   amount         Int
   method         String
-  status         String
+  status         String // completed、failed、pending
   createdAt      Int          @map("created_at")
   updatedAt      Int          @map("updated_at")
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
