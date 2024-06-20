@@ -20,7 +20,7 @@ export default async function handler(
 
   try {
     if (method === 'GET') {
-      const companyId = await convertStringToNumber(req.query.companyId);
+      const companyId = convertStringToNumber(req.query.companyId);
       const session = await checkUser(req, res);
       const { userId } = session;
       const getAdmin = await getAdminByCompanyIdAndUserId(companyId, userId);
