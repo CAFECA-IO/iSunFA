@@ -1,15 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v1/company/[companyId]/admin/[adminId]/index';
 import prisma from '@/client';
-import { ROLE } from '@/constants/role';
 import { IAdmin } from '@/interfaces/admin';
+import { ROLE_NAME } from '@/constants/role_name';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 let admin: IAdmin;
 
 beforeEach(async () => {
-  admin = await prisma.admin.create({
+  const createdAdmin = await prisma.admin.create({
     data: {
       user: {
         connectOrCreate: {
@@ -47,10 +48,10 @@ beforeEach(async () => {
       role: {
         connectOrCreate: {
           where: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.OWNER,
           },
           create: {
-            name: ROLE.OWNER,
+            name: ROLE_NAME.OWNER,
             permissions: ['hihi'],
             createdAt: 0,
             updatedAt: 0,
@@ -69,21 +70,7 @@ beforeEach(async () => {
       role: true,
     },
   });
-  const role = await prisma.role.findUnique({
-    where: {
-      name: 'test_admin',
-    },
-  });
-  if (!role) {
-    await prisma.role.create({
-      data: {
-        name: 'test_admin',
-        permissions: ['hihi'],
-        createdAt: 0,
-        updatedAt: 0,
-      },
-    });
-  }
+  admin = await formatAdmin(createdAdmin);
   req = {
     headers: {},
     query: {},
@@ -92,7 +79,6 @@ beforeEach(async () => {
     body: {},
     session: { userId: admin.user.id, companyId: admin.company.id },
   } as unknown as jest.Mocked<NextApiRequest>;
-
   res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
@@ -123,24 +109,6 @@ afterEach(async () => {
     await prisma.user.delete({
       where: {
         id: admin.user.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.role.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.role.delete({
-      where: {
-        name: 'test_admin',
       },
     });
   } catch (error) {
@@ -180,8 +148,8 @@ describe('API Handler Tests', () => {
   it('should update admin when PUT method is used and valid data is provided', async () => {
     req.method = 'PUT';
     req.body = {
-      status: false,
-      roleName: 'test_admin',
+      status: true,
+      roleName: ROLE_NAME.OWNER,
     };
     req.query = { adminId: admin.id.toString() };
     await handler(req, res);
@@ -259,7 +227,7 @@ describe('API Handler Tests', () => {
     req.query = { adminId: '-1' };
     req.body = {
       status: false,
-      roleName: ROLE.VIEWER,
+      roleName: ROLE_NAME.VIEWER,
     };
     await handler(req, res);
 

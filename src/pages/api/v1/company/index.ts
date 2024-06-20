@@ -1,10 +1,16 @@
-import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { IRole } from '@/interfaces/role';
 import { checkUser } from '@/lib/utils/auth_check';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
+import {
+  formatCompanyAndRole,
+  formatCompanyAndRoleList,
+} from '@/lib/utils/formatter/admin.formatter';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
+import { createCompanyAndRole, listCompanyAndRole } from '@/lib/utils/repo/admin.repo';
+import { getUserById } from '@/lib/utils/repo/user.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -17,19 +23,11 @@ export default async function handler(
     const session = await checkUser(req, res);
     const { userId } = session;
     if (req.method === 'GET') {
-      const companyRoleList: Array<{ company: ICompany; role: IRole }> =
-        await prisma.admin.findMany({
-          where: {
-            userId,
-          },
-          select: {
-            company: true,
-            role: true,
-          },
-        });
+      const listedCompanyAndRole = await listCompanyAndRole(userId);
+      const companyAndRoleList = await formatCompanyAndRoleList(listedCompanyAndRole);
       const { httpCode, result } = formatApiResponse<Array<{ company: ICompany; role: IRole }>>(
         STATUS_MESSAGE.SUCCESS_GET,
-        companyRoleList
+        companyAndRoleList
       );
       res.status(httpCode).json(result);
     } else if (req.method === 'POST') {
@@ -37,51 +35,10 @@ export default async function handler(
       if (!code || !name || !regional) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const now = Date.now();
-      const nowTimestamp = timestampInSeconds(now);
-      const newCompanyRoleList: { company: ICompany; role: IRole } = await prisma.admin.create({
-        data: {
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
-          company: {
-            create: {
-              code,
-              name,
-              regional,
-              kycStatus: false,
-              createdAt: nowTimestamp,
-              updatedAt: nowTimestamp,
-              startDate: nowTimestamp,
-            },
-          },
-          role: {
-            connectOrCreate: {
-              where: {
-                name: 'ADMIN',
-              },
-              create: {
-                name: 'ADMIN',
-                permissions: ['read'],
-                createdAt: nowTimestamp,
-                updatedAt: nowTimestamp,
-              },
-            },
-          },
-          // Todo: (20240517 - Jacky) Maybe need to force a email?
-          email: '',
-          status: true,
-          startDate: nowTimestamp,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-        },
-        select: {
-          company: true,
-          role: true,
-        },
-      });
+      const getUser = await getUserById(userId);
+      const user = await formatUser(getUser);
+      const createdCompanyRoleList = await createCompanyAndRole(user, code, name, regional);
+      const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
       const { httpCode, result } = formatApiResponse<{ company: ICompany; role: IRole }>(
         STATUS_MESSAGE.CREATED,
         newCompanyRoleList

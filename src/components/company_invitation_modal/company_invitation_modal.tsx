@@ -9,6 +9,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
+import { IAdmin } from '@/interfaces/admin';
 import { ICompany } from '@/interfaces/company';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -30,33 +31,41 @@ const CompanyInvitationModal = ({
   const router = useRouter();
 
   const {
-    data: company,
+    data: adminData,
     trigger: addCompany,
     success,
-  } = APIHandler<ICompany>(APIName.COMPANY_ADD_BY_INVITATION_CODE, { params: { userId: userAuth?.id } }, false, false);
+  } = APIHandler<IAdmin>(
+    APIName.COMPANY_ADD_BY_INVITATION_CODE,
+    { params: { userId: userAuth?.id } },
+    false,
+    false
+  );
 
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   useEffect(() => {
-    if (success && company) {
-      // Info: (20240515 - Julian) Close modal
-      selectCompany(company);
-      setCodeInput('');
-      modalVisibilityHandler();
-      // Info: (20240515 - Julian) Toastify
-      const companyName = company.name; // ToDo: (20240524 - Julian) Get company name by company ID
-      toastHandler({
-        id: ToastId.INVITATION_SUCCESS,
-        type: ToastType.SUCCESS,
-        content: (
-          <p>
-            Congratulations! You&apos;ve successfully joined the{' '}
-            <span className="font-semibold">{companyName}</span> team!
-          </p>
-        ),
-        closeable: true,
-      });
-      router.push(ISUNFA_ROUTE.DASHBOARD);
+    if (success && adminData) {
+      const company = adminData.company as ICompany;
+      // Info: (20240613 - Julian) Reset modal and redirect to dashboard
+      if (company) {
+        selectCompany(company);
+        setCodeInput('');
+        modalVisibilityHandler();
+        // Info: (20240515 - Julian) Toastify
+        const companyName = company.name;
+        toastHandler({
+          id: ToastId.INVITATION_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: (
+            <p>
+              Congratulations! You&apos;ve successfully joined the{' '}
+              <span className="font-semibold">{companyName}</span> team!
+            </p>
+          ),
+          closeable: true,
+        });
+        router.push(ISUNFA_ROUTE.DASHBOARD);
+      }
     } else if (success === false) {
       // Info: (20240516 - Julian) Error handling
       messageModalDataHandler({
@@ -69,7 +78,7 @@ const CompanyInvitationModal = ({
       });
       messageModalVisibilityHandler();
     }
-  }, [success, company]);
+  }, [success, adminData]);
 
   const changeCodeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCodeInput(e.target.value);

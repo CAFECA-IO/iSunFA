@@ -40,8 +40,10 @@ export const timestampToString = (timestamp: number | undefined) => {
       day: '-',
       tomorrow: '-',
       month: '-',
-      monthAndDay: '-',
+      monthString: '-',
+      monthShortName: '-',
       monthFullName: '-',
+      monthAndDay: '-',
       year: '-',
       lastYear: '-',
       lastYearDate: '-',
@@ -110,6 +112,7 @@ export const timestampToString = (timestamp: number | undefined) => {
       .padStart(2, '0')}`, // e.g. 2021-01-02
     month: `${month}`.padStart(2, '0'), // e.g. 01
     monthString: `${monthString}`, // e.g. January (with i18n)
+    monthShortName: `${monthNameShort}`, // e.g. Jan.
     monthFullName: `${monthName}`, // e.g. January
     monthAndDay: `${monthNameShort} ${day}`, // e.g. Jan. 01
     year: `${year}`, // e.g. 2021
@@ -381,10 +384,33 @@ export function isParamNumeric(param: string | string[] | undefined): param is s
   return regex.test(param);
 }
 
+export function convertStringToNumber(param: string | string[] | undefined): number {
+  if (typeof param !== 'string' || param.trim() === '') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+
+  const num = +param;
+  if (Number.isNaN(num)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  return num;
+}
+
 export function isParamString(param: string | string[] | undefined): param is string {
   if (!param || Array.isArray(param)) {
     return false;
   }
 
   return true;
+}
+
+export function changeDateToTimeStampOfDayEnd(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T23:59:59+08:00').getTime());
+  return dateToTimeStamp;
+}
+
+export function changeDateToTimeStampOfDayStart(date: string) {
+  const dateToTimeStamp = timestampInSeconds(new Date(date + 'T00:00:00+08:00').getTime());
+  return dateToTimeStamp;
 }

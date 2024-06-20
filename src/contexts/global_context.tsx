@@ -11,7 +11,6 @@ import {
 } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
-import AddBookmarkModal from '@/components/add_bookmark_modal/add_bookmark_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
@@ -30,17 +29,22 @@ import Toast from '@/components/toast/toast';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
-import { useNotificationCtx } from './notification_context';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { useUserCtx } from './user_context';
 import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AllReportTypesKey } from '@/interfaces/report_type';
+import { useUserCtx } from './user_context';
+import { useNotificationCtx } from './notification_context';
+import { ProjectStage } from '@/constants/project';
+import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 
 interface IGlobalContext {
   width: number;
@@ -90,6 +94,13 @@ interface IGlobalContext {
   isLoadingModalVisible: boolean;
   loadingModalVisibilityHandler: () => void;
 
+  isAddProjectModalVisible: boolean;
+  addProjectModalVisibilityHandler: () => void;
+  addProjectModalDataHandler: (stage: ProjectStage) => void;
+
+  profileUploadModalVisible: boolean;
+  profileUploadModalVisibilityHandler: () => void;
+
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
 
@@ -120,7 +131,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    username: '',
+    invitation: '',
   });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
@@ -156,6 +167,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
   const [filterOptionsForPending, setFilterOptionsForPending] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+
+  const [isAddProjectModalVisible, setIsAddProjectModalVisible] = useState(false);
+  const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
+    ProjectStage.SELLING
+  );
+
+  const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -234,6 +252,18 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsFilterOptionsModalForPendingVisible(!isFilterOptionsModalForPendingVisible);
   };
 
+  const addProjectModalVisibilityHandler = () => {
+    setIsAddProjectModalVisible(!isAddProjectModalVisible);
+  };
+
+  const addProjectModalDataHandler = (stage: ProjectStage) => {
+    setAddProjectDefaultStage(stage);
+  };
+
+  const profileUploadModalVisibilityHandler = () => {
+    setProfileUploadModalVisible(!profileUploadModalVisible);
+  };
+
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
     if (filterType === FilterOptionsModalType.history) {
       filterOptionsModalVisibilityHandlerForHistory();
@@ -259,8 +289,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       closeable,
       autoClose: isAutoClose,
       position: toastPosition,
-      onClose,
-      onOpen,
+      onClose = () => {},
+      onOpen = () => {},
     } = props;
 
     const bodyStyle =
@@ -272,8 +302,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
     const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
-    const closeOnClick = closeable ? true : false; // Info:(20240513 - Julian) default closeOnClick true
-    const draggable = closeable ? true : false; // Info:(20240513 - Julian) default draggable true
+    const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
+    const draggable = closeable; // Info:(20240513 - Julian) default draggable true
     const closeButton = closeable
       ? () => (
           <div className="h-20px w-20px">
@@ -449,6 +479,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isFilterOptionsModalForHistoryVisible,
     isFilterOptionsModalForPendingVisible,
     filterOptionsModalVisibilityHandler,
+    isAddProjectModalVisible,
+    addProjectModalVisibilityHandler,
+    addProjectModalDataHandler,
+    profileUploadModalVisible,
+    profileUploadModalVisibilityHandler,
   };
 
   return (
@@ -461,9 +496,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <RegisterFormModal
         isModalVisible={isRegisterModalVisible}
         modalVisibilityHandler={registerModalVisibilityHandler}
+        data={registerModalData}
       />
 
-      <AddBookmarkModal
+      <EditBookmarkModal
         isModalVisible={isAddBookmarkModalVisible}
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}
       />
@@ -530,6 +566,17 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         filterType={FilterOptionsModalType.history}
         modalVisibilityHandler={filterOptionsModalVisibilityHandlerForHistory}
         getFilterOptions={getFilterOptionsForHistory}
+      />
+
+      <AddProjectModal
+        isModalVisible={isAddProjectModalVisible}
+        modalVisibilityHandler={addProjectModalVisibilityHandler}
+        defaultStage={addProjectDefaultStage}
+      />
+
+      <ProfileUploadModal
+        isModalVisible={profileUploadModalVisible}
+        modalVisibilityHandler={profileUploadModalVisibilityHandler}
       />
 
       {children}

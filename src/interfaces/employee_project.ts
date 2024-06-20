@@ -3,7 +3,7 @@ export interface IEmployeeProject {
   employeeId: number;
   projectId: number;
   startDate: number;
-  endDate: number | null;
+  endDate: number;
   createdAt: number;
   updatedAt: number;
 }

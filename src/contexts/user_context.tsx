@@ -12,16 +12,16 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
-import { ISessionData } from '@/interfaces/session_data';
 
 interface SignUpProps {
   username?: string;
+  invitation?: string;
 }
 
 interface UserContextType {
   credential: string | null;
-  signUp: ({ username }: SignUpProps) => Promise<void>;
-  signIn: () => Promise<void>;
+  signUp: ({ username, invitation }: SignUpProps) => Promise<void>;
+  signIn: ({ invitation }: { invitation?: string }) => Promise<void>;
   signOut: () => void;
   userAuth: IUser | null;
   username: string | null;
@@ -117,22 +117,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     trigger: selectCompanyAPI,
     success: companySelectSuccess,
     code: companySelectCode,
-  } = APIHandler<string>(APIName.COMPANY_SELECT, {}, false, false);
+  } = APIHandler<number>(APIName.COMPANY_SELECT, {}, false, false);
 
   const {
     trigger: getUserSessionData,
     data: userSessionData,
-    error: getUserSessionError,
     success: getUserSessionSuccess,
     isLoading: isGetUserSessionLoading,
     code: getUserSessionCode,
-  } = APIHandler<ISessionData>(APIName.SESSION_GET, {}, false, false);
+  } = APIHandler<{ user: IUser; company: ICompany }>(APIName.SESSION_GET, {}, false, false);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
   };
 
-  const signUp = async ({ username: usernameForSignUp }: SignUpProps) => {
+  const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
     const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
 
     try {
@@ -152,7 +151,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
 
-      signUpAPI({ body: { registration } });
+      if (invitation) {
+        signUpAPI({ body: { registration }, query: { invitation } });
+      } else {
+        signUpAPI({ body: { registration } });
+      }
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -166,7 +169,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       先檢查 cookie ，然後檢查是否有 credential 、驗證 credential 有沒有過期或亂寫，
       拿著 credential 跟 server 去拿 member 資料、付錢資料
   */
-  const signIn = async () => {
+  const signIn = async ({ invitation }: { invitation?: string }) => {
     try {
       setIsSignInError(false);
 
@@ -181,7 +184,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         debug: false,
       });
 
-      signInAPI({ body: { authentication, challenge: newChallenge } });
+      if (invitation) {
+        signInAPI({ body: { authentication, challenge: newChallenge }, query: { invitation } });
+      } else {
+        signInAPI({ body: { authentication, challenge: newChallenge } });
+      }
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -208,6 +215,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!company) {
       setSelectedCompany(null);
       setSuccessSelectCompany(undefined);
+      // Info: (20240618 - Julian) 如果取消選擇公司，就把 companyId 設為 0
+      selectCompanyAPI({
+        params: {
+          companyId: 0,
+        },
+      });
       return;
     }
     setSelectedCompany(company);
@@ -237,7 +250,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    signOutAPI(); // TODO: signOutAPI to delete the session (20240524 - Shirley)
+    signOutAPI();
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
   };
@@ -296,7 +309,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isGetUserSessionLoading) return;
 
-    // Deprecated: dev (20240601 - Shirley)
+    // Deprecated: dev (20240630 - Shirley)
     // eslint-disable-next-line no-console
     console.log('userSessionData:', userSessionData);
 
@@ -321,9 +334,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     if (getUserSessionSuccess === false) {
       setIsSignInError(true);
-      // Deprecated: dev (20240601 - Shirley)
-      // eslint-disable-next-line no-console
-      console.log('getUserSessionError:', getUserSessionError);
+
       setErrorCode(getUserSessionCode ?? '');
       setSuccessSelectCompany(undefined);
       setSelectedCompany(null);

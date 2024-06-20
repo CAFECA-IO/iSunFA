@@ -5,9 +5,47 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { MONTH_FULL_LIST_SHORT } from '@/constants/display';
 import prisma from '@/client';
+import { checkAdmin } from '@/lib/utils/auth_check';
+
+async function makeSeriesAnnotations(
+  totalIncome: number[],
+  totalExpense: number[],
+  totalProfit: number[]
+) {
+  const series = [
+    {
+      name: 'Income',
+      data: totalIncome,
+    },
+    {
+      name: 'Expense',
+      data: totalExpense,
+    },
+    {
+      name: 'Profit Status',
+      data: totalProfit,
+    },
+  ];
+  const annotations = [
+    {
+      name: 'Income',
+      data: totalIncome.map((ele) => ({ absolute: ele })),
+    },
+    {
+      name: 'Expense',
+      data: totalExpense.map((ele) => ({ absolute: ele })),
+    },
+    {
+      name: 'Profit Status',
+      data: totalProfit.map((ele) => ({ absolute: ele })),
+    },
+  ];
+  return { series, annotations };
+}
 
 async function getIncomeExpenseTrendChartData(
-  period: string
+  period: string,
+  companyId: number
 ): Promise<IIncomeExpenseTrendChartData> {
   // Info: (20240528 - Gibbs) use raw sql to get data from prisma cashflow groupBy year, month, sum income and expense
   const incomeExpenseData: {
@@ -23,6 +61,8 @@ async function getIncomeExpenseTrendChartData(
       SUM(expense) AS total_expense
       FROM 
           income_expense
+      WHERE
+          "company_id" = ${companyId}
       GROUP BY 
           1, 2
       ORDER BY 
@@ -34,7 +74,10 @@ async function getIncomeExpenseTrendChartData(
     const categories = MONTH_FULL_LIST_SHORT;
     // Info: (20240528 - Gibbs) use 0 if no data found in month
     categories.forEach((_, index) => {
-      const data = incomeExpenseData.find((ele) => Number(ele.month) === index + 1);
+      const targetYear = new Date().getFullYear();
+      const data = incomeExpenseData.find(
+        (ele) => Number(ele.year) === targetYear && Number(ele.month) === index + 1
+      );
       if (data) {
         totalIncome.push(Number(data.total_income));
         totalExpense.push(Number(data.total_expense));
@@ -45,38 +88,19 @@ async function getIncomeExpenseTrendChartData(
         totalProfit.push(0);
       }
     });
-    const series = [
-      {
-        name: 'Income',
-        data: totalIncome,
-      },
-      {
-        name: 'Expense',
-        data: totalExpense,
-      },
-      {
-        name: 'Profit Status',
-        data: totalProfit,
-      },
-    ];
-    const annotations = [
-      {
-        name: 'Income',
-        data: totalIncome.map((ele) => ({ absolute: ele })),
-      },
-      {
-        name: 'Expense',
-        data: totalExpense.map((ele) => ({ absolute: ele })),
-      },
-      {
-        name: 'Profit Status',
-        data: totalProfit.map((ele) => ({ absolute: ele })),
-      },
-    ];
+    const { series, annotations } = await makeSeriesAnnotations(
+      totalIncome,
+      totalExpense,
+      totalProfit
+    );
+    const emptyTotalIncome = totalIncome.every((ele) => ele === 0);
+    const emptyTotalExpense = totalExpense.every((ele) => ele === 0);
+    const empty = emptyTotalIncome && emptyTotalExpense;
     const IncomeExpenseTrendChartData: IIncomeExpenseTrendChartData = {
       categories,
       series,
       annotations,
+      empty,
     };
     return IncomeExpenseTrendChartData;
   }
@@ -101,38 +125,17 @@ async function getIncomeExpenseTrendChartData(
         : Number(ele.total_expense);
       totalProfit[index] = totalIncome[index] - totalExpense[index];
     });
-    const series = [
-      {
-        name: 'Income',
-        data: totalIncome,
-      },
-      {
-        name: 'Expense',
-        data: totalExpense,
-      },
-      {
-        name: 'Profit Status',
-        data: totalProfit,
-      },
-    ];
-    const annotations = [
-      {
-        name: 'Income',
-        data: totalIncome.map((ele) => ({ absolute: ele })),
-      },
-      {
-        name: 'Expense',
-        data: totalExpense.map((ele) => ({ absolute: ele })),
-      },
-      {
-        name: 'Profit Status',
-        data: totalProfit.map((ele) => ({ absolute: ele })),
-      },
-    ];
+    const { series, annotations } = await makeSeriesAnnotations(
+      totalIncome,
+      totalExpense,
+      totalProfit
+    );
+    const empty = categories.length === 0;
     const IncomeExpenseTrendChartData: IIncomeExpenseTrendChartData = {
       categories,
       series,
       annotations,
+      empty,
     };
     return IncomeExpenseTrendChartData;
   }
@@ -147,8 +150,10 @@ export default async function handler(
     if (req.method !== 'GET') {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
+    const session = await checkAdmin(req, res);
+    const { companyId } = session;
     const { period = 'month' } = req.query;
-    const responseData = await getIncomeExpenseTrendChartData(period as string);
+    const responseData = await getIncomeExpenseTrendChartData(period as string, companyId);
     const { httpCode, result } = formatApiResponse<IIncomeExpenseTrendChartData>(
       STATUS_MESSAGE.SUCCESS_GET,
       responseData

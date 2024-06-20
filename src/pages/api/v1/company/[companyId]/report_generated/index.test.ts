@@ -1,142 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ReportKind } from '@/interfaces/report_item';
-import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import prisma from '@/client';
 import handler from './index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
-
-const dummyGeneratedReportItems = [
-  {
-    id: 10000006,
-    name: 'Cash Flow Balance Sheet-20240423-1-20240420-1',
-    from: 1715616000,
-    to: 1718208000,
-    reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    blockChainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.balance_sheet,
-    type: ReportKind.financial,
-    status: 'generated',
-    createdAt: 1713815673,
-    updatedAt: 1713815673,
-  },
-  {
-    id: 10000007,
-    name: 'Cash Flow Statement-20240420-1',
-    from: 1715529600,
-    to: 1718121600,
-    projectId: 8888881,
-    reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    blockChainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.cash_flow_statement,
-    type: ReportKind.financial,
-    status: 'generated',
-    createdAt: 1713543101,
-    updatedAt: 1713543101,
-  },
-  {
-    id: 10000008,
-    name: 'Balance Sheet-20240427-1',
-    projectId: 8888882,
-    reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    blockChainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.balance_sheet,
-    type: ReportKind.financial,
-    from: 1715443200,
-    to: 1718035200,
-    status: 'generated',
-    createdAt: 1714220640,
-    updatedAt: 1714220640,
-  },
-  {
-    id: 10000009,
-    name: 'Comprehensive Income Statement-20240422-1',
-    reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000011111111111111111111111117',
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
-    blockChainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.comprehensive_income_statement,
-    type: ReportKind.financial,
-    from: 1715356800,
-    to: 1717948800,
-    status: 'generated',
-    createdAt: 1713755682,
-    updatedAt: 1713755682,
-  },
-  {
-    id: 100000010,
-    name: 'Balance Sheet-20240429-1',
-    projectId: 8888883,
-    reportLink: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
-    blockChainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c109111111111111111111111111111111111111117',
-    reportType: FinancialReportTypesKey.balance_sheet,
-    type: ReportKind.financial,
-    from: 1715270400,
-    to: 1717862400,
-    status: 'generated',
-    createdAt: 1714331987,
-    updatedAt: 1714331987,
-  },
-];
-
-const projects = [
-  {
-    id: 8888881,
-    companyId: 888888100,
-    name: 'iSunFA',
-    completedPercent: 30,
-    stage: 'Designing',
-    createdAt: 1651368365,
-    updatedAt: 1651368365,
-    imageId: 'ISF',
-  },
-  {
-    id: 8888882,
-    companyId: 888888100,
-    name: 'BAIFA',
-    completedPercent: 80,
-    stage: 'Beta Testing',
-    createdAt: 1651368365,
-    updatedAt: 1651368365,
-    imageId: 'BF',
-  },
-  {
-    id: 8888883,
-    companyId: 888888100,
-    name: 'iSunOne',
-    completedPercent: 60,
-    stage: 'Develop',
-    createdAt: 1651368365,
-    updatedAt: 1651368365,
-    imageId: 'ISO',
-  },
-];
-
-const company = {
-  id: 888888100,
-  name: 'Test Company',
-  code: 'TST_company_user-100',
-  regional: 'TW',
-  kycStatus: false,
-  imageId: 'TSTimage',
-  startDate: 1717143507,
-  createdAt: 1717143507,
-  updatedAt: 1717143507,
-};
 
 beforeEach(async () => {
   req = {
@@ -159,15 +25,6 @@ afterEach(async () => {
 
 describe('generatedReports API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
-    await prisma.company.create({
-      data: company,
-    });
-    await prisma.project.createMany({
-      data: projects,
-    });
-    await prisma.report.createMany({
-      data: dummyGeneratedReportItems,
-    });
     req.method = 'GET';
     await handler(req, res);
     const responsePayload = res.json.mock.calls[0][0];
@@ -208,25 +65,6 @@ describe('generatedReports API Handler Tests', () => {
         payload: expect.arrayContaining([expectedStructure]),
       })
     );
-    await prisma.report.deleteMany({
-      where: {
-        id: {
-          in: dummyGeneratedReportItems.map((item) => item.id),
-        },
-      },
-    });
-    await prisma.project.deleteMany({
-      where: {
-        id: {
-          in: projects.map((project) => project.id),
-        },
-      },
-    });
-    await prisma.company.delete({
-      where: {
-        id: company.id,
-      },
-    });
   });
   it('should return [] if no data', async () => {
     req.method = 'GET';

@@ -1,16 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-
 import { server } from '@passwordless-id/webauthn';
-import prisma from '@/client';
 import { IUser } from '@/interfaces/user';
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse, getDomains, timestampInSeconds } from '@/lib/utils/common';
+import { STATUS_MESSAGE, SuccessMessage } from '@/constants/status_code';
+import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { IUserAuth } from '@/interfaces/webauthn';
 import { DUMMY_CHALLENGE } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IInvitation } from '@/interfaces/invitation';
 import { getSession } from '@/lib/utils/get_session';
 import { generateUserIcon } from '@/lib/utils/generate_user_icon';
+import { checkInvitation } from '@/lib/utils/auth_check';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
+import { createUser } from '@/lib/utils/repo/user.repo';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -34,9 +35,6 @@ export default async function handler(
       registration,
       expected
     )) as IUserAuth;
-    const { credential } = registrationParsed;
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
     let imageUrl = '';
     try {
       imageUrl = await generateUserIcon(registrationParsed.username);
@@ -47,76 +45,30 @@ export default async function handler(
       console.error('Failed to generate user icon', e);
     }
 
-    const newUser = {
-      name: registrationParsed.username,
-      credentialId: credential.id,
-      publicKey: credential.publicKey,
-      algorithm: credential.algorithm,
-      imageId: imageUrl, // ToDo: check the interface (20240516 - Luphia)
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    };
-    const createdUser: IUser = await prisma.user.create({
-      data: newUser,
-    });
+    const createdUser = await createUser(
+      registrationParsed.username,
+      registrationParsed.credential.id,
+      registrationParsed.credential.publicKey,
+      registrationParsed.credential.algorithm,
+      imageUrl
+    );
+    const user = await formatUser(createdUser);
     const session = await getSession(req, res);
     session.userId = createdUser.id;
-    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, createdUser);
-    res.status(httpCode).json(result);
+    let successMessage: SuccessMessage = STATUS_MESSAGE.CREATED;
     if (req.query.invitation) {
-      // update user
-      const invitation = (await prisma.invitation.findUnique({
-        where: {
-          code: req.query.invitation as string,
-        },
-      })) as IInvitation;
-      if (!invitation) {
-        return;
+      try {
+        const invitation = await checkInvitation(req.query.invitation as string, createdUser.id);
+        await createAdminByInvitation(createdUser.id, invitation);
+        successMessage = STATUS_MESSAGE.CREATED_INVITATION;
+      } catch (error) {
+        // TODO: (20240617 - Jacky): Log error in future
+        successMessage = STATUS_MESSAGE.CREATED_WITH_INVALID_INVITATION;
       }
-      if (invitation.hasUsed) {
-        return;
-      }
-      if (invitation.expiredAt < nowTimestamp) {
-        return;
-      }
-      const email = createdUser.email || '';
-      await prisma.$transaction(async (tx) => {
-        await tx.admin.create({
-          data: {
-            user: {
-              connect: {
-                id: createdUser.id,
-              },
-            },
-            company: {
-              connect: {
-                id: invitation.companyId,
-              },
-            },
-            role: {
-              connect: {
-                id: invitation.roleId,
-              },
-            },
-            email,
-            status: true,
-            startDate: nowTimestamp,
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        });
-        await tx.invitation.update({
-          where: {
-            code: req.query.invitation as string,
-          },
-          data: {
-            hasUsed: true,
-          },
-        });
-      });
     }
+    const { httpCode, result } = formatApiResponse<IUser>(successMessage, user);
+    res.status(httpCode).json(result);
   } catch (_error) {
-    // Handle errors
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
     res.status(httpCode).json(result);

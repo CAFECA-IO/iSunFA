@@ -213,7 +213,7 @@ module.exports = {
         },
         'stroke-neutral': {
           invert: 'var(--stroke-neutral-invert)',
-          muted: 'var(--stroke-neutral-muted)',
+          mute: 'var(--stroke-neutral-mute)',
           primary: 'var(--stroke-neutral-primary)',
           quaternary: 'var(--stroke-neutral-quaternary)',
           secondary: 'var(--stroke-neutral-secondary)',
@@ -341,7 +341,7 @@ module.exports = {
           invert: 'var(--text-neutral-invert)',
           link: 'var(--text-neutral-link)',
           'link-hover': 'var(--text-neutral-link-hover)',
-          muted: 'var(--text-neutral-muted)',
+          mute: 'var(--text-neutral-mute)',
           primary: 'var(--text-neutral-primary)',
           secondary: 'var(--text-neutral-secondary)',
           'solid-dark': 'var(--text-neutral-solid-dark)',
@@ -767,6 +767,8 @@ module.exports = {
         reportCover: 'url("/documents/cover.svg")',
         contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
         headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
+
+        spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
       },
       zIndex: {
         '-10': '-10',

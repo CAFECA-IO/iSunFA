@@ -185,6 +185,9 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number) {
     });
 
     if (!invoice) {
+      // Depreciate: ( 20240605 - Murky ) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
   } catch (error) {
@@ -251,6 +254,9 @@ export async function createInvoiceAndPaymentInPrisma(invoiceData: IInvoice, jou
       return invoice.id;
     });
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -325,6 +331,9 @@ export async function updateInvoiceAndPaymentInPrisma(
         return invoice.id;
       });
     } catch (error) {
+      // Depreciate ( 20240522 - Murky ) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
     return updatedInvoiceId;
@@ -492,6 +501,9 @@ export async function handlePrismaSavingLogic(
 
     return journalIdBeCreateOrUpdate;
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }

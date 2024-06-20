@@ -174,7 +174,7 @@ const ProjectProgressChart = () => {
   const { selectedCompany } = useUserCtx();
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
-
+  // TODO: 改成 company startDate (20240618 - Shirley)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 
@@ -185,7 +185,7 @@ const ProjectProgressChart = () => {
       data: number[];
     }[]
   >([]);
-  const [categories, setCategories] = useState<string[]>(DUMMY_CATEGORIES);
+  const [categories, setCategories] = useState<string[]>([]);
 
   const displayedYear = maxDate.getFullYear();
 
@@ -203,6 +203,8 @@ const ProjectProgressChart = () => {
       date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
     },
   });
+
+  const isNoData = projectProgress?.empty || !projectProgress || !listSuccess;
 
   const displayedDate = (() => {
     const startDate = period.startTimeStamp
@@ -231,6 +233,7 @@ const ProjectProgressChart = () => {
       setCategories(c);
       setSeries(s);
     } else if (listSuccess === false) {
+      setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
         content: `Failed to get project progress data. Error code: ${listCode}`,
@@ -262,6 +265,19 @@ const ProjectProgressChart = () => {
       <span className="text-sm font-semibold leading-5 tracking-normal text-text-brand-secondary-lv1">
         {displayedDate}
       </span>{' '}
+    </div>
+  );
+
+  const displayedChart = isNoData ? (
+    <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
+      <ColumnChart data={data} />
+      <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
+        <p className="text-xl font-bold text-text-neutral-mute">No Data</p>
+      </div>
+    </div>
+  ) : (
+    <div className="-ml-3 mt-5 md:mt-5 lg:mt-0">
+      <ColumnChart data={data} />
     </div>
   );
 
@@ -313,6 +329,7 @@ const ProjectProgressChart = () => {
           </div>
           <div className="w-10">
             <DatePicker
+              disabled={isNoData}
               type={DatePickerType.ICON_DATE}
               minDate={minDate}
               maxDate={maxDate}
@@ -325,9 +342,7 @@ const ProjectProgressChart = () => {
         </div>
       </div>
 
-      <div className="-ml-3 mt-5 md:mt-5 lg:mt-0">
-        <ColumnChart data={data} />
-      </div>
+      {displayedChart}
     </div>
   );
   return <div>{displayedDataSection}</div>;

@@ -29,7 +29,7 @@ export interface IEmployeeData {
 export interface IEmployee {
   id: number;
   name: string;
-  imageId: string | null;
+  imageId: string;
   departmentId: number;
   companyId: number;
   salary: number;
@@ -38,7 +38,7 @@ export interface IEmployee {
   salaryPayMode: string;
   payFrequency: string;
   startDate: number;
-  endDate: number | null;
+  endDate: number;
   createdAt: number;
   updatedAt: number;
 }

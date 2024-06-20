@@ -92,3 +92,8 @@ export enum DatePickerAlign {
 }
 
 export const LIMIT_NOTIFICATION_TITLE = 100;
+
+export enum ActionType {
+  login = 'login',
+  register = 'register',
+}

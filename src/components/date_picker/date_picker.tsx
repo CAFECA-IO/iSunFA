@@ -51,6 +51,7 @@ interface IDatePickerProps {
   alignCalendar?: DatePickerAlign;
   customCalendarAlignment?: string;
   datePickerClassName?: string;
+  disabled?: boolean;
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -199,6 +200,7 @@ const DatePicker = ({
   onClose,
   alignCalendar,
   datePickerClassName,
+  disabled,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -361,6 +363,7 @@ const DatePicker = ({
   const displayedButtonContent =
     type === DatePickerType.ICON_PERIOD || type === DatePickerType.ICON_DATE ? (
       <Button
+        disabled={disabled}
         type="button"
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
@@ -373,6 +376,7 @@ const DatePicker = ({
           {
             [buttonStyleAfterDateSelected]: isDateSelected,
             'border-primaryYellow text-primaryYellow': componentVisible,
+            'cursor-not-allowed border-button-stroke-disable text-button-text-disable': disabled,
           }
         )}
       >
@@ -400,6 +404,7 @@ const DatePicker = ({
       </Button>
     ) : type === DatePickerType.TEXT_PERIOD || type === DatePickerType.TEXT_DATE ? (
       <Button
+        disabled={disabled}
         type="button"
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
@@ -409,6 +414,7 @@ const DatePicker = ({
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
             'text-secondaryBlue': isDateSelected,
+            'cursor-not-allowed border-button-stroke-disable text-button-text-disable': disabled,
           }
         )}
       >

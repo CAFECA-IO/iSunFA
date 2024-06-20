@@ -3,27 +3,19 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/client';
-import { checkUser } from '@/lib/utils/auth_check';
+import { checkRole } from '@/lib/utils/auth_check';
+import { ROLE_NAME } from '@/constants/role_name';
+import { getUserById, updateUserById } from '@/lib/utils/repo/user.repo';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUser>>
 ) {
   try {
-    const session = await checkUser(req, res);
-    const { userId } = session;
-    const admin = await prisma.admin.findMany({
-      where: {
-        userId,
-      },
-      select: {
-        role: true,
-      },
-    });
-    const roleNames: string[] = admin.map((item) => item.role.name);
-    if (!roleNames.includes('SUPER_ADMIN')) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    await checkRole(req, res, ROLE_NAME.SUPER_ADMIN);
+    if (!req.query.userId) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
     const userIdNum = Number(req.query.userId);
     if (Number.isNaN(userIdNum)) {
@@ -31,46 +23,16 @@ export default async function handler(
     }
     if (req.method === 'GET') {
       // Handle GET request to retrieve user by userid
-      const user: IUser = (await prisma.user.findUnique({
-        where: {
-          id: userIdNum,
-        },
-      })) as IUser;
-      if (!user) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
+      const getUser = await getUserById(userIdNum);
+      const user = await formatUser(getUser);
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_GET, user);
       res.status(httpCode).json(result);
     } else if (req.method === 'PUT') {
       // Handle PUT request to update user by userid
       const { name, fullName, email, phone, imageId } = req.body;
-      const user: IUser = await prisma.user.update({
-        where: {
-          id: userIdNum,
-        },
-        data: {
-          name,
-          email,
-          fullName,
-          phone,
-          imageId,
-        },
-      });
+      const updatedUser = await updateUserById(userIdNum, name, fullName, email, phone, imageId);
+      const user = await formatUser(updatedUser);
       const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_UPDATE, user);
-      res.status(httpCode).json(result);
-    } else if (req.method === 'DELETE') {
-      // Handle DELETE request to delete user by userid
-      await prisma.admin.deleteMany({
-        where: {
-          userId: userIdNum,
-        },
-      });
-      const user = await prisma.user.delete({
-        where: {
-          id: userIdNum,
-        },
-      });
-      const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.SUCCESS_DELETE, user);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);

@@ -75,6 +75,8 @@ model Admin {
 model Client {
   id        Int     @id @default(autoincrement())
   companyId Int     @map("company_id")
+  name      String
+  taxId     String  @map("tax_id")
   favorite  Boolean
   createdAt Int     @map("created_at")
   updatedAt Int     @map("updated_at")

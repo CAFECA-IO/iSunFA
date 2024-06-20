@@ -5,7 +5,7 @@ export interface IInvitation {
   createdUserId: number;
   code: string;
   email: string;
-  phone: string | null;
+  phone: string;
   hasUsed: boolean;
   expiredAt: number;
   createdAt: number;

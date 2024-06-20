@@ -1,15 +1,14 @@
-import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompany } from '@/interfaces/company';
-import { IInvitation } from '@/interfaces/invitation';
+import { IAdmin } from '@/interfaces/admin';
 import { IResponseData } from '@/interfaces/response_data';
-import { checkUser } from '@/lib/utils/auth_check';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { checkInvitation, checkUser } from '@/lib/utils/auth_check';
+import { formatApiResponse } from '@/lib/utils/common';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | ICompany[]>>
+  res: NextApiResponse<IResponseData<IAdmin>>
 ) {
   try {
     if (req.method === 'PUT') {
@@ -20,65 +19,16 @@ export default async function handler(
       if (!invitation) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const getInvitation: IInvitation = (await prisma.invitation.findUnique({
-        where: {
-          code: invitation as string,
-        },
-      })) as IInvitation;
-      if (!getInvitation) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-      if (getInvitation.hasUsed) {
-        throw new Error(STATUS_MESSAGE.INVITATION_HAS_USED);
-      }
-      const { company } = await prisma.$transaction(async (tx) => {
-        await tx.invitation.update({
-          where: {
-            id: getInvitation.id,
-          },
-          data: {
-            hasUsed: true,
-          },
-        });
-        const now = Date.now();
-        const nowTimestamp = timestampInSeconds(now);
-        const connectedCompany = await tx.admin.create({
-          data: {
-            user: {
-              connect: {
-                id: userId,
-              },
-            },
-            role: {
-              connect: {
-                id: getInvitation.roleId,
-              },
-            },
-            company: {
-              connect: {
-                id: getInvitation.companyId,
-              },
-            },
-            startDate: nowTimestamp,
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-            email: getInvitation.email,
-            status: true,
-          },
-          select: {
-            company: true,
-          },
-        });
-        return connectedCompany;
-      });
-      const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.SUCCESS, company);
+      const invitationInstance = await checkInvitation(invitation, userId);
+      const admin = await createAdminByInvitation(userId, invitationInstance);
+      const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS, admin);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ICompany>(error.message, {} as ICompany);
+    const { httpCode, result } = formatApiResponse<IAdmin>(error.message, {} as IAdmin);
     res.status(httpCode).json(result);
   }
 }

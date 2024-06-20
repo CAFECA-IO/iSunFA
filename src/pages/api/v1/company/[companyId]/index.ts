@@ -1,9 +1,16 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/client';
+import { checkRole, checkUser } from '@/lib/utils/auth_check';
+import { deleteCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
+import { ROLE_NAME } from '@/constants/role_name';
+import {
+  deleteAdminListByCompanyId,
+  getAdminByCompanyIdAndUserId,
+} from '@/lib/utils/repo/admin.repo';
+import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,20 +19,12 @@ export default async function handler(
   const { method } = req;
 
   try {
-    if (!req.query.companyId) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-    const companyIdNum = Number(req.query.companyId);
-    // Info: (20240419 - Jacky) C010002 - GET /client/:id
     if (method === 'GET') {
-      const company: ICompany = (await prisma.company.findUnique({
-        where: {
-          id: companyIdNum,
-        },
-      })) as ICompany;
-      if (!company) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
+      const companyId = convertStringToNumber(req.query.companyId);
+      const session = await checkUser(req, res);
+      const { userId } = session;
+      const getAdmin = await getAdminByCompanyIdAndUserId(companyId, userId);
+      const company: ICompany = await formatCompany(getAdmin.company);
       const { httpCode, result } = formatApiResponse<ICompany>(STATUS_MESSAGE.SUCCESS_GET, company);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010004 - PUT /client/:id
@@ -34,16 +33,10 @@ export default async function handler(
       if (!code && !name && !regional) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const company: ICompany = await prisma.company.update({
-        where: {
-          id: companyIdNum,
-        },
-        data: {
-          code,
-          name,
-          regional,
-        },
-      });
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
+      const { companyId } = session;
+      const updatedCompany = await updateCompanyById(companyId, code, name, regional);
+      const company: ICompany = await formatCompany(updatedCompany);
       const { httpCode, result } = formatApiResponse<ICompany>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
         company
@@ -51,16 +44,11 @@ export default async function handler(
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) C010005 - DELETE /client/:id
     } else if (method === 'DELETE') {
-      await prisma.admin.deleteMany({
-        where: {
-          companyId: companyIdNum,
-        },
-      });
-      const company: ICompany = await prisma.company.delete({
-        where: {
-          id: companyIdNum,
-        },
-      });
+      const session = await checkRole(req, res, ROLE_NAME.OWNER);
+      const { companyId } = session;
+      await deleteAdminListByCompanyId(companyId);
+      const deletedCompany = await deleteCompanyById(companyId);
+      const company: ICompany = await formatCompany(deletedCompany);
       const { httpCode, result } = formatApiResponse<ICompany>(
         STATUS_MESSAGE.SUCCESS_DELETE,
         company

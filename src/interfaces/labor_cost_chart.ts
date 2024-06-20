@@ -4,6 +4,7 @@ export interface ILaborCostChartData {
   date: number;
   categories: string[];
   series: number[];
+  empty: boolean;
 }
 
 export function generateRandomLaborCostData(items: number): ILaborCostChartData {
@@ -37,11 +38,13 @@ export function generateRandomLaborCostData(items: number): ILaborCostChartData 
     'Project Z',
   ].slice(0, items);
   const series = Array.from({ length: items }, () => Math.floor(Math.random() * 100));
+  const empty = false;
 
   return {
     date,
     categories,
     series,
+    empty,
   };
 }
 
