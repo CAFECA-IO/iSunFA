@@ -41,15 +41,27 @@ async function getWorkRates(companyId: number, date: number) {
 }
 
 async function getSalaryRecords(date: number) {
-  const salaryRecords: {
-    employee_id: number;
-    total_payment: number;
-    created_at: number;
-  }[] = await prisma.$queryRaw`
-    SELECT employee_id, (salary + insurance_payment + bonus) AS total_payment, created_at 
-    FROM salary_record 
-    WHERE created_at <= ${date};
-  `;
+  const salaryRecordsResult = await prisma.salaryRecord.findMany({
+    where: {
+      createdAt: {
+        lte: date,
+      },
+    },
+    select: {
+      employeeId: true,
+      salary: true,
+      insurancePayment: true,
+      bonus: true,
+      createdAt: true,
+    },
+  });
+  const salaryRecords = salaryRecordsResult.map((sr) => {
+    return {
+      employee_id: sr.employeeId,
+      total_payment: sr.salary + sr.insurancePayment + sr.bonus,
+      created_at: sr.createdAt,
+    };
+  });
   return salaryRecords;
 }
 
