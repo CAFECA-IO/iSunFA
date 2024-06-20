@@ -56,6 +56,9 @@ async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
     });
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
 
@@ -78,6 +81,9 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   try {
     json = await responseJSON;
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -147,6 +153,10 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     handleErrorResponse(res, error.message);
   }
 }
