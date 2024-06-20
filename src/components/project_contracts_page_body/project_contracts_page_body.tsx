@@ -160,7 +160,7 @@ const ProjectContractsPageBody = () => {
         totalPages={totalPages}
       />
     ) : (
-      <div className="grid w-full grid-cols-2 grid-rows-2 gap-x-35px gap-y-24px">
+      <div className="grid w-full grid-cols-1 gap-x-35px gap-y-24px md:grid-cols-2 md:grid-rows-2">
         {statusList.map((status) => (
           <ContractStatusBlock key={status} status={status} contracts={filteredContracts} />
         ))}

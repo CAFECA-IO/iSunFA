@@ -42,16 +42,15 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
     .map((word) => word[0])
     .join('');
 
+  const durationColor =
+    status === 'Expired' ? 'text-text-state-error' : 'text-text-neutral-tertiary';
+
   const contractDurationStart = parseInt(contractDuration.start, 10);
   const contractDurationEnd = parseInt(contractDuration.end, 10);
   const displayContractPeriod = (
     <p className="text-sm font-semibold text-text-neutral-tertiary">
       {timestampToString(contractDurationStart).date} to{' '}
-      <span
-        className={status === 'Expired' ? 'text-text-state-error' : 'text-text-neutral-tertiary'}
-      >
-        {timestampToString(contractDurationEnd).date}
-      </span>
+      <span className={`${durationColor}`}>{timestampToString(contractDurationEnd).date}</span>
     </p>
   );
 
@@ -126,23 +125,38 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
   } else {
     // Info: (20240620 - Julian) Contract card layout for grid
     return (
-      <div className="flex w-180px flex-none flex-col items-stretch overflow-hidden rounded-sm border border-stroke-neutral-quaternary">
-        {/* Info: (20240620 - Julian) Header */}
-        <div className={`${statusMainColor.mainBg} text-center text-xs text-badge-text-invert`}>
-          {statusStr}
-        </div>
-        {/* Info: (20240620 - Julian) Content */}
-        <div className="flex flex-col items-center gap-y-10px px-16px py-12px">
-          <p className="text-xl font-semibold text-text-brand-secondary-lv2">{contractName}</p>
-          <div className="flex h-24px w-24px items-center justify-center rounded-full bg-avatar-surface-background-indigo text-sm font-bold text-avatar-text-in-dark-background">
-            {abbvProjectName}
+      <div className="flex flex-col gap-y-8px">
+        {/* Info: (20240620 - Julian) Card */}
+        <div className="flex w-180px flex-none flex-col items-stretch overflow-hidden rounded-sm border border-stroke-neutral-quaternary">
+          {/* Info: (20240620 - Julian) Header */}
+          <div
+            className={`${statusMainColor.mainBg} flex h-22px items-center justify-center text-xs text-badge-text-invert`}
+          >
+            {statusStr}
           </div>
-          <p className="text-sm text-text-neutral-tertiary">{signatory}</p>
+          {/* Info: (20240620 - Julian) Content */}
+          <div className="flex flex-col items-center gap-y-10px px-16px py-12px">
+            <p className="text-xl font-semibold text-text-brand-secondary-lv2">{contractName}</p>
+            <div className="flex h-24px w-24px items-center justify-center rounded-full bg-avatar-surface-background-indigo text-sm font-bold text-avatar-text-in-dark-background">
+              {abbvProjectName}
+            </div>
+            <p className="text-sm text-text-neutral-tertiary">{signatory}</p>
+          </div>
+          {/* Info: (20240620 - Julian) Progress bars */}
+          <div className="flex flex-col gap-y-12px">
+            {paymentBar}
+            {progressBar}
+          </div>
         </div>
-        {/* Info: (20240620 - Julian) Progress bars */}
-        <div className="flex flex-col gap-y-12px">
-          {paymentBar}
-          {progressBar}
+        {/* Info: (20240620 - Julian) Duration */}
+        <div className="flex flex-col gap-y-8px">
+          <p className="text-xs text-text-neutral-tertiary">Duration</p>
+          <p className="text-xs text-text-neutral-tertiary">
+            {timestampToString(contractDurationStart).date} to{' '}
+            <span className={`${durationColor}`}>
+              {timestampToString(contractDurationEnd).date}
+            </span>
+          </p>
         </div>
       </div>
     );
