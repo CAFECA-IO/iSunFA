@@ -3,9 +3,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IMilestone } from '@/interfaces/project';
 import { Project } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
-import { timestampInSeconds } from '../../common';
-import { listProjectMilestone } from '../milestone.repo';
-import { formatMilestoneList } from '../../formatter/milestone.formatter';
+import { timestampInSeconds } from '@/lib/utils/common';
+import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
+import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 
 function adjustMilestoneList(
   milestoneList: IMilestone[],

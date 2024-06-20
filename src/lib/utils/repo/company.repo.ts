@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { Company } from '@prisma/client';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function getCompanyById(companyId: number): Promise<Company> {
   const company = await prisma.company.findUnique({
