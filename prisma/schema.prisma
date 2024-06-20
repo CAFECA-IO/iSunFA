@@ -97,6 +97,7 @@ model Company {
   employees       Employee[]
   invitations     Invitation[]
   journals        Journal[]
+  orders          Order[]
   projects        Project[]
   subscriptions   Subscription[]
   auditReports    AuditReport[]
@@ -340,6 +341,20 @@ model Ocr {
   journal   Journal?
 }
 
+model Order {
+  id        Int     @id @default(autoincrement())
+  companyId Int     @map("company_id")
+  planId    Int     @map("plan_id")
+  status    String
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+  company   Company @relation(fields: [companyId], references: [id])
+  plan      Plan    @relation(fields: [planId], references: [id])
+
+  paymentRecords PaymentRecord[]
+  @@map("order")
+}
+
 model Project {
   id               Int               @id @default(autoincrement())
   companyId        Int               @map("company_id")
@@ -387,7 +402,7 @@ model Payment {
 
 model PaymentRecord {
   id             Int          @id @default(autoincrement())
-  subscriptionId Int          @map("subscription_id")
+  orderId        Int          @map("order_id")
   // Info: Third party payment transaction id (20240604 - Jacky)
   transactionId  String       @map("transaction_id")
   date           Int
@@ -397,7 +412,8 @@ model PaymentRecord {
   status         String // completed、failed、pending
   createdAt      Int          @map("created_at")
   updatedAt      Int          @map("updated_at")
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  order         Order         @relation(fields: [orderId], references: [id])
 
   @@map("payment_record")
 }
@@ -410,6 +426,8 @@ model Plan {
   annualFee     Int            @map("annual_fee")
   createdAt     Int            @map("created_at")
   updatedAt     Int            @map("updated_at")
+
+  orders        Order[]
   subscriptions Subscription[]
 }
 
@@ -456,7 +474,6 @@ model Subscription {
   updatedAt      Int             @map("updated_at")
   company        Company         @relation(fields: [companyId], references: [id])
   plan           Plan            @relation(fields: [planId], references: [id])
-  paymentRecords PaymentRecord[]
 }
 
 model Sale {

@@ -6,7 +6,7 @@ import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { IUserAuth } from '@/interfaces/webauthn';
 import { DUMMY_CHALLENGE } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { getSession } from '@/lib/utils/get_session';
+import { getSession, setSession } from '@/lib/utils/session';
 import { generateUserIcon } from '@/lib/utils/generate_user_icon';
 import { checkInvitation } from '@/lib/utils/auth_check';
 import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
@@ -54,7 +54,7 @@ export default async function handler(
     );
     const user = await formatUser(createdUser);
     const session = await getSession(req, res);
-    session.userId = createdUser.id;
+    await setSession(session, user.id);
     let successMessage: SuccessMessage = STATUS_MESSAGE.CREATED;
     if (req.query.invitation) {
       try {
