@@ -182,5 +182,26 @@
     "POWERED_BY": "技術支持 陽光智能會計",
     "ANNOUNCEMENT": "陽光智能會計：提供人工智慧審計與審核，去中心化的區塊鏈瀏覽器和分析平台",
     "COMPANY_INFO": "公司資訊"
+  },
+  "PLUGIN": {
+    "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
+    "RESERVE_RATIO_BLOCK_TITLE_HIGHLIGHT": "儲備金比例",
+    "RESERVE_RATIO_BLOCK_TITLE_2": "",
+    "DOWNLOAD_REPORT": "下載報告",
+    "RESERVE_RATIO_BLOCK_CARD": "儲備金比例",
+    "RESERVE_RATIO_BLOCK_CARD_2": "區塊鏈",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION": "TideBit 用戶資產持有量",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION_2": "TideBit 錢包資產",
+    "SMART": "人工智慧",
+    "AUDITING_REPORTS": "監管報告",
+    "LAST_UPDATED": "最後更新",
+    "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表",
+    "BALANCE_SHEET": "資產負債表",
+    "CASH_FLOW_STATEMENT": "現金流量表",
+    "RED_FLAG_ANALYSIS": "風險分析",
+    "POWERED_BY": "技術支持"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "審計報告"
   }
 }
