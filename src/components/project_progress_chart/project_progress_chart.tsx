@@ -204,7 +204,7 @@ const ProjectProgressChart = () => {
     },
   });
 
-  const isNoData = projectProgress?.empty || !listSuccess;
+  const isNoData = projectProgress?.empty || !projectProgress || !listSuccess;
 
   const displayedDate = (() => {
     const startDate = period.startTimeStamp
