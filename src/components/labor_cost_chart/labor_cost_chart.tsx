@@ -227,7 +227,7 @@ const LaborCostChart = () => {
     false
   );
 
-  const isNoData = laborCostData?.empty || !laborCostData;
+  const isNoData = laborCostData?.empty || !laborCostData || !getSuccess;
 
   const displayedYear = maxDate.getFullYear();
 

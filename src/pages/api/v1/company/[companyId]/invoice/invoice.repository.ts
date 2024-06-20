@@ -51,6 +51,9 @@ export async function findUniqueJournalInPrisma(journalId: number) {
       });
 
       if (!journal) {
+        // Depreciate: ( 20240605 - Murky ) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(`Journal with id ${journalId} not found in findUniqueJournalInPrisma`);
         throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
     } catch (error) {
@@ -125,6 +128,9 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number) {
     });
 
     if (!invoice) {
+      // Depreciate: ( 20240605 - Murky ) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
   } catch (error) {
@@ -185,6 +191,9 @@ export async function createInvoiceAndPaymentInPrisma(invoiceData: IInvoice) {
       return invoice.id;
     });
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -251,6 +260,9 @@ export async function updateInvoiceAndPaymentInPrisma(
         return invoice.id;
       });
     } catch (error) {
+      // Depreciate ( 20240522 - Murky ) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
     return updatedInvoiceId;
@@ -402,6 +414,9 @@ export async function handlePrismaSavingLogic(
         const journalInDB = await findUniqueJournalInPrisma(journalId);
 
         if (!journalInDB) {
+          // Depreciate: ( 20240605 - Murky ) Debugging purpose
+          // eslint-disable-next-line no-console
+          console.log(`Journal with id ${journalId} not found`);
           throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
         }
 
@@ -412,7 +427,7 @@ export async function handlePrismaSavingLogic(
           invoiceId = await createInvoiceAndPaymentInPrisma(formattedInvoice);
         } else {
           // Info Murky (20240416): If 有invoiceId，是之前傳錯要修改的invoice，需要更新
-          invoiceId = await updateInvoiceAndPaymentInPrisma(journalId, formattedInvoice);
+          invoiceId = await updateInvoiceAndPaymentInPrisma(journalInDB.invoiceId, formattedInvoice);
         }
         journalIdBeCreateOrUpdate = await updateJournalInPrisma(
           journalId,
@@ -428,6 +443,9 @@ export async function handlePrismaSavingLogic(
 
     return result;
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
