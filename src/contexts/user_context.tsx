@@ -36,18 +36,18 @@ interface UserContextType {
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
-  signUp: async () => {},
-  signIn: async () => {},
-  signOut: () => {},
+  signUp: async () => { },
+  signIn: async () => { },
+  signOut: () => { },
   userAuth: null,
   username: null,
   signedIn: false,
   isSignInError: false,
   selectedCompany: null,
-  selectCompany: () => {},
+  selectCompany: () => { },
   successSelectCompany: undefined,
   errorCode: null,
-  toggleIsSignInError: () => {},
+  toggleIsSignInError: () => { },
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -125,7 +125,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     success: getUserSessionSuccess,
     isLoading: isGetUserSessionLoading,
     code: getUserSessionCode,
-  } = APIHandler<{ user: IUser; company: ICompany }>(APIName.SESSION_GET, {}, false, false);
+  } = APIHandler<{ user: IUser; company: ICompany; }>(APIName.SESSION_GET, {}, false, false);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);

@@ -111,6 +111,7 @@ const ConfirmModal = ({
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
 
   const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
 
@@ -261,6 +262,14 @@ const ConfirmModal = ({
   }, [accountingVoucher]);
 
   useEffect(() => {
+    const isCreditEqualDebit = totalCredit === totalDebit;
+    const isNotZero = totalCredit !== 0 && totalDebit !== 0;
+    const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
+
+    setDisableConfirmButton(!(isCreditEqualDebit && isNotZero && isEveryLineItemHasAccount));
+  }, [totalCredit, totalDebit, accountingVoucher]);
+
+  useEffect(() => {
     if (createSuccess && result && journal) {
       // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
       closeHandler();
@@ -299,8 +308,6 @@ const ConfirmModal = ({
       messageModalVisibilityHandler();
     }
   }, [createSuccess, createCode]);
-
-  const disableConfirmButton = totalCredit !== totalDebit;
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
 

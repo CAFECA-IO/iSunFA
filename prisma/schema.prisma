@@ -42,15 +42,15 @@ model Asset {
 }
 
 model AuditReport {
-  id                  Int     @id @default(autoincrement())
-  companyId           Int     @map("company_id")
-  informationYear     String  @map("information_year")
-  creditRating        String  @map("credit_rating")
-  createdAt           Int     @map("created_at")
-  updatedAt           Int     @map("updated_at")
-  reportId            Int     @map("report_id")
-  company             Company @relation(fields: [companyId], references: [id])
-  report              Report  @relation(fields: [reportId], references: [id])
+  id              Int     @id @default(autoincrement())
+  companyId       Int     @map("company_id")
+  informationYear String  @map("information_year")
+  creditRating    String  @map("credit_rating")
+  createdAt       Int     @map("created_at")
+  updatedAt       Int     @map("updated_at")
+  reportId        Int     @map("report_id")
+  company         Company @relation(fields: [companyId], references: [id])
+  report          Report  @relation(fields: [reportId], references: [id])
 
   @@map("audit_report")
 }
@@ -356,20 +356,7 @@ model Order {
   plan      Plan    @relation(fields: [planId], references: [id])
 
   paymentRecords PaymentRecord[]
-  @@map("order")
-}
 
-model Order {
-  id        Int     @id @default(autoincrement())
-  companyId Int     @map("company_id")
-  planId    Int     @map("plan_id")
-  status    String
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  company   Company @relation(fields: [companyId], references: [id])
-  plan      Plan    @relation(fields: [planId], references: [id])
-
-  paymentRecords PaymentRecord[]
   @@map("order")
 }
 
@@ -416,31 +403,31 @@ model Payment {
 }
 
 model PaymentRecord {
-  id             Int          @id @default(autoincrement())
-  orderId        Int          @map("order_id")
+  id            Int    @id @default(autoincrement())
+  orderId       Int    @map("order_id")
   // Info: Third party payment transaction id (20240604 - Jacky)
-  transactionId  String       @map("transaction_id")
-  date           Int
-  description    String
-  amount         Int
-  method         String
-  status         String // completed、failed、pending
-  createdAt      Int          @map("created_at")
-  updatedAt      Int          @map("updated_at")
+  transactionId String @map("transaction_id")
+  date          Int
+  description   String
+  amount        Int
+  method        String
+  status        String // completed、failed、pending
+  createdAt     Int    @map("created_at")
+  updatedAt     Int    @map("updated_at")
 
-  order         Order         @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@map("payment_record")
 }
 
 model Plan {
-  id            Int            @id @default(autoincrement())
-  name          String         @unique
-  description   String
-  monthlyFee    Int            @map("monthly_fee")
-  annualFee     Int            @map("annual_fee")
-  createdAt     Int            @map("created_at")
-  updatedAt     Int            @map("updated_at")
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  description String
+  monthlyFee  Int    @map("monthly_fee")
+  annualFee   Int    @map("annual_fee")
+  createdAt   Int    @map("created_at")
+  updatedAt   Int    @map("updated_at")
 
   orders        Order[]
   subscriptions Subscription[]
@@ -457,39 +444,39 @@ model Role {
 }
 
 model Report {
-  id                     Int      @id @default(autoincrement())
-  tokenContract          String?  @map("token_contract")
-  tokenId                String?  @map("token_id")
+  id                     Int           @id @default(autoincrement())
+  tokenContract          String?       @map("token_contract")
+  tokenId                String?       @map("token_id")
   name                   String
   from                   Int
   to                     Int
   type                   String
-  reportType             String   @map("report_type")
+  reportType             String        @map("report_type")
   status                 String
-  remainingSeconds       Int?     @map("remaining_seconds")
+  remainingSeconds       Int?          @map("remaining_seconds")
   paused                 Boolean?
-  projectId              Int?     @map("project_id")
-  reportLink             String?  @map("report_link")
-  downloadLink           String?  @map("download_link")
-  blockChainExplorerLink String?  @map("block_chain_explorer_link")
-  evidenceId             String?  @map("evidence_id")
-  createdAt              Int      @map("created_at")
-  updatedAt              Int      @map("updated_at")
-  project                Project? @relation(fields: [projectId], references: [id])
+  projectId              Int?          @map("project_id")
+  reportLink             String?       @map("report_link")
+  downloadLink           String?       @map("download_link")
+  blockChainExplorerLink String?       @map("block_chain_explorer_link")
+  evidenceId             String?       @map("evidence_id")
+  createdAt              Int           @map("created_at")
+  updatedAt              Int           @map("updated_at")
+  project                Project?      @relation(fields: [projectId], references: [id])
   auditReports           AuditReport[]
 }
 
 model Subscription {
-  id             Int             @id @default(autoincrement())
-  companyId      Int             @map("company_id")
-  planId         Int             @map("plan_id")
-  status         Boolean
-  startDate      Int             @map("start_date")
-  expiredDate    Int             @map("expired_date")
-  createdAt      Int             @map("created_at")
-  updatedAt      Int             @map("updated_at")
-  company        Company         @relation(fields: [companyId], references: [id])
-  plan           Plan            @relation(fields: [planId], references: [id])
+  id          Int     @id @default(autoincrement())
+  companyId   Int     @map("company_id")
+  planId      Int     @map("plan_id")
+  status      Boolean
+  startDate   Int     @map("start_date")
+  expiredDate Int     @map("expired_date")
+  createdAt   Int     @map("created_at")
+  updatedAt   Int     @map("updated_at")
+  company     Company @relation(fields: [companyId], references: [id])
+  plan        Plan    @relation(fields: [planId], references: [id])
 }
 
 model Sale {
