@@ -45,6 +45,7 @@ async function createUser() {
 async function createAccount() {
   const data = accounts.map((accountIns) => {
     const { account, ...rest } = accountIns;
+    rest.companyId = 99999991;
     return rest;
   });
   await prisma.account.createMany({
@@ -58,11 +59,11 @@ async function createCompany() {
   });
 }
 
-// async function createAdmin() {
-//   await prisma.admin.create({
-//     data: admin,
-//   });
-// }
+async function createAdmin() {
+  await prisma.admin.create({
+    data: admin,
+  });
+}
 
 async function createProjects() {
   await prisma.project.createMany({
@@ -82,7 +83,7 @@ async function main() {
   await createUser();
   await createCompany();
   await createAccount();
-  // await createAdmin();
+  await createAdmin();
   await createProjects();
   await new Promise((resolve) => {
     setTimeout(resolve, 5000);
