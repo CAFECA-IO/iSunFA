@@ -10,6 +10,7 @@ export enum ProgressStatus {
   LLM_ERROR = 'llmError',
   SYSTEM_ERROR = 'systemError',
   PAUSED = 'paused',
+  HAS_BEEN_USED = 'hasBeenUsed',
 }
 
 export enum EventType {
@@ -42,6 +43,11 @@ export enum PaymentStatusType {
 export enum PaymentPeriodType {
   AT_ONCE = 'atOnce',
   INSTALLMENT = 'installment',
+}
+
+export enum AccountSystem {
+  IFRS = 'IFRS',
+  US_GAAP = 'US_GAAP',
 }
 
 export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {

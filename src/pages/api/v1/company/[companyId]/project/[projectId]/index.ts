@@ -4,6 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
 import { IProject } from '@/interfaces/project';
+import { formatProject } from '@/lib/utils/formatter/project.formatter';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateProjectMembers } from '@/lib/utils/repo/transaction/project_members.tx';
 import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
@@ -23,7 +24,8 @@ export default async function handler(
     const projectIdNum = convertStringToNumber(projectId);
     // Info: (20240419 - Jacky) S010001 - GET /project
     if (req.method === 'GET') {
-      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const project = await formatProject(checkedProject);
       // Info: (20240607 - Jacky) check input parameter end
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.SUCCESS_GET, project);
       res.status(httpCode).json(result);
@@ -32,18 +34,19 @@ export default async function handler(
       if (!name && !stage && !memberIdList) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
       // Info: (20240419 - Jacky) S010002 - POST /project
       if (stage) {
-        await updateProjectMilestone(project.id, stage);
+        await updateProjectMilestone(checkedProject.id, stage);
       }
       if (memberIdList) {
-        await updateProjectMembers(project.id, memberIdList);
+        await updateProjectMembers(checkedProject.id, memberIdList);
       }
-      const updatedProject = await updateProjectById(project.id, name, imageId);
+      const updatedProject = await updateProjectById(checkedProject.id, name, imageId);
+      const project = await formatProject(updatedProject);
       const { httpCode, result } = formatApiResponse<IProject>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
-        updatedProject
+        project
       );
       res.status(httpCode).json(result);
     } else {
