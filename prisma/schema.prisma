@@ -42,13 +42,12 @@ model AuditReport {
   id                  Int     @id @default(autoincrement())
   companyId           Int     @map("company_id")
   informationYear     String  @map("information_year")
-  detailedInformation String  @map("detailed_information")
   creditRating        String  @map("credit_rating")
-  link                String
-  dateOfUpload        Int     @map("date_of_upload")
   createdAt           Int     @map("created_at")
   updatedAt           Int     @map("updated_at")
+  reportId            Int     @map("report_id")
   company             Company @relation(fields: [companyId], references: [id])
+  report              Report  @relation(fields: [reportId], references: [id])
 
   @@map("audit_report")
 }
@@ -461,6 +460,7 @@ model Report {
   createdAt              Int      @map("created_at")
   updatedAt              Int      @map("updated_at")
   project                Project? @relation(fields: [projectId], references: [id])
+  auditReports           AuditReport[]
 }
 
 model Subscription {
