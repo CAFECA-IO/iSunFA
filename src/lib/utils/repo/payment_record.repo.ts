@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { IPaymentRecord } from '@/interfaces/payment_record';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 // Create
 export async function createPaymentRecord(paymentRecord: IPaymentRecord): Promise<IPaymentRecord> {

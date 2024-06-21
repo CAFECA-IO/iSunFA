@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { IOrder } from '@/interfaces/order';
-import { timestampInSeconds } from '../common';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function listOrder(companyId: number): Promise<IOrder[]> {
   const listedOrder = await prisma.order.findMany({
