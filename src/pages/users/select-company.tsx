@@ -6,14 +6,26 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ToastId } from '@/constants/toast_id';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { ILocale } from '@/interfaces/locale';
+import { useUserCtx } from '@/contexts/user_context';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 const SelectCompanyPage = () => {
+  const { isAuthLoading } = useUserCtx();
   const { eliminateToast } = useGlobalCtx();
 
   useEffect(() => {
     // Info: (20240513 - Julian) 回到選擇公司頁面時，要把提醒試用版的 Toast 關掉
     eliminateToast(ToastId.TRIAL);
   }, []);
+
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <SelectCompanyPageBody />
+  );
 
   return (
     <>
@@ -41,9 +53,7 @@ const SelectCompanyPage = () => {
         <div className="">
           <NavBar />
         </div>
-        <div className="bg-surface-neutral-main-background pt-16">
-          <SelectCompanyPageBody />
-        </div>
+        <div className="bg-surface-neutral-main-background pt-16">{displayedBody}</div>
       </div>
     </>
   );

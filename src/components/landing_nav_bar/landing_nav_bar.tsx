@@ -9,7 +9,6 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { TranslateFunction } from '@/interfaces/locale';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
-// import { IS_BUTTON_DISABLED_TEMP } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import version from '@/lib/version';
 
@@ -524,7 +523,3 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
 }
 
 export default LandingNavBar;
-
-LandingNavBar.defaultProps = {
-  transparentInitially: false,
-};
