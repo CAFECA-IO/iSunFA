@@ -4,14 +4,22 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { GetServerSideProps } from 'next';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
+import { FiPlus } from 'react-icons/fi';
+import { Button } from '@/components/button/button';
+import JournalListBody from '@/components/journal_list_body/journal_list_body';
+import { IDummyJournal } from '@/interfaces/journal';
 
-interface IProjectJournalPageProps {
+interface IProjectJournalListPageProps {
   projectId: string;
 }
 
-const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
-  // ToDo: (20240621 - Julian) Replace with real data
+const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => {
+  // ToDo: (20240621 - Julian) Replace with api data
   const projectName = 'BAIFA';
+  const journals = [] as IDummyJournal[];
+  const success = true;
+  const isLoading = false;
+  const code = '200';
 
   const backClickHandler = () => window.history.back();
 
@@ -47,14 +55,37 @@ const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
                     </button>
 
                     <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                      {projectName} - Add New Journal
+                      {projectName} - Journal List
                     </h1>
                   </div>
                   {/* Info: (20240621 - Julian) Add new contract button (desktop) */}
+
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    className="hidden items-center gap-4px px-4 py-8px md:flex"
+                  >
+                    <FiPlus size={24} />
+                    Add new journal
+                  </Button>
+                  {/* Info: (20240621 - Julian) Add new contract button (mobile) */}
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    className="flex h-46px w-46px items-center justify-center p-0 md:hidden"
+                  >
+                    <FiPlus size={24} />
+                  </Button>
                 </div>
                 {/* Info: (20240621 - Julian) Divider */}
                 <hr className="my-24px border border-divider-stroke-lv-4" />
                 {/* Info: (2024621 - Julian) Content */}
+                <JournalListBody
+                  journals={journals}
+                  isLoading={isLoading}
+                  errorCode={code}
+                  success={success}
+                />
               </div>
             </div>
           </div>
@@ -79,4 +110,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default ProjectJournalPage;
+export default ProjectJournalListPage;

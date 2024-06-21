@@ -112,8 +112,9 @@ const ProjectContractsPageBody = () => {
 
   const statusClickHandler = () => setStatusVisible(!statusVisible);
   const sortClickHandler = () => setSortingVisible(!sortVisible);
-  const filterClickHandler = () =>
+  const filterClickHandler = () => {
     filterOptionsModalVisibilityHandler(FilterOptionsModalType.contract);
+  };
 
   const statusDropdown = (
     <div
