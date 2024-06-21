@@ -110,15 +110,6 @@ afterEach(async () => {
     /* empty */
   }
   try {
-    await prisma.role.delete({
-      where: {
-        id: admin.role.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
     await prisma.admin.delete({
       where: {
         id: admin.id,
