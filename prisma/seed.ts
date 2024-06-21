@@ -45,6 +45,7 @@ async function createUser() {
 async function createAccount() {
   const data = accounts.map((accountIns) => {
     const { account, ...rest } = accountIns;
+    rest.companyId = 99999991;
     return rest;
   });
   await prisma.account.createMany({

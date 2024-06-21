@@ -30,7 +30,8 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     changeVoucherAmountHandler,
   } = useAccountingCtx();
   const [selectAccount, setSelectAccount] = useState<IAccount | null>(
-    !!accountList && accountList.length > 0 ? accountList[0] : null
+    //! !accountList && accountList.length > 0 ? accountList[0] : null
+    null
   );
 
   const {
