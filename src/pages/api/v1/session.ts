@@ -4,7 +4,7 @@ import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
-import { getSession } from '@/lib/utils/get_session';
+import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(

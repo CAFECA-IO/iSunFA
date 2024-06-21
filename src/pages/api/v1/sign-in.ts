@@ -5,7 +5,7 @@ import { STATUS_MESSAGE, SuccessMessage } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { CredentialKey } from '@passwordless-id/webauthn/dist/esm/types';
-import { getSession } from '@/lib/utils/get_session';
+import { getSession, setSession } from '@/lib/utils/session';
 import { getUserByCredential } from '@/lib/utils/repo/user.repo';
 import { checkInvitation } from '@/lib/utils/auth_check';
 import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
@@ -43,7 +43,7 @@ export default async function handler(
 
     await server.verifyAuthentication(authentication, registeredCredential, expected);
     const session = await getSession(req, res);
-    session.userId = getUser.id;
+    await setSession(session, user.id);
     let successMessage: SuccessMessage = STATUS_MESSAGE.SUCCESS_GET;
     if (req.query.invitation) {
       try {

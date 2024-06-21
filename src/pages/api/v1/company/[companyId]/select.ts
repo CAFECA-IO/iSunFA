@@ -3,6 +3,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkUser } from '@/lib/utils/auth_check';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { setSession } from '@/lib/utils/session';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,10 +13,10 @@ export default async function handler(
     if (req.method === 'PUT') {
       const companyIdNum = convertStringToNumber(req.query.companyId);
       const session = await checkUser(req, res);
-      session.companyId = companyIdNum;
+      await setSession(session, undefined, companyIdNum);
       const { httpCode, result } = formatApiResponse<number>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
-        session.companyId
+        companyIdNum
       );
       res.status(httpCode).json(result);
     } else {
