@@ -7,15 +7,17 @@ import { ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';
 import { ToastId } from '@/constants/toast_id';
 import NavBar from '@/components/nav_bar/nav_bar';
-import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import DashboardPageBody from '@/components/dashboard_page_body/dashboard_page_body';
+import { GetServerSideProps } from 'next';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 const DashboardPage = () => {
   const router = useRouter();
 
-  const { signedIn, selectedCompany } = useUserCtx();
+  const { signedIn, selectedCompany, isAuthLoading } = useUserCtx();
   const { toastHandler, eliminateToast } = useGlobalCtx();
 
   useEffect(() => {
@@ -48,6 +50,16 @@ const DashboardPage = () => {
     }
   }, [selectedCompany]);
 
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <div className="pt-14">
+      <DashboardPageBody />
+    </div>
+  );
+
   return (
     <>
       <Head>
@@ -74,20 +86,18 @@ const DashboardPage = () => {
         <div className="">
           <NavBar />
         </div>
-        <div className="pt-14">
-          <DashboardPageBody />
-        </div>
+        {displayedBody}
       </div>
     </>
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common'])),
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
+export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale as string, ['common'])),
+    },
+  };
+};
 
 export default DashboardPage;

@@ -44,6 +44,7 @@ import { useUserCtx } from './user_context';
 import { useNotificationCtx } from './notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 
 interface IGlobalContext {
   width: number;
@@ -97,15 +98,21 @@ interface IGlobalContext {
   addProjectModalVisibilityHandler: () => void;
   addProjectModalDataHandler: (stage: ProjectStage) => void;
 
+  profileUploadModalVisible: boolean;
+  profileUploadModalVisibilityHandler: () => void;
+
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
 
   filterOptionsForHistory: IFilterOptions;
   filterOptionsForPending: IFilterOptions;
+  filterOptionsForContract: IFilterOptions;
   getFilterOptionsForHistory: (options: IFilterOptions) => void;
   getFilterOptionsForPending: (options: IFilterOptions) => void;
+  getFilterOptionsForContract: (options: IFilterOptions) => void;
   isFilterOptionsModalForHistoryVisible: boolean;
   isFilterOptionsModalForPendingVisible: boolean;
+  isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
 }
 
@@ -159,15 +166,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState(false);
   const [isFilterOptionsModalForPendingVisible, setIsFilterOptionsModalForPendingVisible] =
     useState(false);
+  const [isFilterOptionsModalForContractVisible, setIsFilterOptionsModalForContractVisible] =
+    useState(false);
+
   const [filterOptionsForHistory, setFilterOptionsForHistory] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
   const [filterOptionsForPending, setFilterOptionsForPending] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+  const [filterOptionsForContract, setFilterOptionsForContract] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
   const [isAddProjectModalVisible, setIsAddProjectModalVisible] = useState(false);
   const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
     ProjectStage.SELLING
   );
+
+  const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -246,6 +260,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsFilterOptionsModalForPendingVisible(!isFilterOptionsModalForPendingVisible);
   };
 
+  const filterOptionsModalVisibilityHandlerForContract = () => {
+    setIsFilterOptionsModalForContractVisible(!isFilterOptionsModalForContractVisible);
+  };
+
   const addProjectModalVisibilityHandler = () => {
     setIsAddProjectModalVisible(!isAddProjectModalVisible);
   };
@@ -254,11 +272,17 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setAddProjectDefaultStage(stage);
   };
 
+  const profileUploadModalVisibilityHandler = () => {
+    setProfileUploadModalVisible(!profileUploadModalVisible);
+  };
+
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
     if (filterType === FilterOptionsModalType.history) {
       filterOptionsModalVisibilityHandlerForHistory();
     } else if (filterType === FilterOptionsModalType.pending) {
       filterOptionsModalVisibilityHandlerForPending();
+    } else if (filterType === FilterOptionsModalType.contract) {
+      filterOptionsModalVisibilityHandlerForContract();
     }
   };
 
@@ -268,6 +292,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const getFilterOptionsForPending = (options: IFilterOptions) => {
     setFilterOptionsForPending(options);
+  };
+
+  const getFilterOptionsForContract = (options: IFilterOptions) => {
+    setFilterOptionsForContract(options);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -464,14 +492,19 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
     filterOptionsForHistory,
     filterOptionsForPending,
+    filterOptionsForContract,
     getFilterOptionsForHistory,
     getFilterOptionsForPending,
+    getFilterOptionsForContract,
     isFilterOptionsModalForHistoryVisible,
     isFilterOptionsModalForPendingVisible,
+    isFilterOptionsModalForContractVisible,
     filterOptionsModalVisibilityHandler,
     isAddProjectModalVisible,
     addProjectModalVisibilityHandler,
     addProjectModalDataHandler,
+    profileUploadModalVisible,
+    profileUploadModalVisibilityHandler,
   };
 
   return (
@@ -555,11 +588,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={filterOptionsModalVisibilityHandlerForHistory}
         getFilterOptions={getFilterOptionsForHistory}
       />
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalForContractVisible}
+        filterType={FilterOptionsModalType.contract}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForContract}
+        getFilterOptions={getFilterOptionsForContract}
+      />
 
       <AddProjectModal
         isModalVisible={isAddProjectModalVisible}
         modalVisibilityHandler={addProjectModalVisibilityHandler}
         defaultStage={addProjectDefaultStage}
+      />
+
+      <ProfileUploadModal
+        isModalVisible={profileUploadModalVisible}
+        modalVisibilityHandler={profileUploadModalVisibilityHandler}
       />
 
       {children}

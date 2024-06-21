@@ -18,10 +18,10 @@ const NotificationContext = createContext<INotificationContext | undefined>(unde
 export const NotificationProvider = ({ children }: INotificationProvider) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportPendingStatus, setReportPendingStatus, reportPendingStatusRef] =
-    useStateRef<boolean>(true);
+    useStateRef<boolean>(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportGeneratedStatus, setReportGeneratedStatus, reportGeneratedStatusRef] =
-    useStateRef<boolean>(true);
+    useStateRef<boolean>(false);
 
   const reportPendingStatusHandler = (status: boolean) => {
     setReportPendingStatus(status);

@@ -16,11 +16,13 @@ import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
 import Notification from '@/components/notification/notification';
+import Skeleton from '@/components/skeleton/skeleton';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth } = useUserCtx();
+  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
+    useUserCtx();
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
@@ -67,8 +69,7 @@ const NavBar = () => {
     signOut();
   };
 
-  const companyChangeClickHandler = (e: { preventDefault: () => void }) => {
-    e.preventDefault();
+  const companyChangeClickHandler = () => {
     selectCompany(null);
     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
@@ -322,8 +323,8 @@ const NavBar = () => {
             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300" />
           </div>
         </div>
-        <Link
-          href={ISUNFA_ROUTE.SELECT_COMPANY}
+        <button
+          type="button"
           onClick={companyChangeClickHandler}
           className={`mt-3 flex gap-2 rounded-xs px-4 py-2.5 ${selectedCompany ? '' : 'pointer-events-none opacity-50'}`}
         >
@@ -353,7 +354,7 @@ const NavBar = () => {
           <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
             Switch Company
           </div>
-        </Link>
+        </button>
         <button
           type="button"
           disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
@@ -439,8 +440,8 @@ const NavBar = () => {
   );
 
   const displayedCompanyChangeBtn = selectedCompany ? (
-    <Link
-      href={ISUNFA_ROUTE.SELECT_COMPANY}
+    <button
+      type="button"
       onClick={companyChangeClickHandler}
       className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
     >
@@ -455,10 +456,12 @@ const NavBar = () => {
       {/* ToDo: (20240521 - Julian) company name abbreviation */}
       <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
       <GoArrowSwitch size={14} />
-    </Link>
+    </button>
   ) : null;
 
-  const displayedLogInBtn = signedIn ? (
+  const displayedLogInBtn = isAuthLoading ? (
+    <Skeleton width={44} height={40} />
+  ) : signedIn ? (
     <div ref={userMenuRef} className="">
       <button type="button" onClick={avatarClickHandler} className="">
         {/* Info: avatar svg (20240408 - Shirley) */}

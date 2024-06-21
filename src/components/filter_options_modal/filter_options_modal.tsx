@@ -1,11 +1,12 @@
+import React, { useEffect } from 'react';
+import useStateRef from 'react-usestateref';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { ContractStatusWithAll } from '@/constants/contract';
 import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
 import { FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import { AllReportTypesKey, AllReportTypesOptions } from '@/interfaces/report_type';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import React, { useEffect } from 'react';
-import useStateRef from 'react-usestateref';
 
 interface IFilterOptionsModalProps {
   isModalVisible: boolean;
@@ -25,8 +26,12 @@ const FilterOptionsModal = ({
   const [selectedReportType, setSelectedReportType, selectedReportTypeRef] = useStateRef<
     keyof typeof AllReportTypesOptions
   >(AllReportTypesKey.all as keyof typeof AllReportTypesOptions);
+  const [selectedStatus, setSelectedStatus, selectedStatusRef] =
+    useStateRef<keyof typeof ContractStatusWithAll>('ALL');
+
   const [isTypeMenuSelected, setIsTypeMenuSelected] = useStateRef(false);
   const [isSortSelected, setIsSortSelected] = useStateRef(false);
+  const [isStatusMenuSelected, setIsStatusMenuSelected] = useStateRef(false);
 
   const {
     targetRef: typeMenuRef,
@@ -40,6 +45,12 @@ const FilterOptionsModal = ({
     setComponentVisible: setIsHistorySortMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: statusMenuRef,
+    componentVisible: isStatusMenuOpen,
+    setComponentVisible: setIsStatusMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
   const toggleTypeMenu = () => {
     setIsTypeMenuSelected(true);
     setIsTypeMenuOpen(!isTypeMenuOpen);
@@ -50,6 +61,11 @@ const FilterOptionsModal = ({
     setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
   };
 
+  const toggleStatusMenu = () => {
+    setIsTypeMenuSelected(true);
+    setIsStatusMenuOpen(!isStatusMenuOpen);
+  };
+
   useEffect(() => {
     if (!isModalVisible) {
       // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
@@ -58,6 +74,7 @@ const FilterOptionsModal = ({
           period: periodRef.current,
           sort: sortRef.current,
           selectedReportType: selectedReportTypeRef.current,
+          selectedStatus: selectedStatusRef.current,
         });
       }
 
@@ -65,8 +82,10 @@ const FilterOptionsModal = ({
       setPeriod(default30DayPeriodInSec);
       setSort(SortOptions.newest);
       setSelectedReportType(AllReportTypesKey.all as keyof typeof AllReportTypesOptions);
+      setSelectedStatus('ALL' as keyof typeof ContractStatusWithAll);
       setIsTypeMenuSelected(false);
       setIsSortSelected(false);
+      setIsStatusMenuSelected(false);
     }
   }, [isModalVisible]);
 
@@ -106,6 +125,53 @@ const FilterOptionsModal = ({
               key={key}
               onClick={() => {
                 setSelectedReportType(key as keyof typeof AllReportTypesOptions);
+              }}
+              className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+            >
+              {value as string}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
+  const displayedStatusMenu = (
+    <div
+      ref={statusMenuRef}
+      onClick={toggleStatusMenu}
+      className={`group relative flex w-full cursor-pointer max-md:max-w-full ${isStatusMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+    >
+      <p
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isStatusMenuOpen ? ' text-primaryYellow' : isStatusMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
+      >
+        {ContractStatusWithAll[selectedStatus as keyof typeof ContractStatusWithAll]}
+      </p>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        fill="none"
+        viewBox="0 0 20 20"
+      >
+        <path
+          className="fill-current"
+          fillRule="evenodd"
+          d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+          clipRule="evenodd"
+        ></path>
+      </svg>
+      {/* Info: (20240621 - Julian) Dropdown menu */}
+      <div
+        className={`absolute left-0 top-50px grid w-full grid-rows-0 overflow-hidden shadow-dropmenu ${isStatusMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} rounded-sm border transition-all duration-150 ease-in-out`}
+      >
+        {/* Info: (20240621 - Julian) 超過高度就顯示卷軸 */}
+        <ul className="z-10 flex max-h-200px w-full flex-col items-start overflow-y-auto bg-white p-8px">
+          {Object.entries(ContractStatusWithAll).map(([key, value]) => (
+            <li
+              key={key}
+              onClick={() => {
+                setSelectedStatus(key as keyof typeof ContractStatusWithAll);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -163,6 +229,23 @@ const FilterOptionsModal = ({
     </div>
   );
 
+  const displayedMiddleMenu =
+    // Info: (20240620 - Julian)
+    filterType === FilterOptionsModalType.contract ? (
+      <div className="flex flex-col items-start gap-8px">
+        <p className="font-semibold text-input-text-primary">Status</p>
+        {displayedStatusMenu}
+      </div>
+    ) : (
+      <div className="flex flex-col space-y-2 self-stretch">
+        <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
+          Type{' '}
+        </div>
+        {/* Info: type menu (20240513 - Shirley) */}
+        {displayedTypeMenu}
+      </div>
+    );
+
   const isDisplayedModal = isModalVisible ? (
     <div className="fixed inset-0 z-10000 -mt-40 flex items-center justify-center bg-black/50">
       <div className="relative mx-5 flex w-full flex-col items-center rounded-md bg-white pb-10 pt-3 shadow-lg shadow-black/80 sm:mx-auto sm:w-400px sm:px-3">
@@ -206,13 +289,7 @@ const FilterOptionsModal = ({
             btnClassName=""
           />
 
-          <div className="flex flex-col space-y-2 self-stretch">
-            <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
-              Type{' '}
-            </div>
-            {/* Info: type menu (20240513 - Shirley) */}
-            {displayedTypeMenu}
-          </div>
+          {displayedMiddleMenu}
 
           <div className="flex flex-col space-y-2 self-stretch">
             <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">

@@ -29,6 +29,19 @@ async function getStatusNumber(dateToTimeStamp: number, companyId: number) {
   return statusNumber;
 }
 
+async function checkEmpty(
+  statusNumber: {
+    status: string;
+    _count: {
+      id: number;
+    };
+  }[]
+) {
+  // Info: add eslint-disable-next-line no-underscore-dangle for prisma groupBy function (20240614 - Gibbs)
+  // eslint-disable-next-line no-underscore-dangle
+  return statusNumber.every((status) => status._count.id === 0);
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProjectProgressChartData>>
@@ -40,6 +53,7 @@ export default async function handler(
       const { companyId } = session;
       const dateToTimeStamp = changeDateToTimeStampOfDayEnd(date as string);
       const statusNumber = await getStatusNumber(dateToTimeStamp, companyId);
+      const isEmpty = await checkEmpty(statusNumber);
       const responseData: IProjectProgressChartData = {
         date: dateToTimeStamp,
         categories: stageList,
@@ -54,6 +68,7 @@ export default async function handler(
             }) as number[],
           },
         ],
+        empty: isEmpty,
       };
       const { httpCode, result } = formatApiResponse<IProjectProgressChartData>(
         STATUS_MESSAGE.SUCCESS_GET,

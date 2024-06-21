@@ -5,8 +5,28 @@ import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import { ILocale } from '@/interfaces/locale';
 import MyReportsSection from '@/components/my_reports_section/my_reports_section';
+import { useUserCtx } from '@/contexts/user_context';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 const MyReportsPage = () => {
+  const { isAuthLoading } = useUserCtx();
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <>
+      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+        <ReportsSidebar />
+      </div>
+
+      <div className="bg-surface-neutral-main-background pb-40">
+        <MyReportsSection />
+      </div>
+    </>
+  );
+
   return (
     <>
       <Head>
@@ -34,13 +54,7 @@ const MyReportsPage = () => {
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ReportsSidebar />
-        </div>
-
-        <div className="bg-surface-neutral-main-background pb-40">
-          <MyReportsSection />
-        </div>
+        {displayedBody}
       </div>
     </>
   );

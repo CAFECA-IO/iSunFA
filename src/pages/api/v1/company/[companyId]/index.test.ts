@@ -93,6 +93,15 @@ beforeEach(async () => {
 afterEach(async () => {
   jest.clearAllMocks();
   try {
+    await prisma.admin.delete({
+      where: {
+        id: admin.id,
+      },
+    });
+  } catch (error) {
+    /* empty */
+  }
+  try {
     await prisma.user.delete({
       where: {
         id: admin.user.id,
@@ -105,24 +114,6 @@ afterEach(async () => {
     await prisma.company.delete({
       where: {
         id: admin.company.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.role.delete({
-      where: {
-        id: admin.role.id,
-      },
-    });
-  } catch (error) {
-    /* empty */
-  }
-  try {
-    await prisma.admin.delete({
-      where: {
-        id: admin.id,
       },
     });
   } catch (error) {

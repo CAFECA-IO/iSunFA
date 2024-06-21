@@ -4,7 +4,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IUser } from '@/interfaces/user';
 import { IAdmin } from '@/interfaces/admin';
 import { RoleName } from '@/constants/role_name';
-import { getSession } from '@/lib/utils/get_session';
+import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
@@ -51,6 +51,15 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   return session;
 }
 
+export async function checkAuth(userId: number, companyId: number) {
+  let checked = true;
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  if (!admin) {
+    checked = false;
+  }
+  return checked;
+}
+
 export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
   const session = await getSession(req, res);
   const { companyId, userId } = session;
@@ -87,7 +96,7 @@ export async function checkProjectCompanyMatch(projectId: number, companyId: num
   return project;
 }
 
-export async function checkInvitation(invitationCode: string) {
+export async function checkInvitation(invitationCode: string, userId: number) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const invitation = await getInvitationByCode(invitationCode);
@@ -98,6 +107,15 @@ export async function checkInvitation(invitationCode: string) {
     throw new Error(STATUS_MESSAGE.INVITATION_HAS_USED);
   }
   if (invitation.expiredAt < nowTimestamp) {
+    throw new Error(STATUS_MESSAGE.CONFLICT);
+  }
+  let admin;
+  try {
+    admin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
+  } catch (error) {
+    /* empty */
+  }
+  if (admin) {
     throw new Error(STATUS_MESSAGE.CONFLICT);
   }
   return invitation;

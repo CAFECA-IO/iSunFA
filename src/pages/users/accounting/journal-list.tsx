@@ -1,11 +1,36 @@
 import Head from 'next/head';
+import Link from 'next/dist/client/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { FaPlus } from 'react-icons/fa';
+import APIHandler from '@/lib/utils/api_handler';
 import { ILocale } from '@/interfaces/locale';
+import { IDummyJournal } from '@/interfaces/journal';
+import { useUserCtx } from '@/contexts/user_context';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
-import JournalListTab from '@/components/journal_list_body/journal_list_body';
+import JournalListBody from '@/components/journal_list_body/journal_list_body';
+import { Button } from '@/components/button/button';
+import { APIName } from '@/constants/api_connection';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 const JournalListPage = () => {
+  const { selectedCompany } = useUserCtx();
+  const {
+    isLoading,
+    success,
+    code,
+    data: journals,
+    // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
+  } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    // ToDo: (20240621 - Julian) Query params
+  });
+
+  const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
+
+  const journalList = journals || [];
+
   return (
     <>
       <Head>
@@ -27,7 +52,30 @@ const JournalListPage = () => {
           {/* Info: (20240419 - Julian) Overview */}
           <div className="flex h-full w-full bg-gray-100">
             <div className="mt-100px flex-1 md:ml-80px">
-              <JournalListTab />
+              <div className="flex min-h-screen w-full flex-col px-16px py-32px font-barlow md:px-40px">
+                {/* Info: (20240417 - Julian) Title */}
+                <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
+                  <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
+                    {companyName} Journal List
+                  </h1>
+                  <Link href={ISUNFA_ROUTE.ACCOUNTING}>
+                    <Button type="button" variant="tertiary" className="text-sm md:text-base">
+                      <FaPlus />
+                      <p>Add new journal</p>
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Info: (20240417 - Julian) Divider */}
+                <hr className="my-20px w-full border-lightGray6" />
+
+                <JournalListBody
+                  journals={journalList}
+                  isLoading={isLoading || true}
+                  errorCode={code}
+                  success={success || false}
+                />
+              </div>
             </div>
           </div>
         </div>

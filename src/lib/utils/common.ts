@@ -384,7 +384,7 @@ export function isParamNumeric(param: string | string[] | undefined): param is s
   return regex.test(param);
 }
 
-export async function convertStringToNumber(param: string | string[] | undefined): Promise<number> {
+export function convertStringToNumber(param: string | string[] | undefined): number {
   if (typeof param !== 'string' || param.trim() === '') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }

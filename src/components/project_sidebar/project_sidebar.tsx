@@ -18,7 +18,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
   const { pathname } = useRouter();
 
   const inDashboard = pathname.includes('dashboard');
-  const inContract = pathname.includes('contract');
+  const inContract = pathname.includes('contracts');
   const inJournal = pathname.includes('journal');
   const inReport = pathname.includes('report');
   const inSetting = pathname.includes('setting');
@@ -99,7 +99,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
           </Link>
           {/* Info: (20240611 - Julian) Contract List */}
           <Link
-            href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/contract`}
+            href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/contracts`}
             className={`flex w-full items-center gap-8px p-8px ${inContract ? 'stroke-primaryYellow text-primaryYellow' : 'stroke-secondaryBlue text-secondaryBlue'} hover:stroke-primaryYellow hover:text-primaryYellow`}
           >
             <div className="h-20px w-20px">
@@ -129,7 +129,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
           </Link>
           {/* Info: (20240611 - Julian) Accounting Journal */}
           <Link
-            href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/journal`}
+            href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/journal/journal-list`}
             className={`flex w-full items-center gap-8px p-8px ${inJournal ? 'stroke-primaryYellow text-primaryYellow' : 'stroke-secondaryBlue text-secondaryBlue'} hover:stroke-primaryYellow hover:text-primaryYellow`}
           >
             <div className="h-20px w-20px">
@@ -232,7 +232,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
         </Link>
         {/* Info: (20240423 - Julian) Contract List */}
         <Link
-          href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/contract`}
+          href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/contracts`}
           className={`mx-auto p-8px ${inContract ? 'stroke-primaryYellow text-primaryYellow' : 'stroke-secondaryBlue text-secondaryBlue'} hover:stroke-primaryYellow hover:text-primaryYellow`}
         >
           <svg
@@ -255,7 +255,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
         </Link>
         {/* Info: (20240611 - Julian) Accounting Journal */}
         <Link
-          href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/journal`}
+          href={`${ISUNFA_ROUTE.PROJECT_LIST}/${projectId}/journal/journal-list`}
           className={`mx-auto p-8px ${inJournal ? 'stroke-primaryYellow text-primaryYellow' : 'stroke-secondaryBlue text-secondaryBlue'} hover:stroke-primaryYellow hover:text-primaryYellow`}
         >
           <svg

@@ -1,15 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { server } from '@passwordless-id/webauthn';
 import { IUser } from '@/interfaces/user';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_MESSAGE, SuccessMessage } from '@/constants/status_code';
 import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { IUserAuth } from '@/interfaces/webauthn';
 import { DUMMY_CHALLENGE } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { getSession } from '@/lib/utils/get_session';
+import { getSession, setSession } from '@/lib/utils/session';
 import { generateUserIcon } from '@/lib/utils/generate_user_icon';
 import { checkInvitation } from '@/lib/utils/auth_check';
-import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { createUser } from '@/lib/utils/repo/user.repo';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
@@ -54,14 +54,20 @@ export default async function handler(
     );
     const user = await formatUser(createdUser);
     const session = await getSession(req, res);
-    session.userId = createdUser.id;
-    const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
-    res.status(httpCode).json(result);
-    if (!req.query.invitation) {
-      return;
+    await setSession(session, user.id);
+    let successMessage: SuccessMessage = STATUS_MESSAGE.CREATED;
+    if (req.query.invitation) {
+      try {
+        const invitation = await checkInvitation(req.query.invitation as string, createdUser.id);
+        await createAdminByInvitation(createdUser.id, invitation);
+        successMessage = STATUS_MESSAGE.CREATED_INVITATION;
+      } catch (error) {
+        // TODO: (20240617 - Jacky): Log error in future
+        successMessage = STATUS_MESSAGE.CREATED_WITH_INVALID_INVITATION;
+      }
     }
-    const invitation = await checkInvitation(req.query.invitation as string);
-    await createAdminByInvitation(createdUser.id, invitation);
+    const { httpCode, result } = formatApiResponse<IUser>(successMessage, user);
+    res.status(httpCode).json(result);
   } catch (_error) {
     const error = _error as Error;
     const { httpCode, result } = formatApiResponse<IUser>(error.message, {} as IUser);
