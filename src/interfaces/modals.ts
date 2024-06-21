@@ -1,3 +1,4 @@
+import { ContractStatusWithAll } from '@/constants/contract';
 import { SortOptions } from '@/constants/display';
 import { AllReportTypesKey } from '@/interfaces/report_type';
 
@@ -19,16 +20,19 @@ export interface BookmarkItem {
 export interface IFilterOptions {
   period: { startTimeStamp: number; endTimeStamp: number };
   sort: SortOptions;
-  selectedReportType: AllReportTypesKey;
+  selectedReportType?: AllReportTypesKey;
+  selectedStatus?: keyof typeof ContractStatusWithAll;
 }
 
 export const DUMMY_FILTER_OPTIONS: IFilterOptions = {
   period: { startTimeStamp: 0, endTimeStamp: 0 },
   sort: SortOptions.newest,
   selectedReportType: AllReportTypesKey.all,
+  selectedStatus: 'ALL',
 };
 
 export enum FilterOptionsModalType {
   history = 'history',
   pending = 'pending',
+  contract = 'contract',
 }
