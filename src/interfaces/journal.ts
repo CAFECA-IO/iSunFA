@@ -1,5 +1,5 @@
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { IInvoice } from './invoice';
+import { IInvoice } from '@/interfaces/invoice';
 
 export interface IJournal {
   id: number;
