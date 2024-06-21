@@ -43,7 +43,7 @@ beforeEach(async () => {
               credentialId: 'subscription_index2_test',
               publicKey: 'publicKey',
               algorithm: 'ES256',
-              imageId: 'imageId',
+              imageId: 'imagId',
               createdAt: nowTimestamp,
               updatedAt: nowTimestamp,
             },
