@@ -97,3 +97,5 @@ export enum ActionType {
   login = 'login',
   register = 'register',
 }
+
+export const DEFAULT_SKELETON_COUNT_FOR_PAGE = 5;
