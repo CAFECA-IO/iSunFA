@@ -2,27 +2,23 @@ import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
+import Link from 'next/link';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
 import { APIName } from '@/constants/api_connection';
 import { IDummyJournal } from '@/interfaces/journal';
-import useOuterClick from '@/lib/hooks/use_outer_click';
+import { IDatePeriod } from '@/interfaces/date_period';
 import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { IDatePeriod } from '@/interfaces/date_period';
-import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
-import Link from 'next/link';
+import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { Button } from '../button/button';
+import { JournalListSubTab } from '@/constants/journal';
 
-enum JournalListSubTab {
-  UPLOADED_EVENTS = 'Uploaded Events',
-  UPCOMING_EVENTS = 'Upcoming Events',
-}
-
-const JournalListTab = () => {
+const JournalListBody = () => {
   const { selectedCompany } = useUserCtx();
   const {
     isLoading,
@@ -373,4 +369,4 @@ const JournalListTab = () => {
   );
 };
 
-export default JournalListTab;
+export default JournalListBody;
