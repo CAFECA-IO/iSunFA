@@ -1,40 +1,24 @@
 import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
-import { FaPlus } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
-import APIHandler from '@/lib/utils/api_handler';
-import { useUserCtx } from '@/contexts/user_context';
-import { APIName } from '@/constants/api_connection';
-import { IDummyJournal } from '@/interfaces/journal';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { default30DayPeriodInSec } from '@/constants/display';
+import { IDummyJournal } from '@/interfaces/journal';
+import { IDatePeriod } from '@/interfaces/date_period';
 import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { IDatePeriod } from '@/interfaces/date_period';
-import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '@/constants/url';
-import { Button } from '../button/button';
+import { JournalListSubTab } from '@/constants/journal';
 
-enum JournalListSubTab {
-  UPLOADED_EVENTS = 'Uploaded Events',
-  UPCOMING_EVENTS = 'Upcoming Events',
+interface IJournalListBodyProps {
+  journals: IDummyJournal[];
+  isLoading: boolean;
+  success: boolean;
+  errorCode: string | undefined;
 }
 
-const JournalListTab = () => {
-  const { selectedCompany } = useUserCtx();
-  const {
-    isLoading,
-    success,
-    code,
-    error,
-    data: journals,
-    // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
-  } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-  });
-
+const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalListBodyProps) => {
   const {
     targetRef: typeMenuRef,
     componentVisible: isTypeMenuOpen,
@@ -58,8 +42,6 @@ const JournalListTab = () => {
   const totalPages = 100;
   const uploadedEventsCount = 999;
   const upcomingEventsCount = 9;
-
-  const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
   // Info: (20240418 - Julian) for css
   const isTypeSelected = filteredJournalType !== 'All';
@@ -231,31 +213,28 @@ const JournalListTab = () => {
   );
 
   const isDisplayedJournalList =
-    isLoading === false ? (
-      success && journals ? (
-        <>
-          <JournalList journals={journals} />
-          <div className="mx-auto my-40px">
-            <Pagination
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              totalPages={totalPages}
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <p>Failed to fetch data</p>
-          <p>{code}</p>
-          <p>{error?.message}</p>
-        </>
-      )
-    ) : (
-      // Info: (20240419 - Julian) If no data
+    success === false && errorCode ? (
+      <>
+        <p>Failed to fetch data</p>
+        <p>{errorCode}</p>
+      </>
+    ) : isLoading === true || journals.length < 1 ? (
+      // Info: (20240419 - Julian) If loading or no data
       <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
         <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
         <p>Empty</p>
       </div>
+    ) : (
+      <>
+        <JournalList journals={journals} />
+        <div className="mx-auto my-40px">
+          <Pagination
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            totalPages={totalPages}
+          />
+        </div>
+      </>
     );
 
   const displayedTabs = (
@@ -292,26 +271,9 @@ const JournalListTab = () => {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col px-16px py-32px font-barlow">
-      {/* Info: (20240417 - Julian) Title */}
-      <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
-        <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-          {companyName} Journal List
-        </h1>
-        <Link href={ISUNFA_ROUTE.ACCOUNTING}>
-          <Button type="button" variant="tertiary" className="text-sm md:text-base">
-            <FaPlus />
-            <p>Add new journal</p>
-          </Button>
-        </Link>
-      </div>
-
-      {/* Info: (20240417 - Julian) Divider */}
-      <hr className="my-20px w-full border-lightGray6" />
-
+    <>
       {/* Info: (20240523 - Julian) Tabs */}
       {displayedTabs}
-
       {/* Info: (20240417 - Julian) Filter */}
       <div className="my-10px flex items-center gap-24px text-sm md:items-end">
         {/* Info: (20240417 - Julian) Type */}
@@ -354,7 +316,6 @@ const JournalListTab = () => {
           </svg>
         </button>
       </div>
-
       {/* Info: (20240418 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
         <div className="flex items-center gap-2 text-sm">
@@ -363,14 +324,12 @@ const JournalListTab = () => {
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>
-
       {/* Info: (20240418 - Julian) Toolbar */}
       {displayedToolbar}
-
       {/* Info: (20240418 - Julian) Journal list */}
       {isDisplayedJournalList}
-    </div>
+    </>
   );
 };
 
-export default JournalListTab;
+export default JournalListBody;
