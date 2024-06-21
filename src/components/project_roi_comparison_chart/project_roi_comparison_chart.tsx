@@ -224,11 +224,11 @@ const ProjectRoiComparisonChart = () => {
   useEffect(() => {
     if (listSuccess && profitComparison) {
       const {
-        series: newSerices,
+        series: newSeries,
         categories: newCategories,
         totalPages: newTotalPages,
       } = profitComparison;
-      setSeries(newSerices);
+      setSeries(newSeries);
       setCategories(newCategories);
       setTotalPages(newTotalPages);
     }
@@ -446,7 +446,7 @@ const ProjectRoiComparisonChart = () => {
           {/* Info: prev and next button (20240419 - Shirley) */}
           <div className="hidden flex-1 justify-end space-x-2 lg:flex">
             <Button
-              disabled={currentPage === 1}
+              disabled={currentPage === 1 || isNoData}
               onClick={goToPrevPage}
               variant={'tertiaryOutline'}
               className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
@@ -455,7 +455,7 @@ const ProjectRoiComparisonChart = () => {
             </Button>
 
             <Button
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || isNoData}
               onClick={goToNextPage}
               variant={'tertiaryOutline'}
               className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
