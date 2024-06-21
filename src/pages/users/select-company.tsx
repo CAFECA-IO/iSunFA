@@ -20,11 +20,13 @@ const SelectCompanyPage = () => {
   }, []);
 
   const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center">
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <SelectCompanyPageBody />
+    <div className="bg-surface-neutral-main-background pt-16">
+      <SelectCompanyPageBody />
+    </div>
   );
 
   return (
@@ -53,7 +55,7 @@ const SelectCompanyPage = () => {
         <div className="">
           <NavBar />
         </div>
-        <div className="bg-surface-neutral-main-background pt-16">{displayedBody}</div>
+        {displayedBody}
       </div>
     </>
   );

@@ -55,7 +55,9 @@ const DashboardPage = () => {
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <DashboardPageBody />
+    <div className="pt-14">
+      <DashboardPageBody />
+    </div>
   );
 
   return (
@@ -84,7 +86,7 @@ const DashboardPage = () => {
         <div className="">
           <NavBar />
         </div>
-        <div className="pt-14">{displayedBody}</div>
+        {displayedBody}
       </div>
     </>
   );

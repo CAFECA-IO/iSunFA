@@ -12,7 +12,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 const FinancialsReportsPage = () => {
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center">
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
