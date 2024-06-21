@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 import { createChallenge } from '@/lib/utils/authorization';
 import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
@@ -32,22 +32,24 @@ interface UserContextType {
   successSelectCompany: boolean | undefined;
   errorCode: string | null;
   toggleIsSignInError: () => void;
+  isAuthLoading: boolean;
 }
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
-  signUp: async () => { },
-  signIn: async () => { },
-  signOut: () => { },
+  signUp: async () => {},
+  signIn: async () => {},
+  signOut: () => {},
   userAuth: null,
   username: null,
   signedIn: false,
   isSignInError: false,
   selectedCompany: null,
-  selectCompany: () => { },
+  selectCompany: () => {},
   successSelectCompany: undefined,
   errorCode: null,
-  toggleIsSignInError: () => { },
+  toggleIsSignInError: () => {},
+  isAuthLoading: true,
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -73,6 +75,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
 
   const { trigger: signOutAPI } = APIHandler<void>(
     APIName.SIGN_OUT,
@@ -125,7 +129,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     success: getUserSessionSuccess,
     isLoading: isGetUserSessionLoading,
     code: getUserSessionCode,
-  } = APIHandler<{ user: IUser; company: ICompany; }>(APIName.SESSION_GET, {}, false, false);
+  } = APIHandler<{ user: IUser; company: ICompany }>(APIName.SESSION_GET, {}, false, false);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -352,6 +356,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [companySelectSuccess, companySelectCode]);
 
+  useEffect(() => {
+    if (isSignInLoading || isSignUpLoading || isGetUserSessionLoading) {
+      setIsAuthLoading(true);
+    } else {
+      setTimeout(() => {
+        setIsAuthLoading(false);
+      }, MILLISECONDS_IN_A_SECOND);
+    }
+  }, [isSignInLoading, isSignUpLoading, isGetUserSessionLoading]);
+
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(
     () => ({
@@ -368,6 +382,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       successSelectCompany: successSelectCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
+      isAuthLoading: isAuthLoadingRef.current,
     }),
     [
       credentialRef.current,
@@ -375,6 +390,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       successSelectCompanyRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
+      isAuthLoadingRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

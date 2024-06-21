@@ -238,7 +238,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     <button
                       type="button"
                       onClick={profileUploadModalVisibilityHandler}
-                      className="group relative flex items-center justify-center overflow-hidden rounded-full"
+                      className="group relative flex h-150px w-150px items-center justify-center overflow-hidden rounded-full"
                     >
                       <Image
                         src={projectImageSrc}

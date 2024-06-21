@@ -8,16 +8,28 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { GetServerSideProps } from 'next';
 import { ILoginPageProps } from '@/interfaces/page_props';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
   const router = useRouter();
-  const { signedIn } = useUserCtx();
+  const { signedIn, isAuthLoading } = useUserCtx();
 
   useEffect(() => {
     if (signedIn) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     }
   }, [signedIn]);
+
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <div className="pt-16">
+      <LoginPageBody invitation={invitation} action={action} />
+    </div>
+  );
 
   return (
     <>
@@ -45,9 +57,7 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
         <div className="">
           <NavBar />
         </div>
-        <div className="pt-16">
-          <LoginPageBody invitation={invitation} action={action} />
-        </div>
+        {displayedBody}
       </div>
     </>
   );

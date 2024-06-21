@@ -5,6 +5,7 @@ import { Button } from '@/components/button/button';
 import Link from 'next/link';
 import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
 
 interface IReportsHistoryItemProps {
   report: IGeneratedReportItem;
@@ -19,6 +20,7 @@ const ReportsHistoryItem = ({
   isCheckboxVisible,
   onCheckChange = () => {},
 }: IReportsHistoryItemProps) => {
+  const { t } = useTranslation('common');
   const {
     id,
     createdTimestamp,
@@ -98,9 +100,9 @@ const ReportsHistoryItem = ({
       {/* Info: period (20240528 - Shirley) */}
       <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">From</span>
+          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">to</span>
+          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>

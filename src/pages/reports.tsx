@@ -247,7 +247,7 @@ const AuditReport = () => {
           <div className="grow">
             <input
               type="text"
-              placeholder="Search"
+              placeholder={t('AUDIT_REPORT.SEARCH')}
               className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none "
             />
           </div>
@@ -345,7 +345,7 @@ const AuditReport = () => {
                 value="no-daily-reports"
                 className="cursor-pointer"
               />
-              {`Don't show daily reports `}
+              {t('AUDIT_REPORT.DON_T_SHOW_DAILY_REPORTS')}
             </label>
           </form>
         </div>

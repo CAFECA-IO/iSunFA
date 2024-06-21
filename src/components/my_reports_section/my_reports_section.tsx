@@ -23,8 +23,10 @@ import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import { FilterOptionsModalType } from '@/interfaces/modals';
+import { useTranslation } from 'next-i18next';
 
 const MyReportsSection = () => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
@@ -208,7 +210,7 @@ const MyReportsSection = () => {
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
-            Sort by
+            {t('MY_REPORTS_SECTION.SORT_BY')}
           </div>
           {/* Info: sort menu (20240513 - Shirley) */}
           {displayedPendingSortMenu}
@@ -258,7 +260,7 @@ const MyReportsSection = () => {
   );
 
   const displayedPendingDataSection = isPendingDataLoading ? (
-    <div>Loading...</div>
+    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
   ) : pendingData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       {' '}
@@ -331,7 +333,9 @@ const MyReportsSection = () => {
             />
           </svg>
         </div>
-        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+          {t('MY_REPORTS_SECTION.EMPTY')}
+        </div>
       </section>
     </div>
   );
@@ -388,7 +392,7 @@ const MyReportsSection = () => {
         value={searchHistoryQuery}
         onChange={historyInputChangeHandler}
         type="text"
-        placeholder="Search"
+        placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
       <div className="absolute right-3 top-3 hover:cursor-pointer">
@@ -416,7 +420,7 @@ const MyReportsSection = () => {
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
-            Sort by
+            {t('MY_REPORTS_SECTION.SORT_BY')}
           </div>
           {/* Info: sort menu (20240513 - Shirley) */}
           {displayedHistorySortMenu}
@@ -466,7 +470,7 @@ const MyReportsSection = () => {
   );
 
   const displayedHistoryDataSection = isHistoryDataLoading ? (
-    <div>Loading...</div>
+    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
   ) : historyData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       <ReportsHistoryList reports={historyData} />
@@ -538,7 +542,9 @@ const MyReportsSection = () => {
             />
           </svg>
         </div>
-        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+          {t('MY_REPORTS_SECTION.EMPTY')}
+        </div>
       </section>
     </div>
   );
@@ -549,7 +555,9 @@ const MyReportsSection = () => {
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-16 lg:px-28">My Reports</div>
+            <div className="w-full justify-center px-10 md:px-16 lg:px-28">
+              {t('MY_REPORTS_SECTION.MY_REPORTS')}
+            </div>
           </div>
           {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
@@ -563,7 +571,7 @@ const MyReportsSection = () => {
                   className="aspect-square shrink-0"
                 />
               </div>
-              <div className="mt-1.5">My Reports</div>
+              <div className="mt-1.5">{t('MY_REPORTS_SECTION.MY_REPORTS')}</div>
             </div>
           </div>
 
@@ -602,7 +610,7 @@ const MyReportsSection = () => {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <div>Pending</div>
+            <div>{t('MY_REPORTS_SECTION.PENDING')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
             <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
@@ -633,7 +641,7 @@ const MyReportsSection = () => {
                 d="M13.857 5.714a.571.571 0 00-.167-.404L8.547.167A.571.571 0 008.143 0v5.143c0 .315.256.571.571.571h5.143z"
               ></path>
             </svg>
-            <div>Reports History</div>
+            <div>{t('MY_REPORTS_SECTION.REPORTS_HISTORY')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
             <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />

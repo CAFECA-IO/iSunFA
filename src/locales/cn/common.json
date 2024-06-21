@@ -183,5 +183,102 @@
     "POWERED_BY": "技术支持 阳光智能会计",
     "ANNOUNCEMENT": "阳光智能会计：提供人工智慧审计与审核，去中心化的区块链浏览器和分析平台",
     "COMPANY_INFO": "公司资讯"
+  },
+  "PLUGIN": {
+    "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
+    "RESERVE_RATIO_BLOCK_TITLE_HIGHLIGHT": "储备金比例",
+    "RESERVE_RATIO_BLOCK_TITLE_2": "",
+    "DOWNLOAD_REPORT": "下载报告",
+    "RESERVE_RATIO_BLOCK_CARD": "储备金比例",
+    "RESERVE_RATIO_BLOCK_CARD_2": "区块链",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION": "TideBit 用户资产持有量",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION_2": "TideBit 钱包资产",
+    "SMART": "人工智慧",
+    "AUDITING_REPORTS": "监管报告",
+    "LAST_UPDATED": "最后更新",
+    "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
+    "BALANCE_SHEET": "资产负债表",
+    "CASH_FLOW_STATEMENT": "现金流量表",
+    "RED_FLAG_ANALYSIS": "风险分析",
+    "POWERED_BY": "技术支持"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "审计报告",
+    "SHOW_DESIGNATED_REGIONAL_COMPANIES": "显示指定区域公司",
+    "US": "美国",
+    "HK": "香港",
+    "TW": "台湾",
+    "CODE": "代码",
+    "REGIONAL": "区域",
+    "COMPANY": "公司",
+    "INFORMATION_YEAR": "资讯年度",
+    "DETAILED_INFORMATION": "详细资讯",
+    "CREDIT_RATING": "信用评级",
+    "DATE_OF_UPLOAD": "上传日期",
+    "LINK": "连结",
+    "REGION": "地区",
+    "SHOW_DAILY_REPORTS": "显示每日报告",
+    "CARD_LIST": "列表",
+    "ISUNFA_AUDIT_REPORT": "iSunFA - 审计报告",
+    "COMPANY_CODE_OR ABBREVIATION": "公司代码或简称",
+    "OF_100": "（共 100 页）",
+    "SEARCH": "搜索",
+    "DON_T_SHOW_DAILY_REPORTS": "不显示每日报告"
+  },
+  "REPORTS_SIDEBAR": {
+    "REPORT": "报告",
+    "GET_EMBED_CODE": "取得嵌入程式码",
+    "FINANCIAL_REPORTS": "财务报告",
+    "ANALYSIS_REPORTS": "分析报告",
+    "MY_REPORTS": "我的报告"
+  },
+  "MY_REPORTS_SECTION": {
+    "LOADING": "加载中...",
+    "SORT_BY": "排序方式",
+    "EMPTY": "空的",
+    "MY_REPORTS": "我的报告",
+    "PENDING": "待办",
+    "REPORTS_HISTORY": "历史报告"
+  },
+  "REPORTS_HISTORY_ITEM": {
+    "FROM": "从",
+    "TO": "至"
+  },
+  "REPORTS_HISTORY_LIST": {
+    "CANCEL": "取消",
+    "DATE": "日期",
+    "REPORT_NAME": "报告名称",
+    "PERIOD": "期间",
+    "BLOCKCHAIN": "区块链",
+    "PROJECT": "项目",
+    "OPERATIONS": "运营报告"
+  },
+  "PENDING_REPORT_LIST": {
+    "DATE": "日期",
+    "REPORT_NAME": "报告名称",
+    "PERIOD": "期间",
+    "REMAINING_TIME": "剩余时间",
+    "OPERATIONS": "营运报告",
+    "CANCEL": "取消",
+    "SELECT": "选择"
+  },
+  "PENDING_REPORT_ITEM": {
+    "ESTIMATED": "估计",
+    "DAYS": "天",
+    "HOURS": "小时",
+    "MINUTES": "分",
+    "SECONDS": "秒"
+  },
+  "EMBED_CODE_MODAL": {
+    "EMBED_CODE": "嵌入程式码",
+    "WHAT_TYPE_OF_REPORT": "您想在网站上显示什么类型的报告？",
+    "REPORT_LANGUAGE": "报告语言",
+    "COPY": "克隆",
+    "THE_LATEST_REPORT": "在您的网站上显示最新报告",
+    "GENERATE": "产生"
+  },
+  "ANALYSIS_REPORTS_SECTION": {
+    "REPORT_TYPE": "报告类型",
+    "ATTENTION": "注意：产生报告大约需要 30 到 40 分钟。完成后，它将存储在“我的报告”中。感谢您的耐心等待。"
   }
 }

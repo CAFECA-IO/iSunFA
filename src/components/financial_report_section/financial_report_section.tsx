@@ -21,8 +21,10 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 const FinancialReportSection = () => {
+  const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -194,7 +196,9 @@ const FinancialReportSection = () => {
         }`}
       >
         <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
-          <div className="text-center text-input-text-input-filled">Project</div>
+          <div className="text-center text-input-text-input-filled">
+            {t('REPORTS_HISTORY_LIST.PROJECT')}
+          </div>
           <div
             className={`h-11 w-px ${
               isProjectMenuOpen ? 'bg-input-stroke-selected' : 'bg-dropdown-stroke-menu'
@@ -445,7 +449,9 @@ const FinancialReportSection = () => {
         <LoadingSVG />
       ) : (
         <div className="flex gap-1">
-          <div className="text-sm font-medium leading-5 tracking-normal">Generate</div>
+          <div className="text-sm font-medium leading-5 tracking-normal">
+            {t('EMBED_CODE_MODAL.GENERATE')}
+          </div>
           <div className="my-auto flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -476,7 +482,9 @@ const FinancialReportSection = () => {
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: desktop heading (20240513 - Shirley) */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-28">Financial Reports</div>
+            <div className="w-full justify-center px-10 md:px-28">
+              {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
+            </div>
           </div>
           {/* Info: mobile heading (20240513 - Shirley) */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
@@ -490,7 +498,7 @@ const FinancialReportSection = () => {
                   className="aspect-square shrink-0"
                 />
               </div>
-              <div className="mt-1.5">Financial Reports</div>
+              <div className="mt-1.5">{t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
             </div>
           </div>
 
@@ -506,7 +514,7 @@ const FinancialReportSection = () => {
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              Project
+              {t('REPORTS_HISTORY_LIST.PROJECT')}
             </div>
 
             {displayedProjectMenu}
@@ -515,7 +523,7 @@ const FinancialReportSection = () => {
         <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              Report Type
+              {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
             </div>
             {displayedReportTypeMenu}
           </div>
@@ -523,7 +531,7 @@ const FinancialReportSection = () => {
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              Report Language
+              {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
@@ -566,7 +574,7 @@ const FinancialReportSection = () => {
                 </div>
               </div>
               <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
-                Period
+                {t('PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
 
@@ -586,11 +594,7 @@ const FinancialReportSection = () => {
           </div>
         </div>
         <div className="my-10 flex flex-col justify-center">
-          <p>
-            {`Attention: The report will take approximately 30 to 40 minutes to generate. Once
-            completed, it will be stored in "My Reports." Please check back later. Thank you for
-            your patience.`}
-          </p>
+          <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}{' '}
       </div>
