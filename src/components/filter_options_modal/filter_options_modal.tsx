@@ -140,7 +140,7 @@ const FilterOptionsModal = ({
     <div
       ref={statusMenuRef}
       onClick={toggleStatusMenu}
-      className={`group relative flex w-full cursor-pointer max-md:max-w-full lg:w-auto ${isStatusMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex w-full cursor-pointer max-md:max-w-full ${isStatusMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isStatusMenuOpen ? ' text-primaryYellow' : isStatusMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
