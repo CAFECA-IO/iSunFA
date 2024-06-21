@@ -1,11 +1,11 @@
 {
-  "user_id": 1,
-  "company_id": 8867,
-  "role_id": 1,
+  "userId": 1,
+  "companyId": 8867,
+  "roleId": 1,
   "email": "",
   "status": true,
-  "start_date": 1717751006,
-  "end_date": null,
-  "created_at": 1717751006,
-  "updated_at": 1717751006
+  "startDate": 1717751006,
+  "endDate": null,
+  "createdAt": 1717751006,
+  "updatedAt": 1717751006
 }

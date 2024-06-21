@@ -24,14 +24,6 @@ export default async function handler(
     const projectIdNum = convertStringToNumber(projectId);
     // Info: (20240419 - Jacky) S010001 - GET /project
     if (req.method === 'GET') {
-      const session = await checkAdmin(req, res);
-      // Info: (20240607 - Jacky) check input parameter start
-      const { companyId } = session;
-      const { projectId } = req.query;
-      if (!projectId) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const projectIdNum = Number(projectId);
       const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
       const project = await formatProject(checkedProject);
       // Info: (20240607 - Jacky) check input parameter end
@@ -42,18 +34,19 @@ export default async function handler(
       if (!name && !stage && !memberIdList) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
       // Info: (20240419 - Jacky) S010002 - POST /project
       if (stage) {
-        await updateProjectMilestone(project.id, stage);
+        await updateProjectMilestone(checkedProject.id, stage);
       }
       if (memberIdList) {
-        await updateProjectMembers(project.id, memberIdList);
+        await updateProjectMembers(checkedProject.id, memberIdList);
       }
-      const updatedProject = await updateProjectById(project.id, name, imageId);
+      const updatedProject = await updateProjectById(checkedProject.id, name, imageId);
+      const project = await formatProject(updatedProject);
       const { httpCode, result } = formatApiResponse<IProject>(
         STATUS_MESSAGE.SUCCESS_UPDATE,
-        updatedProject
+        project
       );
       res.status(httpCode).json(result);
     } else {

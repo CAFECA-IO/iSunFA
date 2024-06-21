@@ -1,4 +1,3 @@
-import { IProject } from '@/interfaces/project';
 import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { Employee, Project, Value } from '@prisma/client';
@@ -64,7 +63,13 @@ export async function createProject(
   stage: Milestone,
   members?: number[],
   imageId?: string
-) {
+): Promise<
+  Project & {
+    employeeProjects: { employee: { name: string; imageId: string | null } }[];
+    value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
+    _count: { contracts: number };
+  }
+> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const createdProject = await prisma.project.create({
@@ -91,19 +96,17 @@ export async function createProject(
           })),
         },
       },
-      values: {
-        create: [
-          {
-            totalRevenue: 0,
-            totalExpense: 0,
-            totalRevenueGrowthIn30d: 0,
-            netProfit: 0,
-            netProfitGrowthIn30d: 0,
-            netProfitGrowthInYear: 0,
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        ],
+      value: {
+        create: {
+          totalRevenue: 0,
+          totalExpense: 0,
+          totalRevenueGrowthIn30d: 0,
+          netProfit: 0,
+          netProfitGrowthIn30d: 0,
+          netProfitGrowthInYear: 0,
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
+        },
       },
       completedPercent: 0,
       createdAt: nowTimestamp,
@@ -134,23 +137,20 @@ export async function createProject(
       },
     },
   });
-  const { employeeProjects, value, _count, ...rest } = createdProject;
-  const newProject: IProject = {
-    ...rest,
-    members: createdProject.employeeProjects.map((employeeProject) => ({
-      name: employeeProject.employee.name,
-      imageId: employeeProject.employee.imageId as string,
-    })),
-    income: value ? value.totalExpense : 0,
-    expense: value ? value.totalRevenue : 0,
-    profit: value ? value.netProfit : 0,
-    contractAmount: _count.contracts,
-    imageId: rest.imageId ?? '',
-  };
-  return newProject;
+  return createdProject;
 }
 
-export async function updateProjectById(projectId: number, name?: string, imageId?: string) {
+export async function updateProjectById(
+  projectId: number,
+  name?: string,
+  imageId?: string
+): Promise<
+  Project & {
+    employeeProjects: { employee: { name: string; imageId: string | null } }[];
+    value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
+    _count: { contracts: number };
+  }
+> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const updatedProject = await prisma.project.update({
@@ -173,7 +173,7 @@ export async function updateProjectById(projectId: number, name?: string, imageI
           },
         },
       },
-      values: {
+      value: {
         select: {
           totalRevenue: true,
           totalExpense: true,
@@ -187,18 +187,6 @@ export async function updateProjectById(projectId: number, name?: string, imageI
       },
     },
   });
-  const { employeeProjects, values, _count, ...rest } = updatedProject;
-  const newProject: IProject = {
-    ...rest,
-    members: updatedProject.employeeProjects.map((employeeProject) => ({
-      name: employeeProject.employee.name,
-      imageId: employeeProject.employee.imageId as string,
-    })),
-    income: values[updatedProject.values.length - 1].totalExpense,
-    expense: values[updatedProject.values.length - 1].totalRevenue,
-    profit: values[updatedProject.values.length - 1].netProfit,
-    contractAmount: _count.contracts,
-    imageId: rest.imageId ?? '',
-  };
-  return newProject;
+
+  return updatedProject;
 }
