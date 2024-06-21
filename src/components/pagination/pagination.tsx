@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/router';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
+import { useTranslation } from 'next-i18next';
 
 interface IPaginationProps {
   currentPage: number;
@@ -24,8 +25,8 @@ const Pagination = ({
   totalPages,
   pagePrefix = 'page',
 }: IPaginationProps) => {
+  const { t } = useTranslation('common');
   const [targetPage, setTargetPage] = useState<number>(currentPage);
-
   const router = useRouter();
 
   useEffect(() => {
@@ -154,7 +155,9 @@ const Pagination = ({
       <li className="flex flex-col items-center">
         {displayPageInput}
         {/* Info: (20240419 - Julian) 顯示總頁數 */}
-        <p>of {totalPages}</p>
+        <p>
+          {t('COMMON.OF')} {totalPages}
+        </p>
       </li>
       {/* Info: (20240419 - Julian) 下一頁 */}
       <li>{displayNextButton}</li>
