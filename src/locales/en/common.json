@@ -185,5 +185,50 @@
     "POWERED_BY": "Powered by iSunFA",
     "ANNOUNCEMENT": "iSunFA: Blockchain AI Forensic Accounting and Auditing\nis a Block Explorer and Analytics Platform ",
     "COMPANY_INFO": "Company Info"
+  },
+  "PLUGIN": {
+    "RESERVE_RATIO_BLOCK_TITLE": "Latest",
+    "RESERVE_RATIO_BLOCK_TITLE_HIGHLIGHT": " reserve ratio ",
+    "RESERVE_RATIO_BLOCK_TITLE_2": "of TideBit holdings",
+    "DOWNLOAD_REPORT": "Download Report",
+    "RESERVE_RATIO_BLOCK_CARD": "reserve ratio",
+    "RESERVE_RATIO_BLOCK_CARD_2": "Blockchain",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION": "TideBit user asset holdings",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION_2": "TideBit wallet assets",
+    "SMART": "AI",
+    "AUDITING_REPORTS": "Supervision Reports",
+    "LAST_UPDATED": "Last Updated",
+    "COMPREHENSIVE_INCOME_STATEMENT": "Comprehensive Income Statement",
+    "BALANCE_SHEET": "Balance Sheet",
+    "CASH_FLOW_STATEMENT": "Cash Flow Statement",
+    "RED_FLAG_ANALYSIS": "Red Flag Analysis",
+    "POWERED_BY": "Powered by"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "Audit Report",
+    "SHOW_DESIGNATED_REGIONAL_COMPANIES": "Show Designated Regional Companies",
+    "US": "US",
+    "HK": "HK",
+    "TW": "TW",
+    "CODE": "Code",
+    "REGIONAL": "Regional",
+    "COMPANY": "Company",
+    "INFORMATION_YEAR": "Information Year",
+    "DETAILED_INFORMATION": "Detailed Information",
+    "CREDIT_RATING": "Credit rating",
+    "DATE_OF_UPLOAD": "Date of Upload",
+    "LINK": "LINK",
+    "REGION": "Region",
+    "SHOW_DAILY_REPORTS": "Show daily reports",
+    "CARD_LIST": "Card List",
+    "ISUNFA_AUDIT_REPORT": "iSunFA - Audit Report",
+    "COMPANY_CODE_OR ABBREVIATION": "Company Code or Abbreviation",
+    "OF_100": "of 100"
+  },
+  "REPORTS_SIDEBAR": {
+    "REPORT": "Report",
+    "GET_EMBED_CODE": "Get Embed Code",
+    "FINANCIAL_REPORTS":"Financial Reports",
+    "ANALYSIS_REPORTS":"Analysis Reports"
   }
 }

@@ -1,5 +1,5 @@
-/* eslint-disable */
 import React, { useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -104,9 +104,14 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
       <div className="bg-surface-neutral-main-background pb-36 lg:pb-0">
         <div className="flex gap-5 max-lg:flex-col max-lg:gap-0">
           <div className="order-2 hidden w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1 lg:flex">
-            <div className="pointer-events-none -mt-[20px] flex grow flex-col justify-start max-lg:max-w-full md:-mt-[50px] lg:-mt-[65px]">
-              <div className="relative flex h-full w-full flex-col overflow-hidden py-0 max-lg:max-w-full">
-                <img src="/elements/login_bg.svg" className="size-full object-cover" />
+            <div className="pointer-events-none -mt-20px flex grow flex-col justify-start max-lg:max-w-full md:-mt-50px lg:-mt-65px">
+              <div className="relative flex h-full w-full flex-col overflow-hidden max-lg:max-w-full">
+                <Image
+                  src="/elements/login_bg.svg"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  alt="login_bg"
+                />
               </div>
             </div>
           </div>
@@ -114,9 +119,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
             <div className="flex grow flex-col justify-center pb-20 max-lg:max-w-full">
               <div className="mt-12 flex flex-col items-center px-20 max-lg:max-w-full max-lg:px-5 lg:mt-20">
                 <div className="flex flex-col items-center justify-center self-stretch px-20 max-lg:max-w-full max-lg:px-5">
-                  <div className="text-2xl font-bold leading-[51.84px] text-amber-400 lg:text-5xl">
-                    Log In
-                  </div>
+                  <div className="text-2xl font-bold text-amber-400 lg:text-5xl">Log In</div>
                   <div className="mt-5 text-center text-xs leading-6 tracking-normal text-slate-600 lg:mt-2 lg:text-base lg:font-medium">
                     Register your device → <br />
                     Scan the QR code with the device you registered with{' '}
@@ -125,7 +128,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                 <div className="mt-2 flex max-w-full flex-col justify-center lg:mt-10">
                   <div className="flex flex-col justify-center rounded-full max-lg:mx-2.5">
                     <div className="flex aspect-square flex-col items-center justify-center px-16 max-lg:px-5">
-                      <div className="mx-2 flex hidden items-center justify-center lg:flex">
+                      <div className="mx-2 hidden items-center justify-center lg:flex">
                         {/* Info: anonymous avatar (20240422 - Shirley) */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -195,7 +198,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                   <Button
                     variant={'tertiary'}
                     onClick={logInClickHandler}
-                    className="mx-auto mt-0 flex max-w-[400px] justify-center px-4 py-1 lg:gap-2 lg:space-x-2 lg:px-6 lg:py-3.5"
+                    className="mx-auto mt-0 flex max-w-400px justify-center px-4 py-1 lg:gap-2 lg:space-x-2 lg:px-6 lg:py-3.5"
                   >
                     <div className="text-sm leading-7 tracking-normal lg:text-lg lg:font-medium">
                       Log in with Device

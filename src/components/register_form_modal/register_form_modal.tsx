@@ -1,7 +1,5 @@
-/* eslint-disable */
-import React, { useContext, useEffect, useRef } from 'react';
-import { RegisterFormModalProps } from '@/interfaces/modals';
-import { UserContext, useUserCtx } from '@/contexts/user_context';
+import React, { useEffect, useRef, useState } from 'react';
+import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 
@@ -21,11 +19,26 @@ const RegisterFormModal = ({
   const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [registerValid, setRegisterValid] = useState(true);
+
   const registerClickHandler = async () => {
     const name = inputRef.current?.value || DEFAULT_DISPLAYED_USER_NAME;
     signUp({ username: name, invitation: data.invitation });
-    inputRef.current?.value && (inputRef.current.value = '');
+    if (inputRef.current?.value) {
+      inputRef.current.value = '';
+    }
     modalVisibilityHandler();
+  };
+
+  // Info: (20240620 - Julian) 輸入中文的過程中，暫停標籤的添加
+  const handleCompositionStart = () => setRegisterValid(false);
+  // Info: (20240620 - Julian) 輸入完成後，恢復標籤的添加
+  const handleCompositionEnd = () => setRegisterValid(true);
+  // Info: (20240620 - Julian) when value is not empty, press enter to register
+  const onEnterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && registerValid) {
+      registerClickHandler();
+    }
   };
 
   useEffect(() => {
@@ -35,7 +48,7 @@ const RegisterFormModal = ({
   }, [isModalVisible]);
 
   const isDisplayedRegisterModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative mx-auto flex flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
         <div className="flex gap-2.5 bg-white px-5 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
@@ -47,7 +60,11 @@ const RegisterFormModal = ({
             </div>
           </div>
           <div className="absolute right-3 top-3">
-            <button onClick={modalVisibilityHandler} className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={modalVisibilityHandler}
+              className="flex items-center justify-center"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="30"
@@ -92,6 +109,9 @@ const RegisterFormModal = ({
                   type="text"
                   className="mx-2 w-full bg-white px-1 py-2.5 text-base text-navyBlue2 placeholder:text-lightGray4 focus:outline-none"
                   placeholder="Username"
+                  onKeyDown={onEnterPress}
+                  onCompositionStart={handleCompositionStart}
+                  onCompositionEnd={handleCompositionEnd}
                 />
               </div>
             </div>
@@ -101,6 +121,7 @@ const RegisterFormModal = ({
           <div className="flex gap-3">
             {/* TODO: button component (20240409 - Shirley) */}
             <button
+              type="button"
               onClick={modalVisibilityHandler}
               className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >

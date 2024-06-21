@@ -5,8 +5,10 @@ import { useState } from 'react';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { cn } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 
 const ReportsSidebar = () => {
+  const { t } = useTranslation('common');
   const router = useRouter();
   const { embedCodeModalVisibilityHandler } = useGlobalCtx();
 
@@ -34,7 +36,7 @@ const ReportsSidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            Report
+            {t('REPORTS_SIDEBAR.REPORT')}
           </p>
         </div>
 
@@ -68,7 +70,7 @@ const ReportsSidebar = () => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-white transition-all duration-300 ease-in-out`}
             >
-              Get Embed Code
+              {t('REPORTS_SIDEBAR.GET_EMBED_CODE')}
             </p>
           </div>
 
@@ -152,7 +154,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                Financial Reports
+                {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
               </p>
             </Link>
 
@@ -185,7 +187,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                Analysis Reports
+                {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
               </p>
             </Link>
           </div>

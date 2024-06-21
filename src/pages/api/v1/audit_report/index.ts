@@ -58,13 +58,51 @@ const responseDataArray2: IAuditReports[] = [
   },
 ];
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAuditReports[] | IAuditReports>>
 ) {
-  const { region, page, limit, begin, end, search } = req.query;
+  // Todo: (20240620 - Gibbs) 這裡的程式碼需要進行重構
+  // const { region = undefined, page = 1, limit = 10, begin = undefined, end = undefined, search = "" } = req.query;
   try {
-    if (region || page || limit || begin || end || search) {
+    if (req.method !== 'GET') {
+      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+
+      // Todo: (20240620 - Gibbs) 這裡的程式碼需要進行重構
+      /*
+    // no dateOfUpload, createdAt from report table created_at
+    const auditReports = await prisma.auditReport.findMany({
+      where: {
+        // 如果有提供 region，則增加篩選條件
+        ...(region && { company: { region: region } }),
+        // 使用 AND 操作符來組合多個條件
+        AND: [
+          // 根據關聯的 report 的 createdAt 進行篩選
+          {
+            report: {
+              createdAt: {
+                gte: begin ? new Date(begin * 1000) : undefined, // 將 timestamp 轉換為 Date 物件
+                lte: end ? new Date(end * 1000) : undefined,
+              },
+            },
+          },
+          // 如果有提供 search，則增加對應的模糊查詢條件
+          ...(search && {
+            OR: [
+              { company: { name: { contains: search } } },
+              { report: { name: { contains: search } } },
+            ],
+          }),
+        ],
+      },
+      include: {
+        company: true, // 包括關聯的 company 資料
+        report: true,  // 包括關聯的 report 資料
+      },
+      skip: skip,
+      take: limit,
+    });
+    */
       const { httpCode, result } = formatApiResponse<IAuditReports[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         responseDataArray2
