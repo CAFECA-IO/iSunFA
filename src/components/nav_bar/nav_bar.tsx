@@ -16,11 +16,13 @@ import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
 import Notification from '@/components/notification/notification';
+import Skeleton from '@/components/skeleton/skeleton';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth } = useUserCtx();
+  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
+    useUserCtx();
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
@@ -457,7 +459,9 @@ const NavBar = () => {
     </button>
   ) : null;
 
-  const displayedLogInBtn = signedIn ? (
+  const displayedLogInBtn = isAuthLoading ? (
+    <Skeleton width={44} height={40} />
+  ) : signedIn ? (
     <div ref={userMenuRef} className="">
       <button type="button" onClick={avatarClickHandler} className="">
         {/* Info: avatar svg (20240408 - Shirley) */}

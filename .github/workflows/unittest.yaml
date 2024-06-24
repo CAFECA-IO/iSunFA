@@ -56,11 +56,11 @@ jobs:
           # The database URL to connect to the PostgreSQL database
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 
-      - name: Build next.js service
-        run: npm run build
-
       - name: Run unit tests
         run: npm run test
         env:
           # The database URL to connect to the PostgreSQL database
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+      - name: Build next.js service
+        run: npm run build

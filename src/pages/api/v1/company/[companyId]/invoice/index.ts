@@ -8,6 +8,7 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { handlePrismaSavingLogic } from '@/pages/api/v1/company/[companyId]/invoice/invoice.repository';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 interface IPostApiResponseType {
   journalId: number;
@@ -15,13 +16,9 @@ interface IPostApiResponseType {
 }
 
 // Info Murky (20240416): Utils
-function isCompanyIdValid(companyId: string | string[] | undefined): companyId is string {
-  if (Array.isArray(companyId)) {
-    return false;
-  }
-
-  const companyIdRegex = /^\d+$/;
-  return companyIdRegex.test(companyId as string);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isCompanyIdValid(companyId: any): companyId is number {
+  return typeof companyId === 'number';
 }
 
 // Info Murky (20240416): Body傳進來會是any
@@ -42,6 +39,21 @@ function formatInvoice(invoice: any) {
   return formattedInvoice;
 }
 
+// Info Murky (20240612): Body傳進來會是any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatOcrId(ocrId: any): number | undefined {
+  if (!ocrId) {
+    return undefined;
+  }
+
+  // ToDo (20240618 - Murky) Need to use type guard instead
+  if (typeof ocrId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+  const ocrIdNumber = Number(ocrId);
+  return ocrIdNumber;
+}
+
 async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
 
@@ -56,6 +68,9 @@ async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
     });
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
 
@@ -78,6 +93,9 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   try {
     json = await responseJSON;
   } catch (error) {
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -88,14 +106,13 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   return json.payload as IAccountResultStatus;
 }
 
-async function handlePostRequest(
-  companyId: string,
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPostApiResponseType>>
-) {
-  const { invoice } = req.body;
+async function handlePostRequest(companyId: number, req: NextApiRequest) {
+  // Info (20240612 - Murky) ocrId is optional, if not provided, set it to undefined
+  const { invoice, ocrId } = req.body;
 
+  // Depreciate ( 20240522 - Murky ) Need to use type guard instead
   const formattedInvoice = formatInvoice(invoice);
+  const formattedOcrId = formatOcrId(ocrId);
 
   // Post to AICH
   const fetchResult = uploadInvoiceToAICH(formattedInvoice);
@@ -112,14 +129,18 @@ async function handlePostRequest(
   const journalId = await handlePrismaSavingLogic(
     formattedInvoice,
     resultStatus.resultId,
-    Number(companyId)
+    companyId,
+    formattedOcrId
   );
 
   const { httpCode, result } = formatApiResponse<IPostApiResponseType>(STATUS_MESSAGE.CREATED, {
     journalId,
     resultStatus,
   });
-  res.status(httpCode).json(result);
+  return {
+    httpCode,
+    result,
+  };
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {
@@ -135,18 +156,25 @@ export default async function handler(
   res: NextApiResponse<IResponseData<IPostApiResponseType>>
 ) {
   try {
-    const { companyId } = req.query;
+    const session = await checkAdmin(req, res);
+    const { companyId } = session;
+
     if (!isCompanyIdValid(companyId)) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
     if (req.method === 'POST') {
       // Handle POST request to create a new invoice
-      await handlePostRequest(companyId, req, res);
+      const { httpCode, result } = await handlePostRequest(companyId, req);
+      res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
+
+    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     handleErrorResponse(res, error.message);
   }
 }

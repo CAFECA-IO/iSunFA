@@ -6,6 +6,7 @@ import { formatApiResponse, pageToOffset, timestampInSeconds } from '@/lib/utils
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import prisma from '@/client';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
+import { checkAdmin } from '@/lib/utils/auth_check';
 
 type ApiResponseType = {
   id: number;
@@ -13,12 +14,14 @@ type ApiResponseType = {
   type: string | undefined;
   particulars: string | undefined;
   fromTo: string | undefined;
-  account: {
-    id:number;
-    debit: boolean;
-    account: string;
-    amount: number;
-  }[] | undefined;
+  account:
+    | {
+        id: number;
+        debit: boolean;
+        account: string;
+        amount: number;
+      }[]
+    | undefined;
   projectName: string | undefined;
   projectImageId: string | null | undefined;
   voucherId: number | undefined;
@@ -49,7 +52,7 @@ type PrismaReturnType = {
         name: string;
       };
     }[];
-  } | null
+  } | null;
 }[];
 
 async function getJournals(
@@ -69,7 +72,7 @@ async function getJournals(
   try {
     const journalData = await prisma.journal.findMany({
       orderBy: {
-        createdAt: sort === 'asc' ? 'asc' : 'desc'
+        createdAt: sort === 'asc' ? 'asc' : 'desc',
       },
       skip: offset,
       take: limit,
@@ -92,7 +95,7 @@ async function getJournals(
         companyId,
         createdAt: {
           gte: startDateInMilliSecond,
-          lte: endDateInMilliSecond
+          lte: endDateInMilliSecond,
         },
         invoice: {
           eventType,
@@ -101,25 +104,25 @@ async function getJournals(
           {
             invoice: {
               vendorOrSupplier: {
-                contains: search
-              }
-            }
+                contains: search,
+              },
+            },
           },
           {
             invoice: {
               description: {
-                contains: search
-              }
-            }
+                contains: search,
+              },
+            },
           },
           {
             voucher: {
               no: {
-                contains: search
-              }
-            }
-          }
-        ]
+                contains: search,
+              },
+            },
+          },
+        ],
       },
       select: {
         id: true,
@@ -129,14 +132,14 @@ async function getJournals(
             id: true,
             name: true,
             imageId: true,
-          }
+          },
         },
         invoice: {
           select: {
             eventType: true,
             description: true,
             vendorOrSupplier: true,
-          }
+          },
         },
         voucher: {
           select: {
@@ -150,14 +153,14 @@ async function getJournals(
                 account: {
                   select: {
                     name: true,
-                  }
-                }
-            }
-          }
-        }
-
+                  },
+                },
+              },
+            },
+          },
+        },
       },
-    } });
+    });
     return journalData;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -189,46 +192,64 @@ function formatJournals(journalData: PrismaReturnType) {
   return journals;
 }
 
+// ToDo: (20240617 - Murky) Need to use function in type guard instead
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isCompanyIdValid(companyId: any): companyId is number {
+  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
+    return false;
+  }
+  return true;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
+  if (!isCompanyIdValid(companyId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
   try {
     if (req.method === 'GET') {
       const {
-        companyId,
         page, // can be undefined
         limit,
         eventType,
         startDate,
         endDate,
         search,
-        sort
+        sort,
       } = req.query;
       // help me check type
 
       if (
-         Array.isArray(companyId) ||
-        !companyId ||
-        typeof companyId !== 'string' ||
-        !Number.isInteger(Number(companyId)) ||
         (page && !Number.isInteger(Number(page))) ||
         (limit && !Number.isInteger(Number(limit))) ||
         (eventType && typeof eventType !== 'string') ||
         (startDate && !Number.isInteger(Number(startDate))) ||
         (endDate && !Number.isInteger(Number(endDate))) ||
         (search && typeof search !== 'string') ||
-        (sort && typeof sort !== 'string')) {
+        (sort && typeof sort !== 'string')
+      ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
 
-      const companyIdNumber = Number(companyId);
       const pageInt = page ? Number(page) : DEFAULT_PAGE_START_AT;
       const limitInt = limit ? Number(limit) : DEFAULT_PAGE_LIMIT;
       const startDateInt = startDate ? Number(startDate) : undefined;
       const endDateInt = endDate ? Number(endDate) : undefined;
 
-      const journalData = await getJournals(companyIdNumber, pageInt, limitInt, eventType, startDateInt, endDateInt, search, sort);
+      const journalData = await getJournals(
+        companyId,
+        pageInt,
+        limitInt,
+        eventType,
+        startDateInt,
+        endDateInt,
+        search,
+        sort
+      );
       const journals = formatJournals(journalData);
 
       const { httpCode, result } = formatApiResponse<ApiResponseType>(
@@ -242,7 +263,10 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ApiResponseType>(error.message, {} as ApiResponseType);
+    const { httpCode, result } = formatApiResponse<ApiResponseType>(
+      error.message,
+      {} as ApiResponseType
+    );
     res.status(httpCode).json(result);
   }
 }

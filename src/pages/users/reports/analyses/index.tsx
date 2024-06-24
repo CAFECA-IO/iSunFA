@@ -7,8 +7,28 @@ import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import FinancialReportSection from '@/components/financial_report_section/financial_report_section';
 import { ILocale } from '@/interfaces/locale';
 import AnalysisReportSection from '@/components/analysis_reports_section/analysis_reports_section';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 const AnalysesReportsPage = () => {
+  const { isAuthLoading } = useUserCtx();
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <>
+      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+        <ReportsSidebar />
+      </div>
+
+      <div className="h-1200px overflow-x-hidden bg-surface-neutral-main-background lg:h-1200px">
+        <AnalysisReportSection />
+      </div>
+    </>
+  );
+
   return (
     <>
       <Head>
@@ -36,13 +56,7 @@ const AnalysesReportsPage = () => {
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ReportsSidebar />
-        </div>
-
-        <div className="h-1200px overflow-x-hidden bg-surface-neutral-main-background lg:h-1200px">
-          <AnalysisReportSection />
-        </div>
+        {displayedBody}
       </div>
     </>
   );

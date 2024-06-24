@@ -38,7 +38,7 @@ export function generateRandomLaborCostData(items: number): ILaborCostChartData 
     'Project Z',
   ].slice(0, items);
   const series = Array.from({ length: items }, () => Math.floor(Math.random() * 100));
-  const empty = true;
+  const empty = false;
 
   return {
     date,

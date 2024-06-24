@@ -35,7 +35,7 @@ export enum APIName {
   ASSET_MANAGEMENT_UPDATE = 'ASSET_MANAGEMENT_UPDATE',
   OCR_UPLOAD = 'OCR_UPLOAD',
   OCR_RESULT_GET_BY_ID = 'OCR_RESULT_GET_BY_ID',
-  JOURNAL_LIST_UNPROCESSED = 'JOURNAL_LIST_UNPROCESSED',
+  OCR_LIST = 'OCR_LIST',
   INVOICE_CREATE = 'INVOICE_CREATE',
   AI_ASK_STATUS = 'AI_ASK_STATUS',
   AI_ASK_RESULT = 'AI_ASK_RESULT',
@@ -51,6 +51,7 @@ export enum APIName {
   REPORT_GENERATE_FINANCIAL = 'REPORT_GENERATE_FINANCIAL',
   REPORT_GENERATE_ANALYSIS = 'REPORT_GENERATE_ANALYSIS',
   SESSION_GET = 'SESSION_GET',
+  ACCOUNT_LIST = 'ACCOUNT_LIST',
 }
 
 export enum APIPath {
@@ -75,7 +76,7 @@ export enum APIPath {
   ASSET_MANAGEMENT_UPDATE = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
   OCR_UPLOAD = `${apiPrefix}/company/:companyId/ocr`,
   OCR_RESULT_GET_BY_ID = `${apiPrefix}/company/:companyId/ocr/:resultId`,
-  JOURNAL_LIST_UNPROCESSED = `${apiPrefix}/company/:companyId/unprocess_journal`,
+  OCR_LIST = `${apiPrefix}/company/:companyId/ocr`,
   INVOICE_CREATE = `${apiPrefix}/company/:companyId/invoice`,
   AI_ASK_STATUS = `${apiPrefix}/company/:companyId/ask_ai/:resultId/status`,
   AI_ASK_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
@@ -91,6 +92,7 @@ export enum APIPath {
   REPORT_GENERATE_FINANCIAL = `${apiPrefix}/company/:companyId/report_financial`,
   REPORT_GENERATE_ANALYSIS = `${apiPrefix}/company/:companyId/report_analysis`,
   SESSION_GET = `${apiPrefix}/session`,
+  ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
@@ -550,10 +552,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     output: {},
     useWorker: false,
   },
-  [APIName.JOURNAL_LIST_UNPROCESSED]: {
-    name: APIName.JOURNAL_LIST_UNPROCESSED,
+  [APIName.OCR_LIST]: {
+    name: APIName.OCR_LIST,
     method: HttpMethod.GET,
-    path: APIPath.JOURNAL_LIST_UNPROCESSED,
+    path: APIPath.OCR_LIST,
     input: {
       header: {},
       body: {},
@@ -567,6 +569,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.SESSION_GET,
     method: HttpMethod.GET,
     path: APIPath.SESSION_GET,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.ACCOUNT_LIST]: {
+    name: APIName.ACCOUNT_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.ACCOUNT_LIST,
     input: {
       header: {},
       body: {},

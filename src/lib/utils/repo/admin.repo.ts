@@ -155,6 +155,8 @@ export async function updateAdminById(
   status: boolean,
   roleName: RoleName
 ): Promise<Admin & { company: Company; user: User; role: Role }> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const updatedAdmin = await prisma.admin.update({
     where: {
       id: adminId,
@@ -166,6 +168,7 @@ export async function updateAdminById(
           name: roleName,
         },
       },
+      updatedAt: nowTimestamp,
     },
     include: {
       user: true,

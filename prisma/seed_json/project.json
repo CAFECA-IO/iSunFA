@@ -1,98 +1,82 @@
 [
   {
     "id": 9999991,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "iSunFA",
-    "completed_percent": 30,
+    "completedPercent": 30,
     "stage": "Designing",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "ISF",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "ISF",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999992,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "BAIFA",
-    "completed_percent": 80,
+    "completedPercent": 80,
     "stage": "Beta Testing",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "BF",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "BF",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999993,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "iSunOne",
-    "completed_percent": 60,
+    "completedPercent": 60,
     "stage": "Develop",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "ISO",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "ISO",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999994,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "TideBit",
-    "completed_percent": 98,
+    "completedPercent": 98,
     "stage": "Sold",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "TB",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "TB",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999995,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "ProjectE",
-    "completed_percent": 95,
+    "completedPercent": 95,
     "stage": "Selling",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "E",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "E",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999996,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "ProjectF",
-    "completed_percent": 100,
+    "completedPercent": 100,
     "stage": "Archived",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "F",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "F",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999997,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "ProjectG",
-    "completed_percent": 70,
+    "completedPercent": 70,
     "stage": "Develop",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "G",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "G",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   },
   {
     "id": 9999998,
-    "company_id": 8867,
+    "companyId": 8867,
     "name": "ProjectH",
-    "completed_percent": 85,
+    "completedPercent": 85,
     "stage": "Beta Testing",
-    "total_expense": null,
-    "total_income": null,
-    "image_id": "H",
-    "created_at": 1651368365,
-    "updated_at": 1651368365
+    "imageId": "H",
+    "createdAt": 1651368365,
+    "updatedAt": 1651368365
   }
 ]

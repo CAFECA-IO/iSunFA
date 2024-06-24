@@ -8,8 +8,11 @@ import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, DEFAULT_PAGE_START_AT } from '
 import type { Account } from '@prisma/client';
 import { AccountType } from '@/constants/account';
 import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
+import { checkAdmin } from '@/lib/utils/auth_check';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
 export async function findManyAccountsInPrisma(
+  companyId: number,
   page: number = DEFAULT_PAGE_OFFSET,
   limit: number = DEFAULT_PAGE_LIMIT,
   type?: AccountType,
@@ -23,6 +26,14 @@ export async function findManyAccountsInPrisma(
       where: {
         type,
         liquidity,
+        OR: [
+          {
+            companyId,
+          },
+          {
+            companyId: PUBLIC_COMPANY_ID,
+          },
+        ],
       },
     });
 
@@ -39,9 +50,11 @@ export function formatAccounts(accounts: Account[]): IAccount[] {
   return accounts.map((account) => {
     return {
       id: account.id,
+      companyId: account.companyId,
+      system: account.system,
       type: account.type,
       liquidity: account.liquidity,
-      account: account.account,
+      debit: account.debit,
       code: account.code,
       name: account.name,
       createdAt: account.createdAt,
@@ -101,13 +114,14 @@ export function isLimitValid(limit: string | string[] | undefined): limit is str
 }
 
 export function formatParams(
-  companyId: string | string[] | undefined,
+  companyId: unknown,
   type: string | string[] | undefined,
   liquidity: string | string[] | undefined,
   page: string | string[] | undefined,
   limit: string | string[] | undefined
 ) {
-  const isCompanyIdValid = isParamNumeric(companyId);
+  // ToDo: (20240613 - Murky) - need to move to type guard
+  const isCompanyIdValid = !companyId || typeof companyId === 'number';
   const typeIsValid = isTypeValid(type);
   const liquidityIsValid = isLiquidityValid(liquidity);
   const pageIsValid = isPageValid(page);
@@ -117,11 +131,11 @@ export function formatParams(
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const companyIdNumber = Number(companyId);
   const typeEnum = type ? convertStringToAccountType(type) : undefined;
   const liquidityBoolean = liquidity ? liquidity === 'true' : undefined;
   const pageNumber = Number(page) || DEFAULT_PAGE_START_AT;
   const limitNumber = Number(limit) || DEFAULT_PAGE_LIMIT;
+  const companyIdNumber = Number(companyId);
 
   return {
     companyIdNumber,
@@ -136,8 +150,11 @@ export async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccount[]>>
 ) {
-  const { companyId, type, liquidity, page, limit } = req.query;
-  const { typeEnum, liquidityBoolean, pageNumber, limitNumber } = formatParams(
+  const { type, liquidity, page, limit } = req.query;
+  const session = await checkAdmin(req, res);
+  const { companyId } = session;
+
+  const { companyIdNumber, typeEnum, liquidityBoolean, pageNumber, limitNumber } = formatParams(
     companyId,
     type,
     liquidity,
@@ -145,6 +162,7 @@ export async function handleGetRequest(
     limit
   );
   const rawAccounts = await findManyAccountsInPrisma(
+    companyIdNumber,
     pageNumber,
     limitNumber,
     typeEnum,
@@ -152,12 +170,18 @@ export async function handleGetRequest(
   );
   const accounts = formatAccounts(rawAccounts);
   const { httpCode, result } = formatApiResponse<IAccount[]>(STATUS_MESSAGE.SUCCESS_GET, accounts);
-  res.status(httpCode).json(result);
+  return {
+    httpCode,
+    result,
+  };
 }
 
 export function handleErrorResponse(res: NextApiResponse, message: string) {
   const { httpCode, result } = formatApiResponse<IAccount[]>(message, {} as IAccount[]);
-  res.status(httpCode).json(result);
+  return {
+    httpCode,
+    result,
+  };
 }
 
 export default async function handler(
@@ -166,10 +190,13 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      await handleGetRequest(req, res);
+      const { httpCode, result } = await handleGetRequest(req, res);
+
+      res.status(httpCode).json(result);
     }
   } catch (_error) {
     const error = _error as Error;
-    handleErrorResponse(res, error.message);
+    const { httpCode, result } = handleErrorResponse(res, error.message);
+    res.status(httpCode).json(result);
   }
 }

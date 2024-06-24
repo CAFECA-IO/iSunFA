@@ -8,6 +8,7 @@ export interface IProject {
   profit: number;
   contractAmount: number;
   stage: string;
+  completedPercent: number;
   members: IMember[];
   createdAt: number;
   updatedAt: number;
@@ -69,6 +70,7 @@ export const dummyProjects: IProject[] = [
     imageId: '/entities/happy.png',
     name: 'Project 1',
     stage: 'Beta Testing',
+    completedPercent: 50,
     income: 1000,
     expense: 500,
     profit: 500,
@@ -96,6 +98,7 @@ export const dummyProjects: IProject[] = [
     name: 'Project 2',
     imageId: '/entities/happy.png',
     stage: 'Developing',
+    completedPercent: 33,
     income: 4200,
     expense: 4700,
     profit: -500,
@@ -155,6 +158,7 @@ export const dummyProjects: IProject[] = [
     name: 'Project 3',
     imageId: '/entities/happy.png',
     stage: 'Selling',
+    completedPercent: 75,
     income: 2310,
     expense: 2354,
     profit: -44,
@@ -174,6 +178,7 @@ export const dummyProjects: IProject[] = [
     imageId: '/entities/happy.png',
     name: 'StellarScape',
     stage: 'Sold',
+    completedPercent: 90,
     income: 13940,
     expense: 12480,
     profit: 1460,
@@ -197,6 +202,7 @@ export const dummyProjects: IProject[] = [
     imageId: '/entities/happy.png',
     name: 'Project 5',
     stage: 'Archived',
+    completedPercent: 100,
     income: 23425,
     expense: 12412,
     profit: 11013,

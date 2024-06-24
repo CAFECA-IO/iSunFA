@@ -7,6 +7,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;
@@ -25,6 +26,7 @@ const PendingReportItem = ({
   onReportItemUpdate = () => {},
   onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
+  const { t } = useTranslation('common');
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const [reportItem, setReportItem] = useState(report);
@@ -80,7 +82,6 @@ const PendingReportItem = ({
     });
     messageModalVisibilityHandler();
   };
-
   useEffect(() => {
     setReportItem(report);
     setIsPaused(report.paused);
@@ -189,23 +190,23 @@ const PendingReportItem = ({
     +remainingData.days > 0 ? (
       <>
         <span className="text-text-neutral-primary">{remainingData.days}</span>
-        <span className="text-text-neutral-tertiary">D</span>
+        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.DAYS')}</span>
         <span className="text-text-neutral-primary">{remainingData.hours}</span>
-        <span className="text-text-neutral-tertiary">H</span>
+        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.HOURS')}</span>
       </>
     ) : +remainingData.hours > 0 ? (
       <>
         <span className="text-text-neutral-primary">{remainingData.hours}</span>
-        <span className="text-text-neutral-tertiary">H</span>
+        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.HOURS')}</span>
         <span className="text-text-neutral-primary">{remainingData.minutes}</span>
-        <span className="text-text-neutral-tertiary">M</span>
+        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.MINUTES')}</span>
       </>
     ) : (
       <>
         <span className="text-text-neutral-primary">{remainingData.minutes}</span>
-        <span className="text-text-neutral-tertiary">M</span>
+        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.MINUTES')}</span>
         <span className="text-text-neutral-primary">{remainingData.seconds}</span>
-        <span className="text-text-neutral-tertiary">S</span>
+        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.SECONDS')}</span>
       </>
     );
 
@@ -243,16 +244,16 @@ const PendingReportItem = ({
       </td>
       <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">From</span>
+          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">to</span>
+          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
       <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">Estimated</span>
+          <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.ESTIMATED')}</span>
           {displayedEstimatedTime}
         </div>
       </td>

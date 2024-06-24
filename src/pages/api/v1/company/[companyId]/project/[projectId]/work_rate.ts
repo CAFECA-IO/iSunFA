@@ -3,10 +3,10 @@ import { IWorkRate } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { checkAdmin } from '@/lib/utils/auth_check';
-import { getProjectById } from '@/lib/utils/repo/project.repo';
+import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
 import { listEmployeeProject } from '@/lib/utils/repo/employeeProject.repo';
 import { listWorkRate } from '@/lib/utils/repo/work_rate.repo';
+import { formatWorkRateList } from '@/lib/utils/formatter/project.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,15 +23,13 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
       const projectIdNum = Number(projectId);
-      const project = await getProjectById(projectIdNum);
-      if (project.companyId !== companyId) {
-        throw new Error(STATUS_MESSAGE.FORBIDDEN);
-      }
-      const employeeProjectList = await listEmployeeProject(projectIdNum);
+      const project = await checkProjectCompanyMatch(projectIdNum, companyId);
+      const employeeProjectList = await listEmployeeProject(project.id);
       const employeeProjectsIdList = employeeProjectList.map(
         (employeeProject) => employeeProject.id
       );
-      const workRateList = await listWorkRate(employeeProjectsIdList);
+      const listedWorkRate = await listWorkRate(employeeProjectsIdList);
+      const workRateList = await formatWorkRateList(listedWorkRate);
       const { httpCode, result } = formatApiResponse<IWorkRate[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         workRateList

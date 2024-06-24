@@ -2,9 +2,11 @@ import { ProgressStatus } from '@/constants/account';
 
 export interface IAccount {
   id: number;
+  companyId: number;
+  system: string;
   type: string;
+  debit: boolean;
   liquidity: boolean;
-  account: string;
   code: string;
   name: string;
   createdAt: number;
