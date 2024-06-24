@@ -18,8 +18,9 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { timestampToString } from '@/lib/utils/common';
 import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { ILineItem } from '@/interfaces/line_item';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 interface IJournalDetailPageProps {
   journalId: string;
@@ -42,7 +43,7 @@ enum VoucherItem {
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, isAuthLoading } = useUserCtx();
   const {
     previewInvoiceModalDataHandler,
     previewInvoiceModalVisibilityHandler,
@@ -444,6 +445,165 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     </div>
   );
 
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+      {/* Info: (20240503 - Julian) Sidebar */}
+      <AccountingSidebar />
+      {/* Info: (20240503 - Julian) Overview */}
+      <div className="flex h-full w-full bg-gray-100">
+        <div className="mt-100px flex-1 md:ml-80px">
+          <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
+            {/* Info: (20240503 - Julian) Title */}
+            <div className="flex h-45px items-center gap-24px">
+              <Link
+                href={ISUNFA_ROUTE.JOURNAL_LIST}
+                className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+              >
+                <FaArrowLeft />
+              </Link>
+              <h1 className="flex gap-4px text-base font-semibold text-lightGray5 md:text-4xl">
+                <span className="hidden md:block">View Journal - </span>
+                {journalId}
+              </h1>
+            </div>
+            {/* Info: (20240503 - Julian) Divider */}
+            <hr className="my-20px w-full border-lightGray6" />
+            {/* Info: (20240503 - Julian) Journal detail */}
+            <div className="flex flex-col py-10px">
+              <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
+                {/* Info: (20240503 - Julian) Token Contract */}
+                <div className="flex flex-wrap items-center text-base text-lightGray4">
+                  <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
+                    <div className="flex items-center">
+                      <p>Token Contract</p>
+                      <button
+                        type="button"
+                        onClick={copyTokenContractHandler}
+                        className="block p-10px text-secondaryBlue md:hidden"
+                      >
+                        <PiCopySimpleBold size={16} />
+                      </button>
+                    </div>
+
+                    <p className="break-all text-darkBlue">{contractId}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyTokenContractHandler}
+                    className="hidden p-10px text-secondaryBlue md:block"
+                  >
+                    <PiCopySimpleBold size={16} />
+                  </button>
+                </div>
+                {/* Info: (20240503 - Julian) Token ID */}
+                <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
+                  <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
+                    <div className="flex items-center">
+                      <p>Token ID</p>
+                      <button
+                        type="button"
+                        onClick={copyTokenIdHandler}
+                        className="block p-10px text-secondaryBlue md:hidden"
+                      >
+                        <PiCopySimpleBold size={16} />
+                      </button>
+                    </div>
+                    <p className=" text-darkBlue">{journalTokenId}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyTokenIdHandler}
+                    className="hidden p-10px text-secondaryBlue md:block"
+                  >
+                    <PiCopySimpleBold size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
+                {/* Info: (20240503 - Julian) certificate */}
+                <div className="flex w-fit flex-col gap-y-30px">
+                  <button
+                    type="button"
+                    onClick={invoicePreviewClickHandler}
+                    className="border border-lightGray6"
+                  >
+                    <Image src={invoicePreviewSrc} width={236} height={300} alt="certificate" />
+                  </button>
+                  {displayJournalType}
+                </div>
+                {/* Info: (20240503 - Julian) details */}
+                <div className="flex w-full flex-col gap-12px text-base text-lightGray5 md:w-2/3">
+                  {/* Info: (20240503 - Julian) Type */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Type</p>
+                    {displayType}
+                  </div>
+                  {/* Info: (20240507 - Julian) Date */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Date</p>
+                    {displayDate}
+                  </div>
+                  {/* Info: (20240503 - Julian) Reason */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Reason</p>
+                    {displayReason}
+                  </div>
+                  {/* Info: (20240503 - Julian) Vendor/Supplier */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Vendor/Supplier</p>
+                    {displayVendor}
+                  </div>
+                  {/* Info: (20240503 - Julian) Description */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Description</p>
+                    {displayDescription}
+                  </div>
+                  {/* Info: (20240503 - Julian) Total Price */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p className="whitespace-nowrap">Total Price</p>
+                    {displayTotalPrice}
+                  </div>
+                  {/* Info: (20240503 - Julian) Payment Method */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p className="whitespace-nowrap">Payment Method</p>
+                    {displayMethod}
+                  </div>
+                  {/* Info: (20240503 - Julian) Payment Period */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p className="whitespace-nowrap">Payment Period</p>
+                    {displayPeriod}
+                  </div>
+                  {/* Info: (20240503 - Julian) Payment Status */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p className="whitespace-nowrap">Payment Status</p>
+                    {displayStatus}
+                  </div>
+                  {/* Info: (20240503 - Julian) Project */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Project</p>
+                    {displayProject}
+                  </div>
+                  {/* Info: (20240503 - Julian) Contract */}
+                  <div className="flex items-center justify-between gap-x-10px">
+                    <p>Contract</p>
+                    {displayContract}
+                  </div>
+                </div>
+              </div>
+              {/* Info: (20240503 - Julian) Accounting Voucher */}
+              {displayVoucherDesktop}
+              {displayVoucherMobile}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Head>
@@ -459,158 +619,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          {/* Info: (20240503 - Julian) Sidebar */}
-          <AccountingSidebar />
-          {/* Info: (20240503 - Julian) Overview */}
-          <div className="flex h-full w-full bg-gray-100">
-            <div className="mt-100px flex-1 md:ml-80px">
-              <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
-                {/* Info: (20240503 - Julian) Title */}
-                <div className="flex h-45px items-center gap-24px">
-                  <Link
-                    href={ISUNFA_ROUTE.JOURNAL_LIST}
-                    className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
-                  >
-                    <FaArrowLeft />
-                  </Link>
-                  <h1 className="flex gap-4px text-base font-semibold text-lightGray5 md:text-4xl">
-                    <span className="hidden md:block">View Journal - </span>
-                    {journalId}
-                  </h1>
-                </div>
-                {/* Info: (20240503 - Julian) Divider */}
-                <hr className="my-20px w-full border-lightGray6" />
-                {/* Info: (20240503 - Julian) Journal detail */}
-                <div className="flex flex-col py-10px">
-                  <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
-                    {/* Info: (20240503 - Julian) Token Contract */}
-                    <div className="flex flex-wrap items-center text-base text-lightGray4">
-                      <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
-                        <div className="flex items-center">
-                          <p>Token Contract</p>
-                          <button
-                            type="button"
-                            onClick={copyTokenContractHandler}
-                            className="block p-10px text-secondaryBlue md:hidden"
-                          >
-                            <PiCopySimpleBold size={16} />
-                          </button>
-                        </div>
-
-                        <p className="break-all text-darkBlue">{contractId}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={copyTokenContractHandler}
-                        className="hidden p-10px text-secondaryBlue md:block"
-                      >
-                        <PiCopySimpleBold size={16} />
-                      </button>
-                    </div>
-                    {/* Info: (20240503 - Julian) Token ID */}
-                    <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
-                      <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
-                        <div className="flex items-center">
-                          <p>Token ID</p>
-                          <button
-                            type="button"
-                            onClick={copyTokenIdHandler}
-                            className="block p-10px text-secondaryBlue md:hidden"
-                          >
-                            <PiCopySimpleBold size={16} />
-                          </button>
-                        </div>
-                        <p className=" text-darkBlue">{journalTokenId}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={copyTokenIdHandler}
-                        className="hidden p-10px text-secondaryBlue md:block"
-                      >
-                        <PiCopySimpleBold size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
-                    {/* Info: (20240503 - Julian) certificate */}
-                    <div className="flex w-fit flex-col gap-y-30px">
-                      <button
-                        type="button"
-                        onClick={invoicePreviewClickHandler}
-                        className="border border-lightGray6"
-                      >
-                        <Image src={invoicePreviewSrc} width={236} height={300} alt="certificate" />
-                      </button>
-                      {displayJournalType}
-                    </div>
-                    {/* Info: (20240503 - Julian) details */}
-                    <div className="flex w-full flex-col gap-12px text-base text-lightGray5 md:w-2/3">
-                      {/* Info: (20240503 - Julian) Type */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Type</p>
-                        {displayType}
-                      </div>
-                      {/* Info: (20240507 - Julian) Date */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Date</p>
-                        {displayDate}
-                      </div>
-                      {/* Info: (20240503 - Julian) Reason */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Reason</p>
-                        {displayReason}
-                      </div>
-                      {/* Info: (20240503 - Julian) Vendor/Supplier */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Vendor/Supplier</p>
-                        {displayVendor}
-                      </div>
-                      {/* Info: (20240503 - Julian) Description */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Description</p>
-                        {displayDescription}
-                      </div>
-                      {/* Info: (20240503 - Julian) Total Price */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p className="whitespace-nowrap">Total Price</p>
-                        {displayTotalPrice}
-                      </div>
-                      {/* Info: (20240503 - Julian) Payment Method */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p className="whitespace-nowrap">Payment Method</p>
-                        {displayMethod}
-                      </div>
-                      {/* Info: (20240503 - Julian) Payment Period */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p className="whitespace-nowrap">Payment Period</p>
-                        {displayPeriod}
-                      </div>
-                      {/* Info: (20240503 - Julian) Payment Status */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p className="whitespace-nowrap">Payment Status</p>
-                        {displayStatus}
-                      </div>
-                      {/* Info: (20240503 - Julian) Project */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Project</p>
-                        {displayProject}
-                      </div>
-                      {/* Info: (20240503 - Julian) Contract */}
-                      <div className="flex items-center justify-between gap-x-10px">
-                        <p>Contract</p>
-                        {displayContract}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Info: (20240503 - Julian) Accounting Voucher */}
-                  {displayVoucherDesktop}
-                  {displayVoucherMobile}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {displayedBody}
       </div>
     </>
   );
