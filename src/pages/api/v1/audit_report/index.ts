@@ -6,60 +6,6 @@ import { formatApiResponse, convertStringToNumber, pageToOffset } from '@/lib/ut
 import { isTimestamp } from '@/lib/utils/type_guard/date';
 import prisma from '@/client';
 
-// const responseDataArray: IAuditReports[] = [
-//   {
-//     id: 1,
-//     companyId: 1,
-//     code: '2330',
-//     regional: 'TW',
-//     company: 'TSMC',
-//     informationYear: '2024 Q1',
-//     detailedInformation: 'IFRSs Consolidated Financial Report',
-//     creditRating: 'AAA',
-//     dateOfUpload: '2024-04-08',
-//     link: 'http://www.google.com.br',
-//   },
-//   {
-//     id: 2,
-//     companyId: 2,
-//     code: '2234',
-//     regional: 'TW',
-//     company: 'iSunFa',
-//     informationYear: '2024 Q2',
-//     detailedInformation: 'IFRSs Consolidated Financial Report',
-//     creditRating: 'AA',
-//     dateOfUpload: '2024-04-08',
-//     link: 'http://www.google.com.br',
-//   },
-// ];
-
-// const responseDataArray2: IAuditReports[] = [
-//   {
-//     id: 3,
-//     companyId: 1,
-//     code: '2330',
-//     regional: 'TW',
-//     company: 'TSMC',
-//     informationYear: '2024 Q1',
-//     detailedInformation: 'IFRSs Consolidated Financial Report',
-//     creditRating: 'AAA',
-//     dateOfUpload: '2024-04-08',
-//     link: 'http://www.google.com.br',
-//   },
-//   {
-//     id: 4,
-//     companyId: 1,
-//     code: '2330',
-//     regional: 'TW',
-//     company: 'TSMC',
-//     informationYear: '2024 Q2',
-//     detailedInformation: 'IFRSs Consolidated Financial Report',
-//     creditRating: 'AAA',
-//     dateOfUpload: '2024-07-08',
-//     link: 'http://www.google.com.br',
-//   },
-// ];
-
 function parsedSearch(search: string) {
   // Info: (20240621 - Gibbs) 匹配所有數字部分
   const numbers = search.match(/\d+/g) || [];
@@ -120,10 +66,10 @@ export default async function handler(
 
     const auditReports = await prisma.auditReport.findMany({
       where: {
-        // Info: (20240621 - Gibbs) 如果有提供 region，則增加篩選條件
-        ...(region && { company: { regional: regionValue } }),
         // Info: (20240621 - Gibbs) 使用 AND 操作符來組合多個條件
         AND: [
+          // Info: (20240621 - Gibbs) 如果有提供 region，則增加篩選條件
+          ...(region ? [{ company: { regional: regionValue } }] : []),
           {
             report: {
               // Info: (20240621 - Gibbs) 根據關聯的 report 的 createdAt 進行篩選
@@ -134,8 +80,9 @@ export default async function handler(
             },
           },
           // Info: (20240621 - Gibbs) 將 numbersConditions 和 textsConditions 整合進查詢條件
-          ...numbersConditions,
-          ...textsConditions,
+          {
+            OR: [...numbersConditions, ...textsConditions],
+          },
         ],
       },
       include: {
@@ -146,7 +93,6 @@ export default async function handler(
       skip: offset,
       take: limitValue,
     });
-
     const responseDataArray = auditReports.map((auditReport) => ({
       id: auditReport.id,
       companyId: auditReport.companyId,
