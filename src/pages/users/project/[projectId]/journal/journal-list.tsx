@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { GetServerSideProps } from 'next';
 import { FaArrowLeft } from 'react-icons/fa';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiPlusCircle } from 'react-icons/fi';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
@@ -63,7 +63,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
                   variant="tertiary"
                   className="hidden items-center gap-4px px-4 py-8px md:flex"
                 >
-                  <FiPlus size={24} />
+                  <FiPlusCircle size={24} />
                   Add new journal
                 </Button>
               </Link>

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/dist/client/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { FaPlus } from 'react-icons/fa';
+import { FiPlusCircle } from 'react-icons/fi';
 import APIHandler from '@/lib/utils/api_handler';
 import { ILocale } from '@/interfaces/locale';
 import { IDummyJournal } from '@/interfaces/journal';
@@ -48,7 +48,7 @@ const JournalListPage = () => {
             </h1>
             <Link href={ISUNFA_ROUTE.ACCOUNTING}>
               <Button type="button" variant="tertiary" className="text-sm md:text-base">
-                <FaPlus />
+                <FiPlusCircle size={24} />
                 <p>Add new journal</p>
               </Button>
             </Link>

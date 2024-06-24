@@ -5,7 +5,7 @@ import NavBar from '@/components/nav_bar/nav_bar';
 import { GetServerSideProps } from 'next';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
 import { Button } from '@/components/button/button';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiPlusCircle } from 'react-icons/fi';
 import ProjectContractsPageBody from '@/components/project_contracts_page_body/project_contracts_page_body';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
@@ -55,7 +55,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                 variant="tertiary"
                 className="hidden items-center gap-4px px-4 py-8px md:flex"
               >
-                <FiPlus size={24} />
+                <FiPlusCircle size={24} />
                 Add new contract
               </Button>
               {/* Info: (20240619 - Julian) Add new contract button (mobile) */}
