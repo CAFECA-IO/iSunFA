@@ -1,10 +1,12 @@
 import Head from 'next/head';
-import { FaArrowLeft } from 'react-icons/fa';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import Link from 'next/link';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { GetServerSideProps } from 'next';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
-import Link from 'next/link';
+import { Button } from '@/components/button/button';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { BsClipboardPlus } from 'react-icons/bs';
+import ProjectReportPageBody from '@/components/project_report_page_body/project_report_page_body';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IProjectReportPageProps {
@@ -12,14 +14,17 @@ interface IProjectReportPageProps {
 }
 
 const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
+  // ToDo: (20240624 - Julian) Replace with api data
+  const projectName = 'BAIFA';
+
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
-        <title>Project Analysis Report - iSunFA</title>
+        {/* TODO: (20240606 - Julian) i18n */}
+        <title>{projectName} Analysis Report - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -30,21 +35,28 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           <ProjectSidebar projectId={projectId} />
           <div className="flex min-h-screen bg-gray-100">
-            <div className="mt-120px flex-1 md:ml-80px">
+            <div className="my-120px flex-1 md:ml-80px">
               <div className="flex flex-col px-60px">
-                {/* Info: (20240611 - Julian) Title */}
-                <div className="flex items-center gap-24px">
-                  <Link
-                    href={ISUNFA_ROUTE.PROJECT_LIST}
-                    className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
-                  >
-                    <FaArrowLeft />
-                  </Link>
-                  {/* ToDo: (20240611 - Julian) Project Name */}
+                {/* Info: (20240624 - Julian) Title */}
+                <div className="flex items-center justify-between">
+                  {/* ToDo: (20240624 - Julian) Project Name */}
                   <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                    {projectId} - Analysis Report
+                    {projectName} - Analysis Report
                   </h1>
+
+                  {/* ToDo: (20240624 - Julian) Generate Report link */}
+                  <Link href={`${ISUNFA_ROUTE.PROJECT_LIST}`}>
+                    <Button type="button" variant="tertiary" className="flex items-center">
+                      <BsClipboardPlus size={24} />
+                      <p>Generate Report</p>
+                    </Button>
+                  </Link>
                 </div>
+
+                {/* Info: (20240624 - Julian) Divider */}
+                <hr className="my-24px border border-divider-stroke-lv-4" />
+
+                <ProjectReportPageBody projectId={projectId} />
               </div>
             </div>
           </div>
