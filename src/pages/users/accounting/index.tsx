@@ -4,8 +4,27 @@ import { ILocale } from '@/interfaces/locale';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import AddJournalBody from '@/components/add_journal_body/add_journal_body';
+import { useUserCtx } from '@/contexts/user_context';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 const AccountingPage = () => {
+  const { isAuthLoading } = useUserCtx();
+
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+      {/* Info: (20240416 - Julian) Sidebar */}
+      <AccountingSidebar />
+
+      {/* Info: (20240416 - Julian) Main */}
+      <AddJournalBody />
+    </div>
+  );
+
   return (
     <>
       <Head>
@@ -21,13 +40,7 @@ const AccountingPage = () => {
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          {/* Info: (20240416 - Julian) Sidebar */}
-          <AccountingSidebar />
-
-          {/* Info: (20240416 - Julian) Main */}
-          <AddJournalBody />
-        </div>
+        {displayedBody}
       </div>
     </>
   );

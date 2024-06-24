@@ -45,6 +45,7 @@ import { useNotificationCtx } from './notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
+import { ToastId } from '@/constants/toast_id';
 
 interface IGlobalContext {
   width: number;
@@ -126,7 +127,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn } = useUserCtx();
+  const { signedIn, selectedCompany } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -450,6 +451,38 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //   });
     // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
+
+  useEffect(() => {
+    if (signedIn) {
+      if (
+        router.pathname.startsWith('/users') &&
+        !router.pathname.includes(ISUNFA_ROUTE.LOGIN) &&
+        !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
+      ) {
+        if (!selectedCompany) {
+          // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
+          toastHandler({
+            id: ToastId.TRIAL,
+            type: ToastType.INFO,
+            closeable: false,
+            content: (
+              <div className="flex items-center justify-between">
+                <p className="text-sm">iSunFA Trial Version</p>
+                <Link
+                  href={ISUNFA_ROUTE.SELECT_COMPANY}
+                  className="text-base font-semibold text-darkBlue"
+                >
+                  End of trial
+                </Link>
+              </div>
+            ),
+          });
+        } else {
+          eliminateToast(ToastId.TRIAL);
+        }
+      }
+    }
+  }, [pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
