@@ -24,7 +24,7 @@ afterEach(async () => {
 });
 
 describe('generatedReports API Handler Tests', () => {
-  xit('should handle GET requests successfully', async () => {
+  it('should handle GET requests successfully', async () => {
     req.method = 'GET';
     await handler(req, res);
     const responsePayload = res.json.mock.calls[0][0];
