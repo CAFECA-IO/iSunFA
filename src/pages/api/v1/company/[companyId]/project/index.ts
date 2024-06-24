@@ -5,7 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
-import { formatProjectList } from '@/lib/utils/formatter/project.formatter';
+import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.formatter';
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,7 +28,8 @@ export default async function handler(
       if (!name || !stage || !memberIdList) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const project: IProject = await createProject(companyId, name, stage, memberIdList);
+      const createdProject = await createProject(companyId, name, stage, memberIdList);
+      const project = await formatProject(createdProject);
       const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
       res.status(httpCode).json(result);
     } else {

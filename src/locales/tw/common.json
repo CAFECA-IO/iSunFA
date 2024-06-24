@@ -182,5 +182,102 @@
     "POWERED_BY": "技術支持 陽光智能會計",
     "ANNOUNCEMENT": "陽光智能會計：提供人工智慧審計與審核，去中心化的區塊鏈瀏覽器和分析平台",
     "COMPANY_INFO": "公司資訊"
+  },
+  "PLUGIN": {
+    "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",
+    "RESERVE_RATIO_BLOCK_TITLE_HIGHLIGHT": "儲備金比例",
+    "RESERVE_RATIO_BLOCK_TITLE_2": "",
+    "DOWNLOAD_REPORT": "下載報告",
+    "RESERVE_RATIO_BLOCK_CARD": "儲備金比例",
+    "RESERVE_RATIO_BLOCK_CARD_2": "區塊鏈",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION": "TideBit 用戶資產持有量",
+    "RESERVE_RATIO_BLOCK_DESCRIPTION_2": "TideBit 錢包資產",
+    "SMART": "人工智慧",
+    "AUDITING_REPORTS": "監管報告",
+    "LAST_UPDATED": "最後更新",
+    "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表",
+    "BALANCE_SHEET": "資產負債表",
+    "CASH_FLOW_STATEMENT": "現金流量表",
+    "RED_FLAG_ANALYSIS": "風險分析",
+    "POWERED_BY": "技術支持"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "審計報告",
+    "SHOW_DESIGNATED_REGIONAL_COMPANIES": "顯示指定區域公司",
+    "US": "美國",
+    "HK": "香港",
+    "TW": "台灣",
+    "CODE": "代碼",
+    "REGIONAL": "區域",
+    "COMPANY": "公司",
+    "INFORMATION_YEAR": "資訊年度",
+    "DETAILED_INFORMATION": "詳細資訊",
+    "CREDIT_RATING": "信用評級",
+    "DATE_OF_UPLOAD": "上傳日期",
+    "LINK": "連結",
+    "REGION": "地區",
+    "SHOW_DAILY_REPORTS": "顯示每日報告",
+    "CARD_LIST": "列表",
+    "ISUNFA_AUDIT_REPORT": "iSunFA - 審計報告",
+    "COMPANY_CODE_OR ABBREVIATION": "公司代碼或簡稱",
+    "OF_100": "（共 100 頁）",
+    "SEARCH": "搜尋",
+    "DON_T_SHOW_DAILY_REPORTS": "不顯示每日報告"
+  },
+  "REPORTS_SIDEBAR": {
+    "REPORT": "報告",
+    "GET_EMBED_CODE": "取得嵌入程式碼",
+    "FINANCIAL_REPORTS": "財務報告",
+    "ANALYSIS_REPORTS": "分析報告",
+    "MY_REPORTS": "我的報告"
+  },
+  "MY_REPORTS_SECTION": {
+    "LOADING": "載入中...",
+    "SORT_BY": "排序方式",
+    "EMPTY": "空的",
+    "MY_REPORTS": "我的報告",
+    "PENDING": "待辦",
+    "REPORTS_HISTORY": "歷史報告"
+  },
+  "REPORTS_HISTORY_ITEM": {
+    "FROM": "從",
+    "TO": "至"
+  },
+  "REPORTS_HISTORY_LIST": {
+    "CANCEL": "取消",
+    "DATE": "日期",
+    "REPORT_NAME": "報告名稱",
+    "PERIOD": "期間",
+    "BLOCKCHAIN": "區塊鏈",
+    "PROJECT": "專案",
+    "OPERATIONS": "營運報告"
+  },
+  "PENDING_REPORT_LIST": {
+    "DATE": "日期",
+    "REPORT_NAME": "報告名稱",
+    "PERIOD": "期間",
+    "REMAINING_TIME": "剩餘時間",
+    "OPERATIONS": "營運報告",
+    "CANCEL": "取消",
+    "SELECT": "選擇"
+  },
+  "PENDING_REPORT_ITEM": {
+    "ESTIMATED": "估計",
+    "DAYS": "天",
+    "HOURS": "小時",
+    "MINUTES": "分",
+    "SECONDS": "秒"
+  },
+  "EMBED_CODE_MODAL": {
+    "EMBED_CODE": "嵌入程式碼",
+    "WHAT_TYPE_OF_REPORT": "您想在網站上顯示什麼類型的報告？",
+    "REPORT_LANGUAGE": "報告語言",
+    "COPY": "複製",
+    "THE_LATEST_REPORT": "在您的網站上顯示最新報告",
+    "GENERATE": "產生"
+  },
+  "ANALYSIS_REPORTS_SECTION": {
+    "REPORT_TYPE": "報告類型",
+    "ATTENTION": "注意：產生報告大約需要 30 到 40 分鐘。完成後，它將存儲在“我的報告”中。感謝您的耐心等待。"
   }
 }

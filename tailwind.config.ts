@@ -732,6 +732,7 @@ module.exports = {
         warningYellow: '#FFCF24',
 
         indigo: '#8098F9',
+        darkBlue3: '#0024620D',
       },
       backgroundImage: {
         web: 'url("/elements/web.svg")',
@@ -1440,6 +1441,10 @@ module.exports = {
           '0%': { transform: 'translateX(10%)' },
           '100%': { transform: 'translateX(0)' },
         },
+        loading: {
+          '0%': { transform: 'translateX(-80%)' },
+          '100%': { transform: 'translateX(120%)' },
+        },
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
@@ -1447,6 +1452,7 @@ module.exports = {
         slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
         slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
         spinFast: 'spin 1s linear infinite',
+        loading: 'loading 1.5s infinite',
       },
 
       content: {

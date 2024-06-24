@@ -1,29 +1,16 @@
-import { ProgressStatus } from '@/constants/account';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { IOCR } from '@/interfaces/ocr';
-import { IInvoice } from './invoice';
+import { IInvoice } from '@/interfaces/invoice';
 
 export interface IJournal {
   id: number;
-  tokenContract: string | null;
-  tokenId: string | null;
-  aichResultId: string | null;
-  projectId: number | null;
-  contractId: number | null;
-  OCR: IOCR | null;
-  invoice: IInvoice | null;
-  voucher: IVoucherDataForSavingToDB | null;
-}
-
-export interface IUnprocessedJournal {
-  id: number;
+  tokenContract: string;
+  tokenId: string;
   aichResultId: string;
-  imageName: string;
+  projectId: number;
+  contractId: number;
   imageUrl: string;
-  imageSize: string; // info: To Murky frontend need string like 100 KB (20240523 - Tzuhan)
-  progress: number; // 0 ~ 100 Float
-  status: ProgressStatus;
-  createdAt: number;
+  invoice: IInvoice;
+  voucher: IVoucherDataForSavingToDB;
 }
 
 // ToDo: (20240528 - Julian) 根據 Murky 寫在 src/pages/api/v1/company/[companyId]/journal/index.ts

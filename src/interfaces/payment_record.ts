@@ -1,6 +1,6 @@
 export interface IPaymentRecord {
   id: number;
-  subscriptionId: number;
+  orderId: number;
   transactionId: string;
   date: number;
   description: string;

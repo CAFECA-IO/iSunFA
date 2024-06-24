@@ -122,7 +122,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         setProject(invoice.project ?? 'None');
         setContract(invoice.contract ?? 'None');
       }
-      if (voucher) {
+      if (voucher && voucher.lineItems) {
         setLineItems(voucher.lineItems);
       }
     }
@@ -164,7 +164,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
     });
 
   // Info: (20240503 - Murky) To Julian, 如果ocr skip的話=> imageUrl: '', 這樣就不會有圖片 => 原本的位置會變成placeholder
-  const invoicePreviewSrc = journalDetail?.OCR?.imageUrl ?? '';
+  const invoicePreviewSrc = journalDetail?.imageUrl ?? '';
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);

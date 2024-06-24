@@ -23,7 +23,7 @@ export type IAPIName =
   | 'ASSET_MANAGEMENT_UPDATE'
   | 'OCR_UPLOAD'
   | 'OCR_RESULT_GET_BY_ID'
-  | 'JOURNAL_LIST_UNPROCESSED'
+  | 'OCR_LIST'
   | 'INVOICE_CREATE'
   | 'AI_ASK_STATUS'
   | 'AI_ASK_RESULT'
@@ -38,7 +38,8 @@ export type IAPIName =
   | 'REPORT_ANALYSIS_GET_BY_ID'
   | 'REPORT_GENERATE_FINANCIAL'
   | 'REPORT_GENERATE_ANALYSIS'
-  | 'SESSION_GET';
+  | 'SESSION_GET'
+  | 'ACCOUNT_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

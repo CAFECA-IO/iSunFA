@@ -1,37 +1,92 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown, FaListUl } from 'react-icons/fa';
 import { FiGrid, FiSearch } from 'react-icons/fi';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { Layout } from '@/constants/layout';
+import { default30DayPeriodInSec, SortOptions } from '@/constants/display';
+import { ContractStatus, ContractStatusWithAll } from '@/constants/contract';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { dummyContracts } from '@/interfaces/contract';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
-import { dummyContracts } from '@/interfaces/contract';
-import ContractCard from '@/components/contract_card/contract_card';
-
-enum ContractStatus {
-  VALID = 'Valid',
-  IN_WARRANTY = 'In Warranty',
-  EXPIRED = 'Expired',
-  COMPLETED = 'Completed',
-}
-
-enum ContractSort {
-  NEWEST = 'Newest',
-  OLDEST = 'Oldest',
-}
+import ProjectContractList from '@/components/project_contract_list/project_contract_list';
+import ContractStatusBlock from '@/components/contract_status_block/contract_status_block';
+import { FilterOptionsModalType } from '@/interfaces/modals';
 
 const ProjectContractsPageBody = () => {
-  // Info: (2024618 - Julian) add 'ALL' to the list
-  const statusList = ['All', ...Object.values(ContractStatus)];
+  const { filterOptionsModalVisibilityHandler, filterOptionsForContract } = useGlobalCtx();
+
+  const statusList = Object.values(ContractStatus);
+  const statusListWithAll = Object.values(ContractStatusWithAll);
 
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
-  const [filterStatus, setFilterStatus] = useState<string>(statusList[0]);
-  const [sort, setSort] = useState<string>(ContractSort.NEWEST);
+  const [filterStatus, setFilterStatus] = useState<string>(statusListWithAll[0]);
+  const [sorting, setSorting] = useState<string>(SortOptions.newest);
   const [filterPeriod, setFilterPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filteredContracts, setFilteredContracts] = useState(dummyContracts);
+
+  const {
+    period: periodFromFilterModal,
+    sort: sortFromFilterModal,
+    selectedStatus: statusFromFilterModal,
+  } = filterOptionsForContract;
+
+  useEffect(() => {
+    const filtered = dummyContracts
+      .filter((contract) => {
+        // Info: (20240621 - Julian) Filter by search
+        const { contractName, projectName } = contract;
+        return (
+          contractName.toLowerCase().includes(search.toLowerCase()) ||
+          projectName.toLowerCase().includes(search.toLowerCase())
+        );
+      })
+      .filter((contract) => {
+        // Info: (20240621 - Julian) Filter by status
+        return filterStatus === ContractStatusWithAll.ALL || contract.status === filterStatus;
+      })
+      .filter((contract) => {
+        const { contractDuration } = contract.period;
+        const contractDurationStart = parseInt(contractDuration.start, 10);
+        if (filterPeriod.startTimeStamp === 0 && filterPeriod.endTimeStamp === 0) return true;
+        return (
+          contractDurationStart >= filterPeriod.startTimeStamp &&
+          contractDurationStart <= filterPeriod.endTimeStamp
+        );
+      })
+      .sort((a, b) => {
+        if (sorting === SortOptions.newest) {
+          return (
+            parseInt(b.period.contractDuration.start, 10) -
+            parseInt(a.period.contractDuration.start, 10)
+          );
+        }
+        return (
+          parseInt(a.period.contractDuration.start, 10) -
+          parseInt(b.period.contractDuration.start, 10)
+        );
+      });
+    setFilteredContracts(filtered);
+  }, [search, filterStatus, filterPeriod, sorting]);
+
+  useEffect(() => {
+    if (periodFromFilterModal.startTimeStamp !== 0 && periodFromFilterModal.endTimeStamp !== 0) {
+      setFilterPeriod(periodFromFilterModal);
+    }
+    if (sortFromFilterModal) {
+      setSorting(sortFromFilterModal);
+    }
+    if (statusFromFilterModal) {
+      const status =
+        ContractStatusWithAll[statusFromFilterModal as keyof typeof ContractStatusWithAll];
+      setFilterStatus(status);
+    }
+  }, [periodFromFilterModal, sortFromFilterModal, statusFromFilterModal]);
+
+  const totalPages = Math.ceil(dummyContracts.length / 10); // ToDo: (20240620 - Julian) Replace with actual data
 
   const {
     targetRef: statusRef,
@@ -42,7 +97,7 @@ const ProjectContractsPageBody = () => {
   const {
     targetRef: sortRef,
     componentVisible: sortVisible,
-    setComponentVisible: setSortVisible,
+    setComponentVisible: setSortingVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
   const listBtnStyle = currentLayout === Layout.LIST ? 'tertiary' : 'secondaryOutline';
@@ -56,7 +111,10 @@ const ProjectContractsPageBody = () => {
   const gridLayoutHandler = () => setCurrentLayout(Layout.GRID);
 
   const statusClickHandler = () => setStatusVisible(!statusVisible);
-  const sortClickHandler = () => setSortVisible(!sortVisible);
+  const sortClickHandler = () => setSortingVisible(!sortVisible);
+  const filterClickHandler = () => {
+    filterOptionsModalVisibilityHandler(FilterOptionsModalType.contract);
+  };
 
   const statusDropdown = (
     <div
@@ -64,7 +122,7 @@ const ProjectContractsPageBody = () => {
       ${statusVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
       z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
-      {statusList.map((status) => {
+      {statusListWithAll.map((status) => {
         const clickHandler = () => {
           setFilterStatus(status);
           setStatusVisible(false);
@@ -92,27 +150,35 @@ const ProjectContractsPageBody = () => {
       <button
         type="button"
         className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={() => setSort(ContractSort.NEWEST)}
+        onClick={() => setSorting(SortOptions.newest)}
       >
-        {ContractSort.NEWEST}
+        {SortOptions.newest}
       </button>
       <button
         type="button"
         className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-        onClick={() => setSort(ContractSort.OLDEST)}
+        onClick={() => setSorting(SortOptions.oldest)}
       >
-        {ContractSort.OLDEST}
+        {SortOptions.oldest}
       </button>
     </div>
   );
 
-  const displayContracts = (
-    <div className="flex w-full flex-col gap-20px">
-      {dummyContracts.map((contract) => (
-        <ContractCard key={contract.contractId} contract={contract} />
-      ))}
-    </div>
-  );
+  const displayContracts =
+    currentLayout === Layout.LIST ? (
+      <ProjectContractList
+        contracts={filteredContracts}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalPages={totalPages}
+      />
+    ) : (
+      <div className="grid w-full grid-cols-1 gap-x-35px gap-y-24px md:grid-cols-2 md:grid-rows-2">
+        {statusList.map((status) => (
+          <ContractStatusBlock key={status} status={status} contracts={filteredContracts} />
+        ))}
+      </div>
+    );
 
   return (
     <div className="flex flex-1 flex-col items-center gap-y-24px">
@@ -140,18 +206,18 @@ const ProjectContractsPageBody = () => {
           <div
             ref={sortRef}
             onClick={sortClickHandler}
-            className={`relative flex w-200px items-center justify-between rounded-xs border border-input-stroke-input 
+            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input 
             ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
             bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
-            <p className="text-text-neutral-primary">{sort}</p>
+            <p className="text-text-neutral-primary">{sorting}</p>
             <FaChevronDown size={16} />
             {/* Info: (20240618 - Julian) Status dropdown */}
             {sortDropdown}
           </div>
         </div>
         {/* Info: (20240618 - Julian) Date picker */}
-        <div className="w-280px">
+        <div className="w-200px">
           <DatePicker
             type={DatePickerType.TEXT_PERIOD}
             period={filterPeriod}
@@ -159,7 +225,7 @@ const ProjectContractsPageBody = () => {
           />
         </div>
         {/* Info: (20240618 - Julian) Search bar */}
-        <div className="flex w-full flex-1 items-center rounded-xs border border-input-stroke-input bg-input-surface-input-background px-16px text-icon-surface-single-color-primary">
+        <div className="flex flex-1 items-center rounded-xs border border-input-stroke-input bg-input-surface-input-background px-16px text-icon-surface-single-color-primary">
           <input
             id="project-search-bar"
             type="text"
@@ -196,8 +262,12 @@ const ProjectContractsPageBody = () => {
             <FiSearch size={20} />
           </div>
           {/* Info: (20240619 - Julian) filter button */}
-          {/* ToDo: (20240619 - Julian) filter modal */}
-          <Button type="button" variant="tertiaryOutline" className="p-3">
+          <Button
+            type="button"
+            variant="tertiaryOutline"
+            className="p-3"
+            onClick={filterClickHandler}
+          >
             <svg
               width="20"
               height="20"
@@ -227,7 +297,7 @@ const ProjectContractsPageBody = () => {
           </Button>
         </div>
       </div>
-      {/* Info: (2024619 - Julian) Contracts */}
+      {/* Info: (20240619 - Julian) Contracts */}
       {displayContracts}
     </div>
   );

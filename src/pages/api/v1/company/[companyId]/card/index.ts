@@ -3,7 +3,7 @@ import { ICard } from '@/interfaces/card';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { getSession } from '@/lib/utils/get_session';
+import { getSession } from '@/lib/utils/session';
 
 async function getCardList() {
   // TODO (20240530 - Jacky): Implement the function to get the list of cards
