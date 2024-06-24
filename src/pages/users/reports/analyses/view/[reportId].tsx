@@ -12,8 +12,9 @@ import { ToastType } from '@/interfaces/toastify';
 import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { IReport } from '@/interfaces/report';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -37,7 +38,7 @@ const ViewAnalysisReportPage = ({
   endTimestamp,
 }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData, setReportData] = React.useState<IReport>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
@@ -71,6 +72,27 @@ const ViewAnalysisReportPage = ({
     }
   }, [getARSuccess, getARCode, reportAnalysis]);
 
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <>
+      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+        <ReportsSidebar />
+      </div>
+
+      <div className="h-screen bg-surface-neutral-main-background">
+        <ViewAnalysisSection
+          reportTypesName={reportData.reportTypesName}
+          tokenContract={reportData.tokenContract}
+          tokenId={reportData.tokenId}
+          reportLink={reportData.reportLink}
+        />
+      </div>
+    </>
+  );
+
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
@@ -100,19 +122,7 @@ const ViewAnalysisReportPage = ({
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ReportsSidebar />
-        </div>
-
-        {/* TODO: Analysis Report View section (20240508 - Shirley) */}
-        <div className="h-screen bg-surface-neutral-main-background">
-          <ViewAnalysisSection
-            reportTypesName={reportData.reportTypesName}
-            tokenContract={reportData.tokenContract}
-            tokenId={reportData.tokenId}
-            reportLink={reportData.reportLink}
-          />
-        </div>
+        {displayedBody}
       </div>
     </div>
   );

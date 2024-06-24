@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
@@ -16,8 +15,11 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { IRole } from '@/interfaces/role';
 import { cn } from '@/lib/utils/common';
+import { useRouter } from 'next/router';
 
 const SelectCompanyPageBody = () => {
+  const router = useRouter();
+
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
   const {
@@ -25,8 +27,6 @@ const SelectCompanyPageBody = () => {
     companyInvitationModalVisibilityHandler,
     createCompanyModalVisibilityHandler,
   } = useGlobalCtx();
-
-  const router = useRouter();
 
   const {
     targetRef: companyMenuRef,
@@ -67,12 +67,11 @@ const SelectCompanyPageBody = () => {
   const selectCompanyClickHandler = () => {
     if (selectedCompany === null) return;
     selectCompany(selectedCompany);
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   useEffect(() => {
-    if (successSelectCompany) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-    } else if (successSelectCompany === false) {
+    if (successSelectCompany === false) {
       toastHandler({
         id: `companySelectError_${errorCode}`,
         type: ToastType.ERROR,

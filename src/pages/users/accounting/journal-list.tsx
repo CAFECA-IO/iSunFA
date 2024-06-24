@@ -12,10 +12,11 @@ import JournalListBody from '@/components/journal_list_body/journal_list_body';
 import { Button } from '@/components/button/button';
 import { APIName } from '@/constants/api_connection';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const JournalListPage = () => {
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, isAuthLoading } = useUserCtx();
   const {
     isLoading,
     success,
@@ -30,6 +31,42 @@ const JournalListPage = () => {
   const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
   const journalList = journals || [];
+
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    // {/* Info: (20240419 - Julian) Overview */}
+    <div className="flex h-full w-full bg-gray-100">
+      <div className="mt-100px flex-1 md:ml-80px">
+        <div className="flex min-h-screen w-full flex-col px-16px py-32px font-barlow md:px-40px">
+          {/* Info: (20240417 - Julian) Title */}
+          <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
+            <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
+              {companyName} Journal List
+            </h1>
+            <Link href={ISUNFA_ROUTE.ACCOUNTING}>
+              <Button type="button" variant="tertiary" className="text-sm md:text-base">
+                <FiPlusCircle size={24} />
+                <p>Add new journal</p>
+              </Button>
+            </Link>
+          </div>
+
+          {/* Info: (20240417 - Julian) Divider */}
+          <hr className="my-20px w-full border-lightGray6" />
+
+          <JournalListBody
+            journals={journalList}
+            isLoading={isLoading || true}
+            errorCode={code}
+            success={success || false}
+          />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -49,35 +86,7 @@ const JournalListPage = () => {
         <div className="flex w-full flex-1 flex-col overflow-x-hidden">
           {/* Info: (20240419 - Julian) Sidebar */}
           <AccountingSidebar />
-          {/* Info: (20240419 - Julian) Overview */}
-          <div className="flex h-full w-full bg-gray-100">
-            <div className="mt-100px flex-1 md:ml-80px">
-              <div className="flex min-h-screen w-full flex-col px-16px py-32px font-barlow md:px-40px">
-                {/* Info: (20240417 - Julian) Title */}
-                <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
-                  <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-                    {companyName} Journal List
-                  </h1>
-                  <Link href={ISUNFA_ROUTE.ACCOUNTING}>
-                    <Button type="button" variant="tertiary" className="text-sm md:text-base">
-                      <FiPlusCircle size={24} />
-                      <p>Add new journal</p>
-                    </Button>
-                  </Link>
-                </div>
-
-                {/* Info: (20240417 - Julian) Divider */}
-                <hr className="my-20px w-full border-lightGray6" />
-
-                <JournalListBody
-                  journals={journalList}
-                  isLoading={isLoading || true}
-                  errorCode={code}
-                  success={success || false}
-                />
-              </div>
-            </div>
-          </div>
+          {displayedBody}
         </div>
       </div>
     </>
