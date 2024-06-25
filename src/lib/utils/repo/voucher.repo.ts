@@ -25,7 +25,7 @@ export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -45,7 +45,7 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -74,7 +74,7 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -114,7 +114,7 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return voucherData;
@@ -151,7 +151,7 @@ export async function createFakeAccountInPrisma(companyId: number) {
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -215,7 +215,7 @@ export async function createLineItemInPrisma(lineItem: ILineItem, voucherId: num
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -249,7 +249,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -282,7 +282,7 @@ export async function createVoucherInPrisma(
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
