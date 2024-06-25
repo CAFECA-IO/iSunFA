@@ -38,14 +38,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAuditReports[] | IAuditReports>>
 ) {
-  const {
-    region = undefined,
-    page = '1',
-    limit = '10',
-    begin = undefined,
-    end = undefined,
-    search = '',
-  } = req.query;
+  const { region, page = '1', limit = '10', begin, end, search = '' } = req.query;
   try {
     if (req.method !== 'GET') {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
