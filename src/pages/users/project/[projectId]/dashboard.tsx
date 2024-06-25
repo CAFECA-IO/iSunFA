@@ -14,12 +14,17 @@ import ProjectProgressBlock from '@/components/project_progress_block/project_pr
 import ProjectMilestoneBlock from '@/components/project_milestone_block/project_milestone_block';
 import WorkingTimeRatioBlock from '@/components/working_time_ratio_block/working_time_ratio_block';
 import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/project_monthly_sales_block';
+import { useUserCtx } from '@/contexts/user_context';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 interface IProjectDashboardPageProps {
   projectId: string;
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
+  const { isAuthLoading } = useUserCtx();
+
   // ToDo: (20240612 - Julian) replace with actual data
   const projectName = 'BAIFA';
   const currentStage = ProjectStage.DESIGNING;
@@ -58,6 +63,90 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
     </div>
   );
 
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+      <ProjectSidebar projectId={projectId} />
+      <div className="flex min-h-screen bg-gray-100">
+        <div className="mb-60px mt-120px flex-1 md:ml-80px">
+          <div className="flex flex-col px-16px md:px-60px">
+            <div className="flex w-full items-center justify-between">
+              {/* Info: (20240611 - Julian) Title */}
+              <div className="flex items-center gap-24px">
+                <Link
+                  href={ISUNFA_ROUTE.PROJECT_LIST}
+                  className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+                >
+                  <FaArrowLeft />
+                </Link>
+
+                <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
+                  {projectName}
+                </h1>
+              </div>
+              {/* Info: (20240612 - Julian) stage selection (desktop) */}
+              <div className="hidden flex-col items-start gap-y-8px md:flex">
+                <p className="font-semibold">Stage</p>
+                <div
+                  onClick={stageMenuClickHandler}
+                  className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
+      ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
+      px-12px hover:cursor-pointer md:w-200px`}
+                >
+                  {currentStage}
+                  <FaChevronDown />
+                  {displayedStageOptions}
+                </div>
+              </div>
+            </div>
+            {/* Info: (20240612 - Julian) Divider */}
+            <hr className="my-24px border border-divider-stroke-lv-4" />
+            {/* Info: (20240612 - Julian) stage selection (mobile) */}
+            <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
+              <p className="font-semibold">Stage</p>
+              <div
+                onClick={stageMenuClickHandler}
+                className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
+      ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
+      px-12px hover:cursor-pointer md:w-200px`}
+              >
+                {currentStage}
+                <FaChevronDown />
+                {displayedStageOptions}
+              </div>
+            </div>
+            {/* Info: (20240612 - Julian) Content */}
+            <div className="grid grid-flow-row grid-cols-1 gap-24px md:grid-cols-3">
+              {/* Info: (20240612 - Julian) Project Value Block */}
+              <div className="md:col-span-2">
+                <ProjectValueBlock />
+              </div>
+              {/* Info: (20240612 - Julian) Project Progress Block */}
+              <div className="">
+                <ProjectProgressBlock />
+              </div>
+              {/* Info: (20240614 - Julian) Project Milestone Block */}
+              <div className="md:col-span-3">
+                <ProjectMilestoneBlock />
+              </div>
+              {/* Info: (20240614 - Julian) Project Monthly Sales Block */}
+              <div className="md:col-span-2">
+                <ProjectMonthlySalesBlock />
+              </div>
+              {/* Info: (20240614 - Julian) Working Time Ratio Block */}
+              <div className="">
+                <WorkingTimeRatioBlock />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Head>
@@ -73,83 +162,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ProjectSidebar projectId={projectId} />
-          <div className="flex min-h-screen bg-gray-100">
-            <div className="mb-60px mt-120px flex-1 md:ml-80px">
-              <div className="flex flex-col px-16px md:px-60px">
-                <div className="flex w-full items-center justify-between">
-                  {/* Info: (20240611 - Julian) Title */}
-                  <div className="flex items-center gap-24px">
-                    <Link
-                      href={ISUNFA_ROUTE.PROJECT_LIST}
-                      className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
-                    >
-                      <FaArrowLeft />
-                    </Link>
-
-                    <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                      {projectName}
-                    </h1>
-                  </div>
-                  {/* Info: (20240612 - Julian) stage selection (desktop) */}
-                  <div className="hidden flex-col items-start gap-y-8px md:flex">
-                    <p className="font-semibold">Stage</p>
-                    <div
-                      onClick={stageMenuClickHandler}
-                      className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px hover:cursor-pointer md:w-200px`}
-                    >
-                      {currentStage}
-                      <FaChevronDown />
-                      {displayedStageOptions}
-                    </div>
-                  </div>
-                </div>
-                {/* Info: (20240612 - Julian) Divider */}
-                <hr className="my-24px border border-divider-stroke-lv-4" />
-                {/* Info: (20240612 - Julian) stage selection (mobile) */}
-                <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
-                  <p className="font-semibold">Stage</p>
-                  <div
-                    onClick={stageMenuClickHandler}
-                    className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px hover:cursor-pointer md:w-200px`}
-                  >
-                    {currentStage}
-                    <FaChevronDown />
-                    {displayedStageOptions}
-                  </div>
-                </div>
-                {/* Info: (20240612 - Julian) Content */}
-                <div className="grid grid-flow-row grid-cols-1 gap-24px md:grid-cols-3">
-                  {/* Info: (20240612 - Julian) Project Value Block */}
-                  <div className="md:col-span-2">
-                    <ProjectValueBlock />
-                  </div>
-                  {/* Info: (20240612 - Julian) Project Progress Block */}
-                  <div className="">
-                    <ProjectProgressBlock />
-                  </div>
-                  {/* Info: (20240614 - Julian) Project Milestone Block */}
-                  <div className="md:col-span-3">
-                    <ProjectMilestoneBlock />
-                  </div>
-                  {/* Info: (20240614 - Julian) Project Monthly Sales Block */}
-                  <div className="md:col-span-2">
-                    <ProjectMonthlySalesBlock />
-                  </div>
-                  {/* Info: (20240614 - Julian) Working Time Ratio Block */}
-                  <div className="">
-                    <WorkingTimeRatioBlock />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {displayedBody}
       </div>
     </>
   );

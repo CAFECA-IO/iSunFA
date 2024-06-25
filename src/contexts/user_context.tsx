@@ -305,10 +305,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!signedIn && !isGetUserSessionLoading) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        router.push(ISUNFA_ROUTE.LOGIN);
+        const returnUrl = encodeURIComponent(router.asPath);
+        router.push(`${ISUNFA_ROUTE.LOGIN}?returnUrl=${returnUrl}`);
       }
     }
-  }, [signedIn, isGetUserSessionLoading]);
+  }, [signedIn, isGetUserSessionLoading, router]);
 
   useEffect(() => {
     if (isGetUserSessionLoading) return;

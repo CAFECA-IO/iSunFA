@@ -1,12 +1,10 @@
 import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
-// import { FinancialReportType } from '@/interfaces/report';
 import {
   BaifaReportTypeToReportType,
   FinancialReportTypesKey,
   FinancialReportTypesMap,
-  // ReportTypeToBaifaReportType,
 } from '@/interfaces/report_type';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -17,15 +15,13 @@ import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { IReport } from '@/interfaces/report';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 interface IServerSideProps {
   reportId: string;
   reportType: keyof typeof BaifaReportTypeToReportType;
-  // reportLanguage: ReportLanguagesKey;
-  // startTimestamp: string;
-  // endTimestamp: string;
 }
 
 // TODO: dummy data to be replaced (20240429 - Shirley)
@@ -54,7 +50,7 @@ const DUMMY_DATA_FOR_REPORT = {
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData, setReportData] = React.useState<IReport>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -87,6 +83,34 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       setReportData(reportFinancial);
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
+
+  const displayedBody = isAuthLoading ? (
+    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
+  ) : (
+    <>
+      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+        <ReportsSidebar />
+      </div>
+
+      <div className="h-1400px bg-surface-neutral-main-background">
+        <ViewFinancialSection
+          reportTypesName={
+            reportData.reportTypesName as {
+              id: keyof typeof FinancialReportTypesMap;
+              name: string;
+            }
+          }
+          // reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
+          tokenContract={reportData.tokenContract}
+          tokenId={reportData.tokenId}
+          // reportLink={DUMMY_DATA_FOR_REPORT.reportLink}
+          reportLink={reportData.reportLink}
+        />
+      </div>
+    </>
+  );
 
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
@@ -125,25 +149,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           <NavBar />
         </div>
 
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ReportsSidebar />
-        </div>
-
-        <div className="h-1400px bg-surface-neutral-main-background">
-          <ViewFinancialSection
-            reportTypesName={
-              reportData.reportTypesName as {
-                id: keyof typeof FinancialReportTypesMap;
-                name: string;
-              }
-            }
-            // reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
-            tokenContract={reportData.tokenContract}
-            tokenId={reportData.tokenId}
-            // reportLink={DUMMY_DATA_FOR_REPORT.reportLink}
-            reportLink={reportData.reportLink}
-          />
-        </div>
+        {displayedBody}
       </div>
     </div>
   );

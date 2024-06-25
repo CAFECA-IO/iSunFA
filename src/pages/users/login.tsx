@@ -1,15 +1,15 @@
-import { useRouter } from 'next/router';
 import Head from 'next/head';
 import React, { useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import LoginPageBody from '@/components/login_page_body/login_page_body';
 import { useUserCtx } from '@/contexts/user_context';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { GetServerSideProps } from 'next';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useRouter } from 'next/router';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
   const router = useRouter();
@@ -17,9 +17,14 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
 
   useEffect(() => {
     if (signedIn) {
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      const returnUrl = router.query.returnUrl as string;
+      if (returnUrl) {
+        router.push(decodeURIComponent(returnUrl));
+      } else {
+        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      }
     }
-  }, [signedIn]);
+  }, [signedIn, router]);
 
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center">
