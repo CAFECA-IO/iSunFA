@@ -93,7 +93,8 @@ const ConfirmModal = ({
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {
+  }, false, false);
 
   const router = useRouter();
 

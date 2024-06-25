@@ -8,7 +8,7 @@ import NavBar from '@/components/nav_bar/nav_bar';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
 import { Button } from '@/components/button/button';
 import JournalListBody from '@/components/journal_list_body/journal_list_body';
-import { IDummyJournal } from '@/interfaces/journal';
+import { IJournalListItem } from '@/interfaces/journal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
@@ -23,7 +23,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
 
   // ToDo: (20240621 - Julian) Replace with api data
   const projectName = 'BAIFA';
-  const journals = [] as IDummyJournal[];
+  const journals = [] as IJournalListItem[];
   const success = true;
   const isLoading = false;
   const code = '200';
