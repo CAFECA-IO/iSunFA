@@ -1,4 +1,4 @@
-import * as module from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import * as module from '@/lib/utils/repo/ocr.repo';
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
 import * as common from '@/lib/utils/common';
