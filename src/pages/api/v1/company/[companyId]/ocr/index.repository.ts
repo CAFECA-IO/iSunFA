@@ -1,9 +1,9 @@
-import prisma from "@/client";
-import { ProgressStatus } from "@/constants/account";
-import { STATUS_MESSAGE } from "@/constants/status_code";
-import { IAccountResultStatus } from "@/interfaces/accounting_account";
-import { timestampInSeconds } from "@/lib/utils/common";
-import { Ocr } from "@prisma/client";
+import prisma from '@/client';
+import { ProgressStatus } from '@/constants/account';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { timestampInSeconds } from '@/lib/utils/common';
+import { Ocr } from '@prisma/client';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -29,17 +29,23 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
   return company;
 }
 
-export async function findManyOCRByCompanyIdWithoutUsedInPrisma(companyId: number) {
+// Todo: (20240625 - Jacky) Should change prisma to add type
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
+  companyId: number,
+  ocrtype: string = 'invoice'
+) {
   let ocrData: Ocr[];
 
   try {
     ocrData = await prisma.ocr.findMany({
       where: {
         companyId,
+        // ocrtype,
         status: {
           not: ProgressStatus.HAS_BEEN_USED,
         },
-      }
+      },
     });
   } catch (error) {
     // Depreciated (20240611 - Murky) Debugging purpose
@@ -54,11 +60,11 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(companyId: numbe
 export async function createOcrInPrisma(
   companyId: number,
   aichResult: {
-  resultStatus: IAccountResultStatus;
-  imageUrl: string;
-  imageName: string;
-  imageSize: number;
-}
+    resultStatus: IAccountResultStatus;
+    imageUrl: string;
+    imageName: string;
+    imageSize: number;
+  }
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
