@@ -6,7 +6,7 @@ import { formatApiResponse, pageToOffset, timestampInSeconds } from '@/lib/utils
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { checkAdmin } from '@/lib/utils/auth_check';
-import { findManyJournalsInPrisma } from '@/lib/utils/repo/journal.repos';
+import { findManyJournalsInPrisma } from '@/lib/utils/repo/journal.repo';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
 

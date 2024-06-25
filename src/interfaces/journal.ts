@@ -36,10 +36,19 @@ export interface IJournalListItem {
   voucherNo: string | undefined;
 }
 
-export type IJournalFromPrismaIncludeProjectInvoiceVoucher = Prisma.JournalGetPayload<{
+export type IJournalFromPrismaIncludeProjectContractInvoiceVoucher = Prisma.JournalGetPayload<{
   include: {
+    contract: {
+      include: {
+        contractContent: true;
+      }
+    };
     project: true;
-    invoice: true;
+    invoice: {
+      include: {
+        payment: true;
+      }
+    };
     voucher: {
       include: {
         lineItems: {
