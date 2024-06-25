@@ -4,7 +4,7 @@ import { ProgressStatus } from '@/constants/account';
 import * as common from '@/lib/utils/common';
 import { Company } from '@prisma/client';
 
-jest.mock('../../../../../../lib/utils/common', () => ({
+jest.mock('../common', () => ({
   formatApiResponse: jest.fn(),
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),
