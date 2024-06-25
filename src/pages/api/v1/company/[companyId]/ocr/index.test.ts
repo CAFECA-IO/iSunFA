@@ -26,7 +26,7 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   transformBytesToFileSizeString: jest.fn(),
 }));
 
-jest.mock('./index.repository', () => {
+jest.mock('../../../../../../lib/utils/repo/ocr.repo', () => {
   return {
     findCompanyInPrisma: jest.fn(),
     createOcrInPrisma: jest.fn(),
