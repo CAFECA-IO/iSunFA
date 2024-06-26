@@ -19,15 +19,15 @@ export interface IContract {
   signatoryDate: number;
   payment: IPayment;
   hasContractDate: boolean;
-  contractStartDate?: number;
-  contractEndDate?: number;
+  contractStartDate: number;
+  contractEndDate: number;
   hasDeadlineDate: boolean;
-  deadlineDate?: number;
+  deadlineDate: number;
   hasWarrantyDate: boolean;
-  warrantyStartDate?: number;
-  warrantyEndDate?: number;
+  warrantyStartDate: number;
+  warrantyEndDate: number;
   serviceType: string;
-  estimatedCost?: number;
+  estimatedCost: number;
   createdAt: number;
   updatedAt: number;
 }

@@ -100,6 +100,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     imageName: string;
     imageUrl: string;
     imageSize: number;
+    type: string;
   }[]
 > {
   if (!files || !files.image || !files.image.length) {
@@ -121,6 +122,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
         imageUrl,
         imageName,
         imageSize: image.size,
+        type: 'invoice',
       };
     })
   );
@@ -212,6 +214,7 @@ export async function createOcrFromAichResults(
     imageUrl: string;
     imageName: string;
     imageSize: number;
+    type: string;
   }[]
 ) {
   const resultJson: IAccountResultStatus[] = [];

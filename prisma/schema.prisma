@@ -329,6 +329,7 @@ model Ocr {
   imageUrl     String @map("image_url")
   imageSize    Float  @map("image_size")
   status       String
+  type         String // Info (20240626 - Jacky) ex: "invoice", "contract"
   createdAt    Int    @map("created_at")
   updatedAt    Int    @map("updated_at")
 

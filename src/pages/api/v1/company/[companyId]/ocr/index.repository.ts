@@ -41,7 +41,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
     ocrData = await prisma.ocr.findMany({
       where: {
         companyId,
-        // ocrtype,
+        type: ocrtype,
         status: {
           not: ProgressStatus.HAS_BEEN_USED,
         },
@@ -64,6 +64,7 @@ export async function createOcrInPrisma(
     imageUrl: string;
     imageName: string;
     imageSize: number;
+    type: string;
   }
 ) {
   const now = Date.now();
@@ -78,6 +79,7 @@ export async function createOcrInPrisma(
         imageUrl: aichResult.imageUrl,
         imageSize: aichResult.imageSize,
         status: aichResult.resultStatus.status,
+        type: aichResult.type,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
