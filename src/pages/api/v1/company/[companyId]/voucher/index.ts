@@ -7,7 +7,13 @@ import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { checkAdmin } from '@/lib/utils/auth_check';
-import { createLineItemInPrisma, createVoucherInPrisma, findUniqueJournalInPrisma, findUniqueVoucherInPrisma, getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
+import {
+  createLineItemInPrisma,
+  createVoucherInPrisma,
+  findUniqueJournalInPrisma,
+  findUniqueVoucherInPrisma,
+  getLatestVoucherNoInPrisma,
+} from '@/lib/utils/repo/voucher.repo';
 
 type ApiResponseType = {
   id: number;
@@ -16,18 +22,21 @@ type ApiResponseType = {
   journalId: number;
   no: string;
   lineItems: {
-      id: number;
-      amount: number;
-      description: string;
-      debit: boolean;
-      accountId: number;
-      voucherId: number;
-      createdAt: number;
-      updatedAt: number;
+    id: number;
+    amount: number;
+    description: string;
+    debit: boolean;
+    accountId: number;
+    voucherId: number;
+    createdAt: number;
+    updatedAt: number;
   }[];
 } | null;
 
-async function handleVoucherCreatePrismaLogic(voucher: IVoucherDataForSavingToDB, companyId: number) {
+async function handleVoucherCreatePrismaLogic(
+  voucher: IVoucherDataForSavingToDB,
+  companyId: number
+) {
   try {
     const journalId = await findUniqueJournalInPrisma(voucher.journalId);
 

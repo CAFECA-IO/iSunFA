@@ -22,7 +22,7 @@ const ProjectContractList = ({
     contracts.length > 0 ? (
       <div className="flex w-full flex-col gap-20px">
         {contracts.map((contract) => (
-          <ContractCard key={contract.contractId} style={Layout.LIST} contract={contract} />
+          <ContractCard key={contract.id} style={Layout.LIST} contract={contract} />
         ))}
         <div className="mx-auto mt-50px">
           <Pagination

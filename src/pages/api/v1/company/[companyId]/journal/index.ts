@@ -13,11 +13,7 @@ import { IJournalListItem } from '@/interfaces/journal';
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isCompanyIdValid(companyId: any): companyId is number {
-  if (
-    Array.isArray(companyId) ||
-    !companyId ||
-    typeof companyId !== 'number'
-  ) {
+  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
     return false;
   }
   return true;
@@ -35,7 +31,8 @@ export function formatQuery(query: any) {
     (startDate && !Number.isInteger(Number(startDate))) ||
     (endDate && !Number.isInteger(Number(endDate))) ||
     (search && typeof search !== 'string') ||
-    (sort && typeof sort !== 'string')) {
+    (sort && typeof sort !== 'string')
+  ) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
@@ -49,7 +46,7 @@ export function formatQuery(query: any) {
     startDate: startDateInSecond,
     endDate: endDateInSecond,
     search: search ? String(search) : undefined,
-    sort: sort ? String(sort) : undefined
+    sort: sort ? String(sort) : undefined,
   };
 
   return cleanQuery;
@@ -63,7 +60,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     startDate,
     endDate,
     search,
-    sort
+    sort,
   } = formatQuery(req.query);
 
   const offset = pageToOffset(page, limit);
@@ -85,7 +82,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   );
   return {
     httpCode,
-    result
+    result,
   };
 }
 
@@ -107,7 +104,10 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IJournalListItem[]>(error.message, {} as IJournalListItem[]);
+    const { httpCode, result } = formatApiResponse<IJournalListItem[]>(
+      error.message,
+      {} as IJournalListItem[]
+    );
     res.status(httpCode).json(result);
   }
 }

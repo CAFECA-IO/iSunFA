@@ -66,8 +66,8 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
               id: PUBLIC_COMPANY_ID,
             },
           },
-        ]
-      }
+        ],
+      },
     });
 
     return result;
@@ -80,21 +80,21 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 }
 
 export async function findUniqueVoucherInPrisma(voucherId: number) {
-  let voucherData:{
+  let voucherData: {
     id: number;
     createdAt: number;
     updatedAt: number;
     journalId: number;
     no: string;
     lineItems: {
-        id: number;
-        amount: number;
-        description: string;
-        debit: boolean;
-        accountId: number;
-        voucherId: number;
-        createdAt: number;
-        updatedAt: number;
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
     }[];
   } | null = null;
   try {
@@ -156,7 +156,11 @@ export async function createFakeAccountInPrisma(companyId: number) {
   }
 }
 
-export async function createLineItemInPrisma(lineItem: ILineItem, voucherId: number, companyId: number) {
+export async function createLineItemInPrisma(
+  lineItem: ILineItem,
+  voucherId: number,
+  companyId: number
+) {
   try {
     // Deprecated: (20240527 - Murky) LineItem has accountId
     // let accountId = await findFirstAccountInPrisma(lineItem.account);
@@ -177,7 +181,10 @@ export async function createLineItemInPrisma(lineItem: ILineItem, voucherId: num
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
-    const accountBelongsToCompany = await findFirstAccountBelongsToCompanyInPrisma(String(lineItem.accountId), companyId);
+    const accountBelongsToCompany = await findFirstAccountBelongsToCompanyInPrisma(
+      String(lineItem.accountId),
+      companyId
+    );
 
     if (!accountBelongsToCompany) {
       // Deprecated: (20240527 - Murky) Debugging purpose
@@ -240,7 +247,9 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
     const localToday = `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()}`;
     const localTodayStrip = localToday.replace(/\//g, '');
 
-    const resultDate = result?.createdAt ? new Date(timestampInSeconds(result?.createdAt)).getDate() : -1;
+    const resultDate = result?.createdAt
+      ? new Date(timestampInSeconds(result?.createdAt)).getDate()
+      : -1;
     const isYesterday = resultDate !== new Date().getDate();
     const latestNo = result?.no.slice(result.no.length - 3) || '0'; // Info: （ 20240522 - Murky）I want to slice the last 3 digits
     const newVoucherNo = isYesterday ? '001' : String(Number(latestNo) + 1).padStart(3, '0');
@@ -254,10 +263,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
   }
 }
 
-export async function createVoucherInPrisma(
-  newVoucherNo: string,
-  journalId: number,
-) {
+export async function createVoucherInPrisma(newVoucherNo: string, journalId: number) {
   try {
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);

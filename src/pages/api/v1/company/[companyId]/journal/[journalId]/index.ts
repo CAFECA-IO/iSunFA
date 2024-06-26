@@ -20,10 +20,7 @@ export function isCompanyIdValid(companyId: any): companyId is number {
   return true;
 }
 
-async function handleGetRequest(
-  companyId: number,
-  req: NextApiRequest,
-) {
+async function handleGetRequest(companyId: number, req: NextApiRequest) {
   const { journalId } = req.query;
   if (!isJournalIdValid(journalId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -33,7 +30,7 @@ async function handleGetRequest(
   const journalData = await findUniqueJournalInPrisma(journalIdNumber, companyId);
 
   // Info: (20240617 - Murky) If journalData is null, formatIJournal will return an empty object
-  const journal = journalData ? formatIJournal(journalData) : {} as IJournal;
+  const journal = journalData ? formatIJournal(journalData) : ({} as IJournal);
   const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.SUCCESS, journal);
 
   return {
