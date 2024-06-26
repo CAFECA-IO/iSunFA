@@ -4,7 +4,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { FiPlusCircle } from 'react-icons/fi';
 import APIHandler from '@/lib/utils/api_handler';
 import { ILocale } from '@/interfaces/locale';
-import { IDummyJournal } from '@/interfaces/journal';
+import { IJournalListItem } from '@/interfaces/journal';
 import { useUserCtx } from '@/contexts/user_context';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
@@ -25,7 +25,7 @@ const JournalListPage = () => {
     code,
     data: journals,
     // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
-  } = APIHandler<IDummyJournal[]>(APIName.JOURNAL_LIST, {
+  } = APIHandler<IJournalListItem[]>(APIName.JOURNAL_LIST, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     // ToDo: (20240621 - Julian) Query params
   });

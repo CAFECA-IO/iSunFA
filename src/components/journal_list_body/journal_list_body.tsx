@@ -4,7 +4,7 @@ import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { default30DayPeriodInSec } from '@/constants/display';
-import { IDummyJournal } from '@/interfaces/journal';
+import { IJournalListItem } from '@/interfaces/journal';
 import { IDatePeriod } from '@/interfaces/date_period';
 import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
@@ -13,7 +13,7 @@ import { JournalListSubTab } from '@/constants/journal';
 import { useTranslation } from 'next-i18next';
 
 interface IJournalListBodyProps {
-  journals: IDummyJournal[];
+  journals: IJournalListItem[];
   isLoading: boolean;
   success: boolean;
   errorCode: string | undefined;

@@ -7,7 +7,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import * as parseImageForm from '@/lib/utils/parse_image_form';
 import * as common from '@/lib/utils/common';
 import { ProgressStatus } from '@/constants/account';
-import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import * as repository from '@/lib/utils/repo/ocr.repo';
 import { Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import * as authCheck from '@/lib/utils/auth_check';
@@ -26,7 +26,7 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   transformBytesToFileSizeString: jest.fn(),
 }));
 
-jest.mock('./index.repository', () => {
+jest.mock('../../../../../../lib/utils/repo/ocr.repo', () => {
   return {
     findCompanyInPrisma: jest.fn(),
     createOcrInPrisma: jest.fn(),
@@ -307,6 +307,7 @@ describe('POST OCR', () => {
           imageUrl: 'testImageUrl',
           imageName: 'testImageName',
           imageSize: 1024,
+          type: 'invoice',
         },
       ];
 
@@ -318,6 +319,7 @@ describe('POST OCR', () => {
         imageUrl: 'testImageUrl',
         imageName: 'testImageName',
         imageSize: 1024,
+        type: 'invoice',
         createdAt: 0,
         updatedAt: 0,
       };
@@ -465,22 +467,25 @@ describe('GET OCR', () => {
     });
   });
 
-  describe("formatUnprocessedOCR", () => {
-    it("should return IUnprocessedOCR", async () => {
+  describe('formatUnprocessedOCR', () => {
+    it('should return IUnprocessedOCR', async () => {
       const mockAichId = 'testAichId';
       const mockCompanyId = 1;
-      const mockImageFileSize = "1 MB";
-      const mockOcr: Ocr[] = [{
-        id: 1,
-        aichResultId: mockAichId,
-        companyId: mockCompanyId,
-        status: "success",
-        imageUrl: 'testImageUrl',
-        imageName: 'testImageName',
-        imageSize: 1024,
-        createdAt: 0,
-        updatedAt: 0,
-      }];
+      const mockImageFileSize = '1 MB';
+      const mockOcr: Ocr[] = [
+        {
+          id: 1,
+          aichResultId: mockAichId,
+          companyId: mockCompanyId,
+          status: 'success',
+          imageUrl: 'testImageUrl',
+          imageName: 'testImageName',
+          imageSize: 1024,
+          type: 'invoice',
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      ];
 
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -491,16 +496,18 @@ describe('GET OCR', () => {
 
       const unprocessedOCR = await module.formatUnprocessedOCR(mockOcr);
 
-      const expectUnprocessedOCR = [{
-        id: 1,
-        aichResultId: mockAichId,
-        imageName: 'testImageName',
-        imageUrl: 'testImageUrl',
-        imageSize: mockImageFileSize,
-        progress: 100,
-        status: ProgressStatus.SUCCESS,
-        createdAt: 0,
-      }];
+      const expectUnprocessedOCR = [
+        {
+          id: 1,
+          aichResultId: mockAichId,
+          imageName: 'testImageName',
+          imageUrl: 'testImageUrl',
+          imageSize: mockImageFileSize,
+          progress: 100,
+          status: ProgressStatus.SUCCESS,
+          createdAt: 0,
+        },
+      ];
       expect(unprocessedOCR).toEqual(expectUnprocessedOCR);
     });
   });

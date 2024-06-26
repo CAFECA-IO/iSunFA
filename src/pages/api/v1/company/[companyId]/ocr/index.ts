@@ -15,7 +15,10 @@ import { parseForm } from '@/lib/utils/parse_image_form';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { createOcrInPrisma, findManyOCRByCompanyIdWithoutUsedInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import {
+  createOcrInPrisma,
+  findManyOCRByCompanyIdWithoutUsedInPrisma,
+} from '@/lib/utils/repo/ocr.repo';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
@@ -97,6 +100,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     imageName: string;
     imageUrl: string;
     imageSize: number;
+    type: string;
   }[]
 > {
   if (!files || !files.image || !files.image.length) {
@@ -118,6 +122,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
         imageUrl,
         imageName,
         imageSize: image.size,
+        type: 'invoice',
       };
     })
   );
@@ -128,11 +133,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isCompanyIdValid(companyId: any): companyId is number {
-  if (
-    Array.isArray(companyId) ||
-    !companyId ||
-    typeof companyId !== 'number'
-  ) {
+  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
     return false;
   }
   return true;
@@ -183,24 +184,26 @@ export function calculateProgress(createdAt: number, status: ProgressStatus) {
 }
 
 export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IUnprocessedOCR[]> {
-  const unprocessedOCRs = await Promise.all(ocrData.map(async (ocr) => {
-    const status = await fetchStatus(ocr.aichResultId);
-    const progress = calculateProgress(ocr.createdAt, status);
-    const imageSize = transformBytesToFileSizeString(ocr.imageSize);
-    const createdAt = timestampInSeconds(ocr.createdAt);
-    const unprocessedOCR: IUnprocessedOCR = {
-      id: ocr.id,
-      aichResultId: ocr.aichResultId,
-      imageUrl: ocr.imageUrl,
-      imageName: ocr.imageName,
-      imageSize,
-      status,
-      progress,
-      createdAt,
-    };
+  const unprocessedOCRs = await Promise.all(
+    ocrData.map(async (ocr) => {
+      const status = await fetchStatus(ocr.aichResultId);
+      const progress = calculateProgress(ocr.createdAt, status);
+      const imageSize = transformBytesToFileSizeString(ocr.imageSize);
+      const createdAt = timestampInSeconds(ocr.createdAt);
+      const unprocessedOCR: IUnprocessedOCR = {
+        id: ocr.id,
+        aichResultId: ocr.aichResultId,
+        imageUrl: ocr.imageUrl,
+        imageName: ocr.imageName,
+        imageSize,
+        status,
+        progress,
+        createdAt,
+      };
 
-    return unprocessedOCR;
-  }));
+      return unprocessedOCR;
+    })
+  );
   return unprocessedOCRs;
 }
 
@@ -211,6 +214,7 @@ export async function createOcrFromAichResults(
     imageUrl: string;
     imageName: string;
     imageSize: number;
+    type: string;
   }[]
 ) {
   const resultJson: IAccountResultStatus[] = [];
@@ -261,7 +265,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   );
   return {
     httpCode,
-    result
+    result,
   };
 }
 
@@ -270,6 +274,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   // Info Murky (20240416): Check if companyId is string
   const session = await checkAdmin(req, res);
   const { companyId } = session;
+  const { ocrtype } = req.query;
   if (!isCompanyIdValid(companyId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -282,7 +287,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   let ocrData: Ocr[];
 
   try {
-    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyIdNumber);
+    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyIdNumber, ocrtype as string);
   } catch (error) {
     // Depreciated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
@@ -292,10 +297,13 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   // ToDo: (20240611 - Murky) format prisma ocr to IUnprocessedOCR
   const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
   // ToDo: formatApiResponse
-  const { httpCode, result } = formatApiResponse<IUnprocessedOCR[]>(STATUS_MESSAGE.SUCCESS_GET, unprocessedOCRs);
+  const { httpCode, result } = formatApiResponse<IUnprocessedOCR[]>(
+    STATUS_MESSAGE.SUCCESS_GET,
+    unprocessedOCRs
+  );
   return {
     httpCode,
-    result
+    result,
   };
 }
 

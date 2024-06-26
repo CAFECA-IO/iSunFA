@@ -32,9 +32,17 @@ const StatusMainColorMap = {
 };
 
 const ContractCard = ({ style, contract }: IContractCardProps) => {
-  const { contractName, projectName, period, signatory, progress, payment, status } = contract;
+  const {
+    name,
+    projectName,
+    contractStartDate,
+    contractEndDate,
+    signatory,
+    progress,
+    payment,
+    status,
+  } = contract;
   const { price, alreadyPaid } = payment;
-  const { contractDuration } = period;
 
   // ToDo: (20240619 - Julian) temporary abbreviation for project name
   const abbvProjectName = projectName
@@ -45,12 +53,12 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
   const durationColor =
     status === 'Expired' ? 'text-text-state-error' : 'text-text-neutral-tertiary';
 
-  const contractDurationStart = parseInt(contractDuration.start, 10);
-  const contractDurationEnd = parseInt(contractDuration.end, 10);
+  const contractStartStr = timestampToString(contractStartDate).date;
+  const contractEndStr = timestampToString(contractEndDate).date;
+
   const displayContractPeriod = (
     <p className="text-sm font-semibold text-text-neutral-tertiary">
-      {timestampToString(contractDurationStart).date} to{' '}
-      <span className={`${durationColor}`}>{timestampToString(contractDurationEnd).date}</span>
+      {contractStartStr} to <span className={`${durationColor}`}>{contractEndStr}</span>
     </p>
   );
 
@@ -90,7 +98,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
           {/* Info: (20240619 - Julian) Contract name */}
           <div className="flex items-center gap-x-8px">
             <p className="text-lg font-semibold text-text-brand-secondary-lv2 md:text-2xl">
-              {contractName}
+              {name}
             </p>
             {/* Info: (20240619 - Julian) Project name */}
             <div className="flex items-center gap-4px rounded-xs bg-badge-surface-soft-primary px-6px py-4px">
@@ -136,7 +144,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
           </div>
           {/* Info: (20240620 - Julian) Content */}
           <div className="flex flex-col items-center gap-y-10px px-16px py-12px">
-            <p className="text-xl font-semibold text-text-brand-secondary-lv2">{contractName}</p>
+            <p className="text-xl font-semibold text-text-brand-secondary-lv2">{name}</p>
             <div className="flex h-24px w-24px items-center justify-center rounded-full bg-avatar-surface-background-indigo text-sm font-bold text-avatar-text-in-dark-background">
               {abbvProjectName}
             </div>
@@ -152,10 +160,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
         <div className="flex flex-col gap-y-8px">
           <p className="text-xs text-text-neutral-tertiary">Duration</p>
           <p className="text-xs text-text-neutral-tertiary">
-            {timestampToString(contractDurationStart).date} to{' '}
-            <span className={`${durationColor}`}>
-              {timestampToString(contractDurationEnd).date}
-            </span>
+            {contractStartStr} to <span className={`${durationColor}`}>{contractEndStr}</span>
           </p>
         </div>
       </div>

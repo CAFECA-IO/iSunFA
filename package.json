@@ -1,6 +1,10 @@
 {
   "name": "iSunFA",
+<<<<<<< feature/i18n
   "version": "0.1.5+23",
+=======
+  "version": "0.1.5+25",
+>>>>>>> develop
   "private": false,
   "scripts": {
     "dev": "next dev",
