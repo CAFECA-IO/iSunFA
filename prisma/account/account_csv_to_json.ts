@@ -95,6 +95,10 @@ class AccountElement {
 
   rootCode: string;
 
+  createdAt: number = 0;
+
+  updatedAt: number = 0;
+
   constructor(type: string, debit: boolean, liquidity: boolean, code: string, name: string, forUser: boolean, parentCode: string, rootCode: string) {
     this.type = type;
     this.debit = debit;
@@ -310,7 +314,7 @@ function parseCSV(filePath: string) {
 
 const csvPath = path.resolve(__dirname, '一般個別中英文會計科目對照.csv');
 const treeJsonPath = path.resolve(__dirname, 'account_tree.json');
-const accountElementsJsonPath = path.resolve(__dirname, 'accounts.json');
+const accountElementsJsonPath = path.resolve(__dirname, '../seed_json/account.json');
 parseCSV(csvPath)
   // Info: (20240625 - Murky) data 是 string[][], 但是用promise的時候typescript偵測不到type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
