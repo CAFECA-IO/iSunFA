@@ -42,13 +42,13 @@ export type IJournalFromPrismaIncludeProjectContractInvoiceVoucher = Prisma.Jour
       include: {
         contractContent: true;
       }
-    };
+    }
     project: true;
     invoice: {
       include: {
         payment: true;
       }
-    };
+    }
     voucher: {
       include: {
         lineItems: {

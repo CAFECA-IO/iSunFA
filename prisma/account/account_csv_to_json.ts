@@ -64,7 +64,7 @@ function buildTree(records: string[][]) {
     }
 
     const childCode = createMissingCode(node.children[0], depth + 1);
-    const code = `${symbolByDeep[depth]}${childCode}`;
+    const code = `${childCode.slice(0, 4)}${symbolByDeep[depth]}`;
 
     // eslint-disable-next-line no-param-reassign
     node.code = code;
@@ -267,13 +267,65 @@ function isForUser(node: Node, type: string) {
   return false;
 }
 
+// DFS
+// function createAccountElementsForSeeder(rootNode: Node) {
+//   const accountsForSeeder: AccountElement[] = [];
+
+//   const codeSet = new Set<string>();
+//   function createAccountElement(node: Node, parent: Node, root: Node, parentType: string | null, parentDebit: boolean | null, parentLiquidity: boolean | null) {
+//     const { type, debit, liquidity } = determineTypeDebitLiquidity(node, parentType, parentDebit, parentLiquidity);
+//     const forUser = isForUser(node, type);
+//     const account = new AccountElement(
+//       type,
+//       debit,
+//       liquidity,
+//       node.code,
+//       node.accountCName,
+//       forUser,
+//       parent.code,
+//       root.code,
+//     );
+//     if (!codeSet.has(account.code)) {
+//       accountsForSeeder.push(account);
+//       codeSet.add(account.code);
+//     } else {
+//       // eslint-disable-next-line no-console
+//       console.log(`Duplicated code: ${account.code}, name: ${account.name}`);
+//     }
+
+//     node.children.forEach((child) => createAccountElement(child, node, root, type, debit, liquidity));
+//   }
+
+//   rootNode.children.forEach((child) => createAccountElement(child, rootNode, rootNode, null, null, null));
+
+//   // help me check if any code is duplicated
+//   const doubleCheck = new Set<string>();
+//   accountsForSeeder.forEach((account) => {
+//     if (doubleCheck.has(account.code)) {
+//       // eslint-disable-next-line no-console
+//       console.log(`Double check duplicated code: ${account.code}`);
+//     }
+//     doubleCheck.add(account.code);
+//   });
+//   return accountsForSeeder;
+// }
+
+// BFS
 function createAccountElementsForSeeder(rootNode: Node) {
   const accountsForSeeder: AccountElement[] = [];
-
   const codeSet = new Set<string>();
-  function createAccountElement(node: Node, parent: Node, root: Node, parentType: string | null, parentDebit: boolean | null, parentLiquidity: boolean | null) {
+  const doubleCheck = new Set<string>();
+
+  const queue: { node: Node, parent: Node, root: Node, parentType: string | null, parentDebit: boolean | null, parentLiquidity: boolean | null }[] = [];
+
+  rootNode.children.forEach((child) => queue.push({ node: child, parent: child, root: child, parentType: null, parentDebit: null, parentLiquidity: null }));
+
+  while (queue.length > 0) {
+    const { node, parent, root, parentType, parentDebit, parentLiquidity } = queue.shift()!;
+
     const { type, debit, liquidity } = determineTypeDebitLiquidity(node, parentType, parentDebit, parentLiquidity);
     const forUser = isForUser(node, type);
+
     const account = new AccountElement(
       type,
       debit,
@@ -284,6 +336,7 @@ function createAccountElementsForSeeder(rootNode: Node) {
       parent.code,
       root.code,
     );
+
     if (!codeSet.has(account.code)) {
       accountsForSeeder.push(account);
       codeSet.add(account.code);
@@ -292,13 +345,9 @@ function createAccountElementsForSeeder(rootNode: Node) {
       console.log(`Duplicated code: ${account.code}, name: ${account.name}`);
     }
 
-    node.children.forEach((child) => createAccountElement(child, node, root, type, debit, liquidity));
+    node.children.forEach((child) => queue.push({ node: child, parent: node, root, parentType: type, parentDebit: debit, parentLiquidity: liquidity }));
   }
 
-  rootNode.children.forEach((child) => createAccountElement(child, rootNode, rootNode, null, null, null));
-
-  // help me check if any code is duplicated
-  const doubleCheck = new Set<string>();
   accountsForSeeder.forEach((account) => {
     if (doubleCheck.has(account.code)) {
       // eslint-disable-next-line no-console
@@ -306,6 +355,7 @@ function createAccountElementsForSeeder(rootNode: Node) {
     }
     doubleCheck.add(account.code);
   });
+
   return accountsForSeeder;
 }
 
@@ -333,7 +383,7 @@ function parseCSV(filePath: string) {
   });
 }
 
-const csvPath = path.resolve(__dirname, '一般個別中英文會計科目對照.csv');
+const csvPath = path.resolve(__dirname, 'tifrs_accounts.csv');
 const treeJsonPath = path.resolve(__dirname, 'account_tree.json');
 const accountElementsJsonPath = path.resolve(__dirname, '../seed_json/account.json');
 parseCSV(csvPath)

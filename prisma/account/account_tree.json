@@ -1195,7 +1195,7 @@
               "elementId": "ifrs-full_CurrentAssets"
             }
           ],
-          "code": "#1100",
+          "code": "1100#",
           "elementId": "ifrs-full_CurrentAssetsAbstract"
         },
         {
@@ -3735,7 +3735,7 @@
               "elementId": "ifrs-full_NoncurrentAssets"
             }
           ],
-          "code": "#1510",
+          "code": "1510#",
           "elementId": "ifrs-full_NoncurrentAssetsAbstract"
         },
         {
@@ -3746,7 +3746,7 @@
           "elementId": "ifrs-full_Assets"
         }
       ],
-      "code": "@#1100",
+      "code": "1100@",
       "elementId": "ifrs-full_AssetsAbstract"
     },
     {
@@ -4392,7 +4392,7 @@
                   "elementId": "ifrs-full_CurrentLiabilities"
                 }
               ],
-              "code": "$2100",
+              "code": "2100$",
               "elementId": "ifrs-full_CurrentLiabilitiesAbstract"
             },
             {
@@ -4787,7 +4787,7 @@
                   "elementId": "ifrs-full_NoncurrentLiabilities"
                 }
               ],
-              "code": "$2500",
+              "code": "2500$",
               "elementId": "ifrs-full_NoncurrentLiabilitiesAbstract"
             },
             {
@@ -4798,7 +4798,7 @@
               "elementId": "ifrs-full_Liabilities"
             }
           ],
-          "code": "#$2100",
+          "code": "2100#",
           "elementId": "ifrs-full_LiabilitiesAbstract"
         },
         {
@@ -4866,7 +4866,7 @@
                   "elementId": "ifrs-full_IssuedCapital"
                 }
               ],
-              "code": "$3110",
+              "code": "3110$",
               "elementId": "tifrs-bsci-ci_ShareCapitalAbstract"
             },
             {
@@ -4881,7 +4881,7 @@
                   "elementId": "tifrs-bsci-ci_EquitySecurityTokenOffer"
                 }
               ],
-              "code": "$3199",
+              "code": "3199$",
               "elementId": "tifrs-bsci-ci_EquitySecurityTokenOfferAbstract"
             },
             {
@@ -5031,7 +5031,7 @@
                   "elementId": "ifrs-full_CapitalReserve"
                 }
               ],
-              "code": "$3210",
+              "code": "3210$",
               "elementId": "tifrs-bsci-ci_CapitalSurplusAbstract"
             },
             {
@@ -5089,7 +5089,7 @@
                   "elementId": "ifrs-full_RetainedEarnings"
                 }
               ],
-              "code": "$3310",
+              "code": "3310$",
               "elementId": "tifrs-bsci-ci_RetainedEarningsAbstract"
             },
             {
@@ -5592,7 +5592,7 @@
                   "elementId": "ifrs-full_OtherEquityInterest"
                 }
               ],
-              "code": "$3410",
+              "code": "3410$",
               "elementId": "tifrs-bsci-ci_OtherEquityInterestAbstract"
             },
             {
@@ -5624,7 +5624,7 @@
               "elementId": "ifrs-full_Equity"
             }
           ],
-          "code": "#$3110",
+          "code": "3110#",
           "elementId": "ifrs-full_EquityAbstract"
         },
         {
@@ -5670,7 +5670,7 @@
           "elementId": ""
         }
       ],
-      "code": "@#$2100",
+      "code": "2100@",
       "elementId": "ifrs-full_EquityAndLiabilitiesAbstract"
     },
     {
@@ -5739,7 +5739,7 @@
               "elementId": "ifrs-full_RevenueFromSaleOfGoods"
             }
           ],
-          "code": "#4110",
+          "code": "4110#",
           "elementId": "tifrs-bsci-ci_NetSalesRevenueAbstract"
         },
         {
@@ -5818,7 +5818,7 @@
               "elementId": "ifrs-full_InvestmentIncome"
             }
           ],
-          "code": "#4210",
+          "code": "4210#",
           "elementId": "tifrs-bsci-ci_InvestmentRevenueForInvestmentBusinessAbstract"
         },
         {
@@ -5847,7 +5847,7 @@
               "elementId": "ifrs-full_RentalIncome"
             }
           ],
-          "code": "#4310",
+          "code": "4310#",
           "elementId": "tifrs-bsci-ci_RentalRevenueAbstract"
         },
         {
@@ -5941,7 +5941,7 @@
               "elementId": "tifrs-bsci-ci_TravelServiceRevenue"
             }
           ],
-          "code": "#4410",
+          "code": "4410#",
           "elementId": "tifrs-bsci-ci_TravelServiceRevenueAbstract"
         },
         {
@@ -6000,7 +6000,7 @@
               "elementId": "ifrs-full_RevenueFromConstructionContracts"
             }
           ],
-          "code": "#4510",
+          "code": "4510#",
           "elementId": "tifrs-bsci-ci_ConstructionAndEngineeringRevenueAbstract"
         },
         {
@@ -6239,7 +6239,7 @@
               "elementId": "tifrs-bsci-ci_ServiceRevenue"
             }
           ],
-          "code": "#4610",
+          "code": "4610#",
           "elementId": "tifrs-bsci-ci_ServiceRevenueAbstract"
         },
         {
@@ -6268,7 +6268,7 @@
               "elementId": "tifrs-bsci-ci_OtherOperatingRevenue"
             }
           ],
-          "code": "#4881",
+          "code": "4881#",
           "elementId": "tifrs-bsci-ci_OtherOperatingRevenueAbstract"
         },
         {
@@ -6279,7 +6279,7 @@
           "elementId": "ifrs-full_Revenue"
         }
       ],
-      "code": "@#4110",
+      "code": "4110@",
       "elementId": "tifrs-bsci-ci_OperatingRevenueAbstract"
     },
     {
@@ -6312,7 +6312,7 @@
               "elementId": "ifrs-full_CostOfSales"
             }
           ],
-          "code": "#5111",
+          "code": "5111#",
           "elementId": "tifrs-bsci-ci_CostOfSalesAbstract"
         },
         {
@@ -6341,7 +6341,7 @@
               "elementId": "tifrs-bsci-ci_InvestmentCostsForInvestmentBusiness"
             }
           ],
-          "code": "#5260",
+          "code": "5260#",
           "elementId": "tifrs-bsci-ci_InvestmentCostsForInvestmentBusinessAbstract"
         },
         {
@@ -6377,7 +6377,7 @@
               "elementId": "tifrs-bsci-ci_CostOfRentalSales"
             }
           ],
-          "code": "#5310",
+          "code": "5310#",
           "elementId": "tifrs-bsci-ci_CostOfRentalSalesAbstract"
         },
         {
@@ -6457,7 +6457,7 @@
               "elementId": "tifrs-bsci-ci_CostOfTravelServicesForHotelBusiness"
             }
           ],
-          "code": "#5410",
+          "code": "5410#",
           "elementId": "tifrs-bsci-ci_CostOfTravelServicesForHotelBusinessAbstract"
         },
         {
@@ -6486,7 +6486,7 @@
               "elementId": "tifrs-bsci-ci_CostOfConstructionAndEngineeringServiceSales"
             }
           ],
-          "code": "#5510",
+          "code": "5510#",
           "elementId": "tifrs-bsci-ci_CostOfConstructionAndEngineeringServiceSalesAbstract"
         },
         {
@@ -6608,7 +6608,7 @@
               "elementId": "tifrs-bsci-ci_CostOfServices"
             }
           ],
-          "code": "#5610",
+          "code": "5610#",
           "elementId": "tifrs-bsci-ci_CostOfServicesAbstract"
         },
         {
@@ -6696,7 +6696,7 @@
               "elementId": "tifrs-bsci-ci_StandardCostVariances"
             }
           ],
-          "code": "#5710",
+          "code": "5710#",
           "elementId": "tifrs-bsci-ci_StandardCostVariancesAbstract"
         },
         {
@@ -6714,7 +6714,7 @@
           "elementId": "tifrs-bsci-ci_OperatingCosts"
         }
       ],
-      "code": "@#5111",
+      "code": "5111@",
       "elementId": "tifrs-bsci-ci_OperatingCostsAbstract"
     },
     {
@@ -7257,7 +7257,7 @@
           "elementId": "ifrs-full_OperatingExpense"
         }
       ],
-      "code": "@6100",
+      "code": "6100@",
       "elementId": "tifrs-bsci-ci_OperatingExpensesAbstract"
     },
     {
@@ -7358,7 +7358,7 @@
           "elementId": "tifrs-bsci-ci_NetOtherIncomeExpenses"
         }
       ],
-      "code": "@6510",
+      "code": "6510@",
       "elementId": "tifrs-bsci-ci_NetOtherIncomeExpensesAbstract"
     },
     {
@@ -7419,7 +7419,7 @@
               "elementId": "ifrs-full_RevenueFromInterest"
             }
           ],
-          "code": "#7101",
+          "code": "7101#",
           "elementId": "tifrs-bsci-ci_InterestIncomeAbstract"
         },
         {
@@ -7533,7 +7533,7 @@
               "elementId": "ifrs-full_OtherRevenue"
             }
           ],
-          "code": "#7110",
+          "code": "7110#",
           "elementId": "tifrs-bsci-ci_OtherIncomeAbstract"
         },
         {
@@ -7985,7 +7985,7 @@
               "elementId": "ifrs-full_OtherGainsLosses"
             }
           ],
-          "code": "#7210",
+          "code": "7210#",
           "elementId": "tifrs-bsci-ci_OtherGainsAndLossesAbstract"
         },
         {
@@ -8014,7 +8014,7 @@
               "elementId": "ifrs-full_GainLossArisingFromDerecognitionOfFinancialAssetsMeasuredAtAmortisedCost"
             }
           ],
-          "code": "#7350",
+          "code": "7350#",
           "elementId": "ifrs-full_GainLossArisingFromDerecognitionOfFinancialAssetsMeasuredAtAmortisedCostAbstract"
         },
         {
@@ -8150,7 +8150,7 @@
               "elementId": "ifrs-full_FinanceCosts"
             }
           ],
-          "code": "#7299",
+          "code": "7299#",
           "elementId": "tifrs-bsci-ci_FinanceCostsAbstract"
         },
         {
@@ -8179,7 +8179,7 @@
               "elementId": "tifrs-bsci-ci_ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9"
             }
           ],
-          "code": "#7380",
+          "code": "7380#",
           "elementId": "tifrs-bsci-ci_ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9Abstract"
         },
         {
@@ -8208,7 +8208,7 @@
               "elementId": "ifrs-full_ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod"
             }
           ],
-          "code": "#7370",
+          "code": "7370#",
           "elementId": "ifrs-full_ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethodAbstract"
         },
         {
@@ -8237,7 +8237,7 @@
               "elementId": "tifrs-bsci-ci_GainsLossesOnReclassificationOfFinancialAssets"
             }
           ],
-          "code": "#7360",
+          "code": "7360#",
           "elementId": "tifrs-bsci-ci_GainsLossesOnReclassificationOfFinancialAssetsAbstract"
         },
         {
@@ -8266,7 +8266,7 @@
               "elementId": "tifrs-bsci-ci_GainsLossesOnReclassificationOfFinancialAssetsFromFinancialAssetsAtFairValueThroughOtherComprehensiveIncomeToFinancialAssetsAtFairValueThroughProfitOrLoss"
             }
           ],
-          "code": "#7361",
+          "code": "7361#",
           "elementId": "tifrs-bsci-ci_GainsLossesOnReclassificationOfFinancialAssetsFromFinancialAssetsAtFairValueThroughOtherComprehensiveIncomeToFinancialAssetsAtFairValueThroughProfitOrLossAbstract"
         },
         {
@@ -8277,7 +8277,7 @@
           "elementId": "tifrs-bsci-ci_NonoperatingIncomeAndExpenses"
         }
       ],
-      "code": "@#7101",
+      "code": "7101@",
       "elementId": "tifrs-bsci-ci_NonoperatingIncomeAndExpensesAbstract"
     },
     {
@@ -8313,7 +8313,7 @@
           "elementId": "ifrs-full_IncomeTaxExpenseContinuingOperations"
         }
       ],
-      "code": "@7951",
+      "code": "7951@",
       "elementId": "tifrs-bsci-ci_TaxExpenseIncomeAbstract"
     },
     {
@@ -8356,7 +8356,7 @@
           "elementId": "ifrs-full_ProfitLossFromDiscontinuedOperations"
         }
       ],
-      "code": "@8101",
+      "code": "8101@",
       "elementId": "tifrs-bsci-ci_ProfitLossFromDiscontinuedOperationsAbstract"
     },
     {
@@ -8567,7 +8567,7 @@
               "elementId": "ifrs-full_OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTax"
             }
           ],
-          "code": "#8311",
+          "code": "8311#",
           "elementId": "tifrs-bsci-ci_ComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossAbstract"
         },
         {
@@ -8848,7 +8848,7 @@
               "elementId": "ifrs-full_OtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax"
             }
           ],
-          "code": "#8361",
+          "code": "8361#",
           "elementId": "tifrs-bsci-ci_ComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossAbstract"
         },
         {
@@ -8859,7 +8859,7 @@
           "elementId": "ifrs-full_OtherComprehensiveIncome"
         }
       ],
-      "code": "@#8311",
+      "code": "8311@",
       "elementId": "ifrs-full_OtherComprehensiveIncomeAbstract"
     },
     {
@@ -8902,7 +8902,7 @@
           "elementId": "ifrs-full_BasicEarningsLossPerShare"
         }
       ],
-      "code": "@9710",
+      "code": "9710@",
       "elementId": "ifrs-full_BasicEarningsPerShareAbstract"
     },
     {
@@ -8931,7 +8931,7 @@
           "elementId": "ifrs-full_DilutedEarningsLossPerShare"
         }
       ],
-      "code": "@9810",
+      "code": "9810@",
       "elementId": "ifrs-full_DilutedEarningsPerShareAbstract"
     },
     {
@@ -9192,7 +9192,7 @@
                   "elementId": "tifrs-SCF_AdjustmentsToReconcileProfitLoss"
                 }
               ],
-              "code": "$A20100",
+              "code": "A201$",
               "elementId": "tifrs-SCF_AdjustmentsToReconcileProfitLossAbstract"
             },
             {
@@ -9344,7 +9344,7 @@
                       "elementId": "tifrs-SCF_ChangesInOperatingAssets"
                     }
                   ],
-                  "code": "%A31115",
+                  "code": "A311%",
                   "elementId": "tifrs-SCF_ChangesInOperatingAssetsAbstract"
                 },
                 {
@@ -9471,7 +9471,7 @@
                       "elementId": "tifrs-SCF_ChangesInOperatingLiabilities"
                     }
                   ],
-                  "code": "%A32110",
+                  "code": "A321%",
                   "elementId": "tifrs-SCF_ChangesInOperatingLiabilitiesAbstract"
                 },
                 {
@@ -9482,7 +9482,7 @@
                   "elementId": "tifrs-SCF_ChangesInOperatingAssetsAndLiabilities"
                 }
               ],
-              "code": "$%A31115",
+              "code": "A311$",
               "elementId": "tifrs-SCF_ChangesInOperatingAssetsAndLiabilitiesAbstract"
             },
             {
@@ -9493,7 +9493,7 @@
               "elementId": "tifrs-SCF_Adjustments"
             }
           ],
-          "code": "#$A20100",
+          "code": "A201#",
           "elementId": "tifrs-SCF_AdjustmentsAbstract"
         },
         {
@@ -9539,7 +9539,7 @@
           "elementId": "ifrs-full_IncomeTaxesPaidRefundClassifiedAsOperatingActivities"
         }
       ],
-      "code": "@A00010",
+      "code": "A000@",
       "elementId": "ifrs-full_CashFlowsFromUsedInOperatingActivitiesAbstract"
     },
     {
@@ -9600,7 +9600,7 @@
               "elementId": "tifrs-SCF_ClassesOfCashReceiptsFromOperatingActivities"
             }
           ],
-          "code": "#AA0100",
+          "code": "AA01#",
           "elementId": "ifrs-full_ClassesOfCashReceiptsFromOperatingActivitiesAbstract"
         },
         {
@@ -9650,7 +9650,7 @@
               "elementId": "tifrs-SCF_ClassesOfCashPaymentsFromOperatingActivities"
             }
           ],
-          "code": "#AB0100",
+          "code": "AB01#",
           "elementId": "ifrs-full_ClassesOfCashPaymentsAbstract"
         },
         {
@@ -9696,7 +9696,7 @@
           "elementId": "ifrs-full_OtherInflowsOutflowsOfCashClassifiedAsOperatingActivities"
         }
       ],
-      "code": "@#AA0100",
+      "code": "AA01@",
       "elementId": "tifrs-SCF_CashFlowsFromUsedInOperatingActivitiesDirectMethodAbstract"
     },
     {
@@ -10096,7 +10096,7 @@
           "elementId": "tifrs-SCF_NetCashFlowsFromUsedInInvestingActivities"
         }
       ],
-      "code": "@B00010",
+      "code": "B000@",
       "elementId": "ifrs-full_CashFlowsFromUsedInInvestingActivitiesAbstract"
     },
     {
@@ -10468,7 +10468,7 @@
           "elementId": "tifrs-SCF_CashFlowsFromUsedInFinancingActivities"
         }
       ],
-      "code": "@C00100",
+      "code": "C001@",
       "elementId": "ifrs-full_CashFlowsFromUsedInFinancingActivitiesAbstract"
     },
     {
@@ -10849,7 +10849,7 @@
               "elementId": "tifrs-es_ReversalOfSpecialReserve"
             }
           ],
-          "code": "#B1",
+          "code": "B1#",
           "elementId": "tifrs-es_AppropriationAndDistributionOfRetainedEarnings"
         },
         {
@@ -10913,7 +10913,7 @@
               "elementId": "tifrs-es_OtherChangesInCapitalSurplus"
             }
           ],
-          "code": "#C1",
+          "code": "C1#",
           "elementId": "tifrs-es_OtherChangesInCapitalSurplusAbstract"
         },
         {
@@ -11138,6 +11138,6 @@
       "elementId": "tifrs-SCF_CashAndCashEquivalentsAtEndOfPeriod"
     }
   ],
-  "code": "!@#1100",
+  "code": "1100!",
   "elementId": ""
 }
