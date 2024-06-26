@@ -1,10 +1,10 @@
 import { useState } from 'react';
 // import { IJournal } from '@/interfaces/journal';
-import { IDummyJournal } from '@/interfaces/journal';
+import { IJournalListItem } from '@/interfaces/journal';
 import JournalItem, { JournalItemMobile } from '@/components/journal_item/journal_item';
 import { checkboxStyle } from '@/constants/display';
 
-const JournalList = ({ journals }: { journals: IDummyJournal[] }) => {
+const JournalList = ({ journals }: { journals: IJournalListItem[] }) => {
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [isCheckAll, setIsCheckAll] = useState<boolean>(false);
 

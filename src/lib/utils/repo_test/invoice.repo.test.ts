@@ -1,12 +1,12 @@
 import prisma from '@/client';
-import * as module from '@/pages/api/v1/company/[companyId]/invoice/invoice.repository';
+import * as module from '@/lib/utils/repo/invoice.repo';
 import { Company, Invoice, Journal, Payment } from '@prisma/client';
 import * as common from '@/lib/utils/common';
 import { IPayment } from '@/interfaces/payment';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IInvoice } from '@/interfaces/invoice';
 
-jest.mock('../../../../../../lib/utils/common', () => ({
+jest.mock('../common', () => ({
   formatApiResponse: jest.fn(),
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),
@@ -17,47 +17,47 @@ describe('/ocr/index.repository', () => {
   const ocrImageUrl = 'testImageUrl';
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(common, "timestampInSeconds").mockReturnValue(nowTimestamp);
+    jest.spyOn(common, 'timestampInSeconds').mockReturnValue(nowTimestamp);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("findUniqueCompanyInPrisma", () => {
-    it("should return company with id", () => {
+  describe('findUniqueCompanyInPrisma', () => {
+    it('should return company with id', () => {
       const companyId = 1;
 
       const mockPrismaReturn = {
-        id: companyId
+        id: companyId,
       } as Company;
 
-      jest.spyOn(prisma.company, "findUnique").mockResolvedValue(mockPrismaReturn);
+      jest.spyOn(prisma.company, 'findUnique').mockResolvedValue(mockPrismaReturn);
 
       const result = module.findUniqueCompanyInPrisma(companyId);
       expect(result).resolves.toEqual(mockPrismaReturn);
     });
 
-    it("should throw error if company not found", () => {
+    it('should throw error if company not found', () => {
       const companyId = 1;
 
-      jest.spyOn(prisma.company, "findUnique").mockResolvedValue(null);
+      jest.spyOn(prisma.company, 'findUnique').mockResolvedValue(null);
 
       const result = module.findUniqueCompanyInPrisma(companyId);
       expect(result).rejects.toThrow();
     });
 
-    it("should throw error if prisma throws error", () => {
+    it('should throw error if prisma throws error', () => {
       const companyId = 1;
 
-      jest.spyOn(prisma.company, "findUnique").mockRejectedValue(new Error());
+      jest.spyOn(prisma.company, 'findUnique').mockRejectedValue(new Error());
 
       const result = module.findUniqueCompanyInPrisma(companyId);
       expect(result).rejects.toThrow();
     });
   });
 
-  describe("create invoice related steps", () => {
+  describe('create invoice related steps', () => {
     const invoiceId = 1;
     const paymentId = 2;
     const journalId = 3;
@@ -68,101 +68,114 @@ describe('/ocr/index.repository', () => {
       taxPercentage: 0,
       hasFee: true,
       fee: 0,
-      method: "creditCard",
+      method: 'creditCard',
       period: PaymentPeriodType.AT_ONCE,
       installmentPeriod: 1,
       alreadyPaid: 100,
       status: PaymentStatusType.PAID,
-      progress: 0
+      progress: 0,
     };
-    const mockInvoiceData:IInvoice = {
+    const mockInvoiceData: IInvoice = {
       journalId: null,
       date: 1234567890000,
       eventType: EventType.INCOME,
-      paymentReason: "testReason",
-      description: "testDescription",
-      vendorOrSupplier: "testVendor",
+      paymentReason: 'testReason',
+      description: 'testDescription',
+      vendorOrSupplier: 'testVendor',
       projectId: null,
       project: null,
       contractId: null,
       contract: null,
-      payment: mockPaymentInput
+      payment: mockPaymentInput,
     };
-    describe("createPaymentInPrisma", () => {
-      it("should create payment in prisma, and return id", async () => {
+    describe('createPaymentInPrisma', () => {
+      it('should create payment in prisma, and return id', async () => {
         const mockPrismaReturn = {
-          id: paymentId
+          id: paymentId,
         } as Payment;
 
-        jest.spyOn(prisma.payment, "create").mockResolvedValue(mockPrismaReturn);
+        jest.spyOn(prisma.payment, 'create').mockResolvedValue(mockPrismaReturn);
 
         const result = await module.createPaymentInPrisma(mockPaymentInput);
         expect(result.id).toEqual(paymentId);
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.payment, "create").mockRejectedValue(new Error());
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.payment, 'create').mockRejectedValue(new Error());
 
         const result = module.createPaymentInPrisma(mockPaymentInput);
         expect(result).rejects.toThrow();
       });
     });
 
-    describe("createInvoiceInPrisma", () => {
-      it("should create invoice in prisma, and return id", async () => {
+    describe('createInvoiceInPrisma', () => {
+      it('should create invoice in prisma, and return id', async () => {
         const mockInvoiceCreateResult = {
-          id: invoiceId
+          id: invoiceId,
         } as Invoice;
 
-        jest.spyOn(prisma.invoice, "create").mockResolvedValue(mockInvoiceCreateResult);
+        jest.spyOn(prisma.invoice, 'create').mockResolvedValue(mockInvoiceCreateResult);
 
-        const result = await module.createInvoiceInPrisma(mockInvoiceData, paymentId, journalId, ocrImageUrl);
+        const result = await module.createInvoiceInPrisma(
+          mockInvoiceData,
+          paymentId,
+          journalId,
+          ocrImageUrl
+        );
         expect(result).toEqual(mockInvoiceCreateResult);
         expect(result.id).toEqual(invoiceId);
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.invoice, "create").mockRejectedValue(new Error());
-        expect(module.createInvoiceInPrisma(mockInvoiceData, paymentId, journalId, ocrImageUrl)).rejects.toThrow();
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.invoice, 'create').mockRejectedValue(new Error());
+        expect(
+          module.createInvoiceInPrisma(mockInvoiceData, paymentId, journalId, ocrImageUrl)
+        ).rejects.toThrow();
       });
     });
 
-    describe("createInvoiceAndPaymentInPrisma", () => {
-      it("should create invoice and payment in prisma, and return invoice id that is created", async () => {
+    describe('createInvoiceAndPaymentInPrisma', () => {
+      it('should create invoice and payment in prisma, and return invoice id that is created', async () => {
         prisma.$transaction = jest.fn().mockImplementation((cb) => cb(prisma));
 
         const mockPaymentPrismaReturn = {
-          id: paymentId
+          id: paymentId,
         } as Payment;
 
         const mockInvoicePrismaReturn = {
-          id: invoiceId
+          id: invoiceId,
         } as Invoice;
 
-        jest.spyOn(prisma.payment, "create").mockResolvedValue(mockPaymentPrismaReturn);
-        jest.spyOn(prisma.invoice, "create").mockResolvedValue(mockInvoicePrismaReturn);
+        jest.spyOn(prisma.payment, 'create').mockResolvedValue(mockPaymentPrismaReturn);
+        jest.spyOn(prisma.invoice, 'create').mockResolvedValue(mockInvoicePrismaReturn);
 
-        const resultInvoiceId = await module.createInvoiceAndPaymentInPrisma(mockInvoiceData, journalId, ocrImageUrl);
+        const resultInvoiceId = await module.createInvoiceAndPaymentInPrisma(
+          mockInvoiceData,
+          journalId,
+          ocrImageUrl
+        );
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
         expect(resultInvoiceId).toEqual(invoiceId);
       });
 
-      it("should throw error if prisma in transaction throws error", () => {
+      it('should throw error if prisma in transaction throws error', () => {
         const mockInvoicePrismaReturn = {
-          id: invoiceId
+          id: invoiceId,
         } as Invoice;
 
-        jest.spyOn(prisma.payment, "create").mockRejectedValue(new Error());
-        jest.spyOn(prisma.invoice, "create").mockResolvedValue(mockInvoicePrismaReturn);
+        jest.spyOn(prisma.payment, 'create').mockRejectedValue(new Error());
+        jest.spyOn(prisma.invoice, 'create').mockResolvedValue(mockInvoicePrismaReturn);
         prisma.$transaction = jest.fn().mockImplementation((cb) => cb(prisma));
 
-        expect(module.createInvoiceAndPaymentInPrisma(mockInvoiceData, journalId, ocrImageUrl)).rejects.toThrow();
+        expect(
+          module.createInvoiceAndPaymentInPrisma(mockInvoiceData, journalId, ocrImageUrl)
+        ).rejects.toThrow();
       });
     });
   });
 
   // ToDo: (20240605 - Murky) update invoice related steps need to change to PUT?
-  describe("update invoice related steps", () => {
+  describe('update invoice related steps', () => {
     const invoiceId = 1;
     const paymentId = 2;
     const journalId = 3;
@@ -174,34 +187,34 @@ describe('/ocr/index.repository', () => {
       taxPercentage: 0,
       hasFee: true,
       fee: 0,
-      method: "creditCard",
+      method: 'creditCard',
       period: PaymentPeriodType.AT_ONCE,
       installmentPeriod: 1,
       alreadyPaid: 100,
       status: PaymentStatusType.PAID,
-      progress: 0
+      progress: 0,
     };
-    const mockInvoiceData:IInvoice = {
+    const mockInvoiceData: IInvoice = {
       journalId: null,
       date: 1234567890000,
       eventType: EventType.INCOME,
-      paymentReason: "testReason",
-      description: "testDescription",
-      vendorOrSupplier: "testVendor",
+      paymentReason: 'testReason',
+      description: 'testDescription',
+      vendorOrSupplier: 'testVendor',
       projectId: null,
       project: null,
       contractId: null,
       contract: null,
-      payment: mockPaymentInput
+      payment: mockPaymentInput,
     };
-    describe("findUniqueInvoiceInPrisma", () => {
-      it("should return invoice with id", async () => {
+    describe('findUniqueInvoiceInPrisma', () => {
+      it('should return invoice with id', async () => {
         const mockFindInvoicePrismaReturn = {
           id: invoiceId,
-          paymentId
+          paymentId,
         } as Invoice;
 
-        jest.spyOn(prisma.invoice, "findUnique").mockResolvedValue(mockFindInvoicePrismaReturn);
+        jest.spyOn(prisma.invoice, 'findUnique').mockResolvedValue(mockFindInvoicePrismaReturn);
 
         const result = await module.findUniqueInvoiceInPrisma(invoiceId);
         expect(result).toEqual(mockFindInvoicePrismaReturn);
@@ -209,117 +222,138 @@ describe('/ocr/index.repository', () => {
         expect(result.paymentId).toEqual(paymentId);
       });
 
-      it("should throw error if invoice not found", () => {
-        jest.spyOn(prisma.invoice, "findUnique").mockResolvedValue(null);
+      it('should throw error if invoice not found', () => {
+        jest.spyOn(prisma.invoice, 'findUnique').mockResolvedValue(null);
 
         expect(module.findUniqueInvoiceInPrisma(invoiceId)).rejects.toThrow();
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.invoice, "findUnique").mockRejectedValue(new Error());
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.invoice, 'findUnique').mockRejectedValue(new Error());
 
         expect(module.findUniqueInvoiceInPrisma(invoiceId)).rejects.toThrow();
       });
     });
 
-    describe("updatePaymentInPrisma", () => {
-      it("should update payment in prisma, and return id", async () => {
+    describe('updatePaymentInPrisma', () => {
+      it('should update payment in prisma, and return id', async () => {
         const mockPaymentUpdateResult = {
-          id: paymentId
+          id: paymentId,
         } as Payment;
 
-        jest.spyOn(prisma.payment, "update").mockResolvedValue(mockPaymentUpdateResult);
+        jest.spyOn(prisma.payment, 'update').mockResolvedValue(mockPaymentUpdateResult);
 
         const result = await module.updatePaymentInPrisma(paymentId, mockPaymentInput);
         expect(result.id).toEqual(paymentId);
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.payment, "update").mockRejectedValue(new Error());
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.payment, 'update').mockRejectedValue(new Error());
 
         expect(module.updatePaymentInPrisma(paymentId, mockPaymentInput)).rejects.toThrow();
       });
     });
 
-    describe("updateInvoiceInPrisma", () => {
-      it("should update invoice in prisma, and return id", async () => {
+    describe('updateInvoiceInPrisma', () => {
+      it('should update invoice in prisma, and return id', async () => {
         const mockInvoiceUpdateResult = {
-          id: invoiceId
+          id: invoiceId,
         } as Invoice;
 
-        jest.spyOn(prisma.invoice, "update").mockResolvedValue(mockInvoiceUpdateResult);
+        jest.spyOn(prisma.invoice, 'update').mockResolvedValue(mockInvoiceUpdateResult);
 
-        const result = await module.updateInvoiceInPrisma(invoiceId, paymentId, mockInvoiceData, journalId, ocrImageUrl);
+        const result = await module.updateInvoiceInPrisma(
+          invoiceId,
+          paymentId,
+          mockInvoiceData,
+          journalId,
+          ocrImageUrl
+        );
         expect(result.id).toEqual(invoiceId);
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.invoice, "update").mockRejectedValue(new Error());
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.invoice, 'update').mockRejectedValue(new Error());
 
-        expect(module.updateInvoiceInPrisma(invoiceId, paymentId, mockInvoiceData, journalId, ocrImageUrl)).rejects.toThrow();
+        expect(
+          module.updateInvoiceInPrisma(
+            invoiceId,
+            paymentId,
+            mockInvoiceData,
+            journalId,
+            ocrImageUrl
+          )
+        ).rejects.toThrow();
       });
     });
 
-    describe("updateInvoiceAndPaymentInPrisma", () => {
-      it("should update invoice and payment in prisma, and return invoice id that is updated", async () => {
+    describe('updateInvoiceAndPaymentInPrisma', () => {
+      it('should update invoice and payment in prisma, and return invoice id that is updated', async () => {
         prisma.$transaction = jest.fn().mockImplementation((cb) => cb(prisma));
 
         const mockFindInvoicePrismaReturn = {
           id: invoiceId,
-          paymentId
+          paymentId,
         } as Invoice;
         const mockUpdatePaymentPrismaReturn = {
-          id: paymentId
+          id: paymentId,
         } as Payment;
 
         const mockUpdateInvoicePrismaReturn = {
-          id: invoiceId
+          id: invoiceId,
         } as Invoice;
 
-        jest.spyOn(prisma.invoice, "findUnique").mockResolvedValue(mockFindInvoicePrismaReturn);
-        jest.spyOn(prisma.payment, "update").mockResolvedValue(mockUpdatePaymentPrismaReturn);
-        jest.spyOn(prisma.invoice, "update").mockResolvedValue(mockUpdateInvoicePrismaReturn);
+        jest.spyOn(prisma.invoice, 'findUnique').mockResolvedValue(mockFindInvoicePrismaReturn);
+        jest.spyOn(prisma.payment, 'update').mockResolvedValue(mockUpdatePaymentPrismaReturn);
+        jest.spyOn(prisma.invoice, 'update').mockResolvedValue(mockUpdateInvoicePrismaReturn);
 
-        const resultInvoiceId = await module.updateInvoiceAndPaymentInPrisma(invoiceId, mockInvoiceData, journalId, ocrImageUrl);
+        const resultInvoiceId = await module.updateInvoiceAndPaymentInPrisma(
+          invoiceId,
+          mockInvoiceData,
+          journalId,
+          ocrImageUrl
+        );
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
         expect(resultInvoiceId).toEqual(invoiceId);
       });
 
-      it("should throw error if prisma in transaction throws error", () => {
+      it('should throw error if prisma in transaction throws error', () => {
         const mockInvoicePrismaReturn = {
-          id: invoiceId
+          id: invoiceId,
         } as Invoice;
 
-        jest.spyOn(prisma.payment, "update").mockRejectedValue(new Error());
-        jest.spyOn(prisma.invoice, "update").mockResolvedValue(mockInvoicePrismaReturn);
+        jest.spyOn(prisma.payment, 'update').mockRejectedValue(new Error());
+        jest.spyOn(prisma.invoice, 'update').mockResolvedValue(mockInvoicePrismaReturn);
         prisma.$transaction = jest.fn().mockImplementation((cb) => cb(prisma));
 
-        expect(module.updateInvoiceAndPaymentInPrisma(invoiceId, mockInvoiceData, journalId, ocrImageUrl)).rejects.toThrow();
+        expect(
+          module.updateInvoiceAndPaymentInPrisma(invoiceId, mockInvoiceData, journalId, ocrImageUrl)
+        ).rejects.toThrow();
       });
     });
   });
-  describe("journal related steps", () => {
+  describe('journal related steps', () => {
     const journalId = 1;
     const invoiceId = 2;
     const companyId = 3;
     const paymentId = 4;
     const projectId = null;
     const contractId = null;
-    const aichResultId = "testAichId";
-    describe("findUniqueJournalInPrisma", () => {
-      it("should return journal with id, and will return invoiceId", async () => {
+    const aichResultId = 'testAichId';
+    describe('findUniqueJournalInPrisma', () => {
+      it('should return journal with id, and will return invoiceId', async () => {
         const mockImage = {
           id: invoiceId,
           journalId,
           paymentId,
           date: 123456789,
-          eventType: "test",
-          paymentReason: "test",
-          description: "test",
-          vendorOrSupplier: "test",
-          imageUrl: "test",
+          eventType: 'test',
+          paymentReason: 'test',
+          description: 'test',
+          vendorOrSupplier: 'test',
+          imageUrl: 'test',
           createdAt: 123456789,
-          updatedAt: 123456789
+          updatedAt: 123456789,
         } as Invoice;
         const mockFindJournalPrismaReturn = {
           id: journalId,
@@ -331,10 +365,10 @@ describe('/ocr/index.repository', () => {
           companyId: 123,
           createdAt: 123456789,
           updatedAt: 123456789,
-          invoice: mockImage
+          invoice: mockImage,
         } as Journal;
 
-        jest.spyOn(prisma.journal, "findUnique").mockResolvedValue(mockFindJournalPrismaReturn);
+        jest.spyOn(prisma.journal, 'findUnique').mockResolvedValue(mockFindJournalPrismaReturn);
 
         const result = await module.findUniqueJournalInPrisma(journalId);
         expect(result).toEqual(mockFindJournalPrismaReturn);
@@ -343,42 +377,39 @@ describe('/ocr/index.repository', () => {
       });
     });
 
-    describe("createJournalInPrisma", () => {
-      it("should create journal in prisma, and return id", async () => {
+    describe('createJournalInPrisma', () => {
+      it('should create journal in prisma, and return id', async () => {
         const mockCreateJournalPrismaReturn = {
-          id: journalId
+          id: journalId,
         } as Journal;
 
-        jest.spyOn(prisma.journal, "create").mockResolvedValue(mockCreateJournalPrismaReturn);
+        jest.spyOn(prisma.journal, 'create').mockResolvedValue(mockCreateJournalPrismaReturn);
 
         const result = await module.createJournalInPrisma(
           projectId,
           aichResultId,
           contractId,
-          companyId,
+          companyId
         );
         expect(result).toEqual(journalId);
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.journal, "create").mockRejectedValue(new Error());
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.journal, 'create').mockRejectedValue(new Error());
 
-        expect(module.createJournalInPrisma(
-          projectId,
-          aichResultId,
-          contractId,
-          companyId,
-        )).rejects.toThrow();
+        expect(
+          module.createJournalInPrisma(projectId, aichResultId, contractId, companyId)
+        ).rejects.toThrow();
       });
     });
 
-    describe("updateJournalInPrisma", () => {
-      it("should update journal in prisma, and return id", async () => {
+    describe('updateJournalInPrisma', () => {
+      it('should update journal in prisma, and return id', async () => {
         const mockUpdateJournalPrismaReturn = {
-          id: journalId
+          id: journalId,
         } as Journal;
 
-        jest.spyOn(prisma.journal, "update").mockResolvedValue(mockUpdateJournalPrismaReturn);
+        jest.spyOn(prisma.journal, 'update').mockResolvedValue(mockUpdateJournalPrismaReturn);
 
         const result = await module.updateJournalInPrisma(
           journalId,
@@ -389,15 +420,12 @@ describe('/ocr/index.repository', () => {
         expect(result).toEqual(journalId);
       });
 
-      it("should throw error if prisma throws error", () => {
-        jest.spyOn(prisma.journal, "update").mockRejectedValue(new Error());
+      it('should throw error if prisma throws error', () => {
+        jest.spyOn(prisma.journal, 'update').mockRejectedValue(new Error());
 
-        expect(module.updateJournalInPrisma(
-          journalId,
-          aichResultId,
-          projectId,
-          contractId
-        )).rejects.toThrow();
+        expect(
+          module.updateJournalInPrisma(journalId, aichResultId, projectId, contractId)
+        ).rejects.toThrow();
       });
     });
   });

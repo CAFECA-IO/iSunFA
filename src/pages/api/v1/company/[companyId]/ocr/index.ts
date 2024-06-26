@@ -18,7 +18,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
   createOcrInPrisma,
   findManyOCRByCompanyIdWithoutUsedInPrisma,
-} from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+} from '@/lib/utils/repo/ocr.repo';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';

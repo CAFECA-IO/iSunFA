@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IDummyJournal } from '@/interfaces/journal';
+import { IJournalListItem } from '@/interfaces/journal';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { truncateString, numberWithCommas } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
@@ -10,7 +10,7 @@ interface IJournalItemProps {
   isChecked: boolean;
   checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
   // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
-  journal: IDummyJournal;
+  journal: IJournalListItem;
 }
 
 const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
