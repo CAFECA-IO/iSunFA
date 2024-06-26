@@ -287,6 +287,9 @@ function createAccountElementsForSeeder(rootNode: Node) {
     if (!codeSet.has(account.code)) {
       accountsForSeeder.push(account);
       codeSet.add(account.code);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`Duplicated code: ${account.code}, name: ${account.name}`);
     }
 
     node.children.forEach((child) => createAccountElement(child, node, root, type, debit, liquidity));
@@ -299,7 +302,7 @@ function createAccountElementsForSeeder(rootNode: Node) {
   accountsForSeeder.forEach((account) => {
     if (doubleCheck.has(account.code)) {
       // eslint-disable-next-line no-console
-      console.log(`Duplicated code: ${account.code}`);
+      console.log(`Double check duplicated code: ${account.code}`);
     }
     doubleCheck.add(account.code);
   });
