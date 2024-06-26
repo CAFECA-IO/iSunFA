@@ -24,8 +24,8 @@ class Node {
 function countLeadingSpaces(str: string) {
   // Info: (20240625 - Murky) 資料內有全形空格
   // eslint-disable-next-line no-irregular-whitespace
-  const match = str.match(/^[　 ] */);
-  return match ? match[0].length : 0;
+  const spaceCount = str.search(/\S/);
+  return spaceCount;
 }
 
 function buildTree(records: string[][]) {
