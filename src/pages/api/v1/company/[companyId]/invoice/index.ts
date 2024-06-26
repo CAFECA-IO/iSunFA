@@ -7,7 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
-import { handlePrismaSavingLogic } from '@/pages/api/v1/company/[companyId]/invoice/invoice.repository';
+import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAdmin } from '@/lib/utils/auth_check';
 
 interface IPostApiResponseType {

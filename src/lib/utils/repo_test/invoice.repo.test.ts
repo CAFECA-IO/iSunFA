@@ -1,12 +1,12 @@
 import prisma from '@/client';
-import * as module from '@/pages/api/v1/company/[companyId]/invoice/invoice.repository';
+import * as module from '@/lib/utils/repo/invoice.repo';
 import { Company, Invoice, Journal, Payment } from '@prisma/client';
 import * as common from '@/lib/utils/common';
 import { IPayment } from '@/interfaces/payment';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IInvoice } from '@/interfaces/invoice';
 
-jest.mock('../../../../../../lib/utils/common', () => ({
+jest.mock('../common', () => ({
   formatApiResponse: jest.fn(),
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),

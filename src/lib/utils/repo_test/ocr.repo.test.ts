@@ -1,10 +1,10 @@
-import * as module from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import * as module from '@/lib/utils/repo/ocr.repo';
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
 import * as common from '@/lib/utils/common';
 import { Company } from '@prisma/client';
 
-jest.mock('../../../../../../lib/utils/common', () => ({
+jest.mock('../common', () => ({
   formatApiResponse: jest.fn(),
   transformOCRImageIDToURL: jest.fn(),
   timestampInSeconds: jest.fn(),

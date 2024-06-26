@@ -7,7 +7,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import * as parseImageForm from '@/lib/utils/parse_image_form';
 import * as common from '@/lib/utils/common';
 import { ProgressStatus } from '@/constants/account';
-import * as repository from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import * as repository from '@/lib/utils/repo/ocr.repo';
 import { Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import * as authCheck from '@/lib/utils/auth_check';
@@ -26,7 +26,7 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   transformBytesToFileSizeString: jest.fn(),
 }));
 
-jest.mock('./index.repository', () => {
+jest.mock('../../../../../../lib/utils/repo/ocr.repo', () => {
   return {
     findCompanyInPrisma: jest.fn(),
     createOcrInPrisma: jest.fn(),

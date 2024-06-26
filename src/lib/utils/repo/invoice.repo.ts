@@ -33,7 +33,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -60,7 +60,7 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -80,7 +80,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
     } catch (error) {
       // Info: (20240526 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.log(error);
       throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
     }
 
@@ -116,7 +116,7 @@ export async function findUniqueJournalInPrisma(journalId: number) {
     } catch (error) {
       // Depreciate: ( 20240605 - Murky ) Debugging purpose
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.log(error);
       throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -143,7 +143,7 @@ export async function createPaymentInPrisma(paymentData: IPayment) {
     } catch (error) {
       // Depreciate: ( 20240605 - Murky ) Debugging purpose
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.log(error);
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
     return payment;
@@ -193,7 +193,7 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number) {
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return invoice;
@@ -236,7 +236,7 @@ export async function createInvoiceInPrisma(invoiceData: IInvoice, paymentId: nu
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -256,7 +256,7 @@ export async function createInvoiceAndPaymentInPrisma(invoiceData: IInvoice, jou
   } catch (error) {
     // Depreciate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -300,7 +300,7 @@ export async function updateInvoiceInPrisma(invoiceId: number, paymentId: number
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -333,7 +333,7 @@ export async function updateInvoiceAndPaymentInPrisma(
     } catch (error) {
       // Depreciate ( 20240522 - Murky ) Debugging purpose
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.log(error);
       throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
     }
     return updatedInvoiceId;
@@ -388,7 +388,7 @@ export async function createJournalInPrisma(
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -437,7 +437,7 @@ export async function updateJournalInPrisma(
   } catch (error) {
     // Depreciate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -503,7 +503,7 @@ export async function handlePrismaSavingLogic(
   } catch (error) {
     // Depreciate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }

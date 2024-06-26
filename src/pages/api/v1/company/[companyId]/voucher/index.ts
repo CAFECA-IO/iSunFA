@@ -7,7 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { checkAdmin } from '@/lib/utils/auth_check';
-import { createLineItemInPrisma, createVoucherInPrisma, findUniqueJournalInPrisma, findUniqueVoucherInPrisma, getLatestVoucherNoInPrisma } from '@/pages/api/v1/company/[companyId]/voucher/index.repository';
+import { createLineItemInPrisma, createVoucherInPrisma, findUniqueJournalInPrisma, findUniqueVoucherInPrisma, getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
 
 type ApiResponseType = {
   id: number;

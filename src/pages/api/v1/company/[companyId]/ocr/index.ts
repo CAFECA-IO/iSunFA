@@ -15,7 +15,7 @@ import { parseForm } from '@/lib/utils/parse_image_form';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { createOcrInPrisma, findManyOCRByCompanyIdWithoutUsedInPrisma } from '@/pages/api/v1/company/[companyId]/ocr/index.repository';
+import { createOcrInPrisma, findManyOCRByCompanyIdWithoutUsedInPrisma } from '@/lib/utils/repo/ocr.repo';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
