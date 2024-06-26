@@ -6,8 +6,10 @@ import SalarySidebar from '@/components/salary_sidebar/salary_sidebar';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 const SalaryPage = () => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -26,7 +28,7 @@ const SalaryPage = () => {
           {/* Page Title */}
           <section className="flex flex-col gap-16px pb-20px pt-60px">
             <div className="text-h2 font-semibold leading-h2 text-text-neutral-secondary">
-              Employees List
+              {t('SALARY.EMPLOYEES_LIST')}
             </div>
             {/* line */}
             <div className="my-10px grow bg-divider-stroke-lv-4">
@@ -67,7 +69,7 @@ const SalaryPage = () => {
                   />
                 </svg>
               </div>
-              <p className="text-base font-medium text-inherit">Add New Employee</p>
+              <p className="text-base font-medium text-inherit">{t('SALARY.ADD_NEW_EMPLOYEE')}</p>
             </div>
             <div className="flex cursor-pointer items-center gap-8px rounded-xs border border-button-stroke-secondary px-24px py-10px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover">
               <div className="text-inherit">
@@ -86,7 +88,7 @@ const SalaryPage = () => {
                   />
                 </svg>
               </div>
-              <p className="text-base font-medium text-inherit">One-Click Removal</p>
+              <p className="text-base font-medium text-inherit">{t('SALARY.ONE_CLICK_REMOVAL')}</p>
             </div>
           </section>
           {/* Divider */}
@@ -116,7 +118,9 @@ const SalaryPage = () => {
                   />
                 </svg>
               </div>
-              <div className="text-sm font-medium text-divider-text-lv-1">Employees List</div>
+              <div className="text-sm font-medium text-divider-text-lv-1">
+                {t('SALARY.EMPLOYEES_LIST')}
+              </div>
             </div>
             {/* line */}
             <div className="grow bg-divider-stroke-lv-3">
@@ -220,7 +224,9 @@ const SalaryPage = () => {
                 />
               </svg>
             </div>
-            <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+            <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+              {t('SALARY.EMPTY')}
+            </div>
           </section>
         </div>
       </main>
@@ -233,7 +239,7 @@ const SalaryPage = () => {
           <div className="flex items-center justify-between gap-24px">
             {/* title */}
             <div className="text-base font-semibold text-text-neutral-secondary">
-              Employees List
+              {t('SALARY.EMPLOYEES_LIST')}
             </div>
             {/* buttons */}
             <div className="flex gap-12px">
@@ -366,7 +372,9 @@ const SalaryPage = () => {
                 />
               </svg>
             </div>
-            <div className="text-sm font-medium text-divider-text-lv-1">Employees List</div>
+            <div className="text-sm font-medium text-divider-text-lv-1">
+              {t('SALARY.EMPLOYEES_LIST')}
+            </div>
           </div>
           {/* line */}
           <div className="grow bg-divider-stroke-lv-3">
@@ -445,7 +453,9 @@ const SalaryPage = () => {
               />
             </svg>
           </div>
-          <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+          <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+            {t('SALARY.EMPTY')}
+          </div>
         </section>
       </main>
     </>
@@ -457,7 +467,7 @@ const SalaryPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>Salary - iSunFA</title>
+        <title>{t('SALARY.SALARY_ISUNFA')}</title>
       </Head>
 
       <div className="font-barlow">
