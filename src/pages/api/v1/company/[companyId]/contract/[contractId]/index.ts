@@ -15,7 +15,7 @@ export default async function handler(
       case 'GET': {
         // let shouldContinue: boolean = true;
         // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) listContract
+        // TODO: (20240625 - Jacky) getContract
         const getContract = newDummyContracts[0];
         statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
         payload = getContract;
@@ -24,7 +24,7 @@ export default async function handler(
       case 'PUT': {
         // let shouldContinue: boolean = true;
         // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) createContract
+        // TODO: (20240625 - Jacky) updateContract
         const updatedContract: IContract = newDummyContracts[0];
         statusMessage = STATUS_MESSAGE.CREATED;
         payload = updatedContract;
