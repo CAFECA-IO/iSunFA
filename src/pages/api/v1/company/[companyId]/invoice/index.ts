@@ -47,7 +47,7 @@ function formatOcrId(ocrId: any): number | undefined {
   }
 
   // ToDo (20240618 - Murky) Need to use type guard instead
-  if (typeof ocrId !== "number") {
+  if (typeof ocrId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const ocrIdNumber = Number(ocrId);
@@ -106,10 +106,7 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   return json.payload as IAccountResultStatus;
 }
 
-async function handlePostRequest(
-  companyId: number,
-  req: NextApiRequest,
-) {
+async function handlePostRequest(companyId: number, req: NextApiRequest) {
   // Info (20240612 - Murky) ocrId is optional, if not provided, set it to undefined
   const { invoice, ocrId } = req.body;
 

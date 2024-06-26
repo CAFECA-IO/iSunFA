@@ -153,44 +153,34 @@ model CompanySetting {
 }
 
 model Contract {
-  id                Int    @id @default(autoincrement())
-  aichResultId      String @unique @map("aich_result_id")
-  contractContentId Int?   @unique @map("contract_content_id")
-  projectId         Int?   @map("project_id")
-  companyId         Int    @map("company_id")
-  createdAt         Int    @map("created_at")
-  updatedAt         Int    @map("updated_at")
-
-  journal Journal[]
-
-  company         Company          @relation(fields: [companyId], references: [id])
-  contractContent ContractContent? @relation(fields: [contractContentId], references: [id])
-  project         Project?         @relation(fields: [projectId], references: [id])
-}
-
-model ContractContent {
-  id                Int       @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
+  aichResultId String @unique @map("aich_result_id")
+  fileUrl      String @map("file_url")
+  projectId    Int?   @map("project_id")
+  companyId    Int    @map("company_id")
   name              String
   signatory         String
-  signatoryDate     Int       @map("signatory_date")
+  signatoryDate     Int     @map("signatory_date")
   status            String
-  paymentId         Int       @unique @map("payment_id")
-  hasContractDate   Boolean   @map("has_contract_date")
-  contractStartDate Int?      @map("contract_start_date")
-  contractEndDate   Int?      @map("contract_end_date")
-  hasDeadlineDate   Boolean   @map("has_deadline_date")
-  deadlineDate      Int?      @map("deadline_date")
-  hasWarrantyDate   Boolean   @map("has_warranty_date")
-  warrantyStartDate Int?      @map("warranty_start_date")
-  warrantyEndDate   Int?      @map("warranty_end_date")
-  serviceType       String    @map("service_type")
-  estimatedCost     Int?      @map("estimated_cost")
-  createdAt         Int       @map("created_at")
-  updatedAt         Int       @map("updated_at")
-  contract          Contract?
-  payment           Payment   @relation(fields: [paymentId], references: [id])
+  paymentId         Int     @unique @map("payment_id")
+  hasContractDate   Boolean @map("has_contract_date")
+  contractStartDate Int?    @map("contract_start_date")
+  contractEndDate   Int?    @map("contract_end_date")
+  hasDeadlineDate   Boolean @map("has_deadline_date")
+  deadlineDate      Int?    @map("deadline_date")
+  hasWarrantyDate   Boolean @map("has_warranty_date")
+  warrantyStartDate Int?    @map("warranty_start_date")
+  warrantyEndDate   Int?    @map("warranty_end_date")
+  serviceType       String  @map("service_type")
+  estimatedCost     Int?    @map("estimated_cost")
+  createdAt    Int    @map("created_at")
+  updatedAt    Int    @map("updated_at")
 
-  @@map("contract_content")
+  journal         Journal[]
+
+  company Company  @relation(fields: [companyId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+  payment Payment @relation(fields: [paymentId], references: [id])
 }
 
 model Department {
@@ -339,6 +329,7 @@ model Ocr {
   imageUrl     String @map("image_url")
   imageSize    Float  @map("image_size")
   status       String
+  type         String // Info (20240626 - Jacky) ex: "invoice", "contract"
   createdAt    Int    @map("created_at")
   updatedAt    Int    @map("updated_at")
 
@@ -399,7 +390,7 @@ model Payment {
   createdAt         Int              @map("created_at")
   updatedAt         Int              @map("updated_at")
   invoice           Invoice?
-  contractContent   ContractContent?
+  contract          Contract?
 }
 
 model PaymentRecord {

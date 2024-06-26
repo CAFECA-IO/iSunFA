@@ -17,7 +17,7 @@ export async function findManyJournalsInPrisma(
   try {
     journals = await prisma.journal.findMany({
       orderBy: {
-        createdAt: sort === 'asc' ? 'asc' : 'desc'
+        createdAt: sort === 'asc' ? 'asc' : 'desc',
       },
       skip: offset,
       take: limit,
@@ -25,7 +25,7 @@ export async function findManyJournalsInPrisma(
         companyId,
         createdAt: {
           gte: startDateInSecond,
-          lte: endDateInSecond
+          lte: endDateInSecond,
         },
         invoice: {
           eventType,
@@ -34,48 +34,44 @@ export async function findManyJournalsInPrisma(
           {
             invoice: {
               vendorOrSupplier: {
-                contains: search
-              }
-            }
+                contains: search,
+              },
+            },
           },
           {
             invoice: {
               description: {
-                contains: search
-              }
-            }
+                contains: search,
+              },
+            },
           },
           {
             voucher: {
               no: {
-                contains: search
-              }
-            }
-          }
-        ]
+                contains: search,
+              },
+            },
+          },
+        ],
       },
       include: {
         project: true,
-        contract: {
-          include: {
-            contractContent: true,
-          }
-        },
+        contract: true,
         invoice: {
           include: {
-            payment: true
-          }
+            payment: true,
+          },
         },
         voucher: {
           include: {
             lineItems: {
               include: {
-                account: true
-              }
-            }
-          }
-        }
-      }
+                account: true,
+              },
+            },
+          },
+        },
+      },
     });
   } catch (error) {
     // Deprecated: (20240522 - Murk) Debugging purpose
@@ -96,26 +92,22 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
       },
       include: {
         project: true,
-        contract: {
-          include: {
-            contractContent: true,
-          }
-        },
+        contract: true,
         invoice: {
           include: {
             payment: true,
-          }
+          },
         },
         voucher: {
           include: {
             lineItems: {
               include: {
                 account: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
   } catch (error) {
     // Deprecated: (20240522 - Murk) Debugging purpose

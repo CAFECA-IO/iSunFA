@@ -38,25 +38,21 @@ export interface IJournalListItem {
 
 export type IJournalFromPrismaIncludeProjectContractInvoiceVoucher = Prisma.JournalGetPayload<{
   include: {
-    contract: {
-      include: {
-        contractContent: true;
-      }
-    };
+    contract: true;
     project: true;
     invoice: {
       include: {
         payment: true;
-      }
+      };
     };
     voucher: {
       include: {
         lineItems: {
           include: {
             account: true;
-          }
-        }
-      }
-    }
-  }
+          };
+        };
+      };
+    };
+  };
 }>;

@@ -11,22 +11,22 @@ jest.mock('../common', () => ({
 }));
 
 describe('/ocr/index.repository', () => {
-  describe("findUniqueCompanyInPrisma", () => {
-    it("should create company in prisma", async () => {
+  describe('findUniqueCompanyInPrisma', () => {
+    it('should create company in prisma', async () => {
       const companyId = 1;
 
       const mockResult = {
         id: companyId,
       } as Company;
 
-      jest.spyOn(prisma.company, "findUnique").mockResolvedValue(mockResult);
+      jest.spyOn(prisma.company, 'findUnique').mockResolvedValue(mockResult);
 
       await expect(module.findUniqueCompanyInPrisma(companyId)).resolves.toEqual(mockResult);
     });
   });
 
-  describe("findManyOCRByCompanyIdWithoutUsedInPrisma", () => {
-    it("should find many ocr by companyId without journalId in prisma", async () => {
+  describe('findManyOCRByCompanyIdWithoutUsedInPrisma', () => {
+    it('should find many ocr by companyId without journalId in prisma', async () => {
       const companyId = 1;
 
       const mockResult = [
@@ -44,14 +44,16 @@ describe('/ocr/index.repository', () => {
         },
       ];
 
-      jest.spyOn(prisma.ocr, "findMany").mockResolvedValue(mockResult);
+      jest.spyOn(prisma.ocr, 'findMany').mockResolvedValue(mockResult);
 
-      await expect(module.findManyOCRByCompanyIdWithoutUsedInPrisma(companyId)).resolves.toEqual(mockResult);
+      await expect(module.findManyOCRByCompanyIdWithoutUsedInPrisma(companyId)).resolves.toEqual(
+        mockResult
+      );
     });
   });
 
-  describe("createOcrInPrisma", () => {
-    it("should create ocr in prisma", async () => {
+  describe('createOcrInPrisma', () => {
+    it('should create ocr in prisma', async () => {
       const companyId = 1;
       const mockAichResult = {
         resultStatus: {
@@ -64,7 +66,7 @@ describe('/ocr/index.repository', () => {
       };
 
       const nowTimestamp = 0;
-      jest.spyOn(common, "timestampInSeconds").mockReturnValue(nowTimestamp);
+      jest.spyOn(common, 'timestampInSeconds').mockReturnValue(nowTimestamp);
 
       const mockOcrResult = {
         id: 1,
@@ -79,9 +81,11 @@ describe('/ocr/index.repository', () => {
         updatedAt: nowTimestamp,
       };
 
-      jest.spyOn(prisma.ocr, "create").mockResolvedValue(mockOcrResult);
+      jest.spyOn(prisma.ocr, 'create').mockResolvedValue(mockOcrResult);
 
-      await expect(module.createOcrInPrisma(companyId, mockAichResult)).resolves.toEqual(mockOcrResult);
+      await expect(module.createOcrInPrisma(companyId, mockAichResult)).resolves.toEqual(
+        mockOcrResult
+      );
     });
   });
 });
