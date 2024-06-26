@@ -58,14 +58,17 @@ function buildTree(records: string[][]) {
 
   const symbolByDeep = ['!', '@', '#', '$', '%'];
   function createMissingCode(node: Node, depth: number): string {
-    if (node.code) {
+    node.children.forEach((child) => createMissingCode(child, depth + 1));
+    if (node.code.length > 0) {
       return node.code;
     }
 
     const childCode = createMissingCode(node.children[0], depth + 1);
-    const code = `${symbolByDeep[depth]}${childCode.slice(0, 3)}`;
+    const code = `${symbolByDeep[depth]}${childCode}`;
+
     // eslint-disable-next-line no-param-reassign
     node.code = code;
+
     return childCode;
   }
 
@@ -267,6 +270,7 @@ function isForUser(node: Node, type: string) {
 function createAccountElementsForSeeder(rootNode: Node) {
   const accountsForSeeder: AccountElement[] = [];
 
+  const codeSet = new Set<string>();
   function createAccountElement(node: Node, parent: Node, root: Node, parentType: string | null, parentDebit: boolean | null, parentLiquidity: boolean | null) {
     const { type, debit, liquidity } = determineTypeDebitLiquidity(node, parentType, parentDebit, parentLiquidity);
     const forUser = isForUser(node, type);
@@ -280,11 +284,25 @@ function createAccountElementsForSeeder(rootNode: Node) {
       parent.code,
       root.code,
     );
-    accountsForSeeder.push(account);
+    if (!codeSet.has(account.code)) {
+      accountsForSeeder.push(account);
+      codeSet.add(account.code);
+    }
+
     node.children.forEach((child) => createAccountElement(child, node, root, type, debit, liquidity));
   }
 
   rootNode.children.forEach((child) => createAccountElement(child, rootNode, rootNode, null, null, null));
+
+  // help me check if any code is duplicated
+  const doubleCheck = new Set<string>();
+  accountsForSeeder.forEach((account) => {
+    if (doubleCheck.has(account.code)) {
+      // eslint-disable-next-line no-console
+      console.log(`Duplicated code: ${account.code}`);
+    }
+    doubleCheck.add(account.code);
+  });
   return accountsForSeeder;
 }
 
