@@ -41,8 +41,7 @@ export function formatIJournal(journalFromPrisma: IJournalFromPrismaIncludeProje
   const { contractId } = journalFromPrisma;
   const imageUrl = journalFromPrisma.invoice?.imageUrl || null;
 
-  const invoice: IInvoice = journalFromPrisma.invoice
-    ? {
+  const invoice: IInvoice = journalFromPrisma.invoice ? {
         journalId: journalFromPrisma.id,
         date: journalFromPrisma.invoice.date,
         eventType: convertStringToEventType(journalFromPrisma.invoice.eventType),
@@ -67,11 +66,9 @@ export function formatIJournal(journalFromPrisma: IJournalFromPrismaIncludeProje
           status: convertStringToPaymentStatusType(journalFromPrisma.invoice.payment.status),
           progress: journalFromPrisma.invoice.payment.progress,
         },
-      }
-    : ({} as IInvoice);
+      } : ({} as IInvoice);
 
-  const voucher: IVoucherDataForSavingToDB = journalFromPrisma.voucher
-    ? {
+  const voucher: IVoucherDataForSavingToDB = journalFromPrisma.voucher ? {
         journalId: journalFromPrisma.id,
         lineItems: journalFromPrisma.voucher.lineItems.map((lineItem) => {
           return {
@@ -83,8 +80,7 @@ export function formatIJournal(journalFromPrisma: IJournalFromPrismaIncludeProje
             accountId: lineItem.account.id,
           };
         }),
-      }
-    : ({} as IVoucherDataForSavingToDB);
+      } : ({} as IVoucherDataForSavingToDB);
 
   return {
     id: journalFromPrisma.id,
