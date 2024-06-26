@@ -23,7 +23,7 @@ type IJournalResponseFromPrisma = {
   projectId: number | null;
   project: { name: string | null } | null;
   contractId: number | null;
-  contract: { contractContent: { name: string | null } | null } | null;
+  contract: { name: string } | null;
   invoice: {
     id: number;
     date: number;
@@ -133,9 +133,7 @@ async function getJournal(journalId: number, companyId: number) {
         contractId: true,
         contract: {
           select: {
-            contractContent: {
-              select: { name: true },
-            },
+            name: true,
           },
         },
       },
@@ -154,7 +152,7 @@ async function getJournal(journalId: number, companyId: number) {
 function formatJournal(journalData: IJournalResponseFromPrisma): IJournal {
   const projectName = journalData?.project?.name;
   const { projectId } = journalData;
-  const contractName = journalData?.contract?.contractContent?.name;
+  const contractName = journalData?.contract?.name;
   const { contractId } = journalData;
   const imageUrl = journalData.invoice?.imageUrl || null;
 
