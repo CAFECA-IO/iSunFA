@@ -23,9 +23,15 @@ export enum AccountType {
   ASSET = 'asset',
   LIABILITY = 'liability',
   EQUITY = 'equity',
+  REVENUE = 'revenue',
+  COST = 'cost',
   INCOME = 'income',
   EXPENSE = 'expense',
+  GAIN_OR_LOSS = 'gainOrLoss',
   OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
+  CASH_FLOW = 'cashFlow',
+  CHANGE_IN_EQUITY = 'changeInEquity',
+  OTHER = 'other',
 }
 
 export enum VoucherType {
