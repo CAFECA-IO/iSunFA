@@ -3,7 +3,6 @@ import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
-import { AccountSystem, AccountType } from '@/constants/account';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
 export async function findUniqueJournalInPrisma(journalId: number | undefined) {
@@ -118,42 +117,6 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return voucherData;
-}
-
-// Deprecated: (20240527 - Murky) This function is for demo purpose only
-export async function createFakeAccountInPrisma(companyId: number) {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  try {
-    const result = await prisma.account.create({
-      data: {
-        company: {
-          connect: {
-            id: companyId,
-          },
-        },
-        system: AccountSystem.IFRS,
-        type: AccountType.EXPENSE,
-        debit: true,
-        liquidity: true,
-        code: '0100032',
-        name: '其他費用',
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      },
-
-      select: {
-        id: true,
-      },
-    });
-
-    return result.id;
-  } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
 }
 
 export async function createLineItemInPrisma(
