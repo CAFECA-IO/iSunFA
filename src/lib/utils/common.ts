@@ -429,7 +429,7 @@ export function transformYYYYMMDDToTimeStampInSecond(str: string) {
 export function setTimestampToDayEnd(timestamp: number) {
   const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
   const date = new Date(timestampMilliSeconds);
-  date.setHours(23, 59, 59, 0);
+  date.setHours(23, 59, 59, 999);
   return timestampInSeconds(date.getTime());
 }
 
