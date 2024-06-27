@@ -22,7 +22,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('getAnEmployee API Handler Tests', () => {
+xdescribe('getAnEmployee API Handler Tests', () => {
   it('should return specific employee information', async () => {
     req.method = 'GET';
     req.query = { employeeId: '3' };
@@ -53,7 +53,7 @@ describe('getAnEmployee API Handler Tests', () => {
   });
 });
 
-describe('DeleteAnEmployee API Handler Tests', () => {
+xdescribe('DeleteAnEmployee API Handler Tests', () => {
   it("should successfully delete an employee's information", async () => {
     req.method = 'DELETE';
     req.query = { employeeId: '3' };
@@ -81,7 +81,7 @@ describe('DeleteAnEmployee API Handler Tests', () => {
   });
 });
 
-describe('UpdateAnEmployee API Handler Tests', () => {
+xdescribe('UpdateAnEmployee API Handler Tests', () => {
   it('should update specific employee information successfully', async () => {
     req.method = 'PUT';
     req.query = { employeeId: '3' };

@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { EasyEmployee, IEmployee } from '@/interfaces/employees';
+import { IEasyEmployee, IEmployee } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 
-const responseDataArray: EasyEmployee[] = [
+const responseDataArray: IEasyEmployee[] = [
   {
     id: 1,
     name: 'John Doe',
@@ -27,11 +27,11 @@ const responseDataArray: EasyEmployee[] = [
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<EasyEmployee[] | EasyEmployee>>
+  res: NextApiResponse<IResponseData<IEasyEmployee[] | IEasyEmployee>>
 ) {
   try {
     if (req.method === 'GET') {
-      const { httpCode, result } = formatApiResponse<EasyEmployee[]>(
+      const { httpCode, result } = formatApiResponse<IEasyEmployee[]>(
         STATUS_MESSAGE.SUCCESS_GET,
         responseDataArray
       );
@@ -58,12 +58,18 @@ export default function handler(
       ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const { httpCode, result } = formatApiResponse<EasyEmployee>(STATUS_MESSAGE.CREATED, null);
+      const { httpCode, result } = formatApiResponse<IEasyEmployee>(
+        STATUS_MESSAGE.CREATED,
+        {} as IEasyEmployee
+      );
       res.status(httpCode).json(result);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<EasyEmployee>(error.message, {} as EasyEmployee);
+    const { httpCode, result } = formatApiResponse<IEasyEmployee>(
+      error.message,
+      {} as IEasyEmployee
+    );
     res.status(httpCode).json(result);
   }
 }

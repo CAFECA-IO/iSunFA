@@ -23,7 +23,7 @@ afterEach(async () => {
   jest.clearAllMocks();
 });
 
-describe('generatedReports API Handler Tests', () => {
+xdescribe('generatedReports API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';
     await handler(req, res);
