@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { EmployeeData, IEmployee } from '@/interfaces/employees';
+import { EmployeeData } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
@@ -68,7 +68,9 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
       },
     });
   } catch (error) {
-    return;
+    // Info: (20240627 - Gibbs) console error only
+    // eslint-disable-next-line no-console
+    console.log(error);
   }
 }
 
@@ -95,6 +97,9 @@ async function updateEmployee(
       },
     });
   } catch (error) {
+    // Info: (20240627 - Gibbs) console error only
+    // eslint-disable-next-line no-console
+    console.log(error);
   }
   const employee = await prisma.employee.findUnique({
     where: {
@@ -176,21 +181,22 @@ export default async function handler(
         if (shouldContinue) {
           if (employeeIdNumber) {
             statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-            await deleteEmployee(employeeIdNumber)
+            await deleteEmployee(employeeIdNumber);
           }
         }
         break;
       }
       case 'PUT': {
         if (shouldContinue) {
-          const {
+          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency } = req.body;
+          const employeeData = await updateEmployee(
+            employeeIdNumber,
             salary,
             bonus,
             insurancePayment,
             salaryPayMode,
-            payFrequency,
-          } = req.body;
-          const employeeData = await updateEmployee(employeeIdNumber, salary, bonus, insurancePayment, salaryPayMode, payFrequency);
+            payFrequency
+          );
           statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
           payload = employeeData;
         }
@@ -206,6 +212,9 @@ export default async function handler(
     statusMessage = error.message;
     payload = {} as EmployeeData;
   }
-  const { httpCode, result } = formatApiResponse<EmployeeData[] | EmployeeData>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<EmployeeData[] | EmployeeData>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }

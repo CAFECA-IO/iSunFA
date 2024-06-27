@@ -1,6 +1,6 @@
 export type EmployeeDepartments = string[] | null;
 
-export type EmployeeData = IEmployeeData | {};
+export type EmployeeData = IEmployeeData | object;
 
 export type EasyEmployee = IEasyEmployee | null;
 
