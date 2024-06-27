@@ -98,15 +98,15 @@ model Client {
 }
 
 model Company {
-  id        Int     @id @default(autoincrement())
-  name      String
-  code      String  @unique
-  regional  String
-  kycStatus Boolean @map("kyc_status")
-  imageId   String? @map("image_id")
-  startDate Int     @map("start_date")
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
+  id              Int              @id @default(autoincrement())
+  name            String
+  code            String           @unique
+  regional        String
+  kycStatus       Boolean          @map("kyc_status")
+  imageId         String?          @map("image_id")
+  startDate       Int              @map("start_date")
+  createdAt       Int              @map("created_at")
+  updatedAt       Int              @map("updated_at")
 
   admins          Admin[]
   clients         Client[]
