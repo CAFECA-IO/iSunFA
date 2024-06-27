@@ -12,8 +12,7 @@
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
     "validate": "npm run test && npm run check-format && npm run lint",
-    "production": "next start -p 80",
-    "generate-account-json": "ts-node  -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' prisma/account/account_csv_to_json.ts"
+    "production": "next start -p 80"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
