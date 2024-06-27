@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { EmployeeData } from '@/interfaces/employees';
+import { IEmployeeData } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
@@ -7,7 +7,7 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuth } from '@/lib/utils/auth_check';
 import prisma from '@/client';
 
-async function getEmployee(employeeIdNumber: number): Promise<EmployeeData> {
+async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
   const employee = await prisma.employee.findUnique({
     where: {
       id: employeeIdNumber,
@@ -36,7 +36,7 @@ async function getEmployee(employeeIdNumber: number): Promise<EmployeeData> {
     },
   });
   const projectNames = projects.map((project) => project.project.name);
-  let employeeData = {} as EmployeeData;
+  let employeeData = {} as IEmployeeData;
   if (employee) {
     employeeData = {
       id: employee.id,
@@ -81,7 +81,7 @@ async function updateEmployee(
   insurancePayment: number,
   salaryPayMode: string,
   payFrequency: string
-): Promise<EmployeeData> {
+): Promise<IEmployeeData> {
   try {
     await prisma.employee.update({
       where: {
@@ -129,7 +129,7 @@ async function updateEmployee(
     },
   });
   const projectNames = projects.map((project) => project.project.name);
-  let employeeData = {} as EmployeeData;
+  let employeeData = {} as IEmployeeData;
   if (employee) {
     employeeData = {
       id: employee.id,
@@ -149,11 +149,11 @@ async function updateEmployee(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<EmployeeData>>
+  res: NextApiResponse<IResponseData<IEmployeeData>>
 ) {
   let shouldContinue: boolean = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload = {} as EmployeeData;
+  let payload = {} as IEmployeeData;
 
   try {
     const session = await getSession(req, res);
@@ -204,17 +204,14 @@ export default async function handler(
       }
       default:
         statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-        payload = {} as EmployeeData;
+        payload = {} as IEmployeeData;
         break;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = {} as EmployeeData;
+    payload = {} as IEmployeeData;
   }
-  const { httpCode, result } = formatApiResponse<EmployeeData[] | EmployeeData>(
-    statusMessage,
-    payload
-  );
+  const { httpCode, result } = formatApiResponse<IEmployeeData>(statusMessage, payload);
   res.status(httpCode).json(result);
 }
