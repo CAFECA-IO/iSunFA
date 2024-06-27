@@ -7,7 +7,7 @@ import { default30DayPeriodInSec, SortOptions } from '@/constants/display';
 import { ContractStatus, ContractStatusWithAll } from '@/constants/contract';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { dummyContracts } from '@/interfaces/contract';
+import { newDummyContracts } from '@/interfaces/contract';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
 import ProjectContractList from '@/components/project_contract_list/project_contract_list';
@@ -26,7 +26,7 @@ const ProjectContractsPageBody = () => {
   const [filterPeriod, setFilterPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [search, setSearch] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [filteredContracts, setFilteredContracts] = useState(dummyContracts);
+  const [filteredContracts, setFilteredContracts] = useState(newDummyContracts);
 
   const {
     period: periodFromFilterModal,
@@ -35,12 +35,12 @@ const ProjectContractsPageBody = () => {
   } = filterOptionsForContract;
 
   useEffect(() => {
-    const filtered = dummyContracts
+    const filtered = newDummyContracts
       .filter((contract) => {
         // Info: (20240621 - Julian) Filter by search
-        const { contractName, projectName } = contract;
+        const { name, projectName } = contract;
         return (
-          contractName.toLowerCase().includes(search.toLowerCase()) ||
+          name.toLowerCase().includes(search.toLowerCase()) ||
           projectName.toLowerCase().includes(search.toLowerCase())
         );
       })
@@ -49,25 +49,18 @@ const ProjectContractsPageBody = () => {
         return filterStatus === ContractStatusWithAll.ALL || contract.status === filterStatus;
       })
       .filter((contract) => {
-        const { contractDuration } = contract.period;
-        const contractDurationStart = parseInt(contractDuration.start, 10);
+        const { contractStartDate } = contract;
         if (filterPeriod.startTimeStamp === 0 && filterPeriod.endTimeStamp === 0) return true;
         return (
-          contractDurationStart >= filterPeriod.startTimeStamp &&
-          contractDurationStart <= filterPeriod.endTimeStamp
+          contractStartDate >= filterPeriod.startTimeStamp &&
+          contractStartDate <= filterPeriod.endTimeStamp
         );
       })
       .sort((a, b) => {
         if (sorting === SortOptions.newest) {
-          return (
-            parseInt(b.period.contractDuration.start, 10) -
-            parseInt(a.period.contractDuration.start, 10)
-          );
+          return b.contractStartDate - a.contractStartDate;
         }
-        return (
-          parseInt(a.period.contractDuration.start, 10) -
-          parseInt(b.period.contractDuration.start, 10)
-        );
+        return a.contractStartDate - b.contractStartDate;
       });
     setFilteredContracts(filtered);
   }, [search, filterStatus, filterPeriod, sorting]);
@@ -86,7 +79,7 @@ const ProjectContractsPageBody = () => {
     }
   }, [periodFromFilterModal, sortFromFilterModal, statusFromFilterModal]);
 
-  const totalPages = Math.ceil(dummyContracts.length / 10); // ToDo: (20240620 - Julian) Replace with actual data
+  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: (20240620 - Julian) Replace with actual data
 
   const {
     targetRef: statusRef,

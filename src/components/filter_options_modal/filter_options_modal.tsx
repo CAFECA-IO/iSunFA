@@ -7,6 +7,7 @@ import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
 import { FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import { AllReportTypesKey, AllReportTypesOptions } from '@/interfaces/report_type';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { useTranslation } from 'next-i18next';
 
 interface IFilterOptionsModalProps {
   isModalVisible: boolean;
@@ -21,6 +22,7 @@ const FilterOptionsModal = ({
   filterType,
   getFilterOptions = () => {},
 }: IFilterOptionsModalProps) => {
+  const { t } = useTranslation('common');
   const [period, setPeriod, periodRef] = useStateRef(default30DayPeriodInSec);
   const [sort, setSort, sortRef] = useStateRef<SortOptions>(SortOptions.newest);
   const [selectedReportType, setSelectedReportType, selectedReportTypeRef] = useStateRef<
@@ -182,7 +184,6 @@ const FilterOptionsModal = ({
       </div>
     </div>
   );
-
   const displayedSortMenu = (
     <div
       ref={historySortMenuRef}
@@ -192,7 +193,7 @@ const FilterOptionsModal = ({
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isSortSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
       >
-        {sort}
+        {t(sort)}
       </p>
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +222,7 @@ const FilterOptionsModal = ({
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {sorting}
+              {t(sorting)}
             </li>
           ))}
         </ul>

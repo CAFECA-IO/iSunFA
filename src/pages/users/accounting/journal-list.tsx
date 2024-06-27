@@ -14,8 +14,10 @@ import { APIName } from '@/constants/api_connection';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useTranslation } from 'next-i18next';
 
 const JournalListPage = () => {
+  const { t } = useTranslation('common');
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const {
     isLoading,
@@ -44,12 +46,12 @@ const JournalListPage = () => {
           {/* Info: (20240417 - Julian) Title */}
           <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
             <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-              {companyName} Journal List
+              {companyName} {t('JOURNAL.JOURNAL_LIST')}
             </h1>
             <Link href={ISUNFA_ROUTE.ACCOUNTING}>
               <Button type="button" variant="tertiary" className="text-sm md:text-base">
                 <FiPlusCircle size={24} />
-                <p>Add new journal</p>
+                <p>{t('JOURNAL.ADD_NEW_JOURNAL')}</p>
               </Button>
             </Link>
           </div>
@@ -75,7 +77,7 @@ const JournalListPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240419 - Julian) i18n */}
-        <title>Journal List - iSunFA</title>
+        <title>{t('JOURNAL.JOURNAL_LIST_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">

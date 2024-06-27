@@ -1,11 +1,13 @@
 import Image from 'next/image';
 import { AccountingStep } from '@/interfaces/stepper_string';
+import { useTranslation } from 'next-i18next';
 
 interface IAccountingStepperProps {
   step: AccountingStep;
 }
 
 const AccountingStepper = ({ step }: IAccountingStepperProps) => {
+  const { t } = useTranslation('common');
   const isStepTwo = step === AccountingStep.STEP_TWO;
 
   // Info: (20240423 - Julian) Step 1 icon
@@ -24,7 +26,7 @@ const AccountingStepper = ({ step }: IAccountingStepperProps) => {
       {/* Info: (20240422 - Julian) Step 1 */}
       <div className={`z-10 flex flex-col items-center gap-2px text-sm ${stepOneStyle}`}>
         <Image src={stepOneSrc} width={30} height={30} alt="step_1_upload" />
-        <p>Upload</p>
+        <p>{t('JOURNAL.UPLOAD')}</p>
       </div>
 
       {/* Info: (20240422 - Julian) Connecting Line */}
@@ -35,7 +37,7 @@ const AccountingStepper = ({ step }: IAccountingStepperProps) => {
       {/* Info: (20240422 - Julian) Step 2 */}
       <div className={`z-10 flex flex-col items-center gap-2px text-sm ${stepTwoStyle}`}>
         <Image src={stepTwoSrc} width={30} height={30} alt="step_2_fill_up_form" />
-        <p>Fill Up Form</p>
+        <p>{t('JOURNAL.FILL_UP_FORM')}</p>
       </div>
 
       {/* Info: (20240422 - Julian) Connecting Line */}
@@ -44,7 +46,7 @@ const AccountingStepper = ({ step }: IAccountingStepperProps) => {
       {/* Info: (20240422 - Julian) Step 3 */}
       <div className="z-10 flex flex-col items-center gap-2px text-sm text-lightGray4">
         <Image src="/icons/confirm.svg" width={30} height={30} alt="step_3_confirm" />
-        <p>Confirm</p>
+        <p>{t('JOURNAL.CONFIRM')}</p>
       </div>
     </div>
   );

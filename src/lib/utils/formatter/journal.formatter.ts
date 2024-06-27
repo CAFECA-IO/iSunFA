@@ -1,13 +1,19 @@
-import { IInvoice } from "@/interfaces/invoice";
-import { IJournal, IJournalFromPrismaIncludeProjectContractInvoiceVoucher, IJournalListItem } from "@/interfaces/journal";
-import { IVoucherDataForSavingToDB } from "@/interfaces/voucher";
+import { IInvoice } from '@/interfaces/invoice';
+import {
+  IJournal,
+  IJournalFromPrismaIncludeProjectContractInvoiceVoucher,
+  IJournalListItem,
+} from '@/interfaces/journal';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import {
   convertStringToEventType,
   convertStringToPaymentPeriodType,
   convertStringToPaymentStatusType,
 } from '@/lib/utils/type_guard/account';
 
-export function formatSingleIJournalListItem(journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher): IJournalListItem {
+export function formatSingleIJournalListItem(
+  journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
+): IJournalListItem {
   return {
     id: journalFromPrisma.id,
     date: journalFromPrisma.createdAt,
@@ -16,10 +22,10 @@ export function formatSingleIJournalListItem(journalFromPrisma: IJournalFromPris
     fromTo: journalFromPrisma.invoice?.vendorOrSupplier,
     account: journalFromPrisma.voucher?.lineItems.map((lineItem) => {
       return {
-          id: lineItem.id,
-          debit: lineItem.debit,
-          account: lineItem.account.name,
-          amount: lineItem.amount,
+        id: lineItem.id,
+        debit: lineItem.debit,
+        account: lineItem.account.name,
+        amount: lineItem.amount,
       };
     }),
     projectName: journalFromPrisma.project?.name,
@@ -29,19 +35,26 @@ export function formatSingleIJournalListItem(journalFromPrisma: IJournalFromPris
   };
 }
 
-export function formatIJournalListItems(journalsFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]): IJournalListItem[] {
-  const journalLineItems = journalsFromPrisma.map((journalFromPrisma) => formatSingleIJournalListItem(journalFromPrisma));
+export function formatIJournalListItems(
+  journalsFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]
+): IJournalListItem[] {
+  const journalLineItems = journalsFromPrisma.map(
+    (journalFromPrisma) => formatSingleIJournalListItem(journalFromPrisma)
+  );
   return journalLineItems;
 }
 
-export function formatIJournal(journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher): IJournal {
+export function formatIJournal(
+  journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
+): IJournal {
   const projectName = journalFromPrisma?.project?.name;
   const { projectId } = journalFromPrisma;
-  const contractName = journalFromPrisma?.contract?.contractContent?.name;
+  const contractName = journalFromPrisma?.contract?.name;
   const { contractId } = journalFromPrisma;
   const imageUrl = journalFromPrisma.invoice?.imageUrl || null;
 
-  const invoice: IInvoice = journalFromPrisma.invoice ? {
+  const invoice: IInvoice = journalFromPrisma.invoice
+    ? {
         journalId: journalFromPrisma.id,
         date: journalFromPrisma.invoice.date,
         eventType: convertStringToEventType(journalFromPrisma.invoice.eventType),
@@ -66,9 +79,11 @@ export function formatIJournal(journalFromPrisma: IJournalFromPrismaIncludeProje
           status: convertStringToPaymentStatusType(journalFromPrisma.invoice.payment.status),
           progress: journalFromPrisma.invoice.payment.progress,
         },
-      } : ({} as IInvoice);
+      }
+    : ({} as IInvoice);
 
-  const voucher: IVoucherDataForSavingToDB = journalFromPrisma.voucher ? {
+  const voucher: IVoucherDataForSavingToDB = journalFromPrisma.voucher
+    ? {
         journalId: journalFromPrisma.id,
         lineItems: journalFromPrisma.voucher.lineItems.map((lineItem) => {
           return {
@@ -80,7 +95,8 @@ export function formatIJournal(journalFromPrisma: IJournalFromPrismaIncludeProje
             accountId: lineItem.account.id,
           };
         }),
-      } : ({} as IVoucherDataForSavingToDB);
+      }
+    : ({} as IVoucherDataForSavingToDB);
 
   return {
     id: journalFromPrisma.id,
