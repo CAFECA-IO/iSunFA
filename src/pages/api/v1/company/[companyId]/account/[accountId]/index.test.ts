@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import * as module from '@/pages/api/v1/company/[companyId]/account/[accountId]/index';
 import prisma from '@/client';
 import * as authCheck from '@/lib/utils/auth_check';
+import { Account } from '@prisma/client';
 import { IAccount } from '@/interfaces/accounting_account';
 
 jest.mock('../../../../../../../lib/utils/auth_check', () => {
@@ -20,6 +21,22 @@ const session = {
   // Info (20240516 - Murky) - Mocking session
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
+const mockAccountInDB: Account = {
+  id: testAccountId,
+  companyId,
+  system: 'IFRS',
+  type: 'asset',
+  debit: true,
+  liquidity: true,
+  code: '1103-1',
+  parentCode: '1103',
+  rootCode: '1100',
+  forUser: true,
+  name: 'Sun Bank',
+  createdAt: 1000000000,
+  updatedAt: 1000000000,
+};
+
 const mockAccount: IAccount = {
   id: testAccountId,
   companyId,
@@ -54,7 +71,7 @@ afterEach(() => {
 
 describe('GET account by id', () => {
   it('should return account when account id is provided correctly', async () => {
-    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(mockAccount);
+    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(mockAccountInDB);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: `${testAccountId}` };
     const { httpCode, result } = await module.handleGetRequest(req, res);
