@@ -10,6 +10,7 @@ import JournalList from '@/components/journal_list/journal_list';
 import Pagination from '@/components/pagination/pagination';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { JournalListSubTab } from '@/constants/journal';
+import { useTranslation } from 'next-i18next';
 
 interface IJournalListBodyProps {
   journals: IJournalListItem[];
@@ -19,6 +20,7 @@ interface IJournalListBodyProps {
 }
 
 const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalListBodyProps) => {
+  const { t } = useTranslation('common');
   const {
     targetRef: typeMenuRef,
     componentVisible: isTypeMenuOpen,
@@ -207,7 +209,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
             fill="#001840"
           />
         </svg>
-        <p>Select</p>
+        <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
       </button>
     </div>
   );
@@ -215,14 +217,14 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
   const isDisplayedJournalList =
     success === false && errorCode ? (
       <>
-        <p>Failed to fetch data</p>
+        <p>{t('JOURNAL.FAILED_TO_FETCH_DATA')}</p>
         <p>{errorCode}</p>
       </>
     ) : isLoading === true || journals.length < 1 ? (
       // Info: (20240419 - Julian) If loading or no data
       <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
         <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-        <p>Empty</p>
+        <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
       </div>
     ) : (
       <>
@@ -247,7 +249,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         <p
           className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
-          Uploaded <span className="hidden md:block">Events</span>
+          {t('JOURNAL.UPLOADED')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
           {uploadedEventsCount}
@@ -261,7 +263,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         <p
           className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
-          Upcoming <span className="hidden md:block">Events</span>
+          {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
           {upcomingEventsCount}
@@ -278,13 +280,13 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
       <div className="my-10px flex items-center gap-24px text-sm md:items-end">
         {/* Info: (20240417 - Julian) Type */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-navyBlue2">Type</p>
+          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
           {displayedTypeDropMenu}
         </div>
 
         {/* Info: (20240418 - Julian) Sort by */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-navyBlue2">Sort by</p>
+          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
           {displayedSortByDropMenu}
         </div>
 
@@ -320,7 +322,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
       <div className="my-5 flex items-center gap-4">
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/bill.svg" width={16} height={16} alt="bill_icon" />
-          <p>Journal List</p>
+          <p>{t('JOURNAL.JOURNAL_LIST')}</p>
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>

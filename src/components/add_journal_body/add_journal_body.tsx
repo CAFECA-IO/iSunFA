@@ -6,8 +6,10 @@ import AccountingStepper from '@/components/accounting_stepper/accounting_steppe
 import { Button } from '@/components/button/button';
 import { AccountingStep } from '@/interfaces/stepper_string';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useTranslation } from 'next-i18next';
 
 const AddJournalBody = () => {
+  const { t } = useTranslation('common');
   const { selectedOCR, selectOCRHandler } = useAccountingCtx();
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
@@ -51,7 +53,7 @@ const AddJournalBody = () => {
         onClick={skipClickHandler}
         className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
       >
-        <p>Skip</p>
+        <p>{t('JOURNAL.SKIP')}</p>
         <FaArrowRight />
       </button>
     </div>
@@ -65,12 +67,12 @@ const AddJournalBody = () => {
         onClick={skipClickHandler}
         className="flex flex-1 items-center justify-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
       >
-        <p>Skip</p>
+        <p>{t('JOURNAL.SKIP')}</p>
         <FaArrowRight />
       </button>
       {/* Info: (20240422 - Julian) Next button */}
       <Button disabled className="flex-1 px-16px py-8px">
-        Next
+        {t('JOURNAL.NEXT')}
       </Button>
     </div>
   ) : null;
@@ -82,7 +84,9 @@ const AddJournalBody = () => {
           {/* Info: (20240422 - Julian) Title */}
           <div className="flex h-45px items-center gap-24px">
             {displayBackButton}
-            <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">Add New Journal</h1>
+            <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
+              {t('JOURNAL.ADD_NEW_JOURNAL')}
+            </h1>
           </div>
 
           {/* Info: (20240422 - Julian) Divider */}

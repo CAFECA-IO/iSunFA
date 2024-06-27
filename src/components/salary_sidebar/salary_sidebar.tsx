@@ -2,8 +2,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
 
 const SalarySidebar = () => {
+  const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -28,7 +30,7 @@ const SalarySidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            Salary
+            {t('SALARY.SALARY')}
           </p>
         </div>
 
@@ -63,7 +65,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                Employees List
+                {t('SALARY.EMPLOYEES_LIST')}
               </p>
             </Link>
 
@@ -90,7 +92,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                Salary Book
+                {t('SALARY.SALARY_BOOK')}
               </p>
             </Link>
           </div>

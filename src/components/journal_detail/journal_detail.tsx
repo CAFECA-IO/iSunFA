@@ -12,6 +12,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { ILineItem } from '@/interfaces/line_item';
+import { useTranslation } from 'next-i18next';
 
 interface IVoucherItem {
   id: string;
@@ -33,6 +34,7 @@ interface IJournalDetailProps {
 }
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const {
     previewInvoiceModalDataHandler,
@@ -184,7 +186,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#C84949"
           />
         </svg>
-        <p>Payment</p>
+        <p>{t('JOURNAL.PAYMENT')}</p>
       </div>
     ) : type === 'Receiving' ? (
       <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
@@ -202,7 +204,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#3CA876"
           />
         </svg>
-        <p>Receiving</p>
+        <p>{t('JOURNAL.RECEIVING')}</p>
       </div>
     ) : type === 'Transfer' ? (
       <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-lightGray3 px-10px py-6px text-sm font-medium text-navyBlue">
@@ -220,7 +222,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#002462"
           />
         </svg>
-        <p>Transfer</p>
+        <p>{t('JOURNAL.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -245,11 +247,11 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span> TWD
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{tax}%</span> Tax /{' '}
-        <span className="font-semibold text-navyBlue2">{fee}</span> TWD fee)
+        (<span className="font-semibold text-navyBlue2">{tax}%</span> {t('JOURNAL.Tax /')}{' '}
+        <span className="font-semibold text-navyBlue2">{fee}</span> {t('JOURNAL.TWD_FEE')})
       </p>
     </div>
   );
@@ -271,7 +273,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <p>{project}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">None</p>
+      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
   const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
@@ -310,7 +312,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <hr className="flex-1 border-lightGray3" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-          <p>Accounting Voucher</p>
+          <p>{t('JOURNAL.ACCOUNTING_VOUCHER')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
@@ -319,22 +321,22 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <div className="flex w-full text-left text-navyBlue2">
           {/* Info: (20240503 - Julian) Accounting */}
           <div className="w-1/4">
-            <p>Accounting</p>
+            <p>{t('JOURNAL.ACCOUNTING')}</p>
             {displayVoucherAccounting}
           </div>
           {/* Info: (20240503 - Julian) Particulars */}
           <div className="w-1/4">
-            <p>Particulars</p>
+            <p>{t('JOURNAL.PARTICULARS')}</p>
             {displayVoucherParticulars}
           </div>
           {/* Info: (20240503 - Julian) Debit */}
           <div className="w-1/4">
-            <p>Debit</p>
+            <p>{t('JOURNAL.DEBIT')}</p>
             {displayVoucherDebit}
           </div>
           {/* Info: (20240503 - Julian) Credit */}
           <div className="w-1/4">
-            <p>Credit</p>
+            <p>{t('JOURNAL.CREDIT')}</p>
             {displayVoucherCredit}
           </div>
         </div>
@@ -382,14 +384,14 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">Particulars</p>
+          <p className="text-navyBlue2">{t('JOURNAL.PARTICULARS')}</p>
           <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">Credit</p>
+          <p className="text-navyBlue2">{t('JOURNAL.CREDIT')}</p>
           <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{credit.credit}</p>
           </div>
@@ -406,7 +408,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <hr className="flex-1 border-lightGray3" />
           <div className="flex items-center gap-2 text-sm">
             <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-            <p>Debit</p>
+            <p>{t('JOURNAL.DEBIT')}</p>
           </div>
           <hr className="flex-1 border-lightGray3" />
         </div>
@@ -420,7 +422,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <hr className="flex-1 border-lightGray3" />
           <div className="flex items-center gap-2 text-sm">
             <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-            <p>Credit</p>
+            <p>{t('JOURNAL.CREDIT')}</p>
           </div>
           <hr className="flex-1 border-lightGray3" />
         </div>
@@ -442,7 +444,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <FaArrowLeft />
         </button>
         <h1 className="flex gap-4px text-base font-semibold text-lightGray5 md:text-4xl">
-          <span className="hidden md:block">View Journal - </span>
+          <span className="hidden md:block">{t('JOURNAL.VIEW_JOURNAL')}</span>
           {journalId}
         </h1>
       </div>
@@ -455,7 +457,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <div className="flex flex-wrap items-center text-base text-lightGray4">
             <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
               <div className="flex items-center">
-                <p>Token Contract</p>
+                <p>{t('JOURNAL.TOKEN_CONTRACT')}</p>
                 <button
                   type="button"
                   onClick={copyTokenContractHandler}
@@ -479,7 +481,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
             <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
               <div className="flex items-center">
-                <p>Token ID</p>
+                <p>{t('JOURNAL.TOKEN_ID')}</p>
                 <button
                   type="button"
                   onClick={copyTokenIdHandler}
@@ -515,57 +517,57 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <div className="flex w-full flex-col gap-12px text-base text-lightGray5 md:w-2/3">
             {/* Info: (20240503 - Julian) Type */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Type</p>
+              <p>{t('JOURNAL.TYPE')}</p>
               {displayType}
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Date</p>
+              <p>{t('DATE_PICKER.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Reason</p>
+              <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
             </div>
             {/* Info: (20240503 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Vendor/Supplier</p>
+              <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
               {displayVendor}
             </div>
             {/* Info: (20240503 - Julian) Description */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Description</p>
+              <p>{t('JOURNAL.DESCRIPTION')}</p>
               {displayDescription}
             </div>
             {/* Info: (20240503 - Julian) Total Price */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">Total Price</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.TOTAL_PRICE')}</p>
               {displayTotalPrice}
             </div>
             {/* Info: (20240503 - Julian) Payment Method */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">Payment Method</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_METHOD')}</p>
               {displayMethod}
             </div>
             {/* Info: (20240503 - Julian) Payment Period */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">Payment Period</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
               {displayPeriod}
             </div>
             {/* Info: (20240503 - Julian) Payment Status */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">Payment Status</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
               {displayStatus}
             </div>
             {/* Info: (20240503 - Julian) Project */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Project</p>
+              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240503 - Julian) Contract */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>Contract</p>
+              <p>{t('JOURNAL.CONTRACT')}</p>
               {displayContract}
             </div>
           </div>
