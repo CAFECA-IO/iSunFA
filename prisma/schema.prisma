@@ -8,26 +8,27 @@ datasource db {
 }
 
 model Account {
-  id         Int        @id @default(autoincrement())
-  companyId  Int        @default(0) @map("company_id")
+  id         Int     @id @default(autoincrement())
+  companyId  Int     @default(0) @map("company_id")
   system     String // ex "IFRS" 
   type       String // ex "Asset"
   debit      Boolean // true: debit, false: credit
   liquidity  Boolean
-  code       String     @unique
+  code       String  @unique
   name       String // empty if is not sub account
-  forUser    Boolean    @map("for_user") // is account the last layer of account tree
-  parentCode String     @map("parent_code")
-  rootCode   String     @map("root_code")
-  createdAt  Int        @map("created_at")
-  updatedAt  Int        @map("updated_at")
-  level      Int        @default(0)
-  company    Company    @relation(fields: [companyId], references: [id])
-  parent     Account    @relation("Parent", fields: [parentCode], references: [code])
-  root       Account    @relation("Root", fields: [rootCode], references: [code])
-  child      Account[]  @relation("Parent")
-  leaf       Account[]  @relation("Root")
-  lineItem   LineItem[]
+  forUser    Boolean @map("for_user") // is account the last layer of account tree
+  parentCode String  @map("parent_code")
+  rootCode   String  @map("root_code")
+  createdAt  Int     @map("created_at")
+  updatedAt  Int     @map("updated_at")
+  level      Int     @default(0)
+
+  company  Company    @relation(fields: [companyId], references: [id])
+  parent   Account    @relation("Parent", fields: [parentCode], references: [code])
+  root     Account    @relation("Root", fields: [rootCode], references: [code])
+  child    Account[]  @relation("Parent")
+  leaf     Account[]  @relation("Root")
+  lineItem LineItem[]
 }
 
 model Asset {
