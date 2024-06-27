@@ -17,15 +17,16 @@ CREATE TABLE "account" (
 -- CreateTable
 CREATE TABLE "asset" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
+    "voucher_id" INTEGER NOT NULL,
     "project_id" INTEGER NOT NULL,
+    "contract_id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "tag" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "start_date" TEXT NOT NULL,
     "end_date" TEXT NOT NULL,
-    "purchase_price" TEXT NOT NULL,
-    "purchase_amount" TEXT NOT NULL,
-    "total_price" TEXT NOT NULL,
+    "price" TEXT NOT NULL,
     "residual_value" TEXT NOT NULL,
     "estimate_useful_life" TEXT NOT NULL,
     "depreciation_method" TEXT NOT NULL,
@@ -137,7 +138,6 @@ CREATE TABLE "company_setting" (
 -- CreateTable
 CREATE TABLE "contract" (
     "id" SERIAL NOT NULL,
-    "aich_result_id" TEXT NOT NULL,
     "file_url" TEXT NOT NULL,
     "project_id" INTEGER,
     "company_id" INTEGER NOT NULL,
@@ -562,9 +562,6 @@ CREATE TABLE "work_rate" (
 CREATE UNIQUE INDEX "company_code_key" ON "company"("code");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "contract_aich_result_id_key" ON "contract"("aich_result_id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "contract_payment_id_key" ON "contract"("payment_id");
 
 -- CreateIndex
@@ -607,7 +604,13 @@ CREATE UNIQUE INDEX "value_project_id_key" ON "value"("project_id");
 ALTER TABLE "account" ADD CONSTRAINT "account_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "asset" ADD CONSTRAINT "asset_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contract"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "asset" ADD CONSTRAINT "asset_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "asset" ADD CONSTRAINT "asset_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "audit_report" ADD CONSTRAINT "audit_report_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -735,39 +738,3 @@ ALTER TABLE "value" ADD CONSTRAINT "value_project_id_fkey" FOREIGN KEY ("project
 -- AddForeignKey
 ALTER TABLE "work_rate" ADD CONSTRAINT "work_rate_employee_project_id_fkey" FOREIGN KEY ("employee_project_id") REFERENCES "employee_project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "admin_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "asset_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "audit_report_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "client_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "company_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "company_kyc_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "company_setting_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "contract_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "department_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "employee_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "employee_project_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "income_expense_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "invitation_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "invoice_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "journal_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "line_item_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "milestone_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "ocr_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "order_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "payment_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "payment_record_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "plan_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "project_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "report_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "role_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "sale_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "salary_record_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "salary_record_project_hour_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "subscription_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "user_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "value_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "voucher_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "voucher_salary_record_folder_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "voucher_salary_record_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "work_rate_id_seq" RESTART WITH 10000000;
