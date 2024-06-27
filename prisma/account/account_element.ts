@@ -21,11 +21,13 @@ export class AccountElement {
 
   rootCode: string;
 
+  level: number;
+
   createdAt: number = 0;
 
   updatedAt: number = 0;
 
-  constructor(type: string, debit: boolean, liquidity: boolean, code: string, name: string, forUser: boolean, parentCode: string, rootCode: string) {
+  constructor(type: string, debit: boolean, liquidity: boolean, code: string, name: string, forUser: boolean, parentCode: string, rootCode: string, level: number) {
     this.type = type;
     this.debit = debit;
     this.liquidity = liquidity;
@@ -34,5 +36,6 @@ export class AccountElement {
     this.forUser = forUser;
     this.parentCode = parentCode;
     this.rootCode = rootCode;
+    this.level = level;
   }
 }
