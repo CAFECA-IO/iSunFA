@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as module from '@/pages/api/v1/company/[companyId]/account/index';
 import prisma from '@/client';
-import { IAccount } from '@/interfaces/accounting_account';
 import * as authCheck from '@/lib/utils/auth_check';
+import { Account } from '@prisma/client';
+import { IAccount } from '@/interfaces/accounting_account';
 
 jest.mock('../../../../../../lib/utils/auth_check', () => {
   return {
@@ -20,7 +21,7 @@ const session = {
   // Info (20240516 - Murky) - Mocking session
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
-const mockAccounts: IAccount[] = [
+const mockAccountsInDB: Account[] = [
     {
       id: testAccountId,
       companyId,
@@ -29,11 +30,26 @@ const mockAccounts: IAccount[] = [
       debit: true,
       liquidity: true,
       code: '1103-1',
+      parentCode: '1103',
+      rootCode: '1100',
+      forUser: true,
       name: 'Sun Bank',
       createdAt: 1000000000,
       updatedAt: 1000000000,
     }
   ];
+  const mockAccounts: IAccount[] = [{
+    id: testAccountId,
+    companyId,
+    system: 'IFRS',
+    type: 'asset',
+    debit: true,
+    liquidity: true,
+    code: '1103-1',
+    name: 'Sun Bank',
+    createdAt: 1000000000,
+    updatedAt: 1000000000,
+  }];
 beforeEach(() => {
   jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue(session);
   req = {
@@ -49,7 +65,7 @@ beforeEach(() => {
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
 
-  jest.spyOn(prisma.account, 'findMany').mockResolvedValue(mockAccounts);
+  jest.spyOn(prisma.account, 'findMany').mockResolvedValue(mockAccountsInDB);
 });
 
 afterEach(() => {
