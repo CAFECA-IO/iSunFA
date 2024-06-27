@@ -414,3 +414,5 @@ export function changeDateToTimeStampOfDayStart(date: string) {
   const dateToTimeStamp = timestampInSeconds(new Date(date + 'T00:00:00+08:00').getTime());
   return dateToTimeStamp;
 }
+
+// export transformYYYYMMDDToTimeStampInSecond = (date: string) => {
