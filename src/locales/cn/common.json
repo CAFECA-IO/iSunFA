@@ -297,7 +297,8 @@
     "ISUNFA_TRIAL_VERSION": "iSunFA 试用版",
     "END_OF_TRIAL": "试用结束",
     "NEWEST": "最新的",
-    "OLDEST": "最旧的"
+    "OLDEST": "最旧的",
+    "ENTER_A_DESCRIPTION": "输入描述"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "获取数据失败",
@@ -382,7 +383,8 @@
     "TOTAL_REVENUE": "总收入",
     "IN_30_DAYS": "30天内",
     "TOTAL_EXPENSES": "总费用",
-    "NET_PROFIT": "净利"
+    "NET_PROFIT": "净利",
+    "ADD_PROJECT": "新增项目"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -443,5 +445,11 @@
     "CANT_BE_FIXED": "被修复。您",
     "MAKE_CORRECTIONS.": "将需要新的记帐凭证来进行更正。",
     "ADD_ACCOUNTING_VOUCHER": "将会计凭证加入到帐簿中"
+  },
+  "CONTRACT": {
+    "SIGNATORY": "签署人",
+    "DURATION": "期间",
+    "COMPANY_NAME": "公司名称",
+    "BUSINESS_REGISTRATION_NUMBER": "商业登记号码"
   }
 }

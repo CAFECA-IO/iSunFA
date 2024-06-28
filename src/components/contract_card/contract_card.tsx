@@ -2,6 +2,7 @@ import { IContract } from '@/interfaces/contract';
 import { timestampToString } from '@/lib/utils/common';
 import { ContractStatus } from '@/constants/contract';
 import { Layout } from '@/constants/layout';
+import { useTranslation } from 'next-i18next';
 
 interface IContractCardProps {
   style: Layout;
@@ -32,6 +33,7 @@ const StatusMainColorMap = {
 };
 
 const ContractCard = ({ style, contract }: IContractCardProps) => {
+  const { t } = useTranslation('common');
   const {
     name,
     projectName,
@@ -58,7 +60,8 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
 
   const displayContractPeriod = (
     <p className="text-sm font-semibold text-text-neutral-tertiary">
-      {contractStartStr} to <span className={`${durationColor}`}>{contractEndStr}</span>
+      {contractStartStr} {t('DATE_PICKER.TO')}{' '}
+      <span className={`${durationColor}`}>{contractEndStr}</span>
     </p>
   );
 
@@ -112,7 +115,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
           {displayContractPeriod}
           {/* Info: (20240619 - Julian) Signatory */}
           <div className="flex items-center gap-x-8px text-sm">
-            <p className="text-text-neutral-tertiary">Signatory</p>
+            <p className="text-text-neutral-tertiary">{t('CONTRACT.SIGNATORY')}</p>
             <p className="font-semibold text-text-neutral-primary">{signatory}</p>
           </div>
         </div>
@@ -158,9 +161,10 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
         </div>
         {/* Info: (20240620 - Julian) Duration */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-xs text-text-neutral-tertiary">Duration</p>
+          <p className="text-xs text-text-neutral-tertiary">{t('CONTRACT.DURATION')}</p>
           <p className="text-xs text-text-neutral-tertiary">
-            {contractStartStr} to <span className={`${durationColor}`}>{contractEndStr}</span>
+            {contractStartStr} {t('DATE_PICKER.TO')}{' '}
+            <span className={`${durationColor}`}>{contractEndStr}</span>
           </p>
         </div>
       </div>

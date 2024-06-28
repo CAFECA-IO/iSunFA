@@ -15,6 +15,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { MessageType } from '@/interfaces/message_modal';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { IRole } from '@/interfaces/role';
+import { useTranslation } from 'next-i18next';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -34,6 +35,7 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
+  const { t } = useTranslation('common');
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
@@ -142,7 +144,9 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       >
         {/* Info: (20240514 - Julian) Title */}
         <div className="flex justify-center px-20px">
-          <h2 className="text-xl font-bold leading-8 text-navyBlue2">Create My Company</h2>
+          <h2 className="text-xl font-bold leading-8 text-navyBlue2">
+            {t('SELECT_COMPANY.CREATE_MY_COMPANY')}
+          </h2>
           <button
             type="button"
             onClick={cancelBtnClickHandler}
@@ -156,7 +160,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              Company Name
+              {t('CONTRACT.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
@@ -171,7 +175,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Business Registration Number */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              Business Registration Number
+              {t('CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
             </p>
             <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-darkBlue2 shadow">
               {/* Info: (20240514 - Julian) country selection */}
@@ -216,10 +220,10 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
             onClick={cancelBtnClickHandler}
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >
-            Cancel
+            {t('REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button type="submit" variant={'tertiary'}>
-            Submit
+            {t('CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

@@ -299,7 +299,8 @@
     "ISUNFA_TRIAL_VERSION": "iSunFA Trial Version",
     "END_OF_TRIAL": "End of trial",
     "NEWEST": "Newest",
-    "OLDEST": "Oldest"
+    "OLDEST": "Oldest",
+    "ENTER_A_DESCRIPTION": "Enter a description"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",
@@ -384,7 +385,8 @@
     "TOTAL_REVENUE": "Total Revenue",
     "IN_30_DAYS": "In 30 Days",
     "TOTAL_EXPENSES": "Total Expenses",
-    "NET_PROFIT": "Net Profit"
+    "NET_PROFIT": "Net Profit",
+    "ADD_PROJECT": "Add Project"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -445,5 +447,11 @@
     "CANT_BE_FIXED": "t be fixed. You",
     "MAKE_CORRECTIONS.": "ll need new vouchers to make corrections.",
     "ADD_ACCOUNTING_VOUCHER": "Add Accounting Voucher to the book"
+  },
+  "CONTRACT": {
+    "SIGNATORY": "Signatory",
+    "DURATION": "Duration",
+    "COMPANY_NAME": "Company Name",
+    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number"
   }
 }

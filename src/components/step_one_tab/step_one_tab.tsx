@@ -153,7 +153,7 @@ const StepOneTab = () => {
       <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
         <input
           className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-lightGray4"
-          placeholder="Enter a description"
+          placeholder={t('COMMON.ENTER_A_DESCRIPTION')}
         />
         <button
           type="button"

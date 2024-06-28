@@ -149,7 +149,7 @@ const SelectCompanyPageBody = () => {
           <input
             id="companySearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-lightGray4"
