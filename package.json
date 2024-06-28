@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.5+33",
+  "version": "0.1.6+1",
   "private": false,
   "scripts": {
     "dev": "next dev",
