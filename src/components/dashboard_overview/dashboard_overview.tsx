@@ -7,8 +7,10 @@ import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { IProfitInsight } from '@/interfaces/project_insight';
+import { useTranslation } from 'next-i18next';
 
 const DashboardOverview = () => {
+  const { t } = useTranslation('common');
   const [dashboardOverview, setDashboardOverview] = React.useState<IProfitInsight>(
     {} as IProfitInsight
   );
@@ -87,7 +89,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              Profit Change
+              {t('DASHBOARD.PROFIT_CHANGE')}
             </div>
           </div>
           <div
@@ -193,7 +195,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              Pre-launch Projects
+              {t('DASHBOARD.PRE_LAUNCH_PROJECTS')}
             </div>
           </div>
           <div

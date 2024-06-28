@@ -4,6 +4,7 @@ import { IContract } from '@/interfaces/contract';
 import ContractCard from '@/components/contract_card/contract_card';
 import Pagination from '@/components/pagination/pagination';
 import { Layout } from '@/constants/layout';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectContractListProps {
   contracts: IContract[];
@@ -18,6 +19,7 @@ const ProjectContractList = ({
   setCurrentPage,
   totalPages,
 }: IProjectContractListProps) => {
+  const { t } = useTranslation('common');
   const displayedContractList =
     contracts.length > 0 ? (
       <div className="flex w-full flex-col gap-20px">
@@ -35,7 +37,7 @@ const ProjectContractList = ({
     ) : (
       <div className="flex h-400px w-full flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
         <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-        <p>Empty</p>
+        <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
       </div>
     );
 

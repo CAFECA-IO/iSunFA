@@ -25,8 +25,10 @@ import { ToastType } from '@/interfaces/toastify';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useTranslation } from 'next-i18next';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
 
@@ -114,7 +116,10 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         ${isSortByMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
         bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
-      <p className="text-text-neutral-primary">{sorting}</p>
+      <p className="text-text-neutral-primary">
+        {/* {sorting} */}
+        {t(sorting)}
+      </p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
@@ -176,12 +181,12 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">Sort by</p>
+          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
           {displayedSortByDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">Type</p>
+          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
           {displayedTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -212,7 +217,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/hour_glass.svg'} alt="pending_icon" width={16} height={16} />
-            <p>Pending</p>
+            <p>{t('MY_REPORTS_SECTION.PENDING')}</p>
           </div>
           <hr className="flex-1 border-lightGray4" />
         </div>
@@ -234,7 +239,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/file.svg'} alt="history_icon" width={16} height={16} />
-            <p>Reports History</p>
+            <p>{t('MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
           </div>
           <hr className="flex-1 border-lightGray4" />
         </div>

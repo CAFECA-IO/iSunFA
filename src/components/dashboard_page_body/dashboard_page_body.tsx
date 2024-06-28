@@ -4,15 +4,18 @@ import { NO_DATA_FOR_DEMO } from '@/constants/display';
 import DashboardWithoutData from '@/components/dashboard_without_data/dashboard_without_data';
 import DashboardWithData from '@/components/dashboard_with_data/dashboard_with_data';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 const DashboardPageBody = () => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const companyName = selectedCompany?.name ?? 'iSunFA';
 
   const pageHeader = (
     // TODO: i18n (20240415 - Shirley)
     <div className="my-auto flex-1 text-2xl font-semibold text-tertiaryBlue max-md:max-w-full lg:text-5xl lg:leading-52px">
-      Hello! Welcome to <span className="text-primaryYellow">{companyName}</span>
+      {t('DASHBOARD.HELLO_WELCOME_TO')}
+      <span className="text-primaryYellow">{companyName}</span>
     </div>
   );
   // TODO: Loading -> get data from API -> display data or no data (20240603 - Shirley)

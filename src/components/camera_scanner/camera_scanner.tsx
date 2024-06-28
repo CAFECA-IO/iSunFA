@@ -16,6 +16,7 @@ import { Button } from '@/components/button/button';
 import { MessageType } from '@/interfaces/message_modal';
 import { ProgressStatus } from '@/constants/account';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 // Info: (20240506 - Julian) const
 const PHOTO_WIDTH = 320;
@@ -32,6 +33,7 @@ enum ScannerStep {
 }
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
+  const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const { setInvoiceIdHandler } = useAccountingCtx();
@@ -313,7 +315,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         className="flex items-center gap-x-4px px-16px py-8px"
         onClick={handleUploadImage}
       >
-        Upload
+        {t('JOURNAL.UPLOAD')}
         <svg
           width="16"
           height="16"
@@ -395,7 +397,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         className="flex items-center gap-x-4px px-16px py-8px"
         onClick={nextHandler}
       >
-        Next <GrLinkNext />
+        {t('JOURNAL.NEXT')}
+        <GrLinkNext />
       </Button>
     </div>
   );

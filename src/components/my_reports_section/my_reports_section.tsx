@@ -168,7 +168,8 @@ const MyReportsSection = () => {
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {sorting}
+              {/* {sorting} */}
+              {t(sorting)}
             </li>
           ))}
         </ul>
@@ -378,7 +379,8 @@ const MyReportsSection = () => {
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {sorting}
+              {/* {sorting} */}
+              {t(sorting)}
             </li>
           ))}
         </ul>

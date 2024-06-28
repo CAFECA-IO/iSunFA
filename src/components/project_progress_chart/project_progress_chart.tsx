@@ -21,6 +21,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
+import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -172,6 +173,7 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
+  const { t } = useTranslation('common');
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
   // TODO: 改成 company startDate (20240618 - Shirley)
@@ -272,7 +274,7 @@ const ProjectProgressChart = () => {
     <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
       <ColumnChart data={data} />
       <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-        <p className="text-xl font-bold text-text-neutral-mute">No Data</p>
+        <p className="text-xl font-bold text-text-neutral-mute">{t('PROJECT.NO_DATA')}</p>
       </div>
     </div>
   ) : (
@@ -307,16 +309,13 @@ const ProjectProgressChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>Project Stage Chart</p>
+              <p>{t('PROJECT.PROJECT_STAGE_CHART')}</p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>
-                A message which appears when a cursor is positioned over an icon, image, hyperlink,
-                or other element in a graphical user interface.
-              </p>
+              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

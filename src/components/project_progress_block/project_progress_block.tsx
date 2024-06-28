@@ -1,7 +1,9 @@
 import Image from 'next/image';
 import ProgressCircle from '@/components/progress_circle/progress_circle';
+import { useTranslation } from 'next-i18next';
 
 const ProjectProgressBlock = () => {
+  const { t } = useTranslation('common');
   // ToDo: (20240612 - Julian) replace with actual data
   const progress = 64;
 
@@ -14,11 +16,11 @@ const ProjectProgressBlock = () => {
       <div className="flex items-center gap-24px">
         <div className="flex items-center gap-10px">
           <div className="block h-8px w-8px rounded-full bg-surface-brand-primary"></div>
-          <p>Completed</p>
+          <p>{t('PROJECT.COMPLETED')}</p>
         </div>
         <div className="flex items-center gap-10px">
           <div className="block h-8px w-8px rounded-full bg-surface-neutral-depth"></div>
-          <p>Remaining</p>
+          <p>{t('PROJECT.REMAINING')}</p>
         </div>
       </div>
       <div className="mx-auto flex-1">

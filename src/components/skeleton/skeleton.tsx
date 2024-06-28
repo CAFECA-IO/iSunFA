@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 
 interface ISkeletonProps {
   width: number;
@@ -32,6 +33,7 @@ const Skeleton = ({ width, height, rounded, className }: ISkeletonProps) => {
 };
 
 export const SkeletonList = ({ count }: ISkeletonListProps) => {
+  const { t } = useTranslation('common');
   return (
     <div role="status" className="space-y-2 rounded p-4 md:p-6">
       {' '}
@@ -47,7 +49,7 @@ export const SkeletonList = ({ count }: ISkeletonListProps) => {
           </div>
         </div>
       ))}
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">{t('MY_REPORTS_SECTION.LOADING')}</span>
     </div>
   );
 };
