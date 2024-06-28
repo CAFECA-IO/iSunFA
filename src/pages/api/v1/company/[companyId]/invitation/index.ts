@@ -29,7 +29,7 @@ export default async function handler(
       const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { roleId, emails } = req.body;
       const { userId, companyId } = session;
-      const roleIdNum = await convertStringToNumber(roleId);
+      const roleIdNum = convertStringToNumber(roleId);
       const company = await getCompanyById(companyId);
       if (!emails) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

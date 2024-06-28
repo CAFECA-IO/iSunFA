@@ -3,7 +3,7 @@ import { IAdmin } from '@/interfaces/admin';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkInvitation, checkUser } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
-import { createAdminByInvitation } from '@/lib/utils/repo/transaction/create_admin_by_invitation';
+import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -19,8 +19,8 @@ export default async function handler(
       if (!invitation) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const invitationinstance = await checkInvitation(invitation);
-      const admin = await createAdminByInvitation(userId, invitationinstance);
+      const invitationInstance = await checkInvitation(invitation, userId);
+      const admin = await createAdminByInvitation(userId, invitationInstance);
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS, admin);
       res.status(httpCode).json(result);
     } else {

@@ -26,6 +26,7 @@ import { IJournal } from '@/interfaces/journal';
 import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -38,10 +39,16 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmData,
 }: IConfirmModalProps) => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const {
+    getAIStatusHandler,
+    accountList,
+    AIStatus,
+    generateAccountTitle,
     accountingVoucher,
     addVoucherRowHandler,
+    changeVoucherAccountHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
     totalCredit,
@@ -67,23 +74,21 @@ const ConfirmModal = ({
     code: createCode,
   } = APIHandler<{
     id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
     lineItems: {
       id: number;
       amount: number;
       description: string;
       debit: boolean;
       accountId: number;
-      voucherId: number | null;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
     }[];
-  }>(APIName.VOUCHER_CREATE, {}, false, false);
-
-  const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    error: statusError,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
+  } | null>(APIName.VOUCHER_CREATE, {}, false, false);
 
   const {
     trigger: getAIResult,
@@ -94,11 +99,9 @@ const ConfirmModal = ({
 
   const router = useRouter();
 
-  const [isAskAILoading, setIsAskAILoading] = useState<boolean>(true);
-
   const [eventType, setEventType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // const [reason, setReason] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -110,6 +113,7 @@ const ConfirmModal = ({
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
 
   const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
 
@@ -126,51 +130,30 @@ const ConfirmModal = ({
   useEffect(() => {
     if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     clearVoucherHandler();
-    // Info: (20240528 - Julian) Reset AI status
-    setIsAskAILoading(true);
+
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatus({
-      params: {
-        companyId,
-        resultId: askAIId,
-      },
-    });
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (askAIId && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: askAIId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess && status === ProgressStatus.SUCCESS) {
+    if (AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
           companyId,
           resultId: askAIId,
         },
       });
-      setIsAskAILoading(false);
     }
-    if (statusError && statusCode) {
-      setIsAskAILoading(false);
-    }
-    return () => clearInterval(interval);
-  }, [askAIId, statusSuccess, status, statusError, statusCode]);
+    return () => getAIStatusHandler(undefined, false);
+  }, [AIStatus]);
 
   useEffect(() => {
     if (journal && getJournalSuccess) {
       const { invoice, voucher } = journal;
       if (invoice) {
         setDateTimestamp(invoice.date);
-        // setReason(invoice.paymentReason);
+        setReason(invoice.paymentReason);
         setEventType(invoice.eventType);
         setCompanyName(invoice.vendorOrSupplier);
         setDescription(invoice.description);
@@ -214,6 +197,11 @@ const ConfirmModal = ({
     }
   };
 
+  const closeHandler = () => {
+    modalVisibilityHandler();
+    getAIStatusHandler(undefined, false);
+  };
+
   const addRowHandler = () => addVoucherRowHandler();
   const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
@@ -227,6 +215,8 @@ const ConfirmModal = ({
     // Info: (20240529 - Julian) 先加入空白列，再寫入資料
     AILineItems.forEach((lineItem, index) => {
       addRowHandler();
+      const account = accountList.find((acc) => acc.id === lineItem.accountId);
+      changeVoucherAccountHandler(index, account);
       changeVoucherAmountHandler(
         index,
         lineItem.amount,
@@ -246,35 +236,46 @@ const ConfirmModal = ({
       submitBtnStr: 'Confirm',
       submitBtnFunction: importVoucherHandler,
       backBtnStr: 'Cancel',
+      backBtnFunction: () => getAIStatusHandler(undefined, false),
     });
     messageModalVisibilityHandler();
   };
 
   useEffect(() => {
     // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
-    const newLineItems = accountingVoucher.map((voucher) => {
-      const isDebit = voucher.debit !== 0;
-      const debitAmount = voucher.debit ?? 0;
-      const creditAmount = voucher.credit ?? 0;
+    const newLineItems = accountingVoucher
+      .filter((voucher) => voucher.account)
+      .map((voucher) => {
+        const isDebit = voucher.debit !== 0;
+        const debitAmount = voucher.debit ?? 0;
+        const creditAmount = voucher.credit ?? 0;
 
-      return {
-        lineItemIndex: `${voucher.id}`,
-        account: voucher.accountTitle,
-        description: voucher.particulars,
-        debit: isDebit,
-        amount: isDebit ? debitAmount : creditAmount,
-      };
-    });
+        return {
+          accountId: voucher.account!.id,
+          lineItemIndex: `${voucher.id}`,
+          account: generateAccountTitle(voucher.account),
+          description: voucher.particulars,
+          debit: isDebit,
+          amount: isDebit ? debitAmount : creditAmount,
+        };
+      });
 
     setLineItems(newLineItems);
   }, [accountingVoucher]);
 
   useEffect(() => {
+    const isCreditEqualDebit = totalCredit === totalDebit;
+    const isNotZero = totalCredit !== 0 && totalDebit !== 0;
+    const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
+
+    setDisableConfirmButton(!(isCreditEqualDebit && isNotZero && isEveryLineItemHasAccount));
+  }, [totalCredit, totalDebit, accountingVoucher]);
+
+  useEffect(() => {
     if (createSuccess && result && journal) {
       // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
-      modalVisibilityHandler();
+      closeHandler();
       clearVoucherHandler();
-      setIsAskAILoading(true);
       selectJournalHandler(undefined);
 
       // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
@@ -285,12 +286,12 @@ const ConfirmModal = ({
         type: ToastType.SUCCESS,
         content: (
           <div className="flex items-center justify-between">
-            <p>Uploaded successfully.</p>
+            <p>{t('CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              Go check it !
+              {t('AUDIT_REPORT.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -310,8 +311,6 @@ const ConfirmModal = ({
     }
   }, [createSuccess, createCode]);
 
-  const disableConfirmButton = totalCredit !== totalDebit;
-
   const displayType = <p className="text-lightRed">{eventType}</p>;
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
@@ -319,10 +318,10 @@ const ConfirmModal = ({
   const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
     (
       <div className="flex flex-col items-center gap-x-12px md:flex-row">
-        <p>reason</p>
+        <p>{reason}</p>
         <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
           <LuTag size={14} />
-          Printer
+          {t('CONFIRM_MODAL.PRINTER')}
         </div>
       </div>
     );
@@ -334,11 +333,13 @@ const ConfirmModal = ({
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span> TWD
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span>
+        {t('JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> Tax /{' '}
-        <span className="font-semibold text-navyBlue2">{fee}</span> TWD fee)
+        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> {t('JOURNAL.TAX')}
+        <span className="font-semibold text-navyBlue2">{fee}</span>
+        {t('JOURNAL.TWD_FEE')})
       </p>
     </div>
   );
@@ -362,7 +363,7 @@ const ConfirmModal = ({
         <p>{projectName}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">None</p>
+      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
   const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>; // ToDo: (20240527 - Julian) Get contract name from somewhere
@@ -378,7 +379,7 @@ const ConfirmModal = ({
         <hr className="flex-1 border-lightGray3" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-          <p>Accounting Voucher</p>
+          <p>{t('JOURNAL.Accounting Voucher')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
@@ -388,10 +389,10 @@ const ConfirmModal = ({
           {/* Info: (20240429 - Julian) Header */}
           <thead>
             <tr>
-              <th>Accounting</th>
-              <th>Particulars</th>
-              <th>Debit</th>
-              <th>Credit</th>
+              <th>{t('JOURNAL.ACCOUNTING')}</th>
+              <th>{t('JOURNAL.PARTICULARS')}</th>
+              <th>{t('JOURNAL.DEBIT')}</th>
+              <th>{t('JOURNAL.CREDIT')}</th>
             </tr>
           </thead>
           {/* Info: (20240429 - Julian) Body */}
@@ -461,20 +462,25 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayedHint = isAskAILoading ? (
-    <p className="text-slider-surface-bar">
-      AI technology processing
-      <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-      <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-      <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
-    </p>
-  ) : hasAIResult ? (
-    <p className="text-successGreen">AI Analysis Complete</p>
-  ) : AIResultSuccess === false && AIResultCode ? (
-    <p className="text-text-neutral-secondary">AI Detection Error, error code: {AIResultCode}</p>
-  ) : (
-    <p className="text-slider-surface-bar">There are no recommendations from AI</p>
-  );
+  const displayedHint =
+    AIResultSuccess === undefined ? (
+      <p className="text-slider-surface-bar">
+        {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
+        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+      </p>
+    ) : hasAIResult ? (
+      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+    ) : AIResultSuccess === false && AIResultCode ? (
+      <p className="text-text-neutral-secondary">
+        {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+      </p>
+    ) : (
+      <p className="text-slider-surface-bar">
+        {t('CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+      </p>
+    );
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -484,15 +490,15 @@ const ConfirmModal = ({
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
           {/* Info: (20240429 - Julian) desktop title */}
           <h1 className="hidden whitespace-nowrap text-xl md:block">
-            Please make sure all the information are correct !
+            {t('CONFIRM_MODAL.PLEASE_MAKE_SURE')}
           </h1>
           {/* Info: (20240429 - Julian) mobile title */}
-          <h1 className="block text-xl md:hidden">Confirm</h1>
+          <h1 className="block text-xl md:hidden">{t('JOURNAL.CONFIRM')}</h1>
         </div>
         {/* Info: (20240429 - Julian) close button */}
         <button
           type="button"
-          onClick={modalVisibilityHandler}
+          onClick={closeHandler}
           className="absolute right-20px top-20px text-lightGray5"
         >
           <RxCross2 size={20} />
@@ -504,57 +510,57 @@ const ConfirmModal = ({
           <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
             {/* Info: (20240429 - Julian) Type */}
             <div className="flex items-center justify-between">
-              <p>Type</p>
+              <p>{t('JOURNAL.TYPE')}</p>
               {displayType}
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
-              <p>Date</p>
+              <p>{t('DATE_PICKER.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
             <div className="flex items-center justify-between">
-              <p>Reason</p>
+              <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
             </div>
             {/* Info: (20240429 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between">
-              <p>Vendor/Supplier</p>
+              <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
               {displayVendor}
             </div>
             {/* Info: (20240429 - Julian) Description */}
             <div className="flex items-center justify-between">
-              <p>Description</p>
+              <p>{t('JOURNAL.DESCRIPTION')}</p>
               {displayDescription}
             </div>
             {/* Info: (20240429 - Julian) Total Price */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Total Price</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.TOTAL_PRICE')}</p>
               {displayTotalPrice}
             </div>
             {/* Info: (20240429 - Julian) Payment Method */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Payment Method</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_METHOD')}</p>
               {displayMethod}
             </div>
             {/* Info: (20240429 - Julian) Payment Period */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Payment Period</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
               {displayPeriod}
             </div>
             {/* Info: (20240429 - Julian) Payment Status */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">Payment Status</p>
+              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
               {displayStatus}
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">
-              <p>Project</p>
+              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240429 - Julian) Contract */}
             <div className="flex items-center justify-between">
-              <p>Contract</p>
+              <p>{t('JOURNAL.CONTRACT')}</p>
               {displayContract}
             </div>
           </div>
@@ -606,12 +612,12 @@ const ConfirmModal = ({
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
               {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
-              Attention: Saving this voucher means it&#39;s permanent on the blockchain. Mistakes
-              can&#39;t be fixed. You&#39;ll need new vouchers to make corrections.
+              {t('CONFIRM_MODAL.ATTENTION')}&#39;{t('CONFIRM_MODAL.PERMANENT_ON_THE_BLOCKCHAIN')}
+              &#39;{t('CONFIRM_MODAL.CANT_BE_FIXED')}&#39;{t('CONFIRM_MODAL.MAKE_CORRECTIONS.')}
             </p>
             <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
-              <p>Add Accounting Voucher to the book</p>
+              <p>{t('CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
           </div>
         </div>
@@ -620,10 +626,10 @@ const ConfirmModal = ({
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button
             type="button"
-            onClick={modalVisibilityHandler}
+            onClick={closeHandler}
             className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
           >
-            Cancel
+            {t('REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button
             type="button"
@@ -632,7 +638,7 @@ const ConfirmModal = ({
             onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >
-            Confirm
+            {t('JOURNAL.CONFIRM')}
           </Button>
         </div>
       </div>

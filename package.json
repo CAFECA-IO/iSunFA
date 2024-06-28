@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.5",
+  "version": "0.1.6+1",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -12,7 +12,8 @@
     "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
     "validate": "npm run test && npm run check-format && npm run lint",
-    "production": "next start -p 80"
+    "production": "next start -p 80",
+    "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add ."
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
@@ -26,7 +27,7 @@
     "dotenv": "^16.4.5",
     "eslint-config-airbnb": "^19.0.4",
     "formidable": "^3.5.1",
-    "i18next": "^23.7.16",
+    "i18next": "^23.11.5",
     "jest-mock-extended": "^3.0.7",
     "lodash-es": "^4.17.21",
     "next": "^14.2.3",
@@ -37,7 +38,7 @@
     "react": "^18",
     "react-apexcharts": "^1.4.1",
     "react-dom": "^18",
-    "react-i18next": "^14.0.0",
+    "react-i18next": "^14.1.2",
     "react-icons": "^5.0.1",
     "react-pdf": "^8.0.2",
     "react-toastify": "^10.0.5",
@@ -80,13 +81,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run test && lint-staged"
+      "pre-commit": "npm run test && lint-staged && npm run update-version"
     }
   },
   "engines": {
     "node": ">=18.17.1"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node  -r tsconfig-paths/register --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

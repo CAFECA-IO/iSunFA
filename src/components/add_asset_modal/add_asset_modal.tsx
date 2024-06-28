@@ -7,6 +7,7 @@ import { PiWrenchFill } from 'react-icons/pi';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -14,6 +15,7 @@ interface IAddAssetModalProps {
 }
 
 const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModalProps) => {
+  const { t } = useTranslation('common');
   const [inputName, setInputName] = useState('');
   const [inputDescription, setInputDescription] = useState('');
   const [inputPurchasePrice, setInputPurchasePrice] = useState(0);
@@ -100,7 +102,9 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
         <div className="flex items-center gap-6px font-bold text-navyBlue2">
           <Image src="/icons/assets.svg" width={20} height={20} alt="assets_icon" />
           {/* Info: (20240503 - Julian) desktop title */}
-          <h1 className="block whitespace-nowrap text-xl">Asset Management</h1>
+          <h1 className="block whitespace-nowrap text-xl">
+            {t('ADD_ASSET_MODAL.ASSET_MANAGEMENT')}
+          </h1>
         </div>
         {/* Info: (20240503 - Julian) close button */}
         <button
@@ -119,7 +123,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
           <div className="grid grid-cols-1 items-center gap-x-16px gap-y-50px pt-40px text-center md:grid-cols-2">
             {/* Info: (20240503 - Julian) asset name */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">Asset Name</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.ASSET_NAME')}</p>
               <input
                 type="text"
                 placeholder="Name your asset"
@@ -131,7 +135,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240503 - Julian) description */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">Description</p>
+              <p className="font-semibold">{t('JOURNAL.DESCRIPTION')}</p>
               <input
                 type="text"
                 placeholder="Add note"
@@ -143,7 +147,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240503 - Julian) purchase date */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">Purchase Date</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.PURCHASE_DATE')}</p>
               <DatePicker
                 period={selectedDate}
                 setFilteredPeriod={setSelectedDate}
@@ -152,7 +156,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240503 - Julian) purchase price */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">Purchase Price</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.PURCHASE_PRICE')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
                 <input
                   id="inputPurchasePrice"
@@ -171,13 +175,13 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>TWD</p>
+                  <p>{t('JOURNAL.TWD')}</p>
                 </div>
               </div>
             </div>
             {/* Info: (20240508 - Julian) amount */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">Amount</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.AMOUNT')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
                 <button type="button" className="p-12px" onClick={minusAmountHandler}>
                   <FiMinus size={20} />
@@ -199,7 +203,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240508 - Julian) total */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">Total</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.TOTAL')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
                 <input
                   id="inputTotal"
@@ -218,14 +222,14 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>TWD</p>
+                  <p>{t('JOURNAL.TWD')}</p>
                 </div>
               </div>
             </div>
           </div>
           {/* Info: (20240503 - Julian) radio buttons */}
           <div className="flex flex-col justify-between gap-10px md:flex-row md:items-center">
-            <p className="font-semibold">Asset Type</p>
+            <p className="font-semibold">{t('ADD_ASSET_MODAL.ASSET_TYPE')}</p>
             <div className="flex items-center gap-x-20px">
               <label
                 htmlFor="intangibleAssets"
@@ -239,7 +243,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   onChange={intangibleAssetsClickHandler}
                   checked={inputAssetType === 'Intangible Assets'}
                 />
-                <p>Intangible Assets</p>
+                <p>{t('ADD_ASSET_MODAL.INTANGIBLE ASSETS')}</p>
               </label>
               <label
                 htmlFor="tangibleAssets"
@@ -253,7 +257,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   onChange={tangibleAssetsClickHandler}
                   checked={inputAssetType === 'Tangible Assets'}
                 />
-                <p>Tangible Assets</p>
+                <p>{t('ADD_ASSET_MODAL.TANGIBLE_ASSETS')}</p>
               </label>
             </div>
           </div>
@@ -264,13 +268,13 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               <hr className="flex-1 border-lightGray3" />
               <div className="flex items-center gap-2 text-sm">
                 <PiWrenchFill size={16} />
-                <p>Depreciation</p>
+                <p>{t('ADD_ASSET_MODAL.DEPRECIATION')}</p>
               </div>
               <hr className="flex-1 border-lightGray3" />
             </div>
             {/* Info: (20240508 - Julian) depreciation method */}
             <div className="flex flex-col gap-y-8px">
-              <p className="font-semibold">Depreciation Method</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
               <select
                 id="depreciationMethod"
                 name="depreciationMethod"
@@ -279,17 +283,19 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 className="h-46px w-full rounded-sm border border-lightGray3 px-12px outline-none"
               >
                 <option value="straightLine" className="bg-white">
-                  Straight Line
+                  {t('ADD_ASSET_MODAL.STRAIGHT_LINE')}
                 </option>
-                <option value="doubleDeclining className='bg-white'">Double Declining</option>
+                <option value="doubleDeclining className='bg-white'">
+                  {t('ADD_ASSET_MODAL.DOUBLE_DECLINING')}
+                </option>
                 <option value="unitsOfProduction" className="bg-white">
-                  Units of Production
+                  {t('ADD_ASSET_MODAL.UNITS_OF_PRODUCTION')}
                 </option>
               </select>
             </div>
             {/* Info: (20240508 - Julian) estimated useful life */}
             <div className="flex flex-col gap-y-8px">
-              <p className="font-semibold">Estimated useful life</p>
+              <p className="font-semibold">{t('ADD_ASSET_MODAL.ESTIMATED_USEFUL_LIFE')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 overflow-hidden rounded-sm border border-lightGray3 bg-white">
                 <input
                   id="inputUsefulLife"
@@ -308,13 +314,13 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   className="h-full p-12px outline-none"
                 >
                   <option value="year" className="bg-white">
-                    Year
+                    {t('ADD_ASSET_MODAL.YEAR')}Year
                   </option>
                   <option value="month" className="bg-white">
-                    Month
+                    {t('ADD_ASSET_MODAL.MONTH')}
                   </option>
                   <option value="day" className="bg-white">
-                    Day
+                    {t('ADD_ASSET_MODAL.DAY')}
                   </option>
                 </select>
               </div>
@@ -328,7 +334,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               onClick={modalVisibilityHandler}
               variant={null}
             >
-              Cancel
+              {t('REPORTS_HISTORY_LIST.CANCEL')}
             </Button>
             <Button
               className="px-16px py-8px"
@@ -336,7 +342,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               variant="tertiary"
               disabled={isAddButtonDisabled}
             >
-              <p>Add</p> <FaPlus />
+              <p>{t('PROJECT.ADD')}</p> <FaPlus />
             </Button>
           </div>
         </form>

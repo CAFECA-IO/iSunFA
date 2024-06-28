@@ -1,6 +1,30 @@
-  {
-    "id": 99999,
-    "name": "ADMIN",
-    "created_at": 1717741400,
-    "updated_at": 1717741400
-  }
+[
+    {
+        "id": 99999991,
+        "name": "Super Admin",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 99999992,
+        "name": "Admin",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 99999993,
+        "name": "Owner",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 99999994,
+        "name": "Viewer",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
+    }
+]

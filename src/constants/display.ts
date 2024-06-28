@@ -79,8 +79,8 @@ export const radioButtonStyle =
 export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;
 
 export enum SortOptions {
-  newest = 'Newest',
-  oldest = 'Oldest',
+  newest = 'COMMON.NEWEST',
+  oldest = 'COMMON.OLDEST',
 }
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';
@@ -97,3 +97,5 @@ export enum ActionType {
   login = 'login',
   register = 'register',
 }
+
+export const DEFAULT_SKELETON_COUNT_FOR_PAGE = 5;

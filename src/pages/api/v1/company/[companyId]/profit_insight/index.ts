@@ -35,6 +35,7 @@ async function getProfitChange(targetTime: number, companyId: number) {
       companyId,
     },
   });
+  const emptyToday = IncomeExpenseToday.length === 0;
   const profitToday = IncomeExpenseToday.reduce((acc, today) => {
     return acc + (today.income! - today.expense!);
   }, 0);
@@ -51,11 +52,13 @@ async function getProfitChange(targetTime: number, companyId: number) {
       companyId,
     },
   });
+  const emptyYesterday = IncomeExpenseYesterday.length === 0;
   const profitYesterday = IncomeExpenseYesterday.reduce((acc, yesterday) => {
     return acc + (yesterday.income! - yesterday.expense!);
   }, 0);
   const profitChange = (profitToday - profitYesterday) / profitYesterday || 0;
-  return profitChange;
+  const emptyProfitChange = emptyToday && emptyYesterday;
+  return { profitChange, emptyProfitChange };
 }
 
 async function getTopProjectRoi(companyId: number) {
@@ -69,13 +72,14 @@ async function getTopProjectRoi(companyId: number) {
       companyId,
     },
   });
+  const emptyTopProjectRoi = projectsIncomeExpense.length === 0;
   const topProjectRoi = projectsIncomeExpense.reduce((acc, project) => {
     // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
     // eslint-disable-next-line no-underscore-dangle
     const roi = (project._sum.income! - project._sum.expense!) / project._sum.income!;
     return roi > acc ? roi : acc;
   }, 0);
-  return topProjectRoi;
+  return { topProjectRoi, emptyTopProjectRoi };
 }
 
 async function getPreLaunchProject(companyId: number) {
@@ -85,7 +89,8 @@ async function getPreLaunchProject(companyId: number) {
       companyId,
     },
   });
-  return preLaunchProject;
+  const emptyPreLaunchProject = preLaunchProject === 0;
+  return { preLaunchProject, emptyPreLaunchProject };
 }
 
 export default async function handler(
@@ -97,13 +102,16 @@ export default async function handler(
       const session = await checkAdmin(req, res);
       const { companyId } = session;
       const targetTime = new Date().getTime();
-      const profitChange = await getProfitChange(targetTime, companyId);
-      const preLaunchProject = await getPreLaunchProject(companyId);
-      const topProjectRoi = await getTopProjectRoi(companyId);
+      const { profitChange, emptyProfitChange } = await getProfitChange(targetTime, companyId);
+      const { preLaunchProject, emptyPreLaunchProject } = await getPreLaunchProject(companyId);
+      const { topProjectRoi, emptyTopProjectRoi } = await getTopProjectRoi(companyId);
       const { httpCode, result } = formatApiResponse<IProfitInsight>(STATUS_MESSAGE.SUCCESS_GET, {
         profitChange,
         topProjectRoi,
         preLaunchProject,
+        emptyProfitChange,
+        emptyTopProjectRoi,
+        emptyPreLaunchProject,
       });
       res.status(httpCode).json(result);
     }

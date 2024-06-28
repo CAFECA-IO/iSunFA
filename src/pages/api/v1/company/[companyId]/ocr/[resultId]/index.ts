@@ -6,6 +6,7 @@ import { IInvoice } from '@/interfaces/invoice';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIInvoice } from '@/lib/utils/type_guard/invoice';
+import { IContract } from '@/interfaces/contract';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
@@ -32,7 +33,9 @@ export async function fetchOCRResult(resultId: string) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-export async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
+export async function getPayloadFromResponseJSON(
+  responseJSON: Promise<{ payload?: unknown } | null>
+) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
@@ -68,48 +71,58 @@ export function formatOCRResultDate(ocrResult: IInvoice) {
 
 export async function handleGetRequest(
   resultId: string,
-  res: NextApiResponse<IResponseData<IInvoice>>
+  res: NextApiResponse<IResponseData<IInvoice | IContract>>,
+  type: string = 'invoice'
 ) {
   const fetchResult = fetchOCRResult(resultId);
+  switch (type) {
+    case 'contract': {
+      const ocrResult: IContract = {} as IContract;
 
-  const ocrResult: IInvoice = await getPayloadFromResponseJSON(fetchResult);
+      const { httpCode, result } = formatApiResponse<IContract>(STATUS_MESSAGE.SUCCESS, ocrResult);
 
-  setOCRResultJournalId(ocrResult, null);
-  formatOCRResultDate(ocrResult);
+      res.status(httpCode).json(result);
+      break;
+    }
+    case 'invoice': {
+      const ocrResult: IInvoice = await getPayloadFromResponseJSON(fetchResult);
 
-  if (!isIInvoice(ocrResult)) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+      setOCRResultJournalId(ocrResult, null);
+      formatOCRResultDate(ocrResult);
+
+      if (!isIInvoice(ocrResult)) {
+        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+      }
+
+      const { httpCode, result } = formatApiResponse<IInvoice>(STATUS_MESSAGE.SUCCESS, ocrResult);
+
+      res.status(httpCode).json(result);
+      break;
+    }
+    default: {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
   }
-
-  const { httpCode, result } = formatApiResponse<IInvoice>(
-    STATUS_MESSAGE.SUCCESS,
-    ocrResult
-  );
-
-  res.status(httpCode).json(result);
 }
 
 function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IInvoice>(
-    message,
-    {} as IInvoice
-  );
+  const { httpCode, result } = formatApiResponse<IInvoice>(message, {} as IInvoice);
   res.status(httpCode).json(result);
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice>>
+  res: NextApiResponse<IResponseData<IInvoice | IContract>>
 ) {
   try {
-    const { resultId } = req.query;
+    const { resultId, type } = req.query;
     if (!isResultIdValid(resultId)) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
     switch (req.method) {
       case 'GET': {
-        await handleGetRequest(resultId, res);
+        await handleGetRequest(resultId, res, type as string);
         break;
       }
       default: {

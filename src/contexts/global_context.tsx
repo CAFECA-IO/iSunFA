@@ -40,10 +40,13 @@ import FilterOptionsModal from '@/components/filter_options_modal/filter_options
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AllReportTypesKey } from '@/interfaces/report_type';
-import { useUserCtx } from './user_context';
-import { useNotificationCtx } from './notification_context';
+import { useUserCtx } from '@/contexts/user_context';
+import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
+import { ToastId } from '@/constants/toast_id';
+import { useTranslation } from 'next-i18next';
 
 interface IGlobalContext {
   width: number;
@@ -97,15 +100,21 @@ interface IGlobalContext {
   addProjectModalVisibilityHandler: () => void;
   addProjectModalDataHandler: (stage: ProjectStage) => void;
 
+  profileUploadModalVisible: boolean;
+  profileUploadModalVisibilityHandler: () => void;
+
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
 
   filterOptionsForHistory: IFilterOptions;
   filterOptionsForPending: IFilterOptions;
+  filterOptionsForContract: IFilterOptions;
   getFilterOptionsForHistory: (options: IFilterOptions) => void;
   getFilterOptionsForPending: (options: IFilterOptions) => void;
+  getFilterOptionsForContract: (options: IFilterOptions) => void;
   isFilterOptionsModalForHistoryVisible: boolean;
   isFilterOptionsModalForPendingVisible: boolean;
+  isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
 }
 
@@ -116,10 +125,11 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
+  const { t } = useTranslation('common');
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn } = useUserCtx();
+  const { signedIn, selectedCompany } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -159,15 +169,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState(false);
   const [isFilterOptionsModalForPendingVisible, setIsFilterOptionsModalForPendingVisible] =
     useState(false);
+  const [isFilterOptionsModalForContractVisible, setIsFilterOptionsModalForContractVisible] =
+    useState(false);
+
   const [filterOptionsForHistory, setFilterOptionsForHistory] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
   const [filterOptionsForPending, setFilterOptionsForPending] =
+    useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
+  const [filterOptionsForContract, setFilterOptionsForContract] =
     useState<IFilterOptions>(DUMMY_FILTER_OPTIONS);
 
   const [isAddProjectModalVisible, setIsAddProjectModalVisible] = useState(false);
   const [addProjectDefaultStage, setAddProjectDefaultStage] = useState<ProjectStage>(
     ProjectStage.SELLING
   );
+
+  const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -246,6 +263,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsFilterOptionsModalForPendingVisible(!isFilterOptionsModalForPendingVisible);
   };
 
+  const filterOptionsModalVisibilityHandlerForContract = () => {
+    setIsFilterOptionsModalForContractVisible(!isFilterOptionsModalForContractVisible);
+  };
+
   const addProjectModalVisibilityHandler = () => {
     setIsAddProjectModalVisible(!isAddProjectModalVisible);
   };
@@ -254,11 +275,17 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setAddProjectDefaultStage(stage);
   };
 
+  const profileUploadModalVisibilityHandler = () => {
+    setProfileUploadModalVisible(!profileUploadModalVisible);
+  };
+
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
     if (filterType === FilterOptionsModalType.history) {
       filterOptionsModalVisibilityHandlerForHistory();
     } else if (filterType === FilterOptionsModalType.pending) {
       filterOptionsModalVisibilityHandlerForPending();
+    } else if (filterType === FilterOptionsModalType.contract) {
+      filterOptionsModalVisibilityHandlerForContract();
     }
   };
 
@@ -268,6 +295,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const getFilterOptionsForPending = (options: IFilterOptions) => {
     setFilterOptionsForPending(options);
+  };
+
+  const getFilterOptionsForContract = (options: IFilterOptions) => {
+    setFilterOptionsForContract(options);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -388,12 +419,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         closeable: true,
         content: (
           <div className="flex items-center space-x-5">
-            <p>Your report is done</p>
+            <p>{t('AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              Go check it !
+              {t('AUDIT_REPORT.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -422,6 +453,38 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //   });
     // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
+
+  useEffect(() => {
+    if (signedIn) {
+      if (
+        router.pathname.startsWith('/users') &&
+        !router.pathname.includes(ISUNFA_ROUTE.LOGIN) &&
+        !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
+      ) {
+        if (!selectedCompany) {
+          // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
+          toastHandler({
+            id: ToastId.TRIAL,
+            type: ToastType.INFO,
+            closeable: false,
+            content: (
+              <div className="flex items-center justify-between">
+                <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
+                <Link
+                  href={ISUNFA_ROUTE.SELECT_COMPANY}
+                  className="text-base font-semibold text-darkBlue"
+                >
+                  {t('COMMON.END_OF_TRIAL')}
+                </Link>
+              </div>
+            ),
+          });
+        } else {
+          eliminateToast(ToastId.TRIAL);
+        }
+      }
+    }
+  }, [pathname]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
@@ -464,14 +527,19 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
     filterOptionsForHistory,
     filterOptionsForPending,
+    filterOptionsForContract,
     getFilterOptionsForHistory,
     getFilterOptionsForPending,
+    getFilterOptionsForContract,
     isFilterOptionsModalForHistoryVisible,
     isFilterOptionsModalForPendingVisible,
+    isFilterOptionsModalForContractVisible,
     filterOptionsModalVisibilityHandler,
     isAddProjectModalVisible,
     addProjectModalVisibilityHandler,
     addProjectModalDataHandler,
+    profileUploadModalVisible,
+    profileUploadModalVisibilityHandler,
   };
 
   return (
@@ -555,11 +623,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={filterOptionsModalVisibilityHandlerForHistory}
         getFilterOptions={getFilterOptionsForHistory}
       />
+      <FilterOptionsModal
+        isModalVisible={isFilterOptionsModalForContractVisible}
+        filterType={FilterOptionsModalType.contract}
+        modalVisibilityHandler={filterOptionsModalVisibilityHandlerForContract}
+        getFilterOptions={getFilterOptionsForContract}
+      />
 
       <AddProjectModal
         isModalVisible={isAddProjectModalVisible}
         modalVisibilityHandler={addProjectModalVisibilityHandler}
         defaultStage={addProjectDefaultStage}
+      />
+
+      <ProfileUploadModal
+        isModalVisible={profileUploadModalVisible}
+        modalVisibilityHandler={profileUploadModalVisibilityHandler}
       />
 
       {children}

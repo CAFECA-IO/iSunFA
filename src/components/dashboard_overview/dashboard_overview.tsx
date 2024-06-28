@@ -6,11 +6,14 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
-import { DUMMY_PROJECT_INSIGHT, IProfitInsight } from '@/interfaces/project_insight';
+import { IProfitInsight } from '@/interfaces/project_insight';
+import { useTranslation } from 'next-i18next';
 
 const DashboardOverview = () => {
-  const [dashboardOverview, setDashboardOverview] =
-    React.useState<IProfitInsight>(DUMMY_PROJECT_INSIGHT);
+  const { t } = useTranslation('common');
+  const [dashboardOverview, setDashboardOverview] = React.useState<IProfitInsight>(
+    {} as IProfitInsight
+  );
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -24,26 +27,39 @@ const DashboardOverview = () => {
     },
   });
 
-  const displayedProfitChangeRate = `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange < 0 ? `${dashboardOverview.profitChange.toFixed(0)}` : `0`}`;
+  // TODO: i18n (20240620 - Shirley)
+  const displayedProfitChangeRate =
+    dashboardOverview.emptyProfitChange ||
+    (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)
+      ? 'No Data'
+      : `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange.toFixed(0)}`;
+
   const displayedTopProjectRoi =
-    +dashboardOverview.topProjectRoi > 0
-      ? `+${dashboardOverview.topProjectRoi.toFixed(0)}`
-      : +dashboardOverview.topProjectRoi < 0
-        ? `${dashboardOverview.topProjectRoi.toFixed(0)}`
-        : `0`;
-  const displayedPreLaunchProjects = dashboardOverview.preLaunchProject ?? `0`;
+    dashboardOverview.emptyTopProjectRoi ||
+    (!dashboardOverview.topProjectRoi && dashboardOverview.topProjectRoi !== 0)
+      ? 'No Data'
+      : `${dashboardOverview.topProjectRoi > 0 ? `+${dashboardOverview.topProjectRoi.toFixed(0)}` : dashboardOverview.topProjectRoi.toFixed(0)}`;
+
+  const displayedPreLaunchProjects =
+    dashboardOverview.emptyPreLaunchProject ||
+    (!dashboardOverview.preLaunchProject && dashboardOverview.preLaunchProject !== 0)
+      ? 'No Data'
+      : dashboardOverview.preLaunchProject;
 
   React.useEffect(() => {
     if (getSuccess && profitInsight) {
       setDashboardOverview({
         profitChange: profitInsight.profitChange * 100,
-        topProjectRoi: profitInsight.topProjectRoi * 100, // TODO: (20240524 - tzuhan) ask backend to return string instead of number -> the interface used in frontend is the same as backend so the data format for now is good (20240528 - Shirley)
+        topProjectRoi: profitInsight.topProjectRoi * 100,
         preLaunchProject: profitInsight.preLaunchProject,
+        emptyProfitChange: profitInsight.emptyProfitChange,
+        emptyTopProjectRoi: profitInsight.emptyTopProjectRoi,
+        emptyPreLaunchProject: profitInsight.emptyPreLaunchProject,
       });
     } else if (getSuccess === false) {
       toastHandler({
         id: `profit_insight-${getCode}`,
-        content: `Failed to get profit inside. Error code: ${getCode}`,
+        content: `Failed to get profit insight. Error code: ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -55,7 +71,7 @@ const DashboardOverview = () => {
       {/* Info: 區塊一 (20240523 - Shirley) */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
         <div className="flex max-h-70px justify-between gap-2 rounded-3xl bg-surface-support-soft-maple py-4 pl-5 pr-2 max-md:mt-4 md:max-h-84px lg:min-h-180px lg:flex-col lg:space-x-2 lg:px-5">
-          <div className="flex items-center gap-2 lg:items-center">
+          <div className="flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="46"
@@ -73,23 +89,30 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              Profit Change
+              {t('DASHBOARD.PROFIT_CHANGE')}
             </div>
           </div>
-          <div className="flex justify-center gap-1 whitespace-nowrap text-center font-semibold max-md:px-5 lg:mb-3 lg:justify-center lg:px-11 lg:text-center">
+          <div
+            className={cn(
+              'flex items-center justify-center gap-1 whitespace-nowrap text-center font-semibold max-md:px-5 lg:justify-center lg:px-11 lg:text-center',
+              dashboardOverview.emptyProfitChange || !dashboardOverview.profitChange
+                ? 'lg:mb-5'
+                : 'lg:mb-3'
+            )}
+          >
             <div
               className={cn(
-                'text-4xl lg:text-5xl lg:leading-52px',
+                '',
                 dashboardOverview.profitChange > 0
-                  ? 'text-text-state-success-solid'
+                  ? 'text-4xl text-text-state-success-solid lg:text-5xl lg:leading-52px'
                   : dashboardOverview.profitChange < 0
-                    ? 'text-text-state-error-solid'
-                    : 'text-text-neutral-primary'
+                    ? 'text-4xl text-text-state-error-solid lg:text-5xl lg:leading-52px'
+                    : 'text-base text-text-neutral-mute lg:text-xl'
               )}
             >
               {displayedProfitChangeRate}
             </div>
-            <div className="self-end text-base leading-6 tracking-normal text-text-neutral-primary md:mb-2 lg:mt-0">
+            <div className="self-center text-base leading-6 tracking-normal text-text-neutral-primary md:mb-0 lg:mt-0 lg:self-end">
               %
             </div>
           </div>
@@ -122,20 +145,27 @@ const DashboardOverview = () => {
               Top project ROI
             </div>
           </div>
-          <div className="flex justify-end gap-1 whitespace-nowrap text-end font-semibold max-md:px-5 lg:mb-3 lg:justify-center lg:px-11 lg:text-center">
+          <div
+            className={cn(
+              'flex items-center justify-center gap-1 whitespace-nowrap text-center font-semibold max-md:px-5 lg:justify-center lg:px-11 lg:text-center',
+              dashboardOverview.emptyTopProjectRoi || !dashboardOverview.topProjectRoi
+                ? 'lg:mb-5'
+                : 'lg:mb-3'
+            )}
+          >
             <div
               className={cn(
-                'text-4xl lg:text-5xl lg:leading-52px',
+                '',
                 +dashboardOverview.topProjectRoi > 0
-                  ? 'text-text-state-success-solid'
+                  ? 'text-4xl text-text-state-success-solid lg:text-5xl lg:leading-52px'
                   : +dashboardOverview.topProjectRoi < 0
-                    ? 'text-text-state-error-solid'
-                    : 'text-text-neutral-primary'
+                    ? 'text-end text-4xl text-text-state-error-solid lg:text-5xl lg:leading-52px'
+                    : 'text-base text-text-neutral-mute lg:text-xl'
               )}
             >
               <span className="">{displayedTopProjectRoi}</span>
             </div>
-            <div className="self-end text-base leading-6 tracking-normal text-text-neutral-primary md:mb-2 lg:mt-0">
+            <div className="self-center text-base leading-6 tracking-normal text-text-neutral-primary lg:self-end">
               %
             </div>
           </div>
@@ -165,10 +195,17 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              Pre-launch Projects
+              {t('DASHBOARD.PRE_LAUNCH_PROJECTS')}
             </div>
           </div>
-          <div className="mr-2 self-center text-center text-4xl font-semibold leading-52px text-text-neutral-solid-dark md:mr-0 lg:mb-3 lg:text-5xl">
+          <div
+            className={cn(
+              'mb-0 mr-2 space-y-0 self-center text-center text-4xl font-semibold text-text-neutral-solid-dark md:mr-0 lg:mb-3 lg:leading-52px',
+              dashboardOverview.preLaunchProject
+                ? 'text-4xl font-semibold text-text-neutral-solid-dark lg:text-5xl lg:leading-52px'
+                : 'text-base text-text-neutral-mute lg:text-xl'
+            )}
+          >
             {displayedPreLaunchProjects}
           </div>
         </div>

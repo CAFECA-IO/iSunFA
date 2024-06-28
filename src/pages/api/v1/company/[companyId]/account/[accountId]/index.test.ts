@@ -1,13 +1,56 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from '@/pages/api/v1/company/[companyId]/account/[accountId]/index';
+import * as module from '@/pages/api/v1/company/[companyId]/account/[accountId]/index';
 import prisma from '@/client';
+import * as authCheck from '@/lib/utils/auth_check';
+import { Account } from '@prisma/client';
+import { IAccount } from '@/interfaces/accounting_account';
 
+jest.mock('../../../../../../../lib/utils/auth_check', () => {
+  return {
+    checkAdmin: jest.fn(),
+  };
+});
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 
+const companyId = 2;
 const testAccountId = 1;
-beforeAll(() => {});
+
+const session = {
+  companyId,
+  // Info (20240516 - Murky) - Mocking session
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
+const mockAccountInDB: Account = {
+  id: testAccountId,
+  companyId,
+  system: 'IFRS',
+  type: 'asset',
+  debit: true,
+  liquidity: true,
+  code: '1103-1',
+  parentCode: '1103',
+  rootCode: '1100',
+  forUser: true,
+  name: 'Sun Bank',
+  createdAt: 1000000000,
+  updatedAt: 1000000000,
+};
+
+const mockAccount: IAccount = {
+  id: testAccountId,
+  companyId,
+  system: 'IFRS',
+  type: 'asset',
+  debit: true,
+  liquidity: true,
+  code: '1103-1',
+  name: 'Sun Bank',
+  createdAt: 1000000000,
+  updatedAt: 1000000000,
+};
 beforeEach(() => {
+  jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue(session);
   req = {
     headers: {},
     query: {},
@@ -28,48 +71,19 @@ afterEach(() => {
 
 describe('GET account by id', () => {
   it('should return account when account id is provided correctly', async () => {
-    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce({
-      id: testAccountId,
-      type: 'asset',
-      liquidity: true,
-      account: 'cash',
-      code: '1103-1',
-      name: 'Sun Bank',
-      createdAt: 1000000000,
-      updatedAt: 1000000000,
-    });
+    jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(mockAccountInDB);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: `${testAccountId}` };
-    await handler(req, res);
-
-    const paymentExpect = expect.objectContaining({
-      id: expect.any(Number),
-      type: expect.any(String),
-      liquidity: expect.any(Boolean),
-      account: expect.any(String),
-      code: expect.any(String),
-      name: expect.any(String),
-      createdAt: expect.any(Number),
-      updatedAt: expect.any(Number),
-    });
-
-    const expectedResponse = expect.objectContaining({
-      powerby: expect.any(String),
-      success: true,
-      code: expect.stringContaining('200'),
-      message: expect.any(String),
-      payload: paymentExpect,
-    });
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(expectedResponse);
+    const { httpCode, result } = await module.handleGetRequest(req, res);
+    expect(httpCode).toBe(200);
+    expect(result.payload).toEqual(mockAccount);
   });
 
   it('should return an error when account id is not found', async () => {
     jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(null);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: '-2' };
-    await handler(req, res);
+    await module.default(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
 
     const expectedResponse = expect.objectContaining({
@@ -86,7 +100,7 @@ describe('GET account by id', () => {
     jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(null);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: 'a' };
-    await handler(req, res);
+    await module.default(req, res);
     expect(res.status).toHaveBeenCalledWith(422);
 
     const expectedResponse = expect.objectContaining({

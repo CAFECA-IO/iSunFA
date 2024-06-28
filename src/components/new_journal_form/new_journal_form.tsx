@@ -21,7 +21,6 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
-import { IJournal } from '@/interfaces/journal';
 import { useUserCtx } from '@/contexts/user_context';
 
 const taxRateSelection: number[] = [0, 5, 20, 25];
@@ -58,15 +57,7 @@ const NewJournalForm = () => {
     confirmModalDataHandler,
   } = useGlobalCtx();
 
-  const { selectedUnprocessedJournal, selectUnprocessedJournalHandler, selectJournalHandler } =
-    useAccountingCtx();
-
-  const {
-    trigger: getJournalById,
-    success: getJournalSuccess,
-    data: journal,
-    code: getJournalCode,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+  const { selectedOCR, selectOCRHandler, selectedJournal } = useAccountingCtx();
 
   const {
     trigger: getOCRResult,
@@ -141,25 +132,24 @@ const NewJournalForm = () => {
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
   useEffect(() => {
-    if (selectedUnprocessedJournal !== undefined) {
-      getJournalById({
-        params: { companyId, journalId: selectedUnprocessedJournal.id },
+    if (selectedOCR !== undefined) {
+      getOCRResult({
+        params: { companyId, resultId: selectedOCR.aichResultId },
       });
     }
-  }, [selectedUnprocessedJournal]);
+  }, [selectedOCR]);
 
   useEffect(() => {
-    if (selectedUnprocessedJournal && getJournalSuccess && journal) {
-      selectJournalHandler(journal);
-      if (journal.invoice === null) {
+    if (selectedJournal) {
+      if (selectedJournal.invoice === null) {
         getOCRResult({
           params: {
             companyId,
-            resultId: selectedUnprocessedJournal.aichResultId,
+            resultId: selectedJournal.aichResultId,
           },
-        }); // selectedUnprocessedJournal.aichResultId
+        }); // selectedOCR.aichResultId
       } else {
-        const { invoice } = journal;
+        const { invoice } = selectedJournal;
         // Info: update form data with journal data (20240524 - tzuhan)
         // setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
         // setInputPaymentReason(invoice.paymentReason);
@@ -179,12 +169,12 @@ const NewJournalForm = () => {
         setInputPartialPaid(invoice.payment.alreadyPaid);
         setSelectedProject(
           projectSelection.find(
-            (project) => journal.projectId && project.id === journal.projectId
+            (project) => selectedJournal.projectId && project.id === selectedJournal.projectId
           ) || projectSelection[0]
         );
         setSelectedContract(
           contractSelection.find(
-            (contract) => journal.contractId && contract.id === journal.contractId
+            (contract) => selectedJournal.contractId && contract.id === selectedJournal.contractId
           ) || contractSelection[0]
         );
         setProgressRate(invoice.payment.progress);
@@ -193,17 +183,7 @@ const NewJournalForm = () => {
       //   confirmModalVisibilityHandler();
       // }
     }
-    if (getJournalSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Get Journal Failed',
-        content: `Get Journal failed: ${getJournalCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [getJournalSuccess, journal, selectedUnprocessedJournal]);
+  }, [selectedJournal, selectedOCR]);
 
   // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
@@ -397,7 +377,7 @@ const NewJournalForm = () => {
     setProgressRate(0);
     setInputEstimatedCost(0);
     // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
-    selectUnprocessedJournalHandler(undefined);
+    selectOCRHandler(undefined);
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -418,37 +398,45 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invoiceData: IInvoice = {
-      journalId: selectedUnprocessedJournal?.id || invoiceReturn?.journalId || null,
-      date: datePeriod.startTimeStamp,
-      eventType: selectedEventType,
-      paymentReason: inputPaymentReason,
-      description: inputDescription,
-      vendorOrSupplier: inputVendor,
-      project: selectedProject.name,
-      projectId: selectedProject.id,
-      contract: selectedContract.name,
-      contractId: selectedContract.id,
-      payment: {
-        price: inputTotalPrice,
-        hasTax: taxToggle,
-        taxPercentage: taxRate,
-        hasFee: feeToggle,
-        fee: inputFee,
-        method: selectedMethod,
-        installmentPeriod: inputInstallment,
-        alreadyPaid: inputPartialPaid,
-        isRevenue: true,
-        progress: progressRate,
-        period: paymentPeriod,
-        status: paymentStatus,
-      },
-    };
+    if (!createSuccess || !invoiceReturn) {
+      const invoiceData: IInvoice = {
+        journalId: selectedJournal?.id || null,
+        date: datePeriod.startTimeStamp,
+        eventType: selectedEventType,
+        paymentReason: inputPaymentReason,
+        description: inputDescription,
+        vendorOrSupplier: inputVendor,
+        project: selectedProject.name,
+        projectId: selectedProject.id,
+        contract: selectedContract.name,
+        contractId: selectedContract.id,
+        payment: {
+          price: inputTotalPrice,
+          hasTax: taxToggle,
+          taxPercentage: taxRate,
+          hasFee: feeToggle,
+          fee: inputFee,
+          method: selectedMethod,
+          installmentPeriod: inputInstallment,
+          alreadyPaid: inputPartialPaid,
+          isRevenue: true,
+          progress: progressRate,
+          period: paymentPeriod,
+          status: paymentStatus,
+        },
+      };
 
-    createInvoice({
-      params: { companyId },
-      body: { invoice: invoiceData },
-    });
+      createInvoice({
+        params: { companyId },
+        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+      });
+    } else {
+      confirmModalDataHandler({
+        journalId: invoiceReturn.journalId,
+        askAIId: invoiceReturn.resultStatus.resultId,
+      });
+      confirmModalVisibilityHandler();
+    }
   };
 
   useEffect(() => {

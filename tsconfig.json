@@ -25,6 +25,6 @@
     "**/*.tsx",
     "tailwind.config.ts",
     "src/lib/utils/email.js"
-  ],
+, "scripts/update_version.js"  ],
   "exclude": ["node_modules"]
 }

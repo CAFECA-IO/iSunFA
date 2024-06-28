@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { FiBookOpen, FiPlusCircle } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 const AccountingSidebar = () => {
+  const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -43,7 +45,7 @@ const AccountingSidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            Accounting
+            {t('JOURNAL.ACCOUNTING')}
           </p>
 
           {displayedCompanyName}
@@ -59,7 +61,7 @@ const AccountingSidebar = () => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
             >
-              Add New Journal
+              {t('JOURNAL.ADD_NEW_JOURNAL')}
             </p>
           </Link>
 
@@ -76,7 +78,7 @@ const AccountingSidebar = () => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
             >
-              Journal
+              {t('JOURNAL.JOURNAL')}
             </p>
           </Link>
         </div>

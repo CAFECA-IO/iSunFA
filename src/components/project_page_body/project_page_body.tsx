@@ -7,14 +7,12 @@ import { dummyProjects } from '@/interfaces/project';
 import { ProjectStage, stageList } from '@/constants/project';
 import { Button } from '@/components/button/button';
 import ProjectList from '@/components/project_list/project_list';
-import ProjectStageBlock from '../project_stage_block/project_stage_block';
-
-enum Layout {
-  LIST = 'list',
-  GRID = 'grid',
-}
+import { Layout } from '@/constants/layout';
+import ProjectStageBlock from '@/components/project_stage_block/project_stage_block';
+import { useTranslation } from 'next-i18next';
 
 const ProjectPageBody = () => {
+  const { t } = useTranslation('common');
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
 
   const [search, setSearch] = useState<string>('');
@@ -194,7 +192,7 @@ const ProjectPageBody = () => {
         {/* Info: (2024606 - Julian) Title */}
         <div className="flex items-center justify-between">
           <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-            Project
+            {t('REPORTS_HISTORY_LIST.PROJECT')}
           </h1>
           <Button
             type="button"
@@ -203,7 +201,7 @@ const ProjectPageBody = () => {
             onClick={addProjectModalVisibilityHandler}
           >
             <FiPlusCircle size={24} />
-            Add Project
+            {t('PROJECT.ADD_PROJECT')}
           </Button>
           <Button
             type="button"
@@ -224,7 +222,7 @@ const ProjectPageBody = () => {
             <div
               className={`w-full flex-col items-start gap-8px ${currentLayout === Layout.LIST ? 'flex' : 'hidden'} text-input-text-primary md:w-auto`}
             >
-              <p className="font-semibold">Stage</p>
+              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-44px w-full items-center justify-between rounded-xs border bg-input-surface-input-background 
@@ -243,7 +241,8 @@ const ProjectPageBody = () => {
                 type="text"
                 onChange={searchHandler}
                 className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-                placeholder="Search Project"
+                // placeholder="Search Project"
+                placeholder={t('PROJECT.SEARCH_PROJECT')}
               />
               <FiSearch size={20} />
             </div>

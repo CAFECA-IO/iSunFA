@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { IGeneratedReportItem } from '@/interfaces/report_item';
 import ReportsHistoryItem from '@/components/reports_history_item/reports_history_item';
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface IReportsHistoryListProps {
   reports: IGeneratedReportItem[];
 }
 
 const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
+  const { t } = useTranslation('common');
   // Info: 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來 (20240514 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportItems, setReportItems] = useState<IGeneratedReportItem[]>(reports);
@@ -105,7 +107,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
         variant={'secondaryBorderless'}
       >
         {isCheckboxVisible ? (
-          <p>Cancel</p>
+          <p>{t('REPORTS_HISTORY_LIST.CANCEL')}</p>
         ) : (
           <>
             <svg
@@ -122,7 +124,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <p>Select</p>
+            <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
           </>
         )}
       </Button>
@@ -149,12 +151,12 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
           <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
-            <th className="text-center">Date</th>
-            <th className="px-16px">Report Name</th>
-            <th className="hidden px-16px lg:table-cell">Period</th>
-            <th className="hidden px-16px lg:table-cell">Blockchain</th>
-            <th className="hidden px-16px lg:table-cell">Project</th>
-            <th className="hidden px-16px lg:table-cell">Operations</th>
+            <th className="text-center">{t('REPORTS_HISTORY_LIST.DATE')}</th>
+            <th className="px-16px">{t('REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PERIOD')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.BLOCKCHAIN')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.OPERATIONS')}</th>
           </tr>
         </thead>
 

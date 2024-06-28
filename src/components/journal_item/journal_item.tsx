@@ -1,19 +1,21 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IDummyJournal } from '@/interfaces/journal';
+import { IJournalListItem } from '@/interfaces/journal';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { truncateString, numberWithCommas } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
 import { checkboxStyle } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IJournalItemProps {
   isChecked: boolean;
   checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
   // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
-  journal: IDummyJournal;
+  journal: IJournalListItem;
 }
 
 const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
+  const { t } = useTranslation('common');
   const {
     id: journalId,
     date,
@@ -32,13 +34,17 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
     amount: 0,
   };
 
-  const debitItem = lineItems ? lineItems.filter((item) => item.debit)[0] : defaultItem;
+  const debitItem = lineItems
+    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    : defaultItem;
   const debit = {
     account: debitItem.account,
     amount: numberWithCommas(debitItem.amount),
   };
 
-  const creditItem = lineItems ? lineItems.filter((item) => !item.debit)[0] : defaultItem;
+  const creditItem = lineItems
+    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    : defaultItem;
   const credit = {
     account: creditItem.account,
     amount: numberWithCommas(creditItem.amount),
@@ -62,7 +68,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
             fill="#C84949"
           />
         </svg>
-        <p>Payment</p>
+        <p>{t('JOURNAL.PAYMENT')}</p>
       </div>
     ) : // Info: (20240517 - Julian) 收入
     eventType === EventType.INCOME ? (
@@ -81,7 +87,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
             fill="#3CA876"
           />
         </svg>
-        <p>Receiving</p>
+        <p>{t('JOURNAL.RECEIVING')}</p>
       </div>
     ) : // Info: (20240517 - Julian) 轉帳
     eventType === EventType.TRANSFER ? (
@@ -100,7 +106,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
             fill="#002462"
           />
         </svg>
-        <p>Transfer</p>
+        <p>{t('JOURNAL.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -109,21 +115,21 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
       <div className="flex items-center gap-6px">
         <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-successGreen2 px-6px py-2px text-successGreen">
           <div className="h-6px w-6px rounded border-3px border-successGreen"></div>
-          <p>Debit</p>
+          <p>{t('JOURNAL.DEBIT')}</p>
         </div>
         <p className="w-200px whitespace-nowrap text-lightGray4">{debit.account}</p>
         <p className="whitespace-nowrap text-navyBlue2">
-          {debit.amount} <span className="text-lightGray4">TWD</span>
+          {debit.amount} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
         </p>
       </div>
       <div className="flex items-center gap-6px">
         <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-errorRed2 px-6px py-2px text-errorRed">
           <div className="h-6px w-6px rounded border-3px border-errorRed"></div>
-          <p>Credit</p>
+          <p>{t('JOURNAL.CREDIT')}</p>
         </div>
         <p className="w-200px whitespace-nowrap text-lightGray4">{credit.account}</p>
         <p className="whitespace-nowrap text-navyBlue2">
-          {credit.amount} <span className="text-lightGray4">TWD</span>
+          {credit.amount} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
         </p>
       </div>
     </div>
@@ -184,6 +190,7 @@ const JournalItem = ({ isChecked, checkHandler, journal }: IJournalItemProps) =>
 };
 
 export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournalItemProps) => {
+  const { t } = useTranslation('common');
   const { id, date, type: eventType, particulars: description } = journal;
   const price = 0; // ToDo: (20240528 - Julian) Interface lacks price
 
@@ -275,7 +282,7 @@ export const JournalItemMobile = ({ isChecked, checkHandler, journal }: IJournal
             <p className="flex-1 whitespace-nowrap">{truncateString(description ?? '', 10)}</p>
             {/* Info: (20240517 - Julian) 金額 */}
             <p>
-              {numberWithCommas(price)} <span className="text-lightGray4">TWD</span>
+              {numberWithCommas(price)} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
             </p>
           </div>
         </div>

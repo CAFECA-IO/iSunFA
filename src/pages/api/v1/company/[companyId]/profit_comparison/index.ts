@@ -77,6 +77,10 @@ async function matchProjectListsAndIncomeExpenses(
   return { categories, income, expense };
 }
 
+async function checkEmpty(categories: string[]) {
+  return categories.length === 0;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProjectROIComparisonChartDataWithPagination>>
@@ -105,6 +109,7 @@ export default async function handler(
         projectLists,
         incomeExpensesLists
       );
+      const isEmpty = await checkEmpty(categories);
       const { httpCode, result } = formatApiResponse<IProjectROIComparisonChartDataWithPagination>(
         STATUS_MESSAGE.SUCCESS_GET,
         {
@@ -114,6 +119,7 @@ export default async function handler(
           series: [income, expense],
           currentPage: Number(currentPage),
           totalPages: Math.ceil(categories.length / Number(itemsPerPage)),
+          empty: isEmpty,
         }
       );
       res.status(httpCode).json(result);

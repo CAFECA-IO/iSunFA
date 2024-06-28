@@ -10,6 +10,7 @@ export enum ProgressStatus {
   LLM_ERROR = 'llmError',
   SYSTEM_ERROR = 'systemError',
   PAUSED = 'paused',
+  HAS_BEEN_USED = 'hasBeenUsed',
 }
 
 export enum EventType {
@@ -22,9 +23,15 @@ export enum AccountType {
   ASSET = 'asset',
   LIABILITY = 'liability',
   EQUITY = 'equity',
+  REVENUE = 'revenue',
+  COST = 'cost',
   INCOME = 'income',
   EXPENSE = 'expense',
+  GAIN_OR_LOSS = 'gainOrLoss',
   OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
+  CASH_FLOW = 'cashFlow',
+  CHANGE_IN_EQUITY = 'changeInEquity',
+  OTHER = 'other',
 }
 
 export enum VoucherType {
@@ -44,6 +51,11 @@ export enum PaymentPeriodType {
   INSTALLMENT = 'installment',
 }
 
+export enum AccountSystem {
+  IFRS = 'IFRS',
+  US_GAAP = 'US_GAAP',
+}
+
 export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [key in EventType]: VoucherType;
 } = {
@@ -51,3 +63,5 @@ export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [EventType.PAYMENT]: VoucherType.EXPENSE,
   [EventType.TRANSFER]: VoucherType.TRANSFER,
 };
+
+export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];

@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { ILocale } from '@/interfaces/locale';
 import LandingNavBar from '@/components/landing_nav_bar/landing_nav_bar';
 import ToggleButton from '@/components/toggle_button/toggle_button';
@@ -127,6 +128,7 @@ const initialData: ITableData[] = [
 ];
 
 const AuditReport = () => {
+  const { t } = useTranslation('common');
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -227,7 +229,7 @@ const AuditReport = () => {
     <div className="hidden flex-col px-80px py-120px lg:flex">
       {/* Title */}
       <section className="mb-14 text-center text-h1 font-bold leading-h1 text-navy-blue-25">
-        Audit Report
+        {t('AUDIT_REPORT.AUDIT_REPORT')}
       </section>
       {/* Conditional Filters */}
       <section id="conditional-filters" className="mb-10 flex items-center gap-24px px-4px">
@@ -245,7 +247,7 @@ const AuditReport = () => {
           <div className="grow">
             <input
               type="text"
-              placeholder="Search"
+              placeholder={t('AUDIT_REPORT.SEARCH')}
               className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none "
             />
           </div>
@@ -259,20 +261,20 @@ const AuditReport = () => {
         {/* Filter Display List */}
         <div className="flex items-center gap-5 px-4px">
           <div className="text-lg font-semibold text-navy-blue-25">
-            Show Designated Regional Companies
+            {t('AUDIT_REPORT.SHOW_DESIGNATED_REGIONAL_COMPANIES')}
           </div>
           <form className="flex gap-5 text-sm font-semibold text-text-brand-primary-lv2">
             <label htmlFor="us" className="flex cursor-pointer gap-2">
               <input type="checkbox" id="us" name="country" value="US" className="cursor-pointer" />{' '}
-              US
+              {t('AUDIT_REPORT.US')}
             </label>
             <label htmlFor="hk" className="flex cursor-pointer gap-2">
               <input type="checkbox" id="hk" name="country" value="HK" className="cursor-pointer" />{' '}
-              HK
+              {t('AUDIT_REPORT.HK')}
             </label>
             <label htmlFor="tw" className="flex cursor-pointer gap-2">
               <input type="checkbox" id="tw" name="country" value="TW" className="cursor-pointer" />{' '}
-              TW
+              {t('AUDIT_REPORT.TW')}
             </label>
           </form>
         </div>
@@ -281,11 +283,11 @@ const AuditReport = () => {
           <table className="w-full border-separate border-spacing-x-1 text-center">
             <thead className="bg-stroke-brand-primary-moderate text-h6 font-bold leading-8 text-text-brand-secondary-lv1">
               <tr className="">
-                <th className="px-8px py-12px">Code</th>
-                <th className="px-8px py-12px">Regional</th>
-                <th className="px-8px py-12px">Company</th>
+                <th className="px-8px py-12px">{t('AUDIT_REPORT.CODE')}</th>
+                <th className="px-8px py-12px">{t('AUDIT_REPORT.REGIONAL')}</th>
+                <th className="px-8px py-12px">{t('AUDIT_REPORT.COMPANY')}</th>
                 <th className="flex items-center justify-center gap-1 px-8px py-12px">
-                  <div>Information Year</div>
+                  <div>{t('AUDIT_REPORT.INFORMATION_YEAR')}</div>
                   <div onClick={() => handleSort('informationYear')} className="cursor-pointer">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -301,9 +303,9 @@ const AuditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-8px py-12px">Detailed Information</th>
+                <th className="px-8px py-12px">{t('AUDIT_REPORT.DETAILED_INFORMATION')}</th>
                 <th className="flex items-center justify-center gap-1 px-8px py-12px">
-                  <div>Credit rating</div>
+                  <div>{t('AUDIT_REPORT.CREDIT_RATING')}</div>
                   <div onClick={() => handleSort('creditRating')} className="cursor-pointer">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -319,8 +321,8 @@ const AuditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-8px py-12px">Date of Upload</th>
-                <th className="px-8px py-12px">LINK</th>
+                <th className="px-8px py-12px">{t('AUDIT_REPORT.DATE_OF_UPLOAD')}</th>
+                <th className="px-8px py-12px">{t('AUDIT_REPORT.LINK')}</th>
               </tr>
             </thead>
             <tbody className="text-lg font-medium text-text-brand-secondary-lv1">
@@ -343,7 +345,7 @@ const AuditReport = () => {
                 value="no-daily-reports"
                 className="cursor-pointer"
               />
-              {`Don't show daily reports `}
+              {t('AUDIT_REPORT.DON_T_SHOW_DAILY_REPORTS')}
             </label>
           </form>
         </div>
@@ -386,7 +388,7 @@ const AuditReport = () => {
               />
             </div>
           </div>
-          <div>of 100</div>
+          <div>{t('AUDIT_REPORT.OF_100')}</div>
         </div>
       </section>
     </div>
@@ -397,14 +399,14 @@ const AuditReport = () => {
     <div className="flex flex-col px-5 lg:hidden">
       {/* Title */}
       <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9 text-navy-blue-25">
-        Audit Report
+        {t('AUDIT_REPORT.AUDIT_REPORT')}
       </section>
       {/* Conditional Filters */}
       <section className="flex items-end gap-1">
         {/* Search */}
         <div className="flex grow flex-col gap-2">
           <div className="text-sm font-semibold text-navy-blue-25">
-            Company Code or Abbreviation{' '}
+            {t('AUDIT_REPORT.COMPANY_CODE_OR ABBREVIATION')}{' '}
           </div>
           <div className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
             <div className="grow rounded-sm px-3">
@@ -451,7 +453,7 @@ const AuditReport = () => {
       {/* Region & Switch daily reports */}
       <section className="flex justify-between pt-5">
         <div className="flex cursor-pointer items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
-          <div className="text-sm font-medium text-navy-blue-25">Region</div>
+          <div className="text-sm font-medium text-navy-blue-25">{t('AUDIT_REPORT.REGION')}</div>
           <div className="text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -474,7 +476,7 @@ const AuditReport = () => {
           <div
             className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-inactive'}`}
           >
-            Show daily reports
+            {t('AUDIT_REPORT.SHOW_DAILY_REPORTS')}
           </div>
           <ToggleButton checked={checked} onChange={() => setChecked(!checked)} />
         </div>
@@ -499,7 +501,7 @@ const AuditReport = () => {
               />
             </svg>
           </div>
-          <div className="whitespace-nowrap text-navy-blue-25">Card List</div>
+          <div className="whitespace-nowrap text-navy-blue-25">{t('AUDIT_REPORT.CARD_LIST')}</div>
         </div>
         {/* line */}
         <div className="grow bg-stroke-neutral-solid-light">
@@ -606,7 +608,7 @@ const AuditReport = () => {
             </svg>
           </div>
         </div>
-        <div>of 100</div>
+        <div>{t('AUDIT_REPORT.OF_100')}</div>
       </section>
     </div>
   );
@@ -615,7 +617,7 @@ const AuditReport = () => {
     <>
       <Head>
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA - Audit Report</title>
+        <title>{t('AUDIT_REPORT.ISUNFA_AUDIT_REPORT')}</title>
       </Head>
       {/* Navbar */}
       <nav className="">

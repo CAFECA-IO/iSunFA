@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
@@ -16,8 +15,13 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { IRole } from '@/interfaces/role';
 import { cn } from '@/lib/utils/common';
+import { useRouter } from 'next/router';
+import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
+  const { t } = useTranslation('common');
+  const router = useRouter();
+
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
   const {
@@ -25,8 +29,6 @@ const SelectCompanyPageBody = () => {
     companyInvitationModalVisibilityHandler,
     createCompanyModalVisibilityHandler,
   } = useGlobalCtx();
-
-  const router = useRouter();
 
   const {
     targetRef: companyMenuRef,
@@ -67,12 +69,11 @@ const SelectCompanyPageBody = () => {
   const selectCompanyClickHandler = () => {
     if (selectedCompany === null) return;
     selectCompany(selectedCompany);
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   useEffect(() => {
-    if (successSelectCompany) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-    } else if (successSelectCompany === false) {
+    if (successSelectCompany === false) {
       toastHandler({
         id: `companySelectError_${errorCode}`,
         type: ToastType.ERROR,
@@ -132,7 +133,7 @@ const SelectCompanyPageBody = () => {
       );
     })
   ) : (
-    <div>Loading...</div>
+    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
   );
 
   const displayCompanyMenu = (
@@ -148,7 +149,7 @@ const SelectCompanyPageBody = () => {
           <input
             id="companySearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-lightGray4"
@@ -178,10 +179,11 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) title & description */}
         <div className="flex flex-col items-center justify-center self-stretch">
           <div className="text-48px font-bold text-tertiaryBlue max-lg:text-4xl">
-            Welcome back, <span className="text-amber-400">{userName}</span>!
+            {t('SELECT_COMPANY.WELCOME_BACK')}
+            <span className="text-amber-400">{userName}</span>!
           </div>
           <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
-            Select your company to log in, or create your own company.
+            {t('SELECT_COMPANY.YOUR_COMPANY')}
           </div>
         </div>
         {/* Info: (20240513 - Julian) company selection */}
@@ -218,7 +220,7 @@ const SelectCompanyPageBody = () => {
           {/* Info: (20240513 - Julian) company selection */}
           <div className="relative inline-flex w-full flex-col items-start justify-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-slate-700">
-              My Company List
+              {t('SELECT_COMPANY.MY_COMPANY_LIST')}
             </p>
             <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-slate-300 bg-white shadow">
               <button
@@ -282,7 +284,7 @@ const SelectCompanyPageBody = () => {
                   fill="#FCFDFF"
                 />
               </svg>
-              <p>Create My Company</p>
+              <p>{t('SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
               <FaArrowRight />
             </Button>
 
@@ -291,7 +293,7 @@ const SelectCompanyPageBody = () => {
                 variant={'tertiaryOutline'}
                 className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
               >
-                <p>Try it out</p>
+                <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
                 <FaArrowRight />
               </Button>
             </Link>
