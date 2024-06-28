@@ -192,7 +192,7 @@ const ProjectPageBody = () => {
         {/* Info: (2024606 - Julian) Title */}
         <div className="flex items-center justify-between">
           <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-            Project
+            {t('REPORTS_HISTORY_LIST.PROJECT')}
           </h1>
           <Button
             type="button"
@@ -201,7 +201,7 @@ const ProjectPageBody = () => {
             onClick={addProjectModalVisibilityHandler}
           >
             <FiPlusCircle size={24} />
-            Add Project
+            {t('PROJECT.ADD_PROJECT')}
           </Button>
           <Button
             type="button"
@@ -222,7 +222,7 @@ const ProjectPageBody = () => {
             <div
               className={`w-full flex-col items-start gap-8px ${currentLayout === Layout.LIST ? 'flex' : 'hidden'} text-input-text-primary md:w-auto`}
             >
-              <p className="font-semibold">Stage</p>
+              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-44px w-full items-center justify-between rounded-xs border bg-input-surface-input-background 

@@ -337,7 +337,7 @@ const ConfirmModal = ({
         {t('JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> Tax /{' '}
+        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> {t('JOURNAL.TAX')}
         <span className="font-semibold text-navyBlue2">{fee}</span>
         {t('JOURNAL.TWD_FEE')})
       </p>
