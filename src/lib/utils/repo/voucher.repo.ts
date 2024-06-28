@@ -207,17 +207,16 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
       },
     });
 
-    const localToday = `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()}`;
-    const localTodayStrip = localToday.replace(/\//g, '');
-
+    const localToday = new Date();
+    const localTodayNo = `${localToday.getFullYear()}`.padStart(4, '0') + `${localToday.getMonth() + 1}`.padStart(2, '0') + `${localToday.getDate()}`.padStart(2, '0');
     const resultDate = result?.createdAt
       ? new Date(timestampInSeconds(result?.createdAt)).getDate()
       : -1;
-    const isYesterday = resultDate !== new Date().getDate();
+    const isYesterday = resultDate !== localToday.getDate();
     const latestNo = result?.no.slice(result.no.length - 3) || '0'; // Info: （ 20240522 - Murky）I want to slice the last 3 digits
     const newVoucherNo = isYesterday ? '001' : String(Number(latestNo) + 1).padStart(3, '0');
 
-    return `${localTodayStrip}${newVoucherNo}`;
+    return `${localTodayNo}${newVoucherNo}`;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console

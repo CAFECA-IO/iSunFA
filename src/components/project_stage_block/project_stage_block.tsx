@@ -1,8 +1,8 @@
 import { FiPlus } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ProjectStage } from '@/constants/project';
-import ProjectCard from '../project_card/project_card';
-import { IProject } from '../../interfaces/project';
+import ProjectCard from '@/components/project_card/project_card';
+import { IProject } from '@/interfaces/project';
 
 interface IProjectStageBlockProps {
   stage: ProjectStage;
