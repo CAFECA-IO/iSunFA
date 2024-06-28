@@ -414,3 +414,28 @@ export function changeDateToTimeStampOfDayStart(date: string) {
   const dateToTimeStamp = timestampInSeconds(new Date(date + 'T00:00:00+08:00').getTime());
   return dateToTimeStamp;
 }
+
+export function transformYYYYMMDDToTimeStampInSecond(str: string) {
+  if (!/^(\d){8}$/.test(str)) return -1;
+  const year = Number(str.slice(0, 4));
+  const month = Number(str.slice(4, 6));
+  const day = Number(str.slice(6, 8));
+  const date = new Date(year, month - 1, day);
+  const timestamp = date.getTime();
+  const timestampInSecond = timestampInSeconds(timestamp);
+  return timestampInSecond;
+}
+
+export function setTimestampToDayEnd(timestamp: number) {
+  const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
+  const date = new Date(timestampMilliSeconds);
+  date.setHours(23, 59, 59, 999);
+  return timestampInSeconds(date.getTime());
+}
+
+export function setTimestampToDayStart(timestamp: number) {
+  const timestampMilliSeconds = timestampInMilliSeconds(timestamp);
+  const date = new Date(timestampMilliSeconds);
+  date.setHours(0, 0, 0, 0);
+  return timestampInSeconds(date.getTime());
+}
