@@ -32,22 +32,26 @@ model Account {
 }
 
 model Asset {
-  id                 Int     @id @default(autoincrement())
+  id                 Int    @id @default(autoincrement())
+  voucherId          Int    @map("voucher_id")
+  projectId          Int    @map("project_id")
+  contractId         Int    @map("contract_id")
   name               String
-  projectId          Int     @map("project_id")
+  tag                String
   type               String
   description        String
-  startDate          String  @map("start_date")
-  endDate            String  @map("end_date")
-  purchasePrice      String  @map("purchase_price")
-  purchaseAmount     String  @map("purchase_amount")
-  totalPrice         String  @map("total_price")
-  residualValue      String  @map("residual_value")
-  estimateUsefulLife String  @map("estimate_useful_life")
-  depreciationMethod String  @map("depreciation_method")
-  createdAt          Int     @map("created_at")
-  updatedAt          Int     @map("updated_at")
-  project            Project @relation(fields: [projectId], references: [id])
+  startDate          String @map("start_date")
+  endDate            String @map("end_date")
+  price              String
+  residualValue      String @map("residual_value")
+  estimateUsefulLife String @map("estimate_useful_life")
+  depreciationMethod String @map("depreciation_method")
+  createdAt          Int    @map("created_at")
+  updatedAt          Int    @map("updated_at")
+
+  contract Contract @relation(fields: [contractId], references: [id])
+  project  Project  @relation(fields: [projectId], references: [id])
+  voucher  Voucher  @relation(fields: [voucherId], references: [id])
 
   @@map("asset")
 }
@@ -98,15 +102,15 @@ model Client {
 }
 
 model Company {
-  id              Int              @id @default(autoincrement())
-  name            String
-  code            String           @unique
-  regional        String
-  kycStatus       Boolean          @map("kyc_status")
-  imageId         String?          @map("image_id")
-  startDate       Int              @map("start_date")
-  createdAt       Int              @map("created_at")
-  updatedAt       Int              @map("updated_at")
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String  @unique
+  regional  String
+  kycStatus Boolean @map("kyc_status")
+  imageId   String? @map("image_id")
+  startDate Int     @map("start_date")
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
 
   admins          Admin[]
   clients         Client[]
@@ -193,6 +197,7 @@ model Contract {
   createdAt         Int     @map("created_at")
   updatedAt         Int     @map("updated_at")
 
+  assets   Asset[]
   journal Journal[]
 
   company Company  @relation(fields: [companyId], references: [id])
@@ -582,6 +587,7 @@ model Voucher {
   createdAt Int    @map("created_at")
   updatedAt Int    @map("updated_at")
 
+  assets     Asset[]
   lineItems LineItem[]
 
   journal Journal @relation(fields: [journalId], references: [id])
