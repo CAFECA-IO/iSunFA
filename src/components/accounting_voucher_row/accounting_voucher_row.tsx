@@ -9,6 +9,7 @@ import {
   VoucherString,
 } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
+import { useTranslation } from 'next-i18next';
 
 interface IAccountingVoucherRow {
   accountingVoucher: IAccountingVoucher;
@@ -153,6 +154,7 @@ export const AccountingVoucherRowMobile = ({
   type,
   accountingVoucher,
 }: IAccountingVoucherRowMobile) => {
+  const { t } = useTranslation('common');
   const isDebit = type === 'Debit';
 
   const { id, account, particulars, debit, credit } = accountingVoucher;
@@ -191,7 +193,7 @@ export const AccountingVoucherRowMobile = ({
     <div key={id} className="flex flex-col gap-y-16px rounded-sm p-20px">
       {/* Info: (20240508 - Julian) Accounting */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">Accounting</p>
+        <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
         <select
           id="accountTitleSelectMobile"
           name="accountTitleSelectMobile"
@@ -211,7 +213,7 @@ export const AccountingVoucherRowMobile = ({
       </div>
       {/* Info: (20240508 - Julian) Particulars */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">Particulars</p>
+        <p className="text-navyBlue2">{t('JOURNAL.PARTICULARS')}</p>
         <input
           id="particularsInputMobile"
           name="particularsInputMobile"

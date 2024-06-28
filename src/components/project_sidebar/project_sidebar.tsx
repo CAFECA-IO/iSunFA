@@ -5,12 +5,14 @@ import { useRouter } from 'next/router';
 import { FiSettings } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectDetailPageProps {
   projectId: string;
 }
 
 const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
+  const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -56,7 +58,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            Project
+            {t('REPORTS_HISTORY_LIST.PROJECT')}
           </p>
 
           {displayedCompanyName}
@@ -94,7 +96,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              Dashboard
+              {t('NAV_BAR.DASHBOARD')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Contract List */}
@@ -124,7 +126,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              Contract List
+              {t('PROJECT.CONTRACT_LIST')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Accounting Journal */}
@@ -152,7 +154,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              Accounting Journal
+              {t('PROJECT.ACCOUNTING_JOURNAL')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Analysis Reports */}
@@ -182,7 +184,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              Analysis Reports
+              {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Divider */}
@@ -200,7 +202,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              Project Setting
+              {t('PROJECT.PROJECT_SETTING')}
             </p>
           </Link>
         </div>

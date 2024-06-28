@@ -22,6 +22,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
+import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -163,6 +164,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
+  const { t: translate } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { toastHandler, layoutAssertion } = useGlobalCtx();
 
@@ -362,7 +364,9 @@ const ProjectRoiComparisonChart = () => {
             />
           </svg>
         </div>
-        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+          {translate('MY_REPORTS_SECTION.EMPTY')}
+        </div>
       </section>
     </div>
   ) : (
@@ -404,18 +408,17 @@ const ProjectRoiComparisonChart = () => {
               </svg>
               <p className="text-base lg:text-sm xl:text-base">
                 Project-wise <br className="lg:hidden" />
-                <span className="lg:hidden">Income vs. Expense</span>
-                <span className="hidden lg:inline">Income vs. Expense Comparison Graph</span>
+                <span className="lg:hidden">{translate('PROJECT.INCOME_VS_EXPENSE')}</span>
+                <span className="hidden lg:inline">
+                  {translate('PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
+                </span>
               </p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>
-                A message which appears when a cursor is positioned over an icon, image, hyperlink,
-                or other element in a graphical user interface.
-              </p>
+              <p>{translate('PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

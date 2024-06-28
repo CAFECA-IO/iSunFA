@@ -8,6 +8,7 @@ import { Button } from '@/components/button/button';
 import { ProjectStage, stageList } from '@/constants/project';
 import { FiSearch } from 'react-icons/fi';
 import { IMember, dummyMemberList } from '@/interfaces/member';
+import { useTranslation } from 'next-i18next';
 
 interface IAddProjectModalProps {
   isModalVisible: boolean;
@@ -20,6 +21,7 @@ const AddProjectModal = ({
   modalVisibilityHandler,
   defaultStage,
 }: IAddProjectModalProps) => {
+  const { t } = useTranslation('common');
   const [inputName, setInputName] = useState('');
   const [selectedStage, setSelectedStage] = useState<ProjectStage>(defaultStage);
   const [selectedMembers, setSelectedMembers] = useState<IMember[]>([]);
@@ -114,7 +116,9 @@ const AddProjectModal = ({
         );
       })
     ) : (
-      <p className="text-left text-input-text-input-placeholder">Choose Team Members</p>
+      <p className="text-left text-input-text-input-placeholder">
+        {t('PROJECT.CHOOSE_TEAM_MEMBERS')}
+      </p>
     );
 
   const displayMemberList = filteredMemberList.map((member) => {
@@ -171,7 +175,7 @@ const AddProjectModal = ({
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-          Development department
+          {t('PROJECT.DEVELOPMENT_DEPARTMENT')}
         </div>
         {/* Info: (20240611 - Julian) member list */}
         <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
@@ -187,8 +191,12 @@ const AddProjectModal = ({
         {/* Info: (20240611 - Julian) title */}
         <div className="flex flex-col items-start gap-2px whitespace-nowrap border-b px-20px pb-20px">
           {/* Info: (20240611 - Julian) desktop title */}
-          <h1 className="text-xl font-bold text-card-text-primary">Add New Project</h1>
-          <p className="text-xs text-card-text-secondary">Edit Project Information</p>
+          <h1 className="text-xl font-bold text-card-text-primary">
+            {t('PROJECT.ADD_NEW_PROJECT')}
+          </h1>
+          <p className="text-xs text-card-text-secondary">
+            {t('PROJECT.EDIT_PROJECT_INFORMATION')}
+          </p>
         </div>
         {/* Info: (20240611 - Julian) close button */}
         <button
@@ -209,7 +217,7 @@ const AddProjectModal = ({
             <div className="flex w-full flex-col items-start justify-between gap-y-20px md:flex-row">
               {/* Info: (20240611 - Julian) project name */}
               <div className="flex w-full flex-col items-start gap-y-8px md:w-250px">
-                <p className="font-semibold">Project Name</p>
+                <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
                 <input
                   type="text"
                   placeholder="Name your project"
@@ -221,7 +229,7 @@ const AddProjectModal = ({
               </div>
               {/* Info: (20240611 - Julian) stage selection */}
               <div className="flex w-full flex-col items-start gap-y-8px md:w-200px">
-                <p className="font-semibold">Stage</p>
+                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
@@ -238,7 +246,7 @@ const AddProjectModal = ({
             {/* Info: (20240611 - Julian) member selection */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <div className="flex w-full items-end justify-between">
-                <p className="font-semibold">Team Members</p>
+                <p className="font-semibold">{t('PROJECT.TEAM_MEMBERS')}</p>
                 {/* Info: (20240611 - Julian) amount of selected members */}
                 <p className="text-sm text-input-text-secondary">{membersAmount}</p>
               </div>
@@ -262,7 +270,7 @@ const AddProjectModal = ({
               onClick={modalVisibilityHandler}
               variant={null}
             >
-              Cancel
+              {t('REPORTS_HISTORY_LIST.CANCEL')}
             </Button>
             <Button
               className="px-16px py-8px"
@@ -270,7 +278,7 @@ const AddProjectModal = ({
               variant="tertiary"
               disabled={!isConfirmValid}
             >
-              <p>Add</p> <FaPlus />
+              <p>{t('PROJECT.ADD')}</p> <FaPlus />
             </Button>
           </div>
         </form>

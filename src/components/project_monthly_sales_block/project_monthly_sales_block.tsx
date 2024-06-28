@@ -3,6 +3,7 @@ import { ApexOptions } from 'apexcharts';
 import Image from 'next/image';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
+import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -16,6 +17,7 @@ const data = {
 };
 
 const ProjectMonthlySalesBlock = () => {
+  const { t: translate } = useTranslation('common');
   const { layoutAssertion } = useGlobalCtx();
 
   const options: ApexOptions = {
@@ -149,7 +151,7 @@ const ProjectMonthlySalesBlock = () => {
       {/* Info: (20240614 - Julian) Title */}
       <div className="flex gap-8px font-medium text-text-neutral-secondary">
         <Image src="/icons/shopping.svg" width={24} height={24} alt="shopping_icon" />
-        <p>Monthly Sales</p>
+        <p>{translate('PROJECT.MONTHLY_SALES')}</p>
       </div>
       {/* Info: (20240614 - Julian) Chart */}
       <Chart options={options} series={series} type="bar" height={400} />

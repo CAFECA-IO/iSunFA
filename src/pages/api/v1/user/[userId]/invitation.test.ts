@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 import { ONE_DAY_IN_S } from '@/constants/time';
-import handler from './invitation';
+import handler from '@/pages/api/v1/user/[userId]/invitation';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;

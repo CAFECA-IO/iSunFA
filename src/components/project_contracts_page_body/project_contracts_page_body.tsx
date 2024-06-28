@@ -13,8 +13,10 @@ import { Button } from '@/components/button/button';
 import ProjectContractList from '@/components/project_contract_list/project_contract_list';
 import ContractStatusBlock from '@/components/contract_status_block/contract_status_block';
 import { FilterOptionsModalType } from '@/interfaces/modals';
+import { useTranslation } from 'next-i18next';
 
 const ProjectContractsPageBody = () => {
+  const { t } = useTranslation('common');
   const { filterOptionsModalVisibilityHandler, filterOptionsForContract } = useGlobalCtx();
 
   const statusList = Object.values(ContractStatus);
@@ -179,7 +181,7 @@ const ProjectContractsPageBody = () => {
       <div className="hidden w-full items-end gap-x-24px gap-y-40px md:flex">
         {/* Info: (20240618 - Julian) Status filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">Status</p>
+          <p className="font-semibold text-input-text-primary">{t('PROJECT.STATUS')}</p>
           <div
             ref={statusRef}
             onClick={statusClickHandler}
@@ -195,7 +197,7 @@ const ProjectContractsPageBody = () => {
         </div>
         {/* Info: (20240618 - Julian) Sort filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">Sort by</p>
+          <p className="font-semibold text-input-text-primary">{t('SORTING.SORT_BY')}</p>
           <div
             ref={sortRef}
             onClick={sortClickHandler}
@@ -203,7 +205,10 @@ const ProjectContractsPageBody = () => {
             ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
             bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
-            <p className="text-text-neutral-primary">{sorting}</p>
+            <p className="text-text-neutral-primary">
+              {/* {sorting} */}
+              {t(sorting)}
+            </p>
             <FaChevronDown size={16} />
             {/* Info: (20240618 - Julian) Status dropdown */}
             {sortDropdown}

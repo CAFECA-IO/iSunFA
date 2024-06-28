@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
-import handler from './index';
+import handler from '@/pages/api/v1/company/[companyId]/report/[reportId]/index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
