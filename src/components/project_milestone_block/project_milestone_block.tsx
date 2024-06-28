@@ -4,6 +4,7 @@ import { IMilestone } from '@/interfaces/project';
 import { timestampToString } from '@/lib/utils/common';
 import MilestoneCalendar from '@/components/milestone_calendar/milestone_calendar';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { useTranslation } from 'next-i18next';
 
 const dummyMilestone: IMilestone[] = [
   {
@@ -63,6 +64,7 @@ const dummyMilestone: IMilestone[] = [
 ];
 
 const ProjectMilestoneBlock = () => {
+  const { t } = useTranslation('common');
   const getMilestonePeriod = (milestone: IMilestone) => {
     const result: IDatePeriod = {
       startTimeStamp: milestone.startDate,
@@ -97,7 +99,7 @@ const ProjectMilestoneBlock = () => {
           <p className="w-80px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
-          <p className="text-text-neutral-secondary">to</p>
+          <p className="text-text-neutral-secondary">{t('REPORTS_HISTORY_ITEM.TO')}</p>
           <p className="w-80px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>
@@ -106,7 +108,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Number of Days */}
         <div key={`${item.id}-num-days`} className="ml-auto flex items-center gap-8px">
           <p>{numDays}</p>
-          <p className="text-text-neutral-secondary">Days</p>
+          <p className="text-text-neutral-secondary">{t('PROJECT.DAYS')}</p>
         </div>
       </>
     );
@@ -134,7 +136,7 @@ const ProjectMilestoneBlock = () => {
           <p className="w-65px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
-          <p className="text-text-neutral-secondary">to</p>
+          <p className="text-text-neutral-secondary">{t('REPORTS_HISTORY_ITEM.TO')}</p>
           <p className="w-65px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>
@@ -149,7 +151,7 @@ const ProjectMilestoneBlock = () => {
       <div className="flex flex-1 flex-col items-center gap-y-16px md:items-stretch">
         <div className="flex items-center gap-8px text-text-neutral-secondary">
           <Image src="/icons/milestone.svg" alt="Milestone Block" width={24} height={24} />
-          <p>Milestone</p>
+          <p>{t('PROJECT.MILESTONE')}</p>
         </div>
         <div className="hidden grid-cols-3 gap-16px border-t border-divider-stroke-lv-4 p-10px md:grid">
           {displayMilestoneDesktop}

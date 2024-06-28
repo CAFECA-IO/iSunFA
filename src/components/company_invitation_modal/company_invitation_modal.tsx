@@ -13,6 +13,7 @@ import { IAdmin } from '@/interfaces/admin';
 import { ICompany } from '@/interfaces/company';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
 
 interface ICompanyInvitationModal {
   isModalVisible: boolean;
@@ -25,6 +26,7 @@ const CompanyInvitationModal = ({
   modalVisibilityHandler,
   toastHandler,
 }: ICompanyInvitationModal) => {
+  const { t } = useTranslation('common');
   const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
@@ -58,8 +60,10 @@ const CompanyInvitationModal = ({
           type: ToastType.SUCCESS,
           content: (
             <p>
-              Congratulations! You&apos;ve successfully joined the{' '}
-              <span className="font-semibold">{companyName}</span> team!
+              {t('COMPANY_INVITATION_MODAL.CONGRATULATIONS_YOU')}&apos;
+              {t('COMPANY_INVITATION_MODAL.VE_SUCCESSFULLY_JOINED_THE')}{' '}
+              <span className="font-semibold">{companyName}</span>
+              {t('COMPANY_INVITATION_MODAL.TEAM')}
             </p>
           ),
           closeable: true,
@@ -112,9 +116,11 @@ const CompanyInvitationModal = ({
         {/* Info: (20240515 - Julian) Title */}
         <div className="flex justify-center px-20px">
           <div className="flex flex-col items-center">
-            <h2 className="text-xl font-bold leading-8 text-navyBlue2">Invitation Code</h2>
+            <h2 className="text-xl font-bold leading-8 text-navyBlue2">
+              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+            </h2>
             <p className="text-xs font-normal leading-tight tracking-tight text-lightGray5">
-              Enter your Company invitation code
+              {t('COMPANY_INVITATION_MODAL.ENTER_YOUR_COMPANY_INVITATION_CODE')}
             </p>
           </div>
           <button
@@ -130,7 +136,9 @@ const CompanyInvitationModal = ({
           <div
             className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-lightRed border-lightRed text-lightRed'}`}
           >
-            <p className={isCodeValid ? 'text-lightGray4' : 'text-lightRed'}>Invitation Code</p>
+            <p className={isCodeValid ? 'text-lightGray4' : 'text-lightRed'}>
+              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+            </p>
             <input
               id="invitationCodeInput"
               type="text"
@@ -142,7 +150,7 @@ const CompanyInvitationModal = ({
             />
           </div>
           <p className={`text-right text-lightRed ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}>
-            Format Error!
+            {t('COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
           </p>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
@@ -151,10 +159,10 @@ const CompanyInvitationModal = ({
             onClick={cancelBtnClickHandler}
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >
-            Cancel
+            {t('REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button type="submit" variant={'tertiary'}>
-            Submit
+            {t('CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

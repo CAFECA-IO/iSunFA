@@ -1,4 +1,7 @@
+import { useTranslation } from 'next-i18next';
+
 const DashboardWithoutData = () => {
+  const { t } = useTranslation('common');
   const displayedPageBody = (
     <div>
       {/* Info: empty icon section (20240415 - Shirley) */}
@@ -59,7 +62,9 @@ const DashboardWithoutData = () => {
               />
             </svg>
           </div>
-          <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+          <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+            {t('MY_REPORTS_SECTION.EMPTY')}
+          </div>
         </section>
       </div>
     </div>

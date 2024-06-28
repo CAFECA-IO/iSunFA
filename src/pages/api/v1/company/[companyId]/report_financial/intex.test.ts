@@ -3,7 +3,7 @@ it('should pass', () => {
 });
 // import { NextApiRequest, NextApiResponse } from 'next';
 // import version from '@/lib/version';
-// import handler from './index';
+// import handler from '@/pages/api/v1/company/[companyId]/report_financial/index';
 
 // let req: jest.Mocked<NextApiRequest>;
 // let res: jest.Mocked<NextApiResponse>;

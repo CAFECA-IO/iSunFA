@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/client';
 import { IRole } from '@/interfaces/role';
 import { timestampInSeconds } from '@/lib/utils/common';
-import handler from './index';
+import handler from '@/pages/api/v1/company/[companyId]/role/[roleId]/index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;

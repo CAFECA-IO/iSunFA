@@ -9,8 +9,10 @@ import { Button } from '@/components/button/button';
 import ProjectList from '@/components/project_list/project_list';
 import { Layout } from '@/constants/layout';
 import ProjectStageBlock from '@/components/project_stage_block/project_stage_block';
+import { useTranslation } from 'next-i18next';
 
 const ProjectPageBody = () => {
+  const { t } = useTranslation('common');
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
 
   const [search, setSearch] = useState<string>('');
@@ -239,7 +241,8 @@ const ProjectPageBody = () => {
                 type="text"
                 onChange={searchHandler}
                 className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-                placeholder="Search Project"
+                // placeholder="Search Project"
+                placeholder={t('PROJECT.SEARCH_PROJECT')}
               />
               <FiSearch size={20} />
             </div>

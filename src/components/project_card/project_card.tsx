@@ -4,12 +4,14 @@ import { ProjectStage, stageColorMap } from '@/constants/project';
 import { IProject } from '@/interfaces/project';
 import { numberWithCommas } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectCardProps {
   project: IProject;
 }
 
 const ProjectCard = ({ project }: IProjectCardProps) => {
+  const { t } = useTranslation('common');
   const { name, contractAmount, income, expense, profit, stage, members } = project;
 
   const stageColor = stageColorMap[stage as ProjectStage].bg ?? 'bg-surface-neutral-mute';
@@ -64,16 +66,16 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
       {/* Info: (2024606 - Julian) Content */}
       <div className="flex flex-col gap-y-14px text-sm">
         <div className="flex items-center gap-x-16px">
-          <p className="w-52px text-text-neutral-tertiary">Income</p>
+          <p className="w-52px text-text-neutral-tertiary">{t('PROJECT.INCOME')}</p>
           <p className="font-semibold text-text-neutral-primary">{numberWithCommas(income)}</p>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-16px">
-            <p className="w-52px text-text-neutral-tertiary">Expense</p>
+            <p className="w-52px text-text-neutral-tertiary">{t('PROJECT.EXPENSE')}</p>
             <p className="font-semibold text-text-neutral-primary">{numberWithCommas(expense)}</p>
           </div>
           <div className="flex items-center gap-x-16px">
-            <p className="text-text-neutral-tertiary">Profit</p>
+            <p className="text-text-neutral-tertiary">{t('PROJECT.PROFIT')}</p>
             <p className="font-semibold text-text-neutral-primary">{numberWithCommas(profit)}</p>
           </div>
         </div>
