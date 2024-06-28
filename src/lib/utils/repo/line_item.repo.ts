@@ -1,17 +1,19 @@
 import prisma from '@/client';
 import { AccountType } from '@/constants/account';
 import { Prisma } from '@prisma/client';
-import { setTimestampToDayEnd, setTimestampToDayStart } from '../common';
+import { setTimestampToDayEnd, setTimestampToDayStart } from '@/lib/utils/common';
 
 export async function getSumOfLineItemsGroupByAccountInPrisma(
   companyId: number,
   type: AccountType,
   startDate: number,
-  endDate: number,
-): Promise<{
-  accountId: number;
-  amount: number;
-}[]> {
+  endDate: number
+): Promise<
+  {
+    accountId: number;
+    amount: number;
+  }[]
+> {
   const startDateInSecond = setTimestampToDayStart(startDate);
   const endDateInSecond = setTimestampToDayEnd(endDate);
 
@@ -27,12 +29,12 @@ export async function getSumOfLineItemsGroupByAccountInPrisma(
         gte: startDateInSecond,
         lte: endDateInSecond,
       },
-    }
+    },
   };
 
   let lineItems: {
-      accountId: number;
-      amount: number;
+    accountId: number;
+    amount: number;
   }[];
 
   try {
