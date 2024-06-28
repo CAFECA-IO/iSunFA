@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'next-i18next';
-import ProjectCard from '../project_card/project_card';
-import { IProject } from '../../interfaces/project';
-import Pagination from '../pagination/pagination';
+import ProjectCard from '@/components/project_card/project_card';
+import { IProject } from '@/interfaces/project';
+import Pagination from '@/components/pagination/pagination';
 
 interface IProjectListProps {
   projects: IProject[];

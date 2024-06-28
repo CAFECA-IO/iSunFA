@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from './index';
+import handler from '@/pages/api/v1/company/[companyId]/test/index';
 
 const req: jest.Mocked<NextApiRequest> = {
   headers: {},

@@ -40,8 +40,8 @@ import FilterOptionsModal from '@/components/filter_options_modal/filter_options
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AllReportTypesKey } from '@/interfaces/report_type';
-import { useUserCtx } from './user_context';
-import { useNotificationCtx } from './notification_context';
+import { useUserCtx } from '@/contexts/user_context';
+import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';

@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ICompanyKYC } from '@/interfaces/company_kyc';
 import { timestampInSeconds } from '@/lib/utils/common';
-import handler from './index';
+import handler from '@/pages/api/v1/company/[companyId]/kyc/index';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
