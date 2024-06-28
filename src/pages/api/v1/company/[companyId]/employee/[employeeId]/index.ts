@@ -1,84 +1,217 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { EmployeeData, IEmployee } from '@/interfaces/employees';
+import { IEmployeeData } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { getSession } from '@/lib/utils/session';
+import { checkAuth } from '@/lib/utils/auth_check';
+import prisma from '@/client';
 
-const ResponseDataEmployeeArray: EmployeeData[] = [
-  {
-    id: 3,
-    name: 'Bob Brown',
-    salary: 60000,
-    department: 'Marketing',
-    email: 'bobbrown@example.org',
-    start_date: new Date('2021-08-10'),
-    bonus: 7500,
-    salary_payment_mode: 'Bank Transfer',
-    pay_frequency: 'Hourly',
-    projects: ['Project A', 'Project B', 'Project C'],
-    insurance_payments: 5500,
-    additional_of_total: 62000,
-  },
-];
+async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
+  const employee = await prisma.employee.findUnique({
+    where: {
+      id: employeeIdNumber,
+      endDate: null,
+    },
+    include: {
+      department: true,
+      employeeProjects: {
+        select: {
+          project: true,
+        },
+      },
+    },
+  });
+  const projects = await prisma.employeeProject.findMany({
+    where: {
+      employeeId: employeeIdNumber,
+      endDate: null,
+    },
+    select: {
+      project: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  const projectNames = projects.map((project) => project.project.name);
+  let employeeData = {} as IEmployeeData;
+  if (employee) {
+    employeeData = {
+      id: employee.id,
+      name: employee.name,
+      salary: employee.salary,
+      department: employee.department.name,
+      start_date: employee.startDate,
+      bonus: employee.bonus,
+      salary_payment_mode: employee.salaryPayMode,
+      pay_frequency: employee.payFrequency,
+      projects: projectNames,
+      insurance_payments: employee.insurancePayment,
+    };
+  }
+  return employeeData;
+}
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<EmployeeData[] | EmployeeData>>
-) {
+async function deleteEmployee(employeeIdNumber: number): Promise<void> {
+  const nowTime = new Date().getTime();
+  const targetTime = timestampInSeconds(nowTime);
   try {
-    if (req.method === 'GET') {
-      const { employeeId } = req.query;
-      if (employeeId) {
-        const { httpCode, result } = formatApiResponse<EmployeeData[]>(
-          STATUS_MESSAGE.SUCCESS_GET,
-          ResponseDataEmployeeArray
-        );
-        res.status(httpCode).json(result);
-      }
-    }
-    if (req.method === 'DELETE') {
-      const { employeeId } = req.query;
-      if (!employeeId) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const { httpCode, result } = formatApiResponse<EmployeeData>(
-        STATUS_MESSAGE.SUCCESS_DELETE,
-        null
-      );
-      res.status(httpCode).json(result);
-    }
-    if (req.method === 'PUT') {
-      const { employeeId } = req.query;
-      const {
-        name,
+    await prisma.employee.update({
+      where: {
+        id: employeeIdNumber,
+        endDate: null,
+      },
+      data: {
+        endDate: targetTime,
+      },
+    });
+  } catch (error) {
+    // Info: (20240627 - Gibbs) console error only
+    // eslint-disable-next-line no-console
+    console.log(error);
+  }
+}
+
+async function updateEmployee(
+  employeeIdNumber: number,
+  salary: number,
+  bonus: number,
+  insurancePayment: number,
+  salaryPayMode: string,
+  payFrequency: string
+): Promise<IEmployeeData> {
+  try {
+    await prisma.employee.update({
+      where: {
+        id: employeeIdNumber,
+        endDate: null,
+      },
+      data: {
         salary,
-        departmentId,
-        startDate,
         bonus,
+        insurancePayment,
         salaryPayMode,
         payFrequency,
-      }: IEmployee = req.body;
-      if (
-        !employeeId ||
-        !name ||
-        !salary ||
-        !departmentId ||
-        !startDate ||
-        !bonus ||
-        !salaryPayMode ||
-        !payFrequency
-      ) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      },
+    });
+  } catch (error) {
+    // Info: (20240627 - Gibbs) console error only
+    // eslint-disable-next-line no-console
+    console.log(error);
+  }
+  const employee = await prisma.employee.findUnique({
+    where: {
+      id: employeeIdNumber,
+      endDate: null,
+    },
+    include: {
+      department: true,
+      employeeProjects: {
+        select: {
+          project: true,
+        },
+      },
+    },
+  });
+  const projects = await prisma.employeeProject.findMany({
+    where: {
+      employeeId: employeeIdNumber,
+      endDate: null,
+    },
+    select: {
+      project: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  const projectNames = projects.map((project) => project.project.name);
+  let employeeData = {} as IEmployeeData;
+  if (employee) {
+    employeeData = {
+      id: employee.id,
+      name: employee.name,
+      salary: employee.salary,
+      department: employee.department.name,
+      start_date: employee.startDate,
+      bonus: employee.bonus,
+      salary_payment_mode: employee.salaryPayMode,
+      pay_frequency: employee.payFrequency,
+      projects: projectNames,
+      insurance_payments: employee.insurancePayment,
+    };
+  }
+  return employeeData;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IEmployeeData>>
+) {
+  let shouldContinue: boolean = true;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = {} as IEmployeeData;
+
+  try {
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const { employeeId } = req.query;
+    const employeeIdNumber = Number(employeeId);
+    if (req.method !== 'GET' && req.method !== 'DELETE' && req.method !== 'PUT') {
+      shouldContinue = false;
+    }
+    if (shouldContinue) {
+      shouldContinue = await checkAuth(userId, companyId);
+    }
+    switch (req.method) {
+      case 'GET': {
+        if (shouldContinue) {
+          if (employeeIdNumber) {
+            statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+            const employeeData = await getEmployee(employeeIdNumber);
+            payload = employeeData;
+          }
+        }
+        break;
       }
-      const { httpCode, result } = formatApiResponse<EmployeeData>(
-        STATUS_MESSAGE.SUCCESS_UPDATE,
-        null
-      );
-      res.status(httpCode).json(result);
+      case 'DELETE': {
+        if (shouldContinue) {
+          if (employeeIdNumber) {
+            statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+            await deleteEmployee(employeeIdNumber);
+          }
+        }
+        break;
+      }
+      case 'PUT': {
+        if (shouldContinue) {
+          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency } = req.body;
+          const employeeData = await updateEmployee(
+            employeeIdNumber,
+            salary,
+            bonus,
+            insurancePayment,
+            salaryPayMode,
+            payFrequency
+          );
+          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+          payload = employeeData;
+        }
+        break;
+      }
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        payload = {} as IEmployeeData;
+        break;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<EmployeeData>(error.message, {} as EmployeeData);
-    res.status(httpCode).json(result);
+    statusMessage = error.message;
+    payload = {} as IEmployeeData;
   }
+  const { httpCode, result } = formatApiResponse<IEmployeeData>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }
