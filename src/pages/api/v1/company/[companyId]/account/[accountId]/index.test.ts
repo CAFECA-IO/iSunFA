@@ -36,6 +36,7 @@ const mockAccountInDB: Account = {
   createdAt: 1000000000,
   updatedAt: 1000000000,
   level: 1,
+  deletedAt: null,
 };
 
 const mockAccount: IAccount = {

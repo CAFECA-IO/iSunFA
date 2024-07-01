@@ -11,7 +11,8 @@ export async function findManyAccountsInPrisma(
   page: number = DEFAULT_PAGE_OFFSET,
   limit: number = DEFAULT_PAGE_LIMIT,
   type?: AccountType,
-  liquidity?: boolean
+  liquidity?: boolean,
+  selectDeleted: boolean = false
 ) {
   let accounts: Account[] = [];
 
@@ -20,6 +21,11 @@ export async function findManyAccountsInPrisma(
     accounts = await prisma.account.findMany({
       skip: offset,
       take: limit,
+      orderBy: [
+        {
+          code: 'asc',
+        }
+      ],
       where: {
         type,
         liquidity,
@@ -30,8 +36,10 @@ export async function findManyAccountsInPrisma(
           },
           {
             companyId: PUBLIC_COMPANY_ID,
-          },
-        ]
+          }
+        ],
+        // Info: (20240701 - Murky) 根據 selectDeleted 設置 deletedAt 的篩選條件
+        deletedAt: selectDeleted ? { not: null } : null,
       },
     });
   } catch (error) {

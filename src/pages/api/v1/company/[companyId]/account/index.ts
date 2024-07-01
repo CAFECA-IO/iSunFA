@@ -117,7 +117,8 @@ export async function handleGetRequest(
     pageNumber,
     limitNumber,
     typeEnum,
-    liquidityBoolean
+    liquidityBoolean,
+    false
   );
   const accounts = formatAccounts(rawAccounts);
   const { httpCode, result } = formatApiResponse<IAccount[]>(STATUS_MESSAGE.SUCCESS_GET, accounts);
