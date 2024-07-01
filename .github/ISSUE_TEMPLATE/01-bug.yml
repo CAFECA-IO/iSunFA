@@ -79,7 +79,6 @@ body:
         - Chrome
         - Safari
         - Microsoft Edge
-        - Brave
         - Other
     validations:
       required: false

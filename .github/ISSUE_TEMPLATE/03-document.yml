@@ -1,4 +1,4 @@
-name: "Documentation Development"
+name: "📘 Documentation Development"
 description: Plan and document development tasks.
 title: "[DOCS] - <title>"
 labels:
@@ -18,9 +18,9 @@ body:
       label: "Tasks"
       description: "List the specific tasks to be completed using Markdown."
       placeholder: |
-        - Task 1...
-        - Task 2...
-        - Task 3...
+        - [ ] Task 1...
+        - [ ] Task 2...
+        - [ ] Task 3...
       render: markdown
     validations:
       required: true
@@ -31,6 +31,7 @@ body:
       description: "Select any dependencies for this task."
       multiple: true
       options:
+        - None
         - API Documentation
         - Design Specifications
         - Code Samples
