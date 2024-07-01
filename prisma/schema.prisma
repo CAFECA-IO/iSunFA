@@ -29,6 +29,8 @@ model Account {
   child    Account[]  @relation("Parent")
   leaf     Account[]  @relation("Root")
   lineItem LineItem[]
+
+  @@map("account")
 }
 
 model Asset {
