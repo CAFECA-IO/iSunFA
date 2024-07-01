@@ -8,6 +8,7 @@ import { IPreviewInvoiceModal } from '@/interfaces/preview_invoice_modal';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
+import { useTranslation } from 'next-i18next';
 
 interface IPreviewInvoiceModalProps {
   isModalVisible: boolean;
@@ -20,6 +21,7 @@ const PreviewInvoiceModal = ({
   modalVisibilityHandler,
   previewInvoiceModalData,
 }: IPreviewInvoiceModalProps) => {
+  const { t } = useTranslation('common');
   const { date, imgStr } = previewInvoiceModalData;
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
@@ -90,7 +92,7 @@ const PreviewInvoiceModal = ({
           {/* Info: (20240508 - Julian) Close Button */}
           <div className="flex w-full justify-end px-16px pt-16px">
             <Button type="button" onClick={closeClickHandler} className="bg-navyBlue2 text-white">
-              Close
+              {t('COMMON.CLOSE')}
             </Button>
           </div>
         </div>

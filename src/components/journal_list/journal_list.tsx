@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { IJournalListItem } from '@/interfaces/journal';
 import JournalItem, { JournalItemMobile } from '@/components/journal_item/journal_item';
 import { checkboxStyle } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 const JournalList = ({ journals }: { journals: IJournalListItem[] }) => {
+  const { t } = useTranslation('common');
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [isCheckAll, setIsCheckAll] = useState<boolean>(false);
 
@@ -65,13 +67,13 @@ const JournalList = ({ journals }: { journals: IJournalListItem[] }) => {
                   onChange={checkAllHandler}
                 />
               </th>
-              <th className="text-center">Date</th>
-              <th className="px-16px">Type</th>
-              <th className="px-16px">Particulars</th>
-              <th className="px-16px">From / To</th>
-              <th className="px-16px">Amount</th>
-              <th className="px-16px">Project</th>
-              <th className="px-16px text-right">Voucher No</th>
+              <th className="text-center">{t('DATE_PICKER.DATE')}</th>
+              <th className="px-16px">{t('JOURNAL.TYPE')}</th>
+              <th className="px-16px">{t('JOURNAL.PARTICULARS')}</th>
+              <th className="px-16px">{t('JOURNAL.FROM_TO')}</th>
+              <th className="px-16px">{t('ADD_ASSET_MODAL.AMOUNT')}</th>
+              <th className="px-16px">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
+              <th className="px-16px text-right">{t('JOURNAL.VOUCHER_NO')}</th>
             </tr>
           </thead>
 
@@ -94,8 +96,8 @@ const JournalList = ({ journals }: { journals: IJournalListItem[] }) => {
                   className="relative h-4 w-4 border border-tertiaryBlue bg-white accent-tertiaryBlue"
                 />
               </th>
-              <th className="text-center">Date</th>
-              <th className="text-center">Info</th>
+              <th className="text-center">{t('DATE_PICKER.DATE')}</th>
+              <th className="text-center">{t('JOURNAL.INFO')}</th>
             </tr>
           </thead>
 

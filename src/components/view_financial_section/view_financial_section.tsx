@@ -10,6 +10,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { ToastType } from '@/interfaces/toastify';
 import useStateRef from 'react-usestateref';
+import { useTranslation } from 'next-i18next';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -334,6 +335,7 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
+  const { t } = useTranslation('common');
   const globalCtx = useGlobalCtx();
 
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
@@ -587,7 +589,7 @@ const ViewFinancialSection = ({
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">Token Contract </div>
+            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_CONTRACT')} </div>
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
@@ -615,7 +617,7 @@ const ViewFinancialSection = ({
             </div>
           </div>
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">Token ID </div>
+            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_ID')}</div>
 
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
@@ -650,7 +652,7 @@ const ViewFinancialSection = ({
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                Token Contract
+                {t('JOURNAL.TOKEN_CONTRACT')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
@@ -683,7 +685,7 @@ const ViewFinancialSection = ({
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                Token ID
+                {t('JOURNAL.TOKEN_ID')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
@@ -751,7 +753,7 @@ const ViewFinancialSection = ({
                   </button>
                 ))
               ) : (
-                <p>Loading...</p>
+                <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
               )}
             </div>
           </div>
@@ -825,7 +827,7 @@ const ViewFinancialSection = ({
           </div>
         ) : (
           <div className="flex h-850px w-full flex-1 justify-center bg-white">
-            <p className="text-stroke-brand-secondary">Loading...</p>
+            <p className="text-stroke-brand-secondary">{t('MY_REPORTS_SECTION.LOADING')}</p>
           </div>
         )}
       </div>

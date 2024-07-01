@@ -114,7 +114,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
-        <p>Account</p>
+        <p>{t('NAV_BAR.ACCOUNT')}</p>
       </Link>
       <button
         type="button"
@@ -124,21 +124,21 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
-        <p>Contract</p>
+        <p>{t('JOURNAL.CONTRACT')}</p>
       </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
-        <p>Salary</p>
+        <p>{t('SALARY.SALARY')}</p>
       </Link>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-        <p>Report</p>
+        <p>{t('REPORTS_SIDEBAR.REPORT')}</p>
       </Link>
     </div>
   );
@@ -156,7 +156,7 @@ const NavBar = () => {
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
-          <p>Applications</p>
+          <p>{t('NAV_BAR.APPLICATIONS')}</p>
         </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -179,14 +179,14 @@ const NavBar = () => {
       >
         <FiLayout size={20} />
 
-        <p>Dashboard</p>
+        <p>{t('NAV_BAR.DASHBOARD')}</p>
       </Link>
       <Link
         href={ISUNFA_ROUTE.CONTACT_US}
         className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <FiMail size={20} />
-        <p>Contact us</p>
+        <p>{t('NAV_BAR.CONTACT_US')}</p>
       </Link>
 
       <Notification
@@ -211,7 +211,7 @@ const NavBar = () => {
       >
         <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-          <p>Project</p>
+          <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Account button */}
@@ -221,7 +221,7 @@ const NavBar = () => {
       >
         <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
-          <p>Account</p>
+          <p>{t('NAV_BAR.ACCOUNT')}</p>
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Contract button */}
@@ -233,13 +233,13 @@ const NavBar = () => {
         className="flex flex-col items-center gap-8px disabled:opacity-50"
       >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
-        <p>Contract</p>
+        <p>{t('JOURNAL.CONTRACT')}</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
       <Link href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`} className="mx-auto">
         <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
-          <p>Salary</p>
+          <p>{t('SALARY.SALARY')}</p>
         </button>
       </Link>
       {/* Info: (20240416 - Julian) Report button */}
@@ -249,7 +249,7 @@ const NavBar = () => {
       >
         <button type="button" className="flex flex-col items-center gap-8px">
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
-          <p>Report</p>
+          <p>{t('REPORTS_SIDEBAR.REPORT')}</p>
         </button>
       </Link>
     </div>
@@ -352,7 +352,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
-            Switch Company
+            {t('NAV_BAR.SWITCH_COMPANY')}
           </div>
         </button>
         <button
@@ -377,7 +377,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
-            Subscription & Bills
+            {t('NAV_BAR.SUBSCRIPTION_BILLS')}
           </div>
         </button>
         <button
@@ -402,7 +402,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal text-button-text-secondary">
-            Setting
+            {t('NAV_BAR.SETTING')}
           </div>
         </button>
         <div className="mt-3 flex flex-col justify-center py-2.5">
@@ -432,7 +432,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal text-tertiaryBlue">
-            Logout
+            {t('NAV_BAR.LOGOUT')}
           </div>
         </button>
       </div>

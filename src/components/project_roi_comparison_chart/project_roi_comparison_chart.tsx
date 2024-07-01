@@ -407,7 +407,7 @@ const ProjectRoiComparisonChart = () => {
                 ></path>
               </svg>
               <p className="text-base lg:text-sm xl:text-base">
-                Project-wise <br className="lg:hidden" />
+                {translate('PROJECT.PROJECT_WISE')} <br className="lg:hidden" />
                 <span className="lg:hidden">{translate('PROJECT.INCOME_VS_EXPENSE')}</span>
                 <span className="hidden lg:inline">
                   {translate('PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}

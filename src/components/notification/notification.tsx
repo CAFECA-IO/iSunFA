@@ -257,7 +257,7 @@ const Notification = ({ mobileMenuIsOpen, setMobileMenuIsOpen }: INotificationPr
               clipRule="evenodd"
             ></path>
           </svg>
-          <p>Notification</p>
+          <p>{t('NAV_BAR.NOTIFICATION')}</p>
         </div>
 
         <svg

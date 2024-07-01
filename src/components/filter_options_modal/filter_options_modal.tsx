@@ -294,7 +294,7 @@ const FilterOptionsModal = ({
 
           <div className="flex flex-col space-y-2 self-stretch">
             <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
-              Sort by
+              {t('MY_REPORTS_SECTION.SORT_BY')}
             </div>
             {/* Info: sort menu (20240513 - Shirley) */}
             {displayedSortMenu}
