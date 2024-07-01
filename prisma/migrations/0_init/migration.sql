@@ -8,8 +8,13 @@ CREATE TABLE "account" (
     "liquidity" BOOLEAN NOT NULL,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "for_user" BOOLEAN NOT NULL,
+    "level" INTEGER NOT NULL DEFAULT 0,
+    "parent_code" TEXT NOT NULL,
+    "root_code" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "account_pkey" PRIMARY KEY ("id")
 );
@@ -559,6 +564,9 @@ CREATE TABLE "work_rate" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "account_code_key" ON "account"("code");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "company_code_key" ON "company"("code");
 
 -- CreateIndex
@@ -602,6 +610,12 @@ CREATE UNIQUE INDEX "value_project_id_key" ON "value"("project_id");
 
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "account" ADD CONSTRAINT "account_parent_code_fkey" FOREIGN KEY ("parent_code") REFERENCES "account"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "account" ADD CONSTRAINT "account_root_code_fkey" FOREIGN KEY ("root_code") REFERENCES "account"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "asset" ADD CONSTRAINT "asset_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contract"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
