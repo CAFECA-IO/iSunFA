@@ -1,15 +1,16 @@
 import Head from 'next/head';
+import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
 import NavBar from '@/components/nav_bar/nav_bar';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
 
-interface IProjectReportDetailPageProps {
+interface IProjectAnalysesReportsPageProps {
   projectId: string;
   reportId: string;
 }
 
-const ProjectReportDetailPage = ({ projectId, reportId }: IProjectReportDetailPageProps) => {
+const ProjectAnalysesReportsPage = ({ projectId, reportId }: IProjectAnalysesReportsPageProps) => {
   return (
     <>
       <Head>
@@ -29,7 +30,10 @@ const ProjectReportDetailPage = ({ projectId, reportId }: IProjectReportDetailPa
           {/* Info: (20240701 - Julian) Sidebar */}
           <ProjectSidebar projectId={projectId} />
           {/* Info: (20240701- Julian) Main */}
-          <div className="flex min-h-screen bg-gray-100"></div>
+          <div className="flex min-h-screen bg-gray-100">
+            {/* Info: (20240701 - Julian) Body */}
+            <div></div>
+          </div>
         </div>
       </div>
     </>
@@ -57,4 +61,6 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default ProjectReportDetailPage;
+export const getStaticProps = ProjectAnalysesReportsPage;
+
+export default ProjectAnalysesReportsPage;
