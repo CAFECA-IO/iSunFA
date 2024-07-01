@@ -139,7 +139,7 @@ const MyReportsSection = () => {
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isPendingSortMenuOpen ? ' text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
-        {filteredPendingSort}
+        {t(filteredPendingSort)}
       </p>
       <svg
         xmlns="http://www.w3.org/2000/svg"

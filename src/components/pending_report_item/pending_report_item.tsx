@@ -157,7 +157,7 @@ const PendingReportItem = ({
 
   const displayedOperationsColumn =
     remainingTime > 0 ? (
-      <div className="flex w-full justify-start space-x-2 md:space-x-10 lg:space-x-2">
+      <div className="hidden w-full grid-cols-3 lg:grid">
         {/* Info: Pause / Resume (20240514 - Shirley) */}
         {displayedPauseOrResumeButton}
         {/* Info: Delete (20240514 - Shirley) */}
@@ -242,7 +242,7 @@ const PendingReportItem = ({
           <div className="flex items-center justify-start">{displayedOperationsColumn}</div>
         </div>
       </td>
-      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden w-240px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
@@ -251,7 +251,7 @@ const PendingReportItem = ({
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
-      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden w-240px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.ESTIMATED')}</span>
           {displayedEstimatedTime}
