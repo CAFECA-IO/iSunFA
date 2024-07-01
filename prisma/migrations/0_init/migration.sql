@@ -14,6 +14,7 @@ CREATE TABLE "account" (
     "root_code" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "account_pkey" PRIMARY KEY ("id")
 );
