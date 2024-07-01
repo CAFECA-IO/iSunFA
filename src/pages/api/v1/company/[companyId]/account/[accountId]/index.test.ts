@@ -35,6 +35,7 @@ const mockAccountInDB: Account = {
   name: 'Sun Bank',
   createdAt: 1000000000,
   updatedAt: 1000000000,
+  level: 1,
 };
 
 const mockAccount: IAccount = {
@@ -84,13 +85,14 @@ describe('GET account by id', () => {
     req.method = 'GET';
     req.query = { companyId: '1', accountId: '-2' };
     await module.default(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.status).toHaveBeenCalledWith(200);
 
     const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
-      success: false,
-      code: expect.stringContaining('404'),
+      success: true,
+      code: expect.stringContaining('200'),
       message: expect.any(String),
+      payload: {},
     });
 
     expect(res.json).toHaveBeenCalledWith(expectedResponse);

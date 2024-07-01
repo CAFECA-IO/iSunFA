@@ -2,66 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAccount } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse, isParamNumeric, pageToOffset } from '@/lib/utils/common';
-import prisma from '@/client';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import type { Account } from '@prisma/client';
+import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { AccountType } from '@/constants/account';
 import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
 import { checkAdmin } from '@/lib/utils/auth_check';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
-
-export async function findManyAccountsInPrisma(
-  companyId: number,
-  page: number = DEFAULT_PAGE_OFFSET,
-  limit: number = DEFAULT_PAGE_LIMIT,
-  type?: AccountType,
-  liquidity?: boolean
-) {
-  try {
-    const offset = pageToOffset(page, limit);
-    const accounts = await prisma.account.findMany({
-      skip: offset,
-      take: limit,
-      where: {
-        type,
-        liquidity,
-        OR: [
-          {
-            companyId,
-          },
-          {
-            companyId: PUBLIC_COMPANY_ID,
-          },
-        ]
-      },
-    });
-
-    return accounts;
-  } catch (error) {
-    // Info (20240516 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
-  }
-}
-
-export function formatAccounts(accounts: Account[]): IAccount[] {
-  return accounts.map((account) => {
-    return {
-      id: account.id,
-      companyId: account.companyId,
-      system: account.system,
-      type: account.type,
-      liquidity: account.liquidity,
-      debit: account.debit,
-      code: account.code,
-      name: account.name,
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt,
-    };
-  });
-}
+import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
+import { formatAccounts } from '@/lib/utils/formatter/account.formatter';
 
 export function isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
   if (Array.isArray(type)) {
@@ -161,8 +108,12 @@ export async function handleGetRequest(
     page,
     limit
   );
+
+  // Info (20240701 - Murky) - User can only get accounts that are for user
+  const forUser = true;
   const rawAccounts = await findManyAccountsInPrisma(
     companyIdNumber,
+    forUser,
     pageNumber,
     limitNumber,
     typeEnum,

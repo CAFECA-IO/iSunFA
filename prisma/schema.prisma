@@ -29,6 +29,8 @@ model Account {
   child    Account[]  @relation("Parent")
   leaf     Account[]  @relation("Root")
   lineItem LineItem[]
+
+  @@map("account")
 }
 
 model Asset {
@@ -197,7 +199,7 @@ model Contract {
   createdAt         Int     @map("created_at")
   updatedAt         Int     @map("updated_at")
 
-  assets   Asset[]
+  assets  Asset[]
   journal Journal[]
 
   company Company  @relation(fields: [companyId], references: [id])
@@ -587,7 +589,7 @@ model Voucher {
   createdAt Int    @map("created_at")
   updatedAt Int    @map("updated_at")
 
-  assets     Asset[]
+  assets    Asset[]
   lineItems LineItem[]
 
   journal Journal @relation(fields: [journalId], references: [id])
