@@ -22,6 +22,7 @@ model Account {
   createdAt  Int     @map("created_at")
   updatedAt  Int     @map("updated_at")
   level      Int     @default(0)
+  deletedAt  Int?    @map("deleted_at")
 
   company  Company    @relation(fields: [companyId], references: [id])
   parent   Account    @relation("Parent", fields: [parentCode], references: [code])
@@ -199,7 +200,7 @@ model Contract {
   createdAt         Int     @map("created_at")
   updatedAt         Int     @map("updated_at")
 
-  assets   Asset[]
+  assets  Asset[]
   journal Journal[]
 
   company Company  @relation(fields: [companyId], references: [id])
@@ -589,7 +590,7 @@ model Voucher {
   createdAt Int    @map("created_at")
   updatedAt Int    @map("updated_at")
 
-  assets     Asset[]
+  assets    Asset[]
   lineItems LineItem[]
 
   journal Journal @relation(fields: [journalId], references: [id])
