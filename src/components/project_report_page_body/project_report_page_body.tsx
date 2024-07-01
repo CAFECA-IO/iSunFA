@@ -268,7 +268,6 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
 
   return (
     <div className="flex flex-1 flex-col gap-16px">
-      <button>test</button>
       {/* Info: (20240624 - Julian) Pending Report Filter */}
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}

@@ -64,6 +64,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export const getStaticProps = ProjectFinancialsReportsPage;
-
 export default ProjectFinancialsReportsPage;
