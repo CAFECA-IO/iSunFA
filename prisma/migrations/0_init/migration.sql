@@ -23,12 +23,13 @@ CREATE TABLE "account" (
 CREATE TABLE "asset" (
     "id" SERIAL NOT NULL,
     "voucher_id" INTEGER NOT NULL,
-    "project_id" INTEGER NOT NULL,
-    "contract_id" INTEGER NOT NULL,
+    "project_id" INTEGER,
+    "contract_id" INTEGER,
     "name" TEXT NOT NULL,
-    "tag" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "description" TEXT NOT NULL,
+    "supplier" TEXT NOT NULL,
     "start_date" TEXT NOT NULL,
     "end_date" TEXT NOT NULL,
     "price" TEXT NOT NULL,
@@ -618,10 +619,10 @@ ALTER TABLE "account" ADD CONSTRAINT "account_parent_code_fkey" FOREIGN KEY ("pa
 ALTER TABLE "account" ADD CONSTRAINT "account_root_code_fkey" FOREIGN KEY ("root_code") REFERENCES "account"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "asset" ADD CONSTRAINT "asset_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contract"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "asset" ADD CONSTRAINT "asset_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contract"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "asset" ADD CONSTRAINT "asset_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "asset" ADD CONSTRAINT "asset_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "asset" ADD CONSTRAINT "asset_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -751,8 +752,6 @@ ALTER TABLE "value" ADD CONSTRAINT "value_project_id_fkey" FOREIGN KEY ("project
 
 -- AddForeignKey
 ALTER TABLE "work_rate" ADD CONSTRAINT "work_rate_employee_project_id_fkey" FOREIGN KEY ("employee_project_id") REFERENCES "employee_project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- This is an empty migration.
 
 ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "admin_id_seq" RESTART WITH 10000000;
