@@ -7,12 +7,14 @@ import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import JournalDetail from '@/components/journal_detail/journal_detail';
+import { useTranslation } from 'next-i18next';
 
 interface IJournalDetailPageProps {
   journalId: string;
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -39,7 +41,9 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240503 - Julian) i18n */}
-        <title>Journal {journalId} - iSunFA</title>
+        <title>
+          {t('JOURNAL.JOURNAL')} {journalId} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

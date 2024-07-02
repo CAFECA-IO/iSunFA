@@ -10,12 +10,14 @@ import ProjectContractsPageBody from '@/components/project_contracts_page_body/p
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectContractPageProps {
   projectId: string;
 }
 
 const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
+  const { t } = useTranslation('common');
   // ToDo: (20240618 - Julian) replace with actual data
   const projectName = 'BAIFA';
 
@@ -45,7 +47,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                 </button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                  {projectName} - Contracts
+                  {projectName} - {t('JOURNAL.CONTRACTS')}
                 </h1>
               </div>
               {/* Info: (20240618 - Julian) Add new contract button (desktop) */}
@@ -56,7 +58,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                 className="hidden items-center gap-4px px-4 py-8px md:flex"
               >
                 <FiPlusCircle size={24} />
-                Add new contract
+                {t('JOURNAL.ADD_NEW_CONTRACT')}
               </Button>
               {/* Info: (20240619 - Julian) Add new contract button (mobile) */}
               <Button
@@ -84,7 +86,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>Project Contract - iSunFA</title>
+        <title>{t('JOURNAL.PROJECT_CONTRACT_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">

@@ -229,7 +229,7 @@ const ProjectContractsPageBody = () => {
             type="text"
             onChange={searchHandler}
             className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-            placeholder="Search Contract"
+            placeholder={t('CONTRACT.SEARCH_CONTRACT')}
           />
           <FiSearch size={20} />
         </div>
@@ -255,7 +255,7 @@ const ProjectContractsPageBody = () => {
               type="text"
               onChange={searchHandler}
               className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-              placeholder="Search Contract"
+              placeholder={t('CONTRACT.SEARCH_CONTRACT')}
             />
             <FiSearch size={20} />
           </div>

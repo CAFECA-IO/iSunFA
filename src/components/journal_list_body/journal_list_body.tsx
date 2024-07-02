@@ -137,7 +137,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
     <div className="relative flex-1">
       <input
         type="text"
-        placeholder="Search"
+        placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
       <FiSearch size={20} className="absolute right-3 top-3 cursor-pointer" />

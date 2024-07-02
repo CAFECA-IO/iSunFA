@@ -11,12 +11,14 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectReportPageProps {
   projectId: string;
 }
 
 const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
   // ToDo: (20240624 - Julian) Replace with api data
   const projectName = 'BAIFA';
@@ -35,14 +37,14 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
             <div className="flex items-center justify-between">
               {/* ToDo: (20240624 - Julian) Project Name */}
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                {projectName} - Analysis Report
+                {projectName} - {t('REPORTS_SIDEBAR.ANALYSIS_REPORT')}
               </h1>
 
               {/* ToDo: (20240624 - Julian) Generate Report link */}
               <Link href={`${ISUNFA_ROUTE.PROJECT_LIST}`}>
                 <Button type="button" variant="tertiary" className="flex items-center">
                   <BsClipboardPlus size={24} />
-                  <p>Generate Report</p>
+                  <p>{t('MY_REPORTS_SECTION.GENERATE_REPORT')}</p>
                 </Button>
               </Link>
             </div>
@@ -64,7 +66,9 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240606 - Julian) i18n */}
-        <title>{projectName} Analysis Report - iSunFA</title>
+        <title>
+          {projectName} {t('REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

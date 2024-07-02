@@ -238,7 +238,7 @@ const ProfitTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
-                {t('ADD_ASSET_MODAL.MONTH')}Month
+                {t('ADD_ASSET_MODAL.MONTH')}
               </Button>
             </div>
             <div className="">

@@ -165,7 +165,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
             <input
               id="companyNameInput"
               type="text"
-              placeholder="Enter company name"
+              placeholder={t('SELECT_COMPANY.ENTER_COMPANY_NAME')}
               value={nameValue}
               onChange={changeNameHandler}
               required
@@ -199,7 +199,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
               <input
                 id="registrationNumberInput"
                 type="text"
-                placeholder="Enter business registration number"
+                placeholder={t('SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
                 value={registrationNumberValue}
                 onChange={changeRegistrationNumberHandler}
                 required

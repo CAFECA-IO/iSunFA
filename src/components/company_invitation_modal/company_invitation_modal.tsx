@@ -142,7 +142,7 @@ const CompanyInvitationModal = ({
             <input
               id="invitationCodeInput"
               type="text"
-              placeholder="Enter code"
+              placeholder={t('COMPANY_INVITATION_MODAL.ENTER_CODE')}
               value={codeInput}
               onChange={changeCodeHandler}
               required

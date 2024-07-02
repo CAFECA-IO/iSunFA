@@ -126,7 +126,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               <p className="font-semibold">{t('ADD_ASSET_MODAL.ASSET_NAME')}</p>
               <input
                 type="text"
-                placeholder="Name your asset"
+                placeholder={t('ADD_ASSET_MODAL.NAME_YOUR_ASSET')}
                 value={inputName}
                 onChange={nameChangeHandler}
                 required
@@ -138,7 +138,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               <p className="font-semibold">{t('JOURNAL.DESCRIPTION')}</p>
               <input
                 type="text"
-                placeholder="Add note"
+                placeholder={t('ADD_ASSET_MODAL.ADD_NOTE')}
                 value={inputDescription}
                 onChange={descriptionChangeHandler}
                 required

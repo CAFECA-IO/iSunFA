@@ -10,8 +10,10 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
+  const { t } = useTranslation('common');
   const router = useRouter();
   const { signedIn, isAuthLoading } = useUserCtx();
 
@@ -43,7 +45,7 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Login - iSunFA</title>
+        <title>{t('NAV_BAR.LOGIN')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

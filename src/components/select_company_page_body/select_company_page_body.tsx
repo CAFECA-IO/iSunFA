@@ -51,7 +51,7 @@ const SelectCompanyPageBody = () => {
   >([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedCompanyName = selectedCompany?.name ?? 'Select an Company';
+  const selectedCompanyName = selectedCompany?.name ?? t('SELECT_COMPANY.SELECT_AN_COMPANY');
 
   const menuOpenHandler = () => {
     listCompany({
@@ -167,7 +167,7 @@ const SelectCompanyPageBody = () => {
           className="flex w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
-          <p>Enter Invitation Code</p>
+          <p>{t('SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
         </button>
       </div>
     </div>

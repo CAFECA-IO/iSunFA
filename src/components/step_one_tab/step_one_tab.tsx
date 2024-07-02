@@ -191,7 +191,7 @@ const StepOneTab = () => {
           <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
         </div>
 
-        <h3 className="text-xl font-bold text-lightGray4">OR</h3>
+        <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
         <button

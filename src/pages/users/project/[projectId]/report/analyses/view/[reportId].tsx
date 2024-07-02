@@ -3,6 +3,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSideProps } from 'next';
 import NavBar from '@/components/nav_bar/nav_bar';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectAnalysesReportDetailPageProps {
   projectId: string;
@@ -13,6 +14,7 @@ const ProjectAnalysesReportDetailPage = ({
   projectId,
   reportId,
 }: IProjectAnalysesReportDetailPageProps) => {
+  const { t } = useTranslation('common');
   return (
     <>
       <Head>
@@ -20,7 +22,9 @@ const ProjectAnalysesReportDetailPage = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>Project Report {reportId} - iSunFA</title>
+        <title>
+          {t('PROJECT.PROJECT_REPORT')} {reportId} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">
