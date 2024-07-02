@@ -7,10 +7,7 @@ import { checkAdmin } from '@/lib/utils/auth_check';
 import { formatAccount } from '@/lib/utils/formatter/account.formatter';
 import { findFirstAccountInPrisma } from '@/lib/utils/repo/account.repo';
 
-export function formatParams(
-  companyId: unknown,
-  accountId: string | string[] | undefined
-) {
+export function formatParams(companyId: unknown, accountId: string | string[] | undefined) {
   // ToDo: (20240613 - Murky) - need to use type guard instead
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
   const isAccountIdValid = isParamNumeric(accountId);

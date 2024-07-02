@@ -1,5 +1,5 @@
-import { IAccount } from "@/interfaces/accounting_account";
-import { Account } from "@prisma/client";
+import { IAccount } from '@/interfaces/accounting_account';
+import { Account } from '@prisma/client';
 
 export function formatAccount(account: Account): IAccount {
   return {

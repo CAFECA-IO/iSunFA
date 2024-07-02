@@ -142,7 +142,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              Top project ROI
+              {t('DASHBOARD.TOP_PROJECT_ROI')}
             </div>
           </div>
           <div

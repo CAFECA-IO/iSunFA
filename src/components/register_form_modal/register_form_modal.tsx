@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IRegisterFormModal {
   isModalVisible: boolean;
@@ -16,6 +17,7 @@ const RegisterFormModal = ({
   modalVisibilityHandler,
   data,
 }: IRegisterFormModal) => {
+  const { t } = useTranslation('common');
   const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -53,9 +55,11 @@ const RegisterFormModal = ({
         <div className="flex gap-2.5 bg-white px-5 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="space-y-2 px-0">
-              <div className="text-xl font-bold text-slate-700">Set User Name</div>
+              <div className="text-xl font-bold text-slate-700">
+                {t('LOGIN_PAGE_BODY.SET_USER_NAME')}
+              </div>
               <div className="text-xs text-lightGray4">
-                This username will be applied to your device.
+                {t('LOGIN_PAGE_BODY.THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.')}
               </div>
             </div>
           </div>
@@ -125,10 +129,10 @@ const RegisterFormModal = ({
               onClick={modalVisibilityHandler}
               className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
-              Cancel
+              {t('REPORTS_HISTORY_LIST.CANCEL')}
             </button>
             <Button variant={'tertiary'} onClick={registerClickHandler}>
-              Register
+              {t('LOGIN_PAGE_BODY.REGISTER')}
             </Button>
           </div>
         </div>

@@ -16,7 +16,14 @@
     "LOGIN": "登入",
     "MARK_ALL_AS_READ": "將所有通知標記為已讀",
     "READ_MORE": "繼續閱讀...",
-    "LANGUAGE": "語言"
+    "LANGUAGE": "語言",
+    "ACCOUNT": "帳戶",
+    "APPLICATIONS": "應用程式",
+    "SWITCH_COMPANY": "切換公司",
+    "SUBSCRIPTION_BILLS": "訂閱和帳單",
+    "SETTING": "設定",
+    "LOGOUT": "登出",
+    "NOTIFICATION": "通知"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -297,7 +304,9 @@
     "END_OF_TRIAL": "試用結束",
     "NEWEST": "最新的",
     "OLDEST": "最舊的",
-    "ENTER_A_DESCRIPTION": "輸入描述"
+    "ENTER_A_DESCRIPTION": "輸入描述",
+    "CLOSE": "關閉",
+    "PROGRESS": "進度"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",
@@ -348,7 +357,24 @@
     "PAYMENT_METHOD": "付款方式",
     "PAYMENT_PERIOD": "付款期間",
     "PAYMENT_STATUS": "支付狀態",
-    "CONTRACT": "合約"
+    "CONTRACT": "合約",
+    "FROM_TO": "起迄期間",
+    "VOUCHER_NO": "憑證號碼",
+    "INFO": "資訊",
+    "EVENT_TYPE": "事件類型",
+    "PAYMENT_REASON": "付款原因",
+    "ADD_NEW_ASSET": " + 新增資產",
+    "FEE": "費用",
+    "BANK_ACCOUNT": "銀行帳戶",
+    "AT_ONCE": "立刻",
+    "INSTALLMENT": "分期付款:",
+    "TIMES": "次數",
+    "PAYMENT_STATE": "付款狀態",
+    "UNPAID": "未付",
+    "PARTIAL_PAID": "部分付款:",
+    "PAID": "已經付款",
+    "CLEAR_ALL": "全部清除",
+    "ADDED_JOURNAL": "新增日記帳"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -383,7 +409,10 @@
     "IN_30_DAYS": "30天內",
     "TOTAL_EXPENSES": "總費用",
     "NET_PROFIT": "淨利",
-    "ADD_PROJECT": "新增項目"
+    "ADD_PROJECT": "新增項目",
+    "PROJECT_WISE": "專案方面",
+    "FINANCIAL_OVERVIEW": "財務概覽",
+    "INCOME_VS_EXPENDITURE": "收入與支出"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -394,7 +423,8 @@
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
     "PRE_LAUNCH_PROJECTS": "預啟動專案",
-    "HELLO_WELCOME_TO": "你好！歡迎來到"
+    "HELLO_WELCOME_TO": "你好！歡迎來到",
+    "TOP_PROJECT_ROI": "最優項目投資報酬率"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",
@@ -450,5 +480,49 @@
     "DURATION": "期間",
     "COMPANY_NAME": "公司名稱",
     "BUSINESS_REGISTRATION_NUMBER": "商業登記號碼"
+  },
+  "EDIT_BOOKMARK_MODAL": {
+    "LISTED": "列出",
+    "EDIT_MY_FAVORITES": "編輯我的收藏夾",
+    "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "選擇要新增或刪除的書籤",
+    "SAVE": "保存"
+  },
+  "LABOR_COST_CHART": {
+    "ONBOARDING_PROJECTS": "入職項目",
+    "LABOR_COST": "勞動成本",
+    "WORKING_TIME_RATIO": "工作時間比例"
+  },
+  "LOADING_MODAL": {
+    "LOADING": "正在加載中，請稍等..."
+  },
+  "LOGIN_PAGE_BODY": {
+    "PLEASE": "請",
+    "REGISTER_YOUR_DEVICE": "註冊您的設備。",
+    "OOPS": "哎呀！出了些問題。請重試或聯絡客服。",
+    "HELP": "幫助",
+    "REGISTER_YOUR_DEVICE_ARROW": "註冊您的裝置 → ",
+    "SCAN_THE_QR_CODE": "使用您註冊的裝置掃描二維碼",
+    "LOG_IN_WITH_DEVICE": "使用裝置登入",
+    "REGISTER_MY_DEVICE": "註冊我的設備",
+    "LOGIN_ENVIRONMENT_TIPS": "登入環境提示",
+    "SET_USER_NAME": "設定使用者名稱",
+    "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "該用戶名將應用於您的裝置。",
+    "REGISTER": "註冊",
+    "LOG_IN": "登入"
+  },
+  "PASSKEY_SUPPORT_MODAL": {
+    "ANDROID": "Android OS9 或更高版本",
+    "MACOS": "MacOS 13.5 或更高版本",
+    "IOS": "iOS 16 和 iPadOS 16 或更高版本",
+    "GOT_IT": "知道了！"
+  },
+  "PROFILE_UPLOAD_MODAL": {
+    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
+    "PROFILE_PIC": "使用者照片",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "請上傳您的個人資料照片"
+  },
+  "PROFIT_TREND_CHART": {
+    "PROFIT_STATUS_TREND_CHART": "獲利狀況趨勢圖",
+    "WEEK": "星期"
   }
 }

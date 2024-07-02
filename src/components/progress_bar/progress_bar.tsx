@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'next-i18next';
 
 interface IProgressBarProps {
   progressRate: number;
@@ -6,6 +7,7 @@ interface IProgressBarProps {
 }
 
 const ProgressBar = ({ progressRate, progressRateChangeHandler }: IProgressBarProps) => {
+  const { t } = useTranslation('common');
   useEffect(() => {
     // Info: (20240509 - Julian) 找到 sliderProgress 的 style element
     const styleElement = document.getElementById('sliderStyle');
@@ -34,7 +36,7 @@ const ProgressBar = ({ progressRate, progressRateChangeHandler }: IProgressBarPr
 
   return (
     <div className="flex w-full flex-col items-start gap-8px">
-      <p className="text-sm font-semibold text-navyBlue2">Progress</p>
+      <p className="text-sm font-semibold text-navyBlue2">{t('COMMON.PROGRESS')}</p>
       <div className="flex w-full flex-col gap-x-20px gap-y-10px md:flex-row">
         {/* Info: (20240502 - Julian) Progress Bar */}
         <input

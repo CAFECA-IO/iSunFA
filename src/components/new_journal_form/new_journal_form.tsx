@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
@@ -47,6 +48,7 @@ const contractSelection: { id: number | null; name: string }[] = [
 ];
 
 const NewJournalForm = () => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   // Info: (20240428 - Julian) get values from context
   const {
@@ -698,7 +700,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Event Type */}
           <div className="flex w-full flex-col items-start gap-8px md:w-130px">
-            <p className="text-sm font-semibold text-navyBlue2">Event Type</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.EVENT_TYPE')}</p>
             <div
               id="eventTypeMenu"
               onClick={eventMenuOpenHandler}
@@ -722,7 +724,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Payment Reason */}
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
-            <p className="text-sm font-semibold text-navyBlue2">Payment Reason</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_REASON')}</p>
             <input
               id="inputPaymentReason"
               name="inputPaymentReason"
@@ -756,7 +758,7 @@ const NewJournalForm = () => {
               onClick={addAssetModalVisibilityHandler}
               className="ml-auto text-secondaryBlue hover:text-primaryYellow"
             >
-              + Add new asset
+              {t('JOURNAL.ADD_NEW_ASSET')}
             </button>
           </div>
         </div>
@@ -765,7 +767,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row">
           {/* Info: (20240423 - Julian) Description */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">Description</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION')}</p>
             <input
               id="inputDescription"
               name="inputDescription"
@@ -780,7 +782,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Vendor/Supplier */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">Vendor/Supplier</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.VENDOR_SUPPLIER')}</p>
             <input
               id="inputVendor"
               name="inputVendor"
@@ -804,7 +806,7 @@ const NewJournalForm = () => {
         <hr className="block flex-1 border-lightGray3 md:hidden" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/credit_card.svg" width={16} height={16} alt="credit_card_icon" />
-          <p>Payment</p>
+          <p>{t('JOURNAL.PAYMENT')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
@@ -815,7 +817,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240423 - Julian) Total Price */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">Total Price</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
             <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
               <input
                 id="inputTotalPrice"
@@ -835,7 +837,7 @@ const NewJournalForm = () => {
                   alt="twd_icon"
                   className="rounded-full"
                 />
-                <p>TWD</p>
+                <p>{t('JOURNAL.TWD')}</p>
               </div>
             </div>
           </div>
@@ -844,7 +846,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col gap-8px text-lightGray4 md:w-200px">
             {/* Info: (20240424 - Julian) toggle */}
             <div className="flex items-center gap-18px">
-              <p>Tax</p>
+              <p>{t('JOURNAL.Tax')}</p>
               <Toggle
                 id="taxToggle"
                 initialToggleState={taxToggle}
@@ -878,7 +880,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col gap-8px text-lightGray4 md:w-200px">
             {/* Info: (20240424 - Julian) toggle */}
             <div className="flex items-center gap-18px">
-              <p>Fee</p>
+              <p>{t('JOURNAL.FEE')}</p>
               <Toggle
                 id="feeToggle"
                 initialToggleState={feeToggle}
@@ -907,7 +909,7 @@ const NewJournalForm = () => {
                   alt="twd_icon"
                   className="rounded-full"
                 />
-                <p>TWD</p>
+                <p>{t('JOURNAL.TWD')}</p>
               </div>
             </div>
           </div>
@@ -917,7 +919,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-24px md:flex-row md:items-end">
           {/* Info: (20240424 - Julian) Payment Method */}
           <div className="flex w-full flex-col items-start gap-8px md:w-200px">
-            <p className="text-sm font-semibold text-navyBlue2">Payment Method</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_METHOD')}</p>
             <div
               id="paymentMethodMenu"
               onClick={methodMenuHandler}
@@ -941,7 +943,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240424 - Julian) Financial Institution Code */}
           <div className="flex w-full flex-col items-start gap-8px md:w-300px">
-            <p className="text-sm font-semibold text-navyBlue2">Bank Account</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.BANK_ACCOUNT')}</p>
             <button
               id="ficMenu"
               type="button"
@@ -985,7 +987,9 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240424 - Julian) Payment Period */}
           <div className="flex w-full flex-col items-start gap-8px md:w-fit">
-            <p className="text-sm font-semibold text-navyBlue2">Period</p>
+            <p className="text-sm font-semibold text-navyBlue2">
+              {t('REPORTS_HISTORY_LIST.PERIOD')}
+            </p>
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-center">
               {/* Info: (20240424 - Julian) At Once */}
@@ -998,7 +1002,7 @@ const NewJournalForm = () => {
                   checked={paymentPeriod === PaymentPeriodType.AT_ONCE}
                   onChange={atOnceClickHandler}
                 />
-                <p>At Once</p>
+                <p>{t('JOURNAL.AT_ONCE')}</p>
               </label>
 
               {/* Info: (20240424 - Julian) Installment */}
@@ -1015,7 +1019,7 @@ const NewJournalForm = () => {
                     checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
                     onChange={installmentClickHandler}
                   />
-                  Installment:
+                  {t('JOURNAL.INSTALLMENT')}
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
@@ -1031,7 +1035,7 @@ const NewJournalForm = () => {
                     className="flex-1 bg-transparent px-10px outline-none"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-                    <p>Times</p>
+                    <p>{t('JOURNAL.TIMES')}</p>
                   </div>
                 </div>
               </div>
@@ -1040,7 +1044,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240424 - Julian) Payment State */}
           <div className="flex w-full flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">Payment State</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_STATE')}</p>
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
@@ -1053,7 +1057,7 @@ const NewJournalForm = () => {
                   checked={paymentStatus === PaymentStatusType.UNPAID}
                   onChange={unpaidClickHandler}
                 />
-                <p>Unpaid</p>
+                <p>{t('JOURNAL.UNPAID')}</p>
               </label>
               {/* Info: (20240424 - Julian) Partial Paid */}
               <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
@@ -1069,7 +1073,7 @@ const NewJournalForm = () => {
                     checked={paymentStatus === PaymentStatusType.PARTIAL}
                     onChange={partialPaidClickHandler}
                   />
-                  <p>Partial Paid:</p>
+                  <p>{t('JOURNAL.PARTIAL_PAID')}</p>
                 </label>
                 {/* Info: (20240424 - Julian) input */}
                 <div
@@ -1092,7 +1096,7 @@ const NewJournalForm = () => {
                       alt="twd_icon"
                       className="rounded-full"
                     />
-                    <p>TWD</p>
+                    <p>{t('JOURNAL.TWD')}</p>
                   </div>
                 </div>
               </div>
@@ -1106,7 +1110,7 @@ const NewJournalForm = () => {
                   checked={paymentStatus === PaymentStatusType.PAID}
                   onChange={paidClickHandler}
                 />
-                <p>Paid</p>
+                <p>{t('JOURNAL.PAID')}</p>
               </label>
             </div>
           </div>
@@ -1145,7 +1149,7 @@ const NewJournalForm = () => {
                 alt="twd_icon"
                 className="rounded-full"
               />
-              <p>TWD</p>
+              <p>{t('JOURNAL.TWD')}</p>
             </div>
           </div>
         </div>
@@ -1159,7 +1163,7 @@ const NewJournalForm = () => {
         <hr className="block flex-1 border-lightGray3 md:hidden" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
-          <p>Project</p>
+          <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
@@ -1175,7 +1179,7 @@ const NewJournalForm = () => {
             className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
           >
             <div className="p-12px text-sm text-lightGray4">
-              <p>Project</p>
+              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
               <p className="flex-1">{selectedProject.name}</p>
@@ -1201,7 +1205,7 @@ const NewJournalForm = () => {
             className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
           >
             <div className="p-12px text-sm text-lightGray4">
-              <p>Contract</p>
+              <p>{t('JOURNAL.CONTRACT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
               <p className="flex-1">{selectedContract.name}</p>
@@ -1250,7 +1254,7 @@ const NewJournalForm = () => {
             onClick={clearAllClickHandler}
             className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
           >
-            Clear all
+            {t('JOURNAL.CLEAR_ALL')}
           </button>
           <Button
             id="uploadBtn"
@@ -1258,7 +1262,7 @@ const NewJournalForm = () => {
             className="px-16px py-8px"
             disabled={isUploadDisabled}
           >
-            <p>Upload</p>
+            <p>{t('JOURNAL.UPLOAD')}</p>
             <svg
               width="20"
               height="20"

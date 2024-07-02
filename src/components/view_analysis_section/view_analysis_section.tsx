@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface IViewAnalysisSectionProps {
   reportTypesName: { id: string; name: string };
@@ -15,6 +16,7 @@ const ViewAnalysisSection = ({
   tokenId,
   reportLink,
 }: IViewAnalysisSectionProps) => {
+  const { t } = useTranslation('common');
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
     window.alert(`Token contract ${tokenContract} copied to clipboard!`);
@@ -124,7 +126,7 @@ const ViewAnalysisSection = ({
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">Token Contract </div>
+            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_CONTRACT')} </div>
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
@@ -152,7 +154,7 @@ const ViewAnalysisSection = ({
             </div>
           </div>
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">Token ID </div>
+            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_ID')}</div>
 
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
@@ -187,7 +189,7 @@ const ViewAnalysisSection = ({
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                Token Contract
+                {t('JOURNAL.TOKEN_CONTRACT')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
@@ -220,7 +222,7 @@ const ViewAnalysisSection = ({
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                Token ID
+                {t('JOURNAL.Token ID')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">

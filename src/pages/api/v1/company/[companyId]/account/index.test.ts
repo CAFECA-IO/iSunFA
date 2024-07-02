@@ -22,25 +22,26 @@ const session = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
 const mockAccountsInDB: Account[] = [
-    {
-      id: testAccountId,
-      companyId,
-      system: 'IFRS',
-      type: 'asset',
-      debit: true,
-      liquidity: true,
-      code: '1103-1',
-      parentCode: '1103',
-      rootCode: '1100',
-      forUser: true,
-      name: 'Sun Bank',
-      createdAt: 1000000000,
-      updatedAt: 1000000000,
-      level: 1,
-      deletedAt: null,
-    }
-  ];
-  const mockAccounts: IAccount[] = [{
+  {
+    id: testAccountId,
+    companyId,
+    system: 'IFRS',
+    type: 'asset',
+    debit: true,
+    liquidity: true,
+    code: '1103-1',
+    parentCode: '1103',
+    rootCode: '1100',
+    forUser: true,
+    name: 'Sun Bank',
+    createdAt: 1000000000,
+    updatedAt: 1000000000,
+    level: 1,
+    deletedAt: null,
+  },
+];
+const mockAccounts: IAccount[] = [
+  {
     id: testAccountId,
     companyId,
     system: 'IFRS',
@@ -51,7 +52,8 @@ const mockAccountsInDB: Account[] = [
     name: 'Sun Bank',
     createdAt: 1000000000,
     updatedAt: 1000000000,
-  }];
+  },
+];
 beforeEach(() => {
   jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue(session);
   req = {

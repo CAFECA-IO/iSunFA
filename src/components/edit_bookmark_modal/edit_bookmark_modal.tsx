@@ -5,6 +5,7 @@ import { Button } from '@/components/button/button';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useTranslation } from 'next-i18next';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;
@@ -12,6 +13,7 @@ interface IAddBookmarkModal {
 }
 
 const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
+  const { t } = useTranslation('common');
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
@@ -127,7 +129,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                     <div
                       className={`${bookmarkList[key].added ? 'flex' : 'hidden'} my-auto h-fit items-center justify-end rounded-xs bg-badge-surface-soft-primary px-2 py-0.1rem text-center text-xs text-badge-text-primary-solid`}
                     >
-                      listed{' '}
+                      {t('EDIT_BOOKMARK_MODAL.LISTED')}{' '}
                     </div>
 
                     <div className="flex flex-1 items-center justify-end">
@@ -223,10 +225,10 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
               <div className="justify-center self-center text-xl font-bold leading-8 text-navyBlue2">
-                Edit My Favorites{' '}
+                {t('EDIT_BOOKMARK_MODAL.EDIT_MY_FAVORITES')}{' '}
               </div>
               <div className="text-xs leading-5 tracking-normal text-lightGray5">
-                Select a bookmark to add or remove.{' '}
+                {t('EDIT_BOOKMARK_MODAL.SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE')}{' '}
               </div>
             </div>
           </div>
@@ -258,10 +260,10 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
               onClick={cancelBtnClickHandler}
               className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
-              Cancel
+              {t('REPORTS_HISTORY_ITEM.CANCEL')}
             </button>{' '}
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
-              Save
+              {t('EDIT_BOOKMARK_MODAL.SAVE')}
             </Button>{' '}
           </div>
         </div>

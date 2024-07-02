@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils/common';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { Period } from '@/interfaces/chart_unit';
 import { DUMMY_PROFIT_TREND_CHART_DATA } from '@/interfaces/profit_trend_chart';
+import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -185,6 +186,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const ProfitTrendChart = () => {
+  const { t } = useTranslation('common');
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 
@@ -197,14 +199,11 @@ const ProfitTrendChart = () => {
     <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
       <div>
         <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">Profit Status Trend Chart</div>
+          <div className="flex-1">{t('PROFIT_TREND_CHART.PROFIT_STATUS_TREND_CHART')}</div>
 
           <div className="justify-end">
             <Tooltip>
-              <p>
-                A message which appears when a cursor is positioned over an icon, image, hyperlink,
-                or other element in a graphical user interface.
-              </p>
+              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>
@@ -225,7 +224,7 @@ const ProfitTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.WEEK)}
               >
-                Week
+                {t('PROFIT_TREND_CHART.WEEK')}
               </Button>
             </div>
             <div className="">
@@ -239,7 +238,7 @@ const ProfitTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
-                Month
+                {t('ADD_ASSET_MODAL.MONTH')}Month
               </Button>
             </div>
             <div className="">
@@ -253,7 +252,7 @@ const ProfitTrendChart = () => {
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
-                Year
+                {t('ADD_ASSET_MODAL.YEAR')}
               </Button>
             </div>
           </div>
