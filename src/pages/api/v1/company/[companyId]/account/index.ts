@@ -110,10 +110,10 @@ export async function handleGetRequest(
   );
 
   // Info (20240701 - Murky) - User can only get accounts that are for user
-  const forUser = true;
+  const onlyForUser = true;
   const rawAccounts = await findManyAccountsInPrisma(
     companyIdNumber,
-    forUser,
+    onlyForUser,
     pageNumber,
     limitNumber,
     typeEnum,
