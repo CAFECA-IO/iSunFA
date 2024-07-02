@@ -110,7 +110,6 @@ const ReportsHistoryItem = ({
       <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <Link href={blockchainExplorerLink} target="_blank">
           <Button variant={'tertiaryBorderless'} size={'small'}>
-            {' '}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -132,10 +131,9 @@ const ReportsHistoryItem = ({
       <td className="hidden px-16px text-left lg:table-cell">{displayedProject}</td>
       {/* Info: operation buttons (20240516 - Shirley) */}
       <td className="hidden px-16px lg:table-cell">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between">
           {/* Info: download button (20240516 - Shirley) */}
           <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
-            {' '}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -150,10 +148,9 @@ const ReportsHistoryItem = ({
                 clipRule="evenodd"
               ></path>
             </svg>
-          </Button>{' '}
+          </Button>
           {/* Info: share button (20240516 - Shirley) */}
           <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
-            {' '}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
