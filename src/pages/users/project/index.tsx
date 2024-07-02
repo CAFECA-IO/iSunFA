@@ -6,8 +6,10 @@ import ProjectPageBody from '@/components/project_page_body/project_page_body';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 const ProjectMainPage = () => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -27,7 +29,7 @@ const ProjectMainPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>Project List - iSunFA</title>
+        <title>{t('PROJECT.PROJECT_LIST_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">

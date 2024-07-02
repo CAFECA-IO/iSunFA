@@ -7,12 +7,14 @@ import AddJournalBody from '@/components/add_journal_body/add_journal_body';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectJournalPageProps {
   projectId: string;
 }
 
 const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -35,7 +37,7 @@ const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>Project Add Journal - iSunFA</title>
+        <title>{t('JOURNAL.PROJECT_ADD_JOURNAL_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">

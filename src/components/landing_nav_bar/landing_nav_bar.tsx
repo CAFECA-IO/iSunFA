@@ -82,7 +82,10 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
             </Link>
             <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
               <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
-                <div className="justify-center px-1 text-xs">V{version}</div>
+                <div className="justify-center px-1 text-xs">
+                  {t('COMMON.V')}
+                  {version}
+                </div>
               </div>
             </div>
           </div>
@@ -294,7 +297,10 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </Link>
           <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
             <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
-              <div className="justify-center px-1 text-xs">V{version}</div>
+              <div className="justify-center px-1 text-xs">
+                {t('COMMON.V')}
+                {version}
+              </div>
             </div>
           </div>
         </div>

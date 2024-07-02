@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { timestampToString } from '@/lib/utils/common';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { useTranslation } from 'next-i18next';
 
 type ISingleDate = {
   date: number | null;
@@ -23,7 +24,16 @@ const MilestoneCalendar = ({
   sellingPeriod,
   soldPeriod,
 }: ICalendarProps) => {
-  const weekdayTitle = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const { t } = useTranslation('common');
+  const weekdayTitle = [
+    t('JOURNAL.SUN'),
+    t('JOURNAL.MON'),
+    t('JOURNAL.TUE'),
+    t('JOURNAL.WEN'),
+    t('JOURNAL.THU'),
+    t('JOURNAL.FRI'),
+    t('JOURNAL.SAT'),
+  ];
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const currentYear = currentDate.getFullYear();

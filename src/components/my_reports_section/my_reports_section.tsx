@@ -183,7 +183,7 @@ const MyReportsSection = () => {
         value={searchPendingQuery}
         onChange={pendingInputChangeHandler}
         type="text"
-        placeholder="Search"
+        placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
       <div className="absolute right-3 top-3 hover:cursor-pointer">

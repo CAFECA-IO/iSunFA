@@ -35,7 +35,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
         </div>
         <div className="mx-auto flex bg-white pb-4 pt-4">
           <div className="flex w-full flex-1 flex-col justify-between text-center text-xl font-bold text-card-text-primary">
-            <div className="">Passkey support summary</div>
+            <div className="">{t('PASSKEY_SUPPORT_MODAL.PASSKEY_SUPPORT_SUMMARY')}</div>
           </div>
         </div>
         <div className="mt-2 flex w-full flex-col justify-center space-y-4">

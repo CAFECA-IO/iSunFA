@@ -240,7 +240,9 @@
     "REPORT": "Report",
     "GET_EMBED_CODE": "Get Embed Code",
     "FINANCIAL_REPORTS": "Financial Reports",
+    "FINANCIAL_REPORT": "Financial Report - iSunFA",
     "ANALYSIS_REPORTS": "Analysis Reports",
+    "ANALYSIS_REPORT": "Analysis Report",
     "MY_REPORTS": "My Reports"
   },
   "MY_REPORTS_SECTION": {
@@ -249,7 +251,8 @@
     "EMPTY": "Empty",
     "MY_REPORTS": "My Reports",
     "PENDING": "Pending",
-    "REPORTS_HISTORY": "Reports History"
+    "REPORTS_HISTORY": "Reports History",
+    "GENERATE_REPORT": "Generate Report"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "From",
@@ -286,7 +289,8 @@
     "REPORT_LANGUAGE": "Report Language",
     "COPY": "Copy",
     "THE_LATEST_REPORT": "To show the Latest Report on your website",
-    "GENERATE": "Generate"
+    "GENERATE": "Generate",
+    "CODE_COPIED_TO_CLIPBOARD": "Code copied to clipboard"
   },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "Report Type",
@@ -309,7 +313,12 @@
     "OLDEST": "Oldest",
     "ENTER_A_DESCRIPTION": "Enter a description",
     "CLOSE": "Close",
-    "PROGRESS": "Progress"
+    "PROGRESS": "Progress",
+    "FILTER": "Filter",
+    "M": "M",
+    "Y": "Y",
+    "V": "V",
+    "OR": "OR"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",
@@ -361,6 +370,9 @@
     "PAYMENT_PERIOD": "Payment Period",
     "PAYMENT_STATUS": "Payment Status",
     "CONTRACT": "Contract",
+    "CONTRACTS": "Contracts",
+    "ADD_NEW_CONTRACT": "Add new contract",
+    "PROJECT_CONTRACT_ISUNFA": "Project Contract - iSunFA",
     "FROM_TO": "From / To",
     "VOUCHER_NO": "Voucher No",
     "INFO": "Info",
@@ -377,7 +389,15 @@
     "PARTIAL_PAID": "Partial Paid:",
     "PAID": "Paid",
     "CLEAR_ALL": "Clear all",
-    "ADDED_JOURNAL": "Added Journal"
+    "ADDED_JOURNAL": "Added Journal",
+    "BASIC_INFO": "Basic Info",
+    "ESTIMATED_COST": "Estimated Cost",
+    "PREVIEW_INVOICE": "Preview Invoice",
+    "AI_TECHNOLOGY_RECOGNIZING": "AI technology recognizing",
+    "PROJECT_ADD_JOURNAL_ISUNFA": "Project Add Journal - iSunFA",
+    "WHY_YOU_PAY": "Why you pay",
+    "TO_WHOM": "To whom",
+    "ACCOUNT_NUMBER": "Account Number"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -415,7 +435,11 @@
     "ADD_PROJECT": "Add Project",
     "PROJECT_WISE": "Project-wise",
     "FINANCIAL_OVERVIEW": "Financial Overview",
-    "INCOME_VS_EXPENDITURE": "Income vs. Expenditure"
+    "INCOME_VS_EXPENDITURE": "Income vs. Expenditure",
+    "PROJECT_REPORT": "Project Report",
+    "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
+    "NAME_YOUR_PROJECT": "Name your project",
+    "ENTER_NEW_PROJECT_NAME": "Enter New Project Name"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -434,7 +458,12 @@
     "YOUR_COMPANY": "Select your company to log in, or create your own company.",
     "MY_COMPANY_LIST": "My Company List",
     "CREATE_MY_COMPANY": "Create My Company",
-    "TRY_IT_OUT": "Try it out"
+    "TRY_IT_OUT": "Try it out",
+    "ENTER_INVITATION_CODE": "Enter Invitation Code",
+    "SELECT_COMPANY_ISUNFA": "Select Company - iSunFA",
+    "SELECT_AN_COMPANY": "Select an Company",
+    "ENTER_COMPANY_NAME": "Enter company name",
+    "ENTER_BUSINESS_REGISTRATION_NUMBER": "Enter business registration number"
   },
   "ADD_ASSET_MODAL": {
     "ASSET_MANAGEMENT": "Asset Management",
@@ -454,7 +483,9 @@
     "ESTIMATED_USEFUL_LIFE": "Estimated useful life",
     "YEAR": "Year",
     "MONTH": "Month",
-    "DAY": "Day"
+    "DAY": "Day",
+    "NAME_YOUR_ASSET": "Name your asset",
+    "ADD_NOTE": "Add note"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "Congratulations! You",
@@ -462,7 +493,8 @@
     "TEAM": " team!",
     "INVITATION CODE": "Invitation Code",
     "ENTER_YOUR_COMPANY_INVITATION_CODE": "Enter your Company invitation code",
-    "FORMAT_ERROR": "Format Error!"
+    "FORMAT_ERROR": "Format Error!",
+    "ENTER_CODE": "Enter code"
   },
   "CONFIRM_MODAL": {
     "UPLOADED_SUCCESSFULLY": "Uploaded successfully.",
@@ -482,7 +514,8 @@
     "SIGNATORY": "Signatory",
     "DURATION": "Duration",
     "COMPANY_NAME": "Company Name",
-    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number"
+    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number",
+    "SEARCH_CONTRACT": "Search Contract"
   },
   "EDIT_BOOKMARK_MODAL": {
     "LISTED": "listed",
@@ -511,13 +544,15 @@
     "SET_USER_NAME": "Set User Name",
     "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "This username will be applied to your device.",
     "REGISTER": "Register",
-    "LOG_IN": "Log In"
+    "LOG_IN": "Log In",
+    "USERNAME": "Username"
   },
   "PASSKEY_SUPPORT_MODAL": {
     "ANDROID": "Android OS9 or later",
     "MACOS": "MacOS 13.5 or later",
     "IOS": "iOS 16 & iPadOS 16 or later",
-    "GOT_IT": "Got it!"
+    "GOT_IT": "Got it!",
+    "PASSKEY_SUPPORT_SUMMARY": "Passkey support summary"
   },
   "PROFILE_UPLOAD_MODAL": {
     "DROP_YOUR_FILES_HERE_OR": "Drop your files here or",
@@ -527,5 +562,14 @@
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "Profit Status Trend Chart",
     "WEEK": "Week"
+  },
+  "WEEKDAY_TITLE_JSON": {
+    "SUN": "S",
+    "MON": "M",
+    "TUE": "T",
+    "WEN": "W",
+    "THU": "T",
+    "FRI": "F",
+    "SAT": "S"
   }
 }

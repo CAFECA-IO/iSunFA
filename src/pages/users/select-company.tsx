@@ -9,8 +9,10 @@ import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPage = () => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
   const { eliminateToast } = useGlobalCtx();
 
@@ -36,7 +38,7 @@ const SelectCompanyPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Select Company - iSunFA</title>
+        <title>{t('SELECT_COMPANY.SELECT_COMPANY_ISUNFA')}</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

@@ -402,7 +402,7 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
                 <p>
-                  <span className="lg:hidden">M</span>
+                  <span className="lg:hidden">{t('COMMON.M')}</span>
                   <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.MONTH')}</span>{' '}
                 </p>
               </Button>
@@ -421,7 +421,7 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
                 <p>
-                  <span className="lg:hidden">Y</span>
+                  <span className="lg:hidden">{t('COMMON.Y')}</span>
                   <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.YEAR')}</span>{' '}
                 </p>
               </Button>

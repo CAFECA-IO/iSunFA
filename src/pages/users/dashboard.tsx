@@ -7,8 +7,10 @@ import DashboardPageBody from '@/components/dashboard_page_body/dashboard_page_b
 import { GetServerSideProps } from 'next';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 const DashboardPage = () => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -28,7 +30,7 @@ const DashboardPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Dashboard - iSunFA</title>
+        <title>{t('NAV_BAR.DASHBOARD')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

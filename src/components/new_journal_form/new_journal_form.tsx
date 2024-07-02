@@ -679,7 +679,7 @@ const NewJournalForm = () => {
         <hr className="block flex-1 border-lightGray3 md:hidden" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/info.svg" width={16} height={16} alt="info_icon" />
-          <p>Basic Info</p>
+          <p>{t('JOURNAL.BASIC_INFO')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
@@ -690,7 +690,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-y-24px md:flex-row">
           {/* Info: (20240423 - Julian) Date */}
           <div className="flex w-full flex-col items-start gap-8px md:w-240px">
-            <p className="text-sm font-semibold text-navyBlue2">Date</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('DATE_PICKER.DATE')}</p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
@@ -729,7 +729,7 @@ const NewJournalForm = () => {
               id="inputPaymentReason"
               name="inputPaymentReason"
               type="text"
-              placeholder="Why you pay"
+              placeholder={t('JOURNAL.WHY_YOU_PAY')}
               value={inputPaymentReason}
               onChange={paymentReasonChangeHandler}
               required
@@ -772,7 +772,7 @@ const NewJournalForm = () => {
               id="inputDescription"
               name="inputDescription"
               type="text"
-              placeholder="Description"
+              placeholder={t('JOURNAL.DESCRIPTION')}
               value={inputDescription}
               onChange={descriptionChangeHandler}
               required
@@ -787,7 +787,7 @@ const NewJournalForm = () => {
               id="inputVendor"
               name="inputVendor"
               type="text"
-              placeholder="To whom"
+              placeholder={t('JOURNAL.TO_WHOM')}
               value={inputVendor}
               onChange={vendorChangeHandler}
               required
@@ -973,7 +973,7 @@ const NewJournalForm = () => {
               id="inputAccountNumber"
               name="inputAccountNumber"
               type="text"
-              placeholder="Account Number"
+              placeholder={t('JOURNAL.ACCOUNT_NUMBER')}
               value={inputAccountNumber}
               onChange={accountNumberChangeHandler}
               required={isAccountNumberVisible}
@@ -1129,7 +1129,7 @@ const NewJournalForm = () => {
         />
         {/* Info: (20240502 - Julian) Estimated Cost */}
         <div className="flex w-full flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-navyBlue2">Estimated Cost</p>
+          <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
           <div
             className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
           >

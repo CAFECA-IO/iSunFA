@@ -17,12 +17,14 @@ import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/p
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectDashboardPageProps {
   projectId: string;
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240612 - Julian) replace with actual data
@@ -89,7 +91,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
               </div>
               {/* Info: (20240612 - Julian) stage selection (desktop) */}
               <div className="hidden flex-col items-start gap-y-8px md:flex">
-                <p className="font-semibold">Stage</p>
+                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
@@ -106,7 +108,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             <hr className="my-24px border border-divider-stroke-lv-4" />
             {/* Info: (20240612 - Julian) stage selection (mobile) */}
             <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
-              <p className="font-semibold">Stage</p>
+              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
@@ -154,7 +156,9 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>{projectName} Dashboard - iSunFA</title>
+        <title>
+          {projectName} {t('NAV_BAR.DASHBOARD')} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

@@ -293,7 +293,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="pendingReportSearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
             className="w-full outline-none placeholder:text-lightGray4"
@@ -349,7 +349,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="historyReportSearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
             className="w-full outline-none placeholder:text-lightGray4"

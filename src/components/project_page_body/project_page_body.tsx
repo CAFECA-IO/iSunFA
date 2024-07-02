@@ -241,7 +241,6 @@ const ProjectPageBody = () => {
                 type="text"
                 onChange={searchHandler}
                 className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-                // placeholder="Search Project"
                 placeholder={t('PROJECT.SEARCH_PROJECT')}
               />
               <FiSearch size={20} />
