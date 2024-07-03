@@ -11,6 +11,7 @@ export interface IAccount {
   name: string;
   createdAt: number;
   updatedAt: number;
+  deletedAt: number | null;
 }
 
 // Info Murky (20240416): Interface

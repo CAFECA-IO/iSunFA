@@ -50,6 +50,7 @@ const mockAccount: IAccount = {
   name: 'Sun Bank',
   createdAt: 1000000000,
   updatedAt: 1000000000,
+  deletedAt: null,
 };
 beforeEach(() => {
   jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue(session);
@@ -76,7 +77,7 @@ describe('GET account by id', () => {
     jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(mockAccountInDB);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: `${testAccountId}` };
-    const { httpCode, result } = await module.handleGetRequest(req, res);
+    const { httpCode, result } = await module.handleGetRequest(companyId, testAccountId);
     expect(httpCode).toBe(200);
     expect(result.payload).toEqual(mockAccount);
   });
