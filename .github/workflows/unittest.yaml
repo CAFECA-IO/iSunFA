@@ -51,7 +51,7 @@ jobs:
       - name: Connect to PostgreSQL
         # Runs a script that creates a PostgreSQL table, populates
         # the table with data, and then retrieves the data.
-        run: npx prisma migrate deploy
+        run: npx prisma migrate deploy && npx prisma db seed 
         env:
           # The database URL to connect to the PostgreSQL database
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
