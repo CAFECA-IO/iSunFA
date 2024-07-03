@@ -1,14 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, getTimestampOfFirstDateOfThisYear, isParamNumeric, isParamString, timestampInSeconds } from '@/lib/utils/common';
+import {
+  formatApiResponse,
+  getTimestampOfFirstDateOfThisYear,
+  isParamNumeric,
+  isParamString,
+  timestampInSeconds,
+} from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountForSheetDisplay } from '@/interfaces/accounting_account';
 import { getSession } from '@/lib/utils/session';
 import { checkAuth } from '@/lib/utils/auth_check';
 import { AccountSheetAccountTypeMap, AccountSheetType, AccountType } from '@/constants/account';
-import { convertStringToAccountSheetType, isAccountSheetType } from '@/lib/utils/type_guard/account';
+import {
+  convertStringToAccountSheetType,
+  isAccountSheetType,
+} from '@/lib/utils/type_guard/account';
 import { getSumOfLineItemsGroupByAccountInPrisma } from '@/lib/utils/repo/line_item.repo';
-import { buildAccountForest, mappingAccountToSheetDisplay, transformForestToMap, transformLineItemsFromDBToMap, updateAccountAmounts } from '@/lib/utils/account';
+import {
+  buildAccountForest,
+  mappingAccountToSheetDisplay,
+  transformForestToMap,
+  transformLineItemsFromDBToMap,
+  updateAccountAmounts,
+} from '@/lib/utils/account';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 
@@ -57,7 +72,10 @@ export async function buildAccountForestFromDB(companyId: number, accountType: A
   return forest;
 }
 
-export async function getAccountForestByAccountSheet(companyId: number, accountSheet: AccountSheetType) {
+export async function getAccountForestByAccountSheet(
+  companyId: number,
+  accountSheet: AccountSheetType
+) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const forestArray = await Promise.all(
     accountTypes.map((type) => buildAccountForestFromDB(companyId, type))
@@ -75,16 +93,26 @@ export async function getAllLineItemsByAccountSheet(
 ) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map((type) => getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond))
+    accountTypes.map((type) =>
+      getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond)
+    )
   );
 
   const lineItemsFromDB = lineItemsFromDBArray.flat();
   return lineItemsFromDB;
 }
 
-export async function handleGetRequest(companyId: number, req: NextApiRequest): Promise<IAccountForSheetDisplay[]> {
+export async function handleGetRequest(
+  companyId: number,
+  req: NextApiRequest
+): Promise<IAccountForSheetDisplay[]> {
   const { startDateInSecond, endDateInSecond, accountSheet } = formatGetRequestQuery(req);
-  const lineItemsFromDB = await getAllLineItemsByAccountSheet(companyId, startDateInSecond, endDateInSecond, accountSheet);
+  const lineItemsFromDB = await getAllLineItemsByAccountSheet(
+    companyId,
+    startDateInSecond,
+    endDateInSecond,
+    accountSheet
+  );
   const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
   const accountForest = await getAccountForestByAccountSheet(companyId, accountSheet);
   const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
@@ -108,6 +136,7 @@ export default async function handler(
       switch (req.method) {
         case 'GET': {
           payload = await handleGetRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
           break;
         }
         default: {
