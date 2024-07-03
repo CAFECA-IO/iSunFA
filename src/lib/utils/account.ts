@@ -1,5 +1,6 @@
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { Account } from '@prisma/client';
 
 // Depreciated: (20240702 - Murky) This is for testing purpose
@@ -7,6 +8,21 @@ import { Account } from '@prisma/client';
 // import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
 // import { getSumOfLineItemsGroupByAccountInPrisma } from "@/lib/utils/repo/line_item.repo";
 // import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
+
+export function transformLineItemsFromDBToMap(lineItemsFromDB: ILineItemIncludeAccount[]): Map<number, number> {
+  const lineItems: Map<number, number> = new Map();
+  lineItemsFromDB.forEach((lineItem) => {
+    const isAccountDebit = lineItem.account.debit;
+    const isLineItemDebit = lineItem.debit;
+    const { amount } = lineItem;
+
+    const adjustedAmount = isAccountDebit === isLineItemDebit ? amount : -amount;
+
+    const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
+    lineItems.set(lineItem.accountId, lineItemOriginalAmount + adjustedAmount);
+  });
+  return lineItems;
+}
 
 function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> {
   const accountMap = new Map<string, IAccountNode>();

@@ -27,31 +27,12 @@ export async function getSumOfLineItemsGroupByAccountInPrisma(
     },
   };
 
-  const lineItems: Map<number, number> = new Map();
+  const lineItemsFromDB = await prisma.lineItem.findMany({
+    where,
+    include: {
+      account: true,
+    }
+  });
 
-  try {
-    const lineItemsFromDB = await prisma.lineItem.findMany({
-      where,
-      include: {
-        account: true,
-      }
-    });
-
-    lineItemsFromDB.forEach((lineItem) => {
-      const isAccountDebit = lineItem.account.debit;
-      const isLineItemDebit = lineItem.debit;
-      const { amount } = lineItem;
-
-      const adjustedAmount = isAccountDebit === isLineItemDebit ? amount : -amount;
-
-      const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
-      lineItems.set(lineItem.accountId, lineItemOriginalAmount + adjustedAmount);
-    });
-  } catch (error) {
-    // Depreciated: (20240627 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
-  }
-
-  return lineItems;
+  return lineItemsFromDB;
 }

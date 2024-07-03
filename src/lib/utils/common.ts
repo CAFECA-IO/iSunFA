@@ -439,3 +439,11 @@ export function setTimestampToDayStart(timestamp: number) {
   date.setHours(0, 0, 0, 0);
   return timestampInSeconds(date.getTime());
 }
+
+export function getTimestampOfFirstDateOfThisYear() {
+  const year = new Date().getFullYear();
+  const date = new Date(year, 0, 1);
+  const timestamp = date.getTime();
+  const timestampInSecond = setTimestampToDayStart(timestamp);
+  return timestampInSecond;
+}
