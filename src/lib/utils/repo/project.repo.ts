@@ -1,5 +1,4 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { Employee, Project, Value } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
 import { timestampInSeconds } from '@/lib/utils/common';
@@ -27,32 +26,33 @@ export async function listProject(companyId: number) {
 }
 
 export async function getProjectById(projectId: number): Promise<
-  Project & {
-    employeeProjects: { employee: Employee }[];
-    value: Value | null;
-    _count: { contracts: number };
-  }
+  | (Project & {
+      employeeProjects: { employee: Employee }[];
+      value: Value | null;
+      _count: { contracts: number };
+    })
+  | null
 > {
-  const project = await prisma.project.findUnique({
-    where: {
-      id: projectId,
-    },
-    include: {
-      employeeProjects: {
-        select: {
-          employee: true,
+  let project = null;
+  if (projectId > 0) {
+    project = await prisma.project.findUnique({
+      where: {
+        id: projectId,
+      },
+      include: {
+        employeeProjects: {
+          select: {
+            employee: true,
+          },
+        },
+        value: true,
+        _count: {
+          select: {
+            contracts: true,
+          },
         },
       },
-      value: true,
-      _count: {
-        select: {
-          contracts: true,
-        },
-      },
-    },
-  });
-  if (!project) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    });
   }
   return project;
 }
@@ -189,4 +189,29 @@ export async function updateProjectById(
   });
 
   return updatedProject;
+}
+
+export async function deleteProjectById(projectId: number) {
+  await prisma.$transaction([
+    prisma.milestone.deleteMany({
+      where: {
+        projectId,
+      },
+    }),
+    prisma.value.delete({
+      where: {
+        projectId,
+      },
+    }),
+    prisma.employeeProject.deleteMany({
+      where: {
+        projectId,
+      },
+    }),
+    prisma.project.delete({
+      where: {
+        id: projectId,
+      },
+    }),
+  ]);
 }

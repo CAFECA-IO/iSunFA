@@ -1,15 +1,14 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IValue } from '@/interfaces/project';
 
-export async function listProjectValue(projectId: number) {
-  const valueList: IValue[] = await prisma.value.findMany({
-    where: {
-      projectId,
-    },
-  });
-  if (!valueList) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+export async function getProjectValue(projectId: number): Promise<IValue | null> {
+  let value: IValue | null = null;
+  if (projectId > 0) {
+    value = await prisma.value.findUnique({
+      where: {
+        projectId,
+      },
+    });
   }
-  return valueList;
+  return value;
 }

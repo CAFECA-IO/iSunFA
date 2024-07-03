@@ -1,5 +1,4 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export async function listWorkRate(employeeProjectIdList: number[]) {
   const workRateList = await prisma.workRate.findMany({
@@ -21,9 +20,5 @@ export async function listWorkRate(employeeProjectIdList: number[]) {
       },
     },
   });
-  if (!workRateList) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-
   return workRateList;
 }

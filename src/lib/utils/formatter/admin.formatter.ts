@@ -8,18 +8,21 @@ import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 export async function formatAdminList(
   listedAdmin: (Admin & { company: Company; user: User; role: Role })[]
 ): Promise<IAdmin[]> {
-  const formatPromises = listedAdmin.map(async (admin) => {
-    const formattedUser = await formatUser(admin.user);
-    const formattedCompany = await formatCompany(admin.company);
-    const formattedAdmin = {
-      ...admin,
-      endDate: admin.endDate ?? 0,
-      user: formattedUser,
-      company: formattedCompany,
-    };
-    return formattedAdmin;
-  });
-  const adminList: IAdmin[] = await Promise.all(formatPromises);
+  let adminList: IAdmin[] = [];
+  if (listedAdmin.length > 0) {
+    const formatPromises = listedAdmin.map(async (admin) => {
+      const formattedUser = await formatUser(admin.user);
+      const formattedCompany = await formatCompany(admin.company);
+      const formattedAdmin = {
+        ...admin,
+        endDate: admin.endDate ?? 0,
+        user: formattedUser,
+        company: formattedCompany,
+      };
+      return formattedAdmin;
+    });
+    adminList = await Promise.all(formatPromises);
+  }
   return adminList;
 }
 

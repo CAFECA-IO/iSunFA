@@ -1,0 +1,35 @@
+
+[
+    {
+        "id": 1000,
+        "name": "TEST John Doe",
+        "imageId": "image_1",
+        "departmentId": 1000,
+        "companyId": 1000,
+        "salary": 5000,
+        "insurancePayment": 200,
+        "bonus": 1000,
+        "salaryPayMode": "monthly",
+        "payFrequency": "biweekly",
+        "startDate": 1630435200,
+        "endDate": null,
+        "createdAt": 1630435200,
+        "updatedAt": 1630435200
+    },
+    {
+        "id": 1001,
+        "name": "TEST Jane Smith",
+        "imageId": "image_2",
+        "departmentId": 1001,
+        "companyId": 1000,
+        "salary": 6000,
+        "insurancePayment": 250,
+        "bonus": 1200,
+        "salaryPayMode": "monthly",
+        "payFrequency": "biweekly",
+        "startDate": 1630435200,
+        "endDate": null,
+        "createdAt": 1630435200,
+        "updatedAt": 1630435200
+    }
+]

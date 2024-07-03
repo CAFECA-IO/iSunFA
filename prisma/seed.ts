@@ -9,6 +9,12 @@ import user from '@/seed_json/user.json';
 import milestones from '@/seed_json/milestone.json';
 import generatedReports from '@/seed_json/generated_report.json';
 import pendingReports from '@/seed_json/pending_report.json';
+import departments from '@/seed_json/department.json';
+import employees from '@/seed_json/employee.json';
+import employeeProjects from '@/seed_json/employee_project.json';
+import values from '@/seed_json/value.json';
+import sales from '@/seed_json/sale.json';
+import workRates from '@/seed_json/work_rate.json';
 
 const prisma = new PrismaClient();
 
@@ -54,6 +60,41 @@ async function createCompany() {
   });
 }
 
+async function createDepartment() {
+  await prisma.department.createMany({
+    data: departments,
+  });
+}
+
+async function createEmployee() {
+  await prisma.employee.createMany({
+    data: employees,
+  });
+}
+
+async function createEmployeeProject() {
+  await prisma.employeeProject.createMany({
+    data: employeeProjects,
+  });
+}
+
+async function createValue() {
+  await prisma.value.createMany({
+    data: values,
+  });
+}
+async function createSale() {
+  await prisma.sale.createMany({
+    data: sales,
+  });
+}
+
+async function createWorkRate() {
+  await prisma.workRate.createMany({
+    data: workRates,
+  });
+}
+
 async function createAdmin() {
   await prisma.admin.create({
     data: admin,
@@ -79,7 +120,13 @@ async function main() {
   await createCompany();
   await createAccount();
   await createAdmin();
+  await createDepartment();
+  await createEmployee();
   await createProjects();
+  await createSale();
+  await createValue();
+  await createEmployeeProject();
+  await createWorkRate();
   await new Promise((resolve) => {
     setTimeout(resolve, 5000);
   });
