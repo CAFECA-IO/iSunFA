@@ -10,7 +10,6 @@ import {
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountForSheetDisplay } from '@/interfaces/accounting_account';
 import { getSession } from '@/lib/utils/session';
-import { checkAuth } from '@/lib/utils/auth_check';
 import { AccountSheetAccountTypeMap, AccountSheetType, AccountType } from '@/constants/account';
 import {
   convertStringToAccountSheetType,
@@ -93,9 +92,7 @@ export async function getAllLineItemsByAccountSheet(
 ) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map((type) =>
-      getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond)
-    )
+    accountTypes.map((type) => getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond))
   );
 
   const lineItemsFromDB = lineItemsFromDBArray.flat();
@@ -129,19 +126,17 @@ export default async function handler(
   let payload: IAccountForSheetDisplay[] = [];
   try {
     const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    const shouldContinue = await checkAuth(userId, companyId);
+    const { companyId } = session;
 
-    if (shouldContinue) {
-      switch (req.method) {
-        case 'GET': {
-          payload = await handleGetRequest(companyId, req);
-          statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-          break;
-        }
-        default: {
-          break;
-        }
+    // ToDo: (20240703 - Murky) Need to check Auth
+    switch (req.method) {
+      case 'GET': {
+        payload = await handleGetRequest(companyId, req);
+        statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+        break;
+      }
+      default: {
+        break;
       }
     }
   } catch (_error) {
