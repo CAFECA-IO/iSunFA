@@ -13,6 +13,7 @@ export function formatAccount(account: Account): IAccount {
     name: account.name,
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
+    deletedAt: account.deletedAt,
   };
 }
 

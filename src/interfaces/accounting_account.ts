@@ -12,6 +12,7 @@ export interface IAccount {
   name: string;
   createdAt: number;
   updatedAt: number;
+  deletedAt: number | null;
 }
 
 // Info Murky (20240416): Interface
@@ -25,3 +26,10 @@ export type IAccountNode = Omit<Account, 'children' | 'parent' | 'root' | 'leaf'
   children: IAccountNode[];
   amount: number;
 };
+
+export interface IAccountForSheetDisplay {
+  code: string;
+  name: string;
+  amount: number | null;
+  indent: number;
+}

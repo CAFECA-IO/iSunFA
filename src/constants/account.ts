@@ -56,12 +56,39 @@ export enum AccountSystem {
   US_GAAP = 'US_GAAP',
 }
 
+export enum AccountSheetType {
+  BALANCE_SHEET = 'balanceSheet',
+  INCOME_STATEMENT = 'incomeStatement',
+  CASH_FLOW_STATEMENT = 'cashFlowStatement',
+  CHANGE_IN_EQUITY_STATEMENT = 'changeInEquityStatement',
+}
+
 export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [key in EventType]: VoucherType;
 } = {
   [EventType.INCOME]: VoucherType.RECEIVE,
   [EventType.PAYMENT]: VoucherType.EXPENSE,
   [EventType.TRANSFER]: VoucherType.TRANSFER,
+};
+
+export const AccountSheetAccountTypeMap: {
+  [key in AccountSheetType]: AccountType[];
+} = {
+  [AccountSheetType.BALANCE_SHEET]: [
+    AccountType.ASSET,
+    AccountType.LIABILITY,
+    AccountType.EQUITY,
+  ],
+  [AccountSheetType.INCOME_STATEMENT]: [
+    AccountType.REVENUE,
+    AccountType.COST,
+    AccountType.INCOME,
+    AccountType.EXPENSE,
+    AccountType.GAIN_OR_LOSS,
+    AccountType.OTHER_COMPREHENSIVE_INCOME,
+  ],
+  [AccountSheetType.CASH_FLOW_STATEMENT]: [AccountType.CASH_FLOW],
+  [AccountSheetType.CHANGE_IN_EQUITY_STATEMENT]: [AccountType.CHANGE_IN_EQUITY],
 };
 
 export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];
