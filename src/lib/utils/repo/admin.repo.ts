@@ -62,23 +62,20 @@ export async function getAdminByUserId(
 export async function getAdminByCompanyIdAndUserId(
   companyId: number,
   userId: number
-): Promise<Admin & { company: Company; user: User; role: Role }> {
-  if (typeof companyId !== 'number' || typeof userId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-  const admin = await prisma.admin.findFirst({
-    where: {
-      userId,
-      companyId,
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  });
-  if (!admin) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+  let admin = null;
+  if (companyId > 0 && userId > 0) {
+    admin = await prisma.admin.findFirst({
+      where: {
+        userId,
+        companyId,
+      },
+      include: {
+        user: true,
+        company: true,
+        role: true,
+      },
+    });
   }
   return admin;
 }

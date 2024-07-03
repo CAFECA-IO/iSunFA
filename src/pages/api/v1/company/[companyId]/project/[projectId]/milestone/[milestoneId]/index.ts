@@ -1,43 +1,82 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
+import { isUserAdmin } from '@/lib/utils/auth_check';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IMilestone } from '@/interfaces/project';
 import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
 import { Milestone } from '@/constants/milestone';
+import { getSession } from '@/lib/utils/session';
+import { getProjectById } from '@/lib/utils/repo/project.repo';
+
+async function checkInput(projectId: string, stage: string, startDate: string) {
+  let isValid = true;
+  if (!stage || !startDate || !projectId) {
+    isValid = false;
+  }
+  return isValid;
+}
+
+async function checkAuth(userId: number, companyId: number, projectId: number) {
+  let isValid = true;
+  const isAdmin = await isUserAdmin(userId, companyId);
+  if (!isAdmin) {
+    isValid = false;
+  } else {
+    const project = await getProjectById(projectId);
+    if (!project || project.companyId !== companyId) {
+      isValid = false;
+    }
+  }
+
+  return isValid;
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IMilestone[]>>
 ) {
+  let shouldContinue = true;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IMilestone[] = [];
   try {
-    if (req.method === 'PUT') {
-      const { projectId, stage, startDate } = req.query;
-      if (!projectId || stage || !startDate) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    switch (req.method) {
+      case 'PUT': {
+        const { projectId } = req.query;
+        const { stage, startDate } = req.body;
+        // Info: (20240703 - Jacky) should convert to string
+        shouldContinue = await checkInput(
+          projectId as string,
+          stage as string,
+          startDate as string
+        );
+        // Info: (20240703 - Jacky) check authorization start
+        if (shouldContinue) {
+          const session = await getSession(req, res);
+          const { userId, companyId } = session;
+          const projectIdNum = convertStringToNumber(projectId);
+          shouldContinue = await checkAuth(userId, companyId, projectIdNum);
+          if (shouldContinue) {
+            const startDateNum = convertStringToNumber(startDate);
+            const { updatedMilestoneList } = await updateProjectMilestone(
+              projectIdNum,
+              stage as Milestone,
+              startDateNum
+            );
+            statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+            payload = updatedMilestoneList;
+          }
+        }
+        break;
       }
-      const projectIdNum = convertStringToNumber(projectId);
-      const startDateNum = convertStringToNumber(startDate);
-      const session = await checkAdmin(req, res);
-      const { companyId } = session;
-      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
-      const { updatedMilestoneList } = await updateProjectMilestone(
-        checkedProject.id,
-        stage as Milestone,
-        startDateNum
-      );
-      const { httpCode, result } = formatApiResponse<IMilestone[]>(
-        STATUS_MESSAGE.SUCCESS_UPDATE,
-        updatedMilestoneList
-      );
-      res.status(httpCode).json(result);
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IMilestone[]>(error.message, {} as IMilestone[]);
-    res.status(httpCode).json(result);
+    statusMessage = error.message;
+    payload = [];
   }
+  const { httpCode, result } = formatApiResponse<IMilestone[]>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

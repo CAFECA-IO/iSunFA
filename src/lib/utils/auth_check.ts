@@ -51,13 +51,9 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   return session;
 }
 
-export async function checkAuth(userId: number, companyId: number) {
-  let checked = true;
+export async function isUserAdmin(userId: number, companyId: number): Promise<boolean> {
   const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
-  if (!admin) {
-    checked = false;
-  }
-  return checked;
+  return !!admin;
 }
 
 export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
@@ -88,12 +84,10 @@ export async function checkCompanyAdminMatch(companyId: number, adminId: number)
   return admin;
 }
 
-export async function checkProjectCompanyMatch(projectId: number, companyId: number) {
+export async function isProjectCompanyMatch(projectId: number, companyId: number) {
   const getProject = await getProjectById(projectId);
-  if (getProject.companyId !== companyId) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  return getProject;
+  const match = getProject !== null && getProject.companyId === companyId;
+  return match;
 }
 
 export async function checkInvitation(invitationCode: string, userId: number) {

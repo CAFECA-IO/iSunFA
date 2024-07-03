@@ -88,5 +88,59 @@
     "status": "Beta Testing",
     "createdAt": 1717637165,
     "updatedAt": 1717637165
+  },
+  {
+    "id": 1000,
+    "projectId": 1000,
+    "startDate": 1709578219,
+    "endDate": 1712256619,
+    "status": "Designing",
+    "createdAt": 1709578219,
+    "updatedAt": 1709578219
+  },
+  {
+    "id": 1001,
+    "projectId": 1000,
+    "startDate": 1709578219,
+    "endDate": 1712256619,
+    "status": "Beta Testing",
+    "createdAt": 1709578219,
+    "updatedAt": 1709578219
+  },
+  {
+    "id": 1002,
+    "projectId": 1000,
+    "startDate": 1709578219,
+    "endDate": 1712256619,
+    "status": "Develop",
+    "createdAt": 1709578219,
+    "updatedAt": 1709578219
+  },
+  {
+    "id": 1003,
+    "projectId": 1000,
+    "startDate": 1709578219,
+    "endDate": 1712256619,
+    "status": "Selling",
+    "createdAt": 1709578219,
+    "updatedAt": 1709578219
+  },
+  {
+    "id": 1004,
+    "projectId": 1000,
+    "startDate": 1709578219,
+    "endDate": 1712256619,
+    "status": "Sold",
+    "createdAt": 1709578219,
+    "updatedAt": 1709578219
+  },
+  {
+    "id": 1005,
+    "projectId": 1000,
+    "startDate": 1709578219,
+    "endDate": 1712256619,
+    "status": "Archived",
+    "createdAt": 1709578219,
+    "updatedAt": 1709578219
   }
 ]

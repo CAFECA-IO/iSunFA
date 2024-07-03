@@ -1,5 +1,5 @@
-import { IProject, IWorkRate } from '@/interfaces/project';
-import { Project, WorkRate } from '@prisma/client';
+import { IProject } from '@/interfaces/project';
+import { Project } from '@prisma/client';
 
 export async function formatProjectList(
   listedProject: (Project & {
@@ -8,26 +8,30 @@ export async function formatProjectList(
     _count: { contracts: number };
   })[]
 ) {
-  const projectList: IProject[] = listedProject.map((project) => {
-    const { employeeProjects, value, _count, ...rest } = project;
-    const employeeList = employeeProjects.map((employeeProject) => {
-      const { employee, ...restEmployeeProject } = employeeProject;
+  let projectList: IProject[] = [];
+  if (listedProject.length > 0) {
+    const formattedProjectList: IProject[] = listedProject.map((project) => {
+      const { employeeProjects, value, _count, ...rest } = project;
+      const employeeList = employeeProjects.map((employeeProject) => {
+        const { employee, ...restEmployeeProject } = employeeProject;
+        return {
+          ...employee,
+          ...restEmployeeProject,
+          imageId: employee.imageId ?? '',
+        };
+      });
       return {
-        ...employee,
-        ...restEmployeeProject,
-        imageId: employee.imageId ?? '',
+        ...rest,
+        imageId: rest.imageId ?? '',
+        members: employeeList,
+        income: value ? value.totalExpense : 0,
+        expense: value ? value.totalRevenue : 0,
+        profit: value ? value.netProfit : 0,
+        contractAmount: _count.contracts,
       };
     });
-    return {
-      ...rest,
-      imageId: rest.imageId ?? '',
-      members: employeeList,
-      income: value ? value.totalExpense : 0,
-      expense: value ? value.totalRevenue : 0,
-      profit: value ? value.netProfit : 0,
-      contractAmount: _count.contracts,
-    };
-  });
+    projectList = formattedProjectList;
+  }
   return projectList;
 }
 
@@ -38,43 +42,26 @@ export async function formatProject(
     _count: { contracts: number };
   }
 ) {
-  const { employeeProjects, value, _count, ...rest } = getProject;
-  const employeeList = employeeProjects.map((employeeProject) => {
-    const { employee, ...restEmployeeProject } = employeeProject;
-    return {
-      ...employee,
-      ...restEmployeeProject,
-      imageId: employee.imageId ?? '',
-    };
-  });
-  return {
-    ...rest,
-    members: employeeList,
-    income: value ? value.totalExpense : 0,
-    expense: value ? value.totalRevenue : 0,
-    profit: value ? value.netProfit : 0,
-    contractAmount: _count.contracts,
-    imageId: rest.imageId ?? '',
-  };
-}
-
-export async function formatWorkRateList(
-  workRateList: (WorkRate & {
-    employeeProject: { employee: { name: string; imageId: string | null } };
-  })[]
-) {
-  const formattedWorkRateList: IWorkRate[] = workRateList.map((workRate) => {
-    const { employeeProject, ...rest } = workRate;
-    const { employee } = employeeProject;
-    const formattedWorkRate = {
-      ...rest,
-      member: {
-        name: employee.name,
+  let project: IProject = {} as IProject;
+  if (getProject) {
+    const { employeeProjects, value, _count, ...rest } = getProject;
+    const employeeList = employeeProjects.map((employeeProject) => {
+      const { employee, ...restEmployeeProject } = employeeProject;
+      return {
+        ...employee,
+        ...restEmployeeProject,
         imageId: employee.imageId ?? '',
-      },
-      involvementRate: workRate.involvementRate ?? 0,
+      };
+    });
+    project = {
+      ...rest,
+      members: employeeList,
+      income: value ? value.totalExpense : 0,
+      expense: value ? value.totalRevenue : 0,
+      profit: value ? value.netProfit : 0,
+      contractAmount: _count.contracts,
+      imageId: rest.imageId ?? '',
     };
-    return formattedWorkRate;
-  });
-  return formattedWorkRateList;
+  }
+  return project;
 }
