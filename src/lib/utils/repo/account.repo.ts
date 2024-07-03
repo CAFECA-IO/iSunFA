@@ -7,13 +7,13 @@ import { Account } from '@prisma/client';
 
 export async function findManyAccountsInPrisma(
   companyId: number,
-  forUser?: boolean,
+  onlyForUser: boolean = true,
   page: number = DEFAULT_PAGE_OFFSET,
   limit: number = DEFAULT_PAGE_LIMIT,
   type?: AccountType,
   liquidity?: boolean,
   selectDeleted: boolean = false
-) {
+): Promise<Account[]> {
   let accounts: Account[] = [];
 
   try {
@@ -29,7 +29,7 @@ export async function findManyAccountsInPrisma(
       where: {
         type,
         liquidity,
-        forUser,
+        forUser: onlyForUser ? true : undefined,
         OR: [
           {
             companyId,

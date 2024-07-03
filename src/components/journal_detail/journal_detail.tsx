@@ -349,7 +349,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">Accounting</p>
+          <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
           <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
             <p className="whitespace-nowrap">{debit.accounting}</p>
           </div>

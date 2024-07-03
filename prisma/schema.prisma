@@ -37,12 +37,13 @@ model Account {
 model Asset {
   id                 Int    @id @default(autoincrement())
   voucherId          Int    @map("voucher_id")
-  projectId          Int    @map("project_id")
-  contractId         Int    @map("contract_id")
+  projectId          Int?    @map("project_id")
+  contractId         Int?    @map("contract_id")
   name               String
-  tag                String
+  label              String
   type               String
   description        String
+  supplier           String
   startDate          String @map("start_date")
   endDate            String @map("end_date")
   price              String
@@ -52,8 +53,8 @@ model Asset {
   createdAt          Int    @map("created_at")
   updatedAt          Int    @map("updated_at")
 
-  contract Contract @relation(fields: [contractId], references: [id])
-  project  Project  @relation(fields: [projectId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+  project  Project?  @relation(fields: [projectId], references: [id])
   voucher  Voucher  @relation(fields: [voucherId], references: [id])
 
   @@map("asset")

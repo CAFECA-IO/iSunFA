@@ -167,7 +167,7 @@ const AddProjectModal = ({
           <input
             id="companySearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-lightGray4"
@@ -220,7 +220,7 @@ const AddProjectModal = ({
                 <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
                 <input
                   type="text"
-                  placeholder="Name your project"
+                  placeholder={t('PROJECT.NAME_YOUR_PROJECT')}
                   value={inputName}
                   onChange={nameChangeHandler}
                   required

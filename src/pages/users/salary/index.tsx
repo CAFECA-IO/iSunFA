@@ -147,7 +147,7 @@ const SalaryPage = () => {
             <div className="grow">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t('AUDIT_REPORT.SEARCH')}
                 className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>
@@ -305,7 +305,7 @@ const SalaryPage = () => {
             <div className="grow">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t('AUDIT_REPORT.SEARCH')}
                 className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>
