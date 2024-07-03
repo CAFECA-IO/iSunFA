@@ -139,8 +139,8 @@ export function mappingAccountToSheetDisplay(accountMap: Map<string, IAccountNod
     }
 
     sheetDisplay.push({
-      code: account.code,
-      name: account.name,
+      code: row.code,
+      name: row.name,
       amount: account.amount,
       indent: row.indent,
     });
