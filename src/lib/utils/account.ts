@@ -1,11 +1,28 @@
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { IAccountNode } from '@/interfaces/accounting_account';
+import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { Account } from '@prisma/client';
 
 // Depreciated: (20240702 - Murky) This is for testing purpose
 // import { AccountType } from "@/constants/account";
 // import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
 // import { getSumOfLineItemsGroupByAccountInPrisma } from "@/lib/utils/repo/line_item.repo";
+// import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
+
+export function transformLineItemsFromDBToMap(lineItemsFromDB: ILineItemIncludeAccount[]): Map<number, number> {
+  const lineItems: Map<number, number> = new Map();
+  lineItemsFromDB.forEach((lineItem) => {
+    const isAccountDebit = lineItem.account.debit;
+    const isLineItemDebit = lineItem.debit;
+    const { amount } = lineItem;
+
+    const adjustedAmount = isAccountDebit === isLineItemDebit ? amount : -amount;
+
+    const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
+    lineItems.set(lineItem.accountId, lineItemOriginalAmount + adjustedAmount);
+  });
+  return lineItems;
+}
 
 function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> {
   const accountMap = new Map<string, IAccountNode>();
@@ -21,7 +38,7 @@ function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> 
   return accountMap;
 }
 
-export function buildAccountTree(accounts: Account[]): IAccountNode[] {
+export function buildAccountForest(accounts: Account[]): IAccountNode[] {
   const accountMap = transformAccountsToMap(accounts);
   const rootAccounts: IAccountNode[] = [];
 
@@ -59,13 +76,77 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   return updatedAccount;
 }
 
-export function updateAccountAmounts(
+export function updateAccountAmountsInSingleTree(
   accounts: IAccountNode,
-  lineItems: { accountId: number; amount: number }[]
+  lineItemsMap: Map<number, number>
 ) {
-  const lineItemsMap = new Map(lineItems.map((lineItem) => [lineItem.accountId, lineItem.amount]));
   const updatedIAccountNode = updateAccountAmountsByDFS(accounts, lineItemsMap);
   return updatedIAccountNode;
+}
+
+export function updateAccountAmounts(
+  forest: IAccountNode[],
+  lineItemsMap: Map<number, number>
+) {
+  const updatedForest = forest.map((account) => updateAccountAmountsInSingleTree(account, lineItemsMap));
+  return updatedForest;
+}
+
+export function addAccountNodeToMapRecursively(accountMap: Map<string, IAccountNode>, account: IAccountNode) {
+  const newAccountNode = { ...account, children: [] };
+  accountMap.set(account.code, newAccountNode);
+  account.children.forEach((child) => {
+    addAccountNodeToMapRecursively(accountMap, child);
+  });
+}
+
+export function transformForestToMap(forest: IAccountNode[]): Map<string, IAccountNode> {
+  const accountMap = new Map<string, IAccountNode>();
+
+  forest.forEach((accountNode) => {
+    addAccountNodeToMapRecursively(accountMap, accountNode);
+  });
+
+  return accountMap;
+}
+
+export function mappingAccountToSheetDisplay(accountMap: Map<string, IAccountNode>, sheetMappingRow: {
+  code: string;
+  name: string;
+  indent: number;
+}[]): IAccountForSheetDisplay[] {
+  const sheetDisplay: IAccountForSheetDisplay[] = [];
+
+  sheetMappingRow.forEach((row) => {
+    if (!row.code) {
+      sheetDisplay.push({
+        code: row.code,
+        name: row.name,
+        amount: null,
+        indent: row.indent,
+      });
+      return;
+    }
+    const account = accountMap.get(row.code);
+    if (!account) {
+      sheetDisplay.push({
+        code: row.code,
+        name: row.name,
+        amount: 0,
+        indent: row.indent,
+      });
+      return;
+    }
+
+    sheetDisplay.push({
+      code: row.code,
+      name: row.name,
+      amount: account.amount,
+      indent: row.indent,
+    });
+  });
+
+  return sheetDisplay;
 }
 
 // Depreciated: (20240702 - Murky) This is for testing purpose
@@ -81,7 +162,7 @@ export function updateAccountAmounts(
 //         undefined,
 //         false
 //     );
-//     const tree = buildAccountTree(accounts);
+//     const forest = buildAccountForest(accounts);
 
 //     const accountIdAmountPair = await getSumOfLineItemsGroupByAccountInPrisma(
 //         PUBLIC_COMPANY_ID,
@@ -90,13 +171,14 @@ export function updateAccountAmounts(
 //         999999999
 //     );
 
-//     // eslint-disable-next-line no-console
-//     console.log(JSON.stringify(accountIdAmountPair, null, 2));
+//     const updatedForest = updateAccountAmounts(forest, accountIdAmountPair);
 
-//     const updatedTree = updateAccountAmounts(tree[0], accountIdAmountPair);
+//     const accountMap = transformForestToMap(updatedForest);
+//     const sheetDisplay = mappingAccountToSheetDisplay(accountMap, balanceSheetMapping);
 
 //     // eslint-disable-next-line no-console
-//     console.log(JSON.stringify(updatedTree.children.filter((child) => child.code === '11XX')[0].children.filter((child) => child.code === '1100'), null, 2));
+//     console.log(JSON.stringify(sheetDisplay.slice(0, 10), null, 2));
+//     // console.log(JSON.stringify(updatedTree.children.filter((child) => child.code === '11XX')[0].children.filter((child) => child.code === '1100'), null, 2));
 // }
 
 // main();
