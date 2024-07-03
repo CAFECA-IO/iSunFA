@@ -25,3 +25,10 @@ export type IAccountNode = Omit<Account, 'children' | 'parent' | 'root' | 'leaf'
   children: IAccountNode[];
   amount: number;
 };
+
+export interface IAccountForSheetDisplay {
+  code: string;
+  name: string;
+  amount: number | null;
+  indent: number;
+}

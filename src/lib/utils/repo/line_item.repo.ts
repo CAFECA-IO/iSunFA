@@ -8,12 +8,7 @@ export async function getSumOfLineItemsGroupByAccountInPrisma(
   type: AccountType,
   startDate: number,
   endDate: number
-): Promise<
-  {
-    accountId: number;
-    amount: number;
-  }[]
-> {
+) {
   const startDateInSecond = setTimestampToDayStart(startDate);
   const endDateInSecond = setTimestampToDayEnd(endDate);
 
@@ -32,33 +27,30 @@ export async function getSumOfLineItemsGroupByAccountInPrisma(
     },
   };
 
-  let lineItems: {
-    accountId: number;
-    amount: number;
-  }[];
+  const lineItems: Map<number, number> = new Map();
 
   try {
-    const lineItemsFromDB = await prisma.lineItem.groupBy({
-      by: ['accountId'],
+    const lineItemsFromDB = await prisma.lineItem.findMany({
       where,
-      _sum: {
-        amount: true,
-      },
+      include: {
+        account: true,
+      }
     });
 
-    lineItems = lineItemsFromDB.map((lineItem) => {
-      return {
-        accountId: lineItem.accountId,
-        // Info: (20240627 - Murky) _sum is supposed to have underscore-dangle
-        // eslint-disable-next-line no-underscore-dangle
-        amount: lineItem._sum.amount || 0,
-      };
+    lineItemsFromDB.forEach((lineItem) => {
+      const isAccountDebit = lineItem.account.debit;
+      const isLineItemDebit = lineItem.debit;
+      const { amount } = lineItem;
+
+      const adjustedAmount = isAccountDebit === isLineItemDebit ? amount : -amount;
+
+      const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
+      lineItems.set(lineItem.accountId, lineItemOriginalAmount + adjustedAmount);
     });
   } catch (error) {
     // Depreciated: (20240627 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
-    lineItems = [];
   }
 
   return lineItems;
