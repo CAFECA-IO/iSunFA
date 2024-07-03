@@ -76,7 +76,11 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
   return account;
 }
 
-export async function updateAccountInPrisma(accountIdNumber: number, companyIdNumber: number, name: string) {
+export async function updateAccountInPrisma(
+  accountIdNumber: number,
+  companyIdNumber: number,
+  name: string
+) {
   let account: Account | null = null;
   try {
     account = await prisma.account.update({
@@ -117,4 +121,27 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
     console.error(error);
   }
   return account;
+}
+
+export async function findLatestSubAccountInPrisma(
+  companyIdNumber: number,
+  parentAccount: Account
+) {
+  let latestSubAccount: Account | null = null;
+  try {
+    latestSubAccount = await prisma.account.findFirst({
+      where: {
+        companyId: companyIdNumber,
+        parentCode: parentAccount.code,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  } catch (error) {
+    // Info (20240703 - Gibbs) - Debugging error
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+  return latestSubAccount;
 }
