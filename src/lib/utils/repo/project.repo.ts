@@ -8,6 +8,9 @@ export async function listProject(companyId: number) {
     where: {
       companyId,
     },
+    orderBy: {
+      id: 'asc',
+    },
     include: {
       employeeProjects: {
         select: {

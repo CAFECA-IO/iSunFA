@@ -28,12 +28,12 @@ export async function createSubscription(
 }
 
 // Read
-export async function getSubscriptionById(id: number): Promise<ISubscription> {
-  const subscription = (await prisma.subscription.findUnique({
+export async function getSubscriptionById(id: number): Promise<ISubscription | null> {
+  const subscription = await prisma.subscription.findUnique({
     where: {
       id,
     },
-  })) as ISubscription;
+  });
   return subscription;
 }
 
@@ -52,7 +52,7 @@ export async function updateSubscription(
 }
 
 // Delete
-export async function deleteSubscription(id: number): Promise<ISubscription | null> {
+export async function deleteSubscription(id: number): Promise<ISubscription> {
   const deletedSubscription = await prisma.subscription.delete({
     where: {
       id,
@@ -62,7 +62,11 @@ export async function deleteSubscription(id: number): Promise<ISubscription | nu
 }
 
 // List
-export async function listSubscriptions(): Promise<ISubscription[]> {
-  const subscriptions = await prisma.subscription.findMany();
+export async function listSubscriptions(companyId: number): Promise<ISubscription[]> {
+  const subscriptions = await prisma.subscription.findMany({
+    where: {
+      companyId,
+    },
+  });
   return subscriptions;
 }

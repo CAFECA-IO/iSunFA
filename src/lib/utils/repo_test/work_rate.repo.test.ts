@@ -7,7 +7,7 @@ describe('listWorkRate', () => {
     const workRateList = await listWorkRate(employeeProjectIdList);
     expect(workRateList).toBeDefined();
     expect(Array.isArray(workRateList)).toBe(true);
-    expect(workRateList[0].employeeProject.employee.name).toBe('TEST John Doe');
+    expect(workRateList[0].employeeProject.employee.name).toBe('TEST John Doe 1');
     expect(workRateList[0].involvementRate).toBe(workRates[0].involvementRate);
     expect(workRateList[0].actualHours).toBe(workRates[0].actualHours);
     expect(workRateList[0].expectedHours).toBe(workRates[0].expectedHours);

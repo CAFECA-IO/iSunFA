@@ -1,33 +1,36 @@
 import prisma from '@/client';
 import { Prisma, User } from '@prisma/client';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export async function listUser(): Promise<User[]> {
-  const userList = await prisma.user.findMany();
+  const userList = await prisma.user.findMany({
+    orderBy: {
+      id: 'asc',
+    },
+  });
   return userList;
 }
 
-export async function getUserById(userId: number): Promise<User> {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
-  if (!user) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+export async function getUserById(userId: number): Promise<User | null> {
+  let user = null;
+  if (userId > 0) {
+    user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
   }
   return user;
 }
 
-export async function getUserByCredential(credentialId: string): Promise<User> {
-  const user = await prisma.user.findUnique({
-    where: {
-      credentialId,
-    },
-  });
-  if (!user) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+export async function getUserByCredential(credentialId: string): Promise<User | null> {
+  let user = null;
+  if (credentialId.trim() !== '') {
+    user = await prisma.user.findUnique({
+      where: {
+        credentialId,
+      },
+    });
   }
   return user;
 }

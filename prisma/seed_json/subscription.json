@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1000,
+    "companyId": 1000,
+    "planId": 1000,
+    "startDate": 1635724800,
+    "expiredDate": 1667260800,
+    "status": true,
+    "createdAt": 1635724800,
+    "updatedAt": 1635724800
+  }
+]
