@@ -18,6 +18,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { IReport } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useTranslation } from 'next-i18next';
 
 interface IServerSideProps {
   reportId: string;
@@ -49,6 +50,7 @@ const DUMMY_DATA_FOR_REPORT = {
 };
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
+  const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData, setReportData] = React.useState<IReport>({
@@ -74,7 +76,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     if (getFRSuccess === false) {
       toastHandler({
         id: `getFR-${getFRCode}_${reportId}`,
-        content: `Failed to get ${reportType} report: ${getFRCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET')} ${reportType}${t('DASHBOARD.REPORT')}${getFRCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

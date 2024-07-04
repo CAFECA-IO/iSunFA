@@ -26,7 +26,7 @@ export interface IDashboardProvider {
 export const BookmarkAvailableList: Record<string, BookmarkItem> = {
   addNewContract: {
     id: 'addNewContract',
-    name: 'Add new contract',
+    name: 'Add New Contract',
     iconOnModal: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

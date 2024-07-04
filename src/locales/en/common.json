@@ -451,8 +451,16 @@
     "PROFIT_CHANGE": "Profit Change",
     "PRE_LAUNCH_PROJECTS": "Pre-launch Projects",
     "HELLO_WELCOME_TO": "Hello! Welcome to ",
-    "TOP_PROJECT_ROI": "Top project ROI"
+    "TOP_PROJECT_ROI": "Top project ROI",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "Failed to get profit insight. Error code:",
+    "FAILED_TO_GET_LABOR_COST": "Failed to get labor cost chart data. Error code:",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "Failed to get income/expense trend. Error code:",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "Failed to get project progress data. Error code:",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "Failed to get profit comparison. Error code:",
+    "FAILED_TO_GET": "Failed to get",
+    "REPORT": "report: "
   },
+
   "SELECT_COMPANY": {
     "WELCOME_BACK": "Welcome back, ",
     "YOUR_COMPANY": "Select your company to log in, or create your own company.",
@@ -571,5 +579,14 @@
     "THU": "T",
     "FRI": "F",
     "SAT": "S"
+  },
+  "STAGE_NAME_MAP": {
+    "ALL": "All",
+    "DESIGNING": "Designing",
+    "DEVELOPING": "Developing",
+    "BETA_TESTING": "Beta Testing",
+    "SELLING": "Selling",
+    "SOLD": "Sold",
+    "ARCHIVED": "Archived"
   }
 }

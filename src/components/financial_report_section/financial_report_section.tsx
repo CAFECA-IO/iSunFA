@@ -196,7 +196,10 @@ const FinancialReportSection = () => {
         }`}
       >
         <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
-          <div className="text-center text-input-text-input-filled">
+          <div
+            className="text-center text-input-text-input-filled"
+            style={{ whiteSpace: 'nowrap' }}
+          >
             {t('REPORTS_HISTORY_LIST.PROJECT')}
           </div>
           <div
