@@ -25,6 +25,7 @@ import {
 } from '@/lib/utils/account';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
+import incomeStatementMapping from '@/constants/account_sheet_mapping/income_statement_mapping.json';
 
 export function formatGetRequestQuery(req: NextApiRequest) {
   const { startDate, endDate, sheet } = req.query;
@@ -99,11 +100,12 @@ export async function getAllLineItemsByAccountSheet(
   return lineItemsFromDB;
 }
 
-export async function handleGetRequest(
+export async function generateFinancialReport(
   companyId: number,
-  req: NextApiRequest
-): Promise<IAccountForSheetDisplay[]> {
-  const { startDateInSecond, endDateInSecond, accountSheet } = formatGetRequestQuery(req);
+  startDateInSecond: number,
+  endDateInSecond: number,
+  accountSheet: AccountSheetType
+) {
   const lineItemsFromDB = await getAllLineItemsByAccountSheet(
     companyId,
     startDateInSecond,
@@ -114,7 +116,30 @@ export async function handleGetRequest(
   const accountForest = await getAccountForestByAccountSheet(companyId, accountSheet);
   const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
   const accountMap = transformForestToMap(updatedAccountForest);
-  const sheetDisplay = mappingAccountToSheetDisplay(accountMap, balanceSheetMapping);
+  let sheetDisplay: IAccountForSheetDisplay[];
+
+  switch (accountSheet) {
+    case AccountSheetType.BALANCE_SHEET:
+      sheetDisplay = mappingAccountToSheetDisplay(accountMap, balanceSheetMapping);
+      break;
+    case AccountSheetType.INCOME_STATEMENT:
+      sheetDisplay = mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
+      break;
+    default:
+      sheetDisplay = [];
+      // Depreciated: (20240416 - Murky) This is for debugging purpose
+      // eslint-disable-next-line no-console
+      console.log("accountSheet: ", accountSheet, " is not supported");
+  }
+  return sheetDisplay;
+}
+
+export async function handleGetRequest(
+  companyId: number,
+  req: NextApiRequest
+): Promise<IAccountForSheetDisplay[]> {
+  const { startDateInSecond, endDateInSecond, accountSheet } = formatGetRequestQuery(req);
+  const sheetDisplay = await generateFinancialReport(companyId, startDateInSecond, endDateInSecond, accountSheet);
   return sheetDisplay;
 }
 
