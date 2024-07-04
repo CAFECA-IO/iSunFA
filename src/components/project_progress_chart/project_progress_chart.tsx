@@ -14,7 +14,6 @@ import {
   DUMMY_CATEGORIES,
   DUMMY_START_DATE,
   IProjectProgressChartData,
-  useTranslatedCategories, // 引入 useTranslatedCategories
 } from '@/interfaces/project_progress_chart';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -232,17 +231,14 @@ const ProjectProgressChart = () => {
 
   useEffect(() => {
     if (listSuccess && projectProgress) {
-      // const { series: s, categories: c } = projectProgress;
-      const { series: s } = projectProgress;
-      const translatedCategories = useTranslatedCategories(); // 使用翻譯後的類別名稱
-      // setCategories(c);
-      setCategories(translatedCategories);
+      const { series: s, categories: c } = projectProgress;
+      setCategories(c);
       setSeries(s);
     } else if (listSuccess === false) {
       setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
+        content: `Failed to get project progress data. Error code: ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
