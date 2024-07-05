@@ -90,8 +90,11 @@ export function updateAccountAmountsInSingleTree(
 }
 
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
-  const updatedForest = forest.map((account) =>
-    updateAccountAmountsInSingleTree(account, lineItemsMap)
+  const updatedForest = forest.map(
+    (account) => updateAccountAmountsInSingleTree(
+      account,
+      lineItemsMap
+    )
   );
   return updatedForest;
 }
