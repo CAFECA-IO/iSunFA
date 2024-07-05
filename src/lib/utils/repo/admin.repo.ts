@@ -11,6 +11,9 @@ export async function listAdminByCompanyId(
     where: {
       companyId,
     },
+    orderBy: {
+      id: 'asc',
+    },
     include: {
       user: true,
       company: true,
@@ -64,10 +67,7 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
   companyId: number,
   userId: number,
   roleName: RoleName
-): Promise<Admin & { company: Company; user: User; role: Role }> {
-  if (typeof companyId !== 'number' || typeof userId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
   const admin = await prisma.admin.findFirst({
     where: {
       userId,
@@ -82,9 +82,6 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
       role: true,
     },
   });
-  if (!admin) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
   return admin;
 }
 

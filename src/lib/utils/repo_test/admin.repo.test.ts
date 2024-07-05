@@ -72,15 +72,18 @@ describe('Admin Repository Tests', () => {
         roleName
       );
       expect(admin).toBeDefined();
-      expect(admin.companyId).toBe(testCompanyId);
-      expect(admin.userId).toBe(testUserId);
-      expect(admin.role.name).toBe(roleName);
+      expect(admin!.companyId).toBe(testCompanyId);
+      expect(admin!.userId).toBe(testUserId);
+      expect(admin!.role.name).toBe(roleName);
     });
 
     it('should throw an error if the admin is not found', async () => {
-      await expect(
-        getAdminByCompanyIdAndUserIdAndRoleName(9999, 9998, 'NON_EXISTENT_ROLE' as RoleName)
-      ).rejects.toThrow();
+      const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+        9999,
+        9998,
+        'NON_EXISTENT_ROLE' as RoleName
+      );
+      expect(admin).toBeNull();
     });
   });
 
