@@ -585,5 +585,14 @@
     "SELLING": "销售中",
     "SOLD": "已销售",
     "ARCHIVED": "已归档"
+  },
+  "ROLE": {
+    "SUPER_ADMIN": "最终管理员",
+    "ADMIN": "管理员",
+    "OWNER": "拥有者",
+    "ACCOUNTANT": "会计",
+    "BOOKKEEPER": "记帐员",
+    "FINANCE": "财务",
+    "VIEWER": "检视者"
   }
 }
