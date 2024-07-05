@@ -448,7 +448,14 @@
     "PROFIT_CHANGE": "利潤變化",
     "PRE_LAUNCH_PROJECTS": "預啟動專案",
     "HELLO_WELCOME_TO": "你好！歡迎來到",
-    "TOP_PROJECT_ROI": "最優項目投資報酬率"
+    "TOP_PROJECT_ROI": "最優項目投資報酬率",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "無法獲得利潤觀察。錯誤代碼: ",
+    "FAILED_TO_GET_LABOR_COST": "取得人工成本資料失敗。錯誤代碼：",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "無法獲取收入/支出趨勢。錯誤代碼：",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "無法取得專案進度資料。錯誤代碼：",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "無法獲得利潤比較。錯誤代碼：",
+    "FAILED_TO_GET": "無法獲得",
+    "REPORT": "報告: "
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",
@@ -568,5 +575,14 @@
     "THU": "四",
     "FRI": "五",
     "SAT": "六"
+  },
+  "STAGE_NAME_MAP": {
+    "ALL": "全部",
+    "DESIGNING": "設計中",
+    "DEVELOPING": "開發中",
+    "BETA_TESTING": "測試中",
+    "SELLING": "銷售中",
+    "SOLD": "已銷售",
+    "ARCHIVED": "已歸檔"
   }
 }

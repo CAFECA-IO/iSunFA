@@ -59,7 +59,7 @@ const DashboardOverview = () => {
     } else if (getSuccess === false) {
       toastHandler({
         id: `profit_insight-${getCode}`,
-        content: `Failed to get profit insight. Error code: ${getCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

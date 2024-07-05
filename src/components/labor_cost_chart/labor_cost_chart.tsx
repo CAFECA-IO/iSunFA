@@ -263,7 +263,7 @@ const LaborCostChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `labor-cost-chart-${getCode}`,
-        content: `Failed to get labor cost chart data. Error code: ${getCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

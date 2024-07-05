@@ -9,7 +9,9 @@ import { Account } from '@prisma/client';
 // import { getSumOfLineItemsGroupByAccountInPrisma } from "@/lib/utils/repo/line_item.repo";
 // import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 
-export function transformLineItemsFromDBToMap(lineItemsFromDB: ILineItemIncludeAccount[]): Map<number, number> {
+export function transformLineItemsFromDBToMap(
+  lineItemsFromDB: ILineItemIncludeAccount[]
+): Map<number, number> {
   const lineItems: Map<number, number> = new Map();
   lineItemsFromDB.forEach((lineItem) => {
     const isAccountDebit = lineItem.account.debit;
@@ -60,7 +62,10 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   let newAmount = lineItemsMap.get(account.id) || 0;
   const updatedChildren = account.children.map((child) => {
     const childAccount = updateAccountAmountsByDFS(child, lineItemsMap);
-    newAmount += childAccount.amount;
+
+    // Info: (20240702 - Murky) 如果parent和child的debit方向不同，則child的amount要取負值
+    // 例如：Parent 是 機具設備淨額，Child 是 機具設備成本 and 累計折舊－機具設備，則機具設備淨額 = 機具設備成本 - 累計折舊
+    newAmount += account.debit === child.debit ? childAccount.amount : -childAccount.amount;
     return childAccount;
   });
 
@@ -84,15 +89,20 @@ export function updateAccountAmountsInSingleTree(
   return updatedIAccountNode;
 }
 
-export function updateAccountAmounts(
-  forest: IAccountNode[],
-  lineItemsMap: Map<number, number>
-) {
-  const updatedForest = forest.map((account) => updateAccountAmountsInSingleTree(account, lineItemsMap));
+export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
+  const updatedForest = forest.map(
+    (account) => updateAccountAmountsInSingleTree(
+      account,
+      lineItemsMap
+    )
+  );
   return updatedForest;
 }
 
-export function addAccountNodeToMapRecursively(accountMap: Map<string, IAccountNode>, account: IAccountNode) {
+export function addAccountNodeToMapRecursively(
+  accountMap: Map<string, IAccountNode>,
+  account: IAccountNode
+) {
   const newAccountNode = { ...account, children: [] };
   accountMap.set(account.code, newAccountNode);
   account.children.forEach((child) => {
@@ -110,11 +120,14 @@ export function transformForestToMap(forest: IAccountNode[]): Map<string, IAccou
   return accountMap;
 }
 
-export function mappingAccountToSheetDisplay(accountMap: Map<string, IAccountNode>, sheetMappingRow: {
-  code: string;
-  name: string;
-  indent: number;
-}[]): IAccountForSheetDisplay[] {
+export function mappingAccountToSheetDisplay(
+  accountMap: Map<string, IAccountNode>,
+  sheetMappingRow: {
+    code: string;
+    name: string;
+    indent: number;
+  }[]
+): IAccountForSheetDisplay[] {
   const sheetDisplay: IAccountForSheetDisplay[] = [];
 
   sheetMappingRow.forEach((row) => {

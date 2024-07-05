@@ -449,7 +449,14 @@
     "PROFIT_CHANGE": "利润变化",
     "PRE_LAUNCH_PROJECTS": "预启动专案",
     "HELLO_WELCOME_TO": "你好！欢迎来到",
-    "TOP_PROJECT_ROI": "最优项目投资报酬率"
+    "TOP_PROJECT_ROI": "最优项目投资报酬率",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "无法获得利润观察。错误代码: ",
+    "FAILED_TO_GET_LABOR_COST": "获取人工成本数据失败。错误代码：",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "无法获取收入/支出趋势。错误代码：",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "无法获取项目进度数据。错误代码：",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "无法获得利润比较。错误代码：",
+    "FAILED_TO_GET": "无法获得",
+    "REPORT": "报告: "
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",
@@ -569,5 +576,14 @@
     "THU": "四",
     "FRI": "五",
     "SAT": "六"
+  },
+  "STAGE_NAME_MAP": {
+    "ALL": "全部",
+    "DESIGNING": "设计中",
+    "DEVELOPING": "开发中",
+    "BETA_TESTING": "测试中",
+    "SELLING": "销售中",
+    "SOLD": "已销售",
+    "ARCHIVED": "已归档"
   }
 }
