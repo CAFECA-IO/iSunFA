@@ -93,7 +93,14 @@ export async function getAllLineItemsByAccountSheet(
 ) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map((type) => getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond))
+    accountTypes.map(
+      (type) => getSumOfLineItemsGroupByAccountInPrisma(
+        companyId,
+        type,
+        startDateInSecond,
+        endDateInSecond
+)
+      )
   );
 
   const lineItemsFromDB = lineItemsFromDBArray.flat();
@@ -129,7 +136,7 @@ export async function generateFinancialReport(
       sheetDisplay = [];
       // Depreciated: (20240416 - Murky) This is for debugging purpose
       // eslint-disable-next-line no-console
-      console.log("accountSheet: ", accountSheet, " is not supported");
+      console.log('accountSheet: ', accountSheet, ' is not supported');
   }
   return sheetDisplay;
 }
@@ -139,7 +146,12 @@ export async function handleGetRequest(
   req: NextApiRequest
 ): Promise<IAccountForSheetDisplay[]> {
   const { startDateInSecond, endDateInSecond, accountSheet } = formatGetRequestQuery(req);
-  const sheetDisplay = await generateFinancialReport(companyId, startDateInSecond, endDateInSecond, accountSheet);
+  const sheetDisplay = await generateFinancialReport(
+    companyId,
+    startDateInSecond,
+    endDateInSecond,
+    accountSheet
+  );
   return sheetDisplay;
 }
 

@@ -19,6 +19,20 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
+// Info: (2024704 - Anna) For list
+// Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
+interface StageNameMap {
+  [key: string]: string;
+}
+
+const stageNameMap: StageNameMap = {
+  Designing: 'STAGE_NAME_MAP.DESIGNING',
+  Developing: 'STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'STAGE_NAME_MAP.SELLING',
+  Sold: 'STAGE_NAME_MAP.SOLD',
+  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+};
 interface IProjectDashboardPageProps {
   projectId: string;
 }
@@ -58,7 +72,8 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
             onClick={clickHandler}
           >
-            {stage}
+            {t(stageNameMap[stage])}
+            {/* {stage}test3 */}
           </button>
         );
       })}
@@ -98,7 +113,8 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
       ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
       px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {currentStage}
+                  {/* {currentStage} */}
+                  {t(stageNameMap[currentStage])}
                   <FaChevronDown />
                   {displayedStageOptions}
                 </div>
@@ -115,7 +131,8 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
       ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
       px-12px hover:cursor-pointer md:w-200px`}
               >
-                {currentStage}
+                {t(stageNameMap[currentStage])}
+                {/* {currentStage} */}
                 <FaChevronDown />
                 {displayedStageOptions}
               </div>

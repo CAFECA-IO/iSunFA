@@ -15,6 +15,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { IReport } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useTranslation } from 'next-i18next';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -37,6 +38,7 @@ const ViewAnalysisReportPage = ({
   startTimestamp,
   endTimestamp,
 }: IServerSideProps) => {
+  const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const [reportData, setReportData] = React.useState<IReport>({
@@ -62,7 +64,7 @@ const ViewAnalysisReportPage = ({
     if (getARSuccess === false) {
       toastHandler({
         id: `getAR-${getARCode}}`,
-        content: `Failed to get ${reportType} report: ${getARCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET')} ${reportType}${t('DASHBOARD.REPORT')}${getARCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
