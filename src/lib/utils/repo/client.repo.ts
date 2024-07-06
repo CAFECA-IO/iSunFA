@@ -1,5 +1,4 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IClient } from '@/interfaces/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 
@@ -12,16 +11,16 @@ export async function listClient(companyId: number): Promise<IClient[]> {
   return listedClient;
 }
 
-export async function getClientById(clientId: number): Promise<IClient> {
-  const getClient = await prisma.client.findUnique({
-    where: {
-      id: clientId,
-    },
-  });
-  if (!getClient) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+export async function getClientById(clientId: number): Promise<IClient | null> {
+  let client: IClient | null = null;
+  if (clientId > 0) {
+    client = await prisma.client.findUnique({
+      where: {
+        id: clientId,
+      },
+    });
   }
-  return getClient;
+  return client;
 }
 
 export async function updateClientById(

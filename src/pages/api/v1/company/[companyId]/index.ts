@@ -44,9 +44,14 @@ export default async function handler(
         if (shouldContinue) {
           await checkRole(req, res, ROLE_NAME.OWNER);
           const updatedCompany = await updateCompanyById(companyId, code, name, regional);
-          const company = await formatCompany(updatedCompany);
-          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-          payload = company;
+          if (!updatedCompany) {
+            shouldContinue = false;
+            statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+          } else {
+            const company = await formatCompany(updatedCompany);
+            statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+            payload = company;
+          }
         }
         break;
       }

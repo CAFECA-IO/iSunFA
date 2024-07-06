@@ -2,40 +2,97 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IClient } from '@/interfaces/client';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
 import { createClient, listClient } from '@/lib/utils/repo/client.repo';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { formatApiResponse } from '@/lib/utils/common';
+import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
+import { getSession } from '@/lib/utils/session';
+
+function checkInput(name: string, taxId: string, favorite: boolean): boolean {
+  return !!name && !!taxId && typeof favorite === 'boolean';
+}
+
+async function checkAuth(userId: number, companyId: number): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  return !!admin;
+}
+
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient | IClient[] | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IClient | IClient[] | null = null;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuth(userId, companyId);
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    const clientList = await listClient(companyId);
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = clientList;
+  }
+  return { statusMessage, payload };
+}
+
+async function handlePostRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient | IClient[] | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IClient | IClient[] | null = null;
+  const { name, taxId, favorite } = req.body;
+  const isValid = checkInput(name, taxId, favorite);
+  if (!isValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+  } else {
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const isAuth = await checkAuth(userId, companyId);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const newClient = await createClient(companyId, name, taxId, favorite);
+      statusMessage = STATUS_MESSAGE.CREATED;
+      payload = newClient;
+    }
+  }
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IClient | IClient[] | null }>;
+} = {
+  GET: handleGetRequest,
+  POST: handlePostRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IClient | IClient[]>>
+  res: NextApiResponse<IResponseData<IClient | IClient[] | null>>
 ) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IClient | IClient[] | null = null;
+
   try {
-    // Info: (20240419 - Jacky) C010001 - GET /client
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
-    if (req.method === 'GET') {
-      const listedClient = await listClient(companyId);
-      const { httpCode, result } = formatApiResponse<IClient[]>(
-        STATUS_MESSAGE.SUCCESS_LIST,
-        listedClient
-      );
-      res.status(httpCode).json(result);
-      // Info: (20240419 - Jacky) C010003 - POST /client
-    } else if (req.method === 'POST') {
-      const { name, taxId, favorite } = req.body;
-      const createdClient = await createClient(companyId, name, taxId, favorite);
-      const { httpCode, result } = formatApiResponse<IClient>(
-        STATUS_MESSAGE.CREATED,
-        createdClient
-      );
-      res.status(httpCode).json(result);
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IClient>(error.message, {} as IClient);
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IClient | IClient[] | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

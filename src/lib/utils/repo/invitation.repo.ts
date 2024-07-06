@@ -1,14 +1,14 @@
 import prisma from '@/client';
 import { ONE_DAY_IN_S } from '@/constants/time';
-import { IInvitation } from '@/interfaces/invitation';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { Invitation } from '@prisma/client';
 
-export async function getInvitationByCode(code: string): Promise<IInvitation> {
-  const invitation = (await prisma.invitation.findUnique({
+export async function getInvitationByCode(code: string): Promise<Invitation | null> {
+  const invitation = await prisma.invitation.findUnique({
     where: {
       code,
     },
-  })) as IInvitation;
+  });
   return invitation;
 }
 
@@ -19,10 +19,10 @@ export async function createInvitation(
   code: string,
   email: string,
   phone: string = ''
-): Promise<IInvitation> {
+): Promise<Invitation> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const invitation: IInvitation = (await prisma.invitation.create({
+  const invitation: Invitation = await prisma.invitation.create({
     data: {
       role: {
         connect: {
@@ -47,6 +47,15 @@ export async function createInvitation(
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
-  })) as IInvitation;
+  });
   return invitation;
+}
+
+export async function deleteInvitation(id: number): Promise<Invitation> {
+  const deletedInvitation = await prisma.invitation.delete({
+    where: {
+      id,
+    },
+  });
+  return deletedInvitation;
 }

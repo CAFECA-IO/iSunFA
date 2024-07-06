@@ -7,13 +7,13 @@ import { RoleName } from '@/constants/role_name';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 import {
   getAdminByCompanyIdAndUserId,
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
 import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
+import { Invitation } from '@prisma/client';
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
@@ -90,27 +90,9 @@ export async function isProjectCompanyMatch(projectId: number, companyId: number
   return match;
 }
 
-export async function checkInvitation(invitationCode: string, userId: number) {
+export async function checkInvitation(invitation: Invitation): Promise<boolean> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const invitation = await getInvitationByCode(invitationCode);
-  if (!invitation) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-  if (invitation.hasUsed) {
-    throw new Error(STATUS_MESSAGE.INVITATION_HAS_USED);
-  }
-  if (invitation.expiredAt < nowTimestamp) {
-    throw new Error(STATUS_MESSAGE.CONFLICT);
-  }
-  let admin;
-  try {
-    admin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
-  } catch (error) {
-    /* empty */
-  }
-  if (admin) {
-    throw new Error(STATUS_MESSAGE.CONFLICT);
-  }
-  return invitation;
+  const isValid = invitation && !invitation.hasUsed && invitation.expiredAt >= nowTimestamp;
+  return isValid;
 }

@@ -3,18 +3,26 @@ import { IPaymentRecord } from '@/interfaces/payment_record';
 import { timestampInSeconds } from '@/lib/utils/common';
 
 // Create
-export async function createPaymentRecord(paymentRecord: IPaymentRecord): Promise<IPaymentRecord> {
+export async function createPaymentRecord(
+  orderId: number,
+  transactionId: string,
+  date: number,
+  description: string,
+  amount: number,
+  method: string,
+  status: string
+): Promise<IPaymentRecord> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const newPaymentRecord = await prisma.paymentRecord.create({
     data: {
-      orderId: paymentRecord.orderId,
-      transactionId: paymentRecord.transactionId,
-      date: paymentRecord.date,
-      description: paymentRecord.description,
-      amount: paymentRecord.amount,
-      method: paymentRecord.method,
-      status: paymentRecord.status,
+      orderId,
+      transactionId,
+      date,
+      description,
+      amount,
+      method,
+      status,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
@@ -23,50 +31,16 @@ export async function createPaymentRecord(paymentRecord: IPaymentRecord): Promis
 }
 
 // Read
-export async function getPaymentRecordById(id: number): Promise<IPaymentRecord> {
-  let paymentRecord = {} as IPaymentRecord;
+export async function getPaymentRecordById(id: number): Promise<IPaymentRecord | null> {
+  let paymentRecord = null;
   if (id > 0) {
-    const getPaymentRecord = (await prisma.paymentRecord.findUnique({
+    paymentRecord = await prisma.paymentRecord.findUnique({
       where: {
         id,
-      },
-    })) as IPaymentRecord;
-    paymentRecord = getPaymentRecord;
-  }
-
-  return paymentRecord;
-}
-
-// Update
-export async function updatePaymentRecord(
-  id: number,
-  transactionId: string,
-  date: number,
-  description: string,
-  amount: number,
-  method: string,
-  status: string
-): Promise<IPaymentRecord> {
-  let paymentRecord = {} as IPaymentRecord;
-  if (id > 0) {
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
-    const updatedPaymentRecord = await prisma.paymentRecord.update({
-      where: {
-        id,
-      },
-      data: {
-        transactionId,
-        date,
-        description,
-        amount,
-        method,
-        status,
-        updatedAt: nowTimestamp,
       },
     });
-    paymentRecord = updatedPaymentRecord;
   }
+
   return paymentRecord;
 }
 
@@ -78,4 +52,13 @@ export async function listPaymentRecords(orderId: number): Promise<IPaymentRecor
     },
   });
   return listedPaymentRecords;
+}
+
+export async function deletePaymentRecord(id: number): Promise<IPaymentRecord> {
+  const deletedPaymentRecord = await prisma.paymentRecord.delete({
+    where: {
+      id,
+    },
+  });
+  return deletedPaymentRecord;
 }

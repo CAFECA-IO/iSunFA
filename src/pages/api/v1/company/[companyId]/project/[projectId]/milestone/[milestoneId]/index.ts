@@ -5,9 +5,10 @@ import { isUserAdmin } from '@/lib/utils/auth_check';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IMilestone } from '@/interfaces/project';
 import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
-import { Milestone } from '@/constants/milestone';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
+import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
+import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 
 async function checkInput(projectId: string, stage: string, startDate: string) {
   let isValid = true;
@@ -58,13 +59,20 @@ export default async function handler(
           shouldContinue = await checkAuth(userId, companyId, projectIdNum);
           if (shouldContinue) {
             const startDateNum = convertStringToNumber(startDate);
-            const { updatedMilestoneList } = await updateProjectMilestone(
-              projectIdNum,
-              stage as Milestone,
-              startDateNum
-            );
-            statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-            payload = updatedMilestoneList;
+            const listedMilestone = await listProjectMilestone(projectIdNum);
+            const milestoneList = formatMilestoneList(listedMilestone);
+            if (milestoneList.length === 0) {
+              statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+            } else {
+              const { updatedMilestoneList } = await updateProjectMilestone(
+                projectIdNum,
+                milestoneList,
+                stage,
+                startDateNum
+              );
+              statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+              payload = updatedMilestoneList;
+            }
           }
         }
         break;

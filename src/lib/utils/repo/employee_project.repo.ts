@@ -6,6 +6,9 @@ export async function listEmployeeProject(projectId: number): Promise<EmployeePr
     where: {
       projectId,
     },
+    orderBy: {
+      id: 'asc',
+    },
   });
   return employeeInProject;
 }

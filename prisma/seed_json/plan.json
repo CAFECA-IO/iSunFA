@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1000,
+        "name": "Basic Plan",
+        "description": "This is the basic plan",
+        "monthlyFee": 10,
+        "annualFee": 100,
+        "createdAt": 1634567890,
+        "updatedAt": 1634567890
+    },
+    {
+        "id": 1001,
+        "name": "Premium Plan",
+        "description": "This is the premium plan",
+        "monthlyFee": 20,
+        "annualFee": 200,
+        "createdAt": 1634567890,
+        "updatedAt": 1634567890
+    }
+]

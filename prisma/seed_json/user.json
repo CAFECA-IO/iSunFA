@@ -1,4 +1,18 @@
-{
+[
+  {
+    "id": 1000,
+    "name": "Test_User_1",
+    "fullName": "Test User 1",
+    "email": "test1@gmail.com",
+    "phone": "1234567891",
+    "credentialId": "test_credential_id_1",
+    "publicKey": "test_public_key_1",
+    "algorithm": "test_algorithm_1",
+    "imageId": "2",
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
     "id": 99999991,
     "name": "Test_User",
     "fullName": "Test User",
@@ -10,4 +24,5 @@
     "imageId": "1",
     "createdAt": 1,
     "updatedAt": 1
-}
+  }
+]
