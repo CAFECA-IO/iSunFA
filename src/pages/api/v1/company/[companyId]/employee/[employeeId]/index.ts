@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
-import { checkAuth } from '@/lib/utils/auth_check';
+import { isUserAdmin } from '@/lib/utils/auth_check';
 import prisma from '@/client';
 
 async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
@@ -164,7 +164,7 @@ export default async function handler(
       shouldContinue = false;
     }
     if (shouldContinue) {
-      shouldContinue = await checkAuth(userId, companyId);
+      shouldContinue = await isUserAdmin(userId, companyId);
     }
     switch (req.method) {
       case 'GET': {

@@ -11,7 +11,7 @@ const ProjectProgressBlock = () => {
     <div className="flex h-full flex-col items-center gap-26px rounded-lg bg-surface-neutral-surface-lv2 p-20px font-medium md:items-stretch">
       <div className="flex items-center gap-8px text-text-neutral-secondary">
         <Image src="/icons/progress.svg" width={24} height={24} alt="progress_icon" />
-        <p>Progress</p>
+        <p>{t('COMMON.PROGRESS')}</p>
       </div>
       <div className="flex items-center gap-24px">
         <div className="flex items-center gap-10px">

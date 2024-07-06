@@ -18,6 +18,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { cn, getTodayPeriodInSec } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
+import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -109,8 +110,8 @@ const PieChart = ({ data }: PieChartProps) => {
       offsetY,
       offsetX: -30,
       markers: {
-        width: 20,
-        height: 12,
+        // width: 20,
+        // height: 12,
         radius: 0,
       },
       width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
@@ -197,6 +198,7 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const LaborCostChart = () => {
+  const { t } = useTranslation('common');
   const { layoutAssertion } = useGlobalCtx();
 
   // TODO: 改成 company startDate (20240618 - Shirley)
@@ -261,7 +263,7 @@ const LaborCostChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `labor-cost-chart-${getCode}`,
-        content: `Failed to get labor cost chart data. Error code: ${getCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -287,7 +289,9 @@ const LaborCostChart = () => {
   const displayedChart = isNoData ? (
     <div className="flex w-full flex-col items-center justify-between gap-5 font-barlow lg:flex-row lg:items-start lg:gap-0">
       <div className="mt-3 lg:mt-10">
-        <p className="font-semibold text-text-brand-secondary-lv1">Onboarding Projects</p>
+        <p className="font-semibold text-text-brand-secondary-lv1">
+          {t('LABOR_COST_CHART.ONBOARDING_PROJECTS')}
+        </p>
       </div>
       <div className="lg:mr-10">
         {' '}
@@ -300,7 +304,7 @@ const LaborCostChart = () => {
         >
           <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
           <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
-            No Data
+            {t('PROJECT.NO_DATA')}
           </text>
         </svg>
       </div>
@@ -309,7 +313,7 @@ const LaborCostChart = () => {
     <div className="relative">
       {' '}
       <div className="absolute left-1/2 top-5 w-150px -translate-x-1/2 text-center font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
-        Onboarding Projects
+        {t('LABOR_COST_CHART.ONBOARDING_PROJECTS')}
       </div>
       <div className="ml-0 flex pt-16 max-md:ml-0 md:pt-0 lg:pt-5">
         <PieChart data={data} />
@@ -359,16 +363,13 @@ const LaborCostChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>Labor cost</p>
+              <p>{t('LABOR_COST_CHART.LABOR_COST')}</p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>
-                A message which appears when a cursor is positioned over an icon, image, hyperlink,
-                or other element in a graphical user interface.
-              </p>
+              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

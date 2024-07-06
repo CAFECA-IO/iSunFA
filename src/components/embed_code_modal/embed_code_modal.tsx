@@ -70,7 +70,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const copyClickHandler = () => {
     navigator.clipboard.writeText(generatedCode);
-    window.alert('Code copied to clipboard');
+    window.alert(t('EMBED_CODE_MODAL.CODE_COPIED_TO_CLIPBOARD'));
   };
 
   const generateClickHandler = () => {
@@ -144,7 +144,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         }`}
       >
         <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
-          <div className="text-center text-input-text-input-filled">
+          <div
+            className="text-center text-input-text-input-filled"
+            style={{ whiteSpace: 'nowrap' }}
+          >
             {t('REPORTS_HISTORY_LIST.PROJECT')}
           </div>
           <div
@@ -195,7 +198,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
             <input
               type="text"
-              placeholder="Search"
+              placeholder={t('AUDIT_REPORT.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"

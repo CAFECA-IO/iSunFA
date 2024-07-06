@@ -7,6 +7,9 @@ export async function listOrder(companyId: number): Promise<IOrder[]> {
     where: {
       companyId,
     },
+    orderBy: {
+      id: 'asc',
+    },
   });
   return listedOrder;
 }
@@ -31,15 +34,14 @@ export async function createOrder(
 }
 
 // Read
-export async function getOrderById(id: number): Promise<IOrder> {
-  let order = {} as IOrder;
+export async function getOrderById(id: number): Promise<IOrder | null> {
+  let order = null;
   if (id > 0) {
-    const getOrder = (await prisma.order.findUnique({
+    order = await prisma.order.findUnique({
       where: {
         id,
       },
-    })) as IOrder;
-    order = getOrder;
+    });
   }
 
   return order;
@@ -47,20 +49,25 @@ export async function getOrderById(id: number): Promise<IOrder> {
 
 // Update
 export async function updateOrder(id: number, status: string): Promise<IOrder> {
-  let order = {} as IOrder;
-  if (id > 0) {
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
-    const updatedOrder = await prisma.order.update({
-      where: {
-        id,
-      },
-      data: {
-        status,
-        updatedAt: nowTimestamp,
-      },
-    });
-    order = updatedOrder;
-  }
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const order = await prisma.order.update({
+    where: {
+      id,
+    },
+    data: {
+      status,
+      updatedAt: nowTimestamp,
+    },
+  });
   return order;
+}
+
+export async function deleteOrder(id: number): Promise<IOrder> {
+  const deletedOrder = await prisma.order.delete({
+    where: {
+      id,
+    },
+  });
+  return deletedOrder;
 }

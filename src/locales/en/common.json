@@ -16,7 +16,14 @@
     "LOGIN": "Login",
     "MARK_ALL_AS_READ": "Mark all as read",
     "READ_MORE": "Read more...",
-    "LANGUAGE": "Language"
+    "LANGUAGE": "Language",
+    "ACCOUNT": "Account",
+    "APPLICATIONS": "Applications",
+    "SWITCH_COMPANY": "Switch Company",
+    "SUBSCRIPTION_BILLS": "Subscription & Bills",
+    "SETTING": "Setting",
+    "LOGOUT": "Logout",
+    "NOTIFICATION": "Notification"
   },
   "USER": {
     "MY_ADDRESS": "My Address page",
@@ -233,7 +240,9 @@
     "REPORT": "Report",
     "GET_EMBED_CODE": "Get Embed Code",
     "FINANCIAL_REPORTS": "Financial Reports",
+    "FINANCIAL_REPORT": "Financial Report - iSunFA",
     "ANALYSIS_REPORTS": "Analysis Reports",
+    "ANALYSIS_REPORT": "Analysis Report",
     "MY_REPORTS": "My Reports"
   },
   "MY_REPORTS_SECTION": {
@@ -242,7 +251,8 @@
     "EMPTY": "Empty",
     "MY_REPORTS": "My Reports",
     "PENDING": "Pending",
-    "REPORTS_HISTORY": "Reports History"
+    "REPORTS_HISTORY": "Reports History",
+    "GENERATE_REPORT": "Generate Report"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "From",
@@ -279,7 +289,8 @@
     "REPORT_LANGUAGE": "Report Language",
     "COPY": "Copy",
     "THE_LATEST_REPORT": "To show the Latest Report on your website",
-    "GENERATE": "Generate"
+    "GENERATE": "Generate",
+    "CODE_COPIED_TO_CLIPBOARD": "Code copied to clipboard"
   },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "Report Type",
@@ -300,7 +311,14 @@
     "END_OF_TRIAL": "End of trial",
     "NEWEST": "Newest",
     "OLDEST": "Oldest",
-    "ENTER_A_DESCRIPTION": "Enter a description"
+    "ENTER_A_DESCRIPTION": "Enter a description",
+    "CLOSE": "Close",
+    "PROGRESS": "Progress",
+    "FILTER": "Filter",
+    "M": "M",
+    "Y": "Y",
+    "V": "V",
+    "OR": "OR"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",
@@ -351,7 +369,35 @@
     "PAYMENT_METHOD": "Payment Method",
     "PAYMENT_PERIOD": "Payment Period",
     "PAYMENT_STATUS": "Payment Status",
-    "CONTRACT": "Contract"
+    "CONTRACT": "Contract",
+    "CONTRACTS": "Contracts",
+    "ADD_NEW_CONTRACT": "Add new contract",
+    "PROJECT_CONTRACT_ISUNFA": "Project Contract - iSunFA",
+    "FROM_TO": "From / To",
+    "VOUCHER_NO": "Voucher No",
+    "INFO": "Info",
+    "EVENT_TYPE": "Event Type",
+    "PAYMENT_REASON": "Payment Reason",
+    "ADD_NEW_ASSET": " + Add new asset",
+    "FEE": "Fee",
+    "BANK_ACCOUNT": "Bank Account",
+    "AT_ONCE": "At Once",
+    "INSTALLMENT": "Installment:",
+    "TIMES": "Times",
+    "PAYMENT_STATE": "Payment State",
+    "UNPAID": "Unpaid",
+    "PARTIAL_PAID": "Partial Paid:",
+    "PAID": "Paid",
+    "CLEAR_ALL": "Clear all",
+    "ADDED_JOURNAL": "Added Journal",
+    "BASIC_INFO": "Basic Info",
+    "ESTIMATED_COST": "Estimated Cost",
+    "PREVIEW_INVOICE": "Preview Invoice",
+    "AI_TECHNOLOGY_RECOGNIZING": "AI technology recognizing",
+    "PROJECT_ADD_JOURNAL_ISUNFA": "Project Add Journal - iSunFA",
+    "WHY_YOU_PAY": "Why you pay",
+    "TO_WHOM": "To whom",
+    "ACCOUNT_NUMBER": "Account Number"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -386,7 +432,14 @@
     "IN_30_DAYS": "In 30 Days",
     "TOTAL_EXPENSES": "Total Expenses",
     "NET_PROFIT": "Net Profit",
-    "ADD_PROJECT": "Add Project"
+    "ADD_PROJECT": "Add Project",
+    "PROJECT_WISE": "Project-wise",
+    "FINANCIAL_OVERVIEW": "Financial Overview",
+    "INCOME_VS_EXPENDITURE": "Income vs. Expenditure",
+    "PROJECT_REPORT": "Project Report",
+    "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
+    "NAME_YOUR_PROJECT": "Name your project",
+    "ENTER_NEW_PROJECT_NAME": "Enter New Project Name"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -397,14 +450,28 @@
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
     "PRE_LAUNCH_PROJECTS": "Pre-launch Projects",
-    "HELLO_WELCOME_TO": "Hello! Welcome to "
+    "HELLO_WELCOME_TO": "Hello! Welcome to ",
+    "TOP_PROJECT_ROI": "Top project ROI",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "Failed to get profit insight. Error code:",
+    "FAILED_TO_GET_LABOR_COST": "Failed to get labor cost chart data. Error code:",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "Failed to get income/expense trend. Error code:",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "Failed to get project progress data. Error code:",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "Failed to get profit comparison. Error code:",
+    "FAILED_TO_GET": "Failed to get",
+    "REPORT": "report: "
   },
+
   "SELECT_COMPANY": {
     "WELCOME_BACK": "Welcome back, ",
     "YOUR_COMPANY": "Select your company to log in, or create your own company.",
     "MY_COMPANY_LIST": "My Company List",
     "CREATE_MY_COMPANY": "Create My Company",
-    "TRY_IT_OUT": "Try it out"
+    "TRY_IT_OUT": "Try it out",
+    "ENTER_INVITATION_CODE": "Enter Invitation Code",
+    "SELECT_COMPANY_ISUNFA": "Select Company - iSunFA",
+    "SELECT_AN_COMPANY": "Select an Company",
+    "ENTER_COMPANY_NAME": "Enter company name",
+    "ENTER_BUSINESS_REGISTRATION_NUMBER": "Enter business registration number"
   },
   "ADD_ASSET_MODAL": {
     "ASSET_MANAGEMENT": "Asset Management",
@@ -424,7 +491,9 @@
     "ESTIMATED_USEFUL_LIFE": "Estimated useful life",
     "YEAR": "Year",
     "MONTH": "Month",
-    "DAY": "Day"
+    "DAY": "Day",
+    "NAME_YOUR_ASSET": "Name your asset",
+    "ADD_NOTE": "Add note"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "Congratulations! You",
@@ -432,7 +501,8 @@
     "TEAM": " team!",
     "INVITATION CODE": "Invitation Code",
     "ENTER_YOUR_COMPANY_INVITATION_CODE": "Enter your Company invitation code",
-    "FORMAT_ERROR": "Format Error!"
+    "FORMAT_ERROR": "Format Error!",
+    "ENTER_CODE": "Enter code"
   },
   "CONFIRM_MODAL": {
     "UPLOADED_SUCCESSFULLY": "Uploaded successfully.",
@@ -452,6 +522,80 @@
     "SIGNATORY": "Signatory",
     "DURATION": "Duration",
     "COMPANY_NAME": "Company Name",
-    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number"
+    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number",
+    "SEARCH_CONTRACT": "Search Contract"
+  },
+  "EDIT_BOOKMARK_MODAL": {
+    "LISTED": "listed",
+    "EDIT_MY_FAVORITES": "Edit My Favorites",
+    "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "Select a bookmark to add or remove.",
+    "SAVE": "Save"
+  },
+  "LABOR_COST_CHART": {
+    "ONBOARDING_PROJECTS": "Onboarding Projects",
+    "LABOR_COST": "Labor cost",
+    "WORKING_TIME_RATIO": "Working Time Ratio"
+  },
+  "LOADING_MODAL": {
+    "LOADING": "It is loading, please wait..."
+  },
+  "LOGIN_PAGE_BODY": {
+    "PLEASE": "Please",
+    "REGISTER_YOUR_DEVICE": "register your device.",
+    "OOPS": "Oops! Something went wrong. Please try again or contact customer support.",
+    "HELP": "Help",
+    "REGISTER_YOUR_DEVICE_ARROW": "Register your device → ",
+    "SCAN_THE_QR_CODE": "Scan the QR code with the device you registered with",
+    "LOG_IN_WITH_DEVICE": "Log in with Device",
+    "REGISTER_MY_DEVICE": "Register my Device",
+    "LOGIN_ENVIRONMENT_TIPS": "Login Environment Tips",
+    "SET_USER_NAME": "Set User Name",
+    "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "This username will be applied to your device.",
+    "REGISTER": "Register",
+    "LOG_IN": "Log In",
+    "USERNAME": "Username"
+  },
+  "PASSKEY_SUPPORT_MODAL": {
+    "ANDROID": "Android OS9 or later",
+    "MACOS": "MacOS 13.5 or later",
+    "IOS": "iOS 16 & iPadOS 16 or later",
+    "GOT_IT": "Got it!",
+    "PASSKEY_SUPPORT_SUMMARY": "Passkey support summary"
+  },
+  "PROFILE_UPLOAD_MODAL": {
+    "DROP_YOUR_FILES_HERE_OR": "Drop your files here or",
+    "PROFILE_PIC": "Profile Pic",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "Please upload your profile picture"
+  },
+  "PROFIT_TREND_CHART": {
+    "PROFIT_STATUS_TREND_CHART": "Profit Status Trend Chart",
+    "WEEK": "Week"
+  },
+  "WEEKDAY_TITLE_JSON": {
+    "SUN": "S",
+    "MON": "M",
+    "TUE": "T",
+    "WEN": "W",
+    "THU": "T",
+    "FRI": "F",
+    "SAT": "S"
+  },
+  "STAGE_NAME_MAP": {
+    "ALL": "All",
+    "DESIGNING": "Designing",
+    "DEVELOPING": "Developing",
+    "BETA_TESTING": "Beta Testing",
+    "SELLING": "Selling",
+    "SOLD": "Sold",
+    "ARCHIVED": "Archived"
+  },
+  "ROLE": {
+    "SUPER_ADMIN": "Super Admin",
+    "ADMIN": "Admin",
+    "OWNER": "Owner",
+    "ACCOUNTANT": "Accountant",
+    "BOOKKEEPER": "Bookkeeper",
+    "FINANCE": "Finance",
+    "VIEWER": "Viewer"
   }
 }

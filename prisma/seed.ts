@@ -1,14 +1,26 @@
 import { PrismaClient } from '@prisma/client';
 import accounts from '@/seed_json/account.json';
 import companies from '@/seed_json/company.json';
-import admin from '@/seed_json/admin.json';
+import admins from '@/seed_json/admin.json';
 import projects from '@/seed_json/project.json';
 import IncomeExpenses from '@/seed_json/income_expense.json';
 import roles from '@/seed_json/role.json';
-import user from '@/seed_json/user.json';
+import users from '@/seed_json/user.json';
 import milestones from '@/seed_json/milestone.json';
 import generatedReports from '@/seed_json/generated_report.json';
 import pendingReports from '@/seed_json/pending_report.json';
+import departments from '@/seed_json/department.json';
+import employees from '@/seed_json/employee.json';
+import employeeProjects from '@/seed_json/employee_project.json';
+import values from '@/seed_json/value.json';
+import sales from '@/seed_json/sale.json';
+import workRates from '@/seed_json/work_rate.json';
+import plans from '@/seed_json/plan.json';
+import subscriptions from '@/seed_json/subscription.json';
+import orders from '@/seed_json/order.json';
+import paymentRecords from '@/seed_json/payment_record.json';
+import invitations from '@/seed_json/invitation.json';
+import clients from '@/seed_json/client.json';
 
 const prisma = new PrismaClient();
 
@@ -37,8 +49,8 @@ async function createRole() {
 }
 
 async function createUser() {
-  await prisma.user.create({
-    data: user,
+  await prisma.user.createMany({
+    data: users,
   });
 }
 
@@ -54,9 +66,74 @@ async function createCompany() {
   });
 }
 
+async function createClient() {
+  await prisma.client.createMany({
+    data: clients,
+  });
+}
+
+async function createDepartment() {
+  await prisma.department.createMany({
+    data: departments,
+  });
+}
+
+async function createEmployee() {
+  await prisma.employee.createMany({
+    data: employees,
+  });
+}
+
+async function createEmployeeProject() {
+  await prisma.employeeProject.createMany({
+    data: employeeProjects,
+  });
+}
+
+async function createValue() {
+  await prisma.value.createMany({
+    data: values,
+  });
+}
+async function createSale() {
+  await prisma.sale.createMany({
+    data: sales,
+  });
+}
+
+async function createWorkRate() {
+  await prisma.workRate.createMany({
+    data: workRates,
+  });
+}
+
+async function createPlan() {
+  await prisma.plan.createMany({
+    data: plans,
+  });
+}
+
+async function createSubscription() {
+  await prisma.subscription.createMany({
+    data: subscriptions,
+  });
+}
+
+async function createOrder() {
+  await prisma.order.createMany({
+    data: orders,
+  });
+}
+
+async function createPaymentRecord() {
+  await prisma.paymentRecord.createMany({
+    data: paymentRecords,
+  });
+}
+
 async function createAdmin() {
-  await prisma.admin.create({
-    data: admin,
+  await prisma.admin.createMany({
+    data: admins,
   });
 }
 
@@ -72,14 +149,32 @@ async function createIncomeExpenses() {
   });
 }
 
+async function createInvitation() {
+  await prisma.invitation.createMany({
+    data: invitations,
+  });
+}
+
 async function main() {
   // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
   await createRole();
   await createUser();
   await createCompany();
+  await createClient();
   await createAccount();
   await createAdmin();
+  await createDepartment();
+  await createEmployee();
   await createProjects();
+  await createSale();
+  await createValue();
+  await createEmployeeProject();
+  await createWorkRate();
+  await createPlan();
+  await createOrder();
+  await createPaymentRecord();
+  await createSubscription();
+  await createInvitation();
   await new Promise((resolve) => {
     setTimeout(resolve, 5000);
   });

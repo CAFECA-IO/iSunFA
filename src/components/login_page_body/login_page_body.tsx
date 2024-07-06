@@ -7,6 +7,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
 import { pageQueries } from '@/interfaces/page_query';
+import { useTranslation } from 'next-i18next';
 
 interface ILoginPageBodyProps {
   invitation?: string;
@@ -14,6 +15,18 @@ interface ILoginPageBodyProps {
 }
 
 const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
+  // Info: (2024705 - Anna) 用 t 獲取翻譯文本，使用 i18n.language 獲取當前語言
+  const { t, i18n } = useTranslation('common');
+  const currentLanguage = i18n.language;
+
+  // Info: (2024705 - Anna) 根據語言設置圖片
+  const imageSrc =
+    {
+      tw: '/elements/zh_tw_login_bg.svg',
+      cn: '/elements/zh_cn_login_bg.svg',
+      en: '/elements/login_bg.svg',
+    }[currentLanguage] || '/elements/zh_tw_login_bg.svg'; // Info: (2024705 - Anna) 默認圖片
+
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
     registerModalDataHandler,
@@ -63,13 +76,15 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
         errorCode === `511ISF0001` ? (
           <div>
             <div>
-              Please{' '}
+              {t('LOGIN_PAGE_BODY.PLEASE')}{' '}
               <button
                 onClick={registerClickHandler}
                 type="button"
                 className="text-base text-link-text-primary hover:opacity-70"
               >
-                <div className="justify-center rounded-sm">register your device.</div>
+                <div className="justify-center rounded-sm">
+                  {t('LOGIN_PAGE_BODY.REGISTER_YOUR_DEVICE')}
+                </div>
               </button>
               <span className="pl-3">({errorCode})</span>
             </div>
@@ -77,11 +92,10 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
         ) : (
           <div className="">
             <p className="">
-              Oops! Something went wrong. Please try again or contact customer support. ({errorCode}
-              )
+              {t('LOGIN_PAGE_BODY.OOPS')}({errorCode})
               <span className="pl-3">
                 <Link href={ISUNFA_ROUTE.CONTACT_US} className="font-bold text-link-text-warning">
-                  Help
+                  {t('LOGIN_PAGE_BODY.HELP')}
                 </Link>
               </span>
             </p>
@@ -106,12 +120,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
           <div className="order-2 hidden w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1 lg:flex">
             <div className="pointer-events-none -mt-20px flex grow flex-col justify-start max-lg:max-w-full md:-mt-50px lg:-mt-65px">
               <div className="relative flex h-full w-full flex-col overflow-hidden max-lg:max-w-full">
-                <Image
-                  src="/elements/login_bg.svg"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  alt="login_bg"
-                />
+                <Image src={imageSrc} fill style={{ objectFit: 'cover' }} alt="login_bg" />
               </div>
             </div>
           </div>
@@ -119,10 +128,12 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
             <div className="flex grow flex-col justify-center pb-20 max-lg:max-w-full">
               <div className="mt-12 flex flex-col items-center px-20 max-lg:max-w-full max-lg:px-5 lg:mt-20">
                 <div className="flex flex-col items-center justify-center self-stretch px-20 max-lg:max-w-full max-lg:px-5">
-                  <div className="text-2xl font-bold text-amber-400 lg:text-5xl">Log In</div>
+                  <div className="text-2xl font-bold text-amber-400 lg:text-5xl">
+                    {t('LOGIN_PAGE_BODY.LOG_IN')}
+                  </div>
                   <div className="mt-5 text-center text-xs leading-6 tracking-normal text-slate-600 lg:mt-2 lg:text-base lg:font-medium">
-                    Register your device → <br />
-                    Scan the QR code with the device you registered with{' '}
+                    {t('LOGIN_PAGE_BODY.REGISTER_YOUR_DEVICE_ARROW')} <br />
+                    {t('LOGIN_PAGE_BODY.SCAN_THE_QR_CODE')}{' '}
                   </div>
                 </div>
                 <div className="mt-2 flex max-w-full flex-col justify-center lg:mt-10">
@@ -201,7 +212,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                     className="mx-auto mt-0 flex max-w-400px justify-center px-4 py-1 lg:gap-2 lg:space-x-2 lg:px-6 lg:py-3.5"
                   >
                     <div className="text-sm leading-7 tracking-normal lg:text-lg lg:font-medium">
-                      Log in with Device
+                      {t('LOGIN_PAGE_BODY.LOG_IN_WITH_DEVICE')}
                     </div>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -226,7 +237,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                     type="button"
                     className="mt-5 flex max-w-full flex-col justify-center self-center text-sm font-semibold leading-6 tracking-normal text-link-text-primary hover:opacity-70 lg:mt-10 lg:text-base"
                   >
-                    <div className="justify-center rounded-sm">Register my Device</div>
+                    <div className="justify-center rounded-sm">
+                      {t('LOGIN_PAGE_BODY.REGISTER_MY_DEVICE')}
+                    </div>
                   </button>
                 </div>
                 <button
@@ -238,7 +251,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                     onClick={showPassKeySupport}
                     className="text-sm font-medium leading-5 tracking-normal text-secondaryBlue"
                   >
-                    Login Environment Tips
+                    {t('LOGIN_PAGE_BODY.LOGIN_ENVIRONMENT_TIPS')}
                   </div>
                   <div className="my-auto flex items-center justify-center">
                     <svg

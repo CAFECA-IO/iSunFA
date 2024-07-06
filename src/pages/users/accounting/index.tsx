@@ -7,8 +7,10 @@ import AddJournalBody from '@/components/add_journal_body/add_journal_body';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 const AccountingPage = () => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -32,7 +34,7 @@ const AccountingPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240416 - Julian) i18n */}
-        <title>Accounting - iSunFA</title>
+        <title>{t('JOURNAL.ACCOUNTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">

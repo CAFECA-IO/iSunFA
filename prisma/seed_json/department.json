@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1000,
+        "companyId": 1000,
+        "name": "Marketing",
+        "createdAt": 1634567890,
+        "updatedAt": 1634567890
+    },
+    {
+        "id": 1001,
+        "companyId": 1000,
+        "name": "Engineering",
+        "createdAt": 1634567890,
+        "updatedAt": 1634567890
+    }
+]

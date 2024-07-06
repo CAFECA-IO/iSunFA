@@ -16,7 +16,14 @@
     "LOGIN": "登入",
     "MARK_ALL_AS_READ": "將所有通知標記為已讀",
     "READ_MORE": "繼續閱讀...",
-    "LANGUAGE": "語言"
+    "LANGUAGE": "語言",
+    "ACCOUNT": "帳戶",
+    "APPLICATIONS": "應用程式",
+    "SWITCH_COMPANY": "切換公司",
+    "SUBSCRIPTION_BILLS": "訂閱和帳單",
+    "SETTING": "設定",
+    "LOGOUT": "登出",
+    "NOTIFICATION": "通知"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -230,7 +237,9 @@
     "REPORT": "報告",
     "GET_EMBED_CODE": "取得嵌入程式碼",
     "FINANCIAL_REPORTS": "財務報告",
+    "FINANCIAL_REPORT": "財務報告 - iSunFA",
     "ANALYSIS_REPORTS": "分析報告",
+    "ANALYSIS_REPORT": "分析報告",
     "MY_REPORTS": "我的報告"
   },
   "MY_REPORTS_SECTION": {
@@ -239,7 +248,8 @@
     "EMPTY": "空的",
     "MY_REPORTS": "我的報告",
     "PENDING": "待辦",
-    "REPORTS_HISTORY": "歷史報告"
+    "REPORTS_HISTORY": "歷史報告",
+    "GENERATE_REPORT": "產生報告"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "從",
@@ -276,7 +286,8 @@
     "REPORT_LANGUAGE": "報告語言",
     "COPY": "複製",
     "THE_LATEST_REPORT": "在您的網站上顯示最新報告",
-    "GENERATE": "產生"
+    "GENERATE": "產生",
+    "CODE_COPIED_TO_CLIPBOARD": "代碼已複製到剪貼簿"
   },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "報告類型",
@@ -297,7 +308,14 @@
     "END_OF_TRIAL": "試用結束",
     "NEWEST": "最新的",
     "OLDEST": "最舊的",
-    "ENTER_A_DESCRIPTION": "輸入描述"
+    "ENTER_A_DESCRIPTION": "輸入描述",
+    "CLOSE": "關閉",
+    "PROGRESS": "進度",
+    "FILTER": "篩選",
+    "M": "月",
+    "Y": "年",
+    "V": "版本",
+    "OR": "或"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",
@@ -348,7 +366,35 @@
     "PAYMENT_METHOD": "付款方式",
     "PAYMENT_PERIOD": "付款期間",
     "PAYMENT_STATUS": "支付狀態",
-    "CONTRACT": "合約"
+    "CONTRACT": "合約",
+    "CONTRACTS": "合約",
+    "ADD_NEW_CONTRACT": "新增合約",
+    "PROJECT_CONTRACT_ISUNFA": "專案合約 - iSunFA",
+    "FROM_TO": "起迄期間",
+    "VOUCHER_NO": "憑證號碼",
+    "INFO": "資訊",
+    "EVENT_TYPE": "事件類型",
+    "PAYMENT_REASON": "付款原因",
+    "ADD_NEW_ASSET": " + 新增資產",
+    "FEE": "費用",
+    "BANK_ACCOUNT": "銀行帳戶",
+    "AT_ONCE": "立刻",
+    "INSTALLMENT": "分期付款:",
+    "TIMES": "次數",
+    "PAYMENT_STATE": "付款狀態",
+    "UNPAID": "未付",
+    "PARTIAL_PAID": "部分付款:",
+    "PAID": "已經付款",
+    "CLEAR_ALL": "全部清除",
+    "ADDED_JOURNAL": "新增日記帳",
+    "BASIC_INFO": "基本資訊",
+    "ESTIMATED_COST": "估計成本",
+    "PREVIEW_INVOICE": "預覽發票",
+    "AI_TECHNOLOGY_RECOGNIZING": "AI技術識別",
+    "PROJECT_ADD_JOURNAL_ISUNFA": "專案新增日記帳 - iSunFA",
+    "WHY_YOU_PAY": "付款理由",
+    "TO_WHOM": "支付對象",
+    "ACCOUNT_NUMBER": "帳號"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -383,7 +429,14 @@
     "IN_30_DAYS": "30天內",
     "TOTAL_EXPENSES": "總費用",
     "NET_PROFIT": "淨利",
-    "ADD_PROJECT": "新增項目"
+    "ADD_PROJECT": "新增項目",
+    "PROJECT_WISE": "專案方面",
+    "FINANCIAL_OVERVIEW": "財務概覽",
+    "INCOME_VS_EXPENDITURE": "收入與支出",
+    "PROJECT_REPORT": "專案報告",
+    "PROJECT_LIST_ISUNFA": "項目清單 - iSunFA",
+    "NAME_YOUR_PROJECT": "為您的專案命名",
+    "ENTER_NEW_PROJECT_NAME": "輸入新項目名稱"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -394,14 +447,27 @@
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
     "PRE_LAUNCH_PROJECTS": "預啟動專案",
-    "HELLO_WELCOME_TO": "你好！歡迎來到"
+    "HELLO_WELCOME_TO": "你好！歡迎來到",
+    "TOP_PROJECT_ROI": "最優項目投資報酬率",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "無法獲得利潤觀察。錯誤代碼: ",
+    "FAILED_TO_GET_LABOR_COST": "取得人工成本資料失敗。錯誤代碼：",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "無法獲取收入/支出趨勢。錯誤代碼：",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "無法取得專案進度資料。錯誤代碼：",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "無法獲得利潤比較。錯誤代碼：",
+    "FAILED_TO_GET": "無法獲得",
+    "REPORT": "報告: "
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",
     "YOUR_COMPANY": "選擇您的公司進行登錄，或建立您自己的公司。",
     "MY_COMPANY_LIST": "我的公司列表",
     "CREATE_MY_COMPANY": "創建我的公司",
-    "TRY_IT_OUT": "試試看"
+    "TRY_IT_OUT": "試試看",
+    "ENTER_INVITATION_CODE": "輸入邀請碼",
+    "SELECT_COMPANY_ISUNFA": "選擇公司 - iSunFA",
+    "SELECT_AN_COMPANY": "選擇公司",
+    "ENTER_COMPANY_NAME": "輸入公司名稱",
+    "ENTER_BUSINESS_REGISTRATION_NUMBER": "輸入商業登記號碼"
   },
   "ADD_ASSET_MODAL": {
     "ASSET_MANAGEMENT": "資產管理",
@@ -421,7 +487,9 @@
     "ESTIMATED_USEFUL_LIFE": "預計使用壽命",
     "YEAR": "年",
     "MONTH": "月",
-    "DAY": "日"
+    "DAY": "日",
+    "NAME_YOUR_ASSET": "為您的資產命名",
+    "ADD_NOTE": "新增備註"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",
@@ -429,7 +497,8 @@
     "TEAM": "團隊！",
     "INVITATION CODE": "邀請碼",
     "ENTER_YOUR_COMPANY_INVITATION_CODE": "輸入您的公司邀請碼",
-    "FORMAT_ERROR": "格式錯誤！"
+    "FORMAT_ERROR": "格式錯誤！",
+    "ENTER_CODE": "輸入代碼"
   },
   "CONFIRM_MODAL": {
     "UPLOADED_SUCCESSFULLY": "上傳成功。",
@@ -449,6 +518,80 @@
     "SIGNATORY": "簽署人",
     "DURATION": "期間",
     "COMPANY_NAME": "公司名稱",
-    "BUSINESS_REGISTRATION_NUMBER": "商業登記號碼"
+    "BUSINESS_REGISTRATION_NUMBER": "商業登記號碼",
+    "SEARCH_CONTRACT": "搜尋合約"
+  },
+  "EDIT_BOOKMARK_MODAL": {
+    "LISTED": "列出",
+    "EDIT_MY_FAVORITES": "編輯我的收藏夾",
+    "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "選擇要新增或刪除的書籤",
+    "SAVE": "保存"
+  },
+  "LABOR_COST_CHART": {
+    "ONBOARDING_PROJECTS": "入職項目",
+    "LABOR_COST": "勞動成本",
+    "WORKING_TIME_RATIO": "工作時間比例"
+  },
+  "LOADING_MODAL": {
+    "LOADING": "正在加載中，請稍等..."
+  },
+  "LOGIN_PAGE_BODY": {
+    "PLEASE": "請",
+    "REGISTER_YOUR_DEVICE": "註冊您的設備。",
+    "OOPS": "哎呀！出了些問題。請重試或聯絡客服。",
+    "HELP": "幫助",
+    "REGISTER_YOUR_DEVICE_ARROW": "註冊您的裝置 → ",
+    "SCAN_THE_QR_CODE": "使用您註冊的裝置掃描二維碼",
+    "LOG_IN_WITH_DEVICE": "使用裝置登入",
+    "REGISTER_MY_DEVICE": "註冊我的設備",
+    "LOGIN_ENVIRONMENT_TIPS": "登入環境提示",
+    "SET_USER_NAME": "設定使用者名稱",
+    "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "該用戶名將應用於您的裝置。",
+    "REGISTER": "註冊",
+    "LOG_IN": "登入",
+    "USERNAME": "使用者名稱"
+  },
+  "PASSKEY_SUPPORT_MODAL": {
+    "ANDROID": "Android OS9 或更高版本",
+    "MACOS": "MacOS 13.5 或更高版本",
+    "IOS": "iOS 16 和 iPadOS 16 或更高版本",
+    "GOT_IT": "知道了！",
+    "PASSKEY_SUPPORT_SUMMARY": "密鑰支援"
+  },
+  "PROFILE_UPLOAD_MODAL": {
+    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
+    "PROFILE_PIC": "使用者照片",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "請上傳您的個人資料照片"
+  },
+  "PROFIT_TREND_CHART": {
+    "PROFIT_STATUS_TREND_CHART": "獲利狀況趨勢圖",
+    "WEEK": "星期"
+  },
+  "WEEKDAY_TITLE_JSON": {
+    "SUN": "日",
+    "MON": "一",
+    "TUE": "二",
+    "WEN": "三",
+    "THU": "四",
+    "FRI": "五",
+    "SAT": "六"
+  },
+  "STAGE_NAME_MAP": {
+    "ALL": "全部",
+    "DESIGNING": "設計中",
+    "DEVELOPING": "開發中",
+    "BETA_TESTING": "測試中",
+    "SELLING": "銷售中",
+    "SOLD": "已銷售",
+    "ARCHIVED": "已歸檔"
+  },
+  "ROLE": {
+    "SUPER_ADMIN": "最終管理員",
+    "ADMIN": "管理員",
+    "OWNER": "擁有者",
+    "ACCOUNTANT": "會計",
+    "BOOKKEEPER": "記帳員",
+    "FINANCE": "財務",
+    "VIEWER": "檢視者"
   }
 }

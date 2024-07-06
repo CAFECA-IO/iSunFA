@@ -16,7 +16,14 @@
     "LOGIN": "登录",
     "MARK_ALL_AS_READ": "将所有通知标记为已读",
     "READ_MORE": "继续阅读...",
-    "LANGUAGE": "语言"
+    "LANGUAGE": "语言",
+    "ACCOUNT": "帐户",
+    "APPLICATIONS": "应用程序",
+    "SWITCH_COMPANY": "切换公司",
+    "SUBSCRIPTION_BILLS": "订阅和帐单",
+    "SETTING": "设置",
+    "LOGOUT": "登出",
+    "NOTIFICATION": "通知"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -231,7 +238,9 @@
     "REPORT": "报告",
     "GET_EMBED_CODE": "取得嵌入程式码",
     "FINANCIAL_REPORTS": "财务报告",
+    "FINANCIAL_REPORT": "财务报告 - iSunFA",
     "ANALYSIS_REPORTS": "分析报告",
+    "ANALYSIS_REPORT": "分析报告",
     "MY_REPORTS": "我的报告"
   },
   "MY_REPORTS_SECTION": {
@@ -240,7 +249,8 @@
     "EMPTY": "空的",
     "MY_REPORTS": "我的报告",
     "PENDING": "待办",
-    "REPORTS_HISTORY": "历史报告"
+    "REPORTS_HISTORY": "历史报告",
+    "GENERATE_REPORT": "生成报告"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "从",
@@ -277,7 +287,8 @@
     "REPORT_LANGUAGE": "报告语言",
     "COPY": "克隆",
     "THE_LATEST_REPORT": "在您的网站上显示最新报告",
-    "GENERATE": "产生"
+    "GENERATE": "产生",
+    "CODE_COPIED_TO_CLIPBOARD": "代码已复制到剪贴簿"
   },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "报告类型",
@@ -298,7 +309,14 @@
     "END_OF_TRIAL": "试用结束",
     "NEWEST": "最新的",
     "OLDEST": "最旧的",
-    "ENTER_A_DESCRIPTION": "输入描述"
+    "ENTER_A_DESCRIPTION": "输入描述",
+    "CLOSE": "关闭",
+    "PROGRESS": "进度",
+    "FILTER": "筛选",
+    "M": "月",
+    "Y": "年",
+    "V": "版本",
+    "OR": "或"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "获取数据失败",
@@ -349,7 +367,35 @@
     "PAYMENT_METHOD": "付款方式",
     "PAYMENT_PERIOD": "付款期间",
     "PAYMENT_STATUS": "支付状态",
-    "CONTRACT": "合同"
+    "CONTRACT": "合同",
+    "CONTRACTS": "合同",
+    "ADD_NEW_CONTRACT": "添加新合同",
+    "PROJECT_CONTRACT_ISUNFA": "项目合同 - iSunFA",
+    "FROM_TO": "起迄期间",
+    "VOUCHER_NO": "凭证号码",
+    "INFO": "信息",
+    "EVENT_TYPE": "事件类型",
+    "PAYMENT_REASON": "付款原因",
+    "ADD_NEW_ASSET": " + 添加新资产",
+    "FEE": "费用",
+    "BANK_ACCOUNT": "银行账户",
+    "AT_ONCE": "立刻",
+    "INSTALLMENT": "分期付款:",
+    "TIMES": "次数",
+    "PAYMENT_STATE": "付款状态",
+    "UNPAID": "未付",
+    "PARTIAL_PAID": "部分付款:",
+    "PAID": "已经付款",
+    "CLEAR_ALL": "全部清除",
+    "ADDED_JOURNAL": "新增日记帐",
+    "BASIC_INFO": "基本资讯",
+    "ESTIMATED_COST": "估计成本",
+    "PREVIEW_INVOICE": "预览发票",
+    "AI_TECHNOLOGY_RECOGNIZING": "AI技术识别",
+    "PROJECT_ADD_JOURNAL_ISUNFA": "专案新增日记帐 - iSunFA",
+    "WHY_YOU_PAY": "付款理由",
+    "TO_WHOM": "支付对象",
+    "ACCOUNT_NUMBER": "帐号"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -384,7 +430,14 @@
     "IN_30_DAYS": "30天内",
     "TOTAL_EXPENSES": "总费用",
     "NET_PROFIT": "净利",
-    "ADD_PROJECT": "新增项目"
+    "ADD_PROJECT": "新增项目",
+    "PROJECT_WISE": "专案方面",
+    "FINANCIAL_OVERVIEW": "财务概览",
+    "INCOME_VS_EXPENDITURE": "收入与支出",
+    "PROJECT_REPORT": "项目报告",
+    "PROJECT_LIST_ISUNFA": "项目清单 - iSunFA",
+    "NAME_YOUR_PROJECT": "为您的项目命名",
+    "ENTER_NEW_PROJECT_NAME": "输入新项目名称"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -395,14 +448,27 @@
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
     "PRE_LAUNCH_PROJECTS": "预启动专案",
-    "HELLO_WELCOME_TO": "你好！欢迎来到"
+    "HELLO_WELCOME_TO": "你好！欢迎来到",
+    "TOP_PROJECT_ROI": "最优项目投资报酬率",
+    "FAILED_TO_GET_PROFIT_INSIGHT": "无法获得利润观察。错误代码: ",
+    "FAILED_TO_GET_LABOR_COST": "获取人工成本数据失败。错误代码：",
+    "FAILED_TO_GET_INCOME_EXPENSE_TREND": "无法获取收入/支出趋势。错误代码：",
+    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "无法获取项目进度数据。错误代码：",
+    "FAILED_TO_GET_PROFIT_COMPARISON": "无法获得利润比较。错误代码：",
+    "FAILED_TO_GET": "无法获得",
+    "REPORT": "报告: "
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",
     "YOUR_COMPANY": "选择您的公司进行登录，或建立您自己的公司。",
     "MY_COMPANY_LIST": "我的公司列表",
     "CREATE_MY_COMPANY": "创建我的公司",
-    "TRY_IT_OUT": "试试看"
+    "TRY_IT_OUT": "试试看",
+    "ENTER_INVITATION_CODE": "输入邀请码",
+    "SELECT_COMPANY_ISUNFA": "选择公司 - iSunFA",
+    "SELECT_AN_COMPANY": "选择公司",
+    "ENTER_COMPANY_NAME": "输入公司名称",
+    "ENTER_BUSINESS_REGISTRATION_NUMBER": "输入商业登记号码"
   },
   "ADD_ASSET_MODAL": {
     "ASSET_MANAGEMENT": "资产管理",
@@ -422,7 +488,9 @@
     "ESTIMATED_USEFUL_LIFE": "预计使用寿命",
     "YEAR": "年",
     "MONTH": "月",
-    "DAY": "日"
+    "DAY": "日",
+    "NAME_YOUR_ASSET": "为您的资产命名",
+    "ADD_NOTE": "添加备注"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",
@@ -430,7 +498,8 @@
     "TEAM": "团队！",
     "INVITATION CODE": "邀请码",
     "ENTER_YOUR_COMPANY_INVITATION_CODE": "输入您的公司邀请码",
-    "FORMAT_ERROR": "格式错误！"
+    "FORMAT_ERROR": "格式错误！",
+    "ENTER_CODE": "输入代码"
   },
   "CONFIRM_MODAL": {
     "UPLOADED_SUCCESSFULLY": "上传成功。",
@@ -450,6 +519,80 @@
     "SIGNATORY": "签署人",
     "DURATION": "期间",
     "COMPANY_NAME": "公司名称",
-    "BUSINESS_REGISTRATION_NUMBER": "商业登记号码"
+    "BUSINESS_REGISTRATION_NUMBER": "商业登记号码",
+    "SEARCH_CONTRACT": "搜寻合约"
+  },
+  "EDIT_BOOKMARK_MODAL": {
+    "LISTED": "列出",
+    "EDIT_MY_FAVORITES": "编辑我的收藏夹",
+    "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "选择要新增或删除的书签",
+    "SAVE": "保存"
+  },
+  "LABOR_COST_CHART": {
+    "ONBOARDING_PROJECTS": "入职项目",
+    "LABOR_COST": "劳动成本",
+    "WORKING_TIME_RATIO": "工作时间比例"
+  },
+  "LOADING_MODAL": {
+    "LOADING": "正在加载中，请稍等..."
+  },
+  "LOGIN_PAGE_BODY": {
+    "PLEASE": "请",
+    "REGISTER_YOUR_DEVICE": "注册您的设备。",
+    "OOPS": "哎呀！出了些问题。请重试或联络客服。",
+    "HELP": "帮助",
+    "REGISTER_YOUR_DEVICE_ARROW": "注册您的装置 → ",
+    "SCAN_THE_QR_CODE": "使用您注册的装置扫描二维码",
+    "LOG_IN_WITH_DEVICE": "使用装置登入",
+    "REGISTER_MY_DEVICE": "注册我的设备",
+    "LOGIN_ENVIRONMENT_TIPS": "登入环境提示",
+    "SET_USER_NAME": "设置用户名",
+    "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "该用户名将应用于您的设备。",
+    "REGISTER": "注册",
+    "LOG_IN": "登录",
+    "USERNAME": "用户名"
+  },
+  "PASSKEY_SUPPORT_MODAL": {
+    "ANDROID": "Android OS9 或更高版本",
+    "MACOS": "MacOS 13.5 或更高版本",
+    "IOS": "iOS 16 和 iPadOS 16 或更高版本",
+    "GOT_IT": "知道了！",
+    "PASSKEY_SUPPORT_SUMMARY": "密钥支持"
+  },
+  "PROFILE_UPLOAD_MODAL": {
+    "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
+    "PROFILE_PIC": "使用者照片",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "请上传您的个人资料照片"
+  },
+  "PROFIT_TREND_CHART": {
+    "PROFIT_STATUS_TREND_CHART": "获利状况趋势图",
+    "WEEK": "星期"
+  },
+  "WEEKDAY_TITLE_JSON": {
+    "SUN": "日",
+    "MON": "一",
+    "TUE": "二",
+    "WEN": "三",
+    "THU": "四",
+    "FRI": "五",
+    "SAT": "六"
+  },
+  "STAGE_NAME_MAP": {
+    "ALL": "全部",
+    "DESIGNING": "设计中",
+    "DEVELOPING": "开发中",
+    "BETA_TESTING": "测试中",
+    "SELLING": "销售中",
+    "SOLD": "已销售",
+    "ARCHIVED": "已归档"
+  },
+  "ROLE": {
+    "SUPER_ADMIN": "最终管理员",
+    "ADMIN": "管理员",
+    "OWNER": "拥有者",
+    "ACCOUNTANT": "会计",
+    "BOOKKEEPER": "记帐员",
+    "FINANCE": "财务",
+    "VIEWER": "检视者"
   }
 }

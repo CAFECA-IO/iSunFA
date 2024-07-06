@@ -3,41 +3,56 @@ import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { isUserAdmin } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
 import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.formatter';
+import { getSession } from '@/lib/utils/session';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProject | IProject[]>>
+  res: NextApiResponse<IResponseData<IProject | IProject[] | null>>
 ) {
+  let shouldContinue: boolean = true;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IProject | IProject[] | null = null;
   try {
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
-    if (req.method === 'GET') {
-      const listedProject = await listProject(companyId);
-      const projectList = await formatProjectList(listedProject);
-      const { httpCode, result } = formatApiResponse<IProject[]>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        projectList
-      );
-      res.status(httpCode).json(result);
-      // Info: (20240419 - Jacky) S010002 - POST /project
-    } else if (req.method === 'POST') {
-      const { name, stage, memberIdList } = req.body;
-      if (!name || !stage || !memberIdList) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    shouldContinue = await isUserAdmin(userId, companyId);
+    if (shouldContinue) {
+      switch (req.method) {
+        case 'GET': {
+          const listedProject = await listProject(companyId);
+          const projectList = await formatProjectList(listedProject);
+          statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+          payload = projectList;
+          break;
+        }
+        case 'POST': {
+          const { name, stage, memberIdList } = req.body;
+          if (!name || !stage || !memberIdList) {
+            shouldContinue = false;
+          }
+          if (shouldContinue) {
+            const createdProject = await createProject(companyId, name, stage, memberIdList);
+            const project = await formatProject(createdProject);
+            statusMessage = STATUS_MESSAGE.CREATED;
+            payload = project;
+          }
+          break;
+        }
+        default:
+          statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
       }
-      const createdProject = await createProject(companyId, name, stage, memberIdList);
-      const project = await formatProject(createdProject);
-      const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.CREATED, project);
-      res.status(httpCode).json(result);
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IProject>(error.message, {} as IProject);
-    res.status(httpCode).json(result);
+    statusMessage = error.message;
+    payload = null;
   }
+  const { httpCode, result } = formatApiResponse<IProject | IProject[] | null>(
+    statusMessage,
+    payload
+  );
+  res.status(httpCode).json(result);
 }

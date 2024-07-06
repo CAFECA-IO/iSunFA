@@ -31,19 +31,19 @@ const DashboardOverview = () => {
   const displayedProfitChangeRate =
     dashboardOverview.emptyProfitChange ||
     (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)
-      ? 'No Data'
+      ? t('PROJECT.NO_DATA')
       : `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange.toFixed(0)}`;
 
   const displayedTopProjectRoi =
     dashboardOverview.emptyTopProjectRoi ||
     (!dashboardOverview.topProjectRoi && dashboardOverview.topProjectRoi !== 0)
-      ? 'No Data'
+      ? t('PROJECT.NO_DATA')
       : `${dashboardOverview.topProjectRoi > 0 ? `+${dashboardOverview.topProjectRoi.toFixed(0)}` : dashboardOverview.topProjectRoi.toFixed(0)}`;
 
   const displayedPreLaunchProjects =
     dashboardOverview.emptyPreLaunchProject ||
     (!dashboardOverview.preLaunchProject && dashboardOverview.preLaunchProject !== 0)
-      ? 'No Data'
+      ? t('PROJECT.NO_DATA')
       : dashboardOverview.preLaunchProject;
 
   React.useEffect(() => {
@@ -59,7 +59,7 @@ const DashboardOverview = () => {
     } else if (getSuccess === false) {
       toastHandler({
         id: `profit_insight-${getCode}`,
-        content: `Failed to get profit insight. Error code: ${getCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -142,7 +142,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              Top project ROI
+              {t('DASHBOARD.TOP_PROJECT_ROI')}
             </div>
           </div>
           <div

@@ -1,60 +1,134 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkAdmin, checkProjectCompanyMatch } from '@/lib/utils/auth_check';
 import { IProject } from '@/interfaces/project';
+import { IResponseData } from '@/interfaces/response_data';
+import { isUserAdmin } from '@/lib/utils/auth_check';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
+import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 import { formatProject } from '@/lib/utils/formatter/project.formatter';
-import { updateProjectById } from '@/lib/utils/repo/project.repo';
+import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
+import { getProjectById, updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateProjectMembers } from '@/lib/utils/repo/transaction/project_members.tx';
 import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
+import { getSession } from '@/lib/utils/session';
+import { NextApiRequest, NextApiResponse } from 'next';
+
+async function checkInput(
+  method: string,
+  projectId: string,
+  name?: string,
+  stage?: string,
+  memberIdList?: number[],
+  imageId?: string
+) {
+  let isValid = true;
+  switch (method) {
+    case 'GET':
+      if (!projectId) {
+        isValid = false;
+      }
+      break;
+    case 'PUT':
+      if (!projectId || (!name && !stage && !memberIdList && !imageId)) {
+        isValid = false;
+      }
+      break;
+    default:
+      isValid = false;
+  }
+  return isValid;
+}
+
+async function checkAuth(userId: number, companyId: number, projectId: number) {
+  let isValid = true;
+  const isAdmin = await isUserAdmin(userId, companyId);
+  if (!isAdmin) {
+    isValid = false;
+  } else {
+    const project = await getProjectById(projectId);
+    if (!project || project.companyId !== companyId) {
+      isValid = false;
+    }
+  }
+
+  return isValid;
+}
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IProject>>
+  res: NextApiResponse<IResponseData<IProject | null>>
 ) {
+  let shouldContinue = true;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IProject | null = null;
+
   try {
-    const session = await checkAdmin(req, res);
-    // Info: (20240607 - Jacky) check input parameter start
-    const { companyId } = session;
-    const { projectId } = req.query;
-    if (!projectId) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-    const projectIdNum = convertStringToNumber(projectId);
-    // Info: (20240419 - Jacky) S010001 - GET /project
-    if (req.method === 'GET') {
-      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
-      const project = await formatProject(checkedProject);
-      // Info: (20240607 - Jacky) check input parameter end
-      const { httpCode, result } = formatApiResponse<IProject>(STATUS_MESSAGE.SUCCESS_GET, project);
-      res.status(httpCode).json(result);
-    } else if (req.method === 'PUT') {
-      const { name, stage, memberIdList, imageId } = req.body;
-      if (!name && !stage && !memberIdList) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    switch (req.method) {
+      case 'GET': {
+        const { projectId } = req.query;
+        shouldContinue = await checkInput('GET', projectId as string);
+        if (!shouldContinue) {
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+        } else {
+          const projectIdNum = convertStringToNumber(projectId as string);
+          const session = await getSession(req, res);
+          const { userId, companyId } = session;
+          shouldContinue = await checkAuth(userId, companyId, projectIdNum);
+          if (!shouldContinue) {
+            statusMessage = STATUS_MESSAGE.FORBIDDEN;
+          } else {
+            const project = await getProjectById(projectIdNum);
+            payload = project ? await formatProject(project) : null;
+            statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          }
+        }
+        break;
       }
-      const checkedProject = await checkProjectCompanyMatch(projectIdNum, companyId);
-      // Info: (20240419 - Jacky) S010002 - POST /project
-      if (stage) {
-        await updateProjectMilestone(checkedProject.id, stage);
+      case 'PUT': {
+        const { projectId } = req.query;
+        const { name, stage, memberIdList, imageId } = req.body;
+        shouldContinue = await checkInput(
+          'PUT',
+          projectId as string,
+          name,
+          stage,
+          memberIdList,
+          imageId
+        );
+        if (!shouldContinue) {
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+        } else {
+          const session = await getSession(req, res);
+          const { userId, companyId } = session;
+          const projectIdNum = convertStringToNumber(projectId as string);
+          shouldContinue = await checkAuth(userId, companyId, projectIdNum);
+          if (shouldContinue) {
+            if (stage) {
+              const listedMilestone = await listProjectMilestone(projectIdNum);
+              if (listedMilestone.length === 0) {
+                statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+              } else {
+                const milestoneList = formatMilestoneList(listedMilestone);
+                await updateProjectMilestone(projectIdNum, milestoneList, stage);
+              }
+            }
+            if (memberIdList) {
+              await updateProjectMembers(projectIdNum, memberIdList);
+            }
+            const updatedProject = await updateProjectById(projectIdNum, name, imageId);
+            payload = await formatProject(updatedProject);
+            statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+          }
+        }
+        break;
       }
-      if (memberIdList) {
-        await updateProjectMembers(checkedProject.id, memberIdList);
-      }
-      const updatedProject = await updateProjectById(checkedProject.id, name, imageId);
-      const project = await formatProject(updatedProject);
-      const { httpCode, result } = formatApiResponse<IProject>(
-        STATUS_MESSAGE.SUCCESS_UPDATE,
-        project
-      );
-      res.status(httpCode).json(result);
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IProject>(error.message, {} as IProject);
-    res.status(httpCode).json(result);
+    statusMessage = error.message;
+    payload = null;
   }
+  const { httpCode, result } = formatApiResponse<IProject | null>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

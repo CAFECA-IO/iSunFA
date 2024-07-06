@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface IPasskeySupportModal {
   isModalVisible: boolean;
@@ -10,6 +11,7 @@ interface IPasskeySupportModal {
 }
 
 const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasskeySupportModal) => {
+  const { t } = useTranslation('common');
   const isDisplayedPasskeySupportModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
       <div className="relative mx-5 flex w-full flex-col items-start rounded-md bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3 lg:mx-auto">
@@ -33,7 +35,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
         </div>
         <div className="mx-auto flex bg-white pb-4 pt-4">
           <div className="flex w-full flex-1 flex-col justify-between text-center text-xl font-bold text-card-text-primary">
-            <div className="">Passkey support summary</div>
+            <div className="">{t('PASSKEY_SUPPORT_MODAL.PASSKEY_SUPPORT_SUMMARY')}</div>
           </div>
         </div>
         <div className="mt-2 flex w-full flex-col justify-center space-y-4">
@@ -42,7 +44,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
               <Image src="/icons/android_icon.svg" alt="android_icon" width={20} height={20} />
             </div>
             <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
-              Android OS9 or later
+              {t('PASSKEY_SUPPORT_MODAL.ANDROID')}
             </div>
             <div className="flex items-center justify-center">
               <svg
@@ -71,7 +73,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
               <Image src="/icons/mac_os_icon.svg" alt="mac_os_icon" width={20} height={20} />
             </div>
             <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
-              MacOS 13.5 or later
+              {t('PASSKEY_SUPPORT_MODAL.MACOS')}
             </div>
             <div className="flex items-center justify-center">
               <svg
@@ -101,7 +103,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
             </div>
 
             <div className="flex flex-1 flex-col justify-center text-xs text-tree-text-primary">
-              iOS 16 & iPadOS 16 or later
+              {t('PASSKEY_SUPPORT_MODAL.IOS')}
             </div>
             <div className="flex items-center justify-center">
               <svg
@@ -133,7 +135,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
             onClick={modalVisibilityHandler}
             className="w-full border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow lg:w-[89px]"
           >
-            Got it!
+            {t('PASSKEY_SUPPORT_MODAL.GOT_IT')}
           </Button>
         </div>
       </div>

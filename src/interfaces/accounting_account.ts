@@ -1,4 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
+import { Account } from '@prisma/client';
 
 export interface IAccount {
   id: number;
@@ -11,10 +12,24 @@ export interface IAccount {
   name: string;
   createdAt: number;
   updatedAt: number;
+  deletedAt: number | null;
 }
 
 // Info Murky (20240416): Interface
 export interface IAccountResultStatus {
   resultId: string;
   status: ProgressStatus;
+}
+
+// Info Murky (20240416): this one is for generating financial report, use in utils/account.ts
+export type IAccountNode = Omit<Account, 'children' | 'parent' | 'root' | 'leaf'> & {
+  children: IAccountNode[];
+  amount: number;
+};
+
+export interface IAccountForSheetDisplay {
+  code: string;
+  name: string;
+  amount: number | null;
+  indent: number;
 }

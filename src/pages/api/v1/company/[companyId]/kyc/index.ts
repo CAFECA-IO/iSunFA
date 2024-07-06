@@ -4,9 +4,9 @@ import { IResponseData } from '@/interfaces/response_data';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
-import { createCompanyKYC } from '@/lib/utils/repo/company_kyc';
 import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParsor
 export const config = {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 // import { PiCopySimple } from 'react-icons/pi';
 // import { FiEdit } from 'react-icons/fi';
@@ -7,6 +8,7 @@ import Image from 'next/image';
 // ToDo: (20240430 - Julian) 預計刪除
 
 const RecordHoldingArea = () => {
+  const { t } = useTranslation('common');
   // const { tempJournalList, duplicateTempJournal, removeTempJournal } = useAccountingCtx();
 
   // const displayTempListMobile = tempJournalList.map((journal) => {
@@ -120,7 +122,7 @@ const RecordHoldingArea = () => {
         <hr className="block flex-1 border-lightGray3 md:hidden" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/tape.svg" width={16} height={16} alt="tape_icon" />
-          <p>Added Journal</p>
+          <p>{t('JOURNAL.ADDED_JOURNAL')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>

@@ -8,6 +8,7 @@ import { IPreviewInvoiceModal } from '@/interfaces/preview_invoice_modal';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
+import { useTranslation } from 'next-i18next';
 
 interface IPreviewInvoiceModalProps {
   isModalVisible: boolean;
@@ -20,6 +21,7 @@ const PreviewInvoiceModal = ({
   modalVisibilityHandler,
   previewInvoiceModalData,
 }: IPreviewInvoiceModalProps) => {
+  const { t } = useTranslation('common');
   const { date, imgStr } = previewInvoiceModalData;
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
@@ -56,7 +58,7 @@ const PreviewInvoiceModal = ({
         <div className="flex h-full w-full flex-col items-center divide-y divide-lightGray6">
           {/* Info: (20240508 - Julian) Title */}
           <div className="flex flex-col items-center pb-16px">
-            <h1 className="text-xl font-bold text-navyBlue2">Preview Invoice</h1>
+            <h1 className="text-xl font-bold text-navyBlue2">{t('JOURNAL.PREVIEW_INVOICE')}</h1>
             <p className="text-xs text-lightGray5">{timestampToString(date).date}</p>
           </div>
           {/* Info: (20240508 - Julian) Function Buttons */}
@@ -90,7 +92,7 @@ const PreviewInvoiceModal = ({
           {/* Info: (20240508 - Julian) Close Button */}
           <div className="flex w-full justify-end px-16px pt-16px">
             <Button type="button" onClick={closeClickHandler} className="bg-navyBlue2 text-white">
-              Close
+              {t('COMMON.CLOSE')}
             </Button>
           </div>
         </div>

@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export interface ILineItem {
   lineItemIndex: string;
   account: string;
@@ -9,3 +11,9 @@ export interface ILineItem {
 
 // Info: (20240619 - Murky) LineItem that aich produces do not have accountId
 export interface ILineItemFromAICH extends Omit<ILineItem, 'accountId'> {}
+
+export type ILineItemIncludeAccount = Prisma.LineItemGetPayload<{
+  include: {
+    account: true;
+  };
+}>;

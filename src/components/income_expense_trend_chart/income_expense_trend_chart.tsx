@@ -15,6 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
+import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -116,8 +117,8 @@ const LineChart = ({ data }: LineChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#4BD394', '#FB5C5C', '#FFA502'],
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
+        // width: 20, // 標記的寬度
+        // height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
@@ -209,6 +210,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
+  const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
@@ -252,7 +254,7 @@ const IncomeExpenseTrendChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `income_expense_trend-${getCode}`,
-        content: `Failed to get income/expense trend. Error code: ${getCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -317,7 +319,9 @@ const IncomeExpenseTrendChart = () => {
             />
           </svg>
         </div>
-        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">Empty</div>
+        <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
+          {t('MY_REPORTS_SECTION.EMPTY')}
+        </div>
       </section>
     </div>
   ) : (
@@ -364,18 +368,15 @@ const IncomeExpenseTrendChart = () => {
                 ></path>
               </svg>
               <p>
-                Financial Overview <br className="flex lg:hidden" />
-                (Income vs. Expenditure)
+                {t('PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
+                {t('PROJECT.INCOME_VS_EXPENDITURE')})
               </p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>
-                A message which appears when a cursor is positioned over an icon, image, hyperlink,
-                or other element in a graphical user interface.
-              </p>
+              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>
@@ -401,8 +402,8 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
                 <p>
-                  <span className="lg:hidden">M</span>
-                  <span className="hidden lg:inline">Month</span>{' '}
+                  <span className="lg:hidden">{t('COMMON.M')}</span>
+                  <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.MONTH')}</span>{' '}
                 </p>
               </Button>
             </div>
@@ -420,8 +421,8 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
                 <p>
-                  <span className="lg:hidden">Y</span>
-                  <span className="hidden lg:inline">Year</span>{' '}
+                  <span className="lg:hidden">{t('COMMON.Y')}</span>
+                  <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.YEAR')}</span>{' '}
                 </p>
               </Button>
             </div>

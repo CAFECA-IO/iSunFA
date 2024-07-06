@@ -1,5 +1,6 @@
 // ToDo (20240605 - Murk): 不同的type guard 需要放在屬於他的資料夾，不要都放在這個檔案裡
 import {
+  AccountSheetType,
   AccountType,
   EventType,
   PaymentPeriodType,
@@ -55,6 +56,11 @@ export function isIAccountResultStatus(value: unknown): value is IAccountResultS
   return isValid;
 }
 
+export function isAccountSheetType(data: string): data is AccountSheetType {
+  const isValid = Object.values(AccountSheetType).includes(data as AccountSheetType);
+  return isValid;
+}
+
 // Info: (20240527 - Murky) convert string to EventType:
 export function convertStringToEventType(data: string) {
   if (!isEventType(data)) {
@@ -89,4 +95,11 @@ export function convertStringToAccountType(data: string) {
     throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
   }
   return data as AccountType;
+}
+
+export function convertStringToAccountSheetType(data: string) {
+  if (!isAccountSheetType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as AccountSheetType;
 }

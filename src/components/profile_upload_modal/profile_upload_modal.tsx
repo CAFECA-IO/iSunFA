@@ -2,6 +2,7 @@ import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface IProfileUploadModalProps {
   isModalVisible: boolean;
@@ -12,6 +13,7 @@ const ProfileUploadModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: IProfileUploadModalProps) => {
+  const { t } = useTranslation('common');
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
 
   useEffect(() => {
@@ -70,9 +72,10 @@ const ProfileUploadModal = ({
       />
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
       <p className="mt-20px font-semibold text-navyBlue2">
-        Drop your files here or <span className="text-darkBlue">Browse</span>
+        {t('PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
+        <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
       </p>
-      <p className="text-center text-lightGray4">Maximum size: 50MB</p>
+      <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
     </label>
   );
 
@@ -92,10 +95,10 @@ const ProfileUploadModal = ({
       {/* Info: (20240618 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-12px px-20px py-16px text-button-text-secondary">
         <Button type="button" variant="secondaryBorderless" onClick={cancelHandler}>
-          Cancel
+          {t('REPORTS_HISTORY_LIST.CANCEL')}
         </Button>
         <Button type="button" className="w-full" variant="tertiary" onClick={saveImage}>
-          <p>Save</p>
+          <p>{t('EDIT_BOOKMARK_MODAL.SAVE')}</p>
           <svg
             width="20"
             height="20"
@@ -130,8 +133,12 @@ const ProfileUploadModal = ({
         </button>
         {/* Info: (20240617 - Julian) Header */}
         <div className="flex flex-col items-center p-16px">
-          <h1 className="text-xl font-bold text-card-text-primary">Profile Pic</h1>
-          <p className="text-xs text-card-text-secondary">Please upload your profile picture</p>
+          <h1 className="text-xl font-bold text-card-text-primary">
+            {t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')}
+          </h1>
+          <p className="text-xs text-card-text-secondary">
+            {t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')}
+          </p>
         </div>
         {/* Info: (20240617 - Julian) Body */}
         <div className="flex items-center justify-center">{overview}</div>

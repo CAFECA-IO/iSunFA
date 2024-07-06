@@ -1,5 +1,16 @@
 [
   {
+    "id": 1000,
+    "name": "Test Company",
+    "code": "TEST123",
+    "regional": "United States",
+    "kycStatus": true,
+    "imageId": null,
+    "startDate": 1717751006,
+    "createdAt": 1717751006,
+    "updatedAt": 1717751006
+  },
+  {
     "id": 99999991,
     "name": "Public_Company",
     "code": "1",

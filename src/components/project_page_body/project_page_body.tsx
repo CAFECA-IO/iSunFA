@@ -11,12 +11,26 @@ import { Layout } from '@/constants/layout';
 import ProjectStageBlock from '@/components/project_stage_block/project_stage_block';
 import { useTranslation } from 'next-i18next';
 
+// Info: (2024704 - Anna) For list
+interface StageNameMap {
+  [key: string]: string;
+}
+
+const stageNameMap: StageNameMap = {
+  All: 'STAGE_NAME_MAP.ALL',
+  Designing: 'STAGE_NAME_MAP.DESIGNING',
+  Developing: 'STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'STAGE_NAME_MAP.SELLING',
+  Sold: 'STAGE_NAME_MAP.SOLD',
+  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+};
+
 const ProjectPageBody = () => {
   const { t } = useTranslation('common');
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
-
   const [search, setSearch] = useState<string>('');
-  const [filteredStage, setFilteredStage] = useState<string>('All'); // Info: (2024607 - Julian) For list
+  const [filteredStage, setFilteredStage] = useState<string>(t('STAGE_NAME_MAP.ALL')); // Info: (2024704 - Anna) For list
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -66,11 +80,22 @@ const ProjectPageBody = () => {
     }
 
     if (currentLayout === Layout.LIST) {
-      setFilteredStage('All');
+      setFilteredStage(t('STAGE_NAME_MAP.ALL'));
     }
-  }, [currentLayout]);
+  }, [currentLayout, t]);
 
   const stageOptions = ['All', ...stageList]; // Info: (2024611 - Julian) Add All option
+
+  // Info: (2024704 - Anna) 反向映射，用於從翻譯值回到原始名稱，以比對專案目前進行階段
+  const stageNameMapReverse: { [key: string]: string } = {
+    [t('STAGE_NAME_MAP.ALL')]: 'All',
+    [t('STAGE_NAME_MAP.DESIGNING')]: 'Designing',
+    [t('STAGE_NAME_MAP.DEVELOPING')]: 'Developing',
+    [t('STAGE_NAME_MAP.BETA_TESTING')]: 'Beta Testing',
+    [t('STAGE_NAME_MAP.SELLING')]: 'Selling',
+    [t('STAGE_NAME_MAP.SOLD')]: 'Sold',
+    [t('STAGE_NAME_MAP.ARCHIVED')]: 'Archived',
+  };
 
   const displayedStageOptions = (
     <div
@@ -84,9 +109,9 @@ const ProjectPageBody = () => {
           key={stage}
           type="button"
           className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-          onClick={() => setFilteredStage(stage)}
+          onClick={() => setFilteredStage(t(stageNameMap[stage]))}
         >
-          {stage}
+          {t(stageNameMap[stage])}
         </button>
       ))}
     </div>
@@ -96,8 +121,8 @@ const ProjectPageBody = () => {
   const filteredProjects = dummyProjects
     .filter((project) => {
       // Info: (2024607 - Julian) 如果選擇 All，則顯示所有 Project
-      if (filteredStage === 'All') return true;
-      return project.stage === filteredStage;
+      if (filteredStage === t('STAGE_NAME_MAP.ALL')) return true;
+      return project.stage === stageNameMapReverse[filteredStage]; // Info: (2024704 - Anna) 使用反向映射來比較階段名稱
     })
     .filter((project) => {
       return project.name.toLowerCase().includes(search.toLowerCase());
@@ -178,7 +203,8 @@ const ProjectPageBody = () => {
         onClick={stageClickHandler}
         className={`border-b-2 ${activeStageStyle} px-12px py-8px hover:border-tabs-text-hover hover:text-tabs-text-hover`}
       >
-        {stage}
+        {/* Info: (2024704 - Anna) 翻譯Stage */}
+        {t(stageNameMap[stage])}
       </button>
     );
   });
@@ -241,7 +267,6 @@ const ProjectPageBody = () => {
                 type="text"
                 onChange={searchHandler}
                 className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-                // placeholder="Search Project"
                 placeholder={t('PROJECT.SEARCH_PROJECT')}
               />
               <FiSearch size={20} />

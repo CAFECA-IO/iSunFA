@@ -6,6 +6,7 @@ export enum RoleName {
   BOOKKEEPER = 'Bookkeeper',
   FINANCE = 'Finance',
   VIEWER = 'Viewer',
+  TEST = 'Test',
 }
 
 export const ROLE_NAME = RoleName;

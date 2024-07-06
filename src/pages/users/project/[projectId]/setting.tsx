@@ -17,12 +17,28 @@ import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
+// Info: (2024704 - Anna) For list
+// Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
+interface StageNameMap {
+  [key: string]: string;
+}
+
+const stageNameMap: StageNameMap = {
+  Designing: 'STAGE_NAME_MAP.DESIGNING',
+  Developing: 'STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'STAGE_NAME_MAP.SELLING',
+  Sold: 'STAGE_NAME_MAP.SOLD',
+  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+};
 interface IProjectSettingPageProps {
   projectId: string;
 }
 
 const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240617 - Julian) Replace with real data
@@ -104,7 +120,9 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
         );
       })
     ) : (
-      <p className="text-left text-input-text-input-placeholder">Choose Team Members</p>
+      <p className="text-left text-input-text-input-placeholder">
+        {t('PROJECT.CHOOSE_TEAM_MEMBERS')}
+      </p>
     );
 
   const displayedStageOptions = (
@@ -126,7 +144,8 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
             className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
             onClick={clickHandler}
           >
-            {stage}
+            {t(stageNameMap[stage])}
+            {/* {stage}test4 */}
           </button>
         );
       })}
@@ -179,7 +198,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
           <input
             id="companySearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-lightGray4"
@@ -187,7 +206,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-          Development department
+          {t('PROJECT.DEVELOPMENT_DEPARTMENT')}
         </div>
         {/* Info: (20240611 - Julian) member list */}
         <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
@@ -218,7 +237,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
               </button>
               {/* ToDo: (20240611 - Julian) Project Name */}
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                {projectName} - Setting
+                {projectName} - {t('NAV_BAR.SETTING')}
               </h1>
             </div>
             {/* Info: (20240617 - Julian) Divider */}
@@ -250,12 +269,12 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                 <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                   {/* Info: (20240617 - Julian) Project Name */}
                   <div className="flex w-full flex-col items-start gap-y-8px">
-                    <p className="font-semibold">Project Name</p>
+                    <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
                     <input
                       id="changedProjectName"
                       type="text"
                       className="h-44px w-full rounded-sm border border-input-stroke-input px-12px outline-none"
-                      placeholder="Enter New Project Name"
+                      placeholder={t('PROJECT.ENTER_NEW_PROJECT_NAME')}
                       value={changedProjectName}
                       onChange={nameChangeHandler}
                       required
@@ -263,7 +282,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                   </div>
                   {/* Info: (20240617 - Julian) Stage */}
                   <div className="flex w-full flex-col items-start gap-y-8px">
-                    <p className="font-semibold">Stage</p>
+                    <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                     <div
                       onClick={stageMenuClickHandler}
                       className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
@@ -279,7 +298,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                   <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
                     <div className="flex w-full flex-col items-start gap-y-8px">
                       <div className="flex w-full items-end justify-between">
-                        <p className="font-semibold">Team Members</p>
+                        <p className="font-semibold">{t('PROJECT.TEAM_MEMBERS')}</p>
                         {/* Info: (20240611 - Julian) amount of selected members */}
                         <p className="text-sm text-input-text-secondary">{membersAmount}</p>
                       </div>
@@ -336,7 +355,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>Project Setting - iSunFA</title>
+        <title>{t('PROJECT.PROJECT_SETTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">

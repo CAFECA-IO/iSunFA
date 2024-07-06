@@ -1,7 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IPaymentRecord } from '@/interfaces/payment_record';
 import { IResponseData } from '@/interfaces/response_data';
-import { checkAuth } from '@/lib/utils/auth_check';
+import { isUserAdmin } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
 import { updateOrder } from '@/lib/utils/repo/order.repo';
 import { createPaymentRecord } from '@/lib/utils/repo/payment_record.repo';
@@ -20,7 +19,7 @@ export default async function handler(
     const session = await getSession(req, res);
     const { userId, companyId } = session;
     if (shouldContinue) {
-      shouldContinue = await checkAuth(userId, companyId);
+      shouldContinue = await isUserAdmin(userId, companyId);
     }
     if (req.method === 'POST') {
       const { braintreeReturn } = req.body;
@@ -29,8 +28,7 @@ export default async function handler(
       }
       if (shouldContinue) {
         // TODO (20240617 - Jacky): check braintreeReturn and format now is mock
-        const checkedBraintreeReturn: IPaymentRecord = {
-          id: 1,
+        const checkedBraintreeReturn = {
           orderId: 1,
           transactionId: '1',
           date: 213123213,
@@ -43,7 +41,15 @@ export default async function handler(
         };
         // TODO (20240617 - Jacky): Need to wrap to transaction
         // create payment record
-        await createPaymentRecord(checkedBraintreeReturn);
+        await createPaymentRecord(
+          checkedBraintreeReturn.orderId,
+          checkedBraintreeReturn.transactionId,
+          checkedBraintreeReturn.date,
+          checkedBraintreeReturn.description,
+          checkedBraintreeReturn.amount,
+          checkedBraintreeReturn.method,
+          checkedBraintreeReturn.status
+        );
         // update order status
         await updateOrder(checkedBraintreeReturn.orderId, checkedBraintreeReturn.status);
         statusMessage = STATUS_MESSAGE.CREATED;

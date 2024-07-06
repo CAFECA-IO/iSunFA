@@ -26,5 +26,12 @@
         "permissions": [],
         "createdAt": 1,
         "updatedAt": 1
+    },
+    {
+        "id": 1000,
+        "name": "Test",
+        "permissions": [],
+        "createdAt": 1,
+        "updatedAt": 1
     }
 ]

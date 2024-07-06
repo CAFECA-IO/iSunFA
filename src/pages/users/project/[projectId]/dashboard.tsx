@@ -17,12 +17,28 @@ import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/p
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
+// Info: (2024704 - Anna) For list
+// Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
+interface StageNameMap {
+  [key: string]: string;
+}
+
+const stageNameMap: StageNameMap = {
+  Designing: 'STAGE_NAME_MAP.DESIGNING',
+  Developing: 'STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'STAGE_NAME_MAP.SELLING',
+  Sold: 'STAGE_NAME_MAP.SOLD',
+  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+};
 interface IProjectDashboardPageProps {
   projectId: string;
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240612 - Julian) replace with actual data
@@ -56,7 +72,8 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
             onClick={clickHandler}
           >
-            {stage}
+            {t(stageNameMap[stage])}
+            {/* {stage}test3 */}
           </button>
         );
       })}
@@ -89,14 +106,15 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
               </div>
               {/* Info: (20240612 - Julian) stage selection (desktop) */}
               <div className="hidden flex-col items-start gap-y-8px md:flex">
-                <p className="font-semibold">Stage</p>
+                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
       ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
       px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {currentStage}
+                  {/* {currentStage} */}
+                  {t(stageNameMap[currentStage])}
                   <FaChevronDown />
                   {displayedStageOptions}
                 </div>
@@ -106,14 +124,15 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             <hr className="my-24px border border-divider-stroke-lv-4" />
             {/* Info: (20240612 - Julian) stage selection (mobile) */}
             <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
-              <p className="font-semibold">Stage</p>
+              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
       ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
       px-12px hover:cursor-pointer md:w-200px`}
               >
-                {currentStage}
+                {t(stageNameMap[currentStage])}
+                {/* {currentStage} */}
                 <FaChevronDown />
                 {displayedStageOptions}
               </div>
@@ -154,7 +173,9 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (2024606 - Julian) i18n */}
-        <title>{projectName} Dashboard - iSunFA</title>
+        <title>
+          {projectName} {t('NAV_BAR.DASHBOARD')} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

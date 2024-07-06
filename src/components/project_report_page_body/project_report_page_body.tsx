@@ -34,14 +34,23 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
 
   const typeOptions = ['All', ReportKind.analysis, ReportKind.financial];
 
-  const [sorting, setSorting] = useState<string>(SortOptions.newest);
-  const [filteredType, setFilteredType] = useState<string>(typeOptions[0]);
-  const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [search, setSearch] = useState<string>('');
+  // Info: (20240701 - Julian) pending state
   const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
   const [pendingCurrentPage, setPendingCurrentPage] = useState<number>(1);
+  const [pendingSorting, setPendingSorting] = useState<string>(SortOptions.newest);
+  const [pendingFilteredType, setPendingFilteredType] = useState<string>(typeOptions[0]);
+  const [pendingFilteredPeriod, setPendingFilteredPeriod] =
+    useState<IDatePeriod>(default30DayPeriodInSec);
+  const [pendingSearch, setPendingSearch] = useState<string>('');
+
+  // Info: (20240701 - Julian) history state
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
   const [historyCurrentPage, setHistoryCurrentPage] = useState<number>(1);
+  const [historySorting, setHistorySorting] = useState<string>(SortOptions.newest);
+  const [historyFilteredType, setHistoryFilteredType] = useState<string>(typeOptions[0]);
+  const [historyFilteredPeriod, setHistoryFilteredPeriod] =
+    useState<IDatePeriod>(default30DayPeriodInSec);
+  const [historySearch, setHistorySearch] = useState<string>('');
 
   // ToDo: (20240624 - Julian) Replace with api data
   const pendingTotalPages = 5;
@@ -53,15 +62,16 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     success: listPendingSuccess,
   } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-    query: { projectId },
+    query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
   });
+
   const {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
   } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-    query: { projectId },
+    query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
   });
 
   useEffect(() => {
@@ -93,72 +103,123 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
   const {
-    targetRef: sortByMenuRef,
-    componentVisible: isSortByMenuOpen,
-    setComponentVisible: setIsSortByMenuOpen,
+    targetRef: pendingSortMenuRef,
+    componentVisible: isPendingSortMenuOpen,
+    setComponentVisible: setIsPendingSortMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
-    targetRef: typeMenuRef,
-    componentVisible: isTypeMenuOpen,
-    setComponentVisible: setIsTypeMenuOpen,
+    targetRef: pendingTypeMenuRef,
+    componentVisible: isPendingTypeMenuOpen,
+    setComponentVisible: setIsPendingTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
-  const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
-  const searchChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
+  const {
+    targetRef: historySortMenuRef,
+    componentVisible: isHistorySortMenuOpen,
+    setComponentVisible: setIsHistorySortMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
-  const displayedSortByDropMenu = (
+  const {
+    targetRef: historyTypeMenuRef,
+    componentVisible: isHistoryTypeMenuOpen,
+    setComponentVisible: setIsHistoryTypeMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const togglePendingSortMenu = () => setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+  const togglePendingTypeMenu = () => setIsPendingTypeMenuOpen(!isPendingTypeMenuOpen);
+  const pendingSearchChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPendingSearch(e.target.value);
+  };
+
+  const toggleHistorySortMenu = () => setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+  const toggleHistoryTypeMenu = () => setIsHistoryTypeMenuOpen(!isHistoryTypeMenuOpen);
+  const historySearchChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setHistorySearch(e.target.value);
+  };
+
+  const displayedPendingSortDropMenu = (
     <div
-      ref={sortByMenuRef}
-      onClick={toggleSortByMenu}
+      ref={pendingSortMenuRef}
+      onClick={togglePendingSortMenu}
       className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
-        ${isSortByMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
+        ${isPendingSortMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
         bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
-      <p className="text-text-neutral-primary">
-        {/* {sorting} */}
-        {t(sorting)}
-      </p>
+      <p className="text-text-neutral-primary">{t(pendingSorting)}</p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
         className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-        ${isSortByMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
+        ${isPendingSortMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
         z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
       >
         <button
           type="button"
           className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-          onClick={() => setSorting(SortOptions.newest)}
+          onClick={() => setPendingSorting(SortOptions.newest)}
         >
-          {SortOptions.newest}
+          {t(SortOptions.newest)}
         </button>
         <button
           type="button"
           className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-          onClick={() => setSorting(SortOptions.oldest)}
+          onClick={() => setPendingSorting(SortOptions.oldest)}
         >
-          {SortOptions.oldest}
+          {t(SortOptions.oldest)}
         </button>
       </div>
     </div>
   );
 
-  const displayedTypeDropMenu = (
+  const displayedHistorySortDropMenu = (
     <div
-      ref={typeMenuRef}
-      onClick={toggleTypeMenu}
+      ref={historySortMenuRef}
+      onClick={toggleHistorySortMenu}
       className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
-        ${isTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
+        ${isHistorySortMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
         bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
-      <p className="text-text-neutral-primary">{filteredType}</p>
+      <p className="text-text-neutral-primary">{t(historySorting)}</p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
         className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-        ${isTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
+        ${isHistorySortMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
+        z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      >
+        <button
+          type="button"
+          className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+          onClick={() => setHistorySorting(SortOptions.newest)}
+        >
+          {t(SortOptions.newest)}
+        </button>
+        <button
+          type="button"
+          className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+          onClick={() => setHistorySorting(SortOptions.oldest)}
+        >
+          {t(SortOptions.oldest)}
+        </button>
+      </div>
+    </div>
+  );
+
+  const displayedPendingTypeDropMenu = (
+    <div
+      ref={pendingTypeMenuRef}
+      onClick={togglePendingTypeMenu}
+      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
+        ${isPendingTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
+        bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+    >
+      <p className="text-text-neutral-primary">{pendingFilteredType}</p>
+      <FaChevronDown size={16} />
+      {/* Info: (20240624 - Julian) Sort By Drop Menu */}
+      <div
+        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
+        ${isPendingTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
         z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
       >
         {typeOptions.map((option) => (
@@ -166,7 +227,37 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
             key={option}
             type="button"
             className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-            onClick={() => setFilteredType(option)}
+            onClick={() => setPendingFilteredType(option)}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const displayedHistoryTypeDropMenu = (
+    <div
+      ref={historyTypeMenuRef}
+      onClick={toggleHistoryTypeMenu}
+      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
+        ${isHistoryTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
+        bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+    >
+      <p className="text-text-neutral-primary">{historyFilteredType}</p>
+      <FaChevronDown size={16} />
+      {/* Info: (20240624 - Julian) Sort By Drop Menu */}
+      <div
+        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
+        ${isHistoryTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
+        z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      >
+        {typeOptions.map((option) => (
+          <button
+            key={option}
+            type="button"
+            className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
+            onClick={() => setHistoryFilteredType(option)}
           >
             {option}
           </button>
@@ -177,34 +268,34 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
 
   return (
     <div className="flex flex-1 flex-col gap-16px">
-      {/* Info: (20240624 - Julian) Filter */}
+      {/* Info: (20240624 - Julian) Pending Report Filter */}
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
           <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
-          {displayedSortByDropMenu}
+          {displayedPendingSortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
           <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
-          {displayedTypeDropMenu}
+          {displayedPendingTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
         <div className="w-1/5">
           <DatePicker
             type={DatePickerType.TEXT_PERIOD}
-            period={filteredPeriod}
-            setFilteredPeriod={setFilteredPeriod}
+            period={pendingFilteredPeriod}
+            setFilteredPeriod={setPendingFilteredPeriod}
           />
         </div>
         {/* Info: (20240624 - Julian) Search bar */}
         <div className="flex h-46px w-2/5 items-center justify-between rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px py-8px text-text-neutral-primary">
           <input
-            id="reportSearchBar"
+            id="pendingReportSearchBar"
             type="text"
-            placeholder="Search"
-            value={search}
-            onChange={searchChangeHandler}
+            placeholder={t('AUDIT_REPORT.SEARCH')}
+            value={pendingSearch}
+            onChange={pendingSearchChangeHandler}
             className="w-full outline-none placeholder:text-lightGray4"
           />
           <FiSearch size={20} />
@@ -230,6 +321,40 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
             totalPages={pendingTotalPages}
             pagePrefix="pending"
           />
+        </div>
+      </div>
+
+      {/* Info: (20240624 - Julian) History Report Filter */}
+      <div className="flex items-end gap-x-24px">
+        {/* Info: (20240624 - Julian) Sort */}
+        <div className="flex w-1/5 flex-col gap-y-8px">
+          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
+          {displayedHistorySortDropMenu}
+        </div>
+        {/* Info: (20240624 - Julian) Type */}
+        <div className="flex w-1/5 flex-col gap-y-8px">
+          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          {displayedHistoryTypeDropMenu}
+        </div>
+        {/* Info: (20240624 - Julian) Date Picker */}
+        <div className="w-1/5">
+          <DatePicker
+            type={DatePickerType.TEXT_PERIOD}
+            period={historyFilteredPeriod}
+            setFilteredPeriod={setHistoryFilteredPeriod}
+          />
+        </div>
+        {/* Info: (20240624 - Julian) Search bar */}
+        <div className="flex h-46px w-2/5 items-center justify-between rounded-xs border border-input-stroke-input bg-input-surface-input-background px-12px py-8px text-text-neutral-primary">
+          <input
+            id="historyReportSearchBar"
+            type="text"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
+            value={historySearch}
+            onChange={historySearchChangeHandler}
+            className="w-full outline-none placeholder:text-lightGray4"
+          />
+          <FiSearch size={20} />
         </div>
       </div>
 

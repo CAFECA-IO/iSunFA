@@ -10,6 +10,30 @@ import { FiSearch } from 'react-icons/fi';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useTranslation } from 'next-i18next';
 
+// Info: (2024704 - Anna) For list
+// Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
+interface StageNameMap {
+  [key: string]: string;
+}
+
+const stageNameMap: StageNameMap = {
+  Designing: 'STAGE_NAME_MAP.DESIGNING',
+  Developing: 'STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'STAGE_NAME_MAP.SELLING',
+  Sold: 'STAGE_NAME_MAP.SOLD',
+  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+};
+
+// Info: (2024704 - Anna) 反向映射，用於從翻譯值回到原始名稱，讓篩選時可以比對
+const stageNameMapReverse: { [key: string]: ProjectStage } = {
+  'STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
+  'STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
+  'STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
+  'STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
+  'STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
+  'STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
+};
 interface IAddProjectModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
@@ -90,9 +114,11 @@ const AddProjectModal = ({
           key={stage}
           type="button"
           className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-          onClick={() => setSelectedStage(stage)}
+          onClick={() => setSelectedStage(stageNameMapReverse[t(stageNameMap[stage])])} // Info: (2024704 - Anna) 使用反向映射來設置 `selectedStage`
+          // onClick={() => setSelectedStage(stage)}
         >
-          {stage}
+          {t(stageNameMap[stage])}
+          {/* {stage}test */}
         </button>
       ))}
     </div>
@@ -167,7 +193,7 @@ const AddProjectModal = ({
           <input
             id="companySearchBar"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-lightGray4"
@@ -220,7 +246,7 @@ const AddProjectModal = ({
                 <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
                 <input
                   type="text"
-                  placeholder="Name your project"
+                  placeholder={t('PROJECT.NAME_YOUR_PROJECT')}
                   value={inputName}
                   onChange={nameChangeHandler}
                   required
@@ -236,7 +262,9 @@ const AddProjectModal = ({
             ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
             px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {selectedStage}
+                  {t(stageNameMap[selectedStage])}{' '}
+                  {/* Info: (2024704 - Anna) 顯示翻譯後的選擇階段 */}
+                  {/* {selectedStage} */}
                   <FaChevronDown />
                   {displayedStageOptions}
                 </div>

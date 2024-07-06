@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { FiTrash2, FiPauseCircle, FiPlay } from 'react-icons/fi';
 import { IUnprocessedOCR } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
+import { useTranslation } from 'next-i18next';
 
 interface IUploadedFileItemProps {
   itemData: IUnprocessedOCR;
@@ -16,6 +17,7 @@ const UploadedFileItem = ({
   deleteHandler,
   clickHandler,
 }: IUploadedFileItemProps) => {
+  const { t } = useTranslation('common');
   const { id, imageName, imageUrl, imageSize, progress, status } = itemData;
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
@@ -94,7 +96,7 @@ const UploadedFileItem = ({
       </div>
       {/* Info: (20240523 - Julian) Progress Bar */}
       <div className="inline-flex w-full items-center gap-16px">
-        <p className="text-slider-surface-bar">AI technology recognizing</p>
+        <p className="text-slider-surface-bar">{t('JOURNAL.AI_TECHNOLOGY_RECOGNIZING')}</p>
         <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
           <div
             className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${isError ? 'bg-file-uploading-text-error' : 'bg-progress-bar-surface-bar-secondary'}`}

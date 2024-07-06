@@ -96,8 +96,8 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#4BD394B2', '#FB5C5CB2'],
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
+        // width: 20, // 標記的寬度
+        // height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
@@ -164,7 +164,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { t: translate } = useTranslation('common');
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { toastHandler, layoutAssertion } = useGlobalCtx();
 
@@ -237,7 +237,7 @@ const ProjectRoiComparisonChart = () => {
     if (listSuccess === false) {
       toastHandler({
         id: `profit_comparison-${listCode}`,
-        content: `Failed to get profit comparison. Error code: ${listCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -365,7 +365,7 @@ const ProjectRoiComparisonChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {translate('MY_REPORTS_SECTION.EMPTY')}
+          {t('MY_REPORTS_SECTION.EMPTY')}
         </div>
       </section>
     </div>
@@ -407,10 +407,10 @@ const ProjectRoiComparisonChart = () => {
                 ></path>
               </svg>
               <p className="text-base lg:text-sm xl:text-base">
-                Project-wise <br className="lg:hidden" />
-                <span className="lg:hidden">{translate('PROJECT.INCOME_VS_EXPENSE')}</span>
+                {t('PROJECT.PROJECT_WISE')} <br className="lg:hidden" />
+                <span className="lg:hidden">{t('PROJECT.INCOME_VS_EXPENSE')}</span>
                 <span className="hidden lg:inline">
-                  {translate('PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
+                  {t('PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
                 </span>
               </p>
             </div>
@@ -418,7 +418,7 @@ const ProjectRoiComparisonChart = () => {
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{translate('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

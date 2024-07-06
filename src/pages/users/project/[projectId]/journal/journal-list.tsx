@@ -13,12 +13,14 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'next-i18next';
 
 interface IProjectJournalListPageProps {
   projectId: string;
 }
 
 const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240621 - Julian) Replace with api data
@@ -52,7 +54,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
                 </button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                  {projectName} - Journal List
+                  {projectName} - {t('JOURNAL.JOURNAL_LIST')}
                 </h1>
               </div>
               {/* Info: (20240621 - Julian) Add new contract button (desktop) */}
@@ -64,7 +66,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
                   className="hidden items-center gap-4px px-4 py-8px md:flex"
                 >
                   <FiPlusCircle size={24} />
-                  Add new journal
+                  {t('JOURNAL.ADD_NEW_JOURNAL')}
                 </Button>
               </Link>
               {/* Info: (20240621 - Julian) Add new contract button (mobile) */}
@@ -98,7 +100,9 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240621 - Julian) i18n */}
-        <title>{projectName} Journal List - iSunFA</title>
+        <title>
+          {projectName} {t('JOURNAL.JOURNAL_LIST_ISUNFA')}
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

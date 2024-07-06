@@ -2,65 +2,34 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IAccount } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse, isParamNumeric, pageToOffset } from '@/lib/utils/common';
-import prisma from '@/client';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import type { Account } from '@prisma/client';
+import { formatApiResponse, isParamNumeric, timestampInSeconds } from '@/lib/utils/common';
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { AccountType } from '@/constants/account';
 import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
 import { checkAdmin } from '@/lib/utils/auth_check';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import {
+  findManyAccountsInPrisma,
+  findFirstAccountInPrisma,
+  findLatestSubAccountInPrisma,
+} from '@/lib/utils/repo/account.repo';
+import { formatAccounts } from '@/lib/utils/formatter/account.formatter';
+import prisma from '@/client';
+import { Account } from '@prisma/client';
 
-export async function findManyAccountsInPrisma(
-  companyId: number,
-  page: number = DEFAULT_PAGE_OFFSET,
-  limit: number = DEFAULT_PAGE_LIMIT,
-  type?: AccountType,
-  liquidity?: boolean
-) {
-  try {
-    const offset = pageToOffset(page, limit);
-    const accounts = await prisma.account.findMany({
-      skip: offset,
-      take: limit,
-      where: {
-        type,
-        liquidity,
-        OR: [
-          {
-            companyId,
-          },
-          {
-            companyId: PUBLIC_COMPANY_ID,
-          },
-        ]
-      },
-    });
+function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
+  const isCompanyIdValid = !Number.isNaN(Number(companyId));
+  const isAccountIdValid = isParamNumeric(accountId);
 
-    return accounts;
-  } catch (error) {
-    // Info (20240516 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  if (!(isCompanyIdValid && isAccountIdValid)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-}
 
-export function formatAccounts(accounts: Account[]): IAccount[] {
-  return accounts.map((account) => {
-    return {
-      id: account.id,
-      companyId: account.companyId,
-      system: account.system,
-      type: account.type,
-      liquidity: account.liquidity,
-      debit: account.debit,
-      code: account.code,
-      name: account.name,
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt,
-    };
-  });
+  const companyIdNumber = Number(companyId);
+  const accountIdNumber = Number(accountId);
+  return {
+    companyIdNumber,
+    accountIdNumber,
+  };
 }
 
 export function isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
@@ -161,15 +130,78 @@ export async function handleGetRequest(
     page,
     limit
   );
+
+  // Info (20240701 - Murky) - User can only get accounts that are for user
+  const onlyForUser = true;
   const rawAccounts = await findManyAccountsInPrisma(
     companyIdNumber,
+    onlyForUser,
     pageNumber,
     limitNumber,
     typeEnum,
-    liquidityBoolean
+    liquidityBoolean,
+    false
   );
   const accounts = formatAccounts(rawAccounts);
   const { httpCode, result } = formatApiResponse<IAccount[]>(STATUS_MESSAGE.SUCCESS_GET, accounts);
+  return {
+    httpCode,
+    result,
+  };
+}
+
+function setNewCode(parentAccount: Account, latestSubAccount: Account | null) {
+  const parentCode = parentAccount.code;
+  let newCode = '';
+  if (latestSubAccount) {
+    const latestSubAccountCodeParts = latestSubAccount.code.split('-');
+    if (latestSubAccountCodeParts.length > 1) {
+      const latestSubAccountNumber = Number(latestSubAccountCodeParts.pop());
+      newCode = `${parentCode}-${latestSubAccountNumber + 1}`;
+    } else {
+      newCode = `${parentCode}-1`;
+    }
+  }
+  return newCode;
+}
+
+export async function handlePostRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAccount[]>>
+) {
+  const { companyId } = await checkAdmin(req, res);
+  const { accountId, name } = req.body;
+  const { companyIdNumber, accountIdNumber } = formatCompanyIdAccountId(companyId, accountId);
+  const parentAccount = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
+  const time = new Date().getTime();
+  const timeInSeconds = timestampInSeconds(time);
+  if (!parentAccount) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+  const latestSubAccount = await findLatestSubAccountInPrisma(companyIdNumber, parentAccount);
+  const newCode = setNewCode(parentAccount, latestSubAccount);
+  const newOwnAccount = {
+    companyId: companyIdNumber,
+    system: parentAccount.system,
+    type: parentAccount.type,
+    debit: parentAccount.debit,
+    liquidity: parentAccount.liquidity,
+    code: newCode,
+    name: String(name),
+    forUser: true,
+    parentCode: parentAccount.code,
+    rootCode: parentAccount.rootCode,
+    createdAt: timeInSeconds,
+    updatedAt: timeInSeconds,
+    level: parentAccount.level + 1,
+  };
+  const savedNewOwnAccount = await prisma.account.create({
+    data: newOwnAccount,
+  });
+  const { httpCode, result } = formatApiResponse<IAccount>(
+    STATUS_MESSAGE.CREATED,
+    savedNewOwnAccount
+  );
   return {
     httpCode,
     result,
@@ -186,12 +218,14 @@ export function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount[]>>
+  res: NextApiResponse<IResponseData<IAccount[] | IAccount>>
 ) {
   try {
     if (req.method === 'GET') {
       const { httpCode, result } = await handleGetRequest(req, res);
-
+      res.status(httpCode).json(result);
+    } else if (req.method === 'POST') {
+      const { httpCode, result } = await handlePostRequest(req, res);
       res.status(httpCode).json(result);
     }
   } catch (_error) {

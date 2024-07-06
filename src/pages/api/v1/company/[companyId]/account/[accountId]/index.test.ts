@@ -35,6 +35,8 @@ const mockAccountInDB: Account = {
   name: 'Sun Bank',
   createdAt: 1000000000,
   updatedAt: 1000000000,
+  level: 1,
+  deletedAt: null,
 };
 
 const mockAccount: IAccount = {
@@ -48,6 +50,7 @@ const mockAccount: IAccount = {
   name: 'Sun Bank',
   createdAt: 1000000000,
   updatedAt: 1000000000,
+  deletedAt: null,
 };
 beforeEach(() => {
   jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue(session);
@@ -74,7 +77,7 @@ describe('GET account by id', () => {
     jest.spyOn(prisma.account, 'findFirst').mockResolvedValueOnce(mockAccountInDB);
     req.method = 'GET';
     req.query = { companyId: '1', accountId: `${testAccountId}` };
-    const { httpCode, result } = await module.handleGetRequest(req, res);
+    const { httpCode, result } = await module.handleGetRequest(companyId, testAccountId);
     expect(httpCode).toBe(200);
     expect(result.payload).toEqual(mockAccount);
   });
@@ -84,13 +87,14 @@ describe('GET account by id', () => {
     req.method = 'GET';
     req.query = { companyId: '1', accountId: '-2' };
     await module.default(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.status).toHaveBeenCalledWith(200);
 
     const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),
-      success: false,
-      code: expect.stringContaining('404'),
+      success: true,
+      code: expect.stringContaining('200'),
       message: expect.any(String),
+      payload: {},
     });
 
     expect(res.json).toHaveBeenCalledWith(expectedResponse);

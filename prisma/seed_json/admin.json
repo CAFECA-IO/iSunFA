@@ -1,11 +1,25 @@
-{
-  "userId": 99999991,
-  "companyId": 8867,
-  "roleId": 99999991,
-  "email": "",
-  "status": true,
-  "startDate": 1717751006,
-  "endDate": null,
-  "createdAt": 1717751006,
-  "updatedAt": 1717751006
-}
+[
+  {
+    "id": 1000,
+    "userId": 1000,
+    "companyId": 1000,
+    "roleId": 1000,
+    "email": "",
+    "status": true,
+    "startDate": 1635724800,
+    "endDate": 1667260800,
+    "createdAt": 1635724800,
+    "updatedAt": 1635724800
+  },
+  {
+    "userId": 99999991,
+    "companyId": 8867,
+    "roleId": 99999991,
+    "email": "",
+    "status": true,
+    "startDate": 1717751006,
+    "endDate": null,
+    "createdAt": 1717751006,
+    "updatedAt": 1717751006
+  }
+]
