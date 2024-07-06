@@ -92,8 +92,8 @@
   {
     "id": 1000,
     "projectId": 1000,
-    "startDate": 1709578219,
-    "endDate": 1712256619,
+    "startDate": 0,
+    "endDate": 0,
     "status": "Designing",
     "createdAt": 1709578219,
     "updatedAt": 1709578219
@@ -101,8 +101,8 @@
   {
     "id": 1001,
     "projectId": 1000,
-    "startDate": 1709578219,
-    "endDate": 1712256619,
+    "startDate": 0,
+    "endDate": 0,
     "status": "Beta Testing",
     "createdAt": 1709578219,
     "updatedAt": 1709578219
@@ -110,8 +110,8 @@
   {
     "id": 1002,
     "projectId": 1000,
-    "startDate": 1709578219,
-    "endDate": 1712256619,
+    "startDate": 0,
+    "endDate": 0,
     "status": "Develop",
     "createdAt": 1709578219,
     "updatedAt": 1709578219
@@ -119,8 +119,8 @@
   {
     "id": 1003,
     "projectId": 1000,
-    "startDate": 1709578219,
-    "endDate": 1712256619,
+    "startDate": 0,
+    "endDate": 0,
     "status": "Selling",
     "createdAt": 1709578219,
     "updatedAt": 1709578219
@@ -128,8 +128,8 @@
   {
     "id": 1004,
     "projectId": 1000,
-    "startDate": 1709578219,
-    "endDate": 1712256619,
+    "startDate": 0,
+    "endDate": 0,
     "status": "Sold",
     "createdAt": 1709578219,
     "updatedAt": 1709578219
@@ -137,8 +137,8 @@
   {
     "id": 1005,
     "projectId": 1000,
-    "startDate": 1709578219,
-    "endDate": 1712256619,
+    "startDate": 0,
+    "endDate": 0,
     "status": "Archived",
     "createdAt": 1709578219,
     "updatedAt": 1709578219

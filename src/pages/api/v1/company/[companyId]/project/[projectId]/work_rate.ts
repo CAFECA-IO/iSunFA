@@ -6,7 +6,7 @@ import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkAdmin, isUserAdmin } from '@/lib/utils/auth_check';
 import { listWorkRate } from '@/lib/utils/repo/work_rate.repo';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
-import { listEmployeeProject } from '@/lib/utils/repo/employeeProject.repo';
+import { listEmployeeProject } from '@/lib/utils/repo/employee_project.repo';
 import { formatWorkRateList } from '@/lib/utils/formatter/work_rate.formatter';
 
 async function checkInput(projectId: string) {

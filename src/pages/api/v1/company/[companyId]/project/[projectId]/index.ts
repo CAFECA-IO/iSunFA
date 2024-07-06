@@ -3,7 +3,9 @@ import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { isUserAdmin } from '@/lib/utils/auth_check';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
+import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 import { formatProject } from '@/lib/utils/formatter/project.formatter';
+import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
 import { getProjectById, updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateProjectMembers } from '@/lib/utils/repo/transaction/project_members.tx';
 import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
@@ -101,7 +103,13 @@ export default async function handler(
           shouldContinue = await checkAuth(userId, companyId, projectIdNum);
           if (shouldContinue) {
             if (stage) {
-              await updateProjectMilestone(projectIdNum, stage);
+              const listedMilestone = await listProjectMilestone(projectIdNum);
+              if (listedMilestone.length === 0) {
+                statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+              } else {
+                const milestoneList = formatMilestoneList(listedMilestone);
+                await updateProjectMilestone(projectIdNum, milestoneList, stage);
+              }
             }
             if (memberIdList) {
               await updateProjectMembers(projectIdNum, memberIdList);

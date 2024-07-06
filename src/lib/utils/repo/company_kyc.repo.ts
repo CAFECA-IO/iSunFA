@@ -58,3 +58,13 @@ export async function createCompanyKYC(
 
   return companyKYC;
 }
+
+export async function deleteCompanyKYC(id: number): Promise<ICompanyKYC> {
+  const companyKYC = await prisma.companyKYC.delete({
+    where: {
+      id,
+    },
+  });
+
+  return companyKYC;
+}
