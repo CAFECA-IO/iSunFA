@@ -120,8 +120,8 @@ const LineChart = ({ data }: LineChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#FFA502'],
-        width: 20, // 標記的寬度
-        height: 12, // 標記的高度
+        // width: 20, // 標記的寬度
+        // height: 12, // 標記的高度
         radius: 0, // 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
