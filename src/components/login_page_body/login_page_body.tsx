@@ -15,7 +15,18 @@ interface ILoginPageBodyProps {
 }
 
 const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
-  const { t } = useTranslation('common');
+  // Info: (2024705 - Anna) 用 t 獲取翻譯文本，使用 i18n.language 獲取當前語言
+  const { t, i18n } = useTranslation('common');
+  const currentLanguage = i18n.language;
+
+  // Info: (2024705 - Anna) 根據語言設置圖片
+  const imageSrc =
+    {
+      tw: '/elements/zh_tw_login_bg.svg',
+      cn: '/elements/zh_cn_login_bg.svg',
+      en: '/elements/login_bg.svg',
+    }[currentLanguage] || '/elements/zh_tw_login_bg.svg'; // Info: (2024705 - Anna) 默認圖片
+
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
     registerModalDataHandler,
@@ -109,12 +120,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
           <div className="order-2 hidden w-6/12 flex-col max-lg:ml-0 max-lg:w-full lg:order-1 lg:flex">
             <div className="pointer-events-none -mt-20px flex grow flex-col justify-start max-lg:max-w-full md:-mt-50px lg:-mt-65px">
               <div className="relative flex h-full w-full flex-col overflow-hidden max-lg:max-w-full">
-                <Image
-                  src="/elements/login_bg.svg"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  alt="login_bg"
-                />
+                <Image src={imageSrc} fill style={{ objectFit: 'cover' }} alt="login_bg" />
               </div>
             </div>
           </div>
