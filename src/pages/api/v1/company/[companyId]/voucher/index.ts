@@ -103,7 +103,7 @@ export default async function handler(
 ) {
   const session = await checkAdmin(req, res);
   const { companyId } = session;
-  // Depreciated: (20240613 - Murky) Need to replace by type guard after merge
+  // Deprecated: (20240613 - Murky) Need to replace by type guard after merge
   if (!companyId || typeof companyId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }

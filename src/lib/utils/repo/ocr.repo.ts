@@ -16,7 +16,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -48,7 +48,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
       },
     });
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -87,7 +87,7 @@ export async function createOcrInPrisma(
 
     return ocrData;
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
