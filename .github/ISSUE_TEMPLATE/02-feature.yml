@@ -31,7 +31,6 @@ body:
       description: "Select any dependencies for this task."
       multiple: true
       options:
-        - None
         - API Availability
         - Design Mockups
         - Backend Support
