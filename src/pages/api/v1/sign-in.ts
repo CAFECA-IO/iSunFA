@@ -28,6 +28,7 @@ export default async function handler(
         } else {
           const user = await formatUser(getUser);
           payload = user;
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
           const origins = getDomains();
           // Todo (20240705 - Jacky) should store challenge in session
           const expected = {
