@@ -68,7 +68,7 @@ export default async function handler(
           const session = await getSession(req, res);
           const { userId } = session;
           const isAuth = await checkAuth(userId);
-          if (isAuth) {
+          if (!isAuth) {
             statusMessage = STATUS_MESSAGE.FORBIDDEN;
           } else {
             const createdCompanyRoleList = await createCompanyAndRole(userId, code, name, regional);
