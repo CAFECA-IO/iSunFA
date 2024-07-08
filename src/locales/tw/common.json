@@ -183,7 +183,9 @@
     "POPULAR": "熱門",
     "UNPOPULAR": "冷門",
     "ALL": "全部",
-    "RELEVANCY": "相關性"
+    "RELEVANCY": "相關性",
+    "PAYMENT_PROCESS": "付款流程",
+    "PROJECT_PROCESS": "專案流程"
   },
   "FOOTER": {
     "POWERED_BY": "技術支持 陽光智能會計",
@@ -455,7 +457,9 @@
     "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "無法取得專案進度資料。錯誤代碼：",
     "FAILED_TO_GET_PROFIT_COMPARISON": "無法獲得利潤比較。錯誤代碼：",
     "FAILED_TO_GET": "無法獲得",
-    "REPORT": "報告: "
+    "REPORT": "報告: ",
+    "FAILED_TO_FETCH_PENDING_REPORTS": "無法取得待處理的報告。錯誤代碼：",
+    "USING_DUMMY_DATA": "使用虛擬數據"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",
@@ -525,7 +529,8 @@
     "LISTED": "列出",
     "EDIT_MY_FAVORITES": "編輯我的收藏夾",
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "選擇要新增或刪除的書籤",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "PLEASE_SELECT_BOOKMARKS": "請選擇書籤"
   },
   "LABOR_COST_CHART": {
     "ONBOARDING_PROJECTS": "入職項目",
@@ -592,6 +597,21 @@
     "ACCOUNTANT": "會計",
     "BOOKKEEPER": "記帳員",
     "FINANCE": "財務",
-    "VIEWER": "檢視者"
+    "VIEWER": "檢視者",
+    "TEST": "測試"
+  },
+  "BOOKMARK_LIST": {
+    "ADD_NEW_CONTRACT": "新增合約",
+    "ADD_NEW_EMPLOYEES": "新增員工",
+    "ADD_NEW_PAYROLL": "新增工資",
+    "ADD_NEW_JOURNAL": "新增日記帳",
+    "CAMERA_SCANNER": "相機掃描儀",
+    "BALANCE_SHEET": "資產負債表",
+    "INCOME_STATEMENT": "損益表",
+    "CASH_FLOW_STATEMENT": "現金流量表",
+    "FINANCIAL_PERFORMANCE": "財務表現",
+    "COST_ANALYSIS": "成本分析",
+    "HR_UTILIZATION": "人力資源利用",
+    "FORECAST_REPORT": "預測報告"
   }
 }

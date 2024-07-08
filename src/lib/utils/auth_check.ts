@@ -14,6 +14,23 @@ import {
 } from '@/lib/utils/repo/admin.repo';
 import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 import { Invitation } from '@prisma/client';
+import i18next from 'i18next';
+
+const getTranslatedRoleName = (roleName: RoleName): string => {
+  const t = i18next.t.bind(i18next);
+  const roleTranslations: Record<RoleName, string> = {
+    [RoleName.SUPER_ADMIN]: t('ROLE.SUPER_ADMIN'),
+    [RoleName.ADMIN]: t('ROLE.ADMIN'),
+    [RoleName.OWNER]: t('ROLE.OWNER'),
+    [RoleName.ACCOUNTANT]: t('ROLE.ACCOUNTANT'),
+    [RoleName.BOOKKEEPER]: t('ROLE.BOOKKEEPER'),
+    [RoleName.FINANCE]: t('ROLE.FINANCE'),
+    [RoleName.VIEWER]: t('ROLE.VIEWER'),
+    [RoleName.TEST]: t('ROLE.TEST'),
+  };
+
+  return roleTranslations[roleName] || roleName;
+};
 
 export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
@@ -57,6 +74,7 @@ export async function isUserAdmin(userId: number, companyId: number): Promise<bo
 }
 
 export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
+  const translatedRoleName = getTranslatedRoleName(roleName);
   const session = await getSession(req, res);
   const { companyId, userId } = session;
   if (!userId) {
@@ -70,7 +88,8 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   }
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    // throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error(`${STATUS_MESSAGE.FORBIDDEN} - Missing role: ${translatedRoleName}`);
   }
   return session;
 }

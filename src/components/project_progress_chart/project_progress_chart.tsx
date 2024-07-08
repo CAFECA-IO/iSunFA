@@ -238,7 +238,7 @@ const ProjectProgressChart = () => {
       setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
-        content: `Failed to get project progress data. Error code: ${listCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

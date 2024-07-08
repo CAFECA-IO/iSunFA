@@ -186,7 +186,9 @@
     "POPULAR": "Popular",
     "UNPOPULAR": "Unpopular",
     "ALL": "All",
-    "RELEVANCY": "Relevancy"
+    "RELEVANCY": "Relevancy",
+    "PAYMENT_PROCESS": "Payment Process",
+    "PROJECT_PROCESS": "Project Process"
   },
   "FOOTER": {
     "POWERED_BY": "Powered by iSunFA",
@@ -455,10 +457,12 @@
     "FAILED_TO_GET_PROFIT_INSIGHT": "Failed to get profit insight. Error code:",
     "FAILED_TO_GET_LABOR_COST": "Failed to get labor cost chart data. Error code:",
     "FAILED_TO_GET_INCOME_EXPENSE_TREND": "Failed to get income/expense trend. Error code:",
-    "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "Failed to get project progress data. Error code:",
+    "failed_to_GET_PROJECT_PROGRESS_DATA": "Failed to get project progress data. Error code:",
     "FAILED_TO_GET_PROFIT_COMPARISON": "Failed to get profit comparison. Error code:",
     "FAILED_TO_GET": "Failed to get",
-    "REPORT": "report: "
+    "REPORT": "report: ",
+    "FAILED_TO_FETCH_PENDING_REPORTS": "Failed to fetch pending reports. Error code: ",
+    "USING_DUMMY_DATA": "USING DUMMY DATA"
   },
 
   "SELECT_COMPANY": {
@@ -529,7 +533,8 @@
     "LISTED": "listed",
     "EDIT_MY_FAVORITES": "Edit My Favorites",
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "Select a bookmark to add or remove.",
-    "SAVE": "Save"
+    "SAVE": "Save",
+    "PLEASE_SELECT_BOOKMARKS": "Please select bookmarks"
   },
   "LABOR_COST_CHART": {
     "ONBOARDING_PROJECTS": "Onboarding Projects",
@@ -596,6 +601,21 @@
     "ACCOUNTANT": "Accountant",
     "BOOKKEEPER": "Bookkeeper",
     "FINANCE": "Finance",
-    "VIEWER": "Viewer"
+    "VIEWER": "Viewer",
+    "TEST": "Test"
+  },
+  "BOOKMARK_LIST": {
+    "ADD_NEW_CONTRACT": "Add New Contract",
+    "ADD_NEW_EMPLOYEES": "Add New Employees",
+    "ADD_NEW_PAYROLL": "Add New Payroll",
+    "ADD_NEW_JOURNAL": "Add New Journal",
+    "CAMERA_SCANNER": "Camera Scanner",
+    "BALANCE_SHEET": "Balance Sheet",
+    "INCOME_STATEMENT": "Income Statement",
+    "CASH_FLOW_STATEMENT": "Cash Flow Statement",
+    "FINANCIAL_PERFORMANCE": "Financial Performance",
+    "COST_ANALYSIS": "Cost Analysis",
+    "HR_UTILIZATION": "HR Utilization",
+    "FORECAST_REPORT": "Forecast Report"
   }
 }
