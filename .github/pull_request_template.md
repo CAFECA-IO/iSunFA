@@ -1,10 +1,10 @@
 ### DEVELOP
 
-- [X] Description: What you did in this PR?
+- [X] Description: Describe what you did in this PR. (e.g., "Implemented feature X to improve performance")
   
 #### Related Issues
 
-- [X] Issue Number: #issue_number
+- [X] Issue Number:  Link the related issue (e.g., #123)
 
 #### Checklist
 
@@ -19,9 +19,11 @@
 - [x] new sql: 0
 
 #### UML Diagrams
+
 - None
 
 #### Additional Notes
+
 - Ensured all links are up-to-date.
 - Conducted thorough testing on responsive design changes.
 - Documented any notable considerations or edge cases addressed.
