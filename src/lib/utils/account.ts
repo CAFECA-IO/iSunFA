@@ -227,3 +227,104 @@ export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IA
   }
   return accounts;
 }
+
+// Info: (20240702 - Murky) Cash flow related function
+// Info: (20240702 - Murky) cash flow from operating
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by adding non-cash expense.
+ * , such as depreciation, doubtful debts expense, amortization of intangible assets, loss from Equity method investment, increase of Pension liability
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param  {number} nonCashExpense - Non-cash expense from income statement
+ * @returns {number} adjusted net income
+ */
+export function adjustNonCashExpenseFromNetIncome(netIncome: number, nonCashExpense: number): number {
+  return netIncome + nonCashExpense;
+}
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by adding non-cash revenue.
+ * , such as transfer deferred income into revenue, revenue from Equity method investment
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param  {number} nonCashRevenue - Non-cash revenue from income statement
+ * @returns {number} adjusted net income
+ */
+export function adjustNonCashRevenueFromNetIncome(netIncome: number, nonCashRevenue: number): number {
+  return netIncome - nonCashRevenue;
+}
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by removing interest or dividend revenue (which means retrieve from net income).
+ * the reason is that interest or dividend revenue need to be disclosure in separated row in operating cash flow
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} interestOrDividendRevenue - Interest or dividend revenue from income statement, need to be credit
+ * @returns {number} adjusted net income
+ */
+export function removeInterestOrDividendRevenueFromNetIncome(netIncome: number, interestOrDividendRevenue: number): number {
+  return netIncome - interestOrDividendRevenue;
+}
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by removing interest expense (which means add to net income).
+ * the reason is that interest expense need to be disclosure in separated row in operating cash flow
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} interestExpense - Interest expense from income statement, need to be debit
+ * @returns {number} adjusted net income
+ */
+export function removeInterestExpenseFromNetIncome(netIncome: number, interestExpense: number): number {
+  return netIncome + interestExpense;
+}
+
+/**
+ * This function is used to remove revenue from investment and financial activity from net income.
+ * Since those revenue need to be disclosure in investment and financial activity in cash flow statement.
+ * So that need to remove from operating cash flow.
+ * Example: gain from disposal of fix asset
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} investAndFinancialRevenue - Income tax expense from income statement, need to be credit
+ * @returns {number} adjusted net income
+ */
+export function removeInvestAndFinancialRevenueFromNetIncome(netIncome: number, investAndFinancialRevenue: number): number {
+  return netIncome - investAndFinancialRevenue;
+}
+
+/**
+ * This function is used to remove expense from investment and financial activity from net income.
+ * Since those expense need to be disclosure in investment and financial activity in cash flow statement.
+ * So that need to remove from operating cash flow.
+ * Example: loss from disposal of fix asset
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} investAndFinancialExpense - Income tax expense from income statement, need to be debit
+ * @returns {number} adjusted net income
+ */
+export function removeInvestAndFinancialExpenseFromNetIncome(netIncome: number, investAndFinancialExpense: number): number {
+  return netIncome + investAndFinancialExpense;
+}
+
+/**
+ * This function adjust asset increase from net income to cash flow from operating.
+ * Asset increase need to be debit increase, if is decrease (or credit increase) please input negative number
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} assetIncrease - Asset increase from balance sheet
+ * @returns {number} adjusted net income
+ */
+export function adjustAssetIncreaseFromNetIncome(netIncome: number, assetIncrease: number): number {
+  return netIncome - assetIncrease;
+}
+
+/**
+ * This function adjust liability increase from net income to cash flow from operating.
+ * Liability increase need to be credit increase, if is decrease (or debit increase) please input negative number
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} liabilityIncrease - Liability increase from balance sheet
+ * @returns {number} adjusted net income
+ */
+export function adjustLiabilityIncreaseFromNetIncome(netIncome: number, liabilityIncrease: number): number {
+  return netIncome + liabilityIncrease;
+}
