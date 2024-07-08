@@ -241,7 +241,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Depreciated (20240611 - Murky) This convert is not needed
+  // Deprecated (20240611 - Murky) This convert is not needed
   const companyIdNumber = Number(companyId);
 
   let resultJson: IAccountResultStatus[];
@@ -249,11 +249,11 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   try {
     const files = await getImageFileFromFormData(req);
     const aichResults = await postImageToAICH(files);
-    // Depreciated (20240611 - Murky) This function is not used
+    // Deprecated (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyIdNumber, aichResults);
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
@@ -279,7 +279,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Depreciated (20240611 - Murky) This convert is not needed
+  // Deprecated (20240611 - Murky) This convert is not needed
   const companyIdNumber = Number(companyId);
 
   // ToDo: (20240611 - Murky) GET ocr by companyId in Journal from prisma
@@ -289,7 +289,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyIdNumber, ocrtype as string);
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
@@ -337,7 +337,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     handleErrorResponse(res, error.message);

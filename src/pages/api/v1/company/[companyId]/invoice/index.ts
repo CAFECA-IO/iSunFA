@@ -24,7 +24,7 @@ function isCompanyIdValid(companyId: any): companyId is number {
 // Info Murky (20240416): Body傳進來會是any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatInvoice(invoice: any) {
-  // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   const formattedInvoice = {
     ...invoice,
     projectId: invoice.projectId ? invoice.projectId : null,
@@ -68,7 +68,7 @@ async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
     });
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
@@ -93,7 +93,7 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   try {
     json = await responseJSON;
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
@@ -110,7 +110,7 @@ async function handlePostRequest(companyId: number, req: NextApiRequest) {
   // Info (20240612 - Murky) ocrId is optional, if not provided, set it to undefined
   const { invoice, ocrId } = req.body;
 
-  // Depreciate ( 20240522 - Murky ) Need to use type guard instead
+  // Deprecate ( 20240522 - Murky ) Need to use type guard instead
   const formattedInvoice = formatInvoice(invoice);
   const formattedOcrId = formatOcrId(ocrId);
 
@@ -123,7 +123,7 @@ async function handlePostRequest(companyId: number, req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
   }
 
-  // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   // const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
 
   const journalId = await handlePrismaSavingLogic(
@@ -172,7 +172,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     handleErrorResponse(res, error.message);

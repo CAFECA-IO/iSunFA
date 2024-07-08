@@ -3,7 +3,7 @@ import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_a
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { Account } from '@prisma/client';
 
-// Depreciated: (20240702 - Murky) This is for testing purpose
+// Deprecated: (20240702 - Murky) This is for testing purpose
 // import { AccountType } from "@/constants/account";
 // import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
 // import { getSumOfLineItemsGroupByAccountInPrisma } from "@/lib/utils/repo/line_item.repo";
@@ -162,36 +162,169 @@ export function mappingAccountToSheetDisplay(
   return sheetDisplay;
 }
 
-// Depreciated: (20240702 - Murky) This is for testing purpose
-// add this to package json can run:
-// "account-tree": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' src/lib/utils/account.ts"
-// export async function main() {
-//     const accounts = await findManyAccountsInPrisma(
-//         PUBLIC_COMPANY_ID,
-//         false,
-//         1,
-//         Number.MAX_SAFE_INTEGER,
-//         AccountType.ASSET,
-//         undefined,
-//         false
-//     );
-//     const forest = buildAccountForest(accounts);
+// Deprecated: (20240702 - Murky) Accounting logic need to be refactor, Income sum up should be done when update account tree
+export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IAccountNode[] {
+  const operatingRevenues = accounts.find((account) => account.code === '4000')?.amount || 0;
+  const operatingCosts = accounts.find((account) => account.code === '5000')?.amount || 0;
+  const biologicalRecognizedGainLoss = accounts.find((account) => account.code === '5850')?.amount || 0;
+  const biologicalChangeInFairValue = accounts.find((account) => account.code === '5860')?.amount || 0;
 
-//     const accountIdAmountPair = await getSumOfLineItemsGroupByAccountInPrisma(
-//         PUBLIC_COMPANY_ID,
-//         AccountType.ASSET,
-//         0,
-//         999999999
-//     );
+  const grossProfit = operatingRevenues - operatingCosts + biologicalRecognizedGainLoss + biologicalChangeInFairValue;
+  const grossProfitAccount = accounts.find((account) => account.code === '5900');
 
-//     const updatedForest = updateAccountAmounts(forest, accountIdAmountPair);
+  if (grossProfitAccount) {
+    grossProfitAccount.amount = grossProfit;
+  }
 
-//     const accountMap = transformForestToMap(updatedForest);
-//     const sheetDisplay = mappingAccountToSheetDisplay(accountMap, balanceSheetMapping);
+  const unrealizedProfitFromSales = accounts.find((account) => account.code === '5910')?.amount || 0;
+  const realizedProfitFromSales = accounts.find((account) => account.code === '5920')?.amount || 0;
+  const netGrossProfit = grossProfit + unrealizedProfitFromSales + realizedProfitFromSales;
 
-//     // eslint-disable-next-line no-console
-//     console.log(JSON.stringify(sheetDisplay.slice(0, 10), null, 2));
-//     // console.log(JSON.stringify(updatedTree.children.filter((child) => child.code === '11XX')[0].children.filter((child) => child.code === '1100'), null, 2));
-// }
+  const netGrossProfitAccount = accounts.find((account) => account.code === '5950');
+  if (netGrossProfitAccount) {
+    netGrossProfitAccount.amount = netGrossProfit;
+  }
 
-// main();
+  const operatingExpenses = accounts.find((account) => account.code === '6000')?.amount || 0;
+  const netOtherIncome = accounts.find((account) => account.code === '6500')?.amount || 0;
+  const netOperatingIncome = netGrossProfit - operatingExpenses + netOtherIncome;
+
+  const netOperatingIncomeAccount = accounts.find((account) => account.code === '6900');
+  if (netOperatingIncomeAccount) {
+    netOperatingIncomeAccount.amount = netOperatingIncome;
+  }
+
+  const noneOperatingIncomeAndExpenses = accounts.find((account) => account.code === '7000')?.amount || 0;
+  const profitFromContinuingOperationsBeforeTax = netOperatingIncome + noneOperatingIncomeAndExpenses;
+
+  const profitFromContinuingOperationsBeforeTaxAccount = accounts.find((account) => account.code === '7900');
+  if (profitFromContinuingOperationsBeforeTaxAccount) {
+    profitFromContinuingOperationsBeforeTaxAccount.amount = profitFromContinuingOperationsBeforeTax;
+  }
+
+  const TaxExpense = accounts.find((account) => account.code === '7950')?.amount || 0;
+  const profitFromContinuingOperations = profitFromContinuingOperationsBeforeTax - TaxExpense;
+  const profitFromContinuingOperationsAccount = accounts.find((account) => account.code === '8000');
+  if (profitFromContinuingOperationsAccount) {
+    profitFromContinuingOperationsAccount.amount = profitFromContinuingOperations;
+  }
+
+  const profitFromDiscontinuedOperations = accounts.find((account) => account.code === '8100')?.amount || 0;
+  const ProfitToNonControllingInterestsBeforeBusinessCombination = accounts.find((account) => account.code === '8160')?.amount || 0;
+  const netIncome = profitFromContinuingOperations + profitFromDiscontinuedOperations + ProfitToNonControllingInterestsBeforeBusinessCombination;
+
+  const netIncomeAccount = accounts.find((account) => account.code === '8200');
+  if (netIncomeAccount) {
+    netIncomeAccount.amount = netIncome;
+  }
+
+  const otherComprehensiveIncome = accounts.find((account) => account.code === '8300')?.amount || 0;
+  const comprehensiveIncomeToNonControllingInterestsBeforeBusinessCombination = accounts.find((account) => account.code === '8400')?.amount || 0;
+  const totalComprehensiveIncome = netIncome + otherComprehensiveIncome + comprehensiveIncomeToNonControllingInterestsBeforeBusinessCombination;
+  const totalComprehensiveIncomeAccount = accounts.find((account) => account.code === '8500');
+  if (totalComprehensiveIncomeAccount) {
+    totalComprehensiveIncomeAccount.amount = totalComprehensiveIncome;
+  }
+  return accounts;
+}
+
+// Info: (20240702 - Murky) Cash flow related function
+// Info: (20240702 - Murky) cash flow from operating
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by adding non-cash expense.
+ * , such as depreciation, doubtful debts expense, amortization of intangible assets, loss from Equity method investment, increase of Pension liability
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param  {number} nonCashExpense - Non-cash expense from income statement
+ * @returns {number} adjusted net income
+ */
+export function adjustNonCashExpenseFromNetIncome(netIncome: number, nonCashExpense: number): number {
+  return netIncome + nonCashExpense;
+}
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by adding non-cash revenue.
+ * , such as transfer deferred income into revenue, revenue from Equity method investment
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param  {number} nonCashRevenue - Non-cash revenue from income statement
+ * @returns {number} adjusted net income
+ */
+export function adjustNonCashRevenueFromNetIncome(netIncome: number, nonCashRevenue: number): number {
+  return netIncome - nonCashRevenue;
+}
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by removing interest or dividend revenue (which means retrieve from net income).
+ * the reason is that interest or dividend revenue need to be disclosure in separated row in operating cash flow
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} interestOrDividendRevenue - Interest or dividend revenue from income statement, need to be credit
+ * @returns {number} adjusted net income
+ */
+export function removeInterestOrDividendRevenueFromNetIncome(netIncome: number, interestOrDividendRevenue: number): number {
+  return netIncome - interestOrDividendRevenue;
+}
+
+/**
+ * This function is used to adjust the net income to cash flow from operating by removing interest expense (which means add to net income).
+ * the reason is that interest expense need to be disclosure in separated row in operating cash flow
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} interestExpense - Interest expense from income statement, need to be debit
+ * @returns {number} adjusted net income
+ */
+export function removeInterestExpenseFromNetIncome(netIncome: number, interestExpense: number): number {
+  return netIncome + interestExpense;
+}
+
+/**
+ * This function is used to remove revenue from investment and financial activity from net income.
+ * Since those revenue need to be disclosure in investment and financial activity in cash flow statement.
+ * So that need to remove from operating cash flow.
+ * Example: gain from disposal of fix asset
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} investAndFinancialRevenue - Income tax expense from income statement, need to be credit
+ * @returns {number} adjusted net income
+ */
+export function removeInvestAndFinancialRevenueFromNetIncome(netIncome: number, investAndFinancialRevenue: number): number {
+  return netIncome - investAndFinancialRevenue;
+}
+
+/**
+ * This function is used to remove expense from investment and financial activity from net income.
+ * Since those expense need to be disclosure in investment and financial activity in cash flow statement.
+ * So that need to remove from operating cash flow.
+ * Example: loss from disposal of fix asset
+ * (Used in indirect method of cash flow statement)
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} investAndFinancialExpense - Income tax expense from income statement, need to be debit
+ * @returns {number} adjusted net income
+ */
+export function removeInvestAndFinancialExpenseFromNetIncome(netIncome: number, investAndFinancialExpense: number): number {
+  return netIncome + investAndFinancialExpense;
+}
+
+/**
+ * This function adjust asset increase from net income to cash flow from operating.
+ * Asset increase need to be debit increase, if is decrease (or credit increase) please input negative number
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} assetIncrease - Asset increase from balance sheet
+ * @returns {number} adjusted net income
+ */
+export function adjustAssetIncreaseFromNetIncome(netIncome: number, assetIncrease: number): number {
+  return netIncome - assetIncrease;
+}
+
+/**
+ * This function adjust liability increase from net income to cash flow from operating.
+ * Liability increase need to be credit increase, if is decrease (or debit increase) please input negative number
+ * @param {number} netIncome - Net income from income statement
+ * @param {number} liabilityIncrease - Liability increase from balance sheet
+ * @returns {number} adjusted net income
+ */
+export function adjustLiabilityIncreaseFromNetIncome(netIncome: number, liabilityIncrease: number): number {
+  return netIncome + liabilityIncrease;
+}
