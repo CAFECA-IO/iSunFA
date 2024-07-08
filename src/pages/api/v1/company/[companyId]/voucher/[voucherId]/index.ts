@@ -38,7 +38,7 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
-      // Depreciate: AICH需要match這邊的type
+      // Deprecate: AICH需要match這邊的type
       // const { voucherIndex, metaData, lineItems } = rawVoucher;
       // const {vendorOrSupplier, paymentReason, invoiceId, ...rawMetadata } = metaData[0];
       // const truemetaData: IVoucherMetaData = {
