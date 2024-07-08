@@ -403,7 +403,7 @@ describe('POST OCR', () => {
         files: mockFiles,
       });
 
-      // Depreciate ( 20240605 - Murky ) - This is not necessary
+      // Deprecate ( 20240605 - Murky ) - This is not necessary
       jest
         .spyOn(common, 'formatApiResponse')
         .mockReturnValue({ httpCode: 201, result: mockReturn });
@@ -420,7 +420,7 @@ describe('POST OCR', () => {
 
       const { httpCode, result } = await module.handlePostRequest(req, res);
 
-      // Depreciate ( 20240605 - Murky ) - Use createOcrInPrisma instead
+      // Deprecate ( 20240605 - Murky ) - Use createOcrInPrisma instead
       // expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
       expect(repository.createOcrInPrisma).toHaveBeenCalled();
 

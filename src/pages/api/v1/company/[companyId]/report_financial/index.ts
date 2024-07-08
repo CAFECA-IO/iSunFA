@@ -18,6 +18,7 @@ import {
 import { getSumOfLineItemsGroupByAccountInPrisma } from '@/lib/utils/repo/line_item.repo';
 import {
   buildAccountForest,
+  calculateIncomeStatementNetIncome,
   mappingAccountToSheetDisplay,
   transformForestToMap,
   transformLineItemsFromDBToMap,
@@ -93,14 +94,9 @@ export async function getAllLineItemsByAccountSheet(
 ) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map(
-      (type) => getSumOfLineItemsGroupByAccountInPrisma(
-        companyId,
-        type,
-        startDateInSecond,
-        endDateInSecond
-)
-      )
+    accountTypes.map((type) =>
+      getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond)
+    )
   );
 
   const lineItemsFromDB = lineItemsFromDBArray.flat();
@@ -121,7 +117,13 @@ export async function generateFinancialReport(
   );
   const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
   const accountForest = await getAccountForestByAccountSheet(companyId, accountSheet);
-  const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
+  let updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
+
+  // Deprecated: (20240416 - Murky) This logic should embed into Class, not by if or switch
+  if (accountSheet === AccountSheetType.INCOME_STATEMENT) {
+    updatedAccountForest = calculateIncomeStatementNetIncome(updatedAccountForest);
+  }
+
   const accountMap = transformForestToMap(updatedAccountForest);
   let sheetDisplay: IAccountForSheetDisplay[];
 
@@ -134,7 +136,7 @@ export async function generateFinancialReport(
       break;
     default:
       sheetDisplay = [];
-      // Depreciated: (20240416 - Murky) This is for debugging purpose
+      // Deprecated: (20240416 - Murky) This is for debugging purpose
       // eslint-disable-next-line no-console
       console.log('accountSheet: ', accountSheet, ' is not supported');
   }
