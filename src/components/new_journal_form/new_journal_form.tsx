@@ -7,7 +7,6 @@ import { APIName } from '@/constants/api_connection';
 import { IInvoice } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
-import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -24,27 +23,39 @@ import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 
+// Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
+const eventTypeMap: { [key in EventType]: string } = {
+  [EventType.INCOME]: 'PROJECT.INCOME',
+  [EventType.PAYMENT]: 'JOURNAL.PAYMENT',
+  [EventType.TRANSFER]: 'JOURNAL.TRANSFER',
+};
 const taxRateSelection: number[] = [0, 5, 20, 25];
-const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
+
+const paymentMethodSelection: string[] = [
+  'PAYMENT_METHOD.CASH',
+  'PAYMENT_METHOD.TRANSFER',
+  'PAYMENT_METHOD.CREDIT_CARD',
+];
+
 const ficSelection: string[] = [
-  '004 Bank of Taiwan',
-  '005 Land Bank of Taiwan',
-  '006 Taiwan Cooperative Bank',
-  '007 First Commercial Bank',
+  'JOURNAL.BANK_OF_TAIWAN',
+  'JOURNAL.LAND_BANK_OF_TAIWAN',
+  'JOURNAL.TAIWAN_COOPERATIVE_BANK',
+  'JOURNAL.FIRST_COMMERCIAL_BANK',
 ];
 
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 const projectSelection: { id: number | null; name: string }[] = [
-  { id: null, name: 'None' },
-  { id: 1, name: 'Project A' },
-  { id: 2, name: 'Project B' },
-  { id: 3, name: 'Project C' },
+  { id: null, name: 'JOURNAL.NONE' },
+  { id: 1, name: 'JOURNAL.PROJECT_A' },
+  { id: 2, name: 'JOURNAL.PROJECT_B' },
+  { id: 3, name: 'JOURNAL.PROJECT_C' },
 ];
 const contractSelection: { id: number | null; name: string }[] = [
-  { id: null, name: 'None' },
-  { id: 1, name: 'Contract A' },
-  { id: 2, name: 'Contract B' },
-  { id: 3, name: 'Contract C' },
+  { id: null, name: 'JOURNAL.NONE' },
+  { id: 1, name: 'JOURNAL.CONTRACT_A' },
+  { id: 2, name: 'JOURNAL.CONTRACT_B' },
+  { id: 3, name: 'JOURNAL.CONTRACT_C' },
 ];
 
 const NewJournalForm = () => {
@@ -125,12 +136,14 @@ const NewJournalForm = () => {
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
-  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>(
-    projectSelection[0]
-  );
-  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>(
-    contractSelection[0]
-  );
+  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>({
+    id: projectSelection[0].id,
+    name: t(projectSelection[0].name),
+  });
+  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>({
+    id: contractSelection[0].id,
+    name: t(contractSelection[0].name),
+  });
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
@@ -584,7 +597,7 @@ const NewJournalForm = () => {
         onClick={selectionClickHandler}
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
-        {firstCharToUpperCase(type)}
+        <p>{t(eventTypeMap[type])}</p>
       </li>
     );
   });
@@ -606,9 +619,11 @@ const NewJournalForm = () => {
     );
   });
 
-  const displayMethodDropmenu = paymentMethodSelection.map((method: string) => {
+  const displayMethodDropmenu = paymentMethodSelection.map((methodKey: string) => {
+    const method = t(methodKey);
     const selectionClickHandler = () => {
-      setSelectedMethod(method);
+      setSelectedMethod(methodKey); // 使用方法鍵值而不是翻譯後的文字
+      setIsMethodMenuOpen(false);
     };
 
     return (
@@ -622,18 +637,18 @@ const NewJournalForm = () => {
     );
   });
 
-  const displayFICDropmenu = ficSelection.map((account: string) => {
+  const displayFICDropmenu = ficSelection.map((accountKey: string) => {
     const selectionClickHandler = () => {
-      setSelectedFIC(account);
+      setSelectedFIC(accountKey);
     };
 
     return (
       <li
-        key={account}
+        key={accountKey}
         onClick={selectionClickHandler}
         className="w-full cursor-pointer px-3 py-2 text-left text-navyBlue2 hover:text-primaryYellow"
       >
-        {account}
+        {t(accountKey)}
       </li>
     );
   });
@@ -641,7 +656,10 @@ const NewJournalForm = () => {
   const displayProjectDropmenu = projectSelection.map(
     (project: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
-        setSelectedProject(project);
+        setSelectedProject({
+          id: project.id,
+          name: t(project.name),
+        });
       };
 
       return (
@@ -650,7 +668,7 @@ const NewJournalForm = () => {
           onClick={selectionClickHandler}
           className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
         >
-          {project.name}
+          {t(project.name)}
         </li>
       );
     }
@@ -659,7 +677,10 @@ const NewJournalForm = () => {
   const displayContractDropmenu = contractSelection.map(
     (contract: { id: number | null; name: string }) => {
       const selectionClickHandler = () => {
-        setSelectedContract(contract);
+        setSelectedContract({
+          id: contract.id,
+          name: t(contract.name),
+        });
       };
 
       return (
@@ -668,7 +689,7 @@ const NewJournalForm = () => {
           onClick={selectionClickHandler}
           className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
         >
-          {contract.name}
+          {t(contract.name)}
         </li>
       );
     }
@@ -708,7 +729,7 @@ const NewJournalForm = () => {
               onClick={eventMenuOpenHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
-              <p>{firstCharToUpperCase(selectedEventType)}</p>
+              <p>{t(eventTypeMap[selectedEventType])}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
@@ -848,7 +869,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col gap-8px text-lightGray4 md:w-200px">
             {/* Info: (20240424 - Julian) toggle */}
             <div className="flex items-center gap-18px">
-              <p>{t('JOURNAL.Tax')}</p>
+              <p>{t('JOURNAL.NO_SLASH_TAX')}</p>
               <Toggle
                 id="taxToggle"
                 initialToggleState={taxToggle}
@@ -927,7 +948,7 @@ const NewJournalForm = () => {
               onClick={methodMenuHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
-              <p>{selectedMethod}</p>
+              <p>{t(selectedMethod)}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -953,7 +974,7 @@ const NewJournalForm = () => {
               disabled={!isAccountNumberVisible}
               className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6 disabled:hover:border-lightGray3 disabled:hover:text-navyBlue2`}
             >
-              <p>{selectedFIC}</p>
+              <p>{t(selectedFIC)}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -1037,7 +1058,7 @@ const NewJournalForm = () => {
                     className="flex-1 bg-transparent px-10px outline-none"
                   />
                   <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-                    <p>{t('JOURNAL.TIMES')}</p>
+                    <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.TIMES')}</p>
                   </div>
                 </div>
               </div>
@@ -1181,7 +1202,7 @@ const NewJournalForm = () => {
             className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
           >
             <div className="p-12px text-sm text-lightGray4">
-              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
               <p className="flex-1">{selectedProject.name}</p>
@@ -1207,7 +1228,7 @@ const NewJournalForm = () => {
             className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
           >
             <div className="p-12px text-sm text-lightGray4">
-              <p>{t('JOURNAL.CONTRACT')}</p>
+              <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.CONTRACT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
               <p className="flex-1">{selectedContract.name}</p>

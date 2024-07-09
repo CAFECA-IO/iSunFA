@@ -90,12 +90,7 @@ export function updateAccountAmountsInSingleTree(
 }
 
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
-  const updatedForest = forest.map(
-    (account) => updateAccountAmountsInSingleTree(
-      account,
-      lineItemsMap
-    )
-  );
+  const updatedForest = forest.map((account) => updateAccountAmountsInSingleTree(account, lineItemsMap));
   return updatedForest;
 }
 
@@ -166,20 +161,24 @@ export function mappingAccountToSheetDisplay(
 }
 
 // Deprecated: (20240702 - Murky) Accounting logic need to be refactor, Income sum up should be done when update account tree
-export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IAccountNode[] {
+export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]): IAccountNode[] {
   const operatingRevenues = accounts.find((account) => account.code === '4000')?.amount || 0;
   const operatingCosts = accounts.find((account) => account.code === '5000')?.amount || 0;
-  const biologicalRecognizedGainLoss = accounts.find((account) => account.code === '5850')?.amount || 0;
-  const biologicalChangeInFairValue = accounts.find((account) => account.code === '5860')?.amount || 0;
+  const biologicalRecognizedGainLoss =
+    accounts.find((account) => account.code === '5850')?.amount || 0;
+  const biologicalChangeInFairValue =
+    accounts.find((account) => account.code === '5860')?.amount || 0;
 
-  const grossProfit = operatingRevenues - operatingCosts + biologicalRecognizedGainLoss + biologicalChangeInFairValue;
+  const grossProfit =
+    operatingRevenues - operatingCosts + biologicalRecognizedGainLoss + biologicalChangeInFairValue;
   const grossProfitAccount = accounts.find((account) => account.code === '5900');
 
   if (grossProfitAccount) {
     grossProfitAccount.amount = grossProfit;
   }
 
-  const unrealizedProfitFromSales = accounts.find((account) => account.code === '5910')?.amount || 0;
+  const unrealizedProfitFromSales =
+    accounts.find((account) => account.code === '5910')?.amount || 0;
   const realizedProfitFromSales = accounts.find((account) => account.code === '5920')?.amount || 0;
   const netGrossProfit = grossProfit + unrealizedProfitFromSales + realizedProfitFromSales;
 
@@ -197,10 +196,14 @@ export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IA
     netOperatingIncomeAccount.amount = netOperatingIncome;
   }
 
-  const noneOperatingIncomeAndExpenses = accounts.find((account) => account.code === '7000')?.amount || 0;
-  const profitFromContinuingOperationsBeforeTax = netOperatingIncome + noneOperatingIncomeAndExpenses;
+  const noneOperatingIncomeAndExpenses =
+    accounts.find((account) => account.code === '7000')?.amount || 0;
+  const profitFromContinuingOperationsBeforeTax =
+    netOperatingIncome + noneOperatingIncomeAndExpenses;
 
-  const profitFromContinuingOperationsBeforeTaxAccount = accounts.find((account) => account.code === '7900');
+  const profitFromContinuingOperationsBeforeTaxAccount = accounts.find(
+    (account) => account.code === '7900'
+  );
   if (profitFromContinuingOperationsBeforeTaxAccount) {
     profitFromContinuingOperationsBeforeTaxAccount.amount = profitFromContinuingOperationsBeforeTax;
   }
@@ -212,9 +215,14 @@ export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IA
     profitFromContinuingOperationsAccount.amount = profitFromContinuingOperations;
   }
 
-  const profitFromDiscontinuedOperations = accounts.find((account) => account.code === '8100')?.amount || 0;
-  const ProfitToNonControllingInterestsBeforeBusinessCombination = accounts.find((account) => account.code === '8160')?.amount || 0;
-  const netIncome = profitFromContinuingOperations + profitFromDiscontinuedOperations + ProfitToNonControllingInterestsBeforeBusinessCombination;
+  const profitFromDiscontinuedOperations =
+    accounts.find((account) => account.code === '8100')?.amount || 0;
+  const ProfitToNonControllingInterestsBeforeBusinessCombination =
+    accounts.find((account) => account.code === '8160')?.amount || 0;
+  const netIncome =
+    profitFromContinuingOperations +
+    profitFromDiscontinuedOperations +
+    ProfitToNonControllingInterestsBeforeBusinessCombination;
 
   const netIncomeAccount = accounts.find((account) => account.code === '8200');
   if (netIncomeAccount) {
@@ -222,8 +230,12 @@ export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IA
   }
 
   const otherComprehensiveIncome = accounts.find((account) => account.code === '8300')?.amount || 0;
-  const comprehensiveIncomeToNonControllingInterestsBeforeBusinessCombination = accounts.find((account) => account.code === '8400')?.amount || 0;
-  const totalComprehensiveIncome = netIncome + otherComprehensiveIncome + comprehensiveIncomeToNonControllingInterestsBeforeBusinessCombination;
+  const comprehensiveIncomeToNonControllingInterestsBeforeBusinessCombination =
+    accounts.find((account) => account.code === '8400')?.amount || 0;
+  const totalComprehensiveIncome =
+    netIncome +
+    otherComprehensiveIncome +
+    comprehensiveIncomeToNonControllingInterestsBeforeBusinessCombination;
   const totalComprehensiveIncomeAccount = accounts.find((account) => account.code === '8500');
   if (totalComprehensiveIncomeAccount) {
     totalComprehensiveIncomeAccount.amount = totalComprehensiveIncome;
@@ -242,7 +254,10 @@ export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]) : IA
  * @param  {number} nonCashExpense - Non-cash expense from income statement
  * @returns {number} adjusted net income
  */
-export function adjustNonCashExpenseFromNetIncome(netIncome: number, nonCashExpense: number): number {
+export function adjustNonCashExpenseFromNetIncome(
+  netIncome: number,
+  nonCashExpense: number
+): number {
   return netIncome + nonCashExpense;
 }
 
@@ -254,7 +269,10 @@ export function adjustNonCashExpenseFromNetIncome(netIncome: number, nonCashExpe
  * @param  {number} nonCashRevenue - Non-cash revenue from income statement
  * @returns {number} adjusted net income
  */
-export function adjustNonCashRevenueFromNetIncome(netIncome: number, nonCashRevenue: number): number {
+export function adjustNonCashRevenueFromNetIncome(
+  netIncome: number,
+  nonCashRevenue: number
+): number {
   return netIncome - nonCashRevenue;
 }
 
@@ -266,7 +284,10 @@ export function adjustNonCashRevenueFromNetIncome(netIncome: number, nonCashReve
  * @param {number} interestOrDividendRevenue - Interest or dividend revenue from income statement, need to be credit
  * @returns {number} adjusted net income
  */
-export function removeInterestOrDividendRevenueFromNetIncome(netIncome: number, interestOrDividendRevenue: number): number {
+export function removeInterestOrDividendRevenueFromNetIncome(
+  netIncome: number,
+  interestOrDividendRevenue: number
+): number {
   return netIncome - interestOrDividendRevenue;
 }
 
@@ -278,7 +299,10 @@ export function removeInterestOrDividendRevenueFromNetIncome(netIncome: number, 
  * @param {number} interestExpense - Interest expense from income statement, need to be debit
  * @returns {number} adjusted net income
  */
-export function removeInterestExpenseFromNetIncome(netIncome: number, interestExpense: number): number {
+export function removeInterestExpenseFromNetIncome(
+  netIncome: number,
+  interestExpense: number
+): number {
   return netIncome + interestExpense;
 }
 
@@ -292,7 +316,10 @@ export function removeInterestExpenseFromNetIncome(netIncome: number, interestEx
  * @param {number} investAndFinancialRevenue - Income tax expense from income statement, need to be credit
  * @returns {number} adjusted net income
  */
-export function removeInvestAndFinancialRevenueFromNetIncome(netIncome: number, investAndFinancialRevenue: number): number {
+export function removeInvestAndFinancialRevenueFromNetIncome(
+  netIncome: number,
+  investAndFinancialRevenue: number
+): number {
   return netIncome - investAndFinancialRevenue;
 }
 
@@ -306,7 +333,10 @@ export function removeInvestAndFinancialRevenueFromNetIncome(netIncome: number, 
  * @param {number} investAndFinancialExpense - Income tax expense from income statement, need to be debit
  * @returns {number} adjusted net income
  */
-export function removeInvestAndFinancialExpenseFromNetIncome(netIncome: number, investAndFinancialExpense: number): number {
+export function removeInvestAndFinancialExpenseFromNetIncome(
+  netIncome: number,
+  investAndFinancialExpense: number
+): number {
   return netIncome + investAndFinancialExpense;
 }
 
@@ -328,7 +358,10 @@ export function adjustAssetIncreaseFromNetIncome(netIncome: number, assetIncreas
  * @param {number} liabilityIncrease - Liability increase from balance sheet
  * @returns {number} adjusted net income
  */
-export function adjustLiabilityIncreaseFromNetIncome(netIncome: number, liabilityIncrease: number): number {
+export function adjustLiabilityIncreaseFromNetIncome(
+  netIncome: number,
+  liabilityIncrease: number
+): number {
   return netIncome + liabilityIncrease;
 }
 

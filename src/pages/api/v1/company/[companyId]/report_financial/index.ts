@@ -94,14 +94,7 @@ export async function getAllLineItemsByAccountSheet(
 ) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map(
-      (type) => getSumOfLineItemsGroupByAccountInPrisma(
-        companyId,
-        type,
-        startDateInSecond,
-        endDateInSecond
-)
-      )
+    accountTypes.map((type) => getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond))
   );
 
   const lineItemsFromDB = lineItemsFromDBArray.flat();

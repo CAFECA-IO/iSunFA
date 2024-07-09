@@ -353,6 +353,7 @@
     "RECEIVING": "收入",
     "TWD": "新台币",
     "TAX": "税 /",
+    "NO_SLASH_TAX": "税",
     "TWD_FEE": "新台币费用",
     "NONE": "无",
     "ACCOUNTING_VOUCHER": "会计凭证",
@@ -397,7 +398,17 @@
     "PROJECT_ADD_JOURNAL_ISUNFA": "专案新增日记帐 - iSunFA",
     "WHY_YOU_PAY": "付款理由",
     "TO_WHOM": "支付对象",
-    "ACCOUNT_NUMBER": "帐号"
+    "ACCOUNT_NUMBER": "帐号",
+    "BANK_OF_TAIWAN": "004 台湾银行",
+    "LAND_BANK_OF_TAIWAN": "005 土地银行",
+    "TAIWAN_COOPERATIVE_BANK": "006 合库银行",
+    "FIRST_COMMERCIAL_BANK": "007 第一银行",
+    "PROJECT_A": "项目 A",
+    "PROJECT_B": "项目 B",
+    "PROJECT_C": "项目 C",
+    "CONTRACT_A": "合同 A",
+    "CONTRACT_B": "合同 B",
+    "CONTRACT_C": "合同 C"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -439,7 +450,18 @@
     "PROJECT_REPORT": "项目报告",
     "PROJECT_LIST_ISUNFA": "项目清单 - iSunFA",
     "NAME_YOUR_PROJECT": "为您的项目命名",
-    "ENTER_NEW_PROJECT_NAME": "输入新项目名称"
+    "ENTER_NEW_PROJECT_NAME": "输入新项目名称",
+    "OVERALL": "全部",
+    "PROJECT AB": "项目 AB",
+    "PROJECT BN": "项目 BN",
+    "PROJECT CQ": "项目 CQ",
+    "PROJECT DR": "项目 DR",
+    "PROJECT ES": "项目 ES",
+    "PROJECT FT": "项目 FT",
+    "PROJECT GU": "项目 GU",
+    "PROJECT IW": "项目 IW",
+    "PROJECT JX": "项目 JX",
+    "PROJECT KI": "项目 KI"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -614,5 +636,10 @@
     "COST_ANALYSIS": "成本分析",
     "HR_UTILIZATION": "人力资源利用",
     "FORECAST_REPORT": "预测报告"
+  },
+  "PAYMENT_METHOD": {
+    "CASH": "现金",
+    "TRANSFER": "转帐",
+    "CREDIT_CARD": "信用卡"
   }
 }

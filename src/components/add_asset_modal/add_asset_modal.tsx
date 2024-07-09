@@ -314,7 +314,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   className="h-full p-12px outline-none"
                 >
                   <option value="year" className="bg-white">
-                    {t('ADD_ASSET_MODAL.YEAR')}Year
+                    {t('ADD_ASSET_MODAL.YEAR')}
                   </option>
                   <option value="month" className="bg-white">
                     {t('ADD_ASSET_MODAL.MONTH')}
