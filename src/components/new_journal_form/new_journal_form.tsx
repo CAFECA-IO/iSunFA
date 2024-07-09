@@ -99,6 +99,7 @@ const NewJournalForm = () => {
   */
 
   // Info: (20240425 - Julian) check if form has changed
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
@@ -234,16 +235,16 @@ const NewJournalForm = () => {
   }, [getSuccess]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
-  useEffect(() => {
-    // const onBeforeUnload = (e: BeforeUnloadEvent) => {
-    //   if (formHasChanged) {
-    //     e.preventDefault();
-    //     e.returnValue = '';
-    //   }
-    // };
-    // window.addEventListener('beforeunload', onBeforeUnload);
-    // return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [formHasChanged]);
+  // useEffect(() => {
+  // const onBeforeUnload = (e: BeforeUnloadEvent) => {
+  //   if (formHasChanged) {
+  //     e.preventDefault();
+  //     e.returnValue = '';
+  //   }
+  // };
+  // window.addEventListener('beforeunload', onBeforeUnload);
+  // return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  // }, [formHasChanged]);
 
   const {
     targetRef: eventMenuRef,
@@ -400,6 +401,7 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (!createSuccess || !invoiceReturn) {
       const invoiceData: IInvoice = {
         journalId: selectedJournal?.id || null,

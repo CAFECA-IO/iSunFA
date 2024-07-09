@@ -379,7 +379,7 @@ const ConfirmModal = ({
         <hr className="flex-1 border-lightGray3" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-          <p>{t('JOURNAL.Accounting Voucher')}</p>
+          <p>{t('JOURNAL.ACCOUNTING_VOUCHER')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
