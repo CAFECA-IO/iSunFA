@@ -159,10 +159,7 @@ const StepOneTab = () => {
           type="button"
           className="flex items-center gap-10px p-20px text-tertiaryBlue hover:text-primaryYellow"
         >
-          <p className="hidden md:block">
-            {t('CONTACT_US.SUBMIT')}
-            {t('CONTACT_US.SUBMIT')}
-          </p>
+          <p className="hidden md:block">{t('CONTACT_US.SUBMIT')}</p>
           <FiSend />
         </button>
       </div>
