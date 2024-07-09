@@ -32,4 +32,5 @@ export interface IAccountForSheetDisplay {
   name: string;
   amount: number | null;
   indent: number;
+  debit?: boolean;
 }

@@ -34,6 +34,7 @@ const stageNameMapReverse: { [key: string]: ProjectStage } = {
   'STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
   'STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
 };
+
 interface IAddProjectModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;

@@ -184,7 +184,9 @@
     "POPULAR": "热门",
     "UNPOPULAR": "冷门",
     "ALL": "全部",
-    "RELEVANCY": "相关性"
+    "RELEVANCY": "相关性",
+    "PAYMENT_PROCESS": "付款流程",
+    "PROJECT_PROCESS": "项目流程"
   },
   "FOOTER": {
     "POWERED_BY": "技术支持 阳光智能会计",
@@ -456,7 +458,9 @@
     "FAILED_TO_GET_PROJECT_PROGRESS_DATA": "无法获取项目进度数据。错误代码：",
     "FAILED_TO_GET_PROFIT_COMPARISON": "无法获得利润比较。错误代码：",
     "FAILED_TO_GET": "无法获得",
-    "REPORT": "报告: "
+    "REPORT": "报告: ",
+    "FAILED_TO_FETCH_PENDING_REPORTS": "无法获取待处理的报告。错误代码：",
+    "USING_DUMMY_DATA": "使用虚拟数据"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",
@@ -526,7 +530,8 @@
     "LISTED": "列出",
     "EDIT_MY_FAVORITES": "编辑我的收藏夹",
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "选择要新增或删除的书签",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "PLEASE_SELECT_BOOKMARKS": "请选择书签"
   },
   "LABOR_COST_CHART": {
     "ONBOARDING_PROJECTS": "入职项目",
@@ -593,6 +598,21 @@
     "ACCOUNTANT": "会计",
     "BOOKKEEPER": "记帐员",
     "FINANCE": "财务",
-    "VIEWER": "检视者"
+    "VIEWER": "检视者",
+    "TEST": "测试"
+  },
+  "BOOKMARK_LIST": {
+    "ADD_NEW_CONTRACT": "新增合同",
+    "ADD_NEW_EMPLOYEES": "新增员工",
+    "ADD_NEW_PAYROLL": "新增工资",
+    "ADD_NEW_JOURNAL": "新增日记账",
+    "CAMERA_SCANNER": "相机扫描仪",
+    "BALANCE_SHEET": "资产负债表",
+    "INCOME_STATEMENT": "损益表",
+    "CASH_FLOW_STATEMENT": "现金流量表",
+    "FINANCIAL_PERFORMANCE": "财务表现",
+    "COST_ANALYSIS": "成本分析",
+    "HR_UTILIZATION": "人力资源利用",
+    "FORECAST_REPORT": "预测报告"
   }
 }
