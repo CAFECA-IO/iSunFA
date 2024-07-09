@@ -132,6 +132,7 @@ export function mappingAccountToSheetDisplay(
         name: row.name,
         amount: null,
         indent: row.indent,
+        debit: undefined,
       });
       return;
     }
@@ -142,6 +143,7 @@ export function mappingAccountToSheetDisplay(
         name: row.name,
         amount: 0,
         indent: row.indent,
+        debit: undefined,
       });
       return;
     }
@@ -151,6 +153,7 @@ export function mappingAccountToSheetDisplay(
       name: row.name,
       amount: account.amount,
       indent: row.indent,
+      debit: account.debit,
     });
   });
 
@@ -360,4 +363,14 @@ export function adjustLiabilityIncreaseFromNetIncome(
   liabilityIncrease: number
 ): number {
   return netIncome + liabilityIncrease;
+}
+
+/**
+ * This function is returning original value of item
+ * @param {number} netIncome - Net income from income statement, just an placeholder to carry a zero
+ * @param {number} originalNumber - Original number from income statement
+ * @returns {number} net income
+ */
+export function noAdjustNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
+  return netIncome + originalNumber;
 }
