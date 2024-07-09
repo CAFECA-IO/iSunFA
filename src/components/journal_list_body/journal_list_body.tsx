@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
@@ -21,6 +21,18 @@ interface IJournalListBodyProps {
 
 const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalListBodyProps) => {
   const { t } = useTranslation('common');
+  const types = [
+    'JOURNAL_TYPES.ALL',
+    'JOURNAL_TYPES.PAYMENT',
+    'JOURNAL_TYPES.RECEIVING',
+    'JOURNAL_TYPES.TRANSFER',
+  ];
+  const sortingOptions = [
+    'SORTING.NEWEST',
+    'SORTING.OLDEST',
+    'SORTING.PAYMENT_PROCESS',
+    'SORTING.PROJECT_PROCESS',
+  ];
   const {
     targetRef: typeMenuRef,
     componentVisible: isTypeMenuOpen,
@@ -34,8 +46,14 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
   } = useOuterClick<HTMLUListElement>(false);
 
   // Info: (20240419 - Julian) Filtered states
-  const [filteredJournalType, setFilteredJournalType] = useState<string>('All');
-  const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<string>('Newest');
+  const [filteredJournalType, setFilteredJournalType] = useState<string>('');
+  useEffect(() => {
+    setFilteredJournalType(t('JOURNAL_TYPES.ALL'));
+  }, [t]);
+  const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<string>('');
+  useEffect(() => {
+    setFilteredJournalSortBy(t('SORTING.NEWEST'));
+  }, [t]);
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [currentTab, setCurrentTab] = useState<string>(JournalListSubTab.UPLOADED_EVENTS);
@@ -46,8 +64,10 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
   const upcomingEventsCount = 9;
 
   // Info: (20240418 - Julian) for css
-  const isTypeSelected = filteredJournalType !== 'All';
-  const isSortBySelected = filteredJournalSortBy !== 'Newest';
+  const isTypeSelected = filteredJournalType !== t('JOURNAL_TYPES.ALL');
+  const isSortBySelected = filteredJournalSortBy !== t('SORTING.NEWEST');
+  //  const isTypeSelected = filteredJournalType !== 'All';
+  //  const isSortBySelected = filteredJournalSortBy !== 'Newest';
 
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
@@ -71,16 +91,16 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul ref={typeMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {['All', 'Payment', 'Receiving', 'Transfer'].map((type: string) => (
+          {types.map((type: string) => (
             <li
               key={type}
               onClick={() => {
-                setFilteredJournalType(type);
+                setFilteredJournalType(t(type));
                 setIsTypeMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {type}
+              {t(type)}
             </li>
           ))}
         </ul>
@@ -104,16 +124,15 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul ref={sortByMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {['Newest', 'Oldest', 'Payment Process', 'Project Process'].map((sorting: string) => (
+          {sortingOptions.map((sorting: string) => (
             <li
               key={sorting}
               onClick={() => {
-                setFilteredJournalSortBy(sorting);
+                setFilteredJournalSortBy(t(sorting));
                 setIsSortByMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {/* {sorting} */}
               {t(sorting)}
             </li>
           ))}
