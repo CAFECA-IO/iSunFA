@@ -79,8 +79,8 @@ const FinancialReportSection = () => {
   };
 
   const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
-    setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
-
+    //   setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
+    setSelectedProjectName(projectName);
     setIsProjectMenuOpen(false);
   };
 
@@ -215,7 +215,10 @@ const FinancialReportSection = () => {
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {selectedProjectName}
+            {/* {selectedProjectName} */}
+            {t(
+              `PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
+            )}
           </div>
 
           <div className="my-auto flex flex-col justify-center px-0 py-0">

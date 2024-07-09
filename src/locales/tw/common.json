@@ -352,6 +352,7 @@
     "RECEIVING": "收入",
     "TWD": "新台幣",
     "TAX": "稅 /",
+    "NO_SLASH_TAX": "稅",
     "TWD_FEE": "新台幣費用",
     "NONE": "無",
     "ACCOUNTING_VOUCHER": "會計憑證",
@@ -396,7 +397,17 @@
     "PROJECT_ADD_JOURNAL_ISUNFA": "專案新增日記帳 - iSunFA",
     "WHY_YOU_PAY": "付款理由",
     "TO_WHOM": "支付對象",
-    "ACCOUNT_NUMBER": "帳號"
+    "ACCOUNT_NUMBER": "帳號",
+    "BANK_OF_TAIWAN": "004 台灣銀行",
+    "LAND_BANK_OF_TAIWAN": "005 土地銀行",
+    "TAIWAN_COOPERATIVE_BANK": "006 合庫銀行",
+    "FIRST_COMMERCIAL_BANK": "007 第一銀行",
+    "PROJECT_A": "專案 A",
+    "PROJECT_B": "專案 B",
+    "PROJECT_C": "專案 C",
+    "CONTRACT_A": "合約 A",
+    "CONTRACT_B": "合約 B",
+    "CONTRACT_C": "合約 C"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -438,7 +449,18 @@
     "PROJECT_REPORT": "專案報告",
     "PROJECT_LIST_ISUNFA": "項目清單 - iSunFA",
     "NAME_YOUR_PROJECT": "為您的專案命名",
-    "ENTER_NEW_PROJECT_NAME": "輸入新項目名稱"
+    "ENTER_NEW_PROJECT_NAME": "輸入新項目名稱",
+    "OVERALL": "全部",
+    "PROJECT AB": "專案 AB",
+    "PROJECT BN": "專案 BN",
+    "PROJECT CQ": "專案 CQ",
+    "PROJECT DR": "專案 DR",
+    "PROJECT ES": "專案 ES",
+    "PROJECT FT": "專案 FT",
+    "PROJECT GU": "專案 GU",
+    "PROJECT IW": "專案 IW",
+    "PROJECT JX": "專案 JX",
+    "PROJECT KI": "專案 KI"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -613,5 +635,10 @@
     "COST_ANALYSIS": "成本分析",
     "HR_UTILIZATION": "人力資源利用",
     "FORECAST_REPORT": "預測報告"
+  },
+  "PAYMENT_METHOD": {
+    "CASH": "現金",
+    "TRANSFER": "轉帳",
+    "CREDIT_CARD": "信用卡"
   }
 }

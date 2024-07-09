@@ -355,6 +355,7 @@
     "RECEIVING": "Receiving",
     "TWD": "TWD",
     "TAX": "Tax /",
+    "NO_SLASH_TAX": "Tax",
     "TWD_FEE": " TWD fee",
     "NONE": "None",
     "ACCOUNTING_VOUCHER": "Accounting Voucher",
@@ -399,7 +400,17 @@
     "PROJECT_ADD_JOURNAL_ISUNFA": "Project Add Journal - iSunFA",
     "WHY_YOU_PAY": "Why you pay",
     "TO_WHOM": "To whom",
-    "ACCOUNT_NUMBER": "Account Number"
+    "ACCOUNT_NUMBER": "Account Number",
+    "BANK_OF_TAIWAN": "004 Bank of Taiwan",
+    "LAND_BANK_OF_TAIWAN": "005 Land Bank of Taiwan",
+    "TAIWAN_COOPERATIVE_BANK": "006 Taiwan Cooperative Bank",
+    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank",
+    "PROJECT_A": "Project A",
+    "PROJECT_B": "Project B",
+    "PROJECT_C": "Project C",
+    "CONTRACT_A": "Contract A",
+    "CONTRACT_B": "Contract B",
+    "CONTRACT_C": "Contract C"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -441,7 +452,18 @@
     "PROJECT_REPORT": "Project Report",
     "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
     "NAME_YOUR_PROJECT": "Name your project",
-    "ENTER_NEW_PROJECT_NAME": "Enter New Project Name"
+    "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
+    "OVERALL": "Overall",
+    "PROJECT AB": "Project AB",
+    "PROJECT BN": "Project BN",
+    "PROJECT CQ": "Project CQ",
+    "PROJECT DR": "Project DR",
+    "PROJECT ES": "Project ES",
+    "PROJECT FT": "Project FT",
+    "PROJECT GU": "Project GU",
+    "PROJECT IW": "Project IW",
+    "PROJECT JX": "Project JX",
+    "PROJECT KI": "Project KI"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -617,5 +639,10 @@
     "COST_ANALYSIS": "Cost Analysis",
     "HR_UTILIZATION": "HR Utilization",
     "FORECAST_REPORT": "Forecast Report"
+  },
+  "PAYMENT_METHOD": {
+    "CASH": "Cash",
+    "TRANSFER": "Transfer",
+    "CREDIT_CARD": "Credit Card"
   }
 }

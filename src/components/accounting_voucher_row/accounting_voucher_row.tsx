@@ -11,6 +11,17 @@ import {
 import { IAccount } from '@/interfaces/accounting_account';
 import { useTranslation } from 'next-i18next';
 
+// Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
+interface AccountTitleMap {
+  [key: string]: string;
+}
+
+const accountTitleMap: AccountTitleMap = {
+  Income: 'PROJECT.INCOME',
+  Payment: 'JOURNAL.PAYMENT',
+  Transfer: 'JOURNAL.TRANSFER',
+};
+
 interface IAccountingVoucherRow {
   accountingVoucher: IAccountingVoucher;
 }
@@ -21,6 +32,7 @@ interface IAccountingVoucherRowMobile {
 }
 
 const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
+  const { t } = useTranslation('common');
   const { id, particulars, debit, credit } = accountingVoucher;
   const {
     accountList,
@@ -74,7 +86,8 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         onClick={clickHandler}
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
-        {title}
+        {/* {title} */}
+        {t(accountTitleMap[title] || title)}
       </li>
     );
   });
@@ -88,7 +101,16 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           onClick={accountingMenuHandler}
           className={`group relative flex h-46px w-271px cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
         >
-          <p>{generateAccountTitle(selectAccount)}</p>
+          {/* <p>{generateAccountTitle(selectAccount)}</p> */}
+          <p>{t(accountTitleMap[generateAccountTitle(selectAccount)])}</p>
+          {/* <p>
+            {selectAccount
+              ? t(
+                  accountTitleMap[generateAccountTitle(selectAccount)] ||
+                    generateAccountTitle(selectAccount)
+                )
+              : ''}
+          </p> */}
           <FaChevronDown />
           {/* Info: (20240423 - Julian) Dropmenu */}
           <div
@@ -205,7 +227,8 @@ export const AccountingVoucherRowMobile = ({
             const title = generateAccountTitle(acc);
             return (
               <option key={title} value={title}>
-                {title}
+                {/* {title} */}
+                {t(accountTitleMap[title] || title)}
               </option>
             );
           })}
