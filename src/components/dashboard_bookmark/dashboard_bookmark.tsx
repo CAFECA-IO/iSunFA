@@ -5,8 +5,30 @@ import { useDashboardCtx } from '@/contexts/dashboard_context';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 import { BOOKMARK_SCROLL_STEP } from '@/constants/config';
 import Link from 'next/link';
+import { useTranslation } from 'next-i18next';
+
+// Info: (2024708 - Anna) 定義BookmarkName名稱到翻譯鍵值的映射
+interface BookmarkNameMap {
+  [key: string]: string;
+}
+
+const bookmarkNameMap: BookmarkNameMap = {
+  'Add New Contract': 'BOOKMARK_LIST.ADD_NEW_CONTRACT',
+  'Add New Employees': 'BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
+  'Add New Payroll': 'BOOKMARK_LIST.ADD_NEW_PAYROLL',
+  'Add New Journal': 'BOOKMARK_LIST.ADD_NEW_JOURNAL',
+  'Camera Scanner': 'BOOKMARK_LIST.CAMERA_SCANNER',
+  'Balance Sheet': 'BOOKMARK_LIST.BALANCE_SHEET',
+  'Income Statement': 'BOOKMARK_LIST.INCOME_STATEMENT',
+  'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
+  'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
+  'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
+  'Hr Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
+  'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
+};
 
 const DashboardBookmark = () => {
+  const { t } = useTranslation('common');
   const { addBookmarkModalVisibilityHandler } = useGlobalCtx();
   const { bookmarkList } = useDashboardCtx();
   const [isAtScrollStart, setIsAtScrollStart] = useState(true);
@@ -83,7 +105,8 @@ const DashboardBookmark = () => {
               {bookmarkList[key].iconOnSection}
             </div>
             <div className="hidden text-lg font-normal leading-7 tracking-normal lg:inline">
-              {bookmarkList[key].name}
+              {/* {bookmarkList[key].name} */}
+              {t(bookmarkNameMap[bookmarkList[key].name])}
             </div>
           </Button>
         </Link>

@@ -79,7 +79,7 @@ const MyReportsSection = () => {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
+        content: `${t('DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
       setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
