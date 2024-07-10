@@ -1,11 +1,15 @@
 export interface ISalaryRecord {
-  id: number;
   employeeId: number;
+  employeeName: string;
+  employeeDepartment: string;
   salary: number;
   insurancePayment: number;
   bonus: number;
   description: string;
-  date: number;
+  startDate: number;
+  endDate: number;
+  workingHour: number;
+  confirmed: boolean;
   createdAt: number;
   updatedAt: number;
 }

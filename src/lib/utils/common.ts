@@ -447,3 +447,22 @@ export function getTimestampOfFirstDateOfThisYear() {
   const timestampInSecond = setTimestampToDayStart(timestamp);
   return timestampInSecond;
 }
+
+export function calculateWorkingHours(startDate: number, endDate: number) {
+  // 將秒轉換為毫秒
+  const start = new Date(startDate * 1000);
+  const end = new Date(endDate * 1000);
+  let totalWorkingHours = 0;
+
+  // 遍歷每一天
+  // 使用 let date = new Date(start) 創建一個新的 Date 物件，在迴圈中不會影響到原始的 start
+  // date.setDate(date.getDate() + 1) 會將日期增加一天
+  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+    const day = date.getDay();
+    // 如果是工作日（週一到週五）
+    if (day >= 1 && day <= 5) {
+      totalWorkingHours += 8;
+    }
+  }
+  return totalWorkingHours;
+}
