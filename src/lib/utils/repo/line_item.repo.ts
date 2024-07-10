@@ -3,7 +3,7 @@ import { AccountType } from '@/constants/account';
 import { Prisma } from '@prisma/client';
 import { setTimestampToDayEnd, setTimestampToDayStart } from '@/lib/utils/common';
 
-export async function getSumOfLineItemsGroupByAccountInPrisma(
+export async function getLineItemsInPrisma(
   companyId: number,
   type: AccountType,
   startDate: number,

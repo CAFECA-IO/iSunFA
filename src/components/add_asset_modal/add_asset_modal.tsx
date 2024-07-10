@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { FaPlus } from 'react-icons/fa6';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { PiWrenchFill } from 'react-icons/pi';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import NumericInput from '@/components/numeric_input/numeric_input';
 import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
-import { useTranslation } from 'next-i18next';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -32,30 +33,6 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
   };
   const descriptionChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputDescription(event.target.value);
-  };
-  const purchasePriceChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(event.target.value);
-    if (!Number.isNaN(input)) {
-      setInputPurchasePrice(input);
-    }
-  };
-  const amountChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(event.target.value);
-    if (!Number.isNaN(input)) {
-      setInputAmount(input);
-    }
-  };
-  const totalPriceChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(event.target.value);
-    if (!Number.isNaN(input)) {
-      setInputTotal(input);
-    }
-  };
-  const usefulLifeChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(event.target.value);
-    if (!Number.isNaN(input)) {
-      setInputUsefulLife(input);
-    }
   };
 
   const minusAmountHandler = () => {
@@ -158,12 +135,12 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.PURCHASE_PRICE')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
-                <input
-                  id="inputPurchasePrice"
-                  name="inputPurchasePrice"
-                  type="number"
+                <NumericInput
+                  id="input-purchase-price"
+                  name="input-purchase-price"
                   value={inputPurchasePrice}
-                  onChange={purchasePriceChangeHandler}
+                  setValue={setInputPurchasePrice}
+                  isDecimal
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />
@@ -186,13 +163,12 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 <button type="button" className="p-12px" onClick={minusAmountHandler}>
                   <FiMinus size={20} />
                 </button>
-                <input
-                  id="inputAmount"
-                  name="inputAmount"
-                  type="number"
+                <NumericInput
+                  id="input-amount"
+                  name="input-amount"
                   min={1}
                   value={inputAmount}
-                  onChange={amountChangeHandler}
+                  setValue={setInputAmount}
                   required
                   className="h-full flex-1 bg-transparent px-10px outline-none"
                 />
@@ -205,12 +181,12 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.TOTAL')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
-                <input
-                  id="inputTotal"
-                  name="inputTotal"
-                  type="number"
+                <NumericInput
+                  id="input-total"
+                  name="input-total"
                   value={inputTotal}
-                  onChange={totalPriceChangeHandler}
+                  setValue={setInputTotal}
+                  isDecimal
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />
@@ -232,13 +208,13 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             <p className="font-semibold">{t('ADD_ASSET_MODAL.ASSET_TYPE')}</p>
             <div className="flex items-center gap-x-20px">
               <label
-                htmlFor="intangibleAssets"
+                htmlFor="intangible-assets"
                 className="flex items-center gap-8px whitespace-nowrap"
               >
                 <input
                   type="radio"
-                  id="intangibleAssets"
-                  name="assetType"
+                  id="intangible-assets"
+                  name="asset-type"
                   className={radioButtonStyle}
                   onChange={intangibleAssetsClickHandler}
                   checked={inputAssetType === 'Intangible Assets'}
@@ -251,8 +227,8 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               >
                 <input
                   type="radio"
-                  id="tangibleAssets"
-                  name="assetType"
+                  id="tangible-assets"
+                  name="asset-type"
                   className={radioButtonStyle}
                   onChange={tangibleAssetsClickHandler}
                   checked={inputAssetType === 'Tangible Assets'}
@@ -297,12 +273,11 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             <div className="flex flex-col gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.ESTIMATED_USEFUL_LIFE')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 overflow-hidden rounded-sm border border-lightGray3 bg-white">
-                <input
-                  id="inputUsefulLife"
-                  name="inputUsefulLife"
-                  type="number"
+                <NumericInput
+                  id="input-useful-life"
+                  name="input-useful-life"
                   value={inputUsefulLife}
-                  onChange={usefulLifeChangeHandler}
+                  setValue={setInputUsefulLife}
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />

@@ -1,14 +1,7 @@
+import { IOperatingCashFlowMapping } from "@/interfaces/cash_flow";
 import { adjustAssetIncreaseFromNetIncome, adjustLiabilityIncreaseFromNetIncome, adjustNonCashExpenseFromNetIncome, adjustNonCashRevenueFromNetIncome, noAdjustNetIncome, removeInterestExpenseFromNetIncome, removeInterestOrDividendRevenueFromNetIncome, removeInvestAndFinancialExpenseFromNetIncome } from "@/lib/utils/account";
 
 // Info: (20240708 - Murky) Indirect Cash flow from operating activities
-interface IOperatingCashFlowMapping {
-    fromCode: string[];
-    // toCode: string;
-    name: string;
-    debit: boolean; // Info: (20240708 - Murky) 這個項目原始應該要是借方還是貸方, 項目加總時如果該科目是相反的方向, 需要改用減的
-    operatingFunction: (...args: number[]) => number;
-    child?: Map<string, IOperatingCashFlowMapping>;
-}
 
 export const OPERATING_REVENUE_AND_EXPENSE_MAPPING: Map<string, IOperatingCashFlowMapping> = new Map([
     ['A20100', {

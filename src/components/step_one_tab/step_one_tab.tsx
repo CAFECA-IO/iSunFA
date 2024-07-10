@@ -23,9 +23,10 @@ const StepOneTab = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-    updateOCRListHandler(selectedCompany!.id, true);
+    const companyId = selectedCompany?.id ?? 0;
+    updateOCRListHandler(companyId, true);
 
-    return () => updateOCRListHandler(selectedCompany!.id, false);
+    return () => updateOCRListHandler(companyId, false);
   }, []);
 
   useEffect(() => {
