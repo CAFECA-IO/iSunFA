@@ -22,10 +22,10 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   // Info: (2024705 - Anna) 根據語言設置圖片
   const imageSrc =
     {
-      tw: '/elements/zh_tw_login_bg.svg',
-      cn: '/elements/zh_cn_login_bg.svg',
-      en: '/elements/login_bg.svg',
-    }[currentLanguage] || '/elements/zh_tw_login_bg.svg'; // Info: (2024705 - Anna) 默認圖片
+      tw: '/elements/zh_tw_login_bg.png',
+      cn: '/elements/zh_cn_login_bg.png',
+      en: '/elements/login_bg.png',
+    }[currentLanguage] || '/elements/zh_tw_login_bg.png'; // Info: (2024705 - Anna) 默認圖片
 
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
