@@ -98,10 +98,6 @@ const useAPI = <Data>(
           },
           signal
         );
-
-        // eslint-disable-next-line no-console
-        console.log(`response.payload:`, response.payload, `response:`, response);
-
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
