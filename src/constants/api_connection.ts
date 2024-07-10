@@ -13,6 +13,7 @@ export enum HttpMethod {
 }
 
 export enum APIName {
+  CREATE_CHALLENGE = 'CREATE_CHALLENGE',
   SIGN_UP = 'SIGN_UP',
   SIGN_IN = 'SIGN_IN',
   SIGN_OUT = 'SIGN_OUT',
@@ -55,6 +56,7 @@ export enum APIName {
 }
 
 export enum APIPath {
+  CREATE_CHALLENGE = `${apiPrefix}/challenge`,
   SIGN_UP = `${apiPrefix}/sign-up`,
   SIGN_IN = `${apiPrefix}/sign-in`,
   SIGN_OUT = `${apiPrefix}/sign-out`,
@@ -96,6 +98,19 @@ export enum APIPath {
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
+  [APIName.CREATE_CHALLENGE]: {
+    name: APIName.CREATE_CHALLENGE,
+    method: HttpMethod.GET,
+    path: APIPath.CREATE_CHALLENGE,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
   [APIName.SIGN_UP]: {
     name: APIName.SIGN_UP,
     method: HttpMethod.POST,
