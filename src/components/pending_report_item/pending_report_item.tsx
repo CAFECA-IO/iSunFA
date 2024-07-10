@@ -111,7 +111,7 @@ const PendingReportItem = ({
     <Button
       onClick={pauseClickHandler}
       variant={'tertiaryBorderless'}
-      className="my-auto mr-5 px-0 py-0"
+      className="my-auto mr-2 px-0 py-0"
     >
       {' '}
       <svg
@@ -133,7 +133,7 @@ const PendingReportItem = ({
     <Button
       onClick={resumeClickHandler}
       variant={'tertiaryBorderless'}
-      className="my-auto mr-5 px-0 py-0"
+      className="my-auto mr-2 px-0 py-0"
     >
       {' '}
       <svg
