@@ -40,10 +40,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     deleteVoucherRowHandler,
     changeVoucherAccountHandler,
     changeVoucherStringHandler,
-    // changeVoucherAmountHandler,
-
-    changeVoucherCreditHandler,
-    changeVoucherDebitHandler,
+    changeVoucherAmountHandler,
   } = useAccountingCtx();
   const [selectAccount, setSelectAccount] = useState<IAccount | null>(
     //! !accountList && accountList.length > 0 ? accountList[0] : null
@@ -67,12 +64,10 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     changeVoucherStringHandler(id, event.target.value, VoucherString.PARTICULARS);
   };
   const changeDebitHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    changeVoucherCreditHandler(id, Number(event.target.value));
-    // changeVoucherAmountHandler(id, Number(event.target.value), VoucherRowType.DEBIT);
+    changeVoucherAmountHandler(id, Number(event.target.value), VoucherRowType.DEBIT);
   };
   const changeCreditHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    changeVoucherDebitHandler(id, Number(event.target.value));
-    // changeVoucherAmountHandler(id, Number(event.target.value), VoucherRowType.CREDIT);
+    changeVoucherAmountHandler(id, Number(event.target.value), VoucherRowType.CREDIT);
   };
   const deleteClickHandler = () => deleteVoucherRowHandler(id);
 

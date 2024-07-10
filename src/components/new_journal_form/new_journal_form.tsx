@@ -196,9 +196,9 @@ const NewJournalForm = () => {
         );
         setProgressRate(invoice.payment.progress);
       }
-      // if (journal.voucher) {
-      //   confirmModalVisibilityHandler();
-      // }
+      if (selectedJournal.voucher) {
+        confirmModalVisibilityHandler();
+      }
     }
   }, [selectedJournal, selectedOCR]);
 
