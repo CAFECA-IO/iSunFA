@@ -3,7 +3,7 @@ import FinancialReportGenerator from "@/lib/utils/financial_report/financial_rep
 import BalanceSheetGenerator from "@/lib/utils/financial_report/balance_sheet_generator";
 import IncomeStatementGenerator from "@/lib/utils/financial_report/income_statement_generator";
 
-export class FinancialReportGeneratorFactory {
+export default class FinancialReportGeneratorFactory {
     static createGenerator(
         companyId: number,
         startDateInSecond: number,
