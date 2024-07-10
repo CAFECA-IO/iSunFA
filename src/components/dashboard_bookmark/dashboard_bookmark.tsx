@@ -146,7 +146,7 @@ const DashboardBookmark = () => {
         <div className="relative inline-flex h-16 flex-1 items-center overflow-hidden lg:h-24">
           <div
             ref={containerRef}
-            className="inline-flex items-center gap-5 overflow-x-auto scroll-smooth px-20px py-14px"
+            className="hideScrollbar inline-flex items-center gap-5 overflow-x-auto scroll-smooth px-20px py-14px"
           >
             {displayedBookmarkList}
           </div>
