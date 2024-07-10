@@ -1,6 +1,5 @@
 import prisma from '@/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { Admin, Company, Role, User } from '@prisma/client';
 
@@ -25,19 +24,19 @@ export async function listAdminByCompanyId(
 
 export async function getAdminById(
   adminId: number
-): Promise<Admin & { company: Company; user: User; role: Role }> {
-  const admin = await prisma.admin.findUnique({
-    where: {
-      id: adminId,
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  });
-  if (!admin) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+  let admin = null;
+  if (adminId > 0) {
+    admin = await prisma.admin.findUnique({
+      where: {
+        id: adminId,
+      },
+      include: {
+        user: true,
+        company: true,
+        role: true,
+      },
+    });
   }
   return admin;
 }

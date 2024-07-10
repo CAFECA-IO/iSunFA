@@ -4,8 +4,8 @@ import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
 import { checkAdmin, checkCompanyAdminMatch, checkRole } from '@/lib/utils/auth_check';
-import { ROLE_NAME, RoleName } from '@/constants/role_name';
-import { deleteAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
+import { ROLE_NAME } from '@/constants/role_name';
+import { deleteAdminById, getAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
 import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 
 export default async function handler(
@@ -17,7 +17,15 @@ export default async function handler(
     const adminIdNum = convertStringToNumber(adminId);
     if (req.method === 'GET') {
       const { companyId } = await checkAdmin(req, res);
-      const admin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
+      const isAuth = await checkCompanyAdminMatch({ companyId, adminId: adminIdNum });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
+      const getAdmin = await getAdminById(adminIdNum);
+      if (!getAdmin) {
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
+      const admin = await formatAdmin(getAdmin);
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_GET, admin);
       res.status(httpCode).json(result);
       // Info: (20240419 - Jacky) S010003 - PUT /subscription/:id
@@ -28,26 +36,22 @@ export default async function handler(
       }
       const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { companyId } = session;
-      const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
-      let updatedRoleName;
-      if (!roleName) {
-        updatedRoleName = getAdmin.role.name;
-      } else {
-        updatedRoleName = roleName;
+      const isAuth = await checkCompanyAdminMatch({ companyId, adminId: adminIdNum });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }
-      const updatedRoleNameStr = updatedRoleName;
-      if (!Object.values(RoleName).includes(updatedRoleNameStr)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
-      }
-      const updatedAdmin = await updateAdminById(getAdmin.id, status, updatedRoleName);
+      const updatedAdmin = await updateAdminById(adminIdNum, status, roleName);
       const admin = await formatAdmin(updatedAdmin);
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_UPDATE, admin);
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
       const session = await checkRole(req, res, ROLE_NAME.OWNER);
       const { companyId } = session;
-      const getAdmin: IAdmin = await checkCompanyAdminMatch(companyId, adminIdNum);
-      const deletedAdmin = await deleteAdminById(getAdmin.id);
+      const isAuth = await checkCompanyAdminMatch({ companyId, adminId: adminIdNum });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
+      const deletedAdmin = await deleteAdminById(adminIdNum);
       const admin = await formatAdmin(deletedAdmin);
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_DELETE, admin);
       res.status(httpCode).json(result);

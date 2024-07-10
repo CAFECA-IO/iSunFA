@@ -13,7 +13,7 @@ export async function useInvitation(
 
   const invitation = await getInvitationByCode(invitationCode);
   if (invitation) {
-    const isValid = await checkInvitation(invitation);
+    const isValid = await checkInvitation({ invitation });
     if (isValid) {
       const getAdmin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
       if (!getAdmin) {
