@@ -140,6 +140,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   name="input-purchase-price"
                   value={inputPurchasePrice}
                   setValue={setInputPurchasePrice}
+                  isDecimal
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />
@@ -185,6 +186,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   name="input-total"
                   value={inputTotal}
                   setValue={setInputTotal}
+                  isDecimal
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />

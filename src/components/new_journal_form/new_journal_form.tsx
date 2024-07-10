@@ -809,6 +809,7 @@ const NewJournalForm = () => {
                 name="input-total-price"
                 value={inputTotalPrice}
                 setValue={setInputTotalPrice}
+                isDecimal
                 required
                 className="flex-1 bg-transparent px-10px outline-none"
               />
@@ -880,6 +881,7 @@ const NewJournalForm = () => {
                 disabled={!feeToggle}
                 value={inputFee}
                 setValue={setInputFee}
+                isDecimal
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1070,6 +1072,7 @@ const NewJournalForm = () => {
                     name="input-partial-paid-amount"
                     value={inputPartialPaid}
                     setValue={setInputPartialPaid}
+                    isDecimal
                     disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
@@ -1120,6 +1123,7 @@ const NewJournalForm = () => {
               name="input-estimated-cost"
               value={inputEstimatedCost}
               setValue={setInputEstimatedCost}
+              isDecimal
               className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
             />
             <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
