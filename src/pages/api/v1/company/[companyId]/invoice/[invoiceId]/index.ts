@@ -4,7 +4,7 @@ import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { getSession } from '@/lib/utils/session';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkUserAdmin } from '@/lib/utils/auth_check';
 import prisma from '@/client';
 import {
   convertStringToEventType,
@@ -76,7 +76,7 @@ export default async function handler(
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
     if (shouldContinue) {
-      shouldContinue = await isUserAdmin(userId, companyId);
+      shouldContinue = await checkUserAdmin({ userId, companyId });
       if (!shouldContinue) {
         statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       }

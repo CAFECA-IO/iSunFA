@@ -3,7 +3,7 @@ import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkUserAdmin } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
 import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.formatter';
 import { getSession } from '@/lib/utils/session';
@@ -18,7 +18,7 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    shouldContinue = await isUserAdmin(userId, companyId);
+    shouldContinue = await checkUserAdmin({ userId, companyId });
     if (shouldContinue) {
       switch (req.method) {
         case 'GET': {

@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkUserAdmin } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { createOrder, listOrder } from '@/lib/utils/repo/order.repo';
 import { IOrder } from '@/interfaces/order';
@@ -21,7 +21,7 @@ export default async function handler(
       shouldContinue = false;
     }
     if (shouldContinue) {
-      shouldContinue = await isUserAdmin(userId, companyId);
+      shouldContinue = await checkUserAdmin({ userId, companyId });
     }
     if (req.method === 'GET' && shouldContinue) {
       const orderList = await listOrder(companyId);
