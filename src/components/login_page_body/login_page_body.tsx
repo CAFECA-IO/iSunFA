@@ -66,14 +66,14 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
 
   useEffect(() => {
     /* Info: possible error code when login & register (20240522 - Shirley)
-       沒有註冊資料: 511ISF0001
+       沒有註冊資料: 401ISF0000
        伺服器錯誤: 500ISF0000
     */
 
     if (!signedIn && isSignInError) {
-      const toastType = errorCode === `511ISF0001` ? ToastType.WARNING : ToastType.ERROR;
+      const toastType = errorCode === `401ISF0000` ? ToastType.WARNING : ToastType.ERROR;
       const toastContent =
-        errorCode === `511ISF0001` ? (
+        errorCode === `401ISF0000` ? (
           <div>
             <div>
               {t('LOGIN_PAGE_BODY.PLEASE')}{' '}

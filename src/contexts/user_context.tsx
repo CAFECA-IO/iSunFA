@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 import { createChallenge } from '@/lib/utils/authorization';
-import { DUMMY_TIMESTAMP, FIDO2_USER_HANDLE } from '@/constants/config';
+import { FIDO2_USER_HANDLE } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
@@ -141,9 +141,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsSignInError(false);
 
-      const newChallenge = await createChallenge(
-        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
-      );
+      const newChallenge = await createChallenge();
 
       const registration = await client.register(name, newChallenge, {
         authenticatorType: 'both',
@@ -156,9 +154,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (invitation) {
-        signUpAPI({ body: { registration }, query: { invitation } });
+        signUpAPI({ body: { registration, challenge: newChallenge }, query: { invitation } });
       } else {
-        signUpAPI({ body: { registration } });
+        signUpAPI({ body: { registration, challenge: newChallenge } });
       }
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
@@ -177,9 +175,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsSignInError(false);
 
-      const newChallenge = await createChallenge(
-        'FIDO2.TEST.reg-' + DUMMY_TIMESTAMP.toString() + '-hello'
-      );
+      const newChallenge = await createChallenge();
 
       const authentication: AuthenticationEncoded = await client.authenticate([], newChallenge, {
         authenticatorType: 'both',
