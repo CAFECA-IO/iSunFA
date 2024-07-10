@@ -109,7 +109,8 @@ const AnalysisReportSection = () => {
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {selectedProjectName}
+            {/* {selectedProjectName} */}
+            {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
           </div>
 
           <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -199,7 +200,11 @@ const AnalysisReportSection = () => {
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
+                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
+                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
+                      'Overall'
+                        ? t('PROJECT.OVERALL')
+                        : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
                 </li>
@@ -219,7 +224,7 @@ const AnalysisReportSection = () => {
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {selectedReportName}
+          {t(`BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center px-0 py-0">
           <div className="flex items-center justify-center">
@@ -255,7 +260,8 @@ const AnalysisReportSection = () => {
               onClick={() => menuOptionClickHandler(id as AnalysisReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
-              {name}
+              {/* {name} */}
+              {t(`BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>

@@ -401,13 +401,7 @@
     "BANK_OF_TAIWAN": "004 台灣銀行",
     "LAND_BANK_OF_TAIWAN": "005 土地銀行",
     "TAIWAN_COOPERATIVE_BANK": "006 合庫銀行",
-    "FIRST_COMMERCIAL_BANK": "007 第一銀行",
-    "PROJECT_A": "專案 A",
-    "PROJECT_B": "專案 B",
-    "PROJECT_C": "專案 C",
-    "CONTRACT_A": "合約 A",
-    "CONTRACT_B": "合約 B",
-    "CONTRACT_C": "合約 C"
+    "FIRST_COMMERCIAL_BANK": "007 第一銀行"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -450,17 +444,7 @@
     "PROJECT_LIST_ISUNFA": "項目清單 - iSunFA",
     "NAME_YOUR_PROJECT": "為您的專案命名",
     "ENTER_NEW_PROJECT_NAME": "輸入新項目名稱",
-    "OVERALL": "全部",
-    "PROJECT AB": "專案 AB",
-    "PROJECT BN": "專案 BN",
-    "PROJECT CQ": "專案 CQ",
-    "PROJECT DR": "專案 DR",
-    "PROJECT ES": "專案 ES",
-    "PROJECT FT": "專案 FT",
-    "PROJECT GU": "專案 GU",
-    "PROJECT IW": "專案 IW",
-    "PROJECT JX": "專案 JX",
-    "PROJECT KI": "專案 KI"
+    "OVERALL": "全部"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -481,7 +465,8 @@
     "FAILED_TO_GET": "無法獲得",
     "REPORT": "報告: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "無法取得待處理的報告。錯誤代碼：",
-    "USING_DUMMY_DATA": "使用虛擬數據"
+    "USING_DUMMY_DATA": "使用虛擬數據",
+    "SELECTED": "已選擇"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",
@@ -509,7 +494,7 @@
     "DEPRECIATION_METHOD": "折舊方法",
     "STRAIGHT_LINE": "直線折舊法",
     "DOUBLE_DECLINING": "雙倍餘額遞減法",
-    "UNITS_OF_PRODUCTION": "生產單位",
+    "UNITS_OF_PRODUCTION": "工作量法",
     "ESTIMATED_USEFUL_LIFE": "預計使用壽命",
     "YEAR": "年",
     "MONTH": "月",

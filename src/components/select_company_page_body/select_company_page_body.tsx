@@ -128,7 +128,9 @@ const SelectCompanyPageBody = () => {
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
             {companyAndRole.company.name}
           </p>
-          <p className="text-xs text-lightGray5">{companyAndRole.role.name}</p>
+          <p className="text-xs text-lightGray5">
+            {t(`ROLE.${companyAndRole.role.name.toUpperCase().replace(/ /g, '_')}`)}
+          </p>
         </button>
       );
     })

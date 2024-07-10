@@ -84,7 +84,8 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
       <div
         className={`absolute -right-4 rounded-xs ${stageColor} ${stage === ProjectStage.ARCHIVED ? 'text-lightGray4' : 'text-badge-text-invert'} py-4px pl-12px pr-28px text-xs`}
       >
-        {stage}
+        {/* {stage} */}
+        {t(`STAGE_NAME_MAP.${stage.toUpperCase().replace(/ /g, '_')}`)}
       </div>
     </Link>
   );

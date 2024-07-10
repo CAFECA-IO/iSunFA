@@ -404,13 +404,7 @@
     "BANK_OF_TAIWAN": "004 Bank of Taiwan",
     "LAND_BANK_OF_TAIWAN": "005 Land Bank of Taiwan",
     "TAIWAN_COOPERATIVE_BANK": "006 Taiwan Cooperative Bank",
-    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank",
-    "PROJECT_A": "Project A",
-    "PROJECT_B": "Project B",
-    "PROJECT_C": "Project C",
-    "CONTRACT_A": "Contract A",
-    "CONTRACT_B": "Contract B",
-    "CONTRACT_C": "Contract C"
+    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -453,17 +447,7 @@
     "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
     "NAME_YOUR_PROJECT": "Name your project",
     "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
-    "OVERALL": "Overall",
-    "PROJECT AB": "Project AB",
-    "PROJECT BN": "Project BN",
-    "PROJECT CQ": "Project CQ",
-    "PROJECT DR": "Project DR",
-    "PROJECT ES": "Project ES",
-    "PROJECT FT": "Project FT",
-    "PROJECT GU": "Project GU",
-    "PROJECT IW": "Project IW",
-    "PROJECT JX": "Project JX",
-    "PROJECT KI": "Project KI"
+    "OVERALL": "Overall"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -484,7 +468,8 @@
     "FAILED_TO_GET": "Failed to get",
     "REPORT": "report: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "Failed to fetch pending reports. Error code: ",
-    "USING_DUMMY_DATA": "USING DUMMY DATA"
+    "USING_DUMMY_DATA": "USING DUMMY DATA",
+    "SELECTED": "selected"
   },
 
   "SELECT_COMPANY": {
