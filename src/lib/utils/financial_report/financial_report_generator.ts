@@ -7,13 +7,13 @@ import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
 
 export default abstract class FinancialReportGenerator {
-    private companyId: number;
+    protected companyId: number;
 
-    private startDateInSecond: number;
+    protected startDateInSecond: number;
 
-    private endDateInSecond: number;
+    protected endDateInSecond: number;
 
-    private accountSheetType: AccountSheetType;
+    protected accountSheetType: AccountSheetType;
 
     constructor(
         companyId: number,
@@ -27,7 +27,7 @@ export default abstract class FinancialReportGenerator {
         this.accountSheetType = accountSheetType;
     }
 
-    private async buildAccountForestFromDB(accountType: AccountType) {
+    protected async buildAccountForestFromDB(accountType: AccountType) {
       const onlyForUser = false;
       const page = 1;
       const limit = Number.MAX_SAFE_INTEGER;
@@ -46,7 +46,7 @@ export default abstract class FinancialReportGenerator {
       return forest;
     }
 
-    private async getAccountForestByAccountSheet() {
+    protected async getAccountForestByAccountSheet() {
       const accountTypes = AccountSheetAccountTypeMap[this.accountSheetType];
       const forestArray = await Promise.all(
         accountTypes.map((type) => this.buildAccountForestFromDB(type))
@@ -56,7 +56,7 @@ export default abstract class FinancialReportGenerator {
       return forest;
     }
 
-    private async getAllLineItemsByAccountSheet(accountSheetType?: AccountSheetType) {
+    protected async getAllLineItemsByAccountSheet(accountSheetType?: AccountSheetType) {
       const accountSheetTypeForQuery = accountSheetType || this.accountSheetType;
       const accountTypes = AccountSheetAccountTypeMap[accountSheetTypeForQuery];
       const lineItemsFromDBArray = await Promise.all(
@@ -67,6 +67,6 @@ export default abstract class FinancialReportGenerator {
       return lineItemsFromDB;
     }
 
-    public abstract generateFinancialReportTree(): IAccountNode[];
-    public abstract generateFinancialReportArray(): IAccountForSheetDisplay[];
+    public abstract generateFinancialReportTree(): Promise<IAccountNode[]>;
+    public abstract generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]>;
 }
