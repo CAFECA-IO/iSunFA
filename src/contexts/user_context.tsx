@@ -168,9 +168,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (invitation) {
-        signUpAPI({ body: { registration, challenge: newChallenge }, query: { invitation } });
+        signUpAPI({ body: { registration }, query: { invitation } });
       } else {
-        signUpAPI({ body: { registration, challenge: newChallenge } });
+        signUpAPI({ body: { registration } });
       }
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
@@ -203,9 +203,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (invitation) {
-        signInAPI({ body: { authentication, challenge: newChallenge }, query: { invitation } });
+        signInAPI({ body: { authentication }, query: { invitation } });
       } else {
-        signInAPI({ body: { authentication, challenge: newChallenge } });
+        signInAPI({ body: { authentication } });
       }
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)

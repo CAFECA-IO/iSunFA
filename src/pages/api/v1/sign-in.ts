@@ -50,10 +50,9 @@ async function authenticateUser(
 async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
-  const { authentication, challenge } = req.body;
+  const { authentication } = req.body;
   const session = await getSession(req, res);
-  // Todo (20240710 - Jacky) Dear Emily: should use this challenge after use getChallenge API
-  // const { challenge } = session;
+  const { challenge } = session;
   const user = await authenticateUser(authentication, challenge);
   if (!user) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;

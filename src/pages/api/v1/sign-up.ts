@@ -56,10 +56,9 @@ async function registerUser(
 async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
-  const { registration, challenge } = req.body;
+  const { registration } = req.body;
   const session = await getSession(req, res);
-  // Todo (20240710 - Jacky) Dear Emily: should use this challenge after use getChallenge API
-  // const { challenge } = session;
+  const { challenge } = session;
   const registrationParsed = await registerUser(registration, challenge);
   if (!registrationParsed) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
