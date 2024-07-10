@@ -77,6 +77,9 @@ interface IAccountingContext {
   ) => void;
   clearVoucherHandler: () => void;
 
+  changeVoucherCreditHandler: (index: number, value: number | null) => void;
+  changeVoucherDebitHandler: (index: number, value: number | null) => void;
+
   totalDebit: number;
   totalCredit: number;
 
@@ -91,30 +94,33 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => { },
+  updateOCRListHandler: () => {},
   accountList: [],
-  getAIStatusHandler: () => { },
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => { },
+  selectOCRHandler: () => {},
   selectedJournal: undefined,
-  selectJournalHandler: () => { },
+  selectJournalHandler: () => {},
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   // accountingVoucher: [defaultAccountingVoucher],
   accountingVoucher: [],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAccountHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  clearVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  clearVoucherHandler: () => {},
+
+  changeVoucherCreditHandler: () => {},
+  changeVoucherDebitHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
@@ -306,10 +312,36 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       setAccountingVoucher((prev) => {
         const newVoucher = [...prev]; // Info: (20240430 - Julian) 複製現有的傳票
         const newStr = value || ''; // Info: (20240430 - Julian) 若 value 為 undefined 則預設為空字串
-        const targetId = prev.findIndex((voucher) => voucher.id === index); // Info: (20240430 - Julian) 找到要寫入的傳票 id
+        const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index; // Info: (20240430 - Julian) 找到要寫入的傳票 id
         if (type === VoucherString.PARTICULARS) {
           newVoucher[targetId].particulars = newStr; // Info: (20240430 - Julian) 寫入新的 particulars 值
         }
+        return newVoucher;
+      });
+    },
+    [accountingVoucher]
+  );
+
+  const changeVoucherCreditHandler = useCallback(
+    (index: number, value: number | null) => {
+      setAccountingVoucher((prev) => {
+        const newVoucher = [...prev];
+        const newAmount = value || 0;
+        const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index;
+        newVoucher[targetId].credit = newAmount;
+        return newVoucher;
+      });
+    },
+    [accountingVoucher]
+  );
+
+  const changeVoucherDebitHandler = useCallback(
+    (index: number, value: number | null) => {
+      setAccountingVoucher((prev) => {
+        const newVoucher = [...prev];
+        const newAmount = value || 0;
+        const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index;
+        newVoucher[targetId].debit = newAmount;
         return newVoucher;
       });
     },
@@ -442,6 +474,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       totalDebit,
       totalCredit,
 
+      changeVoucherCreditHandler,
+      changeVoucherDebitHandler,
+
       invoiceId,
       setInvoiceIdHandler,
       voucherId,
@@ -478,6 +513,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectOCRHandler,
       selectedJournal,
       selectJournalHandler,
+
+      changeVoucherCreditHandler,
+      changeVoucherDebitHandler,
     ]
   );
 

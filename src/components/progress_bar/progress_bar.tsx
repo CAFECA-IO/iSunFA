@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import NumericInput from '@/components/numeric_input/numeric_input';
 
 interface IProgressBarProps {
   progressRate: number;
-  progressRateChangeHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setProgressRate: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const ProgressBar = ({ progressRate, progressRateChangeHandler }: IProgressBarProps) => {
+const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
   const { t } = useTranslation('common');
+
   useEffect(() => {
     // Info: (20240509 - Julian) 找到 sliderProgress 的 style element
     const styleElement = document.getElementById('sliderStyle');
@@ -34,14 +36,26 @@ const ProgressBar = ({ progressRate, progressRateChangeHandler }: IProgressBarPr
     }
   }, [progressRate]);
 
+  // Info: (20240509 - Julian) 進度條變更事件
+  const progressRateChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = Number(e.target.value);
+    if (!Number.isNaN(input)) {
+      // Info: (20240425 - Julian) 限制輸入範圍 0 ~ 100
+      if (input <= 100 && input >= 0) {
+        setProgressRate(input);
+      }
+    }
+  };
+
   return (
     <div className="flex w-full flex-col items-start gap-8px">
       <p className="text-sm font-semibold text-navyBlue2">{t('COMMON.PROGRESS')}</p>
       <div className="flex w-full flex-col gap-x-20px gap-y-10px md:flex-row">
         {/* Info: (20240502 - Julian) Progress Bar */}
         <input
+          id="slider-progress"
+          name="slider-progress"
           type="range"
-          id="sliderProgress"
           min={0}
           max={100}
           step={1}
@@ -53,11 +67,11 @@ const ProgressBar = ({ progressRate, progressRateChangeHandler }: IProgressBarPr
         <div
           className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
         >
-          <input
-            id="inputProgressRate"
-            type="number"
-            name="inputProgressRate"
+          <NumericInput
+            id="input-progress-rate"
+            name="input-progress-rate"
             value={progressRate}
+            setValue={setProgressRate}
             onChange={progressRateChangeHandler}
             min={0}
             max={100}
