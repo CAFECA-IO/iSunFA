@@ -142,7 +142,7 @@ const MyReportsSection = () => {
 
   useEffect(() => {
     fetchGeneratedReports();
-  }, [historyCurrentPage, historyCurrentPage, searchHistoryQuery]);
+  }, [filteredHistorySort, historyCurrentPage, searchHistoryQuery]);
 
   const {
     targetRef: pendingSortMenuRef,
