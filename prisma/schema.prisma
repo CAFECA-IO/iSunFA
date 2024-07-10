@@ -8,54 +8,52 @@ datasource db {
 }
 
 model Account {
-  id         Int     @id @default(autoincrement())
-  companyId  Int     @default(0) @map("company_id")
-  system     String // ex "IFRS" 
-  type       String // ex "Asset"
-  debit      Boolean // true: debit, false: credit
+  id         Int        @id @default(autoincrement())
+  companyId  Int        @default(0) @map("company_id")
+  system     String
+  type       String
+  debit      Boolean
   liquidity  Boolean
-  code       String  @unique
-  name       String // empty if is not sub account
-  forUser    Boolean @map("for_user") // is account the last layer of account tree
-  parentCode String  @map("parent_code")
-  rootCode   String  @map("root_code")
-  createdAt  Int     @map("created_at")
-  updatedAt  Int     @map("updated_at")
-  level      Int     @default(0)
-  deletedAt  Int?    @map("deleted_at")
-
-  company  Company    @relation(fields: [companyId], references: [id])
-  parent   Account    @relation("Parent", fields: [parentCode], references: [code])
-  root     Account    @relation("Root", fields: [rootCode], references: [code])
-  child    Account[]  @relation("Parent")
-  leaf     Account[]  @relation("Root")
-  lineItem LineItem[]
+  code       String     @unique
+  name       String
+  forUser    Boolean    @map("for_user")
+  level      Int        @default(0)
+  parentCode String     @map("parent_code")
+  rootCode   String     @map("root_code")
+  createdAt  Int        @map("created_at")
+  updatedAt  Int        @map("updated_at")
+  deletedAt  Int?       @map("deleted_at")
+  company    Company    @relation(fields: [companyId], references: [id])
+  parent     Account    @relation("Parent", fields: [parentCode], references: [code])
+  child      Account[]  @relation("Parent")
+  root       Account    @relation("Root", fields: [rootCode], references: [code])
+  leaf       Account[]  @relation("Root")
+  lineItem   LineItem[]
 
   @@map("account")
 }
 
 model Asset {
-  id                 Int    @id @default(autoincrement())
-  voucherId          Int    @map("voucher_id")
-  projectId          Int?    @map("project_id")
-  contractId         Int?    @map("contract_id")
+  id                 Int       @id @default(autoincrement())
+  voucherId          Int       @map("voucher_id")
+  projectId          Int?      @map("project_id")
+  contractId         Int?      @map("contract_id")
   name               String
   label              String
   type               String
   description        String
   supplier           String
-  startDate          String @map("start_date")
-  endDate            String @map("end_date")
+  startDate          String    @map("start_date")
+  endDate            String    @map("end_date")
   price              String
-  residualValue      String @map("residual_value")
-  estimateUsefulLife String @map("estimate_useful_life")
-  depreciationMethod String @map("depreciation_method")
-  createdAt          Int    @map("created_at")
-  updatedAt          Int    @map("updated_at")
-
-  contract Contract? @relation(fields: [contractId], references: [id])
-  project  Project?  @relation(fields: [projectId], references: [id])
-  voucher  Voucher  @relation(fields: [voucherId], references: [id])
+  residualValue      String    @map("residual_value")
+  estimateUsefulLife String    @map("estimate_useful_life")
+  depreciationMethod String    @map("depreciation_method")
+  createdAt          Int       @map("created_at")
+  updatedAt          Int       @map("updated_at")
+  contract           Contract? @relation(fields: [contractId], references: [id])
+  project            Project?  @relation(fields: [projectId], references: [id])
+  voucher            Voucher   @relation(fields: [voucherId], references: [id])
 
   @@map("asset")
 }
@@ -106,32 +104,31 @@ model Client {
 }
 
 model Company {
-  id        Int     @id @default(autoincrement())
-  name      String
-  code      String  @unique
-  regional  String
-  kycStatus Boolean @map("kyc_status")
-  imageId   String? @map("image_id")
-  startDate Int     @map("start_date")
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-
+  id              Int              @id @default(autoincrement())
+  name            String
+  code            String           @unique
+  regional        String
+  kycStatus       Boolean          @map("kyc_status")
+  imageId         String?          @map("image_id")
+  startDate       Int              @map("start_date")
+  createdAt       Int              @map("created_at")
+  updatedAt       Int              @map("updated_at")
+  accounts        Account[]
   admins          Admin[]
+  auditReports    AuditReport[]
   clients         Client[]
+  companyKYCs     CompanyKYC[]
+  companySettings CompanySetting[]
   contracts       Contract[]
   departments     Department[]
   employees       Employee[]
+  incomeExpenses  IncomeExpense[]
   invitations     Invitation[]
   journals        Journal[]
-  orders          Order[]
   ocrs            Ocr[]
+  orders          Order[]
   projects        Project[]
   subscriptions   Subscription[]
-  auditReports    AuditReport[]
-  companyKYCs     CompanyKYC[]
-  companySettings CompanySetting[]
-  incomeExpenses  IncomeExpense[]
-  accounts        Account[]
 
   @@map("company")
 }
@@ -179,34 +176,32 @@ model CompanySetting {
 }
 
 model Contract {
-  id                Int     @id @default(autoincrement())
-  fileUrl           String  @map("file_url")
-  projectId         Int?    @map("project_id")
-  companyId         Int     @map("company_id")
+  id                Int      @id @default(autoincrement())
+  fileUrl           String   @map("file_url")
+  projectId         Int?     @map("project_id")
+  companyId         Int      @map("company_id")
   name              String
   signatory         String
-  signatoryDate     Int     @map("signatory_date")
+  signatoryDate     Int      @map("signatory_date")
   status            String
-  paymentId         Int     @unique @map("payment_id")
-  hasContractDate   Boolean @map("has_contract_date")
-  contractStartDate Int?    @map("contract_start_date")
-  contractEndDate   Int?    @map("contract_end_date")
-  hasDeadlineDate   Boolean @map("has_deadline_date")
-  deadlineDate      Int?    @map("deadline_date")
-  hasWarrantyDate   Boolean @map("has_warranty_date")
-  warrantyStartDate Int?    @map("warranty_start_date")
-  warrantyEndDate   Int?    @map("warranty_end_date")
-  serviceType       String  @map("service_type")
-  estimatedCost     Int?    @map("estimated_cost")
-  createdAt         Int     @map("created_at")
-  updatedAt         Int     @map("updated_at")
-
-  assets  Asset[]
-  journal Journal[]
-
-  company Company  @relation(fields: [companyId], references: [id])
-  project Project? @relation(fields: [projectId], references: [id])
-  payment Payment  @relation(fields: [paymentId], references: [id])
+  paymentId         Int      @unique @map("payment_id")
+  hasContractDate   Boolean  @map("has_contract_date")
+  contractStartDate Int?     @map("contract_start_date")
+  contractEndDate   Int?     @map("contract_end_date")
+  hasDeadlineDate   Boolean  @map("has_deadline_date")
+  deadlineDate      Int?     @map("deadline_date")
+  hasWarrantyDate   Boolean  @map("has_warranty_date")
+  warrantyStartDate Int?     @map("warranty_start_date")
+  warrantyEndDate   Int?     @map("warranty_end_date")
+  serviceType       String   @map("service_type")
+  estimatedCost     Int?     @map("estimated_cost")
+  createdAt         Int      @map("created_at")
+  updatedAt         Int      @map("updated_at")
+  assets            Asset[]
+  company           Company  @relation(fields: [companyId], references: [id])
+  payment           Payment  @relation(fields: [paymentId], references: [id])
+  project           Project? @relation(fields: [projectId], references: [id])
+  journal           Journal?
 
   @@map("contract")
 }
@@ -273,8 +268,8 @@ model Invoice {
   imageUrl         String  @default("") @map("image_url")
   createdAt        Int     @map("created_at")
   updatedAt        Int     @map("updated_at")
-  payment          Payment @relation(fields: [paymentId], references: [id])
   journal          Journal @relation(fields: [journalId], references: [id])
+  payment          Payment @relation(fields: [paymentId], references: [id])
 
   @@map("invoice")
 }
@@ -313,22 +308,20 @@ model IncomeExpense {
 }
 
 model Journal {
-  id            Int     @id @default(autoincrement())
-  tokenContract String? @map("token_contract")
-  tokenId       String? @map("token_id")
-  aichResultId  String? @unique @map("aich_result_id")
-  projectId     Int?    @unique @map("project_id")
-  contractId    Int?    @unique @map("contract_id")
-  companyId     Int     @map("company_id")
-  createdAt     Int     @map("created_at")
-  updatedAt     Int     @map("updated_at")
-
-  invoice Invoice?
-  voucher Voucher?
-
-  company  Company   @relation(fields: [companyId], references: [id])
-  contract Contract? @relation(fields: [contractId], references: [id])
-  project  Project?  @relation(fields: [projectId], references: [id])
+  id            Int       @id @default(autoincrement())
+  tokenContract String?   @map("token_contract")
+  tokenId       String?   @map("token_id")
+  aichResultId  String?   @unique @map("aich_result_id")
+  projectId     Int?      @unique @map("project_id")
+  contractId    Int?      @unique @map("contract_id")
+  companyId     Int       @map("company_id")
+  createdAt     Int       @map("created_at")
+  updatedAt     Int       @map("updated_at")
+  invoice       Invoice?
+  company       Company   @relation(fields: [companyId], references: [id])
+  contract      Contract? @relation(fields: [contractId], references: [id])
+  project       Project?  @relation(fields: [projectId], references: [id])
+  voucher       Voucher?
 
   @@map("journal")
 }
@@ -362,32 +355,30 @@ model Milestone {
 }
 
 model Ocr {
-  id           Int    @id @default(autoincrement())
-  aichResultId String @unique @map("aich_result_id")
-  companyId    Int    @map("company_id")
-  imageName    String @map("image_name")
-  imageUrl     String @map("image_url")
-  imageSize    Float  @map("image_size")
+  id           Int     @id @default(autoincrement())
+  aichResultId String  @unique @map("aich_result_id")
+  companyId    Int     @map("company_id")
+  imageName    String  @map("image_name")
+  imageUrl     String  @map("image_url")
+  imageSize    Float   @map("image_size")
   status       String
-  type         String // Info (20240626 - Jacky) ex: "invoice", "contract"
-  createdAt    Int    @map("created_at")
-  updatedAt    Int    @map("updated_at")
-
-  company Company @relation(fields: [companyId], references: [id])
+  type         String
+  createdAt    Int     @map("created_at")
+  updatedAt    Int     @map("updated_at")
+  company      Company @relation(fields: [companyId], references: [id])
 
   @@map("ocr")
 }
 
 model Order {
-  id        Int     @id @default(autoincrement())
-  companyId Int     @map("company_id")
-  planId    Int     @map("plan_id")
-  status    String
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  company   Company @relation(fields: [companyId], references: [id])
-  plan      Plan    @relation(fields: [planId], references: [id])
-
+  id             Int             @id @default(autoincrement())
+  companyId      Int             @map("company_id")
+  planId         Int             @map("plan_id")
+  status         String
+  createdAt      Int             @map("created_at")
+  updatedAt      Int             @map("updated_at")
+  company        Company         @relation(fields: [companyId], references: [id])
+  plan           Plan            @relation(fields: [planId], references: [id])
   paymentRecords PaymentRecord[]
 
   @@map("order")
@@ -404,15 +395,14 @@ model Project {
   updatedAt        Int               @map("updated_at")
   assets           Asset[]
   contracts        Contract[]
-  journals         Journal[]
+  employeeProjects EmployeeProject[]
+  income_expenses  IncomeExpense[]
+  journals         Journal?
   milestones       Milestone[]
+  company          Company           @relation(fields: [companyId], references: [id])
   report           Report[]
   sales            Sale[]
   value            Value?
-  employeeProjects EmployeeProject[]
-  income_expenses  IncomeExpense[]
-
-  company Company @relation(fields: [companyId], references: [id])
 
   @@map("project")
 }
@@ -433,8 +423,8 @@ model Payment {
   progress          Int
   createdAt         Int       @map("created_at")
   updatedAt         Int       @map("updated_at")
-  invoice           Invoice?
   contract          Contract?
+  invoice           Invoice?
 
   @@map("payment")
 }
@@ -442,30 +432,27 @@ model Payment {
 model PaymentRecord {
   id            Int    @id @default(autoincrement())
   orderId       Int    @map("order_id")
-  // Info: Third party payment transaction id (20240604 - Jacky)
   transactionId String @map("transaction_id")
   date          Int
   description   String
   amount        Int
   method        String
-  status        String // completed、failed、pending
+  status        String
   createdAt     Int    @map("created_at")
   updatedAt     Int    @map("updated_at")
-
-  order Order @relation(fields: [orderId], references: [id])
+  order         Order  @relation(fields: [orderId], references: [id])
 
   @@map("payment_record")
 }
 
 model Plan {
-  id          Int    @id @default(autoincrement())
-  name        String @unique
-  description String
-  monthlyFee  Int    @map("monthly_fee")
-  annualFee   Int    @map("annual_fee")
-  createdAt   Int    @map("created_at")
-  updatedAt   Int    @map("updated_at")
-
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  description   String
+  monthlyFee    Int            @map("monthly_fee")
+  annualFee     Int            @map("annual_fee")
+  createdAt     Int            @map("created_at")
+  updatedAt     Int            @map("updated_at")
   orders        Order[]
   subscriptions Subscription[]
 
@@ -503,8 +490,8 @@ model Report {
   evidenceId             String?       @map("evidence_id")
   createdAt              Int           @map("created_at")
   updatedAt              Int           @map("updated_at")
-  project                Project?      @relation(fields: [projectId], references: [id])
   auditReports           AuditReport[]
+  project                Project?      @relation(fields: [projectId], references: [id])
 
   @@map("report")
 }
@@ -585,16 +572,14 @@ model User {
 }
 
 model Voucher {
-  id        Int    @id @default(autoincrement())
-  journalId Int    @unique @map("journal_id")
+  id        Int        @id @default(autoincrement())
+  journalId Int        @unique @map("journal_id")
   no        String
-  createdAt Int    @map("created_at")
-  updatedAt Int    @map("updated_at")
-
+  createdAt Int        @map("created_at")
+  updatedAt Int        @map("updated_at")
   assets    Asset[]
   lineItems LineItem[]
-
-  journal Journal @relation(fields: [journalId], references: [id])
+  journal   Journal    @relation(fields: [journalId], references: [id])
 
   @@map("voucher")
 }

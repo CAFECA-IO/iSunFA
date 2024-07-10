@@ -33,61 +33,69 @@ const useAPIWorker = <Data>(
     setIsLoading(false);
   };
 
-  const fetchData = useCallback((input?: IAPIInput) => {
-    const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
-      type: 'module',
-    });
-    const requestId = apiConfig.name;
-    requestIdRef.current = requestId;
+  const trigger = useCallback(
+    async (input?: IAPIInput): Promise<Data | undefined> => {
+      return new Promise((resolve, reject) => {
+        const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
+          type: 'module',
+        });
+        const requestId = apiConfig.name;
+        requestIdRef.current = requestId;
 
-    setIsLoading(true);
-    setSuccess(undefined);
-    setCode(undefined);
-    setError(null);
-    setData(undefined);
+        setIsLoading(true);
+        setSuccess(undefined);
+        setCode(undefined);
+        setError(null);
+        setData(undefined);
 
-    worker.postMessage({
-      apiConfig,
-      options: {
-        ...options,
-        header: input?.header || options.header,
-        params: input?.params || options.params,
-        query: input?.query || options.query,
-        body: input?.body || options.body,
-      },
-      action: cancel ? Action.CANCEL : undefined,
-    });
+        worker.postMessage({
+          apiConfig,
+          options: {
+            ...options,
+            header: input?.header || options.header,
+            params: input?.params || options.params,
+            query: input?.query || options.query,
+            body: input?.body || options.body,
+          },
+          action: cancel ? Action.CANCEL : undefined,
+        });
 
-    const handleMessage = (event: MessageEvent) => {
-      handleResponse(event.data);
-    };
+        const handleMessage = (event: MessageEvent) => {
+          handleResponse(event.data);
+          resolve(event.data.data.payload as Data); // Resolve the promise with the data
+          worker.removeEventListener(Action.MESSAGE, handleMessage);
+          worker.terminate();
+        };
 
-    worker.addEventListener(Action.MESSAGE, handleMessage);
-    worker.onerror = (e: ErrorEvent) => {
-      setError(e instanceof Error ? e : new Error('An error occurred'));
-      setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
-      setSuccess(false);
-      setIsLoading(false);
-    };
-
-    // Info: Cleanup function (20240504 - tzuhan)
-    return () => {
-      worker.removeEventListener(Action.MESSAGE, handleMessage);
-      worker.terminate();
-    };
-  }, []);
+        worker.addEventListener(Action.MESSAGE, handleMessage);
+        worker.onerror = (e: ErrorEvent) => {
+          setError(e instanceof Error ? e : new Error('An error occurred'));
+          setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
+          setSuccess(false);
+          setIsLoading(false);
+          reject(e); // Reject the promise with the error
+          worker.terminate();
+        };
+      });
+    },
+    [apiConfig, options, cancel]
+  );
 
   useEffect(() => {
     if (controllerRef.current && cancel) {
       controllerRef.current.abort();
     }
     controllerRef.current = new AbortController();
-    const cleanup = triggerImmediately ? fetchData() : () => {};
-    return cleanup;
+    const cleanup = triggerImmediately ? trigger() : () => {};
+    return () => {
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, [apiConfig.name, options.params, cancel, triggerImmediately]);
 
   return {
-    trigger: fetchData,
+    trigger,
     success,
     code,
     isLoading,

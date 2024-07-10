@@ -79,8 +79,8 @@ const useAPI = <Data>(
     setError(e);
   }, []);
 
-  const fetchDataCallback = useCallback(
-    async (input?: IAPIInput, signal?: AbortSignal) => {
+  const trigger = useCallback(
+    async (input?: IAPIInput, signal?: AbortSignal): Promise<Data | undefined> => {
       setIsLoading(true);
       setSuccess(undefined);
       setCode(undefined);
@@ -98,28 +98,31 @@ const useAPI = <Data>(
           },
           signal
         );
+
+        // eslint-disable-next-line no-console
+        console.log(`response.payload:`, response.payload, `response:`, response);
+
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
+        return response.payload as Data;
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
-        // Deprecated: debug log (20240523 - Tzuahan)
-        // eslint-disable-next-line no-console
-        console.log(`setCode: ${setCode}`, e);
         setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
+        return undefined;
       } finally {
         setIsLoading(false);
       }
     },
-    [apiConfig.name, options, handleError]
+    [apiConfig, options, handleError]
   );
 
   useEffect(() => {
     const controller = new AbortController();
 
     if (triggerImmediately) {
-      fetchDataCallback(undefined, cancel ? controller.signal : undefined);
+      trigger(undefined, cancel ? controller.signal : undefined);
     }
 
     return () => {
@@ -128,7 +131,7 @@ const useAPI = <Data>(
   }, [apiConfig.name, cancel, triggerImmediately]);
 
   return {
-    trigger: fetchDataCallback,
+    trigger,
     success,
     code,
     isLoading,
