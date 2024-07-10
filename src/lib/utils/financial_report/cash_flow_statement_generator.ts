@@ -39,7 +39,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     level: number,
     node: IOperatingCashFlowMapping
   ): Map<string, IAccountForSheetDisplay> {
-    // DFS
+    // Info: (20240710 - Murky) DFS
     let childMap = new Map<string, IAccountForSheetDisplay>();
     node.child?.forEach((value, key) => {
         const childAccountForSheet = this.generateIndirectOperatingCashFlowRecursive(referenceMap, key, level + 1, value);
