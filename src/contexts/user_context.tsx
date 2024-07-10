@@ -3,7 +3,7 @@ import useStateRef from 'react-usestateref';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
-import { createChallenge } from '@/lib/utils/authorization';
+// import { createChallenge } from '@/lib/utils/authorization';
 import { FIDO2_USER_HANDLE } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -87,6 +87,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
+  const { trigger: createChallengeAPI } = APIHandler<string>(
+    APIName.CREATE_CHALLENGE,
+    {
+      header: { 'Content-Type': 'application/json' },
+    },
+    false,
+    false
+  );
+
   const {
     trigger: signInAPI,
     data: signInData,
@@ -141,7 +150,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsSignInError(false);
 
-      const newChallenge = await createChallenge();
+      const { data: newChallenge, success, code } = await createChallengeAPI();
+
+      if (!success || !newChallenge) {
+        setErrorCode(code);
+        return;
+      }
 
       const registration = await client.register(name, newChallenge, {
         authenticatorType: 'both',
@@ -175,8 +189,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsSignInError(false);
 
-      const newChallenge = await createChallenge();
+      const { data: newChallenge, success, code } = await createChallengeAPI();
 
+      if (!success || !newChallenge) {
+        setErrorCode(code);
+        return;
+      }
       const authentication: AuthenticationEncoded = await client.authenticate([], newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
