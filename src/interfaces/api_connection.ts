@@ -64,7 +64,15 @@ export type IAPIConfig = {
 
 export type IAPIResponse<Data> = {
   success: boolean | undefined;
-  trigger: (input?: IAPIInput, signal?: AbortSignal) => Promise<Data | undefined>;
+  trigger: (
+    input?: IAPIInput,
+    signal?: AbortSignal
+  ) => Promise<{
+    success: boolean;
+    data: Data | null;
+    code: string;
+    error: Error | null;
+  }>;
   isLoading: boolean | undefined;
   data: Data | undefined;
   code: string | undefined;

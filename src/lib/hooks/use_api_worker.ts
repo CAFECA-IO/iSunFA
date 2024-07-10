@@ -34,8 +34,15 @@ const useAPIWorker = <Data>(
   };
 
   const trigger = useCallback(
-    async (input?: IAPIInput): Promise<Data | undefined> => {
-      return new Promise((resolve, reject) => {
+    async (
+      input?: IAPIInput
+    ): Promise<{
+      success: boolean;
+      data: Data | null;
+      code: string;
+      error: Error | null;
+    }> => {
+      return new Promise((resolve) => {
         const worker = new Worker(new URL('../workers/worker.ts', import.meta.url), {
           type: 'module',
         });
@@ -62,7 +69,12 @@ const useAPIWorker = <Data>(
 
         const handleMessage = (event: MessageEvent) => {
           handleResponse(event.data);
-          resolve(event.data.data.payload as Data); // Resolve the promise with the data
+          resolve({
+            success: event.data.data.success,
+            data: event.data.data.payload as Data,
+            code: event.data.data.code,
+            error: null,
+          }); // Resolve the promise with the data
           worker.removeEventListener(Action.MESSAGE, handleMessage);
           worker.terminate();
         };
@@ -73,7 +85,12 @@ const useAPIWorker = <Data>(
           setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
           setSuccess(false);
           setIsLoading(false);
-          reject(e); // Reject the promise with the error
+          resolve({
+            success: false,
+            data: null,
+            code: STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR],
+            error: e instanceof Error ? e : new Error('An error occurred'),
+          }); // Resolve the promise with null
           worker.terminate();
         };
       });

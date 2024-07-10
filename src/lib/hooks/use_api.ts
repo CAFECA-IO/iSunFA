@@ -80,7 +80,15 @@ const useAPI = <Data>(
   }, []);
 
   const trigger = useCallback(
-    async (input?: IAPIInput, signal?: AbortSignal): Promise<Data | undefined> => {
+    async (
+      input?: IAPIInput,
+      signal?: AbortSignal
+    ): Promise<{
+      success: boolean;
+      data: Data | null;
+      code: string;
+      error: Error | null;
+    }> => {
       setIsLoading(true);
       setSuccess(undefined);
       setCode(undefined);
@@ -101,12 +109,22 @@ const useAPI = <Data>(
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
-        return response.payload as Data;
+        return {
+          success: response.success,
+          data: response.payload as Data,
+          code: response.code,
+          error: null,
+        };
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
         setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
-        return undefined;
+        return {
+          success: false,
+          data: null,
+          code: STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR],
+          error: e as Error,
+        };
       } finally {
         setIsLoading(false);
       }

@@ -150,9 +150,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsSignInError(false);
 
-      const newChallenge = await createChallengeAPI();
+      const { data: newChallenge, success, code } = await createChallengeAPI();
 
-      if (newChallenge === undefined) throw new Error('newChallenge is undefined');
+      if (!success || !newChallenge) {
+        setErrorCode(code);
+        return;
+      }
 
       const registration = await client.register(name, newChallenge, {
         authenticatorType: 'both',
@@ -186,10 +189,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsSignInError(false);
 
-      const newChallenge = await createChallengeAPI();
+      const { data: newChallenge, success, code } = await createChallengeAPI();
 
-      if (newChallenge === undefined) throw new Error('newChallenge is undefined');
-
+      if (!success || !newChallenge) {
+        setErrorCode(code);
+        return;
+      }
       const authentication: AuthenticationEncoded = await client.authenticate([], newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
