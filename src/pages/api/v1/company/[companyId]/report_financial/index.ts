@@ -15,7 +15,7 @@ import {
   convertStringToAccountSheetType,
   isAccountSheetType,
 } from '@/lib/utils/type_guard/account';
-import { getSumOfLineItemsGroupByAccountInPrisma } from '@/lib/utils/repo/line_item.repo';
+import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import {
   buildAccountForest,
   calculateIncomeStatementNetIncome,
@@ -94,7 +94,7 @@ export async function getAllLineItemsByAccountSheet(
 ) {
   const accountTypes = AccountSheetAccountTypeMap[accountSheet];
   const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map((type) => getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond))
+    accountTypes.map((type) => getLineItemsInPrisma(companyId, type, startDateInSecond, endDateInSecond))
   );
 
   const lineItemsFromDB = lineItemsFromDBArray.flat();
