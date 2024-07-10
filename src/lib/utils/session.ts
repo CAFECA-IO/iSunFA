@@ -12,13 +12,21 @@ const options = {
 
 export const getSession = nextSession<ISessionData>(options);
 
-export async function setSession(session: Session, userId?: number, companyId?: number) {
+export async function setSession(
+  session: Session,
+  userId?: number,
+  companyId?: number,
+  challenge?: string
+) {
   const updatedSession = session;
   if (userId) {
     updatedSession.userId = userId;
   }
   if (companyId) {
     updatedSession.companyId = companyId;
+  }
+  if (challenge) {
+    updatedSession.challenge = challenge;
   }
   return updatedSession;
 }
