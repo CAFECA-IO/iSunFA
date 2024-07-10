@@ -145,7 +145,6 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
             onClick={clickHandler}
           >
             {t(stageNameMap[stage])}
-            {/* {stage}test4 */}
           </button>
         );
       })}

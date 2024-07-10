@@ -73,7 +73,6 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             onClick={clickHandler}
           >
             {t(stageNameMap[stage])}
-            {/* {stage}test3 */}
           </button>
         );
       })}

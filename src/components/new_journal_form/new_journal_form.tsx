@@ -47,15 +47,15 @@ const ficSelection: string[] = [
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 const projectSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'JOURNAL.NONE' },
-  { id: 1, name: 'JOURNAL.PROJECT_A' },
-  { id: 2, name: 'JOURNAL.PROJECT_B' },
-  { id: 3, name: 'JOURNAL.PROJECT_C' },
+  { id: 1, name: 'Project A' },
+  { id: 2, name: 'Project B' },
+  { id: 3, name: 'Project C' },
 ];
 const contractSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'JOURNAL.NONE' },
-  { id: 1, name: 'JOURNAL.CONTRACT_A' },
-  { id: 2, name: 'JOURNAL.CONTRACT_B' },
-  { id: 3, name: 'JOURNAL.CONTRACT_C' },
+  { id: 1, name: 'Contract A' },
+  { id: 2, name: 'Contract B' },
+  { id: 3, name: 'Contract C' },
 ];
 
 const NewJournalForm = () => {
@@ -658,7 +658,8 @@ const NewJournalForm = () => {
       const selectionClickHandler = () => {
         setSelectedProject({
           id: project.id,
-          name: t(project.name),
+          // name: t(project.name),
+          name: project.id === null ? t(project.name) : project.name,
         });
       };
 
@@ -679,7 +680,8 @@ const NewJournalForm = () => {
       const selectionClickHandler = () => {
         setSelectedContract({
           id: contract.id,
-          name: t(contract.name),
+          // name: t(contract.name),
+          name: contract.id === null ? t(contract.name) : contract.name,
         });
       };
 

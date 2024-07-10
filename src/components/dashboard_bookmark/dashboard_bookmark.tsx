@@ -23,7 +23,7 @@ const bookmarkNameMap: BookmarkNameMap = {
   'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
   'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
   'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
-  'Hr Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
+  'HR Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
   'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
 };
 
@@ -105,7 +105,6 @@ const DashboardBookmark = () => {
               {bookmarkList[key].iconOnSection}
             </div>
             <div className="hidden text-lg font-normal leading-7 tracking-normal lg:inline">
-              {/* {bookmarkList[key].name} */}
               {t(bookmarkNameMap[bookmarkList[key].name])}
             </div>
           </Button>
