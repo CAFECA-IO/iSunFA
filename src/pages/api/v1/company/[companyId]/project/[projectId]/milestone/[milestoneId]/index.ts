@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkUserAdmin } from '@/lib/utils/auth_check';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IMilestone } from '@/interfaces/project';
 import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
@@ -20,7 +20,7 @@ async function checkInput(projectId: string, stage: string, startDate: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await isUserAdmin(userId, companyId);
+  const isAdmin = await checkUserAdmin({ userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {

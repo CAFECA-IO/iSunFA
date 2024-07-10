@@ -333,8 +333,7 @@ const ConfirmModal = ({
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span>
-        {t('JOURNAL.TWD')}
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> {t('JOURNAL.TAX')}
@@ -344,11 +343,13 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = (
+    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+  );
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const displayPeriod = <p className="font-semibold text-navyBlue2">{t(paymentPeriod)}</p>;
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  const displayStatus = <p className="font-semibold text-navyBlue2">{t(paymentStatus)}</p>;
 
   const projectName = project; // ToDo: (20240527 - Julian) Get project name from somewhere
   // Info: (20240430 - Julian) Get first letter of each word

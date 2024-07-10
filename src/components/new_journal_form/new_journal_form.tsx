@@ -22,6 +22,7 @@ import Toggle from '@/components/toggle/toggle';
 import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
+import NumericInput from '@/components/numeric_input/numeric_input';
 
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
@@ -195,9 +196,9 @@ const NewJournalForm = () => {
         );
         setProgressRate(invoice.payment.progress);
       }
-      // if (journal.voucher) {
-      //   confirmModalVisibilityHandler();
-      // }
+      if (selectedJournal.voucher) {
+        confirmModalVisibilityHandler();
+      }
     }
   }, [selectedJournal, selectedOCR]);
 
@@ -313,48 +314,9 @@ const NewJournalForm = () => {
   const vendorChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVendor(e.target.value);
   };
-  const totalPriceChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputTotalPrice(input);
-    }
-  };
-  const feeChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputFee(input);
-    }
-  };
+
   const accountNumberChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputAccountNumber(e.target.value);
-  };
-  const installmentChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputInstallment(input);
-    }
-  };
-  const partialPaidChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputPartialPaid(input);
-    }
-  };
-
-  const progressRateChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      // Info: (20240425 - Julian) 限制輸入範圍 0 ~ 100
-      if (input <= 100 && input >= 0) {
-        setProgressRate(input);
-      }
-    }
-  };
-  const estimatedCostChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputEstimatedCost(input);
-    }
   };
 
   // Info: (20240423 - Julian) 處理 toggle 開關
@@ -727,7 +689,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px md:w-130px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.EVENT_TYPE')}</p>
             <div
-              id="eventTypeMenu"
+              id="event-type-menu"
               onClick={eventMenuOpenHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
@@ -751,8 +713,8 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_REASON')}</p>
             <input
-              id="inputPaymentReason"
-              name="inputPaymentReason"
+              id="input-payment-reason"
+              name="input-payment-reason"
               type="text"
               placeholder={t('JOURNAL.WHY_YOU_PAY')}
               value={inputPaymentReason}
@@ -794,8 +756,8 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION')}</p>
             <input
-              id="inputDescription"
-              name="inputDescription"
+              id="input-description"
+              name="input-description"
               type="text"
               placeholder={t('JOURNAL.DESCRIPTION')}
               value={inputDescription}
@@ -809,8 +771,8 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.VENDOR_SUPPLIER')}</p>
             <input
-              id="inputVendor"
-              name="inputVendor"
+              id="input-vendor"
+              name="input-vendor"
               type="text"
               placeholder={t('JOURNAL.TO_WHOM')}
               value={inputVendor}
@@ -844,15 +806,14 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
             <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
-              <input
-                id="inputTotalPrice"
-                name="inputTotalPrice"
-                type="number"
+              <NumericInput
+                id="input-total-price"
+                name="input-total-price"
                 value={inputTotalPrice}
-                onChange={totalPriceChangeHandler}
+                setValue={setInputTotalPrice}
+                isDecimal
                 required
                 className="flex-1 bg-transparent px-10px outline-none"
-                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                 <Image
@@ -873,7 +834,7 @@ const NewJournalForm = () => {
             <div className="flex items-center gap-18px">
               <p>{t('JOURNAL.NO_SLASH_TAX')}</p>
               <Toggle
-                id="taxToggle"
+                id="tax-toggle"
                 initialToggleState={taxToggle}
                 getToggledState={taxToggleHandler}
                 toggleStateFromParent={taxToggle}
@@ -882,8 +843,8 @@ const NewJournalForm = () => {
 
             {/* Info: (20240424 - Julian) dropmenu */}
             <button
-              id="taxMenu"
-              name="taxMenu"
+              id="tax-menu"
+              name="tax-menu"
               type="button"
               onClick={taxMenuHandler}
               disabled={!taxToggle}
@@ -907,7 +868,7 @@ const NewJournalForm = () => {
             <div className="flex items-center gap-18px">
               <p>{t('JOURNAL.FEE')}</p>
               <Toggle
-                id="feeToggle"
+                id="fee-toggle"
                 initialToggleState={feeToggle}
                 getToggledState={feeToggleHandler}
                 toggleStateFromParent={feeToggle}
@@ -916,15 +877,14 @@ const NewJournalForm = () => {
             <div
               className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
             >
-              <input
-                id="feeInput"
-                name="feeInput"
-                type="number"
+              <NumericInput
+                id="fee-input"
+                name="fee-input"
                 disabled={!feeToggle}
                 value={inputFee}
-                onChange={feeChangeHandler}
+                setValue={setInputFee}
+                isDecimal
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
-                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
                 <Image
@@ -946,7 +906,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px md:w-200px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_METHOD')}</p>
             <div
-              id="paymentMethodMenu"
+              id="payment-method-menu"
               onClick={methodMenuHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
@@ -970,7 +930,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px md:w-300px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.BANK_ACCOUNT')}</p>
             <button
-              id="ficMenu"
+              id="fic-menu"
               type="button"
               onClick={bankAccountMenuHandler}
               disabled={!isAccountNumberVisible}
@@ -995,8 +955,8 @@ const NewJournalForm = () => {
           {/* Info: (20240424 - Julian) Bank Account */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <input
-              id="inputAccountNumber"
-              name="inputAccountNumber"
+              id="input-account-number"
+              name="input-account-number"
               type="text"
               placeholder={t('JOURNAL.ACCOUNT_NUMBER')}
               value={inputAccountNumber}
@@ -1018,11 +978,14 @@ const NewJournalForm = () => {
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-center">
               {/* Info: (20240424 - Julian) At Once */}
-              <label htmlFor="inputAtOnce" className="flex items-center gap-8px whitespace-nowrap">
+              <label
+                htmlFor="input-at-once"
+                className="flex items-center gap-8px whitespace-nowrap"
+              >
                 <input
                   type="radio"
-                  id="inputAtOnce"
-                  name="paymentPeriod"
+                  id="input-at-once"
+                  name="payment-period"
                   className={radioButtonStyle}
                   checked={paymentPeriod === PaymentPeriodType.AT_ONCE}
                   onChange={atOnceClickHandler}
@@ -1033,13 +996,13 @@ const NewJournalForm = () => {
               {/* Info: (20240424 - Julian) Installment */}
               <div className="flex w-full flex-1 flex-col items-start gap-8px md:flex-row md:items-center">
                 <label
-                  htmlFor="inputInstallment"
+                  htmlFor="input-installment"
                   className="flex w-full items-center gap-8px whitespace-nowrap"
                 >
                   <input
                     type="radio"
-                    id="inputInstallment"
-                    name="paymentPeriod"
+                    id="input-installment"
+                    name="payment-period"
                     className={radioButtonStyle}
                     checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
                     onChange={installmentClickHandler}
@@ -1050,12 +1013,11 @@ const NewJournalForm = () => {
                 <div
                   className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
-                  <input
-                    id="inputInstallmentTimes"
-                    type="number"
-                    name="inputInstallmentTimes"
+                  <NumericInput
+                    id="input-installment-times"
+                    name="input-installment-times"
                     value={inputInstallment}
-                    onChange={installmentChangeHandler}
+                    setValue={setInputInstallment}
                     disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
                     className="flex-1 bg-transparent px-10px outline-none"
                   />
@@ -1073,11 +1035,14 @@ const NewJournalForm = () => {
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label htmlFor="inputUnpaid" className=" flex items-center gap-8px whitespace-nowrap">
+              <label
+                htmlFor="input-unpaid"
+                className=" flex items-center gap-8px whitespace-nowrap"
+              >
                 <input
                   type="radio"
-                  id="inputUnpaid"
-                  name="paymentStatus"
+                  id="input-unpaid"
+                  name="payment-status"
                   className={radioButtonStyle}
                   checked={paymentStatus === PaymentStatusType.UNPAID}
                   onChange={unpaidClickHandler}
@@ -1087,13 +1052,13 @@ const NewJournalForm = () => {
               {/* Info: (20240424 - Julian) Partial Paid */}
               <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
                 <label
-                  htmlFor="inputPartialPaid"
+                  htmlFor="input-partial-paid"
                   className="flex items-center gap-8px whitespace-nowrap"
                 >
                   <input
                     type="radio"
-                    id="inputPartialPaid"
-                    name="paymentStatus"
+                    id="input-partial-paid"
+                    name="payment-status"
                     className={radioButtonStyle}
                     checked={paymentStatus === PaymentStatusType.PARTIAL}
                     onChange={partialPaidClickHandler}
@@ -1104,12 +1069,12 @@ const NewJournalForm = () => {
                 <div
                   className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
                 >
-                  <input
-                    id="inputPartialPaidAmount"
-                    type="number"
-                    name="inputPartialPaidAmount"
+                  <NumericInput
+                    id="input-partial-paid-amount"
+                    name="input-partial-paid-amount"
                     value={inputPartialPaid}
-                    onChange={partialPaidChangeHandler}
+                    setValue={setInputPartialPaid}
+                    isDecimal
                     disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
@@ -1126,11 +1091,11 @@ const NewJournalForm = () => {
                 </div>
               </div>
               {/* Info: (20240424 - Julian) Paid */}
-              <label htmlFor="inputPaid" className="flex items-center gap-8px whitespace-nowrap">
+              <label htmlFor="input-paid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
-                  id="inputPaid"
-                  name="paymentStatus"
+                  id="input-paid"
+                  name="payment-status"
                   className={radioButtonStyle}
                   checked={paymentStatus === PaymentStatusType.PAID}
                   onChange={paidClickHandler}
@@ -1148,22 +1113,19 @@ const NewJournalForm = () => {
     selectedEventType === EventType.INCOME ? (
       <div className="flex flex-col items-start gap-40px md:flex-row">
         {/* Info: (20240502 - Julian) Progress */}
-        <ProgressBar
-          progressRate={progressRate}
-          progressRateChangeHandler={progressRateChangeHandler}
-        />
+        <ProgressBar progressRate={progressRate} setProgressRate={setProgressRate} />
         {/* Info: (20240502 - Julian) Estimated Cost */}
         <div className="flex w-full flex-col items-start gap-8px">
           <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
           <div
             className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
           >
-            <input
-              id="inputEstimatedCost"
-              type="number"
-              name="inputEstimatedCost"
+            <NumericInput
+              id="input-estimated-cost"
+              name="input-estimated-cost"
               value={inputEstimatedCost}
-              onChange={estimatedCostChangeHandler}
+              setValue={setInputEstimatedCost}
+              isDecimal
               className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
             />
             <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1199,7 +1161,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-center gap-40px md:flex-row">
           {/* Info: (20240424 - Julian) Project */}
           <div
-            id="projectMenu"
+            id="project-menu"
             onClick={projectMenuHandler}
             className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
           >
@@ -1225,7 +1187,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240424 - Julian) Contract */}
           <div
-            id="contractMenu"
+            id="contract-menu"
             onClick={contractMenuHandler}
             className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
           >
@@ -1274,7 +1236,7 @@ const NewJournalForm = () => {
         {/* Info: (20240423 - Julian) Buttons */}
         <div className="ml-auto flex items-center gap-24px">
           <button
-            id="clearJournalFormBtn"
+            id="clear-journal-form-btn"
             type="button"
             onClick={clearAllClickHandler}
             className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
@@ -1282,7 +1244,7 @@ const NewJournalForm = () => {
             {t('JOURNAL.CLEAR_ALL')}
           </button>
           <Button
-            id="uploadBtn"
+            id="upload-btn"
             type="submit"
             className="px-16px py-8px"
             disabled={isUploadDisabled}

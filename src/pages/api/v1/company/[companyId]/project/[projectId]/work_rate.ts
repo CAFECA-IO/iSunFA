@@ -3,7 +3,7 @@ import { IWorkRate } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkAdmin, isUserAdmin } from '@/lib/utils/auth_check';
+import { checkAdmin, checkUserAdmin } from '@/lib/utils/auth_check';
 import { listWorkRate } from '@/lib/utils/repo/work_rate.repo';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { listEmployeeProject } from '@/lib/utils/repo/employee_project.repo';
@@ -19,7 +19,7 @@ async function checkInput(projectId: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await isUserAdmin(userId, companyId);
+  const isAdmin = await checkUserAdmin({ userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {

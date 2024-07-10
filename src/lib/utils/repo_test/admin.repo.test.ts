@@ -37,16 +37,17 @@ describe('Admin Repository Tests', () => {
     it('should return an admin by its ID', async () => {
       const admin = await getAdminById(testAdminId);
       expect(admin).toBeDefined();
-      expect(admin.companyId).toEqual(admins[0].companyId);
-      expect(admin.userId).toEqual(admins[0].userId);
-      expect(admin.roleId).toEqual(admins[0].roleId);
-      expect(admin.status).toEqual(admins[0].status);
-      expect(admin.startDate).toEqual(admins[0].startDate);
+      expect(admin!.companyId).toEqual(admins[0].companyId);
+      expect(admin!.userId).toEqual(admins[0].userId);
+      expect(admin!.roleId).toEqual(admins[0].roleId);
+      expect(admin!.status).toEqual(admins[0].status);
+      expect(admin!.startDate).toEqual(admins[0].startDate);
     });
 
     it('should throw an error if the admin is not found', async () => {
       const nonExistentAdminId = -1;
-      await expect(getAdminById(nonExistentAdminId)).rejects.toThrow();
+      const admin = await getAdminById(nonExistentAdminId);
+      expect(admin).toBeNull();
     });
   });
 
