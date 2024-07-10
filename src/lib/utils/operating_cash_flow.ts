@@ -1,3 +1,5 @@
+// Deprecated: (20240710 - Murky) 這個檔案已經不再使用，已經移動到src/lib/utils/financial_report/cash_flow_statement_generator.ts
+
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from "@/constants/operating_cash_flow";
 import { IOperatingCashFlowMapping } from "@/interfaces/cash_flow";
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
