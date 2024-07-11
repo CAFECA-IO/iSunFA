@@ -5,6 +5,7 @@ import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { AccountSheetAccountTypeMap, AccountSheetType, AccountType } from '@/constants/account';
 import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import { EitherPattern, VoucherPattern } from '@/interfaces/cash_flow';
 
 export default abstract class FinancialReportGenerator {
     protected companyId: number;
@@ -25,6 +26,26 @@ export default abstract class FinancialReportGenerator {
         this.startDateInSecond = startDateInSecond;
         this.endDateInSecond = endDateInSecond;
         this.accountSheetType = accountSheetType;
+    }
+
+    protected matchPattern(pattern: VoucherPattern, codes: Set<string>): boolean {
+      switch (pattern.type) {
+        case 'AND':
+          return pattern.patterns.every((p) => this.matchPattern(p, codes));
+        case 'OR':
+          return pattern.patterns.some((p) => this.matchPattern(p, codes));
+        case 'CODE':
+          return Array.from(pattern.codes).some((regex) => Array.from(codes).some((code) => regex.test(code)));
+        default:
+          return false;
+      }
+    }
+
+    protected matchEitherPattern(either: EitherPattern | undefined, debitCodes: Set<string>, creditCodes: Set<string>): boolean {
+      if (!either) {
+        return true; // If no either pattern is specified, return true
+      }
+      return this.matchPattern(either.debit, debitCodes) || this.matchPattern(either.credit, creditCodes);
     }
 
     protected async buildAccountForestFromDB(accountType: AccountType) {

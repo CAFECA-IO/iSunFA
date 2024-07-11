@@ -4,7 +4,7 @@ import BalanceSheetGenerator from "@/lib/utils/financial_report/balance_sheet_ge
 import IncomeStatementGenerator from "@/lib/utils/financial_report/income_statement_generator";
 import { IAccountForSheetDisplay, IAccountNode } from "@/interfaces/accounting_account";
 import { IOperatingCashFlowMapping } from "@/interfaces/cash_flow";
-import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from "@/constants/operating_cash_flow";
+import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from "@/constants/cash_flow/operating_cash_flow";
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
