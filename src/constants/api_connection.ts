@@ -78,7 +78,7 @@ export enum APIPath {
   ASSET_MANAGEMENT_GET_BY_ID = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
   ASSET_MANAGEMENT_UPDATE = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
   OCR_UPLOAD = `${apiPrefix}/company/:companyId/ocr`,
-  OCR_DELETE = `${apiPrefix}/company/:companyId/ocr`,
+  OCR_DELETE = `${apiPrefix}/company/:companyId/ocr/:resultId`,
   OCR_RESULT_GET_BY_ID = `${apiPrefix}/company/:companyId/ocr/:resultId`,
   OCR_LIST = `${apiPrefix}/company/:companyId/ocr`,
   INVOICE_CREATE = `${apiPrefix}/company/:companyId/invoice`,

@@ -75,10 +75,10 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = async (id: number) => {
+  const fileItemDeleteHandler = async (aichResultId: string) => {
     // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
     const { success, code } = await deleteOCRTrigger({
-      params: { companyId: selectedCompany!.id, ocrId: id },
+      params: { companyId: selectedCompany!.id, resultId: aichResultId },
     });
     if (success === false) {
       toastHandler({
