@@ -1,5 +1,6 @@
 import { timestampToString } from '@/lib/utils/common';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
+import { IPaginatedItem } from '@/interfaces/pagination';
 
 export enum ReportKind {
   analysis = 'analysis',
@@ -34,6 +35,9 @@ export interface IGeneratedReportItem extends IBasicReportItem {
   blockchainExplorerLink: string;
   evidenceId: string;
 }
+
+export interface IPaginatedPendingReportItem extends IPaginatedItem<IPendingReportItem> {}
+export interface IPaginatedGeneratedReportItem extends IPaginatedItem<IGeneratedReportItem> {}
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
   const now = new Date();
@@ -124,6 +128,16 @@ export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
     remainingSeconds: 30,
     paused: false,
     reportType: FinancialReportTypesKey.balance_sheet,
+    type: ReportKind.financial,
+  },
+  {
+    id: 'ndfgghjd',
+    name: 'Comprehensive Income Statement-20240312-1',
+    createdTimestamp: 1715863312,
+    period: { startTimestamp: 1686721600, endTimestamp: 1724076800 },
+    remainingSeconds: 16150,
+    paused: false,
+    reportType: FinancialReportTypesKey.comprehensive_income_statement,
     type: ReportKind.financial,
   },
 ];
@@ -245,4 +259,30 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     type: ReportKind.financial,
   },
+  {
+    id: 'jsasdrho',
+    name: 'Cash Flow Statement-20240229-1',
+    createdTimestamp: 1719331987,
+    period: { startTimestamp: 1705270400, endTimestamp: 1726862400 },
+    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    project: { id: '78645', name: 'BAIFA', code: 'BF' },
+    downloadLink: 'https://BFample.com/download/report.pdf',
+    reportLinkId:
+      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    reportType: FinancialReportTypesKey.cash_flow_statement,
+    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
+    type: ReportKind.financial,
+  },
 ];
+
+export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedPendingReportItem = {
+  data: FIXED_DUMMY_PENDING_REPORT_ITEMS,
+  page: 1,
+  totalPages: 2,
+};
+
+export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedGeneratedReportItem = {
+  data: FIXED_DUMMY_GENERATED_REPORT_ITEMS,
+  page: 1,
+  totalPages: 2,
+};

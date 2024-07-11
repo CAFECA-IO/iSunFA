@@ -20,10 +20,10 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
 
   const imageSrc =
     {
-      tw: '/elements/zh_tw_login_bg.png',
-      cn: '/elements/zh_cn_login_bg.png',
-      en: '/elements/login_bg.png',
-    }[currentLanguage] || '/elements/zh_tw_login_bg.png';
+      tw: '/elements/zh_tw_login_bg.webp',
+      cn: '/elements/zh_cn_login_bg.webp',
+      en: '/elements/login_bg.webp',
+    }[currentLanguage] || '/elements/zh_tw_login_bg.webp';
 
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
