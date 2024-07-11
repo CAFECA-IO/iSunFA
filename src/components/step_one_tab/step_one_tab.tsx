@@ -24,34 +24,7 @@ const StepOneTab = () => {
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
-  // ToDo: (20240718 - Tzuhan) API 完成後需刪除
-  const [deletedItems, setDeletedItems] = useState<number[]>([]);
-
-  const {
-    trigger: deleteOCRTrigger,
-    success: deleteOCRSuccess,
-    code: deleteOCRCode,
-  } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
-
-  useEffect(() => {
-    if (deleteOCRSuccess === false) {
-      // ToDo: (20240718 - Tzuhan) API 完成後需修改
-      /** toastHandler({
-        id: `deleteUnprocessedOCR-${deleteOCRCode}`,
-        content: `Failed to delete unprocessed OCR: ${deleteOCRCode}, `,
-        type: ToastType.ERROR,
-        closeable: true,
-      });
-      */
-    } else if (deleteOCRSuccess) {
-      toastHandler({
-        id: `deleteUnprocessedOCR-${deleteOCRCode}`,
-        content: `Successfully deleted unprocessed OCR: ${deleteOCRCode}`,
-        type: ToastType.SUCCESS,
-        closeable: true,
-      });
-    }
-  }, [deleteOCRSuccess, deleteOCRCode]);
+  const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
 
   useEffect(() => {
     const companyId = selectedCompany?.id ?? 0;
@@ -70,8 +43,7 @@ const StepOneTab = () => {
       });
     }
     if (OCRListStatus.listSuccess) {
-      // ToDo: (20240718 - Tzuhan) API 完成後需改回 setFileList(OCRList)
-      setFileList(OCRList.filter((data) => !deletedItems.includes(data.id)));
+      setFileList(OCRList);
     }
 
     return () => {};
@@ -103,13 +75,26 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = (id: number) => {
+  const fileItemDeleteHandler = async (id: number) => {
     // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
-    deleteOCRTrigger({ params: { id } });
-    // ToDo: (20240718 - Tzuhan) API 完成後需刪除
-    setDeletedItems([...deletedItems, id]);
-    const newList = fileList.filter((data) => data.id !== id);
-    setFileList(newList);
+    const { success, code } = await deleteOCRTrigger({
+      params: { companyId: selectedCompany!.id, ocrId: id },
+    });
+    if (success === false) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        content: `Failed to delete unprocessed OCR: ${code}, `,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    } else if (success) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        content: `Successfully deleted unprocessed OCR: ${code}`,
+        type: ToastType.SUCCESS,
+        closeable: true,
+      });
+    }
   };
 
   const qrCodeScanClickHandler = () => {
