@@ -4,6 +4,7 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/investing_cash_flow';
 
 export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   try {
@@ -252,5 +253,51 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+}
+
+// Info: (20240710 - Murky) Unefficient need to be refactor
+export async function findManyVoucherWithCashInPrisma(
+  companyId: number,
+  startDateInSecond: number,
+  endDateInSecond: number,
+) {
+  try {
+    const vouchers = await prisma.voucher.findMany({
+      where: {
+        journal: {
+          companyId,
+        },
+        createdAt: {
+          gte: startDateInSecond,
+          lte: endDateInSecond,
+        },
+        lineItems: {
+          some: {
+            OR: CASH_AND_CASH_EQUIVALENTS_CODE.map((cashCode) => ({
+              account: {
+                code: {
+                  startsWith: cashCode,
+                }
+              },
+            }))
+          }
+        }
+      },
+      include: {
+        lineItems: {
+          include: {
+            account: true,
+          }
+        },
+      }
+    });
+
+    return vouchers;
+  } catch (error) {
+    // Info: （ 20240710 - Murky）Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }

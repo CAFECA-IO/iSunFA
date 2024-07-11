@@ -1,6 +1,7 @@
 import { VoucherType } from '@/constants/account';
 import { ILineItem } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
+import { Prisma } from '@prisma/client';
 
 export interface IVoucherMetaData {
   date: number;
@@ -29,3 +30,13 @@ export interface IVoucherDataForSavingToDB {
   journalId?: number;
   lineItems: ILineItem[];
 }
+
+export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
+  include: {
+    lineItems: {
+      include: {
+        account: true,
+      }
+    },
+  }
+}>;
