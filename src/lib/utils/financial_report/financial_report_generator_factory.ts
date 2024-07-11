@@ -5,19 +5,19 @@ import IncomeStatementGenerator from "@/lib/utils/financial_report/income_statem
 import CashFlowStatementGenerator from "@/lib/utils/financial_report/cash_flow_statement_generator";
 
 export default class FinancialReportGeneratorFactory {
-  static createGenerator(
+  static async createGenerator(
     companyId: number,
     startDateInSecond: number,
     endDateInSecond: number,
     accountSheetType: AccountSheetType
-): FinancialReportGenerator {
+): Promise<FinancialReportGenerator> {
   switch (accountSheetType) {
     case AccountSheetType.BALANCE_SHEET:
       return new BalanceSheetGenerator(companyId, startDateInSecond, endDateInSecond);
     case AccountSheetType.INCOME_STATEMENT:
       return new IncomeStatementGenerator(companyId, startDateInSecond, endDateInSecond);
     case AccountSheetType.CASH_FLOW_STATEMENT:
-      return new CashFlowStatementGenerator(companyId, startDateInSecond, endDateInSecond);
+      return CashFlowStatementGenerator.createInstance(companyId, startDateInSecond, endDateInSecond);
     default:
       throw new Error(`Unsupported account sheet type: ${accountSheetType}`);
     }

@@ -523,10 +523,7 @@
     "AI_DETECTION_ERROR_ERROR_CODE": "AI Detection Error, error code: ",
     "THERE_ARE_NO_RECOMMENDATIONS_FROM_AI": "There are no recommendations from AI",
     "PLEASE_MAKE_SURE": "Please make sure all the information are correct !",
-    "ATTENTION": "Attention: Saving this voucher means it",
-    "PERMANENT_ON_THE_BLOCKCHAIN": "s permanent on the blockchain. Mistakes can",
-    "CANT_BE_FIXED": "t be fixed. You",
-    "MAKE_CORRECTIONS.": "ll need new vouchers to make corrections.",
+    "ATTENTION": "Attention: Saving this voucher means it's permanent on the blockchain. Mistakes can't be fixed. You'll need new vouchers to make corrections.",
     "ADD_ACCOUNTING_VOUCHER": "Add Accounting Voucher to the book"
   },
   "CONTRACT": {
