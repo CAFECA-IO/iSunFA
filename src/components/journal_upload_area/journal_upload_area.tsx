@@ -27,6 +27,8 @@ const JournalUploadArea = () => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   // Info: (20240711 - Julian) 決定是否顯示 modal 的 flag
   const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
+  // Info: (20240711 - Julian) 拖曳的樣式
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
   // Info: (20240711 - Julian) 處理上傳檔案
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,9 +41,11 @@ const JournalUploadArea = () => {
   // Info: (20240711 - Julian) 處理拖曳上傳檔案
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    setIsDragOver(true);
   };
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    setIsDragOver(false);
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -115,7 +119,9 @@ const JournalUploadArea = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="h-200px w-300px rounded-lg border border-dashed border-lightGray6 bg-white hover:cursor-pointer md:h-240px md:w-auto md:flex-1"
+      className={`h-200px w-300px rounded-lg border border-dashed bg-white hover:cursor-pointer ${
+        isDragOver ? 'border-drag-n-drop-stroke-focus' : 'border-drag-n-drop-stroke-primary'
+      } md:h-240px md:w-auto md:flex-1`}
     >
       <label
         htmlFor="journal-upload-area"
