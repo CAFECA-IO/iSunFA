@@ -22,7 +22,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   const imageSrc = {
     tw: {
       src: '/elements/zh_tw_login_bg.png',
-      blurDataURL: '/elements/zh_tw_login_bg_blur.png', // 小型模糊版本
+      blurDataURL: '/elements/zh_tw_login_bg_blur.png',
     },
     cn: {
       src: '/elements/zh_cn_login_bg.png',
