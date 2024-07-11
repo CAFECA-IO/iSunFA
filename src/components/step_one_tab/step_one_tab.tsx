@@ -13,6 +13,8 @@ import JournalUploadArea from '@/components/journal_upload_area/journal_upload_a
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 const StepOneTab = () => {
   const { t } = useTranslation('common');
@@ -22,6 +24,34 @@ const StepOneTab = () => {
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
+  // ToDo: (20240718 - Tzuhan) API 完成後需刪除
+  const [deletedItems, setDeletedItems] = useState<number[]>([]);
+
+  const {
+    trigger: deleteOCRTrigger,
+    success: deleteOCRSuccess,
+    code: deleteOCRCode,
+  } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
+
+  useEffect(() => {
+    if (deleteOCRSuccess === false) {
+      // ToDo: (20240718 - Tzuhan) API 完成後需修改
+      /** toastHandler({
+        id: `deleteUnprocessedOCR-${deleteOCRCode}`,
+        content: `Failed to delete unprocessed OCR: ${deleteOCRCode}, `,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+      */
+    } else if (deleteOCRSuccess) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${deleteOCRCode}`,
+        content: `Successfully deleted unprocessed OCR: ${deleteOCRCode}`,
+        type: ToastType.SUCCESS,
+        closeable: true,
+      });
+    }
+  }, [deleteOCRSuccess, deleteOCRCode]);
 
   useEffect(() => {
     const companyId = selectedCompany?.id ?? 0;
@@ -40,7 +70,8 @@ const StepOneTab = () => {
       });
     }
     if (OCRListStatus.listSuccess) {
-      setFileList(OCRList);
+      // ToDo: (20240718 - Tzuhan) API 完成後需改回 setFileList(OCRList)
+      setFileList(OCRList.filter((data) => !deletedItems.includes(data.id)));
     }
 
     return () => {};
@@ -73,7 +104,10 @@ const StepOneTab = () => {
   };
 
   const fileItemDeleteHandler = (id: number) => {
-    // ToDo: (20240528 - Julian) 應串接刪除 item 的 API
+    // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
+    deleteOCRTrigger({ params: { id } });
+    // ToDo: (20240718 - Tzuhan) API 完成後需刪除
+    setDeletedItems([...deletedItems, id]);
     const newList = fileList.filter((data) => data.id !== id);
     setFileList(newList);
   };
