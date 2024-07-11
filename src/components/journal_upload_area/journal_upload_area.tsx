@@ -120,13 +120,15 @@ const JournalUploadArea = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg border border-dashed bg-white hover:cursor-pointer ${
-        isDragOver ? 'border-drag-n-drop-stroke-focus' : 'border-drag-n-drop-stroke-primary'
-      } md:h-240px md:w-auto md:flex-1`}
+      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1`}
     >
       <label
         htmlFor="journal-upload-area"
-        className="flex h-full w-full flex-col items-center justify-center p-24px md:p-48px"
+        className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
+          isDragOver
+            ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
+            : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
+        } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
       >
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
