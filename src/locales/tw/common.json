@@ -519,10 +519,7 @@
     "AI_DETECTION_ERROR_ERROR_CODE": "AI偵測錯誤，錯誤代碼：",
     "THERE_ARE_NO_RECOMMENDATIONS_FROM_AI": "AI沒有推薦",
     "PLEASE_MAKE_SURE": "請確保所有資訊正確！",
-    "ATTENTION": "注意：儲存此記帳憑證即表示",
-    "PERMANENT_ON_THE_BLOCKCHAIN": "永久存在於區塊鏈上。錯誤無法",
-    "CANT_BE_FIXED": "被修復。您",
-    "MAKE_CORRECTIONS.": "將需要新的記帳憑證來進行更正。",
+    "ATTENTION": "注意：按下儲存後，此記帳憑證將永久存在於區塊鏈上，無法修復錯誤。您將需要建立新的記帳憑證來進行更正。",
     "ADD_ACCOUNTING_VOUCHER": "將會計憑證加入到帳簿中"
   },
   "CONTRACT": {
