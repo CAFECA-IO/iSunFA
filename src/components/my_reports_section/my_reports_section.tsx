@@ -10,6 +10,8 @@ import {
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
+  FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
+  FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
   IPendingReportItem,
@@ -45,21 +47,29 @@ const MyReportsSection = () => {
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
-  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(
+    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.page
+  );
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>(
+    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
+  );
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
-  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(
+    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.page
+  );
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>(
+    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
+  );
 
   const isPendingDataLoading = false;
   const isHistoryDataLoading = false;
 
-  const pendingTotalPages = 1;
-  const historyTotalPages = 1;
+  const pendingTotalPages = FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
+  const historyTotalPages = FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
 
   const {
     trigger: fetchPendingReports,
