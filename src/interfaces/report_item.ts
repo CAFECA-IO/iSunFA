@@ -1,6 +1,6 @@
 import { timestampToString } from '@/lib/utils/common';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { IPaginatedItem } from '@/interfaces/pagination';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 export enum ReportKind {
   analysis = 'analysis',
@@ -36,8 +36,8 @@ export interface IGeneratedReportItem extends IBasicReportItem {
   evidenceId: string;
 }
 
-export interface IPaginatedPendingReportItem extends IPaginatedItem<IPendingReportItem> {}
-export interface IPaginatedGeneratedReportItem extends IPaginatedItem<IGeneratedReportItem> {}
+export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem> {}
+export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem> {}
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
   const now = new Date();

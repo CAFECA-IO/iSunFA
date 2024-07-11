@@ -1,4 +1,4 @@
-export interface IPaginatedItem<T> {
+export interface IPaginatedData<T> {
   data: T[];
   page: number;
   totalPages: number;
