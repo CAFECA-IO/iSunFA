@@ -53,6 +53,7 @@ const JournalUploadArea = () => {
     const droppedFile = event.dataTransfer.files[0]; // Info: 如果有多個檔案，只取第一個檔案 (20240701 - Shirley)
     if (droppedFile) {
       setUploadFile(droppedFile);
+      setIsDragOver(false);
     }
   };
 

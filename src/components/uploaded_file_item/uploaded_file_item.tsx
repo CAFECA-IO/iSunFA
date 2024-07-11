@@ -85,7 +85,7 @@ const UploadedFileItem = ({
           </p>
         </div>
         {/* Info: (20240523 - Julian) Tool Buttons */}
-        <div className="absolute right-0 z-30 flex items-center gap-10px text-icon-surface-single-color-primary">
+        <div className="absolute right-0 z-10 flex items-center gap-10px text-icon-surface-single-color-primary">
           {/* Info: (20240523 - Julian) Status */}
           {displayedStatus}
           {/* Info: (20240523 - Julian) Trash Button */}
