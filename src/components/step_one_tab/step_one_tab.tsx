@@ -13,6 +13,8 @@ import JournalUploadArea from '@/components/journal_upload_area/journal_upload_a
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 const StepOneTab = () => {
   const { t } = useTranslation('common');
@@ -22,6 +24,7 @@ const StepOneTab = () => {
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
 
   useEffect(() => {
     const companyId = selectedCompany?.id ?? 0;
@@ -72,10 +75,26 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = (id: number) => {
-    // ToDo: (20240528 - Julian) 應串接刪除 item 的 API
-    const newList = fileList.filter((data) => data.id !== id);
-    setFileList(newList);
+  const fileItemDeleteHandler = async (aichResultId: string) => {
+    // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
+    const { success, code } = await deleteOCRTrigger({
+      params: { companyId: selectedCompany!.id, resultId: aichResultId },
+    });
+    if (success === false) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        content: `Failed to delete unprocessed OCR: ${code}, `,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    } else if (success) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        content: `Successfully deleted unprocessed OCR: ${code}`,
+        type: ToastType.SUCCESS,
+        closeable: true,
+      });
+    }
   };
 
   const qrCodeScanClickHandler = () => {
