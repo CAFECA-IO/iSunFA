@@ -69,7 +69,7 @@ const UploadedFileItem = ({
       <div className="relative inline-flex w-full items-center gap-20px">
         <Image src="/animations/scanning.gif" width={56} height={56} alt="scanning_animation" />
         {/* Info: (20240523 - Julian) File Thumbnail */}
-        <div className="inline-flex h-64px w-64px items-center justify-center overflow-hidden">
+        <div className="relative inline-flex h-64px w-64px items-center justify-center overflow-hidden">
           <Image src={imageUrl} alt="file_thumbnail" fill style={{ objectFit: 'contain' }} />
         </div>
         <div className="flex shrink grow flex-col items-start">
@@ -85,7 +85,7 @@ const UploadedFileItem = ({
           </p>
         </div>
         {/* Info: (20240523 - Julian) Tool Buttons */}
-        <div className="absolute right-0 z-30 flex items-center gap-10px text-icon-surface-single-color-primary">
+        <div className="absolute right-0 z-10 flex items-center gap-10px text-icon-surface-single-color-primary">
           {/* Info: (20240523 - Julian) Status */}
           {displayedStatus}
           {/* Info: (20240523 - Julian) Trash Button */}

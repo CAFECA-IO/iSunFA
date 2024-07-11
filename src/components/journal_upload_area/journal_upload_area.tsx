@@ -27,6 +27,8 @@ const JournalUploadArea = () => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   // Info: (20240711 - Julian) 決定是否顯示 modal 的 flag
   const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
+  // Info: (20240711 - Julian) 拖曳的樣式
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
   // Info: (20240711 - Julian) 處理上傳檔案
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,9 +41,11 @@ const JournalUploadArea = () => {
   // Info: (20240711 - Julian) 處理拖曳上傳檔案
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    setIsDragOver(true);
   };
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    setIsDragOver(false);
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -49,6 +53,7 @@ const JournalUploadArea = () => {
     const droppedFile = event.dataTransfer.files[0]; // Info: 如果有多個檔案，只取第一個檔案 (20240701 - Shirley)
     if (droppedFile) {
       setUploadFile(droppedFile);
+      setIsDragOver(false);
     }
   };
 
@@ -115,11 +120,15 @@ const JournalUploadArea = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="h-200px w-300px rounded-lg border border-dashed border-lightGray6 bg-white hover:cursor-pointer md:h-240px md:w-auto md:flex-1"
+      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1`}
     >
       <label
         htmlFor="journal-upload-area"
-        className="flex h-full w-full flex-col items-center justify-center p-24px md:p-48px"
+        className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
+          isDragOver
+            ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
+            : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
+        } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
       >
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
