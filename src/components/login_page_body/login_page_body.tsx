@@ -114,7 +114,14 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
         {/* Info: 圖片區域 (20240710 - Shirley) */}
         <div className="order-2 flex w-full flex-col lg:order-1 lg:w-6/12">
           <div className="relative h-full">
-            <Image src={imageSrc} fill style={{ objectFit: 'cover' }} alt="login_bg" />
+            <Image
+              src={imageSrc}
+              priority // 添加此屬性
+              quality={75} // 添加此屬性
+              fill
+              style={{ objectFit: 'cover' }}
+              alt="login_bg"
+            />
           </div>
         </div>
 
