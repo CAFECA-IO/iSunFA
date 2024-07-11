@@ -16,14 +16,26 @@ interface ILoginPageBodyProps {
 
 const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   const { t, i18n } = useTranslation('common');
+
   const currentLanguage = i18n.language;
 
-  const imageSrc =
-    {
-      tw: '/elements/zh_tw_login_bg.png',
-      cn: '/elements/zh_cn_login_bg.png',
-      en: '/elements/login_bg.png',
-    }[currentLanguage] || '/elements/zh_tw_login_bg.png';
+  const imageSrc = {
+    tw: {
+      src: '/elements/zh_tw_login_bg.png',
+      blurDataURL: '/elements/zh_tw_login_bg_blur.png', // 小型模糊版本
+    },
+    cn: {
+      src: '/elements/zh_cn_login_bg.png',
+      blurDataURL: '/elements/zh_cn_login_bg_blur.png',
+    },
+    en: {
+      src: '/elements/login_bg.png',
+      blurDataURL: '/elements/login_bg_blur.png',
+    },
+  }[currentLanguage] || {
+    src: '/elements/zh_tw_login_bg.png',
+    blurDataURL: '/elements/zh_tw_login_bg_blur.png',
+  };
 
   const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
   const {
@@ -115,12 +127,14 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
         <div className="order-2 flex w-full flex-col lg:order-1 lg:w-6/12">
           <div className="relative h-full">
             <Image
-              src={imageSrc}
-              priority // 添加此屬性
-              quality={75} // 添加此屬性
+              src={imageSrc.src}
               fill
               style={{ objectFit: 'cover' }}
               alt="login_bg"
+              priority
+              quality={75}
+              placeholder="blur"
+              blurDataURL={imageSrc.blurDataURL}
             />
           </div>
         </div>
