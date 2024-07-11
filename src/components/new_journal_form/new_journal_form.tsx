@@ -32,17 +32,30 @@ const eventTypeMap: { [key in EventType]: string } = {
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];
 
+enum PAYMENT_METHOD {
+  CASH = 'PAYMENT_METHOD.CASH',
+  TRANSFER = 'PAYMENT_METHOD.TRANSFER',
+  CREDIT_CARD = 'PAYMENT_METHOD.CREDIT_CARD',
+}
+
 const paymentMethodSelection: string[] = [
-  'PAYMENT_METHOD.CASH',
-  'PAYMENT_METHOD.TRANSFER',
-  'PAYMENT_METHOD.CREDIT_CARD',
+  PAYMENT_METHOD.CASH,
+  PAYMENT_METHOD.TRANSFER,
+  PAYMENT_METHOD.CREDIT_CARD,
 ];
 
+enum BANK {
+  BANK_OF_TAIWAN = 'JOURNAL.BANK_OF_TAIWAN',
+  LAND_BANK_OF_TAIWAN = 'JOURNAL.LAND_BANK_OF_TAIWAN',
+  TAIWAN_COOPERATIVE_BANK = 'JOURNAL.TAIWAN_COOPERATIVE_BANK',
+  FIRST_COMMERCIAL_BANK = 'JOURNAL.FIRST_COMMERCIAL_BANK',
+}
+
 const ficSelection: string[] = [
-  'JOURNAL.BANK_OF_TAIWAN',
-  'JOURNAL.LAND_BANK_OF_TAIWAN',
-  'JOURNAL.TAIWAN_COOPERATIVE_BANK',
-  'JOURNAL.FIRST_COMMERCIAL_BANK',
+  BANK.BANK_OF_TAIWAN,
+  BANK.LAND_BANK_OF_TAIWAN,
+  BANK.TAIWAN_COOPERATIVE_BANK,
+  BANK.FIRST_COMMERCIAL_BANK,
 ];
 
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
@@ -526,7 +539,7 @@ const NewJournalForm = () => {
   */
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
-  const isAccountNumberVisible = selectedMethod === 'Transfer';
+  const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
   // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
   const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
 
