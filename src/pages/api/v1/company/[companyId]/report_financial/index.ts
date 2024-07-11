@@ -52,7 +52,7 @@ export async function generateFinancialReport(
   // Info: (20240710 - Murky) Financial Report Generator
   let sheetDisplay: IAccountForSheetDisplay[] = [];
   try {
-    const financialReportGenerator = FinancialReportGeneratorFactory.createGenerator(
+    const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
       companyId,
       startDateInSecond,
       endDateInSecond,
