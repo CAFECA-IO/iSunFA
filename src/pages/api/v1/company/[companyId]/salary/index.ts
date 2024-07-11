@@ -6,7 +6,11 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { isUserAdmin } from '@/lib/utils/auth_check';
-import { createSalaryRecord, getSalaryRecordsList } from '@/lib/utils/repo/salary_record.repo';
+import {
+  createSalaryRecord,
+  getSalaryRecordsList,
+  updateSalaryRecordsConfirmed,
+} from '@/lib/utils/repo/salary_record.repo';
 
 function checkInput(
   type: string,
@@ -43,6 +47,26 @@ async function handleGetRequest(
     const salaryRecordsLists = await getSalaryRecordsList(companyId);
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     payload = salaryRecordsLists;
+  }
+  return { statusMessage, payload };
+}
+
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISalaryRecord | ISalaryRecord[] | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ISalaryRecord | ISalaryRecord[] | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await isUserAdmin(userId, companyId);
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    const confirmedSalaryRecordsLists = await updateSalaryRecordsConfirmed(companyId);
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = confirmedSalaryRecordsLists;
   }
   return { statusMessage, payload };
 }
@@ -90,6 +114,7 @@ const methodHandlers: {
   }>;
 } = {
   GET: handleGetRequest,
+  PUT: handlePutRequest,
   POST: handlePostRequest,
 };
 
