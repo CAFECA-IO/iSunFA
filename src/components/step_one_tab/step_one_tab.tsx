@@ -9,6 +9,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
 import Pagination from '@/components/pagination/pagination';
+import JournalUploadArea from '@/components/journal_upload_area/journal_upload_area';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
@@ -180,14 +181,7 @@ const StepOneTab = () => {
 
       <div className="my-20px flex flex-col items-center gap-40px md:flex-row">
         {/* Info: (20240422 - Julian) Upload area */}
-        <div className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px">
-          <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-          <p className="mt-20px font-semibold text-navyBlue2">
-            {t('JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-            <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
-          </p>
-          <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
-        </div>
+        <JournalUploadArea />
 
         <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
 
