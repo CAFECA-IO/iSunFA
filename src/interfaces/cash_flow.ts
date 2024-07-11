@@ -7,6 +7,38 @@ export interface IOperatingCashFlowMapping {
     child?: Map<string, IOperatingCashFlowMapping>;
 }
 
+export type VoucherPattern = AndPattern | OrPattern | CodePattern;
+
+export interface AndPattern {
+  type: 'AND';
+  patterns: VoucherPattern[];
+}
+
+export interface OrPattern {
+  type: 'OR';
+  patterns: VoucherPattern[];
+}
+
+export interface CodePattern {
+  type: 'CODE';
+  codes: Set<RegExp>;
+}
+
+export interface EitherPattern {
+  type: 'EITHER';
+  debit: VoucherPattern;
+  credit: VoucherPattern;
+}
+
+export interface IDirectCashFlowMapping {
+  name: string;
+  cashInflow: boolean;
+  voucherPattern: {
+    debit: VoucherPattern;
+    credit: VoucherPattern;
+  };
+  either?: EitherPattern;
+}
 // Deprecated: (20240710 - Murky): Down below is non used Interface
 export interface ICashFlow {
   reportType: string;

@@ -7,7 +7,7 @@ import { useTranslation } from 'next-i18next';
 interface IUploadedFileItemProps {
   itemData: IUnprocessedOCR;
   pauseHandler: (id: number) => void;
-  deleteHandler: (id: number) => void;
+  deleteHandler: (aichResultId: string) => void;
   clickHandler: (unprocessedJournal: IUnprocessedOCR) => void;
 }
 
@@ -18,7 +18,7 @@ const UploadedFileItem = ({
   clickHandler,
 }: IUploadedFileItemProps) => {
   const { t } = useTranslation('common');
-  const { id, imageName, imageUrl, imageSize, progress, status } = itemData;
+  const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
     status === ProgressStatus.IN_PROGRESS ||
@@ -33,7 +33,7 @@ const UploadedFileItem = ({
 
   const deleteClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation(); // Info: (20240530 - Julian) 防止點擊刪除時，觸發 itemClickHandler
-    deleteHandler(id);
+    deleteHandler(aichResultId);
   };
 
   const itemClickHandler = () => {

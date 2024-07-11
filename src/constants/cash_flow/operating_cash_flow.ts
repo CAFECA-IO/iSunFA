@@ -488,20 +488,20 @@ export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlo
         operatingFunction: noAdjustNetIncome,
         child: OPERATING_ACTIVITY_MAPPING
     }],
-    // Info: (20240708 - Murky) 這個項目需要特別直接算出來
-    ['A33100', {
-        fromCode: ['4240', '7100'],
-        name: '收取之利息',
-        debit: false,
-        operatingFunction: noAdjustNetIncome
-    }],
-    // Info: (20240708 - Murky) 這個項目需要特別直接算出來
-    ['A33200', {
-        fromCode: ['4221', '7130'],
-        name: '收取之股利',
-        debit: false,
-        operatingFunction: noAdjustNetIncome
-    }],
+    // Info: (20240708 - Murky) 這個項目放在投資活動
+    // ['A33100', {
+    //     fromCode: ['4240', '7100'],
+    //     name: '收取之利息',
+    //     debit: false,
+    //     operatingFunction: noAdjustNetIncome
+    // }],
+    // Info: (20240708 - Murky) 這個項目放在投資活動
+    // ['A33200', {
+    //     fromCode: ['4221', '7130'],
+    //     name: '收取之股利',
+    //     debit: false,
+    //     operatingFunction: noAdjustNetIncome
+    // }],
     // Info: (20240708 - Murky) 這個項目需要特別直接算出來
     ['A33300', {
         fromCode: ['7510'],
