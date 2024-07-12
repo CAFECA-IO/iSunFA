@@ -99,5 +99,5 @@ export enum ActionType {
 }
 
 export const DEFAULT_SKELETON_COUNT_FOR_PAGE = 5;
-
 export const LIMIT_FOR_REPORT_PAGE = 5;
+export const DEFAULT_PAGE_NUMBER = 1;

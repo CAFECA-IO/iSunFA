@@ -1,7 +1,6 @@
 import {
   SetStateAction,
   Dispatch,
-  useState,
   useEffect,
   useCallback,
   ChangeEvent,
@@ -11,6 +10,7 @@ import { useRouter } from 'next/router';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
+import useStateRef from 'react-usestateref';
 
 export interface IPaginationProps {
   currentPage: number;
@@ -26,41 +26,82 @@ const Pagination = ({
   pagePrefix = 'page',
 }: IPaginationProps) => {
   const { t } = useTranslation('common');
-  const [targetPage, setTargetPage] = useState<number>(currentPage);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [targetPage, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
   const router = useRouter();
 
+  /* Deprecated: (20240716 - Shirley)
+  // useEffect(() => {
+  //   // Info: (20240419 - Julian) 更新當前頁數到 URL
+  //   const handleUrlChange = () => {
+  //     const url = new URL(window.location.href);
+  //     const pageParam = url.searchParams.get(pagePrefix);
+  //     const page = pageParam ? parseInt(pageParam, 10) : 1;
+  //     if (!Number.isNaN(page) && page !== currentPage) {
+  //       setCurrentPage(page);
+  //     }
+  //   };
+
+  //   window.addEventListener('popstate', handleUrlChange);
+  //   return () => window.removeEventListener('popstate', handleUrlChange);
+  // }, [currentPage, setCurrentPage, pagePrefix]);
+
+  // // const updateUrl = useCallback(
+  // //   (newPage: number) => {
+  // //     const queryKey = pagePrefix;
+  // //     const newQuery = { ...router.query, [queryKey]: newPage.toString() };
+  // //     router.replace({
+  // //       pathname: router.pathname,
+  // //       query: newQuery,
+  // //     });
+  // //   },
+  // //   [pagePrefix]
+  // // );
+
+  // // 更新 URL
+  // const updateUrl = useCallback(
+  //   (newPage: number) => {
+  //     router.push(
+  //       {
+  //         pathname: router.pathname,
+  //         query: { ...router.query, [pagePrefix]: newPage },
+  //       },
+  //       undefined,
+  //       { shallow: true }
+  //     );
+  //   },
+  //   [router, pagePrefix]
+  // );
+
+  // // Info: (20240419 - Julian) 當 currentPage 改變時，更新目標頁碼和 URL
+  // useEffect(() => {
+  //   setTargetPage(currentPage);
+  //   updateUrl(currentPage);
+  // }, [currentPage, setTargetPage, updateUrl]);
+  */
+
+  // Info: 從 URL 獲取初始頁碼 (20240712 - Shirley)
   useEffect(() => {
-    // Info: (20240419 - Julian) 更新當前頁數到 URL
-    const handleUrlChange = () => {
-      const url = new URL(window.location.href);
-      const pageParam = url.searchParams.get(pagePrefix);
-      const page = pageParam ? parseInt(pageParam, 10) : 1;
-      if (!Number.isNaN(page) && page !== currentPage) {
-        setCurrentPage(page);
-      }
-    };
+    const pageFromUrl = Number(router.query[pagePrefix]);
+    if (!Number.isNaN(pageFromUrl) && pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [router.query, pagePrefix, setCurrentPage]);
 
-    window.addEventListener('popstate', handleUrlChange);
-    return () => window.removeEventListener('popstate', handleUrlChange);
-  }, [currentPage, setCurrentPage, pagePrefix]);
-
+  // Info: 更新 URL (20240712 - Shirley)
   const updateUrl = useCallback(
     (newPage: number) => {
-      const queryKey = pagePrefix;
-      const newQuery = { ...router.query, [queryKey]: newPage.toString() };
-      router.replace({
-        pathname: router.pathname,
-        query: newQuery,
-      });
+      router.push(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, [pagePrefix]: newPage },
+        },
+        undefined,
+        { shallow: true }
+      );
     },
-    [pagePrefix]
+    [router, pagePrefix]
   );
-
-  // Info: (20240419 - Julian) 當 currentPage 改變時，更新目標頁碼和 URL
-  useEffect(() => {
-    setTargetPage(currentPage);
-    updateUrl(currentPage);
-  }, [currentPage, setTargetPage, updateUrl]);
 
   // Info: (20240419 - Julian) 如果位於第一頁，則將第一頁和上一頁的按鈕設為 disabled
   const isFirstPage = currentPage === 1;
@@ -68,7 +109,20 @@ const Pagination = ({
   const isLastPage = currentPage === totalPages;
 
   // Info: (20240419 - Julian)  限制輸入的頁數在 1 ~ totalPages 之間
-  const handlePageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  // Info: 用來處理頁數變更邏輯 (20240712 - Shirley)
+  const changePage = useCallback(
+    (newPage: number) => {
+      if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
+        setCurrentPage(newPage);
+        setTargetPage(newPage);
+        updateUrl(newPage);
+      }
+    },
+    [currentPage, totalPages, setCurrentPage, updateUrl]
+  );
+
+  // Info: input 的 onChange 事件處理函數 (20240712 - Shirley)
+  const pageChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
     const value = Math.min(Math.max(1, parseInt(e.target.value, 10)), totalPages);
     if (!Number.isNaN(value)) {
       setTargetPage(value);
@@ -77,15 +131,16 @@ const Pagination = ({
 
   // Info: (20240419 - Julian) 按下 Enter 鍵後，輸入頁數
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      setCurrentPage(targetPage);
+    if (e.key === 'Enter' && targetPageRef.current !== currentPage) {
+      changePage(targetPageRef.current);
     }
   };
 
-  const firstPageHandler = () => setCurrentPage(1);
-  const previousPageHandler = () => setCurrentPage((prev) => prev - 1);
-  const nextPageHandler = () => setCurrentPage((prev) => prev + 1);
-  const lastPageHandler = () => setCurrentPage(totalPages);
+  // Info: 按鈕處理函數 (20240712 - Shirley)
+  const firstPageHandler = () => changePage(1);
+  const previousPageHandler = () => changePage(currentPage - 1);
+  const nextPageHandler = () => changePage(currentPage + 1);
+  const lastPageHandler = () => changePage(totalPages);
 
   const displayFirstButton = (
     <button
@@ -138,8 +193,8 @@ const Pagination = ({
       placeholder={`${currentPage}`}
       min={1}
       max={totalPages}
-      value={targetPage}
-      onChange={handlePageChange}
+      value={targetPageRef.current}
+      onChange={pageChangeHandler}
       onKeyDown={handleKeyDown}
       className="h-40px w-40px rounded border border-secondaryBlue bg-transparent text-center text-sm font-semibold outline-none placeholder:text-lightGray3 disabled:border-lightGray3"
     />
