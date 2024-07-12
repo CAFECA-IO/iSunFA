@@ -5,12 +5,17 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import {
   createSalaryRecord,
   getSalaryRecordsList,
   updateSalaryRecordsConfirmed,
 } from '@/lib/utils/repo/salary_record.repo';
+
+async function checkAuth(userId: number, companyId: number): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  return !!admin;
+}
 
 function checkInput(
   type: string,
@@ -40,7 +45,7 @@ async function handleGetRequest(
 
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await isUserAdmin(userId, companyId);
+  const isAuth = await checkAuth(userId, companyId);
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
@@ -60,7 +65,7 @@ async function handlePutRequest(
 
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await isUserAdmin(userId, companyId);
+  const isAuth = await checkAuth(userId, companyId);
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
@@ -85,7 +90,7 @@ async function handlePostRequest(
   } else {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await isUserAdmin(userId, companyId);
+    const isAuth = await checkAuth(userId, companyId);
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {

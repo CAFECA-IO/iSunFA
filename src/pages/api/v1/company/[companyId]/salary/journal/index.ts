@@ -3,7 +3,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { generateInvoiceFromSalaryRecord } from '@/lib/utils/repo/salary_record.repo';
 import {
@@ -21,6 +21,11 @@ function checkInput(salaryRecordsIdsList: number[]): boolean {
   );
 }
 
+async function checkAuth(userId: number, companyId: number): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  return !!admin;
+}
+
 async function handlePostRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IPostApiResponseType | null>>
@@ -35,7 +40,7 @@ async function handlePostRequest(
   } else {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await isUserAdmin(userId, companyId);
+    const isAuth = await checkAuth(userId, companyId);
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
