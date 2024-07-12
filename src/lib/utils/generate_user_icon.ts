@@ -1,30 +1,36 @@
 import { FORMIDABLE_CONFIG, USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
-import { promises as fs } from 'fs';
 import path from 'path';
-import { mkUploadFolder } from '@/lib/utils/common';
-import { generateDestinationFileNameInGoogleBucket, uploadGoogleFile } from '@/lib/utils/google_image_upload';
+import {
+  generateDestinationFileNameInGoogleBucket,
+  uploadSvgToGoogleCloud,
+} from '@/lib/utils/google_image_upload';
 
 const savePath =
   process.env.VERCEL === '1'
     ? FORMIDABLE_CONFIG.uploadDir
     : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
 
-function isChinese(name: string) {
+function isChinese(name: string): boolean {
   return /[\u3400-\u9FBF]/.test(name);
 }
 
-function generateInitials(name: string) {
-  if (isChinese(name)) {
-    return name.slice(-2);
+function generateInitials(name: string): string {
+  const cleanedName = name.trim();
+  let initials = '';
+
+  if (isChinese(cleanedName)) {
+    initials = cleanedName.slice(-2);
   } else {
-    const parts = name.trim().split(/\s+/);
+    const parts = cleanedName.split(/\s+/).map((part) => part.replace(/[^a-zA-Z0-9]/g, ''));
     if (parts.length === 1) {
-      return parts[0].slice(0, 2).toUpperCase();
+      initials = parts[0].slice(0, 2).toUpperCase();
     } else {
       const lastNameIdx = parts.length - 1;
-      return parts[0][0].toUpperCase() + parts[lastNameIdx][0].toUpperCase();
+      initials = (parts[0][0] + parts[lastNameIdx][0]).toUpperCase();
     }
   }
+
+  return initials;
 }
 
 function getRandomInt(max: number) {
@@ -46,7 +52,7 @@ function generateUserIconSvg(
   backgroundColor: string,
   darkBackgroundColor: string
 ) {
-  return `
+  const svgContent = `
     <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
       <style>
         circle {
@@ -68,10 +74,8 @@ function generateUserIconSvg(
       <text x="100" y="105" font-size="48" text-anchor="middle" dominant-baseline="middle">${initials}</text>
     </svg>
   `;
-}
-
-async function saveUserIconToFile(iconSvg: string, filepath: string) {
-  await fs.writeFile(filepath, iconSvg);
+  const cleanedSvg = svgContent.replace(/\s+/g, ' ').trim();
+  return cleanedSvg;
 }
 
 async function generateSvgSavePath() {
@@ -81,16 +85,10 @@ async function generateSvgSavePath() {
   return filepath;
 }
 
-// Deprecated: (20240604 - Murky) This function is not used anymore
-// function getFileNameFromPath(filepath: string) {
-//   const parts = filepath.split('/');
-//   return parts[parts.length - 1];
-// }
-
 export async function generateUserIcon(name: string) {
   let iconUrl = '';
   try {
-    await mkUploadFolder();
+    // await mkUploadFolder();
     const initials = generateInitials(name);
     const backgroundColor = generateRandomColor();
     const iconSvg = generateUserIconSvg(
@@ -99,17 +97,12 @@ export async function generateUserIcon(name: string) {
       backgroundColor.darkMode
     );
     const filepath = await generateSvgSavePath();
-    await saveUserIconToFile(iconSvg, filepath);
 
-    const filePathInGoogleBucket = generateDestinationFileNameInGoogleBucket(filepath);
+    const destFileName = generateDestinationFileNameInGoogleBucket(filepath);
 
-    const uploadGoogle = uploadGoogleFile(filepath, filePathInGoogleBucket);
-    iconUrl = await uploadGoogle();
+    iconUrl = await uploadSvgToGoogleCloud(iconSvg, destFileName);
   } catch (error) {
-    // Info: For debugging purpose
-    // eslint-disable-next-line no-console
-    console.error('Failed to generate user icon', error);
+    iconUrl = '';
   }
-
   return iconUrl;
 }
