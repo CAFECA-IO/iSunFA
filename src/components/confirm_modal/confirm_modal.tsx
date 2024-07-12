@@ -241,7 +241,7 @@ const ConfirmModal = ({
     const newLineItems = accountingVoucher
       .filter((voucher) => voucher.account)
       .map((voucher) => {
-        const isDebit = voucher.debit !== 0;
+        const isDebit = voucher.debit !== null;
         const debitAmount = voucher.debit ?? 0;
         const creditAmount = voucher.credit ?? 0;
 
