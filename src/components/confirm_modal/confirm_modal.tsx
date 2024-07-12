@@ -341,13 +341,11 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayMethod = (
-    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
-  );
+  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{t(paymentPeriod)}</p>;
+  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">{t(paymentStatus)}</p>;
+  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
 
   const displayProject =
     project !== 'None' ? (

@@ -46,6 +46,7 @@ interface IAccountingContext {
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number, update: boolean) => void;
   accountList: IAccount[];
+  getAccountListHandler: (companyId: number) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
@@ -93,6 +94,7 @@ const initialAccountingContext: IAccountingContext = {
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
   updateOCRListHandler: () => {},
   accountList: [],
+  getAccountListHandler: () => {},
   getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
@@ -107,7 +109,6 @@ const initialAccountingContext: IAccountingContext = {
   voucherPreview: undefined,
   setVoucherPreviewHandler: () => {},
 
-  // accountingVoucher: [defaultAccountingVoucher],
   accountingVoucher: [],
   addVoucherRowHandler: () => {},
   deleteVoucherRowHandler: () => {},
@@ -125,7 +126,11 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
-  const { data: accountList } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {});
+  const {
+    trigger: getAccountList,
+    data: accountTitleList,
+    success: accountSuccess,
+  } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {}, false, false);
   const {
     trigger: getAIStatus,
     data: status,
@@ -139,6 +144,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     success: listSuccess,
     code: listCode,
   } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {}, false, false);
+
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);
@@ -168,6 +174,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [totalDebit, setTotalDebit] = useState<number>(0); // Info: (20240430 - Julian) 計算總借方
   const [totalCredit, setTotalCredit] = useState<number>(0); // Info: (20240430 - Julian) 計算總貸方
 
+  const [accountList, setAccountList] = useState<IAccount[]>([]);
+
+  const getAccountListHandler = (companyId: number) => {
+    getAccountList({ params: { companyId } });
+  };
+
   const getAIStatusHandler = (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
@@ -181,6 +193,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       update,
     });
   };
+
+  useEffect(() => {
+    if (accountSuccess && accountTitleList) {
+      setAccountList(accountTitleList);
+    }
+  }, [accountSuccess, accountTitleList]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -436,7 +454,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       OCRList,
       OCRListStatus,
       updateOCRListHandler,
-      accountList: accountList ?? [],
+      accountList,
+      getAccountListHandler,
       getAIStatusHandler,
       AIStatus,
       accountingVoucher,
@@ -468,6 +487,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       OCRListStatus,
       AIStatus,
       accountList,
+      getAccountListHandler,
       accountingVoucher,
       addVoucherRowHandler,
       deleteVoucherRowHandler,
