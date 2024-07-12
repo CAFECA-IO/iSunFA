@@ -459,7 +459,7 @@ const ConfirmModal = ({
         <hr className="flex-1 border-lightGray3" />
       </div>
       {/* Info: (20240429 - Julian) List */}
-      <div className="overflow-x-auto rounded-sm bg-lightGray7 p-20px">
+      <div className="rounded-sm bg-lightGray7 p-20px">
         <table className="w-full text-left text-navyBlue2">
           {/* Info: (20240429 - Julian) Header */}
           <thead>
