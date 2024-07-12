@@ -17,10 +17,9 @@ function getAPIPath(apiConfig: IAPIConfig, input: IAPIInput) {
   });
   const queryString = input.query
     ? Object.keys(input.query)
-        .map((key) =>
-          input.query?.[key] !== undefined
-            ? `${encodeURIComponent(key)}=${encodeURIComponent(String(input.query?.[key]))}`
-            : ``
+        .filter((key) => input.query?.[key] !== undefined)
+        .map(
+          (key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(input.query?.[key]))}`
         )
         .join('&')
     : '';
