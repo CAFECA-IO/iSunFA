@@ -10,6 +10,7 @@ import { findManyVoucherWithCashInPrisma } from "@/lib/utils/repo/voucher.repo";
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from "@/constants/cash_flow/investing_cash_flow";
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from "@/constants/cash_flow/financing_cash_flow";
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from "@/constants/cash_flow/common_cash_flow";
+import { noAdjustNetIncome } from "@/lib/utils/account";
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -85,8 +86,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   ): Map<string, IAccountForSheetDisplay> {
     // Info: (20240710 - Murky) DFS
     let childMap = new Map<string, IAccountForSheetDisplay>();
+
+    let childAmount = 0;
     node.child?.forEach((value, key) => {
         const childAccountForSheet = this.generateIndirectOperatingCashFlowRecursive(referenceMap, key, level + 1, value);
+        childAccountForSheet.forEach((childValue) => {
+            if (childValue.indent === level + 1) {
+              childAmount += childValue.amount || 0;
+            }
+        });
         childMap = new Map([...childMap, ...childAccountForSheet]);
     });
 
@@ -96,17 +104,14 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         const account = referenceMap.get(code);
         if (account) {
             const isAccountDebit = account.debit;
-            const accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
+            let accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
+            accountAmount = operatingFunction === noAdjustNetIncome ? Math.abs(accountAmount) : accountAmount;
             return operatingFunction(acc, accountAmount);
         }
         return acc;
     }, 0);
 
-    childMap.forEach((value) => {
-        if (value.amount) {
-            amount = operatingFunction(amount, value.amount);
-        }
-    });
+    amount = operatingFunction(amount, childAmount);
 
     const accountForSheetDisplay: IAccountForSheetDisplay = {
         code: currentCode,
@@ -138,12 +143,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   // Info: (20240710 - Murky) This method is only used in this class
   // eslint-disable-next-line class-methods-use-this
   private sumIndirectOperatingCashFlow(indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>): number {
-    let sum = 0;
-    indirectOperatingCashFlow.forEach((value) => {
-        if (value.amount) {
-            sum += value.amount;
-        }
-    });
+    const sum = (indirectOperatingCashFlow.get("A33000")?.amount || 0) + (indirectOperatingCashFlow.get("A33400")?.amount || 0) + (indirectOperatingCashFlow.get("A33500")?.amount || 0);
+
     return sum;
   }
 
@@ -301,7 +302,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     result.set("DDDD", {
       code: "DDDD",
       name: "匯率變動對現金及約當現金之影響",
-      amount: cashFlowFromOperating,
+      amount: 0,
       indent: 0,
     });
 

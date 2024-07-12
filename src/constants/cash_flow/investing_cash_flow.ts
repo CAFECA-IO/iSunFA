@@ -10,7 +10,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         voucherPattern: {
             debit: {
                 type: 'CODE',
-                codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX)
+                codes: new Set([/^1121/, /^1123/])
             },
             credit: {
                 type: 'CODE',
@@ -28,7 +28,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
             },
             credit: {
                 type: 'CODE',
-                codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX)
+                codes: new Set([/^1121/, /^1123/])
             }
         },
         // Info: Murky (20240710): 有調整的才算是處分，不然算減資
