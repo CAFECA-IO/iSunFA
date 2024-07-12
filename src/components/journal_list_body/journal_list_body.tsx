@@ -6,33 +6,52 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IDatePeriod } from '@/interfaces/date_period';
-import JournalList from '@/components/journal_list/journal_list';
-import Pagination from '@/components/pagination/pagination';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { JournalListSubTab } from '@/constants/journal';
 import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import {
+  JOURNAL_EVENT,
+  JOURNAL_TYPE,
+  SORTING_OPTION,
+  toEventType,
+  toSort,
+} from '@/constants/journal';
+import JournalList from '@/components/journal_list/journal_list';
 
-interface IJournalListBodyProps {
-  journals: IJournalListItem[];
-  isLoading: boolean;
-  success: boolean;
-  errorCode: string | undefined;
-}
-
-const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalListBodyProps) => {
+const JournalListBody = () => {
   const { t } = useTranslation('common');
+  const { selectedCompany } = useUserCtx();
+  const [journals, setJournals] = useState<IJournalListItem[]>([]);
+  const {
+    trigger: getJournalList,
+    isLoading,
+    success,
+    code,
+    data,
+  } = APIHandler<IJournalListItem[]>(APIName.JOURNAL_LIST, {
+    params: {
+      companyId: selectedCompany?.id,
+    },
+    query: {
+      event: JOURNAL_EVENT.UPLOADED,
+    },
+  });
+
   const types = [
-    'JOURNAL_TYPES.ALL',
-    'JOURNAL_TYPES.PAYMENT',
-    'JOURNAL_TYPES.RECEIVING',
-    'JOURNAL_TYPES.TRANSFER',
+    JOURNAL_TYPE.ALL,
+    JOURNAL_TYPE.PAYMENT,
+    JOURNAL_TYPE.RECEIVING,
+    JOURNAL_TYPE.TRANSFER,
   ];
   const sortingOptions = [
-    'SORTING.NEWEST',
-    'SORTING.OLDEST',
-    'SORTING.PAYMENT_PROCESS',
-    'SORTING.PROJECT_PROCESS',
+    SORTING_OPTION.NEWEST,
+    SORTING_OPTION.OLDEST,
+    SORTING_OPTION.PAYMENT_PROCESS,
+    SORTING_OPTION.PROJECT_PROCESS,
   ];
+
   const {
     targetRef: typeMenuRef,
     componentVisible: isTypeMenuOpen,
@@ -46,34 +65,72 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
   } = useOuterClick<HTMLUListElement>(false);
 
   // Info: (20240419 - Julian) Filtered states
-  const [filteredJournalType, setFilteredJournalType] = useState<string>('');
+  const [filteredJournalType, setFilteredJournalType] = useState<JOURNAL_TYPE>(JOURNAL_TYPE.ALL);
   useEffect(() => {
-    setFilteredJournalType(t('JOURNAL_TYPES.ALL'));
+    setFilteredJournalType(JOURNAL_TYPE.ALL);
   }, [t]);
-  const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<string>('');
+  const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<SORTING_OPTION>(
+    SORTING_OPTION.NEWEST
+  );
   useEffect(() => {
-    setFilteredJournalSortBy(t('SORTING.NEWEST'));
+    setFilteredJournalSortBy(SORTING_OPTION.NEWEST);
   }, [t]);
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [currentTab, setCurrentTab] = useState<string>(JournalListSubTab.UPLOADED_EVENTS);
-
-  // ToDo: (20240418 - Julian) Replace with real data
-  const totalPages = 100;
-  const uploadedEventsCount = 999;
-  const upcomingEventsCount = 9;
+  const [currentTab, setCurrentTab] = useState<JOURNAL_EVENT>(JOURNAL_EVENT.UPLOADED);
 
   // Info: (20240418 - Julian) for css
-  const isTypeSelected = filteredJournalType !== t('JOURNAL_TYPES.ALL');
-  const isSortBySelected = filteredJournalSortBy !== t('SORTING.NEWEST');
+  const isTypeSelected = filteredJournalType !== JOURNAL_TYPE.ALL;
+  const isSortBySelected = filteredJournalSortBy !== SORTING_OPTION.NEWEST;
   //  const isTypeSelected = filteredJournalType !== 'All';
   //  const isSortBySelected = filteredJournalSortBy !== 'Newest';
 
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
 
-  const uploadTabClickHandler = () => setCurrentTab(JournalListSubTab.UPLOADED_EVENTS);
-  const upcomingTabClickHandler = () => setCurrentTab(JournalListSubTab.UPCOMING_EVENTS);
+  const tabClickHandler = (event: JOURNAL_EVENT) => setCurrentTab(event);
+
+  const [search, setSearch] = useState<string>('');
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
+
+  // ToDo: (20240418 - Julian) Replace with real data
+  const totalPages = 1;
+  const uploadedEventsCount = currentTab === JOURNAL_EVENT.UPLOADED ? journals.length : 0;
+  const upcomingEventsCount = currentTab === JOURNAL_EVENT.UPCOMING ? journals.length : 0;
+
+  useEffect(() => {
+    if (success && data) {
+      setJournals(data);
+    }
+  }, [success, data]);
+
+  useEffect(() => {
+    if (isLoading === false && selectedCompany) {
+      getJournalList({
+        params: {
+          companyId: selectedCompany?.id,
+        },
+        query: {
+          event: currentTab,
+          page: currentPage,
+          eventType: toEventType(filteredJournalType),
+          sortBy: toSort(filteredJournalSortBy),
+          startTimeStamp: filteredPeriod.startTimeStamp,
+          endTimeStamp: filteredPeriod.endTimeStamp,
+          search,
+        },
+      });
+    }
+  }, [
+    selectedCompany,
+    currentPage,
+    currentTab,
+    filteredJournalType,
+    filteredPeriod,
+    filteredJournalSortBy,
+    search,
+  ]);
 
   const displayedTypeDropMenu = (
     <div
@@ -83,7 +140,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
       <p
         className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeSelected ? '' : 'text-lightGray3'}`}
       >
-        {filteredJournalType}
+        {t(filteredJournalType)}
       </p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
@@ -91,11 +148,11 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul ref={typeMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {types.map((type: string) => (
+          {types.map((type: JOURNAL_TYPE) => (
             <li
-              key={type}
+              key={t(type)}
               onClick={() => {
-                setFilteredJournalType(t(type));
+                setFilteredJournalType(type);
                 setIsTypeMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
@@ -116,7 +173,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? ' text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
       >
-        {filteredJournalSortBy}
+        {t(filteredJournalSortBy)}
       </p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
@@ -124,11 +181,11 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
         <ul ref={sortByMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {sortingOptions.map((sorting: string) => (
+          {sortingOptions.map((sorting: SORTING_OPTION) => (
             <li
-              key={sorting}
+              key={t(sorting)}
               onClick={() => {
-                setFilteredJournalSortBy(t(sorting));
+                setFilteredJournalSortBy(sorting);
                 setIsSortByMenuOpen(false);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
@@ -158,6 +215,7 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
+        onChange={handleInputChange}
       />
       <FiSearch size={20} className="absolute right-3 top-3 cursor-pointer" />
     </div>
@@ -234,40 +292,15 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
     </div>
   );
 
-  const isDisplayedJournalList =
-    success === false && errorCode ? (
-      <>
-        <p>{t('JOURNAL.FAILED_TO_FETCH_DATA')}</p>
-        <p>{errorCode}</p>
-      </>
-    ) : isLoading === true || journals.length < 1 ? (
-      // Info: (20240419 - Julian) If loading or no data
-      <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
-        <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-        <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
-      </div>
-    ) : (
-      <>
-        <JournalList journals={journals} />
-        <div className="mx-auto my-40px">
-          <Pagination
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            totalPages={totalPages}
-          />
-        </div>
-      </>
-    );
-
   const displayedTabs = (
     <div className="my-20px inline-flex w-full items-center justify-center">
       <button
         type="button"
-        onClick={uploadTabClickHandler}
-        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
+        onClick={() => tabClickHandler(JOURNAL_EVENT.UPLOADED)}
+        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JOURNAL_EVENT.UPLOADED ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
       >
         <p
-          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPLOADED_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPLOADED ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
           {t('JOURNAL.UPLOADED')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
@@ -277,11 +310,11 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
       </button>
       <button
         type="button"
-        onClick={upcomingTabClickHandler}
-        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
+        onClick={() => tabClickHandler(JOURNAL_EVENT.UPCOMING)}
+        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JOURNAL_EVENT.UPCOMING ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
       >
         <p
-          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JournalListSubTab.UPCOMING_EVENTS ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPCOMING ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
           {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
@@ -349,7 +382,20 @@ const JournalListBody = ({ journals, isLoading, success, errorCode }: IJournalLi
       {/* Info: (20240418 - Julian) Toolbar */}
       {displayedToolbar}
       {/* Info: (20240418 - Julian) Journal list */}
-      {isDisplayedJournalList}
+      <JournalList
+        event={currentTab}
+        journalsProps={{
+          journals,
+          isLoading,
+          success,
+          code,
+        }}
+        paginationProps={{
+          currentPage,
+          setCurrentPage,
+          totalPages,
+        }}
+      />
     </>
   );
 };
