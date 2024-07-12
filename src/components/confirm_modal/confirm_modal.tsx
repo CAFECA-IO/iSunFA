@@ -14,6 +14,7 @@ import { DEFAULT_DISPLAYED_COMPANY_ID, checkboxStyle } from '@/constants/display
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ILineItem } from '@/interfaces/line_item';
 import AccountingVoucherRow from '@/components/accounting_voucher_row/accounting_voucher_row';
+import AccountingVoucherRowMobile from '@/components/accounting_voucher_row/accounting_voucher_row_mobile';
 import { Button } from '@/components/button/button';
 // ToDo: (20240527 - Luphia) Fix me
 // eslint-disable-next-line import/no-cycle
@@ -122,8 +123,8 @@ const ConfirmModal = ({
   const hasAIResult = AIResultSuccess && AIResult && AIResult.lineItems.length > 0;
 
   const addRowHandler = () => addVoucherRowHandler();
-  // const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
-  // const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
+  const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
+  const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
 
   const importVoucherHandler = () => {
     const AILineItems = AIResult?.lineItems ?? [];
@@ -255,9 +256,6 @@ const ConfirmModal = ({
       });
 
     setLineItems(newLineItems);
-
-    // eslint-disable-next-line no-console
-    console.log('accountingVoucher: ', accountingVoucher);
   }, [accountingVoucher]);
 
   useEffect(() => {
@@ -385,65 +383,67 @@ const ConfirmModal = ({
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
   ));
 
-  // const debitListMobile = accountingVoucher
-  //   .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
-  //   .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
+  const debitListMobile = accountingVoucher
+    .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
+    .map((debit) => <AccountingVoucherRowMobile type="Debit" accountingVoucher={debit} />);
 
-  // const creditListMobile = accountingVoucher
-  //   .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
-  //   .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
+  const creditListMobile = accountingVoucher
+    .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
+    .map((credit) => <AccountingVoucherRowMobile type="Credit" accountingVoucher={credit} />);
 
-  // const displayAccountingVoucherMobile = (
-  //   <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
-  //     {/* Info: (20240510 - Julian) Debit */}
-  //     <div className="flex flex-col gap-24px">
-  //       {/* Info: (20240510 - Julian) Divider */}
-  //       <div className="flex items-center gap-4">
-  //         <hr className="flex-1 border-lightGray3" />
-  //         <div className="flex items-center gap-2 text-sm">
-  //           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-  //           <p>Debit</p>
-  //         </div>
-  //         <hr className="flex-1 border-lightGray3" />
-  //       </div>
-  //       {/* Info: (20240510 - Julian) List */}
-  //       <div className="flex flex-col">{/* debitListMobile */}</div>
+  const displayAccountingVoucherMobile = (
+    <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
+      {/* Info: (20240510 - Julian) Debit */}
+      <div className="flex flex-col gap-24px">
+        {/* Info: (20240510 - Julian) Divider */}
+        <div className="flex items-center gap-4">
+          <hr className="flex-1 border-lightGray3" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+            <p>Debit</p>
+          </div>
+          <hr className="flex-1 border-lightGray3" />
+        </div>
+        {/* Info: (20240510 - Julian) List */}
+        <div className="flex flex-col">{debitListMobile}</div>
 
-  //       {/* Info: (20240510 - Julian) Add Button */}
-  //       <button
-  //         type="button"
-  //         onClick={addDebitRowHandler}
-  //         className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
-  //       >
-  //         <FiPlus size={20} />
-  //       </button>
-  //     </div>
+        {/* Info: (20240510 - Julian) Add Button */}
+        <button
+          id="add-debit-btn-mobile"
+          type="button"
+          onClick={addDebitRowHandler}
+          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+        >
+          <FiPlus size={20} />
+        </button>
+      </div>
 
-  //     {/* Info: (20240510 - Julian) Credit */}
-  //     <div className="flex flex-col gap-24px">
-  //       {/* Info: (20240510 - Julian) Divider */}
-  //       <div className="flex items-center gap-4">
-  //         <hr className="flex-1 border-lightGray3" />
-  //         <div className="flex items-center gap-2 text-sm">
-  //           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-  //           <p>Credit</p>
-  //         </div>
-  //         <hr className="flex-1 border-lightGray3" />
-  //       </div>
-  //       {/* Info: (20240510 - Julian) List */}
-  //       <div className="flex flex-col">{/* creditListMobile */}</div>
+      {/* Info: (20240510 - Julian) Credit */}
+      <div className="flex flex-col gap-24px">
+        {/* Info: (20240510 - Julian) Divider */}
+        <div className="flex items-center gap-4">
+          <hr className="flex-1 border-lightGray3" />
+          <div className="flex items-center gap-2 text-sm">
+            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+            <p>Credit</p>
+          </div>
+          <hr className="flex-1 border-lightGray3" />
+        </div>
+        {/* Info: (20240510 - Julian) List */}
+        <div className="flex flex-col">{creditListMobile}</div>
 
-  //       {/* Info: (20240510 - Julian) Add Button */}
-  //       <button
-  //         type="button"
-  //         onClick={addCreditRowHandler}
-  //         className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
-  //       >
-  //         <FiPlus size={20} />
-  //       </button>
-  //     </div>
-  //   </div>
-  // );
+        {/* Info: (20240510 - Julian) Add Button */}
+        <button
+          id="add-credit-btn-mobile"
+          type="button"
+          onClick={addCreditRowHandler}
+          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+        >
+          <FiPlus size={20} />
+        </button>
+      </div>
+    </div>
+  );
 
   const displayAccountingVoucher = (
     <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
@@ -560,12 +560,14 @@ const ConfirmModal = ({
 
           {/* Info: (20240429 - Julian) Accounting Voucher */}
           {displayAccountingVoucher}
+          {displayAccountingVoucherMobile}
 
           <div className="relative mt-24px">
             {/* Info: (20240605 - Julian) AI analysis result */}
             <div className="mt-40px flex flex-col items-center md:mt-0 md:flex-row md:gap-x-16px">
               {/* Info: (20240605 - Julian) button */}
               <button
+                id="ai-analysis-btn"
                 type="button"
                 disabled={!hasAIResult}
                 onClick={analysisBtnClickHandler}
@@ -592,6 +594,7 @@ const ConfirmModal = ({
 
             {/* Info: (20240430 - Julian) Add Button */}
             <button
+              id="add-row-btn"
               type="button"
               onClick={addRowHandler}
               className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
@@ -616,6 +619,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button
+            id="cancel-btn"
             type="button"
             onClick={closeHandler}
             className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
@@ -623,6 +627,7 @@ const ConfirmModal = ({
             {t('REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button
+            id="confirm-btn"
             type="button"
             variant="tertiary"
             disabled={disableConfirmButton}

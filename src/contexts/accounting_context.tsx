@@ -37,6 +37,17 @@ const defaultAccountingVoucher: IAccountingVoucher = {
   credit: 0,
 };
 
+// Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
+interface AccountTitleMap {
+  [key: string]: string;
+}
+
+export const accountTitleMap: AccountTitleMap = {
+  Income: 'PROJECT.INCOME',
+  Payment: 'JOURNAL.PAYMENT',
+  Transfer: 'JOURNAL.TRANSFER',
+};
+
 interface IAccountingContext {
   // tempJournalList: IJournal[];
   // addTempJournal: (journal: IJournal) => void;
@@ -257,7 +268,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       const isVoucherEmpty = !!accountingVoucher && accountingVoucher.length > 0;
       // Info: (20240530 - Julian) 若 accountingVoucher 為空，則新增 id = 0，否則最後一列 id + 1
       const newId = isVoucherEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
-      const account = accountList && accountList.length > 0 ? accountList[0] : null;
 
       switch (type) {
         // Info: (20240530 - Julian) 新增借方列
@@ -266,7 +276,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
             ...prev,
             {
               id: newId,
-              account,
+              account: null,
               particulars: '',
               debit: 1,
               credit: 0,
@@ -279,7 +289,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
             ...prev,
             {
               id: newId,
-              account,
+              account: null,
               particulars: '',
               debit: 0,
               credit: 1,
