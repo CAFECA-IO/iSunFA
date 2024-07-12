@@ -4,7 +4,7 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/investing_cash_flow';
+import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 
 export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   try {
@@ -285,6 +285,7 @@ export async function findManyVoucherWithCashInPrisma(
         }
       },
       include: {
+        journal: true,
         lineItems: {
           include: {
             account: true,

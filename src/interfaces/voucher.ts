@@ -33,6 +33,7 @@ export interface IVoucherDataForSavingToDB {
 
 export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
   include: {
+    journal: true,
     lineItems: {
       include: {
         account: true,
