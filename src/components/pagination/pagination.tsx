@@ -12,7 +12,7 @@ import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 
-interface IPaginationProps {
+export interface IPaginationProps {
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   totalPages: number;

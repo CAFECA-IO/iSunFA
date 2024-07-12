@@ -376,6 +376,7 @@
     "PROJECT_CONTRACT_ISUNFA": "项目合同 - iSunFA",
     "FROM_TO": "起迄期间",
     "VOUCHER_NO": "凭证号码",
+    "OPERATIONS": "操作",
     "INFO": "信息",
     "EVENT_TYPE": "事件类型",
     "PAYMENT_REASON": "付款原因",
