@@ -167,7 +167,8 @@ export const generateRandomGeneratedReportItem = (daysAgo: number): IGeneratedRe
       startTimestamp,
       endTimestamp,
     },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: {
       id: Math.random().toString(36).substring(7),
       name: 'Example Project',
@@ -194,7 +195,8 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Balance Sheet-20240423-1',
     createdTimestamp: 1713815673,
     period: { startTimestamp: 1715616000, endTimestamp: 1718208000 },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportLinkId:
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: null,
@@ -208,7 +210,8 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Cash Flow Statement-20240420-1',
     createdTimestamp: 1713543101,
     period: { startTimestamp: 1715529600, endTimestamp: 1718121600 },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: { id: 'hnhirr', name: 'TideBit', code: 'TB' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -222,7 +225,8 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Balance Sheet-20240427-1',
     createdTimestamp: 1714220640,
     period: { startTimestamp: 1715443200, endTimestamp: 1718035200 },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: { id: '25ptrg', name: 'iSunFA', code: 'IS' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -236,7 +240,8 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Comprehensive Income Statement-20240422-1',
     createdTimestamp: 1713755682,
     period: { startTimestamp: 1715356800, endTimestamp: 1717948800 },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: null,
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -250,7 +255,8 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Balance Sheet-20240429-1',
     createdTimestamp: 1714331987,
     period: { startTimestamp: 1715270400, endTimestamp: 1717862400 },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: { id: '3xza6b', name: 'BAIFA', code: 'BF' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
@@ -264,7 +270,8 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     name: 'Cash Flow Statement-20240229-1',
     createdTimestamp: 1719331987,
     period: { startTimestamp: 1705270400, endTimestamp: 1726862400 },
-    blockchainExplorerLink: `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007`,
+    blockchainExplorerLink:
+      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     project: { id: '78645', name: 'BAIFA', code: 'BF' },
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportLinkId:
