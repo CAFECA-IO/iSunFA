@@ -29,17 +29,20 @@ function checkInput(
   }[]
 ): boolean {
   return (
-    !!startDate &&
-    !!endDate &&
-    !!department &&
-    !!name &&
-    !!salary &&
-    !!bonus &&
-    !!insurancePayment &&
-    !!description &&
-    !!workingHours &&
+    startDate !== undefined &&
+    endDate !== undefined &&
+    department !== undefined &&
+    name !== undefined &&
+    salary !== undefined &&
+    bonus !== undefined &&
+    insurancePayment !== undefined &&
+    description !== undefined &&
+    workingHours !== undefined &&
     Array.isArray(projects) &&
-    projects.every((project) => !!project.id && !!project.name && !!project.hours)
+    projects.every(
+      (project) =>
+        project.id !== undefined && project.name !== undefined && project.hours !== undefined
+    )
   );
 }
 

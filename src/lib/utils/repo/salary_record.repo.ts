@@ -6,6 +6,8 @@ import {
   ISalaryRecordWithProjectsAndHours,
 } from '@/interfaces/salary_record';
 import { timestampInSeconds, calculateWorkingHours } from '@/lib/utils/common';
+import { IInvoice } from '@/interfaces/invoice';
+import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
@@ -494,4 +496,84 @@ export async function updateSalaryRecordById(
       }
     : null;
   return formatUpdatedSalaryRecord;
+}
+
+export async function generateInvoiceFromSalaryRecord(
+  companyId: number,
+  salaryRecordsIdsList: number[]
+): Promise<IInvoice> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const salaryRecords = await prisma.salaryRecord.findMany({
+    where: {
+      id: {
+        in: salaryRecordsIdsList,
+      },
+      employee: {
+        companyId,
+      },
+    },
+    select: {
+      id: true,
+      employeeId: true,
+      employee: {
+        select: {
+          name: true,
+          department: {
+            select: {
+              name: true,
+            },
+          },
+          company: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+      salary: true,
+      insurancePayment: true,
+      bonus: true,
+      description: true,
+      startDate: true,
+      endDate: true,
+      workingHour: true,
+      confirmed: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  const totalSalary = salaryRecords.reduce((acc, record) => acc + record.salary, 0);
+  const totalInsurancePayment = salaryRecords.reduce(
+    (acc, record) => acc + record.insurancePayment,
+    0
+  );
+  const totalBonus = salaryRecords.reduce((acc, record) => acc + record.bonus, 0);
+  const invoice: IInvoice = {
+    journalId: null,
+    date: nowTimestamp,
+    eventType: EventType.PAYMENT,
+    paymentReason: 'Salary Payment',
+    description: salaryRecords[0].description,
+    vendorOrSupplier: salaryRecords[0].employee.company.name,
+    projectId: null,
+    project: null,
+    contractId: null,
+    contract: null,
+    payment: {
+      isRevenue: false,
+      price: totalSalary + totalInsurancePayment + totalBonus,
+      hasTax: false,
+      taxPercentage: 0,
+      hasFee: false,
+      fee: 0,
+      method: 'Bank Transfer',
+      period: PaymentPeriodType.AT_ONCE,
+      installmentPeriod: 0,
+      alreadyPaid: 0,
+      status: PaymentStatusType.UNPAID,
+      progress: 0,
+    },
+  };
+  return invoice;
 }
