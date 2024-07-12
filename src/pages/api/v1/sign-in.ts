@@ -18,8 +18,6 @@ async function authenticateUser(
   let isValid = true;
   let user: IUser | null = null;
   isValid = verifyChallengeTimestamp(challenge);
-  // eslint-disable-next-line no-console
-  // console.log('isValid', isValid);
   if (isValid) {
     const getUser = await getUserByCredential(authentication.credentialId);
     if (!getUser) {
