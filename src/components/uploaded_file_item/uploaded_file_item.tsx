@@ -7,7 +7,7 @@ import { useTranslation } from 'next-i18next';
 interface IUploadedFileItemProps {
   itemData: IUnprocessedOCR;
   pauseHandler: (id: number) => void;
-  deleteHandler: (id: number) => void;
+  deleteHandler: (aichResultId: string) => void;
   clickHandler: (unprocessedJournal: IUnprocessedOCR) => void;
 }
 
@@ -18,7 +18,7 @@ const UploadedFileItem = ({
   clickHandler,
 }: IUploadedFileItemProps) => {
   const { t } = useTranslation('common');
-  const { id, imageName, imageUrl, imageSize, progress, status } = itemData;
+  const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
     status === ProgressStatus.IN_PROGRESS ||
@@ -33,7 +33,7 @@ const UploadedFileItem = ({
 
   const deleteClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation(); // Info: (20240530 - Julian) 防止點擊刪除時，觸發 itemClickHandler
-    deleteHandler(id);
+    deleteHandler(aichResultId);
   };
 
   const itemClickHandler = () => {
@@ -69,8 +69,8 @@ const UploadedFileItem = ({
       <div className="relative inline-flex w-full items-center gap-20px">
         <Image src="/animations/scanning.gif" width={56} height={56} alt="scanning_animation" />
         {/* Info: (20240523 - Julian) File Thumbnail */}
-        <div className="inline-flex h-64px w-64px items-center justify-center">
-          <Image src={imageUrl} width={64} height={64} alt="file_thumbnail" />
+        <div className="relative inline-flex h-64px w-64px items-center justify-center overflow-hidden">
+          <Image src={imageUrl} alt="file_thumbnail" fill style={{ objectFit: 'contain' }} />
         </div>
         <div className="flex shrink grow flex-col items-start">
           {/* Info: (20240523 - Julian) File Name */}
@@ -85,7 +85,7 @@ const UploadedFileItem = ({
           </p>
         </div>
         {/* Info: (20240523 - Julian) Tool Buttons */}
-        <div className="absolute right-0 z-30 flex items-center gap-10px text-icon-surface-single-color-primary">
+        <div className="absolute right-0 z-10 flex items-center gap-10px text-icon-surface-single-color-primary">
           {/* Info: (20240523 - Julian) Status */}
           {displayedStatus}
           {/* Info: (20240523 - Julian) Trash Button */}

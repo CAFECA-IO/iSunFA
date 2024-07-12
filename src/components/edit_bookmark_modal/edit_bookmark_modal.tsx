@@ -28,7 +28,7 @@ const bookmarkNameMap: BookmarkNameMap = {
   'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
   'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
   'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
-  'Hr Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
+  'HR Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
   'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
 };
 
@@ -50,9 +50,8 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   };
 
   const dropdownMenu =
-    // selectedBookmark.length > 0 ? `${selectedBookmark.length} selected` : 'Please select bookmarks';
     selectedBookmark.length > 0
-      ? `${selectedBookmark.length} selected`
+      ? `${selectedBookmark.length} ${t('DASHBOARD.SELECTED')}`
       : t('EDIT_BOOKMARK_MODAL.PLEASE_SELECT_BOOKMARKS');
 
   useEffect(() => {
@@ -284,7 +283,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
               onClick={cancelBtnClickHandler}
               className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
-              {t('REPORTS_HISTORY_ITEM.CANCEL')}
+              {t('REPORTS_HISTORY_LIST.CANCEL')}
             </button>{' '}
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
               {t('EDIT_BOOKMARK_MODAL.SAVE')}

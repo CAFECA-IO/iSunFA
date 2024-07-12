@@ -3,7 +3,7 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import Link from 'next/link';
-import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
+import { FinancialReportTypeName, ReportTypeToBaifaReportType } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 
@@ -97,8 +97,14 @@ const ReportsHistoryItem = ({
           </div>
         </div>
       </td>
+      <td className="hidden px-16px text-left font-medium lg:table-cell">
+        <span className="text-sm text-text-neutral-primary">
+          {/* TODO: 請 @Anna 幫忙加 i18n (20240711 - Shirley) */}
+          {FinancialReportTypeName[report.reportType]}
+        </span>
+      </td>
       {/* Info: period (20240528 - Shirley) */}
-      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
@@ -130,7 +136,7 @@ const ReportsHistoryItem = ({
       {/* Info: project (20240528 - Shirley) */}
       <td className="hidden px-16px text-left lg:table-cell">{displayedProject}</td>
       {/* Info: operation buttons (20240516 - Shirley) */}
-      <td className="hidden px-16px lg:table-cell">
+      <td className="hidden min-w-100px px-16px lg:table-cell">
         <div className="flex items-center justify-between">
           {/* Info: download button (20240516 - Shirley) */}
           <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">

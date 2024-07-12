@@ -17,7 +17,7 @@
     "MARK_ALL_AS_READ": "将所有通知标记为已读",
     "READ_MORE": "继续阅读...",
     "LANGUAGE": "语言",
-    "ACCOUNT": "帐户",
+    "ACCOUNT": "会计",
     "APPLICATIONS": "应用程序",
     "SWITCH_COMPANY": "切换公司",
     "SUBSCRIPTION_BILLS": "订阅和帐单",
@@ -402,13 +402,7 @@
     "BANK_OF_TAIWAN": "004 台湾银行",
     "LAND_BANK_OF_TAIWAN": "005 土地银行",
     "TAIWAN_COOPERATIVE_BANK": "006 合库银行",
-    "FIRST_COMMERCIAL_BANK": "007 第一银行",
-    "PROJECT_A": "项目 A",
-    "PROJECT_B": "项目 B",
-    "PROJECT_C": "项目 C",
-    "CONTRACT_A": "合同 A",
-    "CONTRACT_B": "合同 B",
-    "CONTRACT_C": "合同 C"
+    "FIRST_COMMERCIAL_BANK": "007 第一银行"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -451,17 +445,7 @@
     "PROJECT_LIST_ISUNFA": "项目清单 - iSunFA",
     "NAME_YOUR_PROJECT": "为您的项目命名",
     "ENTER_NEW_PROJECT_NAME": "输入新项目名称",
-    "OVERALL": "全部",
-    "PROJECT AB": "项目 AB",
-    "PROJECT BN": "项目 BN",
-    "PROJECT CQ": "项目 CQ",
-    "PROJECT DR": "项目 DR",
-    "PROJECT ES": "项目 ES",
-    "PROJECT FT": "项目 FT",
-    "PROJECT GU": "项目 GU",
-    "PROJECT IW": "项目 IW",
-    "PROJECT JX": "项目 JX",
-    "PROJECT KI": "项目 KI"
+    "OVERALL": "全部"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -482,7 +466,8 @@
     "FAILED_TO_GET": "无法获得",
     "REPORT": "报告: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "无法获取待处理的报告。错误代码：",
-    "USING_DUMMY_DATA": "使用虚拟数据"
+    "USING_DUMMY_DATA": "使用虚拟数据",
+    "SELECTED": "已选择"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",
@@ -510,7 +495,7 @@
     "DEPRECIATION_METHOD": "折旧方法",
     "STRAIGHT_LINE": "直线折旧法",
     "DOUBLE_DECLINING": "双倍余额递减法",
-    "UNITS_OF_PRODUCTION": "生产单位",
+    "UNITS_OF_PRODUCTION": "工作量法",
     "ESTIMATED_USEFUL_LIFE": "预计使用寿命",
     "YEAR": "年",
     "MONTH": "月",
@@ -535,10 +520,7 @@
     "AI_DETECTION_ERROR_ERROR_CODE": "AI侦测错误，错误代码：",
     "THERE_ARE_NO_RECOMMENDATIONS_FROM_AI": "AI没有推荐",
     "PLEASE_MAKE_SURE": "请确保所有资讯正确！",
-    "ATTENTION": "注意：储存此记帐凭证即表示",
-    "PERMANENT_ON_THE_BLOCKCHAIN": "永久存在于区块链上。错误无法",
-    "CANT_BE_FIXED": "被修复。您",
-    "MAKE_CORRECTIONS.": "将需要新的记帐凭证来进行更正。",
+    "ATTENTION": "注意：按下储存后，此记帐凭证将永久存在于区块链上，无法修复错误。您将需要建立新的记帐凭证来进行更正。",
     "ADD_ACCOUNTING_VOUCHER": "将会计凭证加入到帐簿中"
   },
   "CONTRACT": {

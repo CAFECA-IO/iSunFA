@@ -9,9 +9,12 @@ import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
 import Pagination from '@/components/pagination/pagination';
+import JournalUploadArea from '@/components/journal_upload_area/journal_upload_area';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 const StepOneTab = () => {
   const { t } = useTranslation('common');
@@ -21,11 +24,13 @@ const StepOneTab = () => {
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
 
   useEffect(() => {
-    updateOCRListHandler(selectedCompany!.id, true);
+    const companyId = selectedCompany?.id ?? 0;
+    updateOCRListHandler(companyId, true);
 
-    return () => updateOCRListHandler(selectedCompany!.id, false);
+    return () => updateOCRListHandler(companyId, false);
   }, []);
 
   useEffect(() => {
@@ -70,10 +75,26 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = (id: number) => {
-    // ToDo: (20240528 - Julian) 應串接刪除 item 的 API
-    const newList = fileList.filter((data) => data.id !== id);
-    setFileList(newList);
+  const fileItemDeleteHandler = async (aichResultId: string) => {
+    // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
+    const { success, code } = await deleteOCRTrigger({
+      params: { companyId: selectedCompany!.id, resultId: aichResultId },
+    });
+    if (success === false) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        content: `Failed to delete unprocessed OCR: ${code}, `,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    } else if (success) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        content: `Successfully deleted unprocessed OCR: ${code}`,
+        type: ToastType.SUCCESS,
+        closeable: true,
+      });
+    }
   };
 
   const qrCodeScanClickHandler = () => {
@@ -179,14 +200,7 @@ const StepOneTab = () => {
 
       <div className="my-20px flex flex-col items-center gap-40px md:flex-row">
         {/* Info: (20240422 - Julian) Upload area */}
-        <div className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px">
-          <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-          <p className="mt-20px font-semibold text-navyBlue2">
-            {t('JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-            <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
-          </p>
-          <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
-        </div>
+        <JournalUploadArea />
 
         <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
 

@@ -13,6 +13,7 @@ export enum HttpMethod {
 }
 
 export enum APIName {
+  CREATE_CHALLENGE = 'CREATE_CHALLENGE',
   SIGN_UP = 'SIGN_UP',
   SIGN_IN = 'SIGN_IN',
   SIGN_OUT = 'SIGN_OUT',
@@ -34,6 +35,7 @@ export enum APIName {
   ASSET_MANAGEMENT_GET_BY_ID = 'ASSET_MANAGEMENT_GET_BY_ID',
   ASSET_MANAGEMENT_UPDATE = 'ASSET_MANAGEMENT_UPDATE',
   OCR_UPLOAD = 'OCR_UPLOAD',
+  OCR_DELETE = 'OCR_DELETE',
   OCR_RESULT_GET_BY_ID = 'OCR_RESULT_GET_BY_ID',
   OCR_LIST = 'OCR_LIST',
   INVOICE_CREATE = 'INVOICE_CREATE',
@@ -55,6 +57,7 @@ export enum APIName {
 }
 
 export enum APIPath {
+  CREATE_CHALLENGE = `${apiPrefix}/challenge`,
   SIGN_UP = `${apiPrefix}/sign-up`,
   SIGN_IN = `${apiPrefix}/sign-in`,
   SIGN_OUT = `${apiPrefix}/sign-out`,
@@ -75,6 +78,7 @@ export enum APIPath {
   ASSET_MANAGEMENT_GET_BY_ID = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
   ASSET_MANAGEMENT_UPDATE = `${apiPrefix}/company/:companyId/asset_management/:assetId`,
   OCR_UPLOAD = `${apiPrefix}/company/:companyId/ocr`,
+  OCR_DELETE = `${apiPrefix}/company/:companyId/ocr/:resultId`,
   OCR_RESULT_GET_BY_ID = `${apiPrefix}/company/:companyId/ocr/:resultId`,
   OCR_LIST = `${apiPrefix}/company/:companyId/ocr`,
   INVOICE_CREATE = `${apiPrefix}/company/:companyId/invoice`,
@@ -96,6 +100,19 @@ export enum APIPath {
 }
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
+  [APIName.CREATE_CHALLENGE]: {
+    name: APIName.CREATE_CHALLENGE,
+    method: HttpMethod.GET,
+    path: APIPath.CREATE_CHALLENGE,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
   [APIName.SIGN_UP]: {
     name: APIName.SIGN_UP,
     method: HttpMethod.POST,
@@ -178,6 +195,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.OCR_UPLOAD,
     method: HttpMethod.POST,
     path: APIPath.OCR_UPLOAD,
+    input: {
+      header: {},
+      body: {},
+      params: {},
+      query: {},
+    },
+    output: {},
+    useWorker: false,
+  },
+  [APIName.OCR_DELETE]: {
+    name: APIName.OCR_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.OCR_DELETE,
     input: {
       header: {},
       body: {},

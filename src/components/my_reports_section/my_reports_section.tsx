@@ -5,10 +5,13 @@ import {
   SortOptions,
   DEFAULT_DISPLAYED_COMPANY_ID,
   default30DayPeriodInSec,
+  LIMIT_FOR_REPORT_PAGE,
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
+  FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
+  FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
   IPendingReportItem,
@@ -24,6 +27,7 @@ import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
+import { sortOptionQuery } from '@/constants/sort';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
@@ -38,39 +42,68 @@ const MyReportsSection = () => {
     // filterOptionsForHistory,
     // filterOptionsForPending,
   } = useGlobalCtx();
-  const {
-    data: pendingReports,
-    code: listPendingCode,
-    success: listPendingSuccess,
-  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-  });
-  const {
-    data: generatedReports,
-    code: listGeneratedCode,
-    success: listGeneratedSuccess,
-  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-  });
+
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
-  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(
+    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.page
+  );
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>(
+    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
+  );
 
   const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
-  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(
+    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.page
+  );
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>(
+    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
+  );
 
   const isPendingDataLoading = false;
   const isHistoryDataLoading = false;
 
-  const pendingTotalPages = 1;
-  const historyTotalPages = 1;
+  const pendingTotalPages = FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
+  const historyTotalPages = FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
+
+  const {
+    trigger: fetchPendingReports,
+    data: pendingReports,
+    code: listPendingCode,
+    success: listPendingSuccess,
+  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    query: {
+      sort: sortOptionQuery[filteredPendingSort],
+      begin: pendingPeriod.startTimeStamp,
+      end: pendingPeriod.endTimeStamp,
+      search: searchPendingQuery,
+      page: pendingCurrentPage,
+      limit: LIMIT_FOR_REPORT_PAGE,
+    },
+  });
+
+  const {
+    trigger: fetchGeneratedReports,
+    data: generatedReports,
+    code: listGeneratedCode,
+    success: listGeneratedSuccess,
+  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
+    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    query: {
+      sort: sortOptionQuery[filteredHistorySort],
+      begin: historyPeriod.startTimeStamp,
+      end: historyPeriod.endTimeStamp,
+      search: searchHistoryQuery,
+      page: historyCurrentPage,
+      limit: LIMIT_FOR_REPORT_PAGE,
+    },
+  });
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports) {
@@ -99,6 +132,27 @@ const MyReportsSection = () => {
       setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
+
+  // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
+  // TODO: 嘗試改成用 DatePicker 裡面觸發 callback 來達成 (20240710 - Shirley)
+  useEffect(() => {
+    if (!pendingPeriod.endTimeStamp) return;
+    fetchPendingReports();
+  }, [pendingPeriod]);
+
+  useEffect(() => {
+    fetchPendingReports();
+  }, [filteredPendingSort, pendingCurrentPage, searchPendingQuery]);
+
+  // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
+  useEffect(() => {
+    if (!historyPeriod.endTimeStamp) return;
+    fetchGeneratedReports();
+  }, [historyPeriod]);
+
+  useEffect(() => {
+    fetchGeneratedReports();
+  }, [filteredHistorySort, historyCurrentPage, searchHistoryQuery]);
 
   const {
     targetRef: pendingSortMenuRef,

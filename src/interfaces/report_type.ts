@@ -4,6 +4,12 @@ export enum FinancialReportTypesKey {
   cash_flow_statement = 'cash_flow_statement',
 }
 
+export enum FinancialReportTypeName {
+  balance_sheet = 'Balance Sheet',
+  comprehensive_income_statement = 'Comprehensive Income Statement',
+  cash_flow_statement = 'Cash Flow Statement',
+}
+
 export enum AnalysisReportTypesKey {
   financial_performance = 'financial_performance',
   cost_analysis = 'cost_analysis',

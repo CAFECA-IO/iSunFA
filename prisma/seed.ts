@@ -21,6 +21,9 @@ import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
 import invitations from '@/seed_json/invitation.json';
 import clients from '@/seed_json/client.json';
+import journals from '@/seed_json/journal.json';
+import vouchers from '@/seed_json/voucher.json';
+import lineItems from '@/seed_json/line_item.json';
 
 const prisma = new PrismaClient();
 
@@ -155,6 +158,63 @@ async function createInvitation() {
   });
 }
 
+async function createJournal() {
+  await prisma.journal.createMany({
+    data: journals,
+  });
+}
+
+async function createVoucher() {
+  await prisma.voucher.createMany({
+    data: vouchers,
+  });
+}
+
+async function createLineItem(lineItem: {
+  amount: number;
+  description: string;
+  accountCode: string;
+  debit: boolean;
+  voucherId: number;
+  createdAt: number;
+  updatedAt: number;
+}) {
+  const account = await prisma.account.findFirst({
+    where: {
+      code: lineItem.accountCode,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (!account) {
+    throw new Error(`Account with code ${lineItem.accountCode} not found`);
+  }
+  await prisma.lineItem.create({
+    data: {
+      amount: lineItem.amount,
+      description: lineItem.description,
+      debit: lineItem.debit,
+      createdAt: lineItem.createdAt,
+      updatedAt: lineItem.updatedAt,
+      account: {
+        connect: {
+          id: account.id,
+        },
+      },
+      voucher: {
+        connect: {
+          id: lineItem.voucherId,
+        },
+      },
+    },
+  });
+}
+
+async function createLineItems() {
+  await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
+}
+
 async function main() {
   // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
   await createRole();
@@ -194,6 +254,14 @@ async function main() {
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });
+
+  await createJournal();
+  await createVoucher();
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createLineItems();
 }
 
 main()

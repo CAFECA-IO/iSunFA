@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkUserAdmin } from '@/lib/utils/auth_check';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 import { formatProject } from '@/lib/utils/formatter/project.formatter';
@@ -40,7 +40,7 @@ async function checkInput(
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await isUserAdmin(userId, companyId);
+  const isAdmin = await checkUserAdmin({ userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {

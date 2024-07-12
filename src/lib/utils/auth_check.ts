@@ -2,7 +2,6 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IUser } from '@/interfaces/user';
-import { IAdmin } from '@/interfaces/admin';
 import { RoleName } from '@/constants/role_name';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
@@ -12,9 +11,9 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 import { Invitation } from '@prisma/client';
 import i18next from 'i18next';
+import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
 
 const getTranslatedRoleName = (roleName: RoleName): string => {
   const t = i18next.t.bind(i18next);
@@ -68,8 +67,11 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   return session;
 }
 
-export async function isUserAdmin(userId: number, companyId: number): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+export async function checkUserAdmin(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(params.companyId, params.userId);
   return !!admin;
 }
 
@@ -94,24 +96,54 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   return session;
 }
 
-export async function checkCompanyAdminMatch(companyId: number, adminId: number): Promise<IAdmin> {
-  const getAdmin = await getAdminById(adminId);
-  if (getAdmin.companyId !== companyId) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+export async function checkCompanyAdminMatch(params: {
+  companyId: number;
+  adminId: number;
+}): Promise<boolean> {
+  let isAuth = true;
+  const getAdmin = await getAdminById(params.adminId);
+  if (!getAdmin) {
+    isAuth = false;
+  } else if (getAdmin.companyId !== params.companyId) {
+    isAuth = false;
   }
-  const admin = await formatAdmin(getAdmin);
-  return admin;
+  return isAuth;
 }
 
-export async function isProjectCompanyMatch(projectId: number, companyId: number) {
-  const getProject = await getProjectById(projectId);
-  const match = getProject !== null && getProject.companyId === companyId;
+export async function checkProjectCompanyMatch(params: { projectId: number; companyId: number }) {
+  const getProject = await getProjectById(params.projectId);
+  const match = getProject !== null && getProject.companyId === params.companyId;
   return match;
 }
 
-export async function checkInvitation(invitation: Invitation): Promise<boolean> {
+export async function checkInvitation(params: { invitation: Invitation }): Promise<boolean> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const isValid = invitation && !invitation.hasUsed && invitation.expiredAt >= nowTimestamp;
-  return isValid;
+  const isAuth =
+    params.invitation && !params.invitation.hasUsed && params.invitation.expiredAt >= nowTimestamp;
+  return isAuth;
+}
+
+// 检查函数的映射表
+export const authFunctions: AuthFunctions = {
+  admin: checkUserAdmin,
+  CompanyAdminMatch: checkCompanyAdminMatch,
+  projectCompanyMatch: checkProjectCompanyMatch,
+  invitation: checkInvitation,
+};
+
+export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
+  requiredChecks: T,
+  authParams: AllRequiredParams<T>
+): Promise<boolean> {
+  const results = await Promise.all(
+    requiredChecks.map(async (check) => {
+      const checkFunction = authFunctions[check] as (params: typeof authParams) => Promise<boolean>;
+      const checked = await checkFunction(authParams);
+      return checked; // Await the result directly in map
+    })
+  );
+
+  const isAuthorized = results.every((result) => result); // Use Array.prototype.every for final check
+  return isAuthorized; // Use Array.prototype.every for final check
 }

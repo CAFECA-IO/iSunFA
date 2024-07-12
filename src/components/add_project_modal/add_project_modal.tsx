@@ -119,7 +119,6 @@ const AddProjectModal = ({
           // onClick={() => setSelectedStage(stage)}
         >
           {t(stageNameMap[stage])}
-          {/* {stage}test */}
         </button>
       ))}
     </div>

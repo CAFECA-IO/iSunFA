@@ -8,6 +8,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { FinancialReportTypeName } from '@/interfaces/report_type';
 
 interface IPendingReportItemProps {
   report: IPendingReportItem;
@@ -111,7 +112,7 @@ const PendingReportItem = ({
     <Button
       onClick={pauseClickHandler}
       variant={'tertiaryBorderless'}
-      className="my-auto mr-5 px-0 py-0"
+      className="my-auto mr-2 px-0 py-0"
     >
       {' '}
       <svg
@@ -133,7 +134,7 @@ const PendingReportItem = ({
     <Button
       onClick={resumeClickHandler}
       variant={'tertiaryBorderless'}
-      className="my-auto mr-5 px-0 py-0"
+      className="my-auto mr-2 px-0 py-0"
     >
       {' '}
       <svg
@@ -157,7 +158,7 @@ const PendingReportItem = ({
 
   const displayedOperationsColumn =
     remainingTime > 0 ? (
-      <div className="hidden w-full grid-cols-3 lg:grid">
+      <div className="flex w-full grid-cols-3 lg:grid">
         {/* Info: Pause / Resume (20240514 - Shirley) */}
         {displayedPauseOrResumeButton}
         {/* Info: Delete (20240514 - Shirley) */}
@@ -235,14 +236,19 @@ const PendingReportItem = ({
         <p className="hidden lg:flex">{name}</p>
 
         {/* Info: mobile (20240528 - Shirley) */}
-        <div className="flex flex-col space-y-5 lg:hidden">
+        <div className="flex flex-col space-y-3 lg:hidden">
           <p className="text-ellipsis sm:hidden">{truncateString(name, 16)}</p>
           <p className="hidden text-ellipsis sm:flex">{name}</p>
-
           <div className="flex items-center justify-start">{displayedOperationsColumn}</div>
         </div>
       </td>
-      <td className="hidden w-240px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden px-16px text-left font-medium lg:table-cell">
+        <span className="text-sm text-text-neutral-primary">
+          {/* TODO: 請 @Anna 幫忙加 i18n (20240711 - Shirley) */}
+          {FinancialReportTypeName[report.reportType]}
+        </span>
+      </td>
+      <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
@@ -251,14 +257,14 @@ const PendingReportItem = ({
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
-      <td className="hidden w-240px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-150px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.ESTIMATED')}</span>
           {displayedEstimatedTime}
         </div>
       </td>
-      {/* Info: Operations (20240514 - Shirley) */}
-      <td className="hidden px-16px lg:table-cell">
+      {/* Info: Desktop Operations (20240514 - Shirley) */}
+      <td className="hidden min-w-150px px-16px lg:table-cell">
         <div className="flex items-center">{displayedOperationsColumn}</div>
       </td>
     </tr>

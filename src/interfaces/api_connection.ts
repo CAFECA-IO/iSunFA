@@ -2,6 +2,7 @@ import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
 
 export type IAPIName =
+  | 'CREATE_CHALLENGE'
   | 'SIGN_UP'
   | 'SIGN_IN'
   | 'SIGN_OUT'
@@ -22,6 +23,7 @@ export type IAPIName =
   | 'ASSET_MANAGEMENT_GET_BY_ID'
   | 'ASSET_MANAGEMENT_UPDATE'
   | 'OCR_UPLOAD'
+  | 'OCR_DELETE'
   | 'OCR_RESULT_GET_BY_ID'
   | 'OCR_LIST'
   | 'INVOICE_CREATE'
@@ -63,7 +65,15 @@ export type IAPIConfig = {
 
 export type IAPIResponse<Data> = {
   success: boolean | undefined;
-  trigger: (input?: IAPIInput, signal?: AbortSignal) => void;
+  trigger: (
+    input?: IAPIInput,
+    signal?: AbortSignal
+  ) => Promise<{
+    success: boolean;
+    data: Data | null;
+    code: string;
+    error: Error | null;
+  }>;
   isLoading: boolean | undefined;
   data: Data | undefined;
   code: string | undefined;

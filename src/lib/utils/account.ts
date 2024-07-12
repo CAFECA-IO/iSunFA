@@ -6,7 +6,7 @@ import { Account } from '@prisma/client';
 // Deprecated: (20240702 - Murky) This is for testing purpose
 // import { AccountType } from "@/constants/account";
 // import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
-// import { getSumOfLineItemsGroupByAccountInPrisma } from "@/lib/utils/repo/line_item.repo";
+// import { getLineItemsInPrisma } from "@/lib/utils/repo/line_item.repo";
 // import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 
 export function transformLineItemsFromDBToMap(
@@ -90,7 +90,9 @@ export function updateAccountAmountsInSingleTree(
 }
 
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
-  const updatedForest = forest.map((account) => updateAccountAmountsInSingleTree(account, lineItemsMap));
+  const updatedForest = forest.map((account) =>
+    updateAccountAmountsInSingleTree(account, lineItemsMap)
+  );
   return updatedForest;
 }
 

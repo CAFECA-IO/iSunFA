@@ -10,23 +10,12 @@ import {
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountForSheetDisplay } from '@/interfaces/accounting_account';
 import { getSession } from '@/lib/utils/session';
-import { AccountSheetAccountTypeMap, AccountSheetType, AccountType } from '@/constants/account';
+import { AccountSheetType } from '@/constants/account';
 import {
   convertStringToAccountSheetType,
   isAccountSheetType,
 } from '@/lib/utils/type_guard/account';
-import { getSumOfLineItemsGroupByAccountInPrisma } from '@/lib/utils/repo/line_item.repo';
-import {
-  buildAccountForest,
-  calculateIncomeStatementNetIncome,
-  mappingAccountToSheetDisplay,
-  transformForestToMap,
-  transformLineItemsFromDBToMap,
-  updateAccountAmounts,
-} from '@/lib/utils/account';
-import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
-import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
-import incomeStatementMapping from '@/constants/account_sheet_mapping/income_statement_mapping.json';
+import FinancialReportGeneratorFactory from '@/lib/utils/financial_report/financial_report_generator_factory';
 
 export function formatGetRequestQuery(req: NextApiRequest) {
   const { startDate, endDate, sheet } = req.query;
@@ -54,89 +43,27 @@ export function formatGetRequestQuery(req: NextApiRequest) {
   return { startDateInSecond, endDateInSecond, accountSheet };
 }
 
-export async function buildAccountForestFromDB(companyId: number, accountType: AccountType) {
-  const onlyForUser = false;
-  const page = 1;
-  const limit = Number.MAX_SAFE_INTEGER;
-  const liquidity = undefined;
-  const selectDeleted = false;
-  const accounts = await findManyAccountsInPrisma(
-    companyId,
-    onlyForUser,
-    page,
-    limit,
-    accountType,
-    liquidity,
-    selectDeleted
-  );
-  const forest = buildAccountForest(accounts);
-  return forest;
-}
-
-export async function getAccountForestByAccountSheet(
-  companyId: number,
-  accountSheet: AccountSheetType
-) {
-  const accountTypes = AccountSheetAccountTypeMap[accountSheet];
-  const forestArray = await Promise.all(
-    accountTypes.map((type) => buildAccountForestFromDB(companyId, type))
-  );
-
-  const forest = forestArray.flat(1);
-  return forest;
-}
-
-export async function getAllLineItemsByAccountSheet(
-  companyId: number,
-  startDateInSecond: number,
-  endDateInSecond: number,
-  accountSheet: AccountSheetType
-) {
-  const accountTypes = AccountSheetAccountTypeMap[accountSheet];
-  const lineItemsFromDBArray = await Promise.all(
-    accountTypes.map((type) => getSumOfLineItemsGroupByAccountInPrisma(companyId, type, startDateInSecond, endDateInSecond))
-  );
-
-  const lineItemsFromDB = lineItemsFromDBArray.flat();
-  return lineItemsFromDB;
-}
-
 export async function generateFinancialReport(
   companyId: number,
   startDateInSecond: number,
   endDateInSecond: number,
   accountSheet: AccountSheetType
 ) {
-  const lineItemsFromDB = await getAllLineItemsByAccountSheet(
-    companyId,
-    startDateInSecond,
-    endDateInSecond,
-    accountSheet
-  );
-  const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
-  const accountForest = await getAccountForestByAccountSheet(companyId, accountSheet);
-  let updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
+  // Info: (20240710 - Murky) Financial Report Generator
+  let sheetDisplay: IAccountForSheetDisplay[] = [];
+  try {
+    const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
+      companyId,
+      startDateInSecond,
+      endDateInSecond,
+      accountSheet
+    );
 
-  // Deprecated: (20240416 - Murky) This logic should embed into Class, not by if or switch
-  if (accountSheet === AccountSheetType.INCOME_STATEMENT) {
-    updatedAccountForest = calculateIncomeStatementNetIncome(updatedAccountForest);
-  }
-
-  const accountMap = transformForestToMap(updatedAccountForest);
-  let sheetDisplay: IAccountForSheetDisplay[];
-
-  switch (accountSheet) {
-    case AccountSheetType.BALANCE_SHEET:
-      sheetDisplay = mappingAccountToSheetDisplay(accountMap, balanceSheetMapping);
-      break;
-    case AccountSheetType.INCOME_STATEMENT:
-      sheetDisplay = mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
-      break;
-    default:
-      sheetDisplay = [];
-      // Deprecated: (20240416 - Murky) This is for debugging purpose
-      // eslint-disable-next-line no-console
-      console.log('accountSheet: ', accountSheet, ' is not supported');
+    sheetDisplay = await financialReportGenerator.generateFinancialReportArray();
+  } catch (error) {
+    // Deprecate: (20240710 - Murky) console.error
+    // eslint-disable-next-line no-console
+    console.error(error);
   }
   return sheetDisplay;
 }

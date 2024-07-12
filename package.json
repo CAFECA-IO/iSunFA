@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.8+8",
+  "version": "0.1.8+23",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -13,7 +13,7 @@
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
     "validate": "npm run test && npm run check-format && npm run lint",
     "production": "next start -p 80",
-    "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add ."
+    "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add package.json"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",

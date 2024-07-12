@@ -404,13 +404,7 @@
     "BANK_OF_TAIWAN": "004 Bank of Taiwan",
     "LAND_BANK_OF_TAIWAN": "005 Land Bank of Taiwan",
     "TAIWAN_COOPERATIVE_BANK": "006 Taiwan Cooperative Bank",
-    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank",
-    "PROJECT_A": "Project A",
-    "PROJECT_B": "Project B",
-    "PROJECT_C": "Project C",
-    "CONTRACT_A": "Contract A",
-    "CONTRACT_B": "Contract B",
-    "CONTRACT_C": "Contract C"
+    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -453,17 +447,7 @@
     "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
     "NAME_YOUR_PROJECT": "Name your project",
     "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
-    "OVERALL": "Overall",
-    "PROJECT AB": "Project AB",
-    "PROJECT BN": "Project BN",
-    "PROJECT CQ": "Project CQ",
-    "PROJECT DR": "Project DR",
-    "PROJECT ES": "Project ES",
-    "PROJECT FT": "Project FT",
-    "PROJECT GU": "Project GU",
-    "PROJECT IW": "Project IW",
-    "PROJECT JX": "Project JX",
-    "PROJECT KI": "Project KI"
+    "OVERALL": "Overall"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -484,7 +468,8 @@
     "FAILED_TO_GET": "Failed to get",
     "REPORT": "report: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "Failed to fetch pending reports. Error code: ",
-    "USING_DUMMY_DATA": "USING DUMMY DATA"
+    "USING_DUMMY_DATA": "USING DUMMY DATA",
+    "SELECTED": "selected"
   },
 
   "SELECT_COMPANY": {
@@ -538,10 +523,7 @@
     "AI_DETECTION_ERROR_ERROR_CODE": "AI Detection Error, error code: ",
     "THERE_ARE_NO_RECOMMENDATIONS_FROM_AI": "There are no recommendations from AI",
     "PLEASE_MAKE_SURE": "Please make sure all the information are correct !",
-    "ATTENTION": "Attention: Saving this voucher means it",
-    "PERMANENT_ON_THE_BLOCKCHAIN": "s permanent on the blockchain. Mistakes can",
-    "CANT_BE_FIXED": "t be fixed. You",
-    "MAKE_CORRECTIONS.": "ll need new vouchers to make corrections.",
+    "ATTENTION": "Attention: Saving this voucher means it's permanent on the blockchain. Mistakes can't be fixed. You'll need new vouchers to make corrections.",
     "ADD_ACCOUNTING_VOUCHER": "Add Accounting Voucher to the book"
   },
   "CONTRACT": {

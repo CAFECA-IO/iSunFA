@@ -13,9 +13,7 @@ import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context'
 import { DEFAULT_DISPLAYED_COMPANY_ID, checkboxStyle } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ILineItem } from '@/interfaces/line_item';
-import AccountingVoucherRow, {
-  AccountingVoucherRowMobile,
-} from '@/components/accounting_voucher_row/accounting_voucher_row';
+import AccountingVoucherRow from '@/components/accounting_voucher_row/accounting_voucher_row';
 import { Button } from '@/components/button/button';
 // ToDo: (20240527 - Luphia) Fix me
 // eslint-disable-next-line import/no-cycle
@@ -39,25 +37,43 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmData,
 }: IConfirmModalProps) => {
+  const router = useRouter();
+
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const {
-    getAIStatusHandler,
-    accountList,
     AIStatus,
+    getAIStatusHandler,
+    totalCredit,
+    totalDebit,
+    accountList,
     generateAccountTitle,
     accountingVoucher,
     addVoucherRowHandler,
     changeVoucherAccountHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
-    totalCredit,
-    totalDebit,
     selectJournalHandler,
   } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 
   const { journalId, askAIId } = confirmData;
+
+  const [eventType, setEventType] = useState<string>('');
+  const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  const [reason, setReason] = useState<string>('');
+  const [companyName, setCompanyName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [taxPercentage, setTaxPercentage] = useState<number>(0);
+  const [fee, setFee] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentPeriod, setPaymentPeriod] = useState<string>('');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
+  const [project, setProject] = useState<string>('');
+  const [contract, setContract] = useState<string>('');
+  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
 
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
   const {
@@ -67,6 +83,15 @@ const ConfirmModal = ({
     code: getJournalCode,
   } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
 
+  // Info: (20240527 - Julian) Get AI 生成的傳票
+  const {
+    trigger: getAIResult,
+    data: AIResult,
+    success: AIResultSuccess,
+    code: AIResultCode,
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
+
+  // Info: (20240527 - Julian) 建立傳票
   const {
     trigger: createVoucher,
     data: result,
@@ -90,34 +115,69 @@ const ConfirmModal = ({
     }[];
   } | null>(APIName.VOUCHER_CREATE, {}, false, false);
 
-  const {
-    trigger: getAIResult,
-    data: AIResult,
-    success: AIResultSuccess,
-    code: AIResultCode,
-  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-
-  const router = useRouter();
-
-  const [eventType, setEventType] = useState<string>('');
-  const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  const [reason, setReason] = useState<string>('');
-  const [companyName, setCompanyName] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [taxPercentage, setTaxPercentage] = useState<number>(0);
-  const [fee, setFee] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [paymentPeriod, setPaymentPeriod] = useState<string>('');
-  const [paymentStatus, setPaymentStatus] = useState<string>('');
-  const [project, setProject] = useState<string>('');
-  const [contract, setContract] = useState<string>('');
-  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
-  const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
-
   const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
-
+  // Info: (20240430 - Julian) Get first letter of each word
+  const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
+  // ToDo: (20240711 - Julian) Check if AI result is successful
   const hasAIResult = AIResultSuccess && AIResult && AIResult.lineItems.length > 0;
+
+  const addRowHandler = () => addVoucherRowHandler();
+  // const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
+  // const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
+
+  const importVoucherHandler = () => {
+    const AILineItems = AIResult?.lineItems ?? [];
+
+    // Info: (20240529 - Julian) 清空 accountingVoucher
+    clearVoucherHandler();
+
+    // Info: (20240529 - Julian) 先加入空白列，再寫入資料
+    AILineItems.forEach((lineItem, index) => {
+      addRowHandler();
+      const account = accountList.find((acc) => acc.id === lineItem.accountId);
+      changeVoucherAccountHandler(index, account);
+      changeVoucherAmountHandler(
+        index,
+        lineItem.amount,
+        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
+        lineItem.description
+      );
+    });
+  };
+
+  const analysisBtnClickHandler = () => {
+    // Info: (20240605 - Julian) Show warning message after clicking the button
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Replace Input',
+      subMsg: 'Are you sure you want to use Ai information?',
+      content: 'The text you entered will be replaced.',
+      submitBtnStr: 'Confirm',
+      submitBtnFunction: importVoucherHandler,
+      backBtnStr: 'Cancel',
+      backBtnFunction: () => getAIStatusHandler(undefined, false),
+    });
+    messageModalVisibilityHandler();
+  };
+
+  const closeHandler = () => {
+    modalVisibilityHandler();
+    getAIStatusHandler(undefined, false);
+  };
+
+  // Info: (20240527 - Julian) 送出 Voucher
+  const confirmHandler = () => {
+    if (journal && journal.invoice && lineItems) {
+      const voucher: IVoucherDataForSavingToDB = {
+        journalId: journal.id,
+        lineItems,
+      };
+      createVoucher({
+        params: { companyId },
+        body: { voucher },
+      });
+    }
+  };
 
   useEffect(() => {
     if (journalId !== undefined) {
@@ -126,14 +186,6 @@ const ConfirmModal = ({
       });
     }
   }, [journalId]);
-
-  useEffect(() => {
-    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
-    clearVoucherHandler();
-
-    // Info: (20240528 - Julian) Call AI API first time
-    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
-  }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
@@ -183,64 +235,6 @@ const ConfirmModal = ({
     }
   }, [journal, getJournalSuccess, getJournalCode]);
 
-  // Info: (20240527 - Julian) 送出 Voucher
-  const confirmHandler = () => {
-    if (journal && journal.invoice && lineItems) {
-      const voucher: IVoucherDataForSavingToDB = {
-        journalId: journal.id,
-        lineItems,
-      };
-      createVoucher({
-        params: { companyId },
-        body: { voucher },
-      });
-    }
-  };
-
-  const closeHandler = () => {
-    modalVisibilityHandler();
-    getAIStatusHandler(undefined, false);
-  };
-
-  const addRowHandler = () => addVoucherRowHandler();
-  const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
-  const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
-
-  const importVoucherHandler = () => {
-    const AILineItems = AIResult?.lineItems ?? [];
-
-    // Info: (20240529 - Julian) 清空 accountingVoucher
-    clearVoucherHandler();
-
-    // Info: (20240529 - Julian) 先加入空白列，再寫入資料
-    AILineItems.forEach((lineItem, index) => {
-      addRowHandler();
-      const account = accountList.find((acc) => acc.id === lineItem.accountId);
-      changeVoucherAccountHandler(index, account);
-      changeVoucherAmountHandler(
-        index,
-        lineItem.amount,
-        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
-        lineItem.description
-      );
-    });
-  };
-
-  const analysisBtnClickHandler = () => {
-    // Info: (20240605 - Julian) Show warning message after clicking the button
-    messageModalDataHandler({
-      messageType: MessageType.WARNING,
-      title: 'Replace Input',
-      subMsg: 'Are you sure you want to use Ai information?',
-      content: 'The text you entered will be replaced.',
-      submitBtnStr: 'Confirm',
-      submitBtnFunction: importVoucherHandler,
-      backBtnStr: 'Cancel',
-      backBtnFunction: () => getAIStatusHandler(undefined, false),
-    });
-    messageModalVisibilityHandler();
-  };
-
   useEffect(() => {
     // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
     const newLineItems = accountingVoucher
@@ -261,6 +255,9 @@ const ConfirmModal = ({
       });
 
     setLineItems(newLineItems);
+
+    // eslint-disable-next-line no-console
+    console.log('accountingVoucher: ', accountingVoucher);
   }, [accountingVoucher]);
 
   useEffect(() => {
@@ -319,7 +316,8 @@ const ConfirmModal = ({
     (
       <div className="flex flex-col items-center gap-x-12px md:flex-row">
         <p>{reason}</p>
-        <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+        {/* ToDo: (20240711 - Julian) Add Tag functionality */}
+        <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
           <LuTag size={14} />
           {t('CONFIRM_MODAL.PRINTER')}
         </div>
@@ -333,8 +331,7 @@ const ConfirmModal = ({
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span>
-        {t('JOURNAL.TWD')}
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> {t('JOURNAL.TAX')}
@@ -344,33 +341,111 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = (
+    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+  );
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const displayPeriod = <p className="font-semibold text-navyBlue2">{t(paymentPeriod)}</p>;
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
-
-  const projectName = project; // ToDo: (20240527 - Julian) Get project name from somewhere
-  // Info: (20240430 - Julian) Get first letter of each word
-  const projectCode = projectName.split(' ').reduce((acc, word) => acc + word[0], '');
+  const displayStatus = <p className="font-semibold text-navyBlue2">{t(paymentStatus)}</p>;
 
   const displayProject =
-    projectName !== 'None' ? (
+    project !== 'None' ? (
       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
         <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
           {projectCode}
         </div>
-        <p>{projectName}</p>
+        <p>{project}</p>
       </div>
     ) : (
       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>; // ToDo: (20240527 - Julian) Get contract name from somewhere
+  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+
+  const displayedHint =
+    AIResultSuccess === undefined ? (
+      <p className="text-slider-surface-bar">
+        {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
+        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+      </p>
+    ) : hasAIResult ? (
+      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+    ) : AIResultSuccess === false && AIResultCode ? (
+      <p className="text-text-neutral-secondary">
+        {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+      </p>
+    ) : (
+      <p className="text-slider-surface-bar">
+        {t('CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+      </p>
+    );
 
   const accountingVoucherRow = accountingVoucher.map((voucher) => (
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
   ));
+
+  // const debitListMobile = accountingVoucher
+  //   .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
+  //   .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
+
+  // const creditListMobile = accountingVoucher
+  //   .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
+  //   .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
+
+  // const displayAccountingVoucherMobile = (
+  //   <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
+  //     {/* Info: (20240510 - Julian) Debit */}
+  //     <div className="flex flex-col gap-24px">
+  //       {/* Info: (20240510 - Julian) Divider */}
+  //       <div className="flex items-center gap-4">
+  //         <hr className="flex-1 border-lightGray3" />
+  //         <div className="flex items-center gap-2 text-sm">
+  //           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+  //           <p>Debit</p>
+  //         </div>
+  //         <hr className="flex-1 border-lightGray3" />
+  //       </div>
+  //       {/* Info: (20240510 - Julian) List */}
+  //       <div className="flex flex-col">{/* debitListMobile */}</div>
+
+  //       {/* Info: (20240510 - Julian) Add Button */}
+  //       <button
+  //         type="button"
+  //         onClick={addDebitRowHandler}
+  //         className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+  //       >
+  //         <FiPlus size={20} />
+  //       </button>
+  //     </div>
+
+  //     {/* Info: (20240510 - Julian) Credit */}
+  //     <div className="flex flex-col gap-24px">
+  //       {/* Info: (20240510 - Julian) Divider */}
+  //       <div className="flex items-center gap-4">
+  //         <hr className="flex-1 border-lightGray3" />
+  //         <div className="flex items-center gap-2 text-sm">
+  //           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+  //           <p>Credit</p>
+  //         </div>
+  //         <hr className="flex-1 border-lightGray3" />
+  //       </div>
+  //       {/* Info: (20240510 - Julian) List */}
+  //       <div className="flex flex-col">{/* creditListMobile */}</div>
+
+  //       {/* Info: (20240510 - Julian) Add Button */}
+  //       <button
+  //         type="button"
+  //         onClick={addCreditRowHandler}
+  //         className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+  //       >
+  //         <FiPlus size={20} />
+  //       </button>
+  //     </div>
+  //   </div>
+  // );
 
   const displayAccountingVoucher = (
     <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
@@ -402,86 +477,6 @@ const ConfirmModal = ({
     </div>
   );
 
-  const debitListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
-    .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
-
-  const creditListMobile = accountingVoucher
-    .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
-    .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
-
-  const displayAccountingVoucherMobile = (
-    <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
-      {/* Info: (20240510 - Julian) Debit */}
-      <div className="flex flex-col gap-24px">
-        {/* Info: (20240510 - Julian) Divider */}
-        <div className="flex items-center gap-4">
-          <hr className="flex-1 border-lightGray3" />
-          <div className="flex items-center gap-2 text-sm">
-            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-            <p>Debit</p>
-          </div>
-          <hr className="flex-1 border-lightGray3" />
-        </div>
-        {/* Info: (20240510 - Julian) List */}
-        <div className="flex flex-col">{debitListMobile}</div>
-
-        {/* Info: (20240510 - Julian) Add Button */}
-        <button
-          type="button"
-          onClick={addDebitRowHandler}
-          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
-        >
-          <FiPlus size={20} />
-        </button>
-      </div>
-
-      {/* Info: (20240510 - Julian) Credit */}
-      <div className="flex flex-col gap-24px">
-        {/* Info: (20240510 - Julian) Divider */}
-        <div className="flex items-center gap-4">
-          <hr className="flex-1 border-lightGray3" />
-          <div className="flex items-center gap-2 text-sm">
-            <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-            <p>Credit</p>
-          </div>
-          <hr className="flex-1 border-lightGray3" />
-        </div>
-        {/* Info: (20240510 - Julian) List */}
-        <div className="flex flex-col">{creditListMobile}</div>
-
-        {/* Info: (20240510 - Julian) Add Button */}
-        <button
-          type="button"
-          onClick={addCreditRowHandler}
-          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
-        >
-          <FiPlus size={20} />
-        </button>
-      </div>
-    </div>
-  );
-
-  const displayedHint =
-    AIResultSuccess === undefined ? (
-      <p className="text-slider-surface-bar">
-        {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
-        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
-      </p>
-    ) : hasAIResult ? (
-      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
-    ) : AIResultSuccess === false && AIResultCode ? (
-      <p className="text-text-neutral-secondary">
-        {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
-      </p>
-    ) : (
-      <p className="text-slider-surface-bar">
-        {t('CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
-      </p>
-    );
-
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
@@ -498,7 +493,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) close button */}
         <button
           type="button"
-          onClick={closeHandler}
+          onClick={modalVisibilityHandler}
           className="absolute right-20px top-20px text-lightGray5"
         >
           <RxCross2 size={20} />
@@ -567,7 +562,6 @@ const ConfirmModal = ({
 
           {/* Info: (20240429 - Julian) Accounting Voucher */}
           {displayAccountingVoucher}
-          {displayAccountingVoucherMobile}
 
           <div className="relative mt-24px">
             {/* Info: (20240605 - Julian) AI analysis result */}
@@ -612,8 +606,7 @@ const ConfirmModal = ({
           <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
               {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
-              {t('CONFIRM_MODAL.ATTENTION')}&#39;{t('CONFIRM_MODAL.PERMANENT_ON_THE_BLOCKCHAIN')}
-              &#39;{t('CONFIRM_MODAL.CANT_BE_FIXED')}&#39;{t('CONFIRM_MODAL.MAKE_CORRECTIONS.')}
+              {t('CONFIRM_MODAL.ATTENTION')}
             </p>
             <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
