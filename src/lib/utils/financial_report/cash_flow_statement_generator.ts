@@ -181,9 +181,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     let creditAmount = 0;
     voucher.lineItems.forEach((lineItem) => {
       if (
-        Array.from(CASH_AND_CASH_EQUIVALENTS_REGEX).some((regex) =>
-          regex.test(lineItem.account.code)
-        )
+        Array.from(CASH_AND_CASH_EQUIVALENTS_REGEX).some((regex) => regex.test(lineItem.account.code))
       ) {
         if (lineItem.debit) {
           debitAmount += lineItem.amount;
