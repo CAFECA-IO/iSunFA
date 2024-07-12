@@ -1,9 +1,11 @@
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { IInvoice } from '@/interfaces/invoice';
 import { Prisma } from '@prisma/client';
+import { JOURNAL_EVENT } from '@/constants/journal';
 
 export interface IJournal {
   id: number;
+  event?: JOURNAL_EVENT; // Info: To Murky, when backend is ready, please remove optional (20240712 - Tzuhan)
   tokenContract: string;
   tokenId: string;
   aichResultId: string;

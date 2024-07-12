@@ -12,7 +12,7 @@ import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import useStateRef from 'react-usestateref';
 
-interface IPaginationProps {
+export interface IPaginationProps {
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   totalPages: number;
