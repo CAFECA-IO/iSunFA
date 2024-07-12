@@ -502,14 +502,14 @@ export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlo
     //     debit: false,
     //     operatingFunction: noAdjustNetIncome
     // }],
-    // Info: (20240708 - Murky) 這個項目需要特別直接算出來
-    ['A33300', {
-        fromCode: ['7510'],
-        name: '支付之利息',
-        debit: true,
-        operatingFunction: noAdjustNetIncome
-    }],
-    // Info: (20240708 - Murky) 這個項目需要特別直接算出來
+    // Info: (20240708 - Murky) 這個項目放在籌資活動
+    // ['A33300', {
+    //     fromCode: ['7510'],
+    //     name: '支付之利息',
+    //     debit: true,
+    //     operatingFunction: noAdjustNetIncome
+    // }],
+    // Info: (20240708 - Murky) 這個項目放在籌資活動
     ['A33400', {
         fromCode: [],
         name: '支付之股利',

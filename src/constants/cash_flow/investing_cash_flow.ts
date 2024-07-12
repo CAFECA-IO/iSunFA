@@ -1,7 +1,6 @@
 import { IDirectCashFlowMapping } from '@/interfaces/cash_flow';
+import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 
-export const CASH_AND_CASH_EQUIVALENTS_CODE = ['1101', '1102', '1103', '1105', '1107'];
-export const CASH_AND_CASH_EQUIVALENTS_REGEX = [/^1101/, /^1102/, /^1103/, /^1105/, /^1107/];
 const PPE_REGEX = [/^(16[0-9][0-9]|17[0-4][0-9])/];
 
 export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapping> = new Map([
