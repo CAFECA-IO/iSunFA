@@ -35,8 +35,8 @@ export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
   include: {
     lineItems: {
       include: {
-        account: true,
-      }
-    },
-  }
+        account: true;
+      };
+    };
+  };
 }>;

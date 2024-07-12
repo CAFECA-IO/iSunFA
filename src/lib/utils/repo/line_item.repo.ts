@@ -31,7 +31,7 @@ export async function getLineItemsInPrisma(
     where,
     include: {
       account: true,
-    }
+    },
   });
 
   return lineItemsFromDB;
