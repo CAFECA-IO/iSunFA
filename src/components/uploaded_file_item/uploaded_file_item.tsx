@@ -1,14 +1,14 @@
 import Image from 'next/image';
 import { FiTrash2, FiPauseCircle, FiPlay } from 'react-icons/fi';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
 import { useTranslation } from 'next-i18next';
 
 interface IUploadedFileItemProps {
-  itemData: IUnprocessedOCR;
+  itemData: IOCR;
   pauseHandler: (id: number) => void;
   deleteHandler: (aichResultId: string) => void;
-  clickHandler: (unprocessedJournal: IUnprocessedOCR) => void;
+  clickHandler: (unprocessedJournal: IOCR) => void;
 }
 
 const UploadedFileItem = ({

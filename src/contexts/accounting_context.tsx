@@ -2,7 +2,7 @@ import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import { IJournal } from '@/interfaces/journal';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
@@ -42,7 +42,7 @@ interface IAccountingContext {
   // addTempJournal: (journal: IJournal) => void;
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
-  OCRList: IUnprocessedOCR[];
+  OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number, update: boolean) => void;
   accountList: IAccount[];
@@ -52,8 +52,8 @@ interface IAccountingContext {
   ) => void;
   AIStatus: ProgressStatus;
 
-  selectedOCR: IUnprocessedOCR | undefined;
-  selectOCRHandler: (journal: IUnprocessedOCR | undefined) => void;
+  selectedOCR: IOCR | undefined;
+  selectOCRHandler: (journal: IOCR | undefined) => void;
   selectedJournal: IJournal | undefined;
   selectJournalHandler: (journal: IJournal | undefined) => void;
 
@@ -138,11 +138,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     error: listError,
     success: listSuccess,
     code: listCode,
-  } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {}, false, false);
+  } = APIHandler<IOCR[]>(APIName.OCR_LIST, {}, false, false);
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);
-  const [OCRList, setOCRList] = useState<IUnprocessedOCR[]>([]);
+  const [OCRList, setOCRList] = useState<IOCR[]>([]);
   const [OCRListStatus, setOCRLisStatus] = useState<{
     listSuccess: boolean | undefined;
     listCode: string | undefined;
@@ -150,7 +150,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     listSuccess: undefined,
     listCode: undefined,
   });
-  const [selectedOCR, setSelectedOCR] = useState<IUnprocessedOCR | undefined>(undefined);
+  const [selectedOCR, setSelectedOCR] = useState<IOCR | undefined>(undefined);
   const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
@@ -422,7 +422,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // );
 
   const selectOCRHandler = useCallback(
-    (OCR: IUnprocessedOCR | undefined) => setSelectedOCR(OCR),
+    (OCR: IOCR | undefined) => setSelectedOCR(OCR),
     [selectedOCR]
   );
 
