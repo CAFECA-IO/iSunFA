@@ -13,6 +13,7 @@ export const ISUNFA_ROUTE = {
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
   SALARY: '/users/salary',
+  SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
   ACCOUNTING: '/users/accounting',
   SELECT_COMPANY: '/users/select-company',
   JOURNAL_LIST: '/users/accounting/journal-list',

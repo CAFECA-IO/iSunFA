@@ -70,7 +70,7 @@ const SalarySidebar = () => {
             </Link>
 
             <Link
-              href={ISUNFA_ROUTE.SALARY}
+              href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default hover:text-tabs-text-active"
             >
               <svg
@@ -120,7 +120,7 @@ const SalarySidebar = () => {
           </svg>
         </Link>
         <Link
-          href={ISUNFA_ROUTE.SALARY}
+          href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
         >
           <svg
