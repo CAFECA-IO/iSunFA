@@ -85,7 +85,7 @@ const AccountingSidebar = () => {
       </div>
 
       {/* Info: (20240423 - Julian) Mobile */}
-      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
+      <div className="fixed bottom-0 z-20 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
         <Link
           href={ISUNFA_ROUTE.ACCOUNTING}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"

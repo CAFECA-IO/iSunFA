@@ -301,7 +301,7 @@
   "SALARY": {
     "SALARY": "Salary",
     "EMPLOYEES_LIST": "Employees List",
-    "SALARY_BOOK": "Salary Book",
+    "SALARY_LIST": "Salary List",
     "ADD_NEW_EMPLOYEE": "Add New Employee",
     "ONE_CLICK_REMOVAL": "One-Click Removal",
     "EMPTY": "Empty",
@@ -325,6 +325,9 @@
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",
     "UPLOADED": "Uploaded",
+    "DELETED_SUCCESSFULLY": "Deleted successfully",
+    "TRY_AGAIN_LATER": "Please try again later",
+    "FAILED_TO_DELETE": "Failed to delete",
     "EVENTS": "Events",
     "UPCOMING": "Upcoming",
     "TYPE": "Type",
