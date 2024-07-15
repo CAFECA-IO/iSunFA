@@ -299,7 +299,7 @@
   "SALARY": {
     "SALARY": "薪资",
     "EMPLOYEES_LIST": "员工名单",
-    "SALARY_BOOK": "薪资簿",
+    "SALARY_LIST": "薪资簿",
     "ADD_NEW_EMPLOYEE": "新增员工",
     "ONE_CLICK_REMOVAL": "一键删除",
     "EMPTY": "空的",
