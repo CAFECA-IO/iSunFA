@@ -162,7 +162,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isAccountingMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={accountingRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
+        <ul ref={accountingRef} className="z-10 w-full bg-white p-8px">
           {displayAccountingDropmenu}
         </ul>
       </div>

@@ -188,6 +188,14 @@ const ConfirmModal = ({
     }
   }, [journalId]);
 
+  useEffect(() => {
+    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    clearVoucherHandler();
+
+    // Info: (20240528 - Julian) Call AI API first time
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
+  }, [isModalVisible]);
+
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
     if (AIStatus === ProgressStatus.SUCCESS) {
