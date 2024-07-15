@@ -1,12 +1,12 @@
-import { AccountSheetType } from "@/constants/account";
-import FinancialReportGenerator from "@/lib/utils/financial_report/financial_report_generator";
+import { AccountSheetType } from '@/constants/account';
+import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
 import {
   mappingAccountToSheetDisplay,
   transformForestToMap,
   transformLineItemsFromDBToMap,
   updateAccountAmounts,
 } from '@/lib/utils/account';
-import { IAccountForSheetDisplay, IAccountNode } from "@/interfaces/accounting_account";
+import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {

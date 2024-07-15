@@ -2,37 +2,22 @@ import Head from 'next/head';
 import Link from 'next/dist/client/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { FiPlusCircle } from 'react-icons/fi';
-import APIHandler from '@/lib/utils/api_handler';
 import { ILocale } from '@/interfaces/locale';
-import { IJournalListItem } from '@/interfaces/journal';
 import { useUserCtx } from '@/contexts/user_context';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import JournalListBody from '@/components/journal_list_body/journal_list_body';
 import { Button } from '@/components/button/button';
-import { APIName } from '@/constants/api_connection';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
 
 const JournalListPage = () => {
   const { t } = useTranslation('common');
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const {
-    isLoading,
-    success,
-    code,
-    data: journals,
-    // Info: Julian 用於 journal list 的 dummy interface，之後會被取代 (20240529 - tzuhan)
-  } = APIHandler<IJournalListItem[]>(APIName.JOURNAL_LIST, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-    // ToDo: (20240621 - Julian) Query params
-  });
 
   const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
-
-  const journalList = journals || [];
 
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center">
@@ -59,12 +44,7 @@ const JournalListPage = () => {
           {/* Info: (20240417 - Julian) Divider */}
           <hr className="my-20px w-full border-lightGray6" />
 
-          <JournalListBody
-            journals={journalList}
-            isLoading={isLoading || true}
-            errorCode={code}
-            success={success || false}
-          />
+          <JournalListBody />
         </div>
       </div>
     </div>

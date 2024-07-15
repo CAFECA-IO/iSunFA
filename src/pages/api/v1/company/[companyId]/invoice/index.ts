@@ -10,7 +10,7 @@ import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAdmin } from '@/lib/utils/auth_check';
 
-interface IPostApiResponseType {
+export interface IPostApiResponseType {
   journalId: number;
   resultStatus: IAccountResultStatus;
 }
@@ -54,7 +54,7 @@ function formatOcrId(ocrId: any): number | undefined {
   return ocrIdNumber;
 }
 
-async function uploadInvoiceToAICH(invoice: IInvoice) {
+export async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
 
   try {
@@ -81,7 +81,9 @@ async function uploadInvoiceToAICH(invoice: IInvoice) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
+export async function getPayloadFromResponseJSON(
+  responseJSON: Promise<{ payload?: unknown } | null>
+) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
