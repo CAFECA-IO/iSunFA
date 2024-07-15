@@ -5,7 +5,7 @@ import handler from '@/pages/api/v1/company/[companyId]/report/[reportId]/index'
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
 const report = {
-  id: 888886100,
+  id: 888888888,
   name: 'Balance Sheet-20240423-1',
   tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
   tokenId: '37002036',
@@ -15,6 +15,8 @@ const report = {
   reportType: 'balance_sheet',
   type: 'financial',
   status: 'generated',
+  content: [],
+  companyId: 1,
   createdAt: 1713815673,
   updatedAt: 1713815673,
 };
