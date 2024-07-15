@@ -134,15 +134,16 @@ const ConfirmModal = ({
 
     // Info: (20240529 - Julian) 先加入空白列，再寫入資料
     AILineItems.forEach((lineItem, index) => {
-      addRowHandler();
+      // addVoucherRowHandler();
+      // Info: (20240715 - Julian) 找出對應的 account
       const account = accountList.find((acc) => acc.id === lineItem.accountId);
-      changeVoucherAccountHandler(index, account);
-      changeVoucherAmountHandler(
-        index,
-        lineItem.amount,
-        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
-        lineItem.description
-      );
+      // Info: (20240715 - Julian) 判斷是借方還是貸方
+      const voucherType = lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
+
+      // Info: (20240715 - Julian) 修改 account
+      changeVoucherAccountHandler(index + 1, account);
+      // Info: (20240715 - Julian) 修改內容
+      changeVoucherAmountHandler(index + 1, lineItem.amount, voucherType, lineItem.description);
     });
   };
 
@@ -156,7 +157,10 @@ const ConfirmModal = ({
       submitBtnStr: 'Confirm',
       submitBtnFunction: importVoucherHandler,
       backBtnStr: 'Cancel',
-      backBtnFunction: () => getAIStatusHandler(undefined, false),
+      backBtnFunction: () => {
+        getAIStatusHandler(undefined, false);
+        messageModalVisibilityHandler();
+      },
     });
     messageModalVisibilityHandler();
   };
@@ -164,6 +168,7 @@ const ConfirmModal = ({
   const closeHandler = () => {
     modalVisibilityHandler();
     getAIStatusHandler(undefined, false);
+    clearVoucherHandler();
   };
 
   // Info: (20240527 - Julian) 送出 Voucher
@@ -187,6 +192,14 @@ const ConfirmModal = ({
       });
     }
   }, [journalId]);
+
+  useEffect(() => {
+    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    clearVoucherHandler();
+
+    // Info: (20240528 - Julian) Call AI API first time
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
+  }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {

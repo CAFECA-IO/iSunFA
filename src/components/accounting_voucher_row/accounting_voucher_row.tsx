@@ -159,13 +159,14 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       <p>{t(accountTitle)}</p>
       <FaChevronDown />
       {/* Info: (20240423 - Julian) Dropmenu */}
-      <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isAccountingMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+      <ul
+        ref={accountingRef}
+        className={`absolute left-0 top-50px z-10 w-full bg-dropdown-surface-menu-background-primary p-8px 
+        ${isAccountingMenuOpen ? 'h-200px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} 
+        overflow-y-auto rounded-xs border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={accountingRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
-          {displayAccountingDropmenu}
-        </ul>
-      </div>
+        {displayAccountingDropmenu}
+      </ul>
     </div>
   );
 
