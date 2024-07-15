@@ -323,6 +323,9 @@
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "获取数据失败",
     "UPLOADED": "已上传的",
+    "DELETED_SUCCESSFULLY": "已成功删除",
+    "TRY_AGAIN_LATER": "请稍后再试",
+    "FAILED_TO_DELETE": "删除失败",
     "EVENTS": "活动",
     "UPCOMING": "即将到来的",
     "TYPE": "类型",

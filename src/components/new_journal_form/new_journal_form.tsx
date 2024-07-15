@@ -72,6 +72,21 @@ const contractSelection: { id: number | null; name: string }[] = [
   { id: 3, name: 'Contract C' },
 ];
 
+const getIdAndName = (id: number | null, array: { id: number | null; name: string }[]) => {
+  const obj = id === null || id < 0 ? undefined : array.find((item) => item.id === id);
+  const idAndName =
+    obj === undefined
+      ? {
+          id: array[0].id,
+          name: array[0].name,
+        }
+      : {
+          id: obj.id,
+          name: obj.name,
+        };
+  return idAndName;
+};
+
 const NewJournalForm = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
@@ -85,7 +100,7 @@ const NewJournalForm = () => {
     confirmModalDataHandler,
   } = useGlobalCtx();
 
-  const { selectedOCR, selectOCRHandler, selectedJournal } = useAccountingCtx();
+  const { selectedOCR, selectOCRHandler, selectedJournal, getAIStatusHandler } = useAccountingCtx();
 
   const {
     trigger: getOCRResult,
@@ -108,21 +123,12 @@ const NewJournalForm = () => {
 
   const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
 
-  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
   const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
-
-  const {
-    trigger: getAIResult,
-    data: AIResult,
-    success: AIResultSuccess,
-    code: AIResultCode,
-  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-  */
+    trigger: updateJournal,
+    success: updateSuccess,
+    code: updateCode,
+    data: updateAIResult,
+  } = APIHandler<IAccountResultStatus>(APIName.JOURNAL_UPDATE, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -181,9 +187,8 @@ const NewJournalForm = () => {
         }); // selectedOCR.aichResultId
       } else {
         const { invoice } = selectedJournal;
-        // Info: update form data with journal data (20240524 - tzuhan)
-        // setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
-        // setInputPaymentReason(invoice.paymentReason);
+        setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+        setInputPaymentReason(invoice.paymentReason);
         setSelectedEventType(invoice.eventType as EventType);
         setInputDescription(invoice.description);
         setInputVendor(invoice.vendorOrSupplier);
@@ -198,21 +203,30 @@ const NewJournalForm = () => {
         setInputInstallment(invoice.payment.installmentPeriod);
         setPaymentStatus(invoice.payment.status as PaymentStatusType);
         setInputPartialPaid(invoice.payment.alreadyPaid);
-        setSelectedProject(
-          projectSelection.find(
-            (project) => selectedJournal.projectId && project.id === selectedJournal.projectId
-          ) || projectSelection[0]
-        );
-        setSelectedContract(
-          contractSelection.find(
-            (contract) => selectedJournal.contractId && contract.id === selectedJournal.contractId
-          ) || contractSelection[0]
-        );
+        const project = getIdAndName(selectedJournal.projectId, projectSelection);
+        setSelectedProject({
+          id: project.id,
+          name: t(project.name),
+        });
+        const contract = getIdAndName(selectedJournal.contractId, contractSelection);
+        setSelectedContract({
+          id: contract.id,
+          name: t(contract.name),
+        });
         setProgressRate(invoice.payment.progress);
       }
-      if (selectedJournal.voucher) {
-        confirmModalVisibilityHandler();
-      }
+      getAIStatusHandler(
+        {
+          companyId,
+          askAIId: selectedJournal.aichResultId,
+        },
+        true
+      );
+      confirmModalDataHandler({
+        journalId: selectedJournal.id,
+        askAIId: selectedJournal.aichResultId,
+      });
+      confirmModalVisibilityHandler();
     }
   }, [selectedJournal, selectedOCR]);
 
@@ -390,45 +404,43 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!createSuccess || !invoiceReturn) {
-      const invoiceData: IInvoice = {
-        journalId: selectedJournal?.id || null,
-        date: datePeriod.startTimeStamp,
-        eventType: selectedEventType,
-        paymentReason: inputPaymentReason,
-        description: inputDescription,
-        vendorOrSupplier: inputVendor,
-        project: selectedProject.name,
-        projectId: selectedProject.id,
-        contract: selectedContract.name,
-        contractId: selectedContract.id,
-        payment: {
-          price: inputTotalPrice,
-          hasTax: taxToggle,
-          taxPercentage: taxRate,
-          hasFee: feeToggle,
-          fee: inputFee,
-          method: selectedMethod,
-          installmentPeriod: inputInstallment,
-          alreadyPaid: inputPartialPaid,
-          isRevenue: true,
-          progress: progressRate,
-          period: paymentPeriod,
-          status: paymentStatus,
-        },
-      };
-
+    const invoiceData: IInvoice = {
+      journalId: selectedJournal?.id || null,
+      date: datePeriod.startTimeStamp,
+      eventType: selectedEventType,
+      paymentReason: inputPaymentReason,
+      description: inputDescription,
+      vendorOrSupplier: inputVendor,
+      project: selectedProject.name,
+      projectId: selectedProject.id,
+      contract: selectedContract.name,
+      contractId: selectedContract.id,
+      payment: {
+        price: inputTotalPrice,
+        hasTax: taxToggle,
+        taxPercentage: taxRate,
+        hasFee: feeToggle,
+        fee: inputFee,
+        method: selectedMethod,
+        installmentPeriod: inputInstallment,
+        alreadyPaid: inputPartialPaid,
+        isRevenue: true,
+        progress: progressRate,
+        period: paymentPeriod,
+        status: paymentStatus,
+      },
+    };
+    if (selectedJournal || (createSuccess && invoiceReturn)) {
+      const journalId = selectedJournal?.id || invoiceReturn?.journalId;
+      updateJournal({
+        params: { companyId, journalId },
+        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+      });
+    } else {
       createInvoice({
         params: { companyId },
         body: { invoice: invoiceData, ocrId: selectedOCR?.id },
       });
-    } else {
-      confirmModalDataHandler({
-        journalId: invoiceReturn.journalId,
-        askAIId: invoiceReturn.resultStatus.resultId,
-      });
-      confirmModalVisibilityHandler();
     }
   };
 
@@ -439,13 +451,6 @@ const NewJournalForm = () => {
         askAIId: invoiceReturn.resultStatus.resultId,
       });
       confirmModalVisibilityHandler();
-      // const { resultId } = result;
-      // getAIStatus({
-      //   params: {
-      //     companyId,
-      //     resultId,
-      //   },
-      // });
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -458,86 +463,24 @@ const NewJournalForm = () => {
     }
   }, [createSuccess, invoiceReturn, createCode]);
 
-  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess === false) {
+    if (updateSuccess && updateAIResult?.resultId && updateAIResult?.status) {
+      confirmModalDataHandler({
+        journalId: selectedJournal!.id,
+        askAIId: updateAIResult.resultId,
+      });
+      confirmModalVisibilityHandler();
+    } else if (updateSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal failed: ${statusCode}`,
+        title: 'Update Journal Failed',
+        content: `Update Journal failed: ${updateCode}`,
         submitBtnStr: 'Close',
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
     }
-    if (
-      status === ProgressStatus.INVALID_INPUT ||
-      status === ProgressStatus.LLM_ERROR ||
-      status === ProgressStatus.SYSTEM_ERROR ||
-      status === ProgressStatus.NOT_FOUND ||
-      status === ProgressStatus.PAUSED
-    ) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal status: ${status}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
-      if (journal?.id) {
-        getJournalById({ params: { companyId, journalId: journal?.id } });
-      } else {
-        getAIResult({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }
-    }
-    return () => clearInterval(interval);
-  }, [result, statusSuccess, status]);
-
-  useEffect(() => {
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      loadingModalVisibilityHandler();
-    }
-    if (status === ProgressStatus.SUCCESS) {
-      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
-      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
-    }
-  }, [statusSuccess, status]);
-
-  useEffect(() => {
-    if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId } });
-    }
-    if (AIResultSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Get Voucher Preview Failed',
-        content: `Get voucher preview failed: ${AIResultCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [AIResultSuccess, AIResult, AIResultCode]);
-  */
+  }, [updateSuccess, updateCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
