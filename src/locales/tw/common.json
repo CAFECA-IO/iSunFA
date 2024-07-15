@@ -322,6 +322,9 @@
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",
     "UPLOADED": "已上傳的",
+    "DELETED_SUCCESSFULLY": "已成功刪除",
+    "TRY_AGAIN_LATER": "請稍後再試",
+    "FAILED_TO_DELETE": "刪除失敗",
     "EVENTS": "活動",
     "UPCOMING": "即將到來的",
     "TYPE": "類型",

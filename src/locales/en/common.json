@@ -325,6 +325,9 @@
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",
     "UPLOADED": "Uploaded",
+    "DELETED_SUCCESSFULLY": "Deleted successfully",
+    "TRY_AGAIN_LATER": "Please try again later",
+    "FAILED_TO_DELETE": "Failed to delete",
     "EVENTS": "Events",
     "UPCOMING": "Upcoming",
     "TYPE": "Type",

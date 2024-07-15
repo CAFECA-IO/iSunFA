@@ -54,6 +54,7 @@ const ConfirmModal = ({
     changeVoucherAccountHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
+    selectedJournal,
     selectJournalHandler,
   } = useAccountingCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
@@ -75,6 +76,8 @@ const ConfirmModal = ({
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
   const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
+
+  const { trigger: editJournal } = APIHandler<void>(APIName.JOURNAL_UPDATE, {}, false, false);
 
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
   const {
@@ -174,14 +177,21 @@ const ConfirmModal = ({
   // Info: (20240527 - Julian) 送出 Voucher
   const confirmHandler = () => {
     if (journal && journal.invoice && lineItems) {
-      const voucher: IVoucherDataForSavingToDB = {
-        journalId: journal.id,
-        lineItems,
-      };
-      createVoucher({
-        params: { companyId },
-        body: { voucher },
-      });
+      if (selectedJournal) {
+        editJournal({
+          params: { companyId, journalId: journal.id },
+          body: { voucher: { lineItems } },
+        });
+      } else {
+        const voucher: IVoucherDataForSavingToDB = {
+          journalId: journal.id,
+          lineItems,
+        };
+        createVoucher({
+          params: { companyId },
+          body: { voucher },
+        });
+      }
     }
   };
 
