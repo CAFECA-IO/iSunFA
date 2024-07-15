@@ -1,17 +1,26 @@
 import Head from 'next/head';
+import React, { useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import AddJournalBody from '@/components/add_journal_body/add_journal_body';
 import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 const AccountingPage = () => {
   const { t } = useTranslation('common');
-  const { isAuthLoading } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { getAccountListHandler } = useAccountingCtx();
+
+  useEffect(() => {
+    if (selectedCompany) {
+      getAccountListHandler(selectedCompany.id);
+    }
+  }, [selectedCompany]);
 
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center">
