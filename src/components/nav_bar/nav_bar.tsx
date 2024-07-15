@@ -387,7 +387,7 @@ const NavBar = () => {
         <Button
           onClick={() => redirectTo(ISUNFA_ROUTE.COMPANY_INFO)}
           variant={'secondaryBorderless'}
-          // disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+          disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
           <div className="my-auto flex items-center justify-center">
