@@ -205,21 +205,23 @@ const StepOneTab = () => {
         <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
-        <button
-          type="button"
-          onClick={qrCodeScanClickHandler}
-          className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px"
-        >
-          <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
-          <div className="mt-20px flex items-center gap-10px">
-            <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
-            <p className="font-semibold text-navyBlue2">
-              {t('JOURNAL.USE_YOUR_PHONE_AS')}{' '}
-              <span className="text-primaryYellow">{t('JOURNAL.SCANNER')}</span>
-            </p>
-          </div>
-          <p className="text-center text-lightGray4">{t('JOURNAL.SCAN_THE_QRCODE')}</p>
-        </button>
+        <div className="h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1">
+          <button
+            type="button"
+            onClick={qrCodeScanClickHandler}
+            className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px"
+          >
+            <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
+            <div className="mt-20px flex items-center gap-10px">
+              <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
+              <p className="font-semibold text-navyBlue2">
+                {t('JOURNAL.USE_YOUR_PHONE_AS')}{' '}
+                <span className="text-primaryYellow">{t('JOURNAL.SCANNER')}</span>
+              </p>
+            </div>
+            <p className="text-center text-lightGray4">{t('JOURNAL.SCAN_THE_QRCODE')}</p>
+          </button>
+        </div>
       </div>
     </div>
   );
