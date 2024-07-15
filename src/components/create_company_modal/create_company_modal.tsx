@@ -16,6 +16,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { IRole } from '@/interfaces/role';
 import { useTranslation } from 'next-i18next';
+import { ErrorCode } from '@/constants/status_code';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -84,16 +85,38 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       modalVisibilityHandler();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
-      // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Create Company Failed',
-        subMsg: 'Please try again later',
-        content: `Error code: ${createCompanyCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
+      if (createCompanyCode === ErrorCode.CONFLICT) {
+        messageModalDataHandler({
+          messageType: MessageType.WARNING,
+          title: 'Existed Company',
+          subMsg: 'This company has already been registered.',
+          content: `If you are the owner of this company, 
+          please complete KYC to get access back. Error code: ${createCompanyCode}`,
+          submitBtnStr: 'Go to KYC',
+          submitBtnFunction: messageModalVisibilityHandler,
+          backBtnStr: 'Cancel',
+          backBtnFunction: messageModalVisibilityHandler,
+        });
+        messageModalVisibilityHandler();
+
+        /*
+This company has already been registered.
+
+If you are the owner of this company,
+please complete KYC to get access back.
+        */
+      } else {
+        // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Create Company Failed',
+          subMsg: 'Please try again later',
+          content: `Error code: ${createCompanyCode}`,
+          submitBtnStr: 'Close',
+          submitBtnFunction: messageModalVisibilityHandler,
+        });
+        messageModalVisibilityHandler();
+      }
     }
   }, [createCompanySuccess, createCompanyError, createCompanyCode]);
 

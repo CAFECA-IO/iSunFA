@@ -110,6 +110,18 @@ const useAPI = <Data>(
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
+
+        if (!response.success) {
+          const apiError = new Error(response.message || 'unknown API error');
+          setError(apiError);
+          return {
+            success: false,
+            data: null,
+            code: response.code,
+            error: apiError,
+          };
+        }
+
         return {
           success: response.success,
           data: response.payload as Data,

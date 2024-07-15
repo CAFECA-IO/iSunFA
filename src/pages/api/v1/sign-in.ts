@@ -18,6 +18,7 @@ async function authenticateUser(
   let isValid = true;
   let user: IUser | null = null;
   isValid = verifyChallengeTimestamp(challenge);
+  // console.log('test');
   if (isValid) {
     const getUser = await getUserByCredential(authentication.credentialId);
     if (!getUser) {

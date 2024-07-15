@@ -1,4 +1,4 @@
-enum SuccessCode {
+export enum SuccessCode {
   SUCCESS = '200ISF0000',
   SUCCESS_LIST = '200ISF0001',
   SUCCESS_GET = '200ISF0002',
@@ -10,7 +10,7 @@ enum SuccessCode {
   CREATED_WITH_INVALID_INVITATION = '201ISF0002',
 }
 
-enum ErrorCode {
+export enum ErrorCode {
   BAD_REQUEST = '400ISF0000',
   OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS = '400ISF0001',
   UNAUTHORIZED_ACCESS = '401ISF0000',
