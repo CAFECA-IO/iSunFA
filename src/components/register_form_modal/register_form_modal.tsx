@@ -21,13 +21,19 @@ const RegisterFormModal = ({
   const { signUp } = useUserCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [nameValue, setNameValue] = useState<string>('');
+  const [inputValid, setInputValid] = useState(true);
   const [registerValid, setRegisterValid] = useState(true);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameValue(e.target.value);
+  };
+
   const registerClickHandler = async () => {
-    const name = inputRef.current?.value || DEFAULT_DISPLAYED_USER_NAME;
+    const name = nameValue || DEFAULT_DISPLAYED_USER_NAME;
     signUp({ username: name, invitation: data.invitation });
-    if (inputRef.current?.value) {
-      inputRef.current.value = '';
+    if (nameValue) {
+      setNameValue('');
     }
     modalVisibilityHandler();
   };
@@ -42,6 +48,12 @@ const RegisterFormModal = ({
       registerClickHandler();
     }
   };
+
+  useEffect(() => {
+    // Info: (20240712 - Julian) 阻擋特殊字元，只允許英文、數字、底線
+    const regExp = /^[a-zA-Z0-9_]*$/;
+    setInputValid(regExp.test(nameValue));
+  }, [nameValue]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -84,11 +96,15 @@ const RegisterFormModal = ({
                 ></path>
               </svg>
             </button>
-          </div>{' '}
+          </div>
         </div>
         <div className="flex w-full flex-col justify-center bg-white px-0 py-2.5 lg:px-5">
           <div className="flex flex-col justify-center">
-            <div className="flex gap-0 rounded-sm border border-lightGray3 bg-white shadow-sm">
+            <div
+              className={`flex rounded-sm border bg-input-surface-input-background shadow-sm ${
+                inputValid ? 'border-input-stroke-input' : 'border-input-stroke-error'
+              }`}
+            >
               <div className="flex items-center justify-center px-3 py-2.5">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -109,18 +125,24 @@ const RegisterFormModal = ({
               </div>
               <div className="flex flex-1">
                 <input
+                  id="register-name-input"
                   ref={inputRef}
                   type="text"
-                  className="mx-2 w-full bg-white px-1 py-2.5 text-base text-navyBlue2 placeholder:text-lightGray4 focus:outline-none"
-                  placeholder={t('LOGIN_PAGE_BODY.USERNAME')}
+                  value={nameValue}
+                  onChange={handleInputChange}
                   onKeyDown={onEnterPress}
                   onCompositionStart={handleCompositionStart}
                   onCompositionEnd={handleCompositionEnd}
+                  className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
+                  placeholder={t('LOGIN_PAGE_BODY.USERNAME')}
                 />
               </div>
             </div>
           </div>
         </div>
+        <p className={`text-sm text-input-text-error ${inputValid ? 'opacity-0' : 'opacity-100'}`}>
+          Only letters, numbers, and underscores are allowed.
+        </p>
         <div className="flex w-full items-end justify-end bg-white px-5 py-4 text-sm font-medium">
           <div className="flex gap-3">
             {/* TODO: button component (20240409 - Shirley) */}
@@ -131,7 +153,11 @@ const RegisterFormModal = ({
             >
               {t('REPORTS_HISTORY_LIST.CANCEL')}
             </button>
-            <Button variant={'tertiary'} onClick={registerClickHandler}>
+            <Button
+              variant={'tertiary'}
+              onClick={registerClickHandler}
+              disabled={!inputValid || !registerValid}
+            >
               {t('LOGIN_PAGE_BODY.REGISTER')}
             </Button>
           </div>

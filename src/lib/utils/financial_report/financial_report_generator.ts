@@ -33,7 +33,8 @@ export default abstract class FinancialReportGenerator {
       case 'OR':
         return pattern.patterns.some((p) => this.matchPattern(p, codes));
       case 'CODE':
-        return Array.from(pattern.codes).some((regex) => Array.from(codes).some((code) => regex.test(code)));
+        return Array.from(pattern.codes).some((regex) =>
+          Array.from(codes).some((code) => regex.test(code)));
       default:
         return false;
     }
@@ -85,7 +86,8 @@ export default abstract class FinancialReportGenerator {
     const accountSheetTypeForQuery = accountSheetType || this.accountSheetType;
     const accountTypes = AccountSheetAccountTypeMap[accountSheetTypeForQuery];
     const lineItemsFromDBArray = await Promise.all(
-      accountTypes.map((type) => getLineItemsInPrisma(this.companyId, type, this.startDateInSecond, this.endDateInSecond))
+      accountTypes.map((type) =>
+        getLineItemsInPrisma(this.companyId, type, this.startDateInSecond, this.endDateInSecond))
     );
 
     const lineItemsFromDB = lineItemsFromDBArray.flat();

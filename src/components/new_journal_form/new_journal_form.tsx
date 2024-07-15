@@ -487,6 +487,12 @@ const NewJournalForm = () => {
   // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
   const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
 
+  // Info: (20240715 - Julian) 專案名稱翻譯
+  const projectName = selectedProject.id === null ? t(selectedProject.name) : selectedProject.name;
+  // Info: (20240715 - Julian) 合約名稱翻譯
+  const contractName =
+    selectedContract.id === null ? t(selectedContract.name) : selectedContract.name;
+
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
     // Info: (20240429 - Julian) 檢查日期是否有填寫
@@ -577,7 +583,6 @@ const NewJournalForm = () => {
       const selectionClickHandler = () => {
         setSelectedProject({
           id: project.id,
-          // name: t(project.name),
           name: project.id === null ? t(project.name) : project.name,
         });
       };
@@ -1127,7 +1132,7 @@ const NewJournalForm = () => {
               <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedProject.name}</p>
+              <p className="flex-1">{projectName}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -1153,7 +1158,7 @@ const NewJournalForm = () => {
               <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.CONTRACT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedContract.name}</p>
+              <p className="flex-1">{contractName}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
