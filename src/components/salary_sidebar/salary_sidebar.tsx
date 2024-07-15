@@ -92,7 +92,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.SALARY_BOOK')}
+                {t('SALARY.SALARY_LIST')}
               </p>
             </Link>
           </div>
