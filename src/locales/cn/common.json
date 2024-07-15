@@ -248,11 +248,13 @@
   "MY_REPORTS_SECTION": {
     "LOADING": "加载中...",
     "SORT_BY": "排序方式",
-    "EMPTY": "空的",
+    "EMPTY": "无资料",
     "MY_REPORTS": "我的报告",
-    "PENDING": "待办",
+    "PENDING": "生成中",
     "REPORTS_HISTORY": "历史报告",
-    "GENERATE_REPORT": "生成报告"
+    "GENERATE_REPORT": "生成报告",
+    "WE_RECEIVED_YOUR_APPLICATION": "我们已经收到您的申请",
+    "TAKE_MINUTES": "AI产生报告需要30到40分钟，您可以稍后再回来查看。"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "从",
@@ -265,14 +267,14 @@
     "PERIOD": "期间",
     "BLOCKCHAIN": "区块链",
     "PROJECT": "项目",
-    "OPERATIONS": "运营报告"
+    "OPERATIONS": "操作"
   },
   "PENDING_REPORT_LIST": {
     "DATE": "日期",
     "REPORT_NAME": "报告名称",
     "PERIOD": "期间",
     "REMAINING_TIME": "剩余时间",
-    "OPERATIONS": "营运报告",
+    "OPERATIONS": "操作",
     "CANCEL": "取消",
     "SELECT": "选择"
   },
@@ -302,7 +304,7 @@
     "SALARY_BOOK": "薪资簿",
     "ADD_NEW_EMPLOYEE": "新增员工",
     "ONE_CLICK_REMOVAL": "一键删除",
-    "EMPTY": "空的",
+    "EMPTY": "无资料",
     "SALARY_ISUNFA": "薪资 - iSunFA"
   },
   "COMMON": {
@@ -323,7 +325,7 @@
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "获取数据失败",
     "UPLOADED": "已上传的",
-    "EVENTS": "活动",
+    "EVENTS": "会计事件",
     "UPCOMING": "即将到来的",
     "TYPE": "类型",
     "JOURNAL_LIST": "日记帐",
@@ -423,7 +425,7 @@
     "MILESTONE": "里程碑",
     "MONTHLY_SALES": "每月销售额",
     "REMAINING": "剩余的",
-    "COMPLETED": "完全的",
+    "COMPLETED": "已完成",
     "PROJECT_STAGE_CHART": "专案阶段图",
     "TOOLTIP_MESSAGE": "当游标位于图形使用者介面中的图示、图像、超连结或其他元素上时出现的讯息。",
     "NO_DATA": "没有数据",
@@ -468,7 +470,12 @@
     "REPORT": "报告: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "无法获取待处理的报告。错误代码：",
     "USING_DUMMY_DATA": "使用虚拟数据",
-    "SELECTED": "已选择"
+    "SELECTED": "已选择",
+    "PASS_YEAR": "去年度",
+    "CURRENT_YEAR": "今年度",
+    "WE_CAN_T_GENERATE_THE_REPORT": "我们无法生成您申请的报告，请更改选择并重试。",
+    "FAILED": "失败了",
+    "TRY_AGAIN": "再试一次"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",

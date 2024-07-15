@@ -153,8 +153,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
             {displayedCheckbox}
             <th className="text-center">{t('REPORTS_HISTORY_LIST.DATE')}</th>
             <th className="px-16px">{t('REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
-            {/* TODO: 請 @Anna 幫忙加 i18n (20240711 - Shirley) */}
-            <th className="hidden px-16px lg:table-cell">Type</th>
+            <th className="hidden px-16px lg:table-cell">{t('JOURNAL.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.BLOCKCHAIN')}</th>
             <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>

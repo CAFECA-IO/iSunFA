@@ -148,9 +148,12 @@ const FinancialReportSection = () => {
       if (generatedSuccess) {
         messageModalDataHandler({
           title: '',
-          subtitle: 'We received your application',
-          content: `It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later.`,
-          submitBtnStr: 'Close',
+          // subtitle: 'We received your application',
+          // content: `It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later.`,
+          // submitBtnStr: 'Close',
+          subtitle: t('MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
+          content: t('MY_REPORTS_SECTION.TAKE_MINUTES'),
+          submitBtnStr: t('COMMON.CLOSE'),
           submitBtnFunction: () => {},
           messageType: MessageType.SUCCESS,
           submitBtnVariant: 'secondaryBorderless',
@@ -160,9 +163,9 @@ const FinancialReportSection = () => {
       } else {
         messageModalDataHandler({
           title: '',
-          subtitle: 'Failed',
-          content: `We can't generate the report you applied for, please change the selections and try again.`,
-          submitBtnStr: 'Try again',
+          subtitle: t('DASHBOARD.FAILED'),
+          content: t('DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
+          submitBtnStr: t('DASHBOARD.TRY_AGAIN'),
           submitBtnFunction: tryAgainHandler,
           messageType: MessageType.ERROR,
           submitBtnVariant: 'tertiaryBorderless',

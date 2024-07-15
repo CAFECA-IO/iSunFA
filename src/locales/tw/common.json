@@ -247,11 +247,13 @@
   "MY_REPORTS_SECTION": {
     "LOADING": "載入中...",
     "SORT_BY": "排序方式",
-    "EMPTY": "空的",
+    "EMPTY": "無資料",
     "MY_REPORTS": "我的報告",
-    "PENDING": "待辦",
+    "PENDING": "生成中",
     "REPORTS_HISTORY": "歷史報告",
-    "GENERATE_REPORT": "產生報告"
+    "GENERATE_REPORT": "產生報告",
+    "WE_RECEIVED_YOUR_APPLICATION": "我們已經收到您的申請",
+    "TAKE_MINUTES": "AI產生報告需要30到40分鐘，您可以稍後再回來查看。"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "從",
@@ -264,14 +266,14 @@
     "PERIOD": "期間",
     "BLOCKCHAIN": "區塊鏈",
     "PROJECT": "專案",
-    "OPERATIONS": "營運報告"
+    "OPERATIONS": "操作"
   },
   "PENDING_REPORT_LIST": {
     "DATE": "日期",
     "REPORT_NAME": "報告名稱",
     "PERIOD": "期間",
     "REMAINING_TIME": "剩餘時間",
-    "OPERATIONS": "營運報告",
+    "OPERATIONS": "操作",
     "CANCEL": "取消",
     "SELECT": "選擇"
   },
@@ -301,7 +303,7 @@
     "SALARY_BOOK": "薪資簿",
     "ADD_NEW_EMPLOYEE": "新增員工",
     "ONE_CLICK_REMOVAL": "一鍵刪除",
-    "EMPTY": "空的",
+    "EMPTY": "無資料",
     "SALARY_ISUNFA": "薪資 - iSunFA"
   },
   "COMMON": {
@@ -322,7 +324,7 @@
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",
     "UPLOADED": "已上傳的",
-    "EVENTS": "活動",
+    "EVENTS": "會計事件",
     "UPCOMING": "即將到來的",
     "TYPE": "類型",
     "JOURNAL_LIST": "日記帳",
@@ -407,7 +409,7 @@
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
     "DEVELOPMENT_DEPARTMENT": "開發部",
-    "ADD_NEW_PROJECT": "新增項目",
+    "ADD_NEW_PROJECT": "新增專案",
     "EDIT_PROJECT_INFORMATION": "編輯項目資訊",
     "PROJECT_NAME": "專案名稱",
     "STAGE": "階段",
@@ -422,7 +424,7 @@
     "MILESTONE": "里程碑",
     "MONTHLY_SALES": "每月銷售額",
     "REMAINING": "剩餘的",
-    "COMPLETED": "完全的",
+    "COMPLETED": "已完成",
     "PROJECT_STAGE_CHART": "專案階段圖",
     "TOOLTIP_MESSAGE": "當遊標位於圖形使用者介面中的圖示、圖像、超連結或其他元素上時出現的訊息。",
     "NO_DATA": "沒有數據",
@@ -430,14 +432,14 @@
     "INCOME_VS_EXPENSE_COMPARISON_GRAPH": "收入與支出比較圖",
     "CONTRACT_LIST": "合約清單",
     "ACCOUNTING_JOURNAL": "日記帳",
-    "PROJECT_SETTING": "項目設定",
+    "PROJECT_SETTING": "專案設定",
     "THAN_LAST_YEAR": "比去年",
     "PROJECT_VALUE": "專案價值",
     "TOTAL_REVENUE": "總收入",
     "IN_30_DAYS": "30天內",
     "TOTAL_EXPENSES": "總費用",
     "NET_PROFIT": "淨利",
-    "ADD_PROJECT": "新增項目",
+    "ADD_PROJECT": "新增專案",
     "PROJECT_WISE": "專案方面",
     "FINANCIAL_OVERVIEW": "財務概覽",
     "INCOME_VS_EXPENDITURE": "收入與支出",
@@ -467,7 +469,12 @@
     "REPORT": "報告: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "無法取得待處理的報告。錯誤代碼：",
     "USING_DUMMY_DATA": "使用虛擬數據",
-    "SELECTED": "已選擇"
+    "SELECTED": "已選擇",
+    "PASS_YEAR": "去年度",
+    "CURRENT_YEAR": "今年度",
+    "WE_CAN_T_GENERATE_THE_REPORT": "我們無法產生您申請的報告，請更改選擇並重試。",
+    "FAILED": "失敗了",
+    "TRY_AGAIN": "再試一次"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",
