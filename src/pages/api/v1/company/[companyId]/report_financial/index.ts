@@ -51,8 +51,8 @@ export function formatStartAndEndDateFromQuery(
     endDateInSecond = timestampInSeconds(endDateInSecondString);
   }
 
-  const lastPeriodStartDateInSecond = reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : getTimestampOfSameDateOfLastYear(startDateInSecond);
-  const lastPeriodEndDateInSecond = getTimestampOfSameDateOfLastYear(endDateInSecond);
+  const lastPeriodStartDateInSecond = reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
+  const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
 
   return { startDateInSecond, endDateInSecond, lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
 }
