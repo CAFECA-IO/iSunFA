@@ -4,7 +4,7 @@ import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/investing_cash_flow';
+import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 
 export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   try {
@@ -209,7 +209,10 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
     });
 
     const localToday = new Date();
-    const localTodayNo = `${localToday.getFullYear()}`.padStart(4, '0') + `${localToday.getMonth() + 1}`.padStart(2, '0') + `${localToday.getDate()}`.padStart(2, '0');
+    const localTodayNo =
+      `${localToday.getFullYear()}`.padStart(4, '0') +
+      `${localToday.getMonth() + 1}`.padStart(2, '0') +
+      `${localToday.getDate()}`.padStart(2, '0');
     const resultDate = result?.createdAt
       ? new Date(timestampInSeconds(result?.createdAt)).getDate()
       : -1;
@@ -260,7 +263,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
 export async function findManyVoucherWithCashInPrisma(
   companyId: number,
   startDateInSecond: number,
-  endDateInSecond: number,
+  endDateInSecond: number
 ) {
   try {
     const vouchers = await prisma.voucher.findMany({
@@ -278,19 +281,20 @@ export async function findManyVoucherWithCashInPrisma(
               account: {
                 code: {
                   startsWith: cashCode,
-                }
+                },
               },
-            }))
-          }
-        }
+            })),
+          },
+        },
       },
       include: {
+        journal: true,
         lineItems: {
           include: {
             account: true,
-          }
+          },
         },
-      }
+      },
     });
 
     return vouchers;

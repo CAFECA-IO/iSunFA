@@ -378,6 +378,7 @@
     "PROJECT_CONTRACT_ISUNFA": "Project Contract - iSunFA",
     "FROM_TO": "From / To",
     "VOUCHER_NO": "Voucher No",
+    "OPERATIONS" : "Operations",
     "INFO": "Info",
     "EVENT_TYPE": "Event Type",
     "PAYMENT_REASON": "Payment Reason",

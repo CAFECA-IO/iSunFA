@@ -76,6 +76,7 @@ module.exports = {
             leadingUnderscore: 'allow',
           },
         ],
+        'implicit-arrow-linebreak': 'off',
       },
     },
   ],

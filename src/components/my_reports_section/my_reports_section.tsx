@@ -6,6 +6,7 @@ import {
   DEFAULT_DISPLAYED_COMPANY_ID,
   default30DayPeriodInSec,
   LIMIT_FOR_REPORT_PAGE,
+  DEFAULT_PAGE_NUMBER,
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
@@ -28,9 +29,12 @@ import { useUserCtx } from '@/contexts/user_context';
 import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
 import { sortOptionQuery } from '@/constants/sort';
+import { useRouter } from 'next/router';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
+  const router = useRouter();
+
   const { selectedCompany } = useUserCtx();
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
@@ -43,12 +47,15 @@ const MyReportsSection = () => {
     // filterOptionsForPending,
   } = useGlobalCtx();
 
+  const { pending, history } = router.query;
+  const [mounted, setMounted] = useState(false);
+
   const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(
-    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.page
+    pending ? +pending : DEFAULT_PAGE_NUMBER
   );
   const [pendingData, setPendingData] = useState<IPendingReportItem[]>(
     FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
@@ -59,7 +66,7 @@ const MyReportsSection = () => {
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(
-    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.page
+    history ? +history : DEFAULT_PAGE_NUMBER
   );
   const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>(
     FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
@@ -133,24 +140,30 @@ const MyReportsSection = () => {
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
   // TODO: 嘗試改成用 DatePicker 裡面觸發 callback 來達成 (20240710 - Shirley)
   useEffect(() => {
-    if (!pendingPeriod.endTimeStamp) return;
+    if (!pendingPeriod.endTimeStamp || !mounted) return;
     fetchPendingReports();
   }, [pendingPeriod]);
 
   useEffect(() => {
+    if (!mounted) return;
     fetchPendingReports();
   }, [filteredPendingSort, pendingCurrentPage, searchPendingQuery]);
 
   // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
   useEffect(() => {
-    if (!historyPeriod.endTimeStamp) return;
+    if (!historyPeriod.endTimeStamp || !mounted) return;
     fetchGeneratedReports();
   }, [historyPeriod]);
 
   useEffect(() => {
+    if (!mounted) return;
     fetchGeneratedReports();
   }, [filteredHistorySort, historyCurrentPage, searchHistoryQuery]);
 

@@ -1,5 +1,5 @@
-import { AccountSheetType } from "@/constants/account";
-import FinancialReportGenerator from "@/lib/utils/financial_report/financial_report_generator";
+import { AccountSheetType } from '@/constants/account';
+import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
 import {
   calculateIncomeStatementNetIncome,
   mappingAccountToSheetDisplay,
@@ -7,7 +7,7 @@ import {
   transformLineItemsFromDBToMap,
   updateAccountAmounts,
 } from '@/lib/utils/account';
-import { IAccountForSheetDisplay, IAccountNode } from "@/interfaces/accounting_account";
+import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
 import incomeStatementMapping from '@/constants/account_sheet_mapping/income_statement_mapping.json';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
