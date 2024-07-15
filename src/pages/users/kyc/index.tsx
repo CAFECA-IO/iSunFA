@@ -79,7 +79,7 @@ const KYCIntroPage = () => {
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <>
+    <div>
       {/* ===== Desktop ===== */}
       <main className="hidden space-y-80px px-40px pb-120px pt-100px lg:block">
         {/* Page Title */}
@@ -91,9 +91,12 @@ const KYCIntroPage = () => {
             </h1>
           </div>
           {/* line */}
-          <div className="my-10px border border-divider-stroke-lv-4"></div>
+          <div className="py-10px">
+            <div className="border border-divider-stroke-lv-4"></div>
+          </div>
         </section>
 
+        {/* content */}
         <section className="mx-auto flex w-fit flex-col items-center gap-40px">
           <div>
             <Image
@@ -121,8 +124,48 @@ const KYCIntroPage = () => {
       </main>
 
       {/* ===== Mobile ===== */}
-      <main className="lg:hidden"></main>
-    </>
+      <main className="flex flex-col gap-40px px-16px py-100px lg:hidden">
+        {/* Page Title */}
+        <section className="space-y-8px pb-20px pt-50px">
+          <div className="flex items-center gap-24px">
+            <BackButton />
+            <h1 className="text-base font-semibold text-text-neutral-secondary">
+              Company Verification
+            </h1>
+          </div>
+          {/* line */}
+          <div className="py-10px">
+            <div className="border border-divider-stroke-lv-4"></div>
+          </div>
+        </section>
+
+        {/* content */}
+        <section className="mx-auto flex w-fit flex-col items-center gap-40px">
+          <div>
+            <Image
+              src={'/elements/fingerprint.svg'}
+              alt="fingerprint"
+              width={112}
+              height={112}
+            ></Image>
+          </div>
+          <div>
+            <p className="mb-20px text-sm font-medium text-text-neutral-secondary">
+              In this verification process you will need to...
+            </p>
+            <ul className="list-inside list-disc pl-10px text-base font-semibold">
+              <li>Enter Company Information.</li>
+              <li>Upload Business Registration Certificate.</li>
+              <li>Upload Tax Status Certification (Issued within 6 months).</li>
+              <li>Upload photo of Key Company Representative’s ID.</li>
+            </ul>
+          </div>
+          <div>
+            <KYCButton />
+          </div>
+        </section>
+      </main>
+    </div>
   );
 
   return (
@@ -136,7 +179,6 @@ const KYCIntroPage = () => {
 
       <div className="min-h-screen bg-surface-neutral-main-background font-barlow">
         <NavBar />
-
         {displayedBody}
       </div>
     </>
@@ -152,9 +194,3 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 export const getStaticProps = getStaticPropsFunction;
 
 export default KYCIntroPage;
-
-// const KYCIntroPage = () => {
-//   return <div>Hello</div>;
-// };
-
-// export default KYCIntroPage;
