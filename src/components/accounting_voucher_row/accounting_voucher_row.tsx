@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { RiDeleteBinLine } from 'react-icons/ri';
