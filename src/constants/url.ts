@@ -13,6 +13,7 @@ export const ISUNFA_ROUTE = {
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
   SALARY: '/users/salary',
+  SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
   ACCOUNTING: '/users/accounting',
   SELECT_COMPANY: '/users/select-company',
   JOURNAL_LIST: '/users/accounting/journal-list',
@@ -22,6 +23,8 @@ export const ISUNFA_ROUTE = {
   USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
   USERS_MY_REPORTS: '/users/reports/my-reports',
   PROJECT_LIST: '/users/project',
+  COMPANY_INFO: '/users/setting/company-info',
+  ACCOUNTING_TITLE: '/users/setting/accounting-title',
 };
 
 export const EXTERNAL_API = {

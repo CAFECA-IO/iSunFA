@@ -45,7 +45,8 @@ function checkInput(
     workingHours !== undefined &&
     Array.isArray(projects) &&
     projects.every(
-      (project) => project.id !== undefined && project.name !== undefined && project.hours !== undefined
+      (project) =>
+        project.id !== undefined && project.name !== undefined && project.hours !== undefined
     )
   );
 }
