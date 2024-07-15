@@ -277,8 +277,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
             {displayedCheckbox}
             <th className="text-center">{t('PENDING_REPORT_LIST.DATE')}</th>
             <th className="px-16px">{t('PENDING_REPORT_LIST.REPORT_NAME')}</th>
-            {/* TODO: 請 @Anna 幫忙加 i18n (20240711 - Shirley) */}
-            <th className="hidden px-16px lg:table-cell">Type</th>
+            <th className="hidden px-16px lg:table-cell">{t('JOURNAL.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">{t('PENDING_REPORT_LIST.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">
               {t('PENDING_REPORT_LIST.REMAINING_TIME')}

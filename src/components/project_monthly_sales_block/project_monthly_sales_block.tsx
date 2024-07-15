@@ -137,11 +137,13 @@ const ProjectMonthlySalesBlock = () => {
 
   const series = [
     {
-      name: 'Pass Year',
+      // name: 'Pass Year',
+      name: translate('DASHBOARD.PASS_YEAR'),
       data: data.seriesData[0],
     },
     {
-      name: 'Current Year',
+      // name: 'Current Year',
+      name: translate('DASHBOARD.CURRENT_YEAR'),
       data: data.seriesData[1],
     },
   ];

@@ -177,6 +177,19 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return sum;
   }
 
+  // Info: (20240710 - Murky) This method is only used in this class
+  // eslint-disable-next-line class-methods-use-this
+  private sumIndirectOperatingCashFlow(
+    indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>
+  ): number {
+    const sum =
+      (indirectOperatingCashFlow.get('A33000')?.amount || 0) +
+      (indirectOperatingCashFlow.get('A33400')?.amount || 0) +
+      (indirectOperatingCashFlow.get('A33500')?.amount || 0);
+
+    return sum;
+  }
+
   private async getIndirectOperatingCashFlow(): Promise<Map<string, IAccountForSheetDisplay>> {
     const balanceSheetMap = await this.balanceSheetGenerator.generateFinancialReportMap();
     const incomeStatementMap = await this.incomeStatementGenerator.generateFinancialReportMap();
@@ -249,7 +262,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     firstLineName: string,
     cashFlowMapping: Map<string, IDirectCashFlowMapping>
   ): {
-    reportSheetMapping: Map<string, IAccountForSheetDisplay>;
+    accountSheetMapping: Map<string, IAccountForSheetDisplay>;
     directCashFlow: number;
   } {
     const result = new Map<string, IAccountForSheetDisplay>();
@@ -294,11 +307,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   private getInvestingCashFlow(): Map<string, IAccountForSheetDisplay> {
-    const { reportSheetMapping, directCashFlow } = this.aggregateVouchers(
+    const { accountSheetMapping, directCashFlow } = this.aggregateVouchers(
       '投資活動之現金流量',
       INVESTING_CASH_FLOW_DIRECT_MAPPING
     );
-    reportSheetMapping.set('BBBB', {
+    accountSheetMapping.set('BBBB', {
       code: 'BBBB',
       name: '投資活動之淨現金流入（流出）',
       amount: directCashFlow,
@@ -319,6 +332,81 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       indent: 1,
     });
     return reportSheetMapping;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private sumCashFlow(
+    indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
+    investingCashFlow: Map<string, IAccountForSheetDisplay>,
+    financingCashFlow: Map<string, IAccountForSheetDisplay>
+  ): number {
+    const cashFlowFromOperating =
+      (indirectOperatingCashFlow.get('AAAA')?.amount || 0) +
+      (investingCashFlow.get('BBBB')?.amount || 0) +
+      (financingCashFlow.get('CCCC')?.amount || 0);
+    return cashFlowFromOperating;
+  }
+
+  private concatCashFlow(
+    indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
+    investingCashFlow: Map<string, IAccountForSheetDisplay>,
+    financingCashFlow: Map<string, IAccountForSheetDisplay>
+  ): Map<string, IAccountForSheetDisplay> {
+    const { startCashBalance, endCashBalance } = this.getCashStartAndEndAmount();
+    const cashFlowFromOperating = this.sumCashFlow(
+      indirectOperatingCashFlow,
+      investingCashFlow,
+      financingCashFlow
+    );
+
+    const result = new Map<string, IAccountForSheetDisplay>([
+      ...Array.from(indirectOperatingCashFlow),
+      ...Array.from(investingCashFlow),
+      ...Array.from(financingCashFlow),
+    ]);
+
+    result.set('DDDD', {
+      code: 'DDDD',
+      name: '匯率變動對現金及約當現金之影響',
+      amount: 0,
+      indent: 0,
+    });
+
+    result.set('EEEE', {
+      code: 'EEEE',
+      name: '本期現金及約當現金增加（減少）數',
+      amount: cashFlowFromOperating,
+      indent: 0,
+    });
+
+    result.set('E00100', {
+      code: 'E00100',
+      name: '期初現金及約當現金餘額',
+      amount: startCashBalance,
+      indent: 0,
+    });
+
+    result.set('E00200', {
+      code: 'E00200',
+      name: '期末現金及約當現金餘額',
+      amount: endCashBalance,
+      indent: 0,
+    });
+    return result;
+  }
+
+  private getFinancingCashFlow(): Map<string, IAccountForSheetDisplay> {
+    const { accountSheetMapping, directCashFlow } = this.aggregateVouchers(
+      '籌資活動之現金流量',
+      FINANCING_CASH_FLOW_DIRECT_MAPPING
+    );
+    accountSheetMapping.set('CCCC', {
+      code: 'CCCC',
+      name: '籌資活動之淨現金流入（流出）',
+      amount: directCashFlow,
+      indent: 1,
+    });
+    return accountSheetMapping;
   }
 
   // eslint-disable-next-line class-methods-use-this

@@ -2,13 +2,12 @@ import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import NavBar from '@/components/nav_bar/nav_bar';
-import { useUserCtx } from '@/contexts/user_context';
+import SalarySidebar from '@/components/salary_sidebar/salary_sidebar';
 import { useTranslation } from 'next-i18next';
-import SalaryPageBody from '@/components/salary/salary_page_body';
+import SalaryRecordForm from '@/components/salary_record_form/salary_record_form';
 
-const SalaryHomePage = () => {
+const SalaryBookkeepingPage = () => {
   const { t } = useTranslation('common');
-  const { isAuthLoading } = useUserCtx();
 
   return (
     <>
@@ -20,9 +19,23 @@ const SalaryHomePage = () => {
       </Head>
 
       <div className="font-barlow">
-        <NavBar />
+        <div className="">
+          <NavBar />
+        </div>
 
-        <SalaryPageBody isAuthLoading={isAuthLoading} />
+        {/* Info: (20240715 - Julian) Body */}
+        <div>
+          {/* Info: (20240715 - Julian) Sidebar */}
+          <div className="">
+            <SalarySidebar />
+          </div>
+
+          <main className="hidden h-100vh bg-surface-neutral-main-background md:flex md:h-1100px">
+            <div className="mt-120px flex-1 px-80px md:ml-80px">
+              <SalaryRecordForm />
+            </div>
+          </main>
+        </div>
       </div>
     </>
   );
@@ -36,4 +49,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default SalaryHomePage;
+export default SalaryBookkeepingPage;

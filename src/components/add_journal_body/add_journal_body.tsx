@@ -10,7 +10,7 @@ import { useTranslation } from 'next-i18next';
 
 const AddJournalBody = () => {
   const { t } = useTranslation('common');
-  const { selectedOCR, selectOCRHandler } = useAccountingCtx();
+  const { selectedOCR, selectOCRHandler, selectedJournal } = useAccountingCtx();
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
@@ -27,10 +27,10 @@ const AddJournalBody = () => {
 
   useEffect(() => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
-    if (selectedOCR) {
+    if (selectedOCR || selectedJournal) {
       setCurrentStep(AccountingStep.STEP_TWO);
     }
-  }, [selectedOCR]);
+  }, [selectedOCR, selectedJournal]);
 
   // Info: (20240422 - Julian) 第一步不會顯示 back button
   const displayBackButton = isStepOne ? null : (

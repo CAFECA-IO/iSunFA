@@ -54,6 +54,7 @@ const ConfirmModal = ({
     changeVoucherAccountHandler,
     changeVoucherAmountHandler,
     clearVoucherHandler,
+    selectedJournal,
     selectJournalHandler,
   } = useAccountingCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
@@ -75,6 +76,8 @@ const ConfirmModal = ({
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
   const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
+
+  const { trigger: editJournal } = APIHandler<void>(APIName.JOURNAL_UPDATE, {}, false, false);
 
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
   const {
@@ -134,15 +137,16 @@ const ConfirmModal = ({
 
     // Info: (20240529 - Julian) 先加入空白列，再寫入資料
     AILineItems.forEach((lineItem, index) => {
-      addRowHandler();
+      // addVoucherRowHandler();
+      // Info: (20240715 - Julian) 找出對應的 account
       const account = accountList.find((acc) => acc.id === lineItem.accountId);
-      changeVoucherAccountHandler(index, account);
-      changeVoucherAmountHandler(
-        index,
-        lineItem.amount,
-        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
-        lineItem.description
-      );
+      // Info: (20240715 - Julian) 判斷是借方還是貸方
+      const voucherType = lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
+
+      // Info: (20240715 - Julian) 修改 account
+      changeVoucherAccountHandler(index + 1, account);
+      // Info: (20240715 - Julian) 修改內容
+      changeVoucherAmountHandler(index + 1, lineItem.amount, voucherType, lineItem.description);
     });
   };
 
@@ -156,7 +160,10 @@ const ConfirmModal = ({
       submitBtnStr: 'Confirm',
       submitBtnFunction: importVoucherHandler,
       backBtnStr: 'Cancel',
-      backBtnFunction: () => getAIStatusHandler(undefined, false),
+      backBtnFunction: () => {
+        getAIStatusHandler(undefined, false);
+        messageModalVisibilityHandler();
+      },
     });
     messageModalVisibilityHandler();
   };
@@ -164,19 +171,27 @@ const ConfirmModal = ({
   const closeHandler = () => {
     modalVisibilityHandler();
     getAIStatusHandler(undefined, false);
+    clearVoucherHandler();
   };
 
   // Info: (20240527 - Julian) 送出 Voucher
   const confirmHandler = () => {
     if (journal && journal.invoice && lineItems) {
-      const voucher: IVoucherDataForSavingToDB = {
-        journalId: journal.id,
-        lineItems,
-      };
-      createVoucher({
-        params: { companyId },
-        body: { voucher },
-      });
+      if (selectedJournal) {
+        editJournal({
+          params: { companyId, journalId: journal.id },
+          body: { voucher: { lineItems } },
+        });
+      } else {
+        const voucher: IVoucherDataForSavingToDB = {
+          journalId: journal.id,
+          lineItems,
+        };
+        createVoucher({
+          params: { companyId },
+          body: { voucher },
+        });
+      }
     }
   };
 
@@ -187,6 +202,14 @@ const ConfirmModal = ({
       });
     }
   }, [journalId]);
+
+  useEffect(() => {
+    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    clearVoucherHandler();
+
+    // Info: (20240528 - Julian) Call AI API first time
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
+  }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {

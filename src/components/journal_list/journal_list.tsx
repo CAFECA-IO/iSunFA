@@ -17,10 +17,12 @@ interface IJournalListProps {
 
 const JournalList = ({
   event,
+  companyId,
   journalsProps,
   paginationProps,
 }: {
   event: JOURNAL_EVENT;
+  companyId: number;
   journalsProps: IJournalListProps;
   paginationProps: IPaginationProps;
 }) => {
@@ -60,6 +62,7 @@ const JournalList = ({
   const displayedList = journals.map((journal) => (
     <JournalItem
       event={event}
+      companyId={companyId}
       journal={journal}
       isChecked={checkedItems.includes(`${journal.voucherId}`)}
       checkHandler={checkHandler}
@@ -68,6 +71,7 @@ const JournalList = ({
   const displayedListMobile = journals.map((journal) => (
     <JournalItemMobile
       event={event}
+      companyId={companyId}
       journal={journal}
       isChecked={checkedItems.includes(`${journal.voucherId}`)}
       checkHandler={checkHandler}

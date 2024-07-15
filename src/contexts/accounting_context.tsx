@@ -249,7 +249,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         });
       }, 2000);
     }
-    if ((statusSuccess && status === ProgressStatus.SUCCESS) || statusError) {
+    if ((statusSuccess && status !== ProgressStatus.IN_PROGRESS) || statusError) {
       setAIStatus(status ?? ProgressStatus.LLM_ERROR);
       setAskAIParams((prev) => (prev ? { ...prev, update: false } : prev));
     }
