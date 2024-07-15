@@ -170,14 +170,14 @@ async function createVoucher() {
   });
 }
 
-async function createLineItem(lineItem:{
-  amount: number,
-  description: string,
-  accountCode: string,
-  debit: boolean,
-  voucherId: number,
-  createdAt: number,
-  updatedAt: number
+async function createLineItem(lineItem: {
+  amount: number;
+  description: string;
+  accountCode: string;
+  debit: boolean;
+  voucherId: number;
+  createdAt: number;
+  updatedAt: number;
 }) {
   const account = await prisma.account.findFirst({
     where: {

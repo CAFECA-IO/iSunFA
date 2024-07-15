@@ -75,6 +75,7 @@ const contractSelection: { id: number | null; name: string }[] = [
 const NewJournalForm = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
+  const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
   const {
     messageModalVisibilityHandler,
@@ -756,7 +757,8 @@ const NewJournalForm = () => {
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}
-              className="ml-auto text-secondaryBlue hover:text-primaryYellow"
+              className={`ml-auto ${disabledAddNewAsset ? 'text-gray-400' : 'text-secondaryBlue hover:text-primaryYellow'}`}
+              disabled={disabledAddNewAsset}
             >
               {t('JOURNAL.ADD_NEW_ASSET')}
             </button>

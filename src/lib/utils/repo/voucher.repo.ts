@@ -209,7 +209,10 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
     });
 
     const localToday = new Date();
-    const localTodayNo = `${localToday.getFullYear()}`.padStart(4, '0') + `${localToday.getMonth() + 1}`.padStart(2, '0') + `${localToday.getDate()}`.padStart(2, '0');
+    const localTodayNo =
+      `${localToday.getFullYear()}`.padStart(4, '0') +
+      `${localToday.getMonth() + 1}`.padStart(2, '0') +
+      `${localToday.getDate()}`.padStart(2, '0');
     const resultDate = result?.createdAt
       ? new Date(timestampInSeconds(result?.createdAt)).getDate()
       : -1;
@@ -260,7 +263,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
 export async function findManyVoucherWithCashInPrisma(
   companyId: number,
   startDateInSecond: number,
-  endDateInSecond: number,
+  endDateInSecond: number
 ) {
   try {
     const vouchers = await prisma.voucher.findMany({
@@ -278,19 +281,19 @@ export async function findManyVoucherWithCashInPrisma(
               account: {
                 code: {
                   startsWith: cashCode,
-                }
+                },
               },
-            }))
-          }
-        }
+            })),
+          },
+        },
       },
       include: {
         lineItems: {
           include: {
             account: true,
-          }
+          },
         },
-      }
+      },
     });
 
     return vouchers;
