@@ -99,8 +99,9 @@ const ReportsHistoryItem = ({
       </td>
       <td className="hidden px-16px text-left font-medium lg:table-cell">
         <span className="text-sm text-text-neutral-primary">
-          {/* TODO: 請 @Anna 幫忙加 i18n (20240711 - Shirley) */}
-          {FinancialReportTypeName[report.reportType]}
+          {t(
+            `PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+          )}
         </span>
       </td>
       {/* Info: period (20240528 - Shirley) */}

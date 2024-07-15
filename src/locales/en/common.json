@@ -254,7 +254,9 @@
     "MY_REPORTS": "My Reports",
     "PENDING": "Pending",
     "REPORTS_HISTORY": "Reports History",
-    "GENERATE_REPORT": "Generate Report"
+    "GENERATE_REPORT": "Generate Report",
+    "WE_RECEIVED_YOUR_APPLICATION": "We received your application",
+    "TAKE_MINUTES": "It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later."
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "From",
@@ -473,7 +475,12 @@
     "REPORT": "report: ",
     "FAILED_TO_FETCH_PENDING_REPORTS": "Failed to fetch pending reports. Error code: ",
     "USING_DUMMY_DATA": "USING DUMMY DATA",
-    "SELECTED": "selected"
+    "SELECTED": "selected",
+    "PASS_YEAR": "Pass Year",
+    "CURRENT_YEAR": "Current Year",
+    "WE_CAN_T_GENERATE_THE_REPORT": "We can't generate the report you applied for, please change the selections and try again.",
+    "FAILED": "Failed",
+    "TRY_AGAIN": "Try again"
   },
 
   "SELECT_COMPANY": {
