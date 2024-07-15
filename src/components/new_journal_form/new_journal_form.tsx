@@ -107,22 +107,6 @@ const NewJournalForm = () => {
 
   const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
 
-  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
-  const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
-
-  const {
-    trigger: getAIResult,
-    data: AIResult,
-    success: AIResultSuccess,
-    code: AIResultCode,
-  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-  */
-
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
@@ -438,13 +422,6 @@ const NewJournalForm = () => {
         askAIId: invoiceReturn.resultStatus.resultId,
       });
       confirmModalVisibilityHandler();
-      // const { resultId } = result;
-      // getAIStatus({
-      //   params: {
-      //     companyId,
-      //     resultId,
-      //   },
-      // });
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
@@ -457,91 +434,16 @@ const NewJournalForm = () => {
     }
   }, [createSuccess, invoiceReturn, createCode]);
 
-  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal failed: ${statusCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (
-      status === ProgressStatus.INVALID_INPUT ||
-      status === ProgressStatus.LLM_ERROR ||
-      status === ProgressStatus.SYSTEM_ERROR ||
-      status === ProgressStatus.NOT_FOUND ||
-      status === ProgressStatus.PAUSED
-    ) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal status: ${status}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
-      if (journal?.id) {
-        getJournalById({ params: { companyId, journalId: journal?.id } });
-      } else {
-        getAIResult({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }
-    }
-    return () => clearInterval(interval);
-  }, [result, statusSuccess, status]);
-
-  useEffect(() => {
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      loadingModalVisibilityHandler();
-    }
-    if (status === ProgressStatus.SUCCESS) {
-      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
-      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
-    }
-  }, [statusSuccess, status]);
-
-  useEffect(() => {
-    if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId } });
-    }
-    if (AIResultSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Get Voucher Preview Failed',
-        content: `Get voucher preview failed: ${AIResultCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [AIResultSuccess, AIResult, AIResultCode]);
-  */
-
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
   // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
   const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
+
+  // Info: (20240715 - Julian) 專案名稱翻譯
+  const projectName = selectedProject.id === null ? t(selectedProject.name) : selectedProject.name;
+  // Info: (20240715 - Julian) 合約名稱翻譯
+  const contractName =
+    selectedContract.id === null ? t(selectedContract.name) : selectedContract.name;
 
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
@@ -633,7 +535,6 @@ const NewJournalForm = () => {
       const selectionClickHandler = () => {
         setSelectedProject({
           id: project.id,
-          // name: t(project.name),
           name: project.id === null ? t(project.name) : project.name,
         });
       };
@@ -1182,7 +1083,7 @@ const NewJournalForm = () => {
               <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedProject.name}</p>
+              <p className="flex-1">{projectName}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -1208,7 +1109,7 @@ const NewJournalForm = () => {
               <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.CONTRACT')}</p>
             </div>
             <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedContract.name}</p>
+              <p className="flex-1">{contractName}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
