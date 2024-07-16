@@ -632,7 +632,7 @@ export async function getInfoFromSalaryRecordLists(
 
 export async function createVoucherFolder(
   voucherType: string,
-  newVoucherNo: number
+  newVoucherNo: string
 ): Promise<IFolder> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
