@@ -1,33 +1,100 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IJournalListItem } from '@/interfaces/journal';
+import { IJournal, IJournalListItem } from '@/interfaces/journal';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { truncateString, numberWithCommas } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
 import { checkboxStyle } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { JOURNAL_EVENT } from '@/constants/journal';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useRouter } from 'next/router';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IJournalItemProps {
   event: JOURNAL_EVENT;
   isChecked: boolean;
   checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  companyId: number;
   // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
   journal: IJournalListItem;
 }
 
-const Operations = ({ id }: { id: number }) => {
+const Operations = ({ companyId, journalId }: { companyId: number; journalId: number }) => {
+  const router = useRouter();
   const { t } = useTranslation('common');
+  const { selectJournalHandler } = useAccountingCtx();
+  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { trigger: getJournalById } = APIHandler<IJournal>(
+    APIName.JOURNAL_GET_BY_ID,
+    {},
+    false,
+    false
+  );
+  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE, {}, false, false);
+
+  const deleteJournalHandler = async () => {
+    const { success, code } = await deleteJournalById({
+      params: { companyId, journalId },
+    });
+    if (success) {
+      toastHandler({
+        id: `deleteJournal-${journalId}`,
+        type: ToastType.SUCCESS,
+        content: (
+          <div className="flex items-center justify-between">
+            <p>{t('JOURNAL.DELETED_SUCCESSFULLY')}</p>
+          </div>
+        ),
+        closeable: true,
+      });
+    } else {
+      messageModalDataHandler({
+        title: t('JOURNAL.FAILED_TO_DELETE'),
+        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        content: `Error code: ${code}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  const editJournalHandler = async () => {
+    const {
+      success,
+      code,
+      data: journal,
+    } = await getJournalById({
+      params: { companyId, journalId },
+    });
+    if (success && journal) {
+      selectJournalHandler(journal);
+      router.push(ISUNFA_ROUTE.ACCOUNTING);
+    } else {
+      messageModalDataHandler({
+        title: t('JOURNAL.FAILED_TO_FETCH_DATA'),
+        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        content: `Error code: ${code}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  };
 
   return (
-    <div className="flex w-full items-center justify-center gap-4px md:justify-end">
+    <td className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center justify-center gap-4px md:justify-end">
       <button
         type="button"
         className="rounded-xs text-secondaryBlue hover:text-primaryYellow"
-        onClick={() => {
-          // eslint-disable-next-line no-alert
-          alert(`${t('PENDING_REPORT_LIST.EDIT')}: ${id}`);
-        }}
+        onClick={editJournalHandler}
       >
         <svg
           width="40"
@@ -55,10 +122,7 @@ const Operations = ({ id }: { id: number }) => {
       <button
         type="button"
         className="rounded-xs text-secondaryBlue hover:text-primaryYellow"
-        onClick={() => {
-          // eslint-disable-next-line no-alert
-          alert(`${t('PENDING_REPORT_LIST.DELETE')}: ${id}`);
-        }}
+        onClick={deleteJournalHandler}
       >
         <svg
           width="40"
@@ -83,11 +147,11 @@ const Operations = ({ id }: { id: number }) => {
           </defs>
         </svg>
       </button>
-    </div>
+    </td>
   );
 };
 
-const JournalItem = ({ event, isChecked, checkHandler, journal }: IJournalItemProps) => {
+const JournalItem = ({ event, isChecked, checkHandler, companyId, journal }: IJournalItemProps) => {
   const { t } = useTranslation('common');
   const {
     id: journalId,
@@ -251,20 +315,21 @@ const JournalItem = ({ event, isChecked, checkHandler, journal }: IJournalItemPr
         </div>
       </td>
       {/* Info: (20240418 - Julian) 單據編號 */}
-      <td>
-        {event === JOURNAL_EVENT.UPLOADED && (
-          <div>
-            <td className="px-16px text-right font-medium text-darkBlue">{voucherNo}</td>
-          </div>
-        )}
-        {event === JOURNAL_EVENT.UPCOMING && <Operations id={journalId} />}
-      </td>
 
+      {event === JOURNAL_EVENT.UPLOADED && (
+        <td className="px-16px text-right font-medium text-darkBlue">{voucherNo}</td>
+      )}
+      {event === JOURNAL_EVENT.UPCOMING && (
+        <td className="px-16px text-right font-medium text-darkBlue"></td>
+      )}
       {/* Info: (20240418 - Julian) Link */}
       <Link
-        href={`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`}
+        href={`${ISUNFA_ROUTE.ACCOUNTING}/${journalId}`}
         className="absolute left-46px h-80px w-95%"
       ></Link>
+      {event === JOURNAL_EVENT.UPCOMING && (
+        <Operations companyId={companyId} journalId={journalId} />
+      )}
     </tr>
   );
 };
@@ -273,6 +338,7 @@ export const JournalItemMobile = ({
   event,
   isChecked,
   checkHandler,
+  companyId,
   journal,
 }: IJournalItemProps) => {
   const { t } = useTranslation('common');
@@ -374,7 +440,7 @@ export const JournalItemMobile = ({
       </td>
       <td>
         {event === JOURNAL_EVENT.UPLOADED && <div>{voucherNo}</div>}
-        {event === JOURNAL_EVENT.UPCOMING && <Operations id={id} />}
+        {event === JOURNAL_EVENT.UPCOMING && <Operations companyId={companyId} journalId={id} />}
       </td>
     </tr>
   );

@@ -88,5 +88,50 @@
         "voucherId": 1000,
         "createdAt": 1,
         "updatedAt": 1
+    },
+    {
+        "amount": 10000,
+        "description": "取得透過其他綜合損益按公允價值衡量之金融資產-銀行存款",
+        "accountCode": "1103",
+        "debit": false,
+        "voucherId": 1004,
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "amount": 10000,
+        "description": "取得透過其他綜合損益按公允價值衡量之金融資產-債券",
+        "accountCode": "1121",
+        "debit": true,
+        "voucherId": 1004,
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "amount": 4500,
+        "description": "處分透過其他綜合損益按公允價值衡量之金融資產-銀行存款",
+        "accountCode": "1103",
+        "debit": true,
+        "voucherId": 1005,
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "amount": 4000,
+        "description": "處分透過其他綜合損益按公允價值衡量之金融資產-債券",
+        "accountCode": "1121",
+        "debit": false,
+        "voucherId": 1005,
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "amount": 500,
+        "description": "處分透過其他綜合損益按公允價值衡量之金融資產-評價調整",
+        "accountCode": "1122",
+        "debit": true,
+        "voucherId": 1005,
+        "createdAt": 1,
+        "updatedAt": 1
     }
 ]

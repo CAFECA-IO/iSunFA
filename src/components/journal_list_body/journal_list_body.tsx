@@ -384,6 +384,7 @@ const JournalListBody = () => {
       {/* Info: (20240418 - Julian) Journal list */}
       <JournalList
         event={currentTab}
+        companyId={selectedCompany!.id}
         journalsProps={{
           journals,
           isLoading,
