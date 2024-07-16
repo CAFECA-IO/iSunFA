@@ -36,13 +36,7 @@ export async function getCurrentAndLastPeriodReport(reportId: number) {
         const { companyId, from, to, reportType } = curPeriodReport;
         const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(reportType, from, to);
 
-        // eslint-disable-next-line no-console
-        console.log('lastPeriodStartDateInSecond', lastPeriodStartDateInSecond);
-        // eslint-disable-next-line no-console
-        console.log('lastPeriodEndDateInSecond', lastPeriodEndDateInSecond);
         const lastPeriodReportFromDB = await findFirstReportByFromTo(companyId, lastPeriodStartDateInSecond, lastPeriodEndDateInSecond, reportType);
-        // eslint-disable-next-line no-console
-        console.log('lastPeriodReportFromDB', lastPeriodReportFromDB);
         if (lastPeriodReportFromDB) {
             lastPeriodReport = formatIReport(lastPeriodReportFromDB);
         }
@@ -106,25 +100,13 @@ export async function handleGETRequest(companyId: number, req: NextApiRequest) {
 
     const { reportIdNumber } = formatGetRequestQueryParams(req);
 
-    // eslint-disable-next-line no-console
-    console.log('reportIdNumber', reportIdNumber);
-
     if (reportIdNumber !== null) {
         const { curPeriodReport, lastPeriodReport } = await getCurrentAndLastPeriodReport(reportIdNumber);
 
-        // eslint-disable-next-line no-console
-        console.log('curPeriodReport', curPeriodReport);
-
         resultReportArray = generateIAccountReadyForFrontendArray(curPeriodReport, lastPeriodReport);
-
-        // eslint-disable-next-line no-console
-        console.log('resultReportArray', resultReportArray);
     }
 
     const resultReportMap = generateIAccountReadyForFrontendMap(resultReportArray);
-
-    // eslint-disable-next-line no-console
-    console.log('resultReportMap', resultReportMap);
 
     return {
         resultReportArray,
