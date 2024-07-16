@@ -93,7 +93,7 @@ async function handlePostRequest(
       // create line items
       await createLineItems(voucherType, voucherData.id, companyId, salaryRecordsIdsList);
       // create folder
-      const voucherFolder = await createVoucherFolder(voucherType, newVoucherNo);
+      const voucherFolder = await createVoucherFolder(voucherType, newVoucherNo, companyId);
       // voucher_salary_record_folder_mapping
       await createVoucherSalaryRecordFolderMapping(
         voucherFolder.id,
