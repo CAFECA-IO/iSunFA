@@ -630,24 +630,19 @@ export const OPERATING_LIABILITIES_MAPPING: Map<string, IOperatingCashFlowMappin
 ]);
 
 export const OPERATING_ACTIVITY_MAPPING: Map<string, IOperatingCashFlowMapping> = new Map([
-  [
-    'A00010',
-    {
-      fromCode: ['7900'],
-      name: '繼續營業單位稅前淨利（淨損）',
-      debit: false,
-      operatingFunction: noAdjustNetIncome,
-    },
-  ],
-  [
-    'A00020',
-    {
-      fromCode: ['8100'],
-      name: '停業單位稅前淨利（淨損）',
-      debit: false,
-      operatingFunction: noAdjustNetIncome,
-    },
-  ],
+  // Info: (20240710 - Murky) 暫時不做分類
+  // ['A00010', {
+  //     fromCode: ['7900'],
+  //     name: "繼續營業單位稅前淨利（淨損）",
+  //     debit: false,
+  //     operatingFunction: noAdjustNetIncome
+  // }],
+  // ['A00020', {
+  //     fromCode: ['8100'],
+  //     name: "停業單位稅前淨利（淨損）",
+  //     debit: false,
+  //     operatingFunction: noAdjustNetIncome
+  // }],
   [
     'A00030',
     {
@@ -737,17 +732,14 @@ export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlo
     //     debit: false,
     //     operatingFunction: noAdjustNetIncome
     // }],
-    // Info: (20240708 - Murky) 這個項目需要特別直接算出來
-    [
-      'A33300',
-      {
-        fromCode: ['7510'],
-        name: '支付之利息',
-        debit: true,
-        operatingFunction: noAdjustNetIncome,
-      },
-    ],
-    // Info: (20240708 - Murky) 這個項目需要特別直接算出來
+    // Info: (20240708 - Murky) 這個項目放在籌資活動
+    // ['A33300', {
+    //     fromCode: ['7510'],
+    //     name: '支付之利息',
+    //     debit: true,
+    //     operatingFunction: noAdjustNetIncome
+    // }],
+    // Info: (20240708 - Murky) 這個項目放在籌資活動
     [
       'A33400',
       {

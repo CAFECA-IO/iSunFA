@@ -107,7 +107,7 @@ const ReportsSidebar = () => {
                 ></path>
               </svg>
               <p
-                className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base text-base transition-all duration-300 ease-in-out`}
+                className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
                 {t('REPORTS_SIDEBAR.MY_REPORTS')}
               </p>

@@ -1,0 +1,2 @@
+export const CASH_AND_CASH_EQUIVALENTS_CODE = ['1101', '1102', '1103', '1105', '1107'];
+export const CASH_AND_CASH_EQUIVALENTS_REGEX = [/^1101/, /^1102/, /^1103/, /^1105/, /^1107/];

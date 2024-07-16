@@ -70,7 +70,7 @@ const SalarySidebar = () => {
             </Link>
 
             <Link
-              href={ISUNFA_ROUTE.SALARY}
+              href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default hover:text-tabs-text-active"
             >
               <svg
@@ -92,7 +92,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.SALARY_BOOK')}
+                {t('SALARY.SALARY_LIST')}
               </p>
             </Link>
           </div>
@@ -120,7 +120,7 @@ const SalarySidebar = () => {
           </svg>
         </Link>
         <Link
-          href={ISUNFA_ROUTE.SALARY}
+          href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
         >
           <svg
