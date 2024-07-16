@@ -33,18 +33,16 @@ const SalaryBookConfirmModal = ({
 
   const isDisplayedModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px font-barlow">
+      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 py-16px font-barlow">
         {/* Info: (20240716 - Julian) title */}
-        <div className="flex items-center gap-6px font-bold text-navyBlue2">
+        <div className="flex items-center gap-6px px-20px font-bold text-navyBlue2">
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
           {/* Info: (20240716 - Julian) desktop title */}
           <h1 className="hidden whitespace-nowrap text-xl md:block">
             {'Please make sure all the information are correct !'}
           </h1>
           {/* Info: (20240716 - Julian) mobile title */}
-          <h1 className="block text-xl md:hidden">
-            {'Please make sure all the information are correct !'}
-          </h1>
+          <h1 className="block text-xl md:hidden">{'Confirm'}</h1>
         </div>
         {/* Info: (20240716 - Julian) close button */}
         <button
@@ -55,7 +53,7 @@ const SalaryBookConfirmModal = ({
           <RxCross2 size={20} />
         </button>
         {/* Info: (20240716 - Julian) content */}
-        <div className="flex flex-col gap-y-16px py-40px">
+        <div className="my-20px flex flex-col gap-y-16px bg-surface-neutral-main-background p-20px text-xs md:bg-transparent md:text-base">
           {/* Info: (20240716 - Julian) type */}
           <div className="flex w-full items-center justify-between">
             <p className="text-text-neutral-secondary">Type</p>
@@ -105,7 +103,7 @@ const SalaryBookConfirmModal = ({
           </div>
         </div>
         {/* Info: (20240716 - Julian) buttons */}
-        <div className="ml-auto flex items-center gap-x-12px">
+        <div className="flex items-center justify-center gap-x-12px px-20px text-sm md:justify-end">
           <Button
             id="salary-bookkeeping-cancel"
             type="button"

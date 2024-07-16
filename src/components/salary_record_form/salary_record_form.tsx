@@ -90,7 +90,10 @@ const SalaryRecordForm = () => {
             key={department}
             type="button"
             className="flex p-4px hover:bg-dropdown-surface-item-hover"
-            onClick={() => setSelectedDepartment(department)}
+            onClick={() => {
+              setSelectedDepartment(department);
+              setIsDepartmentVisible(false);
+            }}
           >
             {department}
           </button>
@@ -291,7 +294,7 @@ const SalaryRecordForm = () => {
       <div className="mt-40px flex flex-col gap-y-40px">
         {/* Info: (20240716 - Julian) Toggle */}
         <div className="flex flex-col gap-y-8px">
-          <div className="text-switch-text-primary flex items-center gap-x-16px">
+          <div className="text-text-switch-text-primary flex items-center gap-x-16px">
             <p>Record Working hours</p>
             <Toggle
               id="toggle-record-working-hours"
