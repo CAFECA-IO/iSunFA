@@ -531,7 +531,8 @@ const ViewFinancialSection = ({
           </div>
         </Button>
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
-          {reportTypesName?.name}
+          {/* {reportTypesName?.name} */}
+          {t(`PLUGIN.${reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">

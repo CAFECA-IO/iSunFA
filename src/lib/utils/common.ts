@@ -448,6 +448,27 @@ export function getTimestampOfFirstDateOfThisYear() {
   return timestampInSecond;
 }
 
+export function getTimestampOfSameDateOfLastYear(todayInSecond: number) {
+  const milliseconds = timestampInMilliSeconds(todayInSecond);
+  const date = new Date(milliseconds);
+  date.setFullYear(date.getFullYear() - 1);
+  return timestampInSeconds(date.getTime());
+}
+
+export function getTimestampOfLastSecondOfDate(date: Date | number) {
+  if (typeof date === 'number') {
+    // eslint-disable-next-line no-param-reassign
+    date = new Date(timestampInMilliSeconds(date));
+  }
+
+  const timestamp = date.setHours(23, 59, 59, 999);
+  return timestampInSeconds(timestamp);
+}
+
+export function getTimestampNow() {
+  return timestampInSeconds(new Date().getTime());
+}
+
 export function calculateWorkingHours(startDate: number, endDate: number) {
   // 將秒轉換為毫秒
   const start = new Date(startDate * 1000);

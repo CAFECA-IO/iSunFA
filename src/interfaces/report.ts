@@ -10,7 +10,7 @@ export interface IAnalysisReportRequest {
   end_date: Date;
 }
 
-export interface IReport {
+export interface IReportOld {
   reportTypesName: {
     id: FinancialReportTypesKey | AnalysisReportTypesKey;
     name: string;
@@ -19,20 +19,6 @@ export interface IReport {
   tokenId: string;
   reportLink: string;
 }
-
-// export interface IFinancialReport extends IReport {
-//   reportTypesName: {
-//     id: FinancialReportTypesKey;
-//     name: string;
-//   };
-// }
-
-// export interface IAnalysisReport extends IReport {
-//   reportTypesName: {
-//     id: AnalysisReportTypesKey;
-//     name: string;
-//   };
-// }
 
 export type IAnalysisReport = string | null;
 

@@ -407,6 +407,7 @@ CREATE TABLE "role" (
 -- CreateTable
 CREATE TABLE "report" (
     "id" SERIAL NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "token_contract" TEXT,
     "token_id" TEXT,
     "name" TEXT NOT NULL,
@@ -422,6 +423,7 @@ CREATE TABLE "report" (
     "download_link" TEXT,
     "block_chain_explorer_link" TEXT,
     "evidence_id" TEXT,
+    "content" JSONB NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
 
@@ -752,6 +754,9 @@ ALTER TABLE "value" ADD CONSTRAINT "value_project_id_fkey" FOREIGN KEY ("project
 
 -- AddForeignKey
 ALTER TABLE "work_rate" ADD CONSTRAINT "work_rate_employee_project_id_fkey" FOREIGN KEY ("employee_project_id") REFERENCES "employee_project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "report" ADD CONSTRAINT "report_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "admin_id_seq" RESTART WITH 10000000;
