@@ -309,6 +309,9 @@
     "EMPTY": "Empty",
     "SALARY_ISUNFA": "Salary - iSunFA"
   },
+  "KYC": {
+    "KYC": "KYC"
+  },
   "COMMON": {
     "OF": "of",
     "ISUNFA_TRIAL_VERSION": "iSunFA Trial Version",
@@ -383,7 +386,7 @@
     "PROJECT_CONTRACT_ISUNFA": "Project Contract - iSunFA",
     "FROM_TO": "From / To",
     "VOUCHER_NO": "Voucher No",
-    "OPERATIONS" : "Operations",
+    "OPERATIONS": "Operations",
     "INFO": "Info",
     "EVENT_TYPE": "Event Type",
     "PAYMENT_REASON": "Payment Reason",

@@ -307,6 +307,9 @@
     "EMPTY": "无资料",
     "SALARY_ISUNFA": "薪资 - iSunFA"
   },
+  "KYC": {
+    "KYC": "KYC"
+  },
   "COMMON": {
     "OF": "之",
     "ISUNFA_TRIAL_VERSION": "iSunFA 试用版",
