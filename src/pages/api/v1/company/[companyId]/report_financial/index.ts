@@ -206,10 +206,10 @@ export async function handlePostRequest(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountForSheetDisplay[] | number[]>>
+  res: NextApiResponse<IResponseData< { [key: string]: number } | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountForSheetDisplay[] | number[] = [];
+  let payload: { [key: string]: number } | null = null;
   try {
     const session = await getSession(req, res);
     const { companyId } = session;
@@ -218,7 +218,7 @@ export default async function handler(
     switch (req.method) {
       case 'POST': {
         const { thisPeriodReportId, lastPeriodReportId } = await handlePostRequest(companyId, req);
-        payload = [thisPeriodReportId, lastPeriodReportId];
+        payload = { thisPeriodReportId, lastPeriodReportId };
         statusMessage = STATUS_MESSAGE.CREATED;
         break;
       }
@@ -230,6 +230,6 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<IAccountForSheetDisplay[] | number[]>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<{ [key: string]: number } | null>(statusMessage, payload);
   res.status(httpCode).json(result);
 }
