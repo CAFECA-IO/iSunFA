@@ -123,6 +123,9 @@ export async function handleGETRequest(companyId: number, req: NextApiRequest) {
 
     const resultReportMap = generateIAccountReadyForFrontendMap(resultReportArray);
 
+    // eslint-disable-next-line no-console
+    console.log('resultReportMap', resultReportMap);
+
     return {
         resultReportArray,
         resultReportMap
@@ -139,7 +142,7 @@ export default async function handler(
   res: NextApiResponse<IResponseData< APIResponse >>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse = {
+  const payload: APIResponse = {
     resultReportArray: [],
     resultReportMap: new Map<string, IAccountReadyForFrontend>(),
   };
@@ -150,7 +153,9 @@ export default async function handler(
     // ToDo: (20240703 - Murky) Need to check Auth
     switch (req.method) {
       case 'GET': {
-        payload = await handleGETRequest(companyId, req);
+        const { resultReportArray, resultReportMap } = await handleGETRequest(companyId, req);
+        payload.resultReportArray = resultReportArray;
+        payload.resultReportMap = resultReportMap;
         statusMessage = STATUS_MESSAGE.CREATED;
         break;
       }
