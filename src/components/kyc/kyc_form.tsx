@@ -36,7 +36,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     setStep(newStep);
   };
   return (
-    <>
+    <section className="mx-auto flex w-fit flex-col items-center gap-40px">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
       <form>
         {step === 0 && <BacicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
@@ -57,7 +57,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
           onSubmit={() => {}}
         />
       </form>
-    </>
+    </section>
   );
 };
 
