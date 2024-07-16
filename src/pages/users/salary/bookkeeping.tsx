@@ -31,12 +31,12 @@ const SalaryBookkeepingPage = () => {
             <SalarySidebar />
           </div>
 
-          <main className="hidden min-h-100vh bg-surface-neutral-main-background md:flex">
-            <div className="mb-60px mt-120px flex-1 px-80px md:ml-80px">
+          <main className="flex min-h-100vh bg-surface-neutral-main-background">
+            <div className="mb-60px mt-120px flex-1 px-16px md:ml-80px md:px-80px">
               <div className="flex w-full flex-col">
                 {/* Info: (20240715 - Julian) Title */}
                 <div className="flex flex-col gap-16px">
-                  <h1 className="text-4xl font-semibold text-text-neutral-secondary">
+                  <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
                     Salary Record
                   </h1>
                   <hr className="my-10px bg-divider-stroke-lv-4" />

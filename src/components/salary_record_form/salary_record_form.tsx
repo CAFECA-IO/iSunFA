@@ -96,7 +96,7 @@ const SalaryRecordForm = () => {
   );
 
   const workingHoursPart = isRecordWorkingHours ? (
-    <div className="grid grid-flow-row grid-cols-2 grid-rows-2 gap-x-60px gap-y-40px">
+    <div className="grid grid-flow-row grid-cols-1 gap-x-60px gap-y-40px md:grid-cols-2">
       {/* Info: (20240715 - Julian) Working hours for the period */}
       <div className="flex w-full flex-1 flex-col items-start gap-8px">
         <p className="text-sm font-semibold text-input-text-primary">
@@ -163,9 +163,9 @@ const SalaryRecordForm = () => {
         <hr className="flex-1 border-lightGray3" />
       </div>
       {/* Info: (20240715 - Julian) Main Form */}
-      <div className="mt-40px flex flex-col gap-y-40px">
+      <div className="mt-40px flex flex-col gap-y-24px md:gap-y-40px">
         {/* Info: (20240715 - Julian) First Column */}
-        <div className="flex items-end gap-x-16px">
+        <div className="flex flex-col items-end gap-x-16px gap-y-24px md:flex-row">
           {/* Info: (20240715 - Julian) Date */}
           <div className="flex w-full flex-col items-start gap-8px md:w-240px">
             <p className="text-sm font-semibold text-input-text-primary">{t('DATE_PICKER.DATE')}</p>
@@ -207,7 +207,7 @@ const SalaryRecordForm = () => {
           </div>
         </div>
         {/* Info: (20240715 - Julian) Second Column */}
-        <div className="flex items-end gap-x-60px">
+        <div className="flex flex-col items-end gap-x-60px gap-y-24px md:flex-row">
           {/* Info: (20240715 - Julian) Salary */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-input-text-primary">Salary</p>
@@ -236,7 +236,7 @@ const SalaryRecordForm = () => {
         {/* Info: (20240715 - Julian) Third Column */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">Insurance Payments</p>
-          <div className="flex h-46px w-5/10 items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
+          <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
             <NumericInput
               id="input-insurance-payments"
               value={insurancePayments}
