@@ -40,7 +40,7 @@ enum ErrorCode {
   GATEWAY_TIMEOUT = '504ISF0000',
 }
 
-export enum SuccessMessage {
+enum SuccessMessage {
   SUCCESS = 'Success',
   SUCCESS_LIST = 'List successfully',
   SUCCESS_GET = 'Get successfully',
@@ -52,7 +52,7 @@ export enum SuccessMessage {
   CREATED_WITH_INVALID_INVITATION = 'Created successfully with invalid invitation',
 }
 
-export enum ErrorMessage {
+enum ErrorMessage {
   BAD_REQUEST = 'Bad request',
   OCR_PROCESS_STATUS_IS_NOT_IN_PROGRESS = 'OCR process status is not in progress',
   UNAUTHORIZED_ACCESS = 'Unauthorized access',
