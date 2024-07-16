@@ -6,13 +6,13 @@ const CompanyInfoPageBody = () => {
   return (
     <div>
       <div className="mt-28 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-10 pb-0">
-        <div className="text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full">
-          <span className="font-bold text-amber-500">iSunCloud</span> Basic Info
+        <div className="text-4xl font-semibold leading-10 text-text-neutral-tertiary max-md:max-w-full">
+          <span className="font-bold text-text-brand-primary-lv2">iSunCloud</span> Basic Info
         </div>
         <div className="mt-6 h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
         <div className="mt-7 flex flex-col rounded-lg px-10 py-5 max-md:max-w-full max-md:px-5">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
-            <div className="flex gap-2 text-sm font-medium leading-5 tracking-normal text-slate-800">
+            <div className="flex gap-2 text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
                 {' '}
                 <svg
@@ -34,7 +34,7 @@ const CompanyInfoPageBody = () => {
               <div>Company Info</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
             </div>
           </div>
           <div className="mt-10 flex items-center justify-between gap-5 pr-4 max-md:max-w-full max-md:flex-wrap">
@@ -45,10 +45,10 @@ const CompanyInfoPageBody = () => {
               height={100}
             />
             <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-slate-500">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
                 Company Name
               </div>
-              <div className="mt-4 flex gap-4 text-3xl font-bold leading-9 text-slate-600">
+              <div className="mt-4 flex gap-4 text-3xl font-bold leading-9 text-text-brand-secondary-lv2">
                 <div>iSunCloud </div>
                 <Button variant={'secondaryBorderless'} size={'extraSmall'}>
                   {' '}
@@ -70,26 +70,32 @@ const CompanyInfoPageBody = () => {
               </div>
             </div>
             <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-slate-500">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
                 Tax ID Number
               </div>
-              <div className="mt-4 text-xl font-bold leading-8 text-sky-950">52414797</div>
+              <div className="mt-4 text-xl font-bold leading-8 text-text-brand-secondary-lv1">
+                52414797
+              </div>
             </div>
             <div className="my-auto flex flex-col justify-center self-stretch">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-slate-500">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
                 Owner Account ID
               </div>
-              <div className="mt-5 text-xl font-bold leading-8 text-slate-700">ISFABC-00001</div>
+              <div className="mt-5 text-xl font-bold leading-8 text-text-neutral-primary">
+                ISFABC-00001
+              </div>
             </div>
             <div className="my-auto flex flex-col justify-center self-stretch">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-slate-500">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
                 Created Date
               </div>
-              <div className="mt-5 text-xl font-bold leading-8 text-slate-700">2024/01/26</div>
+              <div className="mt-5 text-xl font-bold leading-8 text-text-neutral-primary">
+                2024/01/26
+              </div>
             </div>
           </div>
           <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
-            <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-slate-800">
+            <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
                 {' '}
                 <svg
@@ -110,17 +116,18 @@ const CompanyInfoPageBody = () => {
               <div>KYC</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-10 flex flex-col rounded-3xl bg-white pb-3.5 shadow-xl max-md:max-w-full">
+          <div className="mt-10 flex flex-col rounded-3xl bg-white pb-3.5 shadow-xl">
             <div className="max-md:max-w-full">
               <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                <div className="flex w-44% flex-col max-md:ml-0 max-md:w-full">
+                <div className="flex w-44% flex-col">
                   <div className="grow max-md:mt-10">
                     <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                      <div className="flex w-30% flex-col max-md:ml-0 max-md:w-full">
+                      <div className="w-100px min-w-100px">
                         <div className="relative">
+                          {/* Info: 圓形 (20240716 - Shirley) */}
                           <Image
                             src="/elements/ellipse_16.png"
                             width={100}
@@ -129,18 +136,23 @@ const CompanyInfoPageBody = () => {
                             className="rounded rounded-tl-lg"
                           />
                           <div className="absolute left-4 top-6">
-                            <p className="text-3xl font-bold text-amber-500">KYC</p>
+                            <p className="text-3xl font-bold text-text-brand-primary-lv2">KYC</p>
                           </div>
                         </div>
                       </div>
                       <div className="ml-5 flex w-70% flex-col max-md:ml-0 max-md:w-full">
-                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-sky-950 max-md:mt-10">
-                          <span className="text-3xl leading-9 text-sky-950">Unlock</span> <br />
-                          <span className="text-5xl leading-52px text-amber-500">
+                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-md:mt-10">
+                          <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
+                            Unlock
+                          </span>{' '}
+                          <br />
+                          <span className="text-5xl leading-52px text-text-brand-primary-lv2">
                             All Functions
                           </span>
                           <br />
-                          <span className="text-xl leading-8 text-sky-950">On iSunFA</span>
+                          <span className="text-xl leading-8 text-text-brand-secondary-lv1">
+                            On iSunFA
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -158,13 +170,13 @@ const CompanyInfoPageBody = () => {
                           </ul>
                         </div>
                       </div>
-                      <div className="relative">
+                      <div className="relative flex w-full justify-end">
                         <Image
                           src="/elements/padlock_square.svg"
                           width={78}
                           height={78}
                           alt="padlock"
-                          className="ml-1 rounded-l rounded-tr-md"
+                          className="ml-1 shrink-0 rounded-l rounded-tr-md"
                         />
                       </div>
                     </div>
@@ -202,7 +214,7 @@ const CompanyInfoPageBody = () => {
             </div>
           </div>
           <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
-            <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-slate-800">
+            <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
                 {' '}
                 <svg
@@ -233,10 +245,10 @@ const CompanyInfoPageBody = () => {
               <div>Account</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-10 flex justify-between gap-5 self-start text-base font-medium leading-6 tracking-normal text-sky-950 max-md:flex-wrap">
+          <div className="mt-10 flex justify-between gap-5 self-start text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv1 max-md:flex-wrap">
             <div className="">
               <Button variant={'secondaryOutline'} className="px-6 py-2.5 max-md:px-5">
                 <svg
