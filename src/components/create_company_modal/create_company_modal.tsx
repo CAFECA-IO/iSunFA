@@ -16,7 +16,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { IRole } from '@/interfaces/role';
 import { useTranslation } from 'next-i18next';
-import { ErrorCode } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -85,7 +85,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       modalVisibilityHandler();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
-      if (createCompanyCode === ErrorCode.CONFLICT) {
+      if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.CONFLICT]) {
         messageModalDataHandler({
           messageType: MessageType.WARNING,
           title: 'Existed Company',
@@ -93,18 +93,13 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           content: `If you are the owner of this company, 
           please complete KYC to get access back. Error code: ${createCompanyCode}`,
           submitBtnStr: 'Go to KYC',
-          submitBtnFunction: messageModalVisibilityHandler,
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+            router.push(ISUNFA_ROUTE.KYC);
+          },
           backBtnStr: 'Cancel',
-          backBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
-
-        /*
-This company has already been registered.
-
-If you are the owner of this company,
-please complete KYC to get access back.
-        */
       } else {
         // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
         messageModalDataHandler({
