@@ -11,6 +11,12 @@ export function isReportSheetType(data: string): data is ReportSheetType {
   return isValid;
 }
 
+export function assertIsReportSheetType(data: string): asserts data is ReportSheetType {
+  if (!isReportSheetType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+}
+
 export function convertStringToReportType(data: string) {
     if (!isReportType(data)) {
       throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);

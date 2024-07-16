@@ -8,7 +8,7 @@ import {
   VoucherType,
 } from '@/constants/account';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IAccountForSheetDisplay, IAccountResultStatus } from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
@@ -53,6 +53,46 @@ export function isIAccountResultStatus(value: unknown): value is IAccountResultS
   const { resultId, status } = value as IAccountResultStatus;
   const isValid = typeof resultId === 'string' && isProgressStatus(status);
   return isValid;
+}
+
+export function isIAccountForSheetDisplay(value: unknown): value is IAccountForSheetDisplay {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const { code, name, amount, indent, debit, percentage } = value as IAccountForSheetDisplay;
+  const isValid =
+    typeof code === 'string' &&
+    typeof name === 'string' &&
+    (amount === null || typeof amount === 'number') &&
+    typeof indent === 'number' &&
+    (debit === undefined || typeof debit === 'boolean') &&
+    (percentage === null || typeof percentage === 'number');
+  return isValid;
+}
+
+export function isIAccountForSheetDisplayArray(value: unknown): value is IAccountForSheetDisplay[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every((item) => isIAccountForSheetDisplay(item));
+}
+
+export function assertIsIAccountResultStatus(value: unknown): asserts value is IAccountResultStatus {
+  if (!isIAccountResultStatus(value)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+}
+
+export function assertIsIAccountForSheetDisplay(value: unknown): asserts value is IAccountForSheetDisplay {
+  if (!isIAccountForSheetDisplay(value)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+}
+
+export function assertIsIAccountForSheetDisplayArray(value: unknown): asserts value is IAccountForSheetDisplay[] {
+  if (!isIAccountForSheetDisplayArray(value)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
 }
 
 // Info: (20240527 - Murky) convert string to EventType:

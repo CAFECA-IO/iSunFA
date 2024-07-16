@@ -96,6 +96,9 @@ export default abstract class FinancialReportGenerator {
   }
 
   public abstract generateFinancialReportTree(): Promise<IAccountNode[]>;
-  public abstract generateFinancialReportMap(): Promise<Map<string, IAccountNode>>;
+  public abstract generateFinancialReportMap(): Promise<Map<string, {
+    accountNode: IAccountNode;
+    percentage: number;
+  }>>;
   public abstract generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]>;
 }

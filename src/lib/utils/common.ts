@@ -487,3 +487,9 @@ export function calculateWorkingHours(startDate: number, endDate: number) {
   }
   return totalWorkingHours;
 }
+
+export function formatNumberSeparateByComma(num: number) {
+  const formatter = new Intl.NumberFormat('en-US');
+  const formattedNumber = formatter.format(num);
+  return formattedNumber;
+}

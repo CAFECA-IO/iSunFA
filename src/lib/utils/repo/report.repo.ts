@@ -4,6 +4,8 @@ import { ReportSheetType, ReportType } from '@/constants/report';
 import { IAccountForSheetDisplay } from '@/interfaces/accounting_account';
 import { Report } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
+import { assertIsIAccountForSheetDisplayArray } from '@/lib/utils/type_guard/account';
+import { assertIsReportSheetType } from '@/lib/utils/type_guard/report';
 
 export async function findFirstReportByFromTo(
     companyId: number,
@@ -23,6 +25,25 @@ export async function findFirstReportByFromTo(
             },
         });
     } catch (error) {
+        // Deprecate: (20240710 - Murky) Debugging perpose
+        // eslint-disable-next-line no-console
+        console.error(error);
+    }
+
+    return report;
+}
+
+export async function findUniqueReportById(reportId: number) {
+    let report: Report | null = null;
+
+    try {
+       report = await prisma.report.findUnique({
+            where: {
+                id: reportId,
+            },
+        });
+    } catch (error) {
+        report = null;
         // Deprecate: (20240710 - Murky) Debugging perpose
         // eslint-disable-next-line no-console
         console.error(error);
