@@ -72,10 +72,11 @@ export default async function handler(
           if (!isAuth) {
             statusMessage = STATUS_MESSAGE.FORBIDDEN;
           } else {
-            // 新增檢查公司是否已存在的邏輯
             const getCompany = await getCompanyByCode(code);
             if (getCompany) {
-              statusMessage = STATUS_MESSAGE.CONFLICT;
+              statusMessage = getCompany.kycStatus
+                ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
+                : STATUS_MESSAGE.CONFLICT;
             } else {
               const createdCompanyRoleList = await createCompanyAndRole(
                 userId,
