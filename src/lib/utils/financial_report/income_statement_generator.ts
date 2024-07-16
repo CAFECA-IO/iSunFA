@@ -1,4 +1,4 @@
-import { AccountSheetType } from '@/constants/account';
+import { ReportSheetType } from '@/constants/report';
 import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
 import {
   calculateIncomeStatementNetIncome,
@@ -12,13 +12,13 @@ import incomeStatementMapping from '@/constants/account_sheet_mapping/income_sta
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
-    const accountSheetType = AccountSheetType.INCOME_STATEMENT;
-    super(companyId, startDateInSecond, endDateInSecond, accountSheetType);
+    const reportSheetType = ReportSheetType.INCOME_STATEMENT;
+    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
   }
 
   public override async generateFinancialReportTree(): Promise<IAccountNode[]> {
-    const lineItemsFromDB = await this.getAllLineItemsByAccountSheet();
-    const accountForest = await this.getAccountForestByAccountSheet();
+    const lineItemsFromDB = await this.getAllLineItemsByReportSheet();
+    const accountForest = await this.getAccountForestByReportSheet();
 
     const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
 

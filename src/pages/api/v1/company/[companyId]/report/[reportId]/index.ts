@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IReport } from '@/interfaces/report';
+import { IReportOld } from '@/interfaces/report';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -7,7 +7,7 @@ import prisma from '@/client';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IReport>>
+  res: NextApiResponse<IResponseData<IReportOld>>
 ) {
   try {
     if (req.method !== 'GET') {
@@ -32,14 +32,14 @@ export default async function handler(
       tokenId: reportInfo.tokenId,
       reportLink: reportInfo.reportLink,
     };
-    const { httpCode, result } = formatApiResponse<IReport>(
+    const { httpCode, result } = formatApiResponse<IReportOld>(
       STATUS_MESSAGE.SUCCESS_GET,
-      responseReportInfo as IReport
+      responseReportInfo as IReportOld
     );
     res.status(httpCode).json(result);
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IReport>(error.message, {} as IReport);
+    const { httpCode, result } = formatApiResponse<IReportOld>(error.message, {} as IReportOld);
     res.status(httpCode).json(result);
   }
 }
