@@ -23,7 +23,7 @@ export default async function handler(
         const result = await fetch(`${AICH_URI}/api/v1/ocr/${invoiceId}/process_status`);
 
         if (!result.ok) {
-          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+          throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
         }
 
         const resultJson: ProgressStatus = (await result.json()).payload;

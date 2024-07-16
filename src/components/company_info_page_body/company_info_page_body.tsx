@@ -150,7 +150,7 @@ const CompanyInfoPageBody = () => {
                   <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
                     <div className="flex gap-5 max-md:flex-col max-md:gap-0">
                       <div className="flex w-83% flex-col max-md:ml-0 max-md:w-full">
-                        <div className="text-neutral-primary mt-24 text-lg font-semibold leading-7 tracking-normal max-md:mt-10">
+                        <div className="text-text-neutral-primary mt-24 text-lg font-semibold leading-7 tracking-normal max-md:mt-10">
                           <ul className="list-disc pl-5">
                             <li> AI Audit Report</li>
                             <li> Higher security</li>

@@ -8,7 +8,8 @@ import { isIAccountForSheetDisplayArray } from "@/lib/utils/type_guard/account";
 export function formatIReport(report: Report): IReport {
     const type: ReportType = isReportType(report.reportType) ? report.reportType : ReportType.FINANCIAL;
     const reportType: ReportSheetType = isReportSheetType(report.reportType) ? report.reportType : ReportSheetType.BALANCE_SHEET;
-    const content: IAccountForSheetDisplay[] = (isIAccountForSheetDisplayArray(report.content)) ? report.content : [];
+    const reportContent = JSON.parse(report.content as string);
+    const content: IAccountForSheetDisplay[] = (isIAccountForSheetDisplayArray(reportContent)) ? reportContent : [];
     const formattedReport: IReport = {
         id: report.id,
         companyId: report.companyId,
