@@ -1,10 +1,11 @@
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { ILocale } from '@/interfaces/locale';
 import NavBar from '@/components/nav_bar/nav_bar';
 import SalarySidebar from '@/components/salary_sidebar/salary_sidebar';
-import { useTranslation } from 'next-i18next';
 import SalaryRecordForm from '@/components/salary_record_form/salary_record_form';
+import SalaryStepper from '@/components/salary_stepper/salary_stepper';
 
 const SalaryBookkeepingPage = () => {
   const { t } = useTranslation('common');
@@ -30,9 +31,22 @@ const SalaryBookkeepingPage = () => {
             <SalarySidebar />
           </div>
 
-          <main className="hidden h-100vh bg-surface-neutral-main-background md:flex md:h-1100px">
-            <div className="mt-120px flex-1 px-80px md:ml-80px">
-              <SalaryRecordForm />
+          <main className="hidden min-h-100vh bg-surface-neutral-main-background md:flex">
+            <div className="mb-60px mt-120px flex-1 px-80px md:ml-80px">
+              <div className="flex w-full flex-col">
+                {/* Info: (20240715 - Julian) Title */}
+                <div className="flex flex-col gap-16px">
+                  <h1 className="text-4xl font-semibold text-text-neutral-secondary">
+                    Salary Record
+                  </h1>
+                  <hr className="my-10px bg-divider-stroke-lv-4" />
+                </div>
+                {/* Info: (20240715 - Julian) Stepper */}
+                <div className="mx-auto mt-20px">
+                  <SalaryStepper />
+                </div>
+                <SalaryRecordForm />
+              </div>
             </div>
           </main>
         </div>
