@@ -1,5 +1,3 @@
-// import { useGlobalCtx } from '@/contexts/global_context';
-// import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
 
 const KYCStepper = ({
