@@ -85,7 +85,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       modalVisibilityHandler();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
-      if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.CONFLICT]) {
+      if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
         messageModalDataHandler({
           messageType: MessageType.WARNING,
           title: 'Existed Company',
@@ -98,6 +98,16 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
             router.push(ISUNFA_ROUTE.KYC);
           },
           backBtnStr: 'Cancel',
+        });
+        messageModalVisibilityHandler();
+      } else if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE]) {
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Verified Company',
+          subMsg: 'This company has already been registered and verified.',
+          content: `Please check the information again, or contact with us. Error code: ${createCompanyCode}`,
+          submitBtnStr: 'Close',
+          submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
       } else {
