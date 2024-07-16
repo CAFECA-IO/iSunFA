@@ -19,7 +19,7 @@ const KYCStepper = ({
   const futureStepStyle = 'text-lightGray4';
 
   return (
-    <div className="max-width:w-500px relative flex items-center justify-between">
+    <div className="relative flex items-center justify-between md:w-500px">
       <div
         className={`z-10 flex w-80px flex-col items-center gap-2px text-sm ${currentStep > 0 ? doneStepStyle : currentStepStyle}`}
         onClick={() => onClick(0)}

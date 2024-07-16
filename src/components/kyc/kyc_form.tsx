@@ -1,24 +1,37 @@
 import { useState } from 'react';
-import KYCStepper from './kyc_stepper';
-
-const BacicInfoForm = () => {
-  return <>BacicInfoForm</>;
-};
-
-const RegistrationInfoForm = () => {
-  return <>RegistrationInfoForm</>;
-};
-
-const ContactInfoForm = () => {
-  return <>ContactInfoForm</>;
-};
-
-const DocumentUploadForm = () => {
-  return <>DocumentUploadForm</>;
-};
+import KYCStepper from '@/components/kyc/kyc_stepper';
+import KYCFormController from '@/components/kyc/kyc_form_controller';
+import { BasicInfoKeys, IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
+import BacicInfoForm from '@/components/kyc/basic_info_form';
+import {
+  initialRegistrationInfo,
+  IRegistrationInfo,
+  RegistrationInfoKeys,
+} from '@/interfaces/kyc_registration_info';
+import RegistrationInfoForm from '@/components/kyc/registration_info_form';
+import { ContactInfoKeys, IContactInfo, initialContactInfo } from '@/interfaces/kyc_contact_info';
+import ContactInfoForm from '@/components/kyc/contact_info_form ';
+import DocumentUploadForm from '@/components/kyc/document_upload_form';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const [step, setStep] = useState(0);
+  const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
+  const [registrationInfoValues, setRegistrationInfoValues] =
+    useState<IRegistrationInfo>(initialRegistrationInfo);
+  const [contactInfoValues, setContactInfoValues] = useState<IContactInfo>(initialContactInfo);
+
+  const handleBasicInfoChange = (key: BasicInfoKeys, value: string) => {
+    setBasicInfoValues((prev) => ({ ...(prev ?? {}), [key]: value }));
+  };
+
+  const handleRegistrationInfoChange = (key: RegistrationInfoKeys, value: string) => {
+    setRegistrationInfoValues((prev) => ({ ...(prev ?? {}), [key]: value }));
+  };
+
+  const handleContactInfoChange = (key: ContactInfoKeys, value: string) => {
+    setContactInfoValues((prev) => ({ ...(prev ?? {}), [key]: value }));
+  };
+
   const handleStepChange = (newStep: number) => {
     setStep(newStep);
   };
@@ -26,36 +39,23 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     <>
       <KYCStepper currentStep={step} onClick={handleStepChange} />
       <form>
-        {step === 0 && <BacicInfoForm />}
-        {step === 1 && <RegistrationInfoForm />}
-        {step === 2 && <ContactInfoForm />}
+        {step === 0 && <BacicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
+        {step === 1 && (
+          <RegistrationInfoForm
+            data={registrationInfoValues}
+            onChange={handleRegistrationInfoChange}
+          />
+        )}
+        {step === 2 && (
+          <ContactInfoForm data={contactInfoValues} onChange={handleContactInfoChange} />
+        )}
         {step === 3 && <DocumentUploadForm />}
-        <div className="mt-6 flex justify-between">
-          <button
-            type="button"
-            className="rounded bg-gray-500 px-4 py-2 text-white"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
-          {step < 3 ? (
-            <button
-              type="button"
-              className="rounded bg-yellow-500 px-4 py-2 text-white"
-              onClick={() => handleStepChange(step + 1)}
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="rounded bg-yellow-500 px-4 py-2 text-white"
-              onClick={() => {}}
-            >
-              Summit
-            </button>
-          )}
-        </div>
+        <KYCFormController
+          step={step}
+          onCancel={onCancel}
+          onNext={() => handleStepChange(step + 1)}
+          onSubmit={() => {}}
+        />
       </form>
     </>
   );
