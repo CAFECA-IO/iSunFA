@@ -1,0 +1,52 @@
+[
+    {
+        "code": "",
+        "name": "資產",
+        "indent": 0
+    },
+    {
+        "code": "11XX",
+        "name": "流動資產合計",
+        "indent": 1
+    },
+    {
+        "code": "15XX",
+        "name": "非流動資產合計",
+        "indent": 1
+    },
+    {
+        "code": "1XXX",
+        "name": "資產總計",
+        "indent": 0
+    },
+    {
+        "code": "",
+        "name": "負債及股東權益",
+        "indent": 0
+    },
+    {
+        "code": "",
+        "name": "負債",
+        "indent": 1
+    },
+    {
+        "code": "21XX",
+        "name": "流動負債合計",
+        "indent": 2
+    },
+    {
+        "code": "25XX",
+        "name": "非流動負債合計",
+        "indent": 2
+    },
+    {
+        "code": "21XX",
+        "name": "負債總計",
+        "indent": 1
+    },
+    {
+        "code": "",
+        "name": "權益",
+        "indent": 1
+    }
+]

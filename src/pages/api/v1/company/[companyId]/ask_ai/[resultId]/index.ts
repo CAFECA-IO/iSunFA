@@ -18,14 +18,14 @@ export async function fetchResultFromAICH(aiApi: string, resultId: string) {
   try {
     response = await fetch(`${AICH_URI}/api/v1/${aiApi}/${resultId}/result`);
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
   if (response.status === 404) {
     throw new Error(STATUS_MESSAGE.AICH_API_NOT_FOUND);
   }
 
   if (!response.ok) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   return response.json() as Promise<{ payload?: unknown } | null>;
@@ -35,7 +35,7 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   let json: {

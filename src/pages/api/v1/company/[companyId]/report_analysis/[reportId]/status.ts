@@ -25,7 +25,7 @@ export default async function handler(
         );
 
         if (!fetchResult.ok) {
-          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+          throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
         }
 
         const resultJson: ProgressStatus = (await fetchResult.json()).payload;
