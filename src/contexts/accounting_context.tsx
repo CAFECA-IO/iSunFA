@@ -319,6 +319,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const changeVoucherAccountHandler = useCallback(
     (index: number, account: IAccount | undefined) => {
       setAccountingVoucher((prev) => {
+        if (index > prev.length - 1) {
+          return prev;
+        }
+
         const newVoucher = [...prev];
         const targetId = prev.findIndex((voucher) => voucher.id === index);
         newVoucher[targetId].account = account ?? null;
@@ -348,6 +352,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const changeVoucherAmountHandler = useCallback(
     (index: number, value: number | null, type: VoucherRowType, description?: string) => {
       setAccountingVoucher((prev) => {
+        // Info: (20240716 - Julian) 若 index 大於傳票長度，則不寫入
+        if (index > prev.length - 1) {
+          return prev;
+        }
+
         // Info: (20240430 - Julian) 複製現有的傳票
         const newVoucher = [...prev];
 
