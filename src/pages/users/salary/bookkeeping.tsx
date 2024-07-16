@@ -32,7 +32,7 @@ const SalaryBookkeepingPage = () => {
           </div>
 
           <main className="flex min-h-100vh bg-surface-neutral-main-background">
-            <div className="mb-60px mt-120px flex-1 px-16px md:ml-80px md:px-80px">
+            <div className="mb-100px mt-120px flex-1 px-16px md:mb-60px md:ml-80px md:px-80px">
               <div className="flex w-full flex-col">
                 {/* Info: (20240715 - Julian) Title */}
                 <div className="flex flex-col gap-16px">

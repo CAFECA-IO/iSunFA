@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa';
+import { useGlobalCtx } from '@/contexts/global_context';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
@@ -19,6 +20,7 @@ enum Department {
 // ToDo: (20240715 - Julian) i18n
 const SalaryRecordForm = () => {
   const { t } = useTranslation('common');
+  const { salaryBookConfirmModalVisibilityHandler } = useGlobalCtx();
 
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [selectedDepartment, setSelectedDepartment] = useState<Department>(Department.UI_UX);
@@ -67,6 +69,8 @@ const SalaryRecordForm = () => {
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // ToDo: (20240716 - Julian) Submit
+
+    salaryBookConfirmModalVisibilityHandler();
   };
 
   const cancelHandler = () => {
