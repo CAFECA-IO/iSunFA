@@ -76,7 +76,7 @@ export default async function handler(
             if (getCompany) {
               statusMessage = getCompany.kycStatus
                 ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
-                : STATUS_MESSAGE.CONFLICT;
+                : STATUS_MESSAGE.DUPLICATE_COMPANY;
             } else {
               const createdCompanyRoleList = await createCompanyAndRole(
                 userId,
