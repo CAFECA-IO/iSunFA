@@ -232,8 +232,8 @@ const getCodeByMessage = (statusMessage: string) => {
     code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
     message = statusMessage;
   } else if (/prisma/i.test(statusMessage)) {
-    code = STATUS_CODE[STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR];
-    message = STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR;
+    code = STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR];
+    message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR;
   } else {
     code = STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR];
     message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
@@ -486,4 +486,12 @@ export function calculateWorkingHours(startDate: number, endDate: number) {
     }
   }
   return totalWorkingHours;
+}
+
+export function formatNumberSeparateByComma(num: number) {
+  const formatter = new Intl.NumberFormat('en-US');
+  const formattedNumber = formatter.format(Math.abs(num));
+
+  // Info: (20240716 - Murky) 如果 num 是負數，則將結果包裹在括號內
+  return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }

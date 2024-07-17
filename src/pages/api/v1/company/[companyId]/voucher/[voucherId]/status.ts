@@ -23,13 +23,13 @@ export default async function handler(
         const fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/process_status`);
 
         if (!fetchResult.ok) {
-          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+          throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
         }
 
         const resultJson: ProgressStatus = (await fetchResult.json()).payload;
 
         if (!resultJson || !isProgressStatus(resultJson)) {
-          throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+          throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
         }
 
         const { httpCode, result } = formatApiResponse<ProgressStatus>(

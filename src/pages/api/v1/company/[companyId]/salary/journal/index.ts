@@ -51,7 +51,7 @@ async function handlePostRequest(
       const fetchResult = uploadInvoiceToAICH(invoiceFromSalaryRecord);
       const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
       if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
       const journalId = await handlePrismaSavingLogic(
         invoiceFromSalaryRecord,

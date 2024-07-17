@@ -74,10 +74,25 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   // Info: (20240710 - Murky) This method is only used in this class
   // eslint-disable-next-line class-methods-use-this
   private mergeMap(
-    balanceSheetMap: Map<string, IAccountNode>,
-    incomeStatementMap: Map<string, IAccountNode>
+    balanceSheetMap:Map<string, {
+      accountNode: IAccountNode;
+      percentage: number;
+    }>,
+    incomeStatementMap:Map<string, {
+      accountNode: IAccountNode;
+      percentage: number;
+    }>
   ): Map<string, IAccountNode> {
-    const mergedMap = new Map<string, IAccountNode>([...balanceSheetMap, ...incomeStatementMap]);
+    const mergedMap = new Map<string, IAccountNode>();
+
+    balanceSheetMap.forEach((value, key) => {
+      mergedMap.set(key, value.accountNode);
+    });
+
+    incomeStatementMap.forEach((value, key) => {
+      mergedMap.set(key, value.accountNode);
+    });
+
     return mergedMap;
   }
 
@@ -142,6 +157,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount,
       indent: level,
       debit,
+      percentage: null,
     };
 
     const newreportSheetMapping = new Map<string, IAccountForSheetDisplay>([
@@ -191,6 +207,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '營運活動之淨現金流入（流出）',
       amount: sum,
       indent: 0,
+      percentage: null,
     });
 
     // ToDo: (20240710 - Murky) 特殊 indirect cash flow的項目都還沒有實作
@@ -258,6 +275,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: firstLineName,
       amount: null,
       indent: 0,
+      percentage: null,
     });
 
     let directCashFlow = 0;
@@ -282,6 +300,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         name: mapping.name,
         amount: total,
         indent: 1,
+        percentage: null,
       };
 
       directCashFlow += total;
@@ -303,6 +322,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '投資活動之淨現金流入（流出）',
       amount: directCashFlow,
       indent: 1,
+      percentage: null,
     });
     return reportSheetMapping;
   }
@@ -317,6 +337,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '籌資活動之淨現金流入（流出）',
       amount: directCashFlow,
       indent: 1,
+      percentage: null,
     });
     return reportSheetMapping;
   }
@@ -357,6 +378,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '匯率變動對現金及約當現金之影響',
       amount: 0,
       indent: 0,
+      percentage: null,
     });
 
     result.set('EEEE', {
@@ -364,6 +386,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '本期現金及約當現金增加（減少）數',
       amount: cashFlowFromOperating,
       indent: 0,
+      percentage: null,
     });
 
     result.set('E00100', {
@@ -371,6 +394,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '期初現金及約當現金餘額',
       amount: startCashBalance,
       indent: 0,
+      percentage: null,
     });
 
     result.set('E00200', {
@@ -378,6 +402,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       name: '期末現金及約當現金餘額',
       amount: endCashBalance,
       indent: 0,
+      percentage: null,
     });
     return result;
   }
@@ -390,8 +415,14 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // ToDo: (20240710 - Murky) Need to implement later
   // eslint-disable-next-line class-methods-use-this
-  public override async generateFinancialReportMap(): Promise<Map<string, IAccountNode>> {
-    return new Map<string, IAccountNode>();
+  public override async generateFinancialReportMap(): Promise<Map<string, {
+    accountNode: IAccountNode;
+    percentage: number;
+  }>> {
+    return new Map<string, {
+      accountNode: IAccountNode;
+      percentage: number;
+    }>();
   }
 
   // ToDo: (20240710 - Murky) Need to implement complete cash flow not just indirect
