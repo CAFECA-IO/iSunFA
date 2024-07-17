@@ -2,12 +2,14 @@ export enum FinancialReportTypesKey {
   balance_sheet = 'balance_sheet',
   comprehensive_income_statement = 'comprehensive_income_statement',
   cash_flow_statement = 'cash_flow_statement',
+  change_in_equity_statement = 'change_in_equity_statement'
 }
 
 export enum FinancialReportTypeName {
   balance_sheet = 'Balance Sheet',
   comprehensive_income_statement = 'Comprehensive Income Statement',
   cash_flow_statement = 'Cash Flow Statement',
+  change_in_equity_statement = 'change_in_equity_statement'
 }
 
 export enum AnalysisReportTypesKey {
@@ -50,6 +52,11 @@ export const FinancialReportTypesMap: Record<
     id: FinancialReportTypesKey.cash_flow_statement,
     name: 'Cash Flow Statement',
   },
+  [FinancialReportTypesKey.change_in_equity_statement]: {
+    id: FinancialReportTypesKey.change_in_equity_statement,
+    name: 'Change in Equity Statement',
+
+  }
 };
 
 export const AllFinancialReportTypesMap: Record<

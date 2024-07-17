@@ -1,9 +1,12 @@
 import prisma from '@/client';
-import { ProgressStatus } from '@/constants/account';
-import { ReportSheetType, ReportType } from '@/constants/report';
+import { ReportSheetType, ReportStatusType, ReportType } from '@/constants/report';
 import { IAccountForSheetDisplay } from '@/interfaces/accounting_account';
-import { Report } from '@prisma/client';
-import { getTimestampNow } from '@/lib/utils/common';
+import { Prisma, Report } from '@prisma/client';
+import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IReportIncludeProject } from '@/interfaces/report';
 
 export async function findFirstReportByFromTo(
     companyId: number,
@@ -23,7 +26,7 @@ export async function findFirstReportByFromTo(
             },
         });
     } catch (error) {
-        // Deprecate: (20240710 - Murky) Debugging perpose
+        // Deprecate: (20240710 - Murky) Debugging purpose
         // eslint-disable-next-line no-console
         console.error(error);
     }
@@ -42,7 +45,7 @@ export async function findUniqueReportById(reportId: number) {
         });
     } catch (error) {
         report = null;
-        // Deprecate: (20240710 - Murky) Debugging perpose
+        // Deprecate: (20240710 - Murky) Debugging purpose
         // eslint-disable-next-line no-console
         console.error(error);
     }
@@ -88,7 +91,7 @@ export async function createReport(
     reportType: ReportType,
     reportSheetType: ReportSheetType,
     content: IAccountForSheetDisplay[],
-    status: ProgressStatus,
+    status: ReportStatusType,
 ) {
     const nowInSecond = getTimestampNow();
     let report: Report | null = null;
@@ -116,4 +119,82 @@ export async function createReport(
     }
 
     return report;
+}
+
+export async function findManyReports(
+    companyId: number,
+    status: ReportStatusType,
+    targetPage: number = DEFAULT_PAGE_NUMBER,
+    pageSize: number = DEFAULT_PAGE_LIMIT,
+    sortBy: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc',
+    startDateInSecond?: number,
+    endDateInSecond?: number,
+    searchQuery?: string
+) {
+    let reports: IReportIncludeProject[] = [];
+
+    const where: Prisma.ReportWhereInput = {
+        companyId,
+        status,
+        AND: [
+            { from: { gte: startDateInSecond } },
+            { to: { lte: endDateInSecond } },
+        ],
+        OR: searchQuery ? [
+            { name: { contains: searchQuery, mode: 'insensitive' } },
+            { type: { contains: searchQuery, mode: 'insensitive' } },
+            { reportType: { contains: searchQuery, mode: 'insensitive' } },
+            { status: { contains: searchQuery, mode: 'insensitive' } },
+        ] : undefined,
+    };
+
+    const totalCount = await prisma.report.count({ where });
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    if (targetPage < 1) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
+
+    const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };
+
+    const include: Prisma.ReportInclude = {
+        project: true,
+    };
+
+    const skip = pageToOffset(targetPage, pageSize);
+
+    const findManyArgs = {
+        where,
+        orderBy,
+        include,
+        skip,
+        take: pageSize,
+    };
+    try {
+        reports = await prisma.report.findMany(findManyArgs);
+    } catch (error) {
+        // Deprecate: (20240710 - Murky) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.error(error);
+    }
+
+    const hasNextPage = reports.length > pageSize;
+    const hasPreviousPage = targetPage > 1;
+
+    if (hasNextPage) {
+        reports.pop();
+    }
+
+    return {
+        data: reports,
+        page: targetPage,
+        totalPages,
+        totalCount,
+        pageSize,
+        hasNextPage,
+        hasPreviousPage,
+        sortOrder,
+        sortBy
+    };
 }
