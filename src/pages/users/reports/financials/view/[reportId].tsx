@@ -62,7 +62,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     tokenId: DUMMY_DATA_FOR_REPORT.tokenId,
     reportLink:
       ReportLink[
-      BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
+        BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
       ],
   });
   const {

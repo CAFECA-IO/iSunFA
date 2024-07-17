@@ -2,8 +2,8 @@ import { AccountType } from "@/constants/account";
 import { FinancialReportTypesKey } from "@/interfaces/report_type";
 
 export enum ReportType {
-    FINANCIAL = 'financial',
-    ANALYSIS = 'analysis',
+  FINANCIAL = 'financial',
+  ANALYSIS = 'analysis',
 }
 
 export enum ReportSheetType {
@@ -28,11 +28,7 @@ export enum ReportStatusType {
 export const ReportSheetAccountTypeMap: {
   [key in ReportSheetType]: AccountType[];
 } = {
-  [ReportSheetType.BALANCE_SHEET]: [
-    AccountType.ASSET,
-    AccountType.LIABILITY,
-    AccountType.EQUITY,
-  ],
+  [ReportSheetType.BALANCE_SHEET]: [AccountType.ASSET, AccountType.LIABILITY, AccountType.EQUITY],
   [ReportSheetType.INCOME_STATEMENT]: [
     AccountType.REVENUE,
     AccountType.COST,
@@ -46,7 +42,7 @@ export const ReportSheetAccountTypeMap: {
 };
 
 export const ReportSheetTypeDisplayMap: {
-    [key in ReportSheetType]: string
+  [key in ReportSheetType]: string;
 } = {
   [ReportSheetType.BALANCE_SHEET]: ReportSheetTypeDisplay.BALANCE_SHEET,
   [ReportSheetType.INCOME_STATEMENT]: ReportSheetTypeDisplay.INCOME_STATEMENT,

@@ -187,9 +187,7 @@ const SalaryRecordForm = () => {
             <div
               id="dropdown-department"
               onClick={departmentToggleHandler}
-              className={`flex w-full items-center rounded-sm border bg-input-surface-input-background px-12px py-10px 
-        ${isDepartmentVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-        hover:cursor-pointer hover:border-input-stroke-selected`}
+              className={`flex w-full items-center rounded-sm border bg-input-surface-input-background px-12px py-10px ${isDepartmentVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} hover:cursor-pointer hover:border-input-stroke-selected`}
             >
               <p className="flex-1 text-text-brand-secondary-lv3">{selectedDepartment}</p>
               <FaChevronDown />

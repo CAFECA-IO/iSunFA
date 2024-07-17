@@ -16,7 +16,7 @@ const SettingSidebar = () => {
         {/* Info: Main icon (20240423 - Shirley) */}
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
-          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100 `}>Setting</p>
+          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>Setting</p>
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
@@ -53,7 +53,7 @@ const SettingSidebar = () => {
                   ></path>
                 </g>
               </svg>
-              <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+              <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                 Personal Setting
               </p>
               {/* </Link> */}
@@ -95,7 +95,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Basic Info{' '}
                 </p>
               </Link>
@@ -127,7 +127,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Accounting Title{' '}
                 </p>
               </Link>
@@ -161,7 +161,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Trading Partner List{' '}
                 </p>
                 {/* </Link> */}
@@ -195,7 +195,7 @@ const SettingSidebar = () => {
                     ></path>
                   </g>
                 </svg>
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Administrator{' '}
                 </p>
                 {/* </Link> */}
@@ -230,7 +230,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Subscription&Bills{' '}
                 </p>
                 {/* </Link> */}

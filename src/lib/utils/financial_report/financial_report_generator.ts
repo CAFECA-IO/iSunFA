@@ -34,8 +34,9 @@ export default abstract class FinancialReportGenerator {
       case 'OR':
         return pattern.patterns.some((p) => this.matchPattern(p, codes));
       case 'CODE':
-        return Array.from(pattern.codes).some((regex) =>
-          Array.from(codes).some((code) => regex.test(code)));
+        return Array.from(pattern.codes).some((regex) => {
+          return Array.from(codes).some((code) => regex.test(code));
+        });
       default:
         return false;
     }
@@ -87,8 +88,14 @@ export default abstract class FinancialReportGenerator {
     const reportSheetTypeForQuery = reportSheetType || this.reportSheetType;
     const accountTypes = ReportSheetAccountTypeMap[reportSheetTypeForQuery];
     const lineItemsFromDBArray = await Promise.all(
-      accountTypes.map((type) =>
-        getLineItemsInPrisma(this.companyId, type, this.startDateInSecond, this.endDateInSecond))
+      accountTypes.map((type) => {
+        return getLineItemsInPrisma(
+          this.companyId,
+          type,
+          this.startDateInSecond,
+          this.endDateInSecond
+        );
+      })
     );
 
     const lineItemsFromDB = lineItemsFromDBArray.flat();
@@ -96,9 +103,14 @@ export default abstract class FinancialReportGenerator {
   }
 
   public abstract generateFinancialReportTree(): Promise<IAccountNode[]>;
-  public abstract generateFinancialReportMap(): Promise<Map<string, {
-    accountNode: IAccountNode;
-    percentage: number;
-  }>>;
+  public abstract generateFinancialReportMap(): Promise<
+    Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  >;
   public abstract generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]>;
 }

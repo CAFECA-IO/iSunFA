@@ -49,7 +49,8 @@ export function formatStartAndEndDateFromQuery(
   const todayInTimestamp = today.getTime();
 
   // Info: (20240710 - Murky) 如果是Balance Sheet，default開始時間為0，否則為今年的第一天
-  let startDateInSecond = reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : getTimestampOfFirstDateOfThisYear();
+  let startDateInSecond =
+    reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : getTimestampOfFirstDateOfThisYear();
   let endDateInSecond = getTimestampOfLastSecondOfDate(todayInTimestamp);
 
   if (startDate && isParamNumeric(startDate)) {
@@ -64,7 +65,12 @@ export function formatStartAndEndDateFromQuery(
 
   const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(reportSheetType, startDateInSecond, endDateInSecond);
 
-  return { startDateInSecond, endDateInSecond, lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
+  return {
+    startDateInSecond,
+    endDateInSecond,
+    lastPeriodStartDateInSecond,
+    lastPeriodEndDateInSecond,
+  };
 }
 
 export function formatProjectIdFromQuery(projectId: string | string[] | undefined): number | null {
@@ -94,7 +100,9 @@ export function formatReportLanguageFromQuery(reportLanguage: string | string[] 
   return reportLanguageString;
 }
 
-export function formatFinancialOrAnalysisFromQuery(financialOrAnalysis: string | string[] | undefined): string {
+export function formatFinancialOrAnalysisFromQuery(
+  financialOrAnalysis: string | string[] | undefined
+): string {
   // Deprecate: (20240710 - Murky) this function is to separate financial and analysis temperately
   let financialOrAnalysisString = 'financial';
 
@@ -105,7 +113,8 @@ export function formatFinancialOrAnalysisFromQuery(financialOrAnalysis: string |
 }
 
 export function formatPostRequestQuery(req: NextApiRequest) {
-  const { projectId, reportType, reportLanguage, startDate, endDate, financialOrAnalysis } = req.query;
+  const { projectId, reportType, reportLanguage, startDate, endDate, financialOrAnalysis } =
+    req.query;
 
   const projectIdNumber = formatProjectIdFromQuery(projectId);
 
@@ -113,11 +122,12 @@ export function formatPostRequestQuery(req: NextApiRequest) {
 
   const reportSheetType = formatReportSheetTypeFromQuery(reportType);
 
-  const { startDateInSecond, endDateInSecond, lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = formatStartAndEndDateFromQuery(
-    reportSheetType,
-    startDate,
-    endDate
-  );
+  const {
+    startDateInSecond,
+    endDateInSecond,
+    lastPeriodStartDateInSecond,
+    lastPeriodEndDateInSecond,
+  } = formatStartAndEndDateFromQuery(reportSheetType, startDate, endDate);
 
   const financialOrAnalysisString = formatFinancialOrAnalysisFromQuery(financialOrAnalysis);
 
@@ -180,20 +190,42 @@ export async function generateReportIfNotExist(
   reportLanguageString: ReportLanguagesKey
 ) {
   // Info: (20240710 - Murky) Check if the report is already generated
-  let reportId = await getReportIdByFromTo(companyId, startDateInSecond, endDateInSecond, reportSheetType);
+  let reportId = await getReportIdByFromTo(
+    companyId,
+    startDateInSecond,
+    endDateInSecond,
+    reportSheetType
+  );
   if (!reportId) {
-    const reportContentJSON = await generateFinancialReport(companyId, startDateInSecond, endDateInSecond, reportSheetType);
-    const name = await generateReportName(companyId, reportSheetType, reportLanguageString, endDateInSecond);
-    const reportCreated = await createReport(companyId, projectId, name, startDateInSecond, endDateInSecond, ReportType.FINANCIAL, reportSheetType, reportContentJSON, ReportStatusType.GENERATED);
+    const reportContentJSON = await generateFinancialReport(
+      companyId,
+      startDateInSecond,
+      endDateInSecond,
+      reportSheetType
+    );
+    const name = await generateReportName(
+      companyId,
+      reportSheetType,
+      reportLanguageString,
+      endDateInSecond
+    );
+    const reportCreated = await createReport(
+      companyId,
+      projectId,
+      name,
+      startDateInSecond,
+      endDateInSecond,
+      ReportType.FINANCIAL,
+      reportSheetType,
+      reportContentJSON,
+      ReportStatusType.GENERATED
+    );
     reportId = reportCreated?.id || -1;
   }
   return reportId;
 }
 
-export async function handlePostRequest(
-  companyId: number,
-  req: NextApiRequest
-) {
+export async function handlePostRequest(companyId: number, req: NextApiRequest) {
   const {
     projectIdNumber,
     reportLanguageString,
@@ -202,14 +234,29 @@ export async function handlePostRequest(
     endDateInSecond,
     lastPeriodStartDateInSecond,
     lastPeriodEndDateInSecond,
-    financialOrAnalysisString } = formatPostRequestQuery(req);
+    financialOrAnalysisString,
+  } = formatPostRequestQuery(req);
 
   let thisPeriodReportId = -1;
   let lastPeriodReportId = -1;
   switch (financialOrAnalysisString) {
     case 'financial': {
-      thisPeriodReportId = await generateReportIfNotExist(companyId, projectIdNumber, startDateInSecond, endDateInSecond, reportSheetType, reportLanguageString);
-      lastPeriodReportId = await generateReportIfNotExist(companyId, projectIdNumber, lastPeriodStartDateInSecond, lastPeriodEndDateInSecond, reportSheetType, reportLanguageString);
+      thisPeriodReportId = await generateReportIfNotExist(
+        companyId,
+        projectIdNumber,
+        startDateInSecond,
+        endDateInSecond,
+        reportSheetType,
+        reportLanguageString
+      );
+      lastPeriodReportId = await generateReportIfNotExist(
+        companyId,
+        projectIdNumber,
+        lastPeriodStartDateInSecond,
+        lastPeriodEndDateInSecond,
+        reportSheetType,
+        reportLanguageString
+      );
       break;
     }
     case 'analysis': {

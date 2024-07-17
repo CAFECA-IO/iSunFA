@@ -3,8 +3,8 @@ import { STATUS_MESSAGE } from "@/constants/status_code";
 import { ReportLanguagesKey } from "@/interfaces/report_language";
 
 export function isReportType(data: string): data is ReportType {
-    const isValid = Object.values(ReportType).includes(data as ReportType);
-    return isValid;
+  const isValid = Object.values(ReportType).includes(data as ReportType);
+  return isValid;
 }
 
 export function isReportSheetType(data: string): data is ReportSheetType {
@@ -29,15 +29,15 @@ export function assertIsReportSheetType(data: string): asserts data is ReportShe
 }
 
 export function convertStringToReportType(data: string) {
-    if (!isReportType(data)) {
-      throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
-    }
-    return data as ReportType;
+  if (!isReportType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as ReportType;
 }
 
 export function convertStringToReportSheetType(data: string) {
-    if (!isReportSheetType(data)) {
-      throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
-    }
-    return data as ReportSheetType;
+  if (!isReportSheetType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
   }
+  return data as ReportSheetType;
+}
