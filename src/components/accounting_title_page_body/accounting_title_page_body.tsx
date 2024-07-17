@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FaChevronDown, FaRegSquarePlus } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import { FaRegStar, FaStar } from 'react-icons/fa';
+import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import Pagination from '@/components/pagination/pagination';
 
@@ -72,6 +73,8 @@ interface IAccountingTitleRowProps {
 }
 
 const AccountingRowDesktop = ({ code, name, favorite }: IAccountingTitleRowProps) => {
+  const { addAccountTitleModalVisibilityHandler } = useGlobalCtx();
+
   const [isFavorite, setIsFavorite] = useState(favorite);
 
   // ToDo: (20240717 - Julian) call API to update favorite status
@@ -106,6 +109,7 @@ const AccountingRowDesktop = ({ code, name, favorite }: IAccountingTitleRowProps
           <button
             type="button"
             className="group flex items-center gap-4px text-checkbox-text-secondary"
+            onClick={addAccountTitleModalVisibilityHandler}
           >
             <FaRegSquarePlus className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
             <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
@@ -119,6 +123,7 @@ const AccountingRowDesktop = ({ code, name, favorite }: IAccountingTitleRowProps
 };
 
 const AccountingRowMobile = ({ code, name, favorite }: IAccountingTitleRowProps) => {
+  const { addAccountTitleModalVisibilityHandler } = useGlobalCtx();
   const [isFavorite, setIsFavorite] = useState(favorite);
 
   // ToDo: (20240717 - Julian) call API to update favorite status
@@ -153,8 +158,9 @@ const AccountingRowMobile = ({ code, name, favorite }: IAccountingTitleRowProps)
           <button
             type="button"
             className="flex items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
+            onClick={addAccountTitleModalVisibilityHandler}
           >
-            <FaRegSquarePlus className="" />
+            <FaRegSquarePlus />
           </button>
         </div>
       </div>

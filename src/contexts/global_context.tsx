@@ -48,6 +48,7 @@ import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
 
 interface IGlobalContext {
   width: number;
@@ -106,6 +107,9 @@ interface IGlobalContext {
 
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
+
+  isAddAccountTitleModalVisible: boolean;
+  addAccountTitleModalVisibilityHandler: () => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -191,6 +195,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
+
+  const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -287,6 +293,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const salaryBookConfirmModalVisibilityHandler = () => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
+  };
+
+  const addAccountTitleModalVisibilityHandler = () => {
+    setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -534,6 +544,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     loadingModalVisibilityHandler,
     isSalaryBookConfirmModalVisible,
     salaryBookConfirmModalVisibilityHandler,
+    isAddAccountTitleModalVisible,
+    addAccountTitleModalVisibilityHandler,
     toastHandler,
     eliminateToast,
 
@@ -656,6 +668,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <SalaryBookConfirmModal
         isModalVisible={isSalaryBookConfirmModalVisible}
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
+      />
+
+      <AddAccountTitleModal
+        isModalVisible={isAddAccountTitleModalVisible}
+        modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
       />
 
       {children}
