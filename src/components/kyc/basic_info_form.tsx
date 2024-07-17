@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CityOptions } from '@/constants/kyc';
 import { BasicInfoKeys, IBasicInfo } from '@/interfaces/kyc_basic_info';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { useTranslation } from 'next-i18next';
 
-const cityTypeMap: { [key in CityOptions]: string } = {
+// Info: (240717 - Liz) 翻譯對應的城市選項
+const cityTranslationMap: { [key in CityOptions]: string } = {
   [CityOptions.DEFAULT]: 'KYC.DEFAULT',
   [CityOptions.GB]: 'KYC.GB',
   [CityOptions.US]: 'KYC.US',
@@ -14,9 +13,7 @@ const cityTypeMap: { [key in CityOptions]: string } = {
 };
 
 const BasicInfoForm = ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onChange,
 }: {
   data: IBasicInfo;
@@ -30,10 +27,10 @@ const BasicInfoForm = ({
     setComponentVisible: setIsCityMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
-  // 開啟/關閉下拉選單
+  // Info: (240717 - Liz) 開啟/關閉下拉選單
   const cityMenuOpenHandler = () => setIsCityMenuOpen(!isCityMenuOpen);
 
-  // 下拉選單選項
+  // Info: (240717 - Liz) 下拉選單選項
   const cityDropmenu = Object.values(CityOptions).map((city: CityOptions) => {
     const selectionClickHandler = () => {
       onChange(BasicInfoKeys.CITY, city);
@@ -46,31 +43,54 @@ const BasicInfoForm = ({
         onClick={selectionClickHandler}
         className={`w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow ${city === CityOptions.DEFAULT ? 'hidden' : ''}`}
       >
-        <p>{t(cityTypeMap[city])}</p>
+        <p>{t(cityTranslationMap[city])}</p>
       </li>
     );
   });
 
+  // Info: (240717 - Liz) Input Handlers
+  const legalCompanyNameInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(BasicInfoKeys.LEGAL_COMPANY_NAME, e.target.value);
+  };
+  const zipCodeInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(BasicInfoKeys.ZIP_CODE, e.target.value);
+  };
+  const streetInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(BasicInfoKeys.STREET, e.target.value);
+  };
+  const keyCompanyRepresentativesInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME, e.target.value);
+  };
+
   return (
-    <section className="flex w-600px flex-col border-4 border-lime-400">
-      <div>
-        <p>Legal Company Name</p>
-        <input type="text" placeholder="example" required className="w-full" />
+    <section className="flex w-600px flex-col gap-40px">
+      {/* Legal Company Name */}
+      <div className="space-y-8px">
+        <p className="text-sm font-semibold text-input-text-primary">Legal Company Name</p>
+        <input
+          id="legal-company-name"
+          type="text"
+          placeholder="example"
+          required
+          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          onChange={legalCompanyNameInputHandler}
+        />
       </div>
 
+      {/* ===== City & Zip Code ===== */}
       <div className="flex gap-20px">
-        {/* ===== Info: City ===== */}
+        {/* City */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-navyBlue2">Company Address</p>
+          <p className="text-sm font-semibold text-input-text-primary">Company Address</p>
           <div
-            id="city-type-menu"
+            id="city-menu"
             onClick={cityMenuOpenHandler}
-            className={`group relative flex h-46px w-full cursor-pointer ${isCityMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+            className={`group relative flex w-full cursor-pointer ${isCityMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
           >
             <p
               className={`${data[BasicInfoKeys.CITY] === CityOptions.DEFAULT ? 'text-input-text-input-placeholder' : ''}`}
             >
-              {t(cityTypeMap[data[BasicInfoKeys.CITY]])}
+              {t(cityTranslationMap[data[BasicInfoKeys.CITY]])}
             </p>
             <FaChevronDown />
             {/* Info: Dropmenu */}
@@ -87,27 +107,45 @@ const BasicInfoForm = ({
           </div>
         </div>
 
-        {/* ===== Info: Zip Code ===== */}
+        {/* Zip Code */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-navyBlue2">Zip Code</p>
+          <p className="text-sm font-semibold text-input-text-primary">Zip Code</p>
           <input
             id="zip-code"
-            name="zip-code"
             type="text"
             placeholder="Zip Code"
             required
-            className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+            className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+            onChange={zipCodeInputHandler}
           />
         </div>
       </div>
 
+      {/* ===== Street ===== */}
       <div>
-        <input type="text" placeholder="Street Address" required className="w-full" />
+        <input
+          id="street"
+          type="text"
+          placeholder="Street Address"
+          required
+          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          onChange={streetInputHandler}
+        />
       </div>
 
-      <div>
-        <p>Key Company Representative’s Name</p>
-        <input type="text" placeholder="example" required className="w-full" />
+      {/* ===== Key Company Representative’s Name ===== */}
+      <div className="space-y-8px">
+        <p className="text-sm font-semibold text-input-text-primary">
+          Key Company Representative’s Name
+        </p>
+        <input
+          id="key-company-representatives-name"
+          type="text"
+          placeholder="example"
+          required
+          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          onChange={keyCompanyRepresentativesInputHandler}
+        />
       </div>
     </section>
   );
