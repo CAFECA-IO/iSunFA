@@ -54,16 +54,16 @@ const SalaryRecordForm = () => {
 
   const disableSubmit =
     datePeriod.startTimeStamp === 0 ||
-    datePeriod.endTimeStamp === 0 ||
-    employeeName === '' ||
-    salaryAmount === 0 ||
-    insurancePayments === 0 ||
-    // Info: (20240716 - Julian) If record working hours is enabled, check if all fields are filled
-    isRecordWorkingHours
+      datePeriod.endTimeStamp === 0 ||
+      employeeName === '' ||
+      salaryAmount === 0 ||
+      insurancePayments === 0 ||
+      // Info: (20240716 - Julian) If record working hours is enabled, check if all fields are filled
+      isRecordWorkingHours
       ? workingHours === 0 ||
-        participatingProjects === 0 ||
-        isunfaHours === 0 ||
-        routineWorkHours === 0
+      participatingProjects === 0 ||
+      isunfaHours === 0 ||
+      routineWorkHours === 0
       : false;
 
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,9 +80,8 @@ const SalaryRecordForm = () => {
   const departmentMenu = (
     <div
       ref={departmentRef}
-      className={`absolute left-0 top-20 grid w-full grid-cols-1 overflow-hidden ${
-        isDepartmentVisible ? 'visible grid-rows-1 opacity-100' : 'invisible grid-rows-0 opacity-0'
-      } transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-20 grid w-full grid-cols-1 overflow-hidden ${isDepartmentVisible ? 'visible grid-rows-1 opacity-100' : 'invisible grid-rows-0 opacity-0'
+        } transition-all duration-300 ease-in-out`}
     >
       <div className="flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary px-12px py-10px text-dropdown-text-primary">
         {Object.values(Department).map((department) => (
@@ -294,7 +293,7 @@ const SalaryRecordForm = () => {
       <div className="mt-40px flex flex-col gap-y-40px">
         {/* Info: (20240716 - Julian) Toggle */}
         <div className="flex flex-col gap-y-8px">
-          <div className="text-text-switch-text-primary flex items-center gap-x-16px">
+          <div className="text-switch-text-active flex items-center gap-x-16px">
             <p>Record Working hours</p>
             <Toggle
               id="toggle-record-working-hours"

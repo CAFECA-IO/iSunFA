@@ -8,6 +8,7 @@ import {
 import { timestampInSeconds, calculateWorkingHours } from '@/lib/utils/common';
 import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
+import { IFolder } from '@/interfaces/folder';
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
@@ -576,4 +577,94 @@ export async function generateInvoiceFromSalaryRecord(
     },
   };
   return invoice;
+}
+
+export async function createSalaryRecordJournal(companyId: number): Promise<number> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const journal = await prisma.journal.create({
+    data: {
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
+      companyId,
+    },
+  });
+  return journal.id;
+}
+
+export async function getInfoFromSalaryRecordLists(
+  salaryRecordsLists: number[],
+  voucherType: string
+): Promise<{
+  description: string;
+  amount: number;
+}> {
+  const salaryRecords = await prisma.salaryRecord.findMany({
+    where: {
+      id: {
+        in: salaryRecordsLists,
+      },
+    },
+    select: {
+      salary: true,
+      insurancePayment: true,
+      bonus: true,
+      description: true,
+    },
+  });
+  const { description } = salaryRecords[0];
+  let amount = 0;
+  if (voucherType === 'Salary') {
+    const totalSalary = salaryRecords.reduce((acc, record) => acc + record.salary, 0);
+    const totalInsurancePayment = salaryRecords.reduce(
+      (acc, record) => acc + record.insurancePayment,
+      0
+    );
+    amount = totalSalary + totalInsurancePayment;
+  } else if (voucherType === 'Bonus') {
+    amount = salaryRecords.reduce((acc, record) => acc + record.bonus, 0);
+  }
+  return {
+    description,
+    amount,
+  };
+}
+
+export async function createVoucherFolder(
+  voucherType: string,
+  newVoucherNo: string,
+  companyId: number
+): Promise<IFolder> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const name = `${voucherType} Voucher: ${newVoucherNo}`;
+  const voucherFolder = await prisma.voucherSalaryRecordFolder.create({
+    data: {
+      name,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
+      companyId,
+    },
+  });
+  return voucherFolder;
+}
+
+export async function createVoucherSalaryRecordFolderMapping(
+  voucherFolderId: number,
+  salaryRecordsIdsList: number[],
+  voucherDataId: number
+) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  salaryRecordsIdsList.map(async (salaryRecordId) => {
+    await prisma.voucherSalaryRecord.create({
+      data: {
+        voucherId: voucherDataId,
+        salaryRecordId,
+        voucherSalaryRecordFolderId: voucherFolderId,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    });
+  });
 }
