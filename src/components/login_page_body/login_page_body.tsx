@@ -110,7 +110,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
 
   return (
     <div className="bg-surface-neutral-main-background pb-0 lg:pb-0">
-      <div className="flex h-screen flex-col gap-0 lg:flex-row">
+      <div className="flex h-screen flex-col gap-0 pt-20 lg:flex-row lg:pt-0">
         {/* Info: 圖片區域 (20240710 - Shirley) */}
         <div className="order-2 flex w-full flex-col lg:order-1 lg:w-6/12">
           <div className="relative h-full">

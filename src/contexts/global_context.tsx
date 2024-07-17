@@ -48,6 +48,9 @@ import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 
 interface IGlobalContext {
   width: number;
@@ -107,6 +110,9 @@ interface IGlobalContext {
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
 
+  isAddAccountTitleModalVisible: boolean;
+  addAccountTitleModalVisibilityHandler: () => void;
+
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
 
@@ -120,6 +126,12 @@ interface IGlobalContext {
   isFilterOptionsModalForPendingVisible: boolean;
   isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
+
+  isTeamSettingModalVisible: boolean;
+  teamSettingModalVisibilityHandler: () => void;
+
+  isTransferCompanyModalVisible: boolean;
+  transferCompanyModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -191,6 +203,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
+
+  const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
+
+  const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
+
+  const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -287,6 +305,18 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const salaryBookConfirmModalVisibilityHandler = () => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
+  };
+
+  const addAccountTitleModalVisibilityHandler = () => {
+    setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
+  };
+
+  const teamSettingModalVisibilityHandler = () => {
+    setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
+  };
+
+  const transferCompanyModalVisibilityHandler = () => {
+    setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -534,6 +564,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     loadingModalVisibilityHandler,
     isSalaryBookConfirmModalVisible,
     salaryBookConfirmModalVisibilityHandler,
+    isAddAccountTitleModalVisible,
+    addAccountTitleModalVisibilityHandler,
     toastHandler,
     eliminateToast,
 
@@ -552,6 +584,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addProjectModalDataHandler,
     profileUploadModalVisible,
     profileUploadModalVisibilityHandler,
+
+    isTeamSettingModalVisible,
+    teamSettingModalVisibilityHandler,
+
+    isTransferCompanyModalVisible,
+    transferCompanyModalVisibilityHandler,
   };
 
   return (
@@ -656,6 +694,21 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <SalaryBookConfirmModal
         isModalVisible={isSalaryBookConfirmModalVisible}
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
+      />
+
+      <AddAccountTitleModal
+        isModalVisible={isAddAccountTitleModalVisible}
+        modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
+      />
+
+      <TeamSettingModal
+        isModalVisible={isTeamSettingModalVisible}
+        modalVisibilityHandler={teamSettingModalVisibilityHandler}
+      />
+
+      <TransferCompanyModal
+        isModalVisible={isTransferCompanyModalVisible}
+        modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
       {children}

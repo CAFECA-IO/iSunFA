@@ -18,7 +18,6 @@ import {
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
   IPendingReportItem,
-  ReportKind,
 } from '@/interfaces/report_item';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ToastType } from '@/interfaces/toastify';
@@ -26,13 +25,14 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
+import { ReportType } from '@/constants/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
 
-  const typeOptions = ['All', ReportKind.analysis, ReportKind.financial];
+  const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];
 
   // Info: (20240701 - Julian) pending state
   const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
