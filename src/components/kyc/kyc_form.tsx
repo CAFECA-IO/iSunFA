@@ -12,6 +12,13 @@ import RegistrationInfoForm from '@/components/kyc/registration_info_form';
 import { ContactInfoKeys, IContactInfo, initialContactInfo } from '@/interfaces/kyc_contact_info';
 import ContactInfoForm from '@/components/kyc/contact_info_form ';
 import DocumentUploadForm from '@/components/kyc/document_upload_form';
+import {
+  initialUploadDocuments,
+  IUploadDocuments,
+  RepresentativeIDType,
+  UploadDocumentKeys,
+} from '@/interfaces/kyc_document_type';
+import { ProgressStatus } from '@/constants/account';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const [step, setStep] = useState(0);
@@ -19,6 +26,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const [registrationInfoValues, setRegistrationInfoValues] =
     useState<IRegistrationInfo>(initialRegistrationInfo);
   const [contactInfoValues, setContactInfoValues] = useState<IContactInfo>(initialContactInfo);
+  const [uploadDocuments, setUploadDocuments] = useState<IUploadDocuments>(initialUploadDocuments);
 
   const handleBasicInfoChange = (key: BasicInfoKeys, value: string) => {
     setBasicInfoValues((prev) => ({ ...(prev ?? {}), [key]: value }));
@@ -35,6 +43,14 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleStepChange = (newStep: number) => {
     setStep(newStep);
   };
+
+  const handleDocumentChange = (
+    key: UploadDocumentKeys,
+    value: { file: File | null; status: ProgressStatus } | RepresentativeIDType
+  ) => {
+    setUploadDocuments((prev) => ({ ...prev, [key]: value }));
+  };
+
   return (
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
@@ -49,7 +65,9 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
         {step === 2 && (
           <ContactInfoForm data={contactInfoValues} onChange={handleContactInfoChange} />
         )}
-        {step === 3 && <DocumentUploadForm />}
+        {step === 3 && (
+          <DocumentUploadForm data={uploadDocuments} onChange={handleDocumentChange} />
+        )}
         <KYCFormController
           step={step}
           onCancel={onCancel}
