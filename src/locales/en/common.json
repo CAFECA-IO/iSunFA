@@ -383,7 +383,7 @@
     "PROJECT_CONTRACT_ISUNFA": "Project Contract - iSunFA",
     "FROM_TO": "From / To",
     "VOUCHER_NO": "Voucher No",
-    "OPERATIONS" : "Operations",
+    "OPERATIONS": "Operations",
     "INFO": "Info",
     "EVENT_TYPE": "Event Type",
     "PAYMENT_REASON": "Payment Reason",
@@ -637,5 +637,18 @@
     "CASH": "Cash",
     "TRANSFER": "Transfer",
     "CREDIT_CARD": "Credit Card"
+  },
+  "UPLOAD_AREA": {
+    "DROP_YOUR_FILES_HERE_OR": "Drop your files here or ",
+    "BROWSE": "Browse",
+    "MAXIMUM_SIZE": "Maximum size: 50MB"
+  },
+  "KYC": {
+    "BUSINESS_REGISTRATION_CERTIFICATE": "Business Registration Certificate",
+    "TAX_STATUS_CERTIFICATE": "Tax Status Certification",
+    "REPRESENTATIVE_ID_CERTIFICATE": "Upload the pictures of the data page of key company representative’s {{type}}",
+    "PASSPORT": "Passport",
+    "ID_CARD": "National ID card",
+    "DRIVER_LICENSE": "Driver's License"
   }
 }

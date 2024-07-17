@@ -634,5 +634,18 @@
     "CASH": "現金",
     "TRANSFER": "轉帳",
     "CREDIT_CARD": "信用卡"
+  },
+  "UPLOAD_AREA": {
+    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
+    "BROWSE": "瀏覽",
+    "MAXIMUM_SIZE": "最大檔案大小：50MB"
+  },
+  "KYC": {
+    "BUSINESS_REGISTRATION_CERTIFICATE": "商業登記證書",
+    "TAX_STATUS_CERTIFICATE": "稅務狀態證明",
+    "REPRESENTATIVE_ID_CERTIFICATE": "代表人{{type}}證明",
+    "PASSPORT": "護照",
+    "ID_CARD": "身份證",
+    "DRIVER_LICENSE": "駕駛執照"
   }
 }
