@@ -1,8 +1,22 @@
 import { Button } from '@/components/button/button';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useGlobalCtx } from '@/contexts/global_context';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import React from 'react';
 
 const CompanyInfoPageBody = () => {
+  const router = useRouter();
+  const { teamSettingModalVisibilityHandler } = useGlobalCtx();
+
+  const editCompanyClickHandler = () => {
+    teamSettingModalVisibilityHandler();
+  };
+
+  const goKYCClickHandler = () => {
+    router.push(ISUNFA_ROUTE.KYC);
+  };
+
   return (
     <div className="font-barlow">
       <div className="mt-28 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-10 pb-0">
@@ -54,7 +68,11 @@ const CompanyInfoPageBody = () => {
                 </div>
                 <div className="flex gap-0 text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:text-3xl">
                   <div>iSunCloud </div>
-                  <Button variant={'secondaryBorderless'} size={'extraSmall'}>
+                  <Button
+                    onClick={editCompanyClickHandler}
+                    variant={'secondaryBorderless'}
+                    size={'extraSmall'}
+                  >
                     {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -211,6 +229,7 @@ const CompanyInfoPageBody = () => {
             </div>
             <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
               <Button
+                onClick={goKYCClickHandler}
                 variant={'secondaryOutline'}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >

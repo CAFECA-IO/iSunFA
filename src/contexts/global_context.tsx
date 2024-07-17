@@ -48,6 +48,7 @@ import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 
 interface IGlobalContext {
   width: number;
@@ -120,6 +121,9 @@ interface IGlobalContext {
   isFilterOptionsModalForPendingVisible: boolean;
   isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
+
+  isTeamSettingModalVisible: boolean;
+  teamSettingModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -191,6 +195,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
+
+  const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -287,6 +293,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const salaryBookConfirmModalVisibilityHandler = () => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
+  };
+
+  const teamSettingModalVisibilityHandler = () => {
+    setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -552,6 +562,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addProjectModalDataHandler,
     profileUploadModalVisible,
     profileUploadModalVisibilityHandler,
+
+    isTeamSettingModalVisible,
+    teamSettingModalVisibilityHandler,
   };
 
   return (
@@ -656,6 +669,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <SalaryBookConfirmModal
         isModalVisible={isSalaryBookConfirmModalVisible}
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
+      />
+
+      <TeamSettingModal
+        isModalVisible={isTeamSettingModalVisible}
+        modalVisibilityHandler={teamSettingModalVisibilityHandler}
       />
 
       {children}
