@@ -139,8 +139,8 @@ const UploadArea = ({
             <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="error_icon" />
             <div>{uploadFile.name}</div>
           </div>
-          <div className="flex w-full items-center gap-16px">
-            <div className="relative mb-4 h-5px flex-1 rounded-full bg-progress-bar-surface-base">
+          <div className="mb-4 flex w-full items-center gap-16px">
+            <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
               <div
                 className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${
                   isError ? 'bg-file-uploading-text-error' : 'bg-progress-bar-surface-bar-secondary'
@@ -149,7 +149,7 @@ const UploadArea = ({
               />
             </div>
             <p className="text-xs font-medium leading-tight tracking-tight text-progress-bar-text-indicator">
-              {uploadProgress === 100 ? 'Completed' : `${uploadProgress}%`}
+              {`${uploadProgress}%`}
             </p>
           </div>
 
