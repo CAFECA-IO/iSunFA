@@ -31,6 +31,25 @@ export async function findFirstReportByFromTo(
     return report;
 }
 
+export async function findUniqueReportById(reportId: number) {
+    let report: Report | null = null;
+
+    try {
+       report = await prisma.report.findUnique({
+            where: {
+                id: reportId,
+            },
+        });
+    } catch (error) {
+        report = null;
+        // Deprecate: (20240710 - Murky) Debugging perpose
+        // eslint-disable-next-line no-console
+        console.error(error);
+    }
+
+    return report;
+}
+
 export async function getReportIdByFromTo(
     companyId: number,
     fromInSecond: number,

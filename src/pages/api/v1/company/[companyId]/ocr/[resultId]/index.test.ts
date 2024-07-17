@@ -67,7 +67,7 @@ describe('fetchOCRResult', () => {
     const resultId = 'validResultId';
     global.fetch = jest.fn().mockRejectedValue(new Error('Failed to fetch'));
 
-    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   });
 
   it('should throw an error if response is not ok', async () => {
@@ -77,7 +77,7 @@ describe('fetchOCRResult', () => {
     } as unknown as Response;
     global.fetch = jest.fn().mockResolvedValue(response);
 
-    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   });
 });
 

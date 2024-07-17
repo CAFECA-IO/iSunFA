@@ -110,6 +110,20 @@ const useAPI = <Data>(
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
+
+        if (!response.success) {
+          const apiError = new Error(
+            response.message || STATUS_MESSAGE.MISSING_ERROR_FROM_BACKEND_API
+          ); // Info: 實際上這裡應該要顯示從後端 API response 的錯誤訊息 (20240716 - Shirley)
+          setError(apiError);
+          return {
+            success: false,
+            data: null,
+            code: response.code,
+            error: apiError,
+          };
+        }
+
         return {
           success: response.success,
           data: response.payload as Data,
