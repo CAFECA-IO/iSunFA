@@ -61,7 +61,7 @@ export enum APIName {
   SESSION_GET = 'SESSION_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
-  FILE_UPLOAD_PROGRESS = 'FILE_UPLOAD_PROGRESS',
+  FILE_LIST_UPLOADED = 'FILE_LIST_UPLOADED',
 }
 
 export enum APIPath {
@@ -106,7 +106,7 @@ export enum APIPath {
   SESSION_GET = `${apiPrefix}/session`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
-  FILE_UPLOAD_PROGRESS = `${apiPrefix}/company/:companyId/file/:fileId/progress`,
+  FILE_LIST_UPLOADED = `${apiPrefix}/company/:companyId/file/`,
 }
 const createConfig = ({
   name,
@@ -338,9 +338,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.FILE_UPLOAD,
   }),
-  [APIName.FILE_UPLOAD_PROGRESS]: createConfig({
-    name: APIName.FILE_UPLOAD_PROGRESS,
+  [APIName.FILE_LIST_UPLOADED]: createConfig({
+    name: APIName.FILE_LIST_UPLOADED,
     method: HttpMethod.GET,
-    path: APIPath.FILE_UPLOAD_PROGRESS,
+    path: APIPath.FILE_LIST_UPLOADED,
   }),
 };

@@ -1,4 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+
+enum DocumentType {
+  PASSPORT = 'passport',
+  ID_CARD = 'id_card',
+  DRIVER_LICENSE = 'driver_license',
+}
 
 type RadioOption = {
   label: string;
@@ -41,19 +48,19 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
   );
 };
 
-const RadioButtonComponent = () => {
-  const [selectedValue, setSelectedValue] = useState<string>('');
-
-  const handleRadioChange = (value: string) => {
-    setSelectedValue(value);
-  };
-
+const RadioButtonComponent = ({
+  selectedValue,
+  onChange,
+}: {
+  selectedValue: string;
+  onChange: (value: string) => void;
+}) => {
+  const { t } = useTranslation('common');
   const radioOptions: RadioOption[] = [
-    { label: 'Passport', value: 'passport' },
-    { label: 'National ID card', value: 'id_card' },
-    { label: 'Driving License', value: 'driving_license' },
+    { label: t('PASSWORD'), value: DocumentType.PASSPORT },
+    { label: t('ID_CARD'), value: DocumentType.ID_CARD },
+    { label: t('DRIVER_LICENSE'), value: DocumentType.DRIVER_LICENSE },
   ];
-
   return (
     <div className="rounded-lg bg-white p-6 shadow-md">
       <h2 className="mb-4 text-center text-lg font-medium text-gray-900">
@@ -63,7 +70,7 @@ const RadioButtonComponent = () => {
         options={radioOptions}
         name="company_representative_id"
         selectedValue={selectedValue}
-        onChange={handleRadioChange}
+        onChange={onChange}
       />
     </div>
   );

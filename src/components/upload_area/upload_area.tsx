@@ -1,24 +1,25 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { IAPIInput } from '@/interfaces/api_connection';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
 import { IUploadProgress } from '@/interfaces/upload_progress';
+import { ProgressStatus } from '@/constants/account';
+import { KYCDocumentType } from '@/interfaces/kyc_document_type';
 
-const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // Info: (20240717 - Tzuhan) 50MB in bytes
+const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
 
 const UploadArea = ({
+  type,
   uploadFile,
   uploadHandler,
   onUpload,
 }: {
+  type: KYCDocumentType;
   uploadFile: File | null;
-  uploadHandler: (file: File) => void;
+  uploadHandler: (file: File, type: KYCDocumentType) => void;
   onUpload: (
     input?: IAPIInput,
     signal?: AbortSignal
@@ -32,14 +33,8 @@ const UploadArea = ({
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const [fileId, setFileId] = useState<string | undefined>(undefined);
   const [isDragOver, setIsDragOver] = useState<boolean>(false); // Info: (20240717 - Tzuhan) 拖曳的樣式
-  const {
-    trigger: getUploadProgress,
-    data: uploadProgress,
-    success: uploadProgressSuccess,
-    code: uploadProgressCode,
-  } = APIHandler<IUploadProgress>(APIName.FILE_UPLOAD_PROGRESS, {}, false, false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isError, setIsError] = useState<boolean>(false);
 
   const handleUploadFile = useCallback(
@@ -56,60 +51,85 @@ const UploadArea = ({
         return;
       }
 
-      uploadHandler(file);
+      uploadHandler(file, type);
 
-      const formData = new FormData();
-      formData.append('file', file);
+      const reader = new FileReader();
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = (event.loaded / event.total) * 100;
+          setUploadProgress(progress);
+        }
+      };
 
-      const { data, success, code } = await onUpload({
-        params: { companyId: selectedCompany!.id },
-        body: formData,
-      });
+      reader.onloadend = async () => {
+        if (reader.readyState === FileReader.DONE) {
+          const formData = new FormData();
+          formData.append('file', file);
 
-      if (success && data) {
-        if (
-          data.status === ProgressStatus.ALREADY_UPLOAD ||
-          data.status === ProgressStatus.SUCCESS ||
-          data.status === ProgressStatus.PAUSED ||
-          data.status === ProgressStatus.IN_PROGRESS
-        ) {
-          setFileId(data.fileId);
-          messageModalDataHandler({
-            title: 'Upload Successful',
-            content: data.status,
-            messageType: MessageType.SUCCESS,
-            submitBtnStr: 'Done',
-            submitBtnFunction: () => {
-              messageModalVisibilityHandler();
-            },
+          const { data, success, code } = await onUpload({
+            params: { companyId: selectedCompany!.id },
+            body: formData,
           });
-          messageModalVisibilityHandler();
-        } else {
-          // Info: (20240717 - Tzuhan) 顯示上傳失敗的錯誤訊息
+
+          if (success && data) {
+            if (
+              data.status === ProgressStatus.ALREADY_UPLOAD ||
+              data.status === ProgressStatus.SUCCESS ||
+              data.status === ProgressStatus.PAUSED ||
+              data.status === ProgressStatus.IN_PROGRESS
+            ) {
+              messageModalDataHandler({
+                title: 'Upload Successful',
+                content: data.status,
+                messageType: MessageType.SUCCESS,
+                submitBtnStr: 'Done',
+                submitBtnFunction: () => {
+                  messageModalVisibilityHandler();
+                },
+              });
+              messageModalVisibilityHandler();
+            } else {
+              setIsError(true);
+              messageModalDataHandler({
+                title: 'Upload File Failed',
+                content: `Upload File Failed(${code}): ${data?.status ?? 'Unknown error'}`,
+                messageType: MessageType.ERROR,
+                submitBtnStr: 'Close',
+                submitBtnFunction: () => messageModalVisibilityHandler(),
+              });
+              messageModalVisibilityHandler();
+            }
+          } else if (success === false && data) {
+            setIsError(true);
+            messageModalDataHandler({
+              title: 'Upload File Failed',
+              content: `Upload File Failed(${code}): ${data.status}`,
+              messageType: MessageType.ERROR,
+              submitBtnStr: 'Close',
+              submitBtnFunction: () => messageModalVisibilityHandler(),
+            });
+            messageModalVisibilityHandler();
+          }
+        }
+
+        reader.onerror = () => {
+          setIsError(true);
           messageModalDataHandler({
             title: 'Upload File Failed',
-            content: `Upload File Failed(${code}): ${data.status}`,
+            content: 'File read failed',
             messageType: MessageType.ERROR,
             submitBtnStr: 'Close',
             submitBtnFunction: () => messageModalVisibilityHandler(),
           });
           messageModalVisibilityHandler();
-        }
-      } else if (success === false) {
-        messageModalDataHandler({
-          title: 'Upload File Failed',
-          content: `Upload File Failed(${code})`,
-          messageType: MessageType.ERROR,
-          submitBtnStr: 'Close',
-          submitBtnFunction: () => messageModalVisibilityHandler(),
-        });
-        messageModalVisibilityHandler();
-      }
+        };
+
+        reader.readAsArrayBuffer(file);
+      };
     },
     [onUpload, selectedCompany]
   );
 
-  // Info: (20240717 - Tzuhan) 處理上傳檔案
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     if (event.target.files && event.target.files.length > 0) {
@@ -117,9 +137,8 @@ const UploadArea = ({
       handleUploadFile(file);
     }
   };
-  // Info: (20240717 - Tzuhan) 處理拖曳上傳檔案
+
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    if (fileId) return;
     event.preventDefault();
     setIsDragOver(true);
   };
@@ -130,44 +149,12 @@ const UploadArea = ({
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const droppedFile = event.dataTransfer.files[0]; // Info: 如果有多個檔案，只取第一個檔案 (20240717 - Tzuhan)
+    const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
       handleUploadFile(droppedFile);
       setIsDragOver(false);
     }
   };
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (
-      selectedCompany &&
-      fileId &&
-      (!uploadProgress || uploadProgress.status === ProgressStatus.IN_PROGRESS) &&
-      (uploadProgressSuccess === undefined || uploadProgressSuccess)
-    ) {
-      interval = setInterval(() => {
-        getUploadProgress({
-          params: {
-            companyId: selectedCompany.id,
-            fileId,
-          },
-        });
-      }, 2000);
-    }
-    if (
-      uploadProgressSuccess === false ||
-      (uploadProgress &&
-        ![
-          ProgressStatus.SUCCESS,
-          ProgressStatus.PAUSED,
-          ProgressStatus.IN_PROGRESS,
-          ProgressStatus.ALREADY_UPLOAD,
-        ].includes(uploadProgress.status))
-    ) {
-      setIsError(true);
-    }
-    return () => clearInterval(interval);
-  }, [selectedCompany, fileId, uploadProgress, uploadProgressSuccess, uploadProgressCode]);
 
   return (
     <div
@@ -191,14 +178,16 @@ const UploadArea = ({
               <p className="text-slider-surface-bar">{t('JOURNAL.AI_TECHNOLOGY_RECOGNIZING')}</p>
               <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
                 <div
-                  className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${isError ? 'bg-file-uploading-text-error' : 'bg-progress-bar-surface-bar-secondary'}`}
-                  style={{ width: `${uploadProgress?.progress ?? 0}%` }}
+                  className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${
+                    isError
+                      ? 'bg-file-uploading-text-error'
+                      : 'bg-progress-bar-surface-bar-secondary'
+                  }`}
+                  style={{ width: `${uploadProgress}%` }}
                 />
               </div>
               <p className="text-xs font-medium leading-tight tracking-tight text-progress-bar-text-indicator">
-                {uploadProgress?.progress === 100
-                  ? 'Completed'
-                  : `${uploadProgress?.progress ?? 0}%`}
+                {uploadProgress === 100 ? 'Completed' : `${uploadProgress}%`}
               </p>
             </div>
           </>
@@ -214,7 +203,6 @@ const UploadArea = ({
             <input
               id="journal-upload-area"
               name="journal-upload-area"
-              // accept="image/*, .txt, .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx" // Info: (20240717 - Tzuhan) 不設限檔案類型
               type="file"
               className="hidden"
               onChange={handleFileChange}
