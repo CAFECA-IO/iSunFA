@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.8+53",
+  "version": "0.1.8+54",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -77,7 +77,7 @@
     "prisma": "^5.14.0",
     "tailwindcss": "^3.4.0",
     "ts-jest": "^29.1.4",
-    "typescript": "^5"
+    "typescript": "^5.3.3"
   },
   "husky": {
     "hooks": {
