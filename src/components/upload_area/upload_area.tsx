@@ -5,9 +5,9 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { IAPIInput } from '@/interfaces/api_connection';
-import { IUploadProgress } from '@/interfaces/upload_progress';
 import { ProgressStatus } from '@/constants/account';
 import { KYCDocumentType } from '@/interfaces/kyc_document_type';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
 
@@ -25,7 +25,7 @@ const UploadArea = ({
     signal?: AbortSignal
   ) => Promise<{
     success: boolean;
-    data: IUploadProgress | null;
+    data: IAccountResultStatus | null;
     code: string;
     error: Error | null;
   }>;

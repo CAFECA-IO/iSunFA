@@ -3,11 +3,11 @@ import UploadArea from '@/components/upload_area/upload_area';
 import RadioButtonComponent from '@/components/kyc/radio_button_component';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IUploadProgress } from '@/interfaces/upload_progress';
 import { useTranslation } from 'react-i18next';
 import { initialKYCDocuments, KYCDocuments, KYCDocumentType } from '@/interfaces/kyc_document_type';
 import { ToastType } from '@/interfaces/toastify';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 const DocumentUploadForm = () => {
   const { t } = useTranslation('common');
@@ -24,7 +24,7 @@ const DocumentUploadForm = () => {
     setSelectedValue(value);
   };
 
-  const { trigger: uploadFile } = APIHandler<IUploadProgress>(
+  const { trigger: uploadFile } = APIHandler<IAccountResultStatus>(
     APIName.FILE_UPLOAD,
     {},
     false,
