@@ -468,7 +468,7 @@ describe('GET OCR', () => {
   });
 
   describe('formatUnprocessedOCR', () => {
-    it('should return IUnprocessedOCR', async () => {
+    it('should return IOCR', async () => {
       const mockAichId = 'testAichId';
       const mockCompanyId = 1;
       const mockImageFileSize = '1 MB';
