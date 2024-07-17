@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { IFolder, IFolderContent } from '@/interfaces/folder';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function getFolderList(companyId: number): Promise<IFolder[]> {
   const folderList = await prisma.voucherSalaryRecordFolder.findMany({
@@ -22,6 +23,8 @@ export async function updateFolderName(
   folderId: number,
   name: string
 ): Promise<IFolder | null> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const updatedFolder = await prisma.voucherSalaryRecordFolder.update({
     where: {
       id: folderId,
@@ -29,6 +32,7 @@ export async function updateFolderName(
     },
     data: {
       name,
+      updatedAt: nowTimestamp,
     },
   });
   if (!updatedFolder) {
