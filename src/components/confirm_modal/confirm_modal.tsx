@@ -597,7 +597,7 @@ const ConfirmModal = ({
               <button
                 id="ai-analysis-btn"
                 type="button"
-                // disabled={!hasAIResult}
+                disabled={!hasAIResult}
                 onClick={analysisBtnClickHandler}
                 className="flex h-44px w-44px items-center justify-center rounded-xs bg-button-surface-strong-secondary text-button-text-invert hover:cursor-pointer hover:opacity-70 disabled:bg-button-surface-strong-disable disabled:text-button-text-disable hover:disabled:cursor-default hover:disabled:opacity-100"
               >
