@@ -1,4 +1,5 @@
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { ReportSheetType, ReportType } from '@/constants/report';
+import { IAccountForSheetDisplay, IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
 
@@ -11,6 +12,28 @@ export interface IAnalysisReportRequest {
 }
 
 export interface IReport {
+  id: number;
+  companyId: number;
+  tokenContract: string;
+  tokenId: string;
+  name: string;
+  from: number;
+  to: number;
+  type: ReportType;
+  reportType: ReportSheetType;
+  status: string;
+  remainingSeconds: number;
+  paused: boolean;
+  projectId: number | null;
+  reportLink: string;
+  downloadLink: string;
+  blockChainExplorerLink: string;
+  evidenceId: string;
+  content: IAccountForSheetDisplay[];
+  createdAt: number;
+  updatedAt: number;
+}
+export interface IReportOld {
   reportTypesName: {
     id: FinancialReportTypesKey | AnalysisReportTypesKey;
     name: string;
@@ -19,20 +42,6 @@ export interface IReport {
   tokenId: string;
   reportLink: string;
 }
-
-// export interface IFinancialReport extends IReport {
-//   reportTypesName: {
-//     id: FinancialReportTypesKey;
-//     name: string;
-//   };
-// }
-
-// export interface IAnalysisReport extends IReport {
-//   reportTypesName: {
-//     id: AnalysisReportTypesKey;
-//     name: string;
-//   };
-// }
 
 export type IAnalysisReport = string | null;
 
@@ -61,7 +70,7 @@ export function isFinancialReportType(data: string): data is FinancialReportType
   );
 }
 
-export interface IFinancialReportsProgreseStatusResponse extends IAccountResultStatus {
+export interface IFinancialReportsProgressStatusResponse extends IAccountResultStatus {
   type: FinancialReportType;
   startDate: Date;
   endDate: Date;
