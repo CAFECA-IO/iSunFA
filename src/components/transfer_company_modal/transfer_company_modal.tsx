@@ -1,18 +1,21 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
 
-interface ITeamSettingModal {
+interface ITransferCompanyModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
 }
 
-const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
+const TransferCompanyModal = ({
+  isModalVisible,
+  modalVisibilityHandler,
+}: ITransferCompanyModal) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const saveClickHandler = async () => {
     if (inputRef.current) {
       // TODO: send API request (20240717 - Shirley)
-      // const name = inputRef.current.value;
+      // const userId = inputRef.current.value;
       inputRef.current.value = '';
       modalVisibilityHandler();
     }
@@ -69,7 +72,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
         <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
           <div className="flex flex-col justify-start gap-2">
             <div className="text-divider-text-lv-1">
-              <p>Company Name</p>
+              <p>Transfer company to ...</p>
             </div>
             <div className="flex gap-0 rounded-sm border border-solid border-lightGray3 bg-white shadow-sm">
               <div className="flex flex-1">
@@ -77,7 +80,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
                   ref={inputRef}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder="iSunCloud" // TODO: get company name from API (20240717 - Shirley)
+                  placeholder="User ID" // TODO: get company name from API (20240717 - Shirley)
                 />
               </div>
             </div>
@@ -94,7 +97,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               Cancel
             </Button>
             <Button variant={'tertiary'} onClick={saveClickHandler} className="flex-1 rounded-xs">
-              Save
+              Transfer
             </Button>
           </div>
         </div>
@@ -104,4 +107,4 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   return <div> {isDisplayedRegisterModal}</div>;
 };
 
-export default TeamSettingModal;
+export default TransferCompanyModal;

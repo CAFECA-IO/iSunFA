@@ -1,13 +1,19 @@
 import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React from 'react';
 
 const CompanyInfoPageBody = () => {
   const router = useRouter();
-  const { teamSettingModalVisibilityHandler } = useGlobalCtx();
+  const {
+    teamSettingModalVisibilityHandler,
+    messageModalVisibilityHandler,
+    messageModalDataHandler,
+    transferCompanyModalVisibilityHandler,
+  } = useGlobalCtx();
 
   const editCompanyClickHandler = () => {
     teamSettingModalVisibilityHandler();
@@ -15,6 +21,23 @@ const CompanyInfoPageBody = () => {
 
   const goKYCClickHandler = () => {
     router.push(ISUNFA_ROUTE.KYC);
+  };
+
+  const deleteCompanyClickHandler = () => {
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Delete company',
+      content:
+        'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
+      backBtnStr: 'Cancel',
+      submitBtnStr: 'Delete',
+      submitBtnFunction: messageModalVisibilityHandler, // TODO: send API request (20240717 - Shirley)
+    });
+    messageModalVisibilityHandler();
+  };
+
+  const transferOwnershipClickHandler = () => {
+    transferCompanyModalVisibilityHandler();
   };
 
   return (
@@ -294,7 +317,11 @@ const CompanyInfoPageBody = () => {
           </div>
           <div className="mt-10 flex justify-center gap-5 self-start text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv1 max-md:flex-wrap lg:justify-between">
             <div className="">
-              <Button variant={'secondaryOutline'} className="max-md:w-220px">
+              <Button
+                onClick={deleteCompanyClickHandler}
+                variant={'secondaryOutline'}
+                className="max-md:w-220px"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -313,7 +340,11 @@ const CompanyInfoPageBody = () => {
               </Button>
             </div>
             <div className="">
-              <Button variant={'secondaryOutline'} className="max-md:w-220px">
+              <Button
+                onClick={transferOwnershipClickHandler}
+                variant={'secondaryOutline'}
+                className="max-md:w-220px"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"

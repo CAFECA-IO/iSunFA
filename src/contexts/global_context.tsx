@@ -49,6 +49,7 @@ import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salar
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 
 interface IGlobalContext {
   width: number;
@@ -124,6 +125,9 @@ interface IGlobalContext {
 
   isTeamSettingModalVisible: boolean;
   teamSettingModalVisibilityHandler: () => void;
+
+  isTransferCompanyModalVisible: boolean;
+  transferCompanyModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -197,6 +201,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
+
+  const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -297,6 +303,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const teamSettingModalVisibilityHandler = () => {
     setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
+  };
+
+  const transferCompanyModalVisibilityHandler = () => {
+    setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -565,6 +575,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
     isTeamSettingModalVisible,
     teamSettingModalVisibilityHandler,
+
+    isTransferCompanyModalVisible,
+    transferCompanyModalVisibilityHandler,
   };
 
   return (
@@ -674,6 +687,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <TeamSettingModal
         isModalVisible={isTeamSettingModalVisible}
         modalVisibilityHandler={teamSettingModalVisibilityHandler}
+      />
+
+      <TransferCompanyModal
+        isModalVisible={isTransferCompanyModalVisible}
+        modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
       {children}
