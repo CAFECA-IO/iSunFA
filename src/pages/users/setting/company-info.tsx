@@ -22,7 +22,7 @@ const CompanyInfoPage = () => {
         <SettingSidebar />
       </div>
 
-      <div className="w-full bg-surface-neutral-main-background pb-40 pl-240px">
+      <div className="w-full bg-surface-neutral-main-background pb-40 lg:pl-240px">
         <CompanyInfoPageBody />
       </div>
     </div>

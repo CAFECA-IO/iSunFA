@@ -13,7 +13,7 @@ import ViewAnalysisSection from '@/components/view_analysis_section/view_analysi
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { IReport } from '@/interfaces/report';
+import { IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
 
@@ -41,7 +41,7 @@ const ViewAnalysisReportPage = ({
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const [reportData, setReportData] = React.useState<IReport>({
+  const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
     tokenId: '37002036',
@@ -53,7 +53,7 @@ const ViewAnalysisReportPage = ({
     data: reportAnalysis,
     code: getARCode,
     success: getARSuccess,
-  } = APIHandler<IReport>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
+  } = APIHandler<IReportOld>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
     params: {
       params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId: '1' },
     },
