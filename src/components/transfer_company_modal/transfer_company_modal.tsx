@@ -1,5 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface ITransferCompanyModal {
   isModalVisible: boolean;
@@ -10,6 +13,7 @@ const TransferCompanyModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: ITransferCompanyModal) => {
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const saveClickHandler = async () => {
@@ -18,6 +22,18 @@ const TransferCompanyModal = ({
       // const userId = inputRef.current.value;
       inputRef.current.value = '';
       modalVisibilityHandler();
+
+      // TODO: validate the userId (20240717 - Shirley)
+      // TODO: show message modal (20240717 - Shirley)
+      messageModalDataHandler({
+        messageType: MessageType.WARNING,
+        title: 'Transfer company',
+        content: `Are you sure you want to transfer the company to \n\nUSER_NAME.`, // TODO: message color (20240717 - Shirley)
+        backBtnStr: 'Cancel',
+        submitBtnStr: 'Transfer',
+        submitBtnFunction: messageModalVisibilityHandler, // TODO: send API request (20240717 - Shirley)
+      });
+      messageModalVisibilityHandler();
     }
   };
 
@@ -33,7 +49,7 @@ const TransferCompanyModal = ({
         <div className="flex gap-2.5 bg-white py-4 pl-10 pr-5">
           <div className="flex w-full flex-1 flex-col justify-center text-center">
             <div className="px-0">
-              <div className="text-xl font-bold text-card-text-primary">Settings</div>
+              <div className="text-xl font-bold text-card-text-primary">Transfer Company</div>
             </div>
           </div>
           <div className="absolute right-3 top-3">
