@@ -8,6 +8,7 @@ export async function fuzzySearchAccountByName(name: string) {
   try {
     const accounts: Account[] = await prisma.$queryRaw`
       SELECT * FROM public."account"
+      WHERE for_user = true
       ORDER BY SIMILARITY(name, ${name}) DESC
       LIMIT 1;
     `;

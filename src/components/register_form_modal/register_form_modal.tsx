@@ -67,7 +67,7 @@ const RegisterFormModal = ({
         <div className="flex gap-2.5 bg-white px-5 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="space-y-2 px-0">
-              <div className="text-xl font-bold text-slate-700">
+              <div className="text-xl font-bold text-card-text-primary">
                 {t('LOGIN_PAGE_BODY.SET_USER_NAME')}
               </div>
               <div className="text-xs text-lightGray4">
