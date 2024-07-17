@@ -1,4 +1,3 @@
-/* eslint-disable */
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -132,48 +131,7 @@ const ConfirmModal = ({
 
   const importVoucherHandler = () => {
     // Info: (20240716 - Julian) 從 API response 取出傳票列表
-    const AILineItems = [
-      {
-        lineItemIndex: '20240426001',
-        account: '資產',
-        description: '影印機 SFT-002 1台$10,000',
-        debit: true,
-        amount: 10000,
-        accountId: 10000000,
-      },
-      {
-        lineItemIndex: '20240426002',
-        account: '資產',
-        description: '碳粉匣 HP-17A 1支$2,900',
-        debit: true,
-        amount: 2900,
-        accountId: 10000000,
-      },
-      {
-        lineItemIndex: '20240426003',
-        account: '資產',
-        description: '感光滾筒 HP-MS13WF 1支$3,000',
-        debit: true,
-        amount: 3000,
-        accountId: 10000000,
-      },
-      {
-        lineItemIndex: '20240426004',
-        account: '資產',
-        description: '總計 $16,695',
-        debit: true,
-        amount: 1695,
-        accountId: 10000000,
-      },
-      {
-        lineItemIndex: '20240426005',
-        account: '資產',
-        description: 'Test',
-        debit: false,
-        amount: 111111,
-        accountId: 10000000,
-      },
-    ]; // AIResult?.lineItems ?? [];
+    const AILineItems = AIResult?.lineItems ?? [];
 
     // Info: (20240529 - Julian) 清空 accountingVoucher
     resetVoucherHandler();
@@ -539,15 +497,6 @@ const ConfirmModal = ({
             </tr>
           </thead>
           {/* Info: (20240429 - Julian) Body */}
-          {accountingVoucher.map((voucher) => (
-            <div key={voucher.id} className="flex w-full flex-col">
-              <div>id: {voucher.id}</div>
-              <div>account: {voucher.account?.name}</div>
-              <div>particulars: {voucher.particulars}</div>
-              <div>debit: {voucher.debit}</div>
-              <div>credit: {voucher.credit}</div>
-            </div>
-          ))}
           <tbody>{accountingVoucherRow}</tbody>
         </table>
       </div>
