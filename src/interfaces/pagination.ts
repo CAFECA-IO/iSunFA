@@ -1,5 +1,5 @@
 export interface IPaginatedData<T> {
-  data: T[];
+  data: T;
   page: number;
   totalPages: number;
   totalCount: number; // 總數量

@@ -1,14 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { checkAdmin } from '@/lib/utils/auth_check';
-import { findManyJournalsInPrisma } from '@/lib/utils/repo/journal.repo';
+import { listJournal } from '@/lib/utils/repo/journal.repo';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { EVENT_TYPE } from '@/constants/account';
 
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,16 +24,28 @@ export function isCompanyIdValid(companyId: any): companyId is number {
 // ToDo: (20240625 - Murky) Need to move to type guard
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatQuery(query: any) {
-  const { page, limit, eventType, startDate, endDate, search, sort } = query;
+  const {
+    isUploaded,
+    page,
+    pageSize,
+    eventType,
+    sortBy,
+    sortOrder,
+    startDate,
+    endDate,
+    searchQuery,
+  } = query;
 
   if (
+    (isUploaded && typeof isUploaded !== 'string') ||
     (page && !Number.isInteger(Number(page))) ||
-    (limit && !Number.isInteger(Number(limit))) ||
-    (eventType && typeof eventType !== 'string') ||
+    (pageSize && !Number.isInteger(Number(pageSize))) ||
+    (sortBy && typeof sortBy !== 'string') ||
+    (sortOrder && typeof sortOrder !== 'string') ||
     (startDate && !Number.isInteger(Number(startDate))) ||
     (endDate && !Number.isInteger(Number(endDate))) ||
-    (search && typeof search !== 'string') ||
-    (sort && typeof sort !== 'string')
+    (searchQuery && typeof searchQuery !== 'string') ||
+    (eventType && !Object.values(EVENT_TYPE).includes(eventType))
   ) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -40,13 +54,15 @@ export function formatQuery(query: any) {
   const endDateInSecond = endDate ? timestampInSeconds(endDate) : undefined;
 
   const cleanQuery = {
+    isUploaded: !!isUploaded,
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
-    limit: limit ? Number(limit) : DEFAULT_PAGE_LIMIT,
-    eventType: eventType ? String(eventType) : undefined,
+    pageSize: pageSize ? Number(pageSize) : DEFAULT_PAGE_LIMIT,
+    eventType: eventType || undefined,
+    sortBy: sortBy || 'createdAt',
+    sortOrder: sortOrder || 'desc',
     startDate: startDateInSecond,
     endDate: endDateInSecond,
-    search: search ? String(search) : undefined,
-    sort: sort ? String(sort) : undefined,
+    searchQuery: searchQuery || undefined,
   };
 
   return cleanQuery;
@@ -54,31 +70,37 @@ export function formatQuery(query: any) {
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   const {
-    page, // can be undefined
-    limit,
+    isUploaded,
+    page,
+    pageSize,
     eventType,
+    sortBy,
+    sortOrder,
     startDate,
     endDate,
-    search,
-    sort,
+    searchQuery,
   } = formatQuery(req.query);
 
-  const offset = pageToOffset(page, limit);
-  const journalFromPrisma = await findManyJournalsInPrisma(
+  const pagenatedJournalList = await listJournal(
     companyId,
-    offset,
-    limit,
+    isUploaded,
+    page,
+    pageSize,
     eventType,
+    sortBy,
+    sortOrder,
     startDate,
     endDate,
-    search,
-    sort
+    searchQuery
   );
-  const journals = formatIJournalListItems(journalFromPrisma);
+  const pagenatedJournalListItems = {
+    ...pagenatedJournalList,
+    data: formatIJournalListItems(pagenatedJournalList.data),
+  };
 
-  const { httpCode, result } = formatApiResponse<IJournalListItem[]>(
+  const { httpCode, result } = formatApiResponse<IPaginatedData<IJournalListItem[]>>(
     STATUS_MESSAGE.SUCCESS_LIST,
-    journals
+    pagenatedJournalListItems
   );
   return {
     httpCode,
@@ -88,7 +110,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournalListItem[]>>
+  res: NextApiResponse<IResponseData<IPaginatedData<IJournalListItem[]> | null>>
 ) {
   const session = await checkAdmin(req, res);
   const { companyId } = session;
@@ -104,10 +126,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IJournalListItem[]>(
-      error.message,
-      {} as IJournalListItem[]
-    );
+    const { httpCode, result } = formatApiResponse<null>(error.message, null);
     res.status(httpCode).json(result);
   }
 }

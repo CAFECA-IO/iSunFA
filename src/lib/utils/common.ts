@@ -350,6 +350,10 @@ export function pageToOffset(
   return (page - 1) * limit;
 }
 
+export function calculateTotalPages(totalCount: number, pageSize: number): number {
+  return Math.ceil(totalCount / pageSize);
+}
+
 export const getTodayPeriodInSec = () => {
   const today = new Date();
   const startTimeStamp = timestampInSeconds(

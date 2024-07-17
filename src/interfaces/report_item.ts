@@ -36,8 +36,8 @@ export interface IGeneratedReportItem extends IBasicReportItem {
   evidenceId: string;
 }
 
-export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem> {}
-export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem> {}
+export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem[]> {}
+export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem[]> {}
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
   const now = new Date();
