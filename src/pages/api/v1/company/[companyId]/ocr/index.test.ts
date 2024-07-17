@@ -131,7 +131,7 @@ describe('POST OCR', () => {
     it('should throw error when fetch failed', async () => {
       (global.fetch as jest.Mock).mockRejectedValue(new Error('fetch failed'));
       await expect(module.uploadImageToAICH(mockBlob, mockName)).rejects.toThrow(
-        STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED
+        STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED
       );
     });
 
@@ -142,7 +142,7 @@ describe('POST OCR', () => {
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
       await expect(module.uploadImageToAICH(mockBlob, mockName)).rejects.toThrow(
-        STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED
+        STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED
       );
     });
   });
@@ -468,7 +468,7 @@ describe('GET OCR', () => {
   });
 
   describe('formatUnprocessedOCR', () => {
-    it('should return IUnprocessedOCR', async () => {
+    it('should return IOCR', async () => {
       const mockAichId = 'testAichId';
       const mockCompanyId = 1;
       const mockImageFileSize = '1 MB';

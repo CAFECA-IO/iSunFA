@@ -3,10 +3,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvoice } from '@/interfaces/invoice';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds, transformBytesToFileSizeString } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { IContract } from '@/interfaces/contract';
+import { deleteOcrByResultId, getOcrByResultId } from '@/lib/utils/repo/ocr.repo';
+import { IOCR } from '@/interfaces/ocr';
+import { ProgressStatus } from '@/constants/account';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
@@ -23,11 +26,11 @@ export async function fetchOCRResult(resultId: string) {
   try {
     response = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   return response.json() as Promise<{ payload?: unknown } | null>;
@@ -37,7 +40,7 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   let json: {
@@ -91,7 +94,7 @@ export async function handleGetRequest(
       formatOCRResultDate(ocrResult);
 
       if (!isIInvoice(ocrResult)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
       const { httpCode, result } = formatApiResponse<IInvoice>(STATUS_MESSAGE.SUCCESS, ocrResult);
@@ -105,6 +108,32 @@ export async function handleGetRequest(
   }
 }
 
+export async function handleDeleteRequest(
+  resultId: string,
+  res: NextApiResponse<IResponseData<IOCR>>,
+) {
+  let payload: IOCR | null = null;
+  const getOCR = await getOcrByResultId(resultId);
+
+  // (20240715 - Jacky): payload should add ad unify formatter @TinyMurky
+  if (!getOCR) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  } else {
+    const deletedOCR = await deleteOcrByResultId(resultId);
+    const imageSize = transformBytesToFileSizeString(deletedOCR.imageSize);
+    payload = {
+      ...deletedOCR,
+      progress: 0,
+      imageSize,
+      status: deletedOCR.status as ProgressStatus,
+    };
+  }
+
+  const { httpCode, result } = formatApiResponse<IOCR>(STATUS_MESSAGE.SUCCESS, payload);
+
+  res.status(httpCode).json(result);
+}
+
 function handleErrorResponse(res: NextApiResponse, message: string) {
   const { httpCode, result } = formatApiResponse<IInvoice>(message, {} as IInvoice);
   res.status(httpCode).json(result);
@@ -112,7 +141,7 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice | IContract>>
+  res: NextApiResponse<IResponseData<IInvoice | IContract | IOCR>>
 ) {
   try {
     const { resultId, type } = req.query;
@@ -123,6 +152,10 @@ export default async function handler(
     switch (req.method) {
       case 'GET': {
         await handleGetRequest(resultId, res, type as string);
+        break;
+      }
+      case "DELETE": {
+        await handleDeleteRequest(resultId, res);
         break;
       }
       default: {

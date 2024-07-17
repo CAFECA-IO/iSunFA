@@ -24,7 +24,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
           </div>
 
           {/* ----- Desktop ----- */}
-          <main className="hidden h-100vh bg-surface-neutral-main-background md:flex md:h-1100px">
+          <main className="hidden min-h-100vh bg-surface-neutral-main-background md:flex">
             <div className="mt-100px flex-1 px-80px md:ml-80px">
               {/* Page Title */}
               <section className="flex flex-col gap-16px pb-20px pt-60px">

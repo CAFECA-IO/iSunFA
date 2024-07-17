@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { HttpMethod } from '@/constants/api_connection';
-import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
+import { ErrorMessage, STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -110,6 +110,20 @@ const useAPI = <Data>(
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
+
+        if (!response.success) {
+          const apiError = new Error(
+            response.message || STATUS_MESSAGE.MISSING_ERROR_FROM_BACKEND_API
+          ); // Info: 實際上這裡應該要顯示從後端 API response 的錯誤訊息 (20240716 - Shirley)
+          setError(apiError);
+          return {
+            success: false,
+            data: null,
+            code: response.code,
+            error: apiError,
+          };
+        }
+
         return {
           success: response.success,
           data: response.payload as Data,

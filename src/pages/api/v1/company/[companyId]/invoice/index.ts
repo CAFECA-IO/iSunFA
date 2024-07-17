@@ -71,11 +71,11 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   return response.json() as Promise<{ payload?: unknown } | null>;
@@ -85,7 +85,7 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   let json: {
@@ -122,7 +122,7 @@ async function handlePostRequest(companyId: number, req: NextApiRequest) {
   const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
 
   if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
   }
 
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
