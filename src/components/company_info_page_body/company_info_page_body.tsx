@@ -121,26 +121,27 @@ const CompanyInfoPageBody = () => {
           </div>
           <div className="mt-10 flex flex-col rounded-3xl bg-white pb-3.5 shadow-xl">
             <div className="max-md:max-w-full">
-              <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                <div className="flex w-44% flex-col">
+              <div className="absolute w-100px min-w-100px">
+                <div className="relative">
+                  {/* Info: 圓形 (20240716 - Shirley) */}
+                  <Image
+                    src="/elements/ellipse_16.png"
+                    width={100}
+                    height={100}
+                    alt="ellipse"
+                    className="rounded rounded-tl-lg"
+                  />
+                  <div className="absolute left-4 top-6">
+                    <p className="text-3xl font-bold text-text-brand-primary-lv2">KYC</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ml-1/10 flex gap-10 max-md:flex-col max-md:gap-0">
+                <div className="flex w-100% flex-col">
                   <div className="grow max-md:mt-10">
-                    <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                      <div className="w-100px min-w-100px">
-                        <div className="relative">
-                          {/* Info: 圓形 (20240716 - Shirley) */}
-                          <Image
-                            src="/elements/ellipse_16.png"
-                            width={100}
-                            height={100}
-                            alt="ellipse"
-                            className="rounded rounded-tl-lg"
-                          />
-                          <div className="absolute left-4 top-6">
-                            <p className="text-3xl font-bold text-text-brand-primary-lv2">KYC</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-5 flex w-70% flex-col max-md:ml-0 max-md:w-full">
+                    <div className="flex gap-0 max-md:flex-col max-md:gap-0">
+                      <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-md:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
                             Unlock
@@ -158,10 +159,10 @@ const CompanyInfoPageBody = () => {
                     </div>
                   </div>
                 </div>
-                <div className="ml-5 flex w-56% flex-col max-md:ml-0 max-md:w-full">
+                <div className="ml-5 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                   <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
                     <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                      <div className="flex w-83% flex-col max-md:ml-0 max-md:w-full">
+                      <div className="flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary max-md:mt-10">
                           <ul className="list-disc pl-5">
                             <li> AI Audit Report</li>
@@ -248,9 +249,9 @@ const CompanyInfoPageBody = () => {
               <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-10 flex justify-between gap-5 self-start text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv1 max-md:flex-wrap">
+          <div className="mt-10 flex justify-center gap-5 self-start text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv1 max-md:flex-wrap lg:justify-between">
             <div className="">
-              <Button variant={'secondaryOutline'} className="px-6 py-2.5 max-md:px-5">
+              <Button variant={'secondaryOutline'} className="max-md:w-220px">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -269,7 +270,7 @@ const CompanyInfoPageBody = () => {
               </Button>
             </div>
             <div className="">
-              <Button variant={'secondaryOutline'} className="px-6 py-2.5 max-md:px-5">
+              <Button variant={'secondaryOutline'} className="max-md:w-220px">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -284,7 +285,7 @@ const CompanyInfoPageBody = () => {
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                <p> Ownership Transfer</p>
+                <p>Transfer Ownership</p>
               </Button>
             </div>
           </div>
