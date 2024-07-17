@@ -65,7 +65,7 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   } else {
     const user = await createUserByRegistrationParsed(registrationParsed);
     if (!user) {
-      statusMessage = STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR;
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR;
     } else {
       payload = user;
       statusMessage = STATUS_MESSAGE.CREATED;

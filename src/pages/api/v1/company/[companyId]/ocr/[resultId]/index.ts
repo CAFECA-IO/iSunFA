@@ -23,11 +23,11 @@ export async function fetchOCRResult(resultId: string) {
   try {
     response = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   return response.json() as Promise<{ payload?: unknown } | null>;
@@ -37,7 +37,7 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   let json: {
@@ -91,7 +91,7 @@ export async function handleGetRequest(
       formatOCRResultDate(ocrResult);
 
       if (!isIInvoice(ocrResult)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
       }
 
       const { httpCode, result } = formatApiResponse<IInvoice>(STATUS_MESSAGE.SUCCESS, ocrResult);

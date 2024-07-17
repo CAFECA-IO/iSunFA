@@ -45,6 +45,7 @@ import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
+import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 
@@ -99,6 +100,9 @@ interface IGlobalContext {
   isAddProjectModalVisible: boolean;
   addProjectModalVisibilityHandler: () => void;
   addProjectModalDataHandler: (stage: ProjectStage) => void;
+
+  isSalaryBookConfirmModalVisible: boolean;
+  salaryBookConfirmModalVisibilityHandler: () => void;
 
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
@@ -185,6 +189,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   );
 
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
+
+  const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -277,6 +283,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const profileUploadModalVisibilityHandler = () => {
     setProfileUploadModalVisible(!profileUploadModalVisible);
+  };
+
+  const salaryBookConfirmModalVisibilityHandler = () => {
+    setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -522,6 +532,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     createCompanyModalVisibilityHandler,
     isLoadingModalVisible,
     loadingModalVisibilityHandler,
+    isSalaryBookConfirmModalVisible,
+    salaryBookConfirmModalVisibilityHandler,
     toastHandler,
     eliminateToast,
 
@@ -639,6 +651,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ProfileUploadModal
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
+      />
+
+      <SalaryBookConfirmModal
+        isModalVisible={isSalaryBookConfirmModalVisible}
+        modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
       />
 
       {children}
