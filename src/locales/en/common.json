@@ -649,6 +649,7 @@
     "REPRESENTATIVE_ID_CERTIFICATE": "Upload the pictures of the data page of key company representative’s {{type}}",
     "PASSPORT": "Passport",
     "ID_CARD": "National ID card",
-    "DRIVER_LICENSE": "Driver's License"
+    "DRIVER_LICENSE": "Driver's License",
+    "SELECT_REPRESENTATIVE_ID_TYPE": "What is the type the key company representative’s ID?"
   }
 }

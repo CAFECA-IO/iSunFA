@@ -646,6 +646,7 @@
     "REPRESENTATIVE_ID_CERTIFICATE": "代表人{{type}}證明",
     "PASSPORT": "護照",
     "ID_CARD": "身份證",
-    "DRIVER_LICENSE": "駕駛執照"
+    "DRIVER_LICENSE": "駕駛執照",
+    "SELECT_REPRESENTATIVE_ID_TYPE": "選擇公司主要代表人的身份證明類型"
   }
 }

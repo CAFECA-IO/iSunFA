@@ -61,6 +61,7 @@ export enum APIName {
   SESSION_GET = 'SESSION_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
+  FILE_DELETE = 'FILE_DELETE',
   FILE_LIST_UPLOADED = 'FILE_LIST_UPLOADED',
 }
 
@@ -106,6 +107,7 @@ export enum APIPath {
   SESSION_GET = `${apiPrefix}/session`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
+  FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_LIST_UPLOADED = `${apiPrefix}/company/:companyId/file/`,
 }
 const createConfig = ({
@@ -337,6 +339,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.FILE_UPLOAD,
     method: HttpMethod.POST,
     path: APIPath.FILE_UPLOAD,
+  }),
+  [APIName.FILE_DELETE]: createConfig({
+    name: APIName.FILE_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.FILE_DELETE,
   }),
   [APIName.FILE_LIST_UPLOADED]: createConfig({
     name: APIName.FILE_LIST_UPLOADED,

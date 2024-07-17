@@ -43,6 +43,7 @@ export type IAPIName =
   | 'SESSION_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
+  | 'FILE_DELETE'
   | 'FILE_LIST_UPLOADED';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';

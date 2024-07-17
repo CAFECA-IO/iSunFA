@@ -1,22 +1,17 @@
+import { RepresentativeIDType } from '@/interfaces/kyc_document_type';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-enum DocumentType {
-  PASSPORT = 'passport',
-  ID_CARD = 'id_card',
-  DRIVER_LICENSE = 'driver_license',
-}
-
 type RadioOption = {
   label: string;
-  value: string;
+  value: RepresentativeIDType;
 };
 
 type RadioButtonGroupProps = {
   options: RadioOption[];
   name: string;
-  selectedValue: string;
-  onChange: (value: string) => void;
+  selectedValue: RepresentativeIDType;
+  onChange: (value: RepresentativeIDType) => void;
 };
 
 const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
@@ -52,19 +47,19 @@ const RadioButtonComponent = ({
   selectedValue,
   onChange,
 }: {
-  selectedValue: string;
-  onChange: (value: string) => void;
+  selectedValue: RepresentativeIDType;
+  onChange: (value: RepresentativeIDType) => void;
 }) => {
   const { t } = useTranslation('common');
   const radioOptions: RadioOption[] = [
-    { label: t('PASSWORD'), value: DocumentType.PASSPORT },
-    { label: t('ID_CARD'), value: DocumentType.ID_CARD },
-    { label: t('DRIVER_LICENSE'), value: DocumentType.DRIVER_LICENSE },
+    { label: t('KYC.PASSPORT'), value: RepresentativeIDType.PASSPORT },
+    { label: t('KYC.ID_CARD'), value: RepresentativeIDType.ID_CARD },
+    { label: t('KYC.DRIVER_LICENSE'), value: RepresentativeIDType.DRIVER_LICENSE },
   ];
   return (
-    <div className="rounded-lg bg-white p-6 shadow-md">
+    <div className="rounded-lg">
       <h2 className="mb-4 text-center text-lg font-medium text-gray-900">
-        What is the type the key company representative’s ID?
+        {t('KYC.SELECT_REPRESENTATIVE_ID_TYPE')}
       </h2>
       <RadioButtonGroup
         options={radioOptions}
