@@ -55,12 +55,13 @@ const DocumentUploadForm = ({
   // }, [uploadedFiles, getSuccess, getCode]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gray-100 p-6">
+    <div className="mb-10 flex flex-col items-center bg-gray-100">
       <div className="mb-8">
         <RadioButtonComponent
           selectedValue={data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}
           onChange={(type: RepresentativeIDType) =>
-            onChange(UploadDocumentKeys.REPRESENTATIVE_ID_TYPE, type)}
+            onChange(UploadDocumentKeys.REPRESENTATIVE_ID_TYPE, type)
+          }
         />
       </div>
       <div className="flex w-full max-w-3xl flex-col space-y-6">
@@ -72,7 +73,8 @@ const DocumentUploadForm = ({
             <UploadArea
               uploadFile={data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE].file}
               uploadHandler={(file: File | null, status: ProgressStatus) =>
-                onChange(UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE, { file, status })}
+                onChange(UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE, { file, status })
+              }
             />
           </div>
           <div>
@@ -82,7 +84,8 @@ const DocumentUploadForm = ({
             <UploadArea
               uploadFile={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE].file}
               uploadHandler={(file: File | null, status: ProgressStatus) =>
-                onChange(UploadDocumentKeys.TAX_STATUS_CERTIFICATE, { file, status })}
+                onChange(UploadDocumentKeys.TAX_STATUS_CERTIFICATE, { file, status })
+              }
             />
           </div>
         </div>
@@ -95,7 +98,8 @@ const DocumentUploadForm = ({
           <UploadArea
             uploadFile={data[UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE].file}
             uploadHandler={(file: File | null, status: ProgressStatus) =>
-              onChange(UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE, { file, status })}
+              onChange(UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE, { file, status })
+            }
           />
         </div>
       </div>
