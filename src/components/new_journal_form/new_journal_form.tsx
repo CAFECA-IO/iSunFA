@@ -19,7 +19,6 @@ import {
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
-import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
@@ -1074,33 +1073,29 @@ const NewJournalForm = () => {
 
   const displayedProjectSecondLine =
     selectedEventType === EventType.INCOME ? (
-      <div className="flex flex-col items-start gap-40px md:flex-row">
-        {/* Info: (20240502 - Julian) Progress */}
-        <ProgressBar progressRate={progressRate} setProgressRate={setProgressRate} />
-        {/* Info: (20240502 - Julian) Estimated Cost */}
-        <div className="flex w-full flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
-          <div
-            className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
-          >
-            <NumericInput
-              id="input-estimated-cost"
-              name="input-estimated-cost"
-              value={inputEstimatedCost}
-              setValue={setInputEstimatedCost}
-              isDecimal
-              className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+      /* Info: (20240502 - Julian) Estimated Cost */
+      <div className="flex w-full flex-col items-start gap-8px">
+        <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
+        <div
+          className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
+        >
+          <NumericInput
+            id="input-estimated-cost"
+            name="input-estimated-cost"
+            value={inputEstimatedCost}
+            setValue={setInputEstimatedCost}
+            isDecimal
+            className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+          />
+          <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+            <Image
+              src="/currencies/twd.svg"
+              width={16}
+              height={16}
+              alt="twd_icon"
+              className="rounded-full"
             />
-            <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-              <Image
-                src="/currencies/twd.svg"
-                width={16}
-                height={16}
-                alt="twd_icon"
-                className="rounded-full"
-              />
-              <p>{t('JOURNAL.TWD')}</p>
-            </div>
+            <p>{t('JOURNAL.TWD')}</p>
           </div>
         </div>
       </div>
