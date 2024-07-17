@@ -307,7 +307,11 @@
     "SALARY_ISUNFA": "薪資 - iSunFA"
   },
   "KYC": {
-    "KYC": "KYC"
+    "KYC": "KYC",
+    "DEFAULT": "City",
+    "GB": "United Kingdom",
+    "US": "United States",
+    "TW": "Taiwan"
   },
   "COMMON": {
     "OF": "之",
