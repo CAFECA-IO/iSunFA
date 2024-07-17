@@ -27,12 +27,14 @@ export enum ReportTypeToBaifaReportType {
   balance_sheet = 'balance',
   comprehensive_income_statement = 'comprehensive-income',
   cash_flow_statement = 'cash-flow',
+  change_in_equity_statement = 'change-in-equity'
 }
 
 export enum BaifaReportTypeToReportType {
   balance = 'balance_sheet',
   'comprehensive-income' = 'comprehensive_income_statement',
   'cash-flow' = 'cash_flow_statement',
+  'change-in-equity' = 'change_in_equity_statement'
 }
 
 // TODO: i18n (20240430 - Shirley)

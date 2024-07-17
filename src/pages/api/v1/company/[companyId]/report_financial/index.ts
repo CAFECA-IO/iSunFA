@@ -292,31 +292,37 @@ export function formatGetRequestQuery(req: NextApiRequest) {
   return { statusString, targetPageNumber, pageSizeNumber, sortByString, sortOrderString, startDateInSecondFromQuery, endDateInSecondFromQuery, searchQueryString };
 }
 
-export function mappingReportByFromTo(pendingReports: IReportIncludeProject[], generatedReports: IReportIncludeProject[]): Map<{ from: number, to: number }, IReportIncludeProject> {
-  const reportMap = new Map<{ from: number, to: number }, IReportIncludeProject>();
+function serializeMapKey(key: { from: number; to: number; companyId: number; type: string; reportType: string }) {
+  return JSON.stringify(key);
+}
+
+export function mappingReportByFromTo(pendingReports: IReportIncludeProject[], generatedReports: IReportIncludeProject[]): Map<string, IReportIncludeProject> {
+  const reportMap = new Map<string, IReportIncludeProject>();
   pendingReports.forEach((report) => {
-    reportMap.set({ from: report.from, to: report.to }, report);
+    reportMap.set(serializeMapKey({ from: report.from, to: report.to, companyId: report.companyId, type: report.type, reportType: report.reportType }), report);
   });
   generatedReports.forEach((report) => {
-    reportMap.set({ from: report.from, to: report.to }, report);
+    reportMap.set(serializeMapKey({ from: report.from, to: report.to, companyId: report.companyId, type: report.type, reportType: report.reportType }), report);
   });
   return reportMap;
 }
 
-export function getReportHasPreviousReport(reportMap: Map<{ from: number, to: number }, IReportIncludeProject>, reportsToBeFormat: IReportIncludeProject[]): Map<{ from: number, to: number }, IReportIncludeProject> {
-  const reportHasPreviousReport = new Map<{ from: number, to: number }, IReportIncludeProject>();
+export function getReportHasPreviousReport(reportMap: Map<string, IReportIncludeProject>, reportsToBeFormat: IReportIncludeProject[]): Map<string, IReportIncludeProject> {
+  const reportHasPreviousReport = new Map<string, IReportIncludeProject>();
   reportsToBeFormat.forEach((report) => {
     const reportType = report.reportType as ReportSheetType;
     const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(reportType, report.from, report.to);
-    const hasPreviousReport = reportMap.has({ from: lastPeriodStartDateInSecond, to: lastPeriodEndDateInSecond });
+
+    const hasPreviousReport = reportMap.has(serializeMapKey({ from: lastPeriodStartDateInSecond, to: lastPeriodEndDateInSecond, companyId: report.companyId, type: report.type, reportType: report.reportType }));
+
     if (hasPreviousReport) {
-      reportHasPreviousReport.set({ from: report.from, to: report.to }, report);
+      reportHasPreviousReport.set(serializeMapKey({ from: report.from, to: report.to, companyId: report.companyId, type: report.type, reportType: report.reportType }), report);
     }
   });
   return reportHasPreviousReport;
 }
 
-export function generateIBasicReport(status: ReportStatusType, reports: Map<{ from: number, to: number }, IReportIncludeProject>): IBasicReportItem[] {
+export function generateIBasicReport(status: ReportStatusType, reports: Map<string, IReportIncludeProject>): IBasicReportItem[] {
   const basicReportItems: IBasicReportItem[] = [];
   reports.forEach((report) => {
     switch (status) {
@@ -350,7 +356,9 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   const pendingData = await findManyReports(companyId, ReportStatusType.PENDING, targetPageNumber, pageSizeNumber, sortByString, sortOrderString, startDateInSecondFromQuery, endDateInSecondFromQuery, searchQueryString);
   const generatedData = await findManyReports(companyId, ReportStatusType.GENERATED, targetPageNumber, pageSizeNumber, sortByString, sortOrderString, startDateInSecondFromQuery, endDateInSecondFromQuery, searchQueryString);
   const reportMap = mappingReportByFromTo(pendingData.data, generatedData.data);
+
   const reportsToBeFormat = statusString === ReportStatusType.PENDING ? pendingData.data : generatedData.data;
+
   const reportHasPreviousReport = getReportHasPreviousReport(reportMap, reportsToBeFormat);
 
   const basicReportItems = generateIBasicReport(statusString, reportHasPreviousReport);
@@ -395,6 +403,7 @@ export default async function handler(
     switch (req.method) {
       case 'GET': {
         payload = await handleGetRequest(companyId, req);
+        statusMessage = STATUS_MESSAGE.CREATED;
         break;
       }
       case 'POST': {
