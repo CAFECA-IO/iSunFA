@@ -16,7 +16,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { IReport } from '@/interfaces/report';
+import { IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
 
@@ -53,7 +53,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const [reportData, setReportData] = React.useState<IReport>({
+  const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },
@@ -68,7 +68,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     data: reportFinancial,
     code: getFRCode,
     success: getFRSuccess,
-  } = APIHandler<IReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+  } = APIHandler<IReportOld>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId },
   });
 

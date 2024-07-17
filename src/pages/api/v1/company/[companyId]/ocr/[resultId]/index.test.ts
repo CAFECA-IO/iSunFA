@@ -50,7 +50,7 @@ describe('fetchOCRResult', () => {
     const resultId = 'validResultId';
     const mockResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ payload: "testPayload" }),
+      json: jest.fn().mockResolvedValue({ payload: 'testPayload' }),
     } as unknown as Response;
 
     global.fetch = jest.fn().mockResolvedValue(mockResponse);
@@ -60,14 +60,16 @@ describe('fetchOCRResult', () => {
       expect.stringContaining(`/api/v1/ocr/${resultId}/result`)
     );
 
-    expect(result).toEqual({ payload: "testPayload" });
+    expect(result).toEqual({ payload: 'testPayload' });
   });
 
   it('should throw an error if fetch fails', async () => {
     const resultId = 'validResultId';
     global.fetch = jest.fn().mockRejectedValue(new Error('Failed to fetch'));
 
-    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED
+    );
   });
 
   it('should throw an error if response is not ok', async () => {
@@ -77,27 +79,31 @@ describe('fetchOCRResult', () => {
     } as unknown as Response;
     global.fetch = jest.fn().mockResolvedValue(response);
 
-    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    await expect(module.fetchOCRResult(resultId)).rejects.toThrow(
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED
+    );
   });
 });
 
-describe("getPayloadFromResponseJSON", () => {
-  it("should return payload if responseJSON is valid", async () => {
-    const responseJSON = Promise.resolve({ payload: "testPayload" });
+describe('getPayloadFromResponseJSON', () => {
+  it('should return payload if responseJSON is valid', async () => {
+    const responseJSON = Promise.resolve({ payload: 'testPayload' });
     const result = await module.getPayloadFromResponseJSON(responseJSON);
 
-    expect(result).toEqual("testPayload");
+    expect(result).toEqual('testPayload');
   });
 
-  it("should throw an error if await responseJSON fails", async () => {
-    const responseJSON = Promise.reject(new Error("Failed to get responseJSON"));
+  it('should throw an error if await responseJSON fails', async () => {
+    const responseJSON = Promise.reject(new Error('Failed to get responseJSON'));
 
-    await expect(module.getPayloadFromResponseJSON(responseJSON)).rejects.toThrow(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
+    await expect(module.getPayloadFromResponseJSON(responseJSON)).rejects.toThrow(
+      STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR
+    );
   });
 });
 
-describe("setOCRResultJournalId", () => {
-  it("should set journalId to the OCR result", () => {
+describe('setOCRResultJournalId', () => {
+  it('should set journalId to the OCR result', () => {
     const ocrResult = {
       journalId: null,
     } as IInvoice;
@@ -109,8 +115,8 @@ describe("setOCRResultJournalId", () => {
   });
 });
 
-describe("formatOCRResultDate", () => {
-  it("should format the date in OCR result", () => {
+describe('formatOCRResultDate', () => {
+  it('should format the date in OCR result', () => {
     const mockSeconds = 1620000000;
     const ocrResult = {
       date: mockSeconds * 1000,
@@ -121,7 +127,7 @@ describe("formatOCRResultDate", () => {
     expect(ocrResult?.date).toEqual(mockSeconds);
   });
 
-  it("should not format the date in OCR result if date is already in seconds", () => {
+  it('should not format the date in OCR result if date is already in seconds', () => {
     const mockSeconds = 1620000000;
     const ocrResult = {
       date: mockSeconds,
@@ -133,16 +139,16 @@ describe("formatOCRResultDate", () => {
   });
 });
 
-describe("handleGetRequest", () => {
-  it("should handle GET request", async () => {
-    const resultId = "validResultId";
+describe('handleGetRequest', () => {
+  it('should handle GET request', async () => {
+    const resultId = 'validResultId';
     const mockInvoice: IInvoice = {
       journalId: null,
       date: 1620000000,
       eventType: EventType.INCOME,
-      paymentReason: "testPaymentReason",
-      description: "testDescription",
-      vendorOrSupplier: "testVendorOrSupplier",
+      paymentReason: 'testPaymentReason',
+      description: 'testDescription',
+      vendorOrSupplier: 'testVendorOrSupplier',
       projectId: null,
       project: null,
       contractId: null,
@@ -154,7 +160,7 @@ describe("handleGetRequest", () => {
         taxPercentage: 5,
         hasFee: true,
         fee: 100,
-        method: "testMethod",
+        method: 'testMethod',
         period: PaymentPeriodType.AT_ONCE,
         installmentPeriod: 1,
         alreadyPaid: 0,
@@ -169,7 +175,7 @@ describe("handleGetRequest", () => {
       json: jest.fn().mockResolvedValue(mockPayload),
     } as unknown as Response;
 
-  const mockResult = {
+    const mockResult = {
       powerby: 'ISunFa',
       success: true,
       code: '201',
@@ -181,7 +187,7 @@ describe("handleGetRequest", () => {
       result: mockResult,
     };
     global.fetch = jest.fn().mockResolvedValue(mockFetchResponse);
-    jest.spyOn(common, "formatApiResponse").mockReturnValue(mockResponse);
+    jest.spyOn(common, 'formatApiResponse').mockReturnValue(mockResponse);
 
     await module.handleGetRequest(resultId, res);
 

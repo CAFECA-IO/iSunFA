@@ -37,8 +37,8 @@ model Account {
 model Asset {
   id                 Int    @id @default(autoincrement())
   voucherId          Int    @map("voucher_id")
-  projectId          Int?    @map("project_id")
-  contractId         Int?    @map("contract_id")
+  projectId          Int?   @map("project_id")
+  contractId         Int?   @map("contract_id")
   name               String
   label              String
   type               String
@@ -55,7 +55,7 @@ model Asset {
 
   contract Contract? @relation(fields: [contractId], references: [id])
   project  Project?  @relation(fields: [projectId], references: [id])
-  voucher  Voucher  @relation(fields: [voucherId], references: [id])
+  voucher  Voucher   @relation(fields: [voucherId], references: [id])
 
   @@map("asset")
 }
@@ -132,6 +132,7 @@ model Company {
   companySettings CompanySetting[]
   incomeExpenses  IncomeExpense[]
   accounts        Account[]
+  reports         Report[]
 
   @@map("company")
 }
@@ -486,6 +487,7 @@ model Role {
 
 model Report {
   id                     Int           @id @default(autoincrement())
+  companyId              Int           @map("company_id")
   tokenContract          String?       @map("token_contract")
   tokenId                String?       @map("token_id")
   name                   String
@@ -501,10 +503,12 @@ model Report {
   downloadLink           String?       @map("download_link")
   blockChainExplorerLink String?       @map("block_chain_explorer_link")
   evidenceId             String?       @map("evidence_id")
+  content                Json          @map("content")
   createdAt              Int           @map("created_at")
   updatedAt              Int           @map("updated_at")
-  project                Project?      @relation(fields: [projectId], references: [id])
   auditReports           AuditReport[]
+  company                Company       @relation(fields: [companyId], references: [id])
+  project                Project?      @relation(fields: [projectId], references: [id])
 
   @@map("report")
 }

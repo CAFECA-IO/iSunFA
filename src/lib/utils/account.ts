@@ -90,33 +90,39 @@ export function updateAccountAmountsInSingleTree(
 }
 
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
-  const updatedForest = forest.map((account) => updateAccountAmountsInSingleTree(account, lineItemsMap));
+  const updatedForest = forest.map((account) =>
+    updateAccountAmountsInSingleTree(account, lineItemsMap)
+  );
   return updatedForest;
 }
 
 export function addAccountNodeToMapRecursively(
-  accountMap: Map<string, IAccountNode>,
-  account: IAccountNode
+  accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
+  account: IAccountNode,
+  rootAmount: number
 ) {
   const newAccountNode = { ...account, children: [] };
-  accountMap.set(account.code, newAccountNode);
+  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount;
+  accountMap.set(account.code, { accountNode: newAccountNode, percentage });
   account.children.forEach((child) => {
-    addAccountNodeToMapRecursively(accountMap, child);
+    addAccountNodeToMapRecursively(accountMap, child, rootAmount);
   });
 }
 
-export function transformForestToMap(forest: IAccountNode[]): Map<string, IAccountNode> {
-  const accountMap = new Map<string, IAccountNode>();
+export function transformForestToMap(
+  forest: IAccountNode[]
+): Map<string, { accountNode: IAccountNode; percentage: number }> {
+  const accountMap = new Map<string, { accountNode: IAccountNode; percentage: number }>();
 
   forest.forEach((accountNode) => {
-    addAccountNodeToMapRecursively(accountMap, accountNode);
+    addAccountNodeToMapRecursively(accountMap, accountNode, accountNode.amount);
   });
 
   return accountMap;
 }
 
 export function mappingAccountToSheetDisplay(
-  accountMap: Map<string, IAccountNode>,
+  accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
   sheetMappingRow: {
     code: string;
     name: string;
@@ -126,16 +132,6 @@ export function mappingAccountToSheetDisplay(
   const sheetDisplay: IAccountForSheetDisplay[] = [];
 
   sheetMappingRow.forEach((row) => {
-    if (!row.code) {
-      sheetDisplay.push({
-        code: row.code,
-        name: row.name,
-        amount: null,
-        indent: row.indent,
-        debit: undefined,
-      });
-      return;
-    }
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
@@ -144,6 +140,7 @@ export function mappingAccountToSheetDisplay(
         amount: 0,
         indent: row.indent,
         debit: undefined,
+        percentage: 0,
       });
       return;
     }
@@ -151,9 +148,10 @@ export function mappingAccountToSheetDisplay(
     sheetDisplay.push({
       code: row.code,
       name: row.name,
-      amount: account.amount,
+      amount: account.accountNode.amount,
       indent: row.indent,
-      debit: account.debit,
+      debit: account.accountNode.debit,
+      percentage: account.percentage,
     });
   });
 
