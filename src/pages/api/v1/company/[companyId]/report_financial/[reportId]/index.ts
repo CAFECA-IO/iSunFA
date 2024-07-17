@@ -8,6 +8,9 @@ import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
 import { IReport } from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
+import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
+import incomeStatementLiteMapping from '@/constants/account_sheet_mapping/income_statement_lite_mapping.json';
 
 export function formatGetRequestQueryParams(req: NextApiRequest) {
     const { reportId } = req.query;
@@ -85,38 +88,91 @@ export function generateIAccountReadyForFrontendArray(curPeriodReport: IReport |
     return curPeriodAccountReadyForFrontendArray;
 }
 
-export function generateIAccountReadyForFrontendMap(accounts: IAccountReadyForFrontend[]): Map<string, IAccountReadyForFrontend> {
+export function getReportTypeFromReport(report: IReport | null) {
+    let reportType = ReportSheetType.BALANCE_SHEET;
+    if (report) {
+        reportType = report.reportType;
+    }
+    return reportType;
+}
+
+export function getMappingByReportType(reportType: ReportSheetType): {
+    code: string;
+    name: string;
+    indent: number;
+}[] {
+    let mapping = balanceSheetLiteMapping;
+    switch (reportType) {
+        case ReportSheetType.BALANCE_SHEET:
+            mapping = balanceSheetLiteMapping;
+            break;
+        case ReportSheetType.CASH_FLOW_STATEMENT:
+            mapping = cashFlowStatementLiteMapping;
+            break;
+        case ReportSheetType.INCOME_STATEMENT:
+            mapping = incomeStatementLiteMapping;
+            break;
+        default:
+            break;
+    }
+    return mapping;
+}
+
+export function transformDetailsIntoGeneral(reportType: ReportSheetType, accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] {
+    const mapping = getMappingByReportType(reportType);
     const accountMap = new Map<string, IAccountReadyForFrontend>();
     accounts.forEach((account) => {
         if (account.code.length > 0) {
             accountMap.set(account.code, account);
         }
     });
-    return accountMap;
+
+    const general: IAccountReadyForFrontend[] = mapping.map((account) => {
+        const accountCode = account.code;
+        const accountInfo = accountMap.get(accountCode);
+        if (accountInfo) {
+            return accountInfo;
+        }
+        return {
+            code: accountCode,
+            name: account.name,
+            curPeriodAmount: 0,
+            curPeriodAmountString: '0',
+            curPeriodPercentage: 0,
+            prePeriodAmount: 0,
+            prePeriodAmountString: '0',
+            prePeriodPercentage: 0,
+            indent: account.indent
+        };
+    });
+    return general;
 }
 
 export async function handleGETRequest(companyId: number, req: NextApiRequest) {
-    let resultReportArray: IAccountReadyForFrontend[] = [];
+    let details: IAccountReadyForFrontend[] = [];
+    let general: IAccountReadyForFrontend[] = [];
+    let reportType: ReportSheetType = ReportSheetType.BALANCE_SHEET;
 
     const { reportIdNumber } = formatGetRequestQueryParams(req);
 
     if (reportIdNumber !== null) {
         const { curPeriodReport, lastPeriodReport } = await getCurrentAndLastPeriodReport(reportIdNumber);
 
-        resultReportArray = generateIAccountReadyForFrontendArray(curPeriodReport, lastPeriodReport);
+        details = generateIAccountReadyForFrontendArray(curPeriodReport, lastPeriodReport);
+        reportType = getReportTypeFromReport(curPeriodReport);
     }
 
-    const resultReportMap = generateIAccountReadyForFrontendMap(resultReportArray);
+    general = transformDetailsIntoGeneral(reportType, details);
 
     return {
-        resultReportArray,
-        resultReportMap
+        general,
+        details
     };
 }
 
 interface APIResponse {
-        resultReportArray: IAccountReadyForFrontend[];
-        resultReportMap: Map<string, IAccountReadyForFrontend>;
+        general: IAccountReadyForFrontend[];
+        details: IAccountReadyForFrontend[];
     }
 
 export default async function handler(
@@ -124,9 +180,9 @@ export default async function handler(
   res: NextApiResponse<IResponseData< APIResponse >>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  const payload: APIResponse = {
-    resultReportArray: [],
-    resultReportMap: new Map<string, IAccountReadyForFrontend>(),
+  let payload: APIResponse = {
+    general: [],
+    details: [],
   };
   try {
     const session = await getSession(req, res);
@@ -135,9 +191,8 @@ export default async function handler(
     // ToDo: (20240703 - Murky) Need to check Auth
     switch (req.method) {
       case 'GET': {
-        const { resultReportArray, resultReportMap } = await handleGETRequest(companyId, req);
-        payload.resultReportArray = resultReportArray;
-        payload.resultReportMap = resultReportMap;
+        payload = await handleGETRequest(companyId, req);
+
         statusMessage = STATUS_MESSAGE.CREATED;
         break;
       }

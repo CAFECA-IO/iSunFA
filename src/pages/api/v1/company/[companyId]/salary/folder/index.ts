@@ -62,9 +62,10 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<
-      IFolder | IFolder[] | null
-    >(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IFolder | IFolder[] | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

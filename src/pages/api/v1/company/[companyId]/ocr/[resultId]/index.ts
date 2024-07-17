@@ -3,7 +3,11 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvoice } from '@/interfaces/invoice';
-import { formatApiResponse, timestampInSeconds, transformBytesToFileSizeString } from '@/lib/utils/common';
+import {
+  formatApiResponse,
+  timestampInSeconds,
+  transformBytesToFileSizeString,
+} from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { IContract } from '@/interfaces/contract';
@@ -110,7 +114,7 @@ export async function handleGetRequest(
 
 export async function handleDeleteRequest(
   resultId: string,
-  res: NextApiResponse<IResponseData<IOCR>>,
+  res: NextApiResponse<IResponseData<IOCR>>
 ) {
   let payload: IOCR | null = null;
   const getOCR = await getOcrByResultId(resultId);
@@ -154,7 +158,7 @@ export default async function handler(
         await handleGetRequest(resultId, res, type as string);
         break;
       }
-      case "DELETE": {
+      case 'DELETE': {
         await handleDeleteRequest(resultId, res);
         break;
       }

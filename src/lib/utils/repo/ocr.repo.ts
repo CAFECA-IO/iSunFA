@@ -110,9 +110,9 @@ export async function createOcrInPrisma(
 
 export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
   const ocr = await prisma.ocr.delete({
-      where: {
-        aichResultId,
-      },
-    });
+    where: {
+      aichResultId,
+    },
+  });
   return ocr;
 }
