@@ -6,10 +6,10 @@ import { useTranslation } from 'next-i18next';
 
 // Info: (240717 - Liz) 翻譯對應的城市選項
 const cityTranslationMap: { [key in CityOptions]: string } = {
-  [CityOptions.DEFAULT]: 'KYC.DEFAULT',
-  [CityOptions.GB]: 'KYC.GB',
-  [CityOptions.US]: 'KYC.US',
-  [CityOptions.TW]: 'KYC.TW',
+  [CityOptions.DEFAULT]: 'KYC.CITY_DEFAULT',
+  [CityOptions.GB]: 'KYC.CITY_GB',
+  [CityOptions.US]: 'KYC.CITY_US',
+  [CityOptions.TW]: 'KYC.CITY_TW',
 };
 
 const BasicInfoForm = ({
@@ -66,7 +66,7 @@ const BasicInfoForm = ({
     <section className="flex w-600px flex-col gap-40px">
       {/* Legal Company Name */}
       <div className="space-y-8px">
-        <p className="text-sm font-semibold text-input-text-primary">Legal Company Name</p>
+        <h6 className="text-sm font-semibold text-input-text-primary">Legal Company Name</h6>
         <input
           id="legal-company-name"
           type="text"
@@ -81,7 +81,7 @@ const BasicInfoForm = ({
       <div className="flex gap-20px">
         {/* City */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-input-text-primary">Company Address</p>
+          <h6 className="text-sm font-semibold text-input-text-primary">Company Address</h6>
           <div
             id="city-menu"
             onClick={cityMenuOpenHandler}
@@ -109,7 +109,7 @@ const BasicInfoForm = ({
 
         {/* Zip Code */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-input-text-primary">Zip Code</p>
+          <h6 className="text-sm font-semibold text-input-text-primary">Zip Code</h6>
           <input
             id="zip-code"
             type="text"
@@ -135,9 +135,9 @@ const BasicInfoForm = ({
 
       {/* ===== Key Company Representative’s Name ===== */}
       <div className="space-y-8px">
-        <p className="text-sm font-semibold text-input-text-primary">
+        <h6 className="text-sm font-semibold text-input-text-primary">
           Key Company Representative’s Name
-        </p>
+        </h6>
         <input
           id="key-company-representatives-name"
           type="text"
