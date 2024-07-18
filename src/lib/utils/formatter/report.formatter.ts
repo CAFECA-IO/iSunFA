@@ -2,9 +2,9 @@ import { ReportSheetType, ReportSheetTypeFinancialFinancialReportTypesKeyMapping
 import { IReport, IReportIncludeProject } from "@/interfaces/report";
 import { Report } from "@prisma/client";
 import { isReportSheetType, isReportType } from "@/lib/utils/type_guard/report";
-import { IAccountForSheetDisplay } from "@/interfaces/accounting_account";
-import { isIAccountForSheetDisplayArray } from "@/lib/utils/type_guard/account";
-import { IPendingReportItem, IGeneratedReportItem, IBasicReportItem } from "@/interfaces/report_item";
+import { IAccountReadyForFrontend } from "@/interfaces/accounting_account";
+import { isIAccountReadyForFrontendArray } from "@/lib/utils/type_guard/account";
+import { IPendingReportItem, IGeneratedReportItem, IBasicReportItem, IPaginatedPendingReportItem, IPaginatedGeneratedReportItem } from "@/interfaces/report_item";
 
 export function formatIReport(report: Report): IReport {
   const type: ReportType = isReportType(report.reportType)
@@ -14,7 +14,7 @@ export function formatIReport(report: Report): IReport {
     ? report.reportType
     : ReportSheetType.BALANCE_SHEET;
   const reportContent = JSON.parse(report.content as string);
-  const content: IAccountForSheetDisplay[] = isIAccountForSheetDisplayArray(reportContent)
+  const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent)
     ? reportContent
     : [];
   const formattedReport: IReport = {
@@ -87,4 +87,22 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
         evidenceId: report.evidenceId || '',
     };
     return reportItem;
+}
+
+export function formatIPaginatedPendingReportItem(pendingItems: IPendingReportItem[], page: number, totalPages: number): IPaginatedPendingReportItem {
+    const paginatedPendingReportItem: IPaginatedPendingReportItem = {
+      data: pendingItems,
+      page,
+      totalPages
+    };
+    return paginatedPendingReportItem;
+}
+
+export function formatIPaginatedGeneratedReportItem(generatedItems: IGeneratedReportItem[], page: number, totalPages: number): IPaginatedGeneratedReportItem {
+    const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
+      data: generatedItems,
+      page,
+      totalPages
+    };
+    return paginatedGeneratedReportItem;
 }
