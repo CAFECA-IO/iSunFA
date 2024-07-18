@@ -53,10 +53,6 @@ const AccountingTitlePageBody = () => {
   const liabilityDropmenuToggleHandler = () => setLiabilityVisible(!liabilityVisible);
   const equityDropmenuToggleHandler = () => setEquityVisible(!equityVisible);
 
-  const favoriteAccountingTitleData = dummyAccountingTitleData.filter(
-    (account) => account.isFavorite
-  );
-
   const assetDropmenu = (
     <div
       ref={assetRef}
@@ -200,7 +196,7 @@ const AccountingTitlePageBody = () => {
       </div>
       {/* Info: (20240717 - Julian) Favorite Accounting Table */}
       <AccountingTitleTable
-        accountingTitleData={favoriteAccountingTitleData}
+        accountingTitleData={dummyAccountingTitleData.slice(0, 3)}
         actionType={ActionType.FAV_AND_ADD}
       />
       {/* Info: (20240717 - Julian) My new accounting title Divider */}

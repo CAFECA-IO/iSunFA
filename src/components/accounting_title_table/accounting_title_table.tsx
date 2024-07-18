@@ -27,6 +27,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     addAccountTitleModalVisibilityHandler,
     addAccountTitleDataHandler,
     editAccountTitleModalVisibilityHandler,
+    editAccountTitleDataHandler,
     messageModalDataHandler,
     messageModalVisibilityHandler,
   } = useGlobalCtx();
@@ -45,6 +46,11 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   const handleAddAccount = () => {
     addAccountTitleDataHandler(id);
     addAccountTitleModalVisibilityHandler();
+  };
+
+  const handleEditAccount = () => {
+    editAccountTitleDataHandler(id);
+    editAccountTitleModalVisibilityHandler();
   };
 
   const handleRemove = () => {
@@ -97,7 +103,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         <button
           type="button"
           className="group flex items-center gap-4px text-checkbox-text-secondary"
-          onClick={editAccountTitleModalVisibilityHandler}
+          onClick={handleEditAccount}
         >
           <FiEdit className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">Edit</p>
@@ -144,7 +150,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         <button
           type="button"
           className="flex items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
-          onClick={editAccountTitleModalVisibilityHandler}
+          onClick={handleEditAccount}
         >
           <FiEdit />
         </button>

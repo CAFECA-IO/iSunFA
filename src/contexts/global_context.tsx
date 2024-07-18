@@ -117,6 +117,7 @@ interface IGlobalContext {
 
   isEditAccountTitleModalVisible: boolean;
   editAccountTitleModalVisibilityHandler: () => void;
+  editAccountTitleDataHandler: (id: number) => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -213,6 +214,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [addAccountTitleId, setAddAccountTitleId] = useState(0);
 
   const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
+  const [editAccountTitleId, setEditAccountTitleId] = useState(0);
 
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
@@ -325,6 +327,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const editAccountTitleModalVisibilityHandler = () => {
     setIsEditAccountTitleModalVisible(!isEditAccountTitleModalVisible);
+  };
+
+  const editAccountTitleDataHandler = (id: number) => {
+    setEditAccountTitleId(id);
   };
 
   const teamSettingModalVisibilityHandler = () => {
@@ -585,6 +591,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addAccountTitleDataHandler,
     isEditAccountTitleModalVisible,
     editAccountTitleModalVisibilityHandler,
+    editAccountTitleDataHandler,
     toastHandler,
     eliminateToast,
 
@@ -724,6 +731,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <EditAccountTitleModal
         isModalVisible={isEditAccountTitleModalVisible}
         modalVisibilityHandler={editAccountTitleModalVisibilityHandler}
+        modalData={{ accountId: editAccountTitleId }}
       />
 
       <TeamSettingModal
