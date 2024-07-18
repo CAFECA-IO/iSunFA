@@ -2,7 +2,7 @@ import { useState } from 'react';
 import KYCStepper from '@/components/kyc/kyc_stepper';
 import KYCFormController from '@/components/kyc/kyc_form_controller';
 import { BasicInfoKeys, IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
-import BacicInfoForm from '@/components/kyc/basic_info_form';
+import BasicInfoForm from '@/components/kyc/basic_info_form';
 import {
   initialRegistrationInfo,
   IRegistrationInfo,
@@ -39,7 +39,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
       <form>
-        {step === 0 && <BacicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
+        {step === 0 && <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
         {step === 1 && (
           <RegistrationInfoForm
             data={registrationInfoValues}

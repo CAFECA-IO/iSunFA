@@ -14,7 +14,7 @@ const ContractStatusBlock = ({ status, contracts }: IContractStatusBlockProps) =
   return (
     <div className="flex w-full flex-col gap-8px rounded-sm bg-surface-neutral-surface-lv2 px-20px py-24px">
       <h2 className="text-xl font-semibold text-text-neutral-tertiary">{status}</h2>
-      <hr className="my-10px bg-divider-stroke-lv-4" />
+      <hr className="my-10px border-divider-stroke-lv-4" />
       <div className="flex w-full items-center gap-10px overflow-x-auto scroll-smooth">
         {contractList.map((contract) => (
           <ContractCard key={contract.id} style={Layout.GRID} contract={contract} />

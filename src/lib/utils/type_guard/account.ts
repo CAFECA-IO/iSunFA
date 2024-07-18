@@ -77,19 +77,25 @@ export function isIAccountForSheetDisplayArray(value: unknown): value is IAccoun
   return value.every((item) => isIAccountForSheetDisplay(item));
 }
 
-export function assertIsIAccountResultStatus(value: unknown): asserts value is IAccountResultStatus {
+export function assertIsIAccountResultStatus(
+  value: unknown
+): asserts value is IAccountResultStatus {
   if (!isIAccountResultStatus(value)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
 }
 
-export function assertIsIAccountForSheetDisplay(value: unknown): asserts value is IAccountForSheetDisplay {
+export function assertIsIAccountForSheetDisplay(
+  value: unknown
+): asserts value is IAccountForSheetDisplay {
   if (!isIAccountForSheetDisplay(value)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
 }
 
-export function assertIsIAccountForSheetDisplayArray(value: unknown): asserts value is IAccountForSheetDisplay[] {
+export function assertIsIAccountForSheetDisplayArray(
+  value: unknown
+): asserts value is IAccountForSheetDisplay[] {
   if (!isIAccountForSheetDisplayArray(value)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }

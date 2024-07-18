@@ -1,3 +1,5 @@
+import { CityOptions } from '@/constants/kyc';
+
 export enum BasicInfoKeys {
   LEGAL_COMPANY_NAME = 'legalCompanyName',
   CITY = 'city',
@@ -8,7 +10,7 @@ export enum BasicInfoKeys {
 
 export interface IBasicInfo {
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: string;
-  [BasicInfoKeys.CITY]: string;
+  [BasicInfoKeys.CITY]: CityOptions;
   [BasicInfoKeys.ZIP_CODE]: string;
   [BasicInfoKeys.STREET]: string;
   [BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME]: string;
@@ -16,7 +18,7 @@ export interface IBasicInfo {
 
 export const initialBasicInfo: IBasicInfo = {
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: '',
-  [BasicInfoKeys.CITY]: '',
+  [BasicInfoKeys.CITY]: CityOptions.DEFAULT,
   [BasicInfoKeys.ZIP_CODE]: '',
   [BasicInfoKeys.STREET]: '',
   [BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME]: '',

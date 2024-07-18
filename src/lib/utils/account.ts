@@ -90,12 +90,14 @@ export function updateAccountAmountsInSingleTree(
 }
 
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
-  const updatedForest = forest.map((account) => updateAccountAmountsInSingleTree(account, lineItemsMap));
+  const updatedForest = forest.map((account) => {
+    return updateAccountAmountsInSingleTree(account, lineItemsMap);
+  });
   return updatedForest;
 }
 
 export function addAccountNodeToMapRecursively(
-  accountMap: Map<string, { accountNode: IAccountNode, percentage: number }>,
+  accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
   account: IAccountNode,
   rootAmount: number
 ) {
@@ -107,8 +109,10 @@ export function addAccountNodeToMapRecursively(
   });
 }
 
-export function transformForestToMap(forest: IAccountNode[]): Map<string, { accountNode: IAccountNode, percentage: number }> {
-  const accountMap = new Map<string, { accountNode: IAccountNode, percentage: number }>();
+export function transformForestToMap(
+  forest: IAccountNode[]
+): Map<string, { accountNode: IAccountNode; percentage: number }> {
+  const accountMap = new Map<string, { accountNode: IAccountNode; percentage: number }>();
 
   forest.forEach((accountNode) => {
     addAccountNodeToMapRecursively(accountMap, accountNode, accountNode.amount);
@@ -118,7 +122,7 @@ export function transformForestToMap(forest: IAccountNode[]): Map<string, { acco
 }
 
 export function mappingAccountToSheetDisplay(
-  accountMap: Map<string, { accountNode: IAccountNode, percentage: number }>,
+  accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
   sheetMappingRow: {
     code: string;
     name: string;

@@ -205,16 +205,16 @@ const JournalItem = ({ event, isChecked, checkHandler, companyId, journal }: IJo
             fill="#C84949"
           />
         </svg>
-        <p>{t('JOURNAL.PAYMENT')}</p>
+        <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT')}</p>
       </div>
     ) : // Info: (20240517 - Julian) 收入
     eventType === EventType.INCOME ? (
       <div className="flex w-fit items-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="40"
-          height="40"
-          viewBox="0 0 40 40"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
           fill="none"
         >
           <path
@@ -224,7 +224,7 @@ const JournalItem = ({ event, isChecked, checkHandler, companyId, journal }: IJo
             fill="#3CA876"
           />
         </svg>
-        <p>{t('JOURNAL.RECEIVING')}</p>
+        <p className="whitespace-nowrap">{t('JOURNAL.RECEIVING')}</p>
       </div>
     ) : // Info: (20240517 - Julian) 轉帳
     eventType === EventType.TRANSFER ? (
@@ -243,7 +243,7 @@ const JournalItem = ({ event, isChecked, checkHandler, companyId, journal }: IJo
             fill="#002462"
           />
         </svg>
-        <p>{t('JOURNAL.TRANSFER')}</p>
+        <p className="whitespace-nowrap">{t('JOURNAL.TRANSFER')}</p>
       </div>
     ) : null;
 
