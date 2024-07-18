@@ -7,11 +7,6 @@ import {
   UploadDocumentKeys,
 } from '@/interfaces/kyc_document_type';
 import { ProgressStatus } from '@/constants/account';
-// import APIHandler from '@/lib/utils/api_handler';
-// import { APIName } from '@/constants/api_connection';
-// import { ToastType } from '@/interfaces/toastify';
-// import { useGlobalCtx } from '@/contexts/global_context';
-// import { useUserCtx } from '@/contexts/user_context';
 
 const DocumentUploadForm = ({
   data,
@@ -20,48 +15,50 @@ const DocumentUploadForm = ({
   data: IUploadDocuments;
   onChange: (
     key: UploadDocumentKeys,
-    value: { file: File | null; status: ProgressStatus } | RepresentativeIDType
+    value:
+      | { file: File | null; status: ProgressStatus | null; fileId: string | null }
+      | RepresentativeIDType
   ) => void;
 }) => {
-  // const { toastHandler } = useGlobalCtx();
-  // const { selectedCompany } = useUserCtx();
-  // const {
-  //   data: uploadedFiles,
-  //   success: getSuccess,
-  //   code: getCode,
-  // } = APIHandler<KYCDocuments>(
-  //   APIName.FILE_LIST_UPLOADED,
-  //   {
-  //     params: {
-  //       companyId: selectedCompany?.id,
-  //     },
-  //   },
-  //   false
-  // );
   const { t } = useTranslation('common');
 
-  // useEffect(() => {
-  //   if (getSuccess && uploadedFiles) {
-  //     setUploadFiles(uploadedFiles);
-  //   }
-  //   if (getSuccess === false) {
-  //     toastHandler({
-  //       id: `listUploadedFiles-${getCode}`,
-  //       content: `Failed to list uploaded files: ${getCode}`,
-  //       type: ToastType.ERROR,
-  //       closeable: true,
-  //     });
-  //   }
-  // }, [uploadedFiles, getSuccess, getCode]);
+  const representativeTypeChangeHandler = (type: RepresentativeIDType) =>
+    onChange(UploadDocumentKeys.REPRESENTATIVE_ID_TYPE, type);
+
+  const bussinessRegistrationUploadHandler = (
+    file: File | null,
+    status: ProgressStatus | null,
+    fileId: string | null
+  ) =>
+    onChange(UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE, {
+      file,
+      status,
+      fileId,
+    });
+
+  const taxStatusUploadHandler = (
+    file: File | null,
+    status: ProgressStatus | null,
+    fileId: string | null
+  ) => onChange(UploadDocumentKeys.TAX_STATUS_CERTIFICATE, { file, status, fileId });
+
+  const representativeUploadHandler = (
+    file: File | null,
+    status: ProgressStatus | null,
+    fileId: string | null
+  ) =>
+    onChange(UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE, {
+      file,
+      status,
+      fileId,
+    });
 
   return (
-    <div className="mb-10 flex flex-col items-center bg-gray-100">
+    <div className="mb-14 flex flex-col items-center bg-gray-100">
       <div className="mb-8">
         <RadioButtonComponent
           selectedValue={data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}
-          onChange={(type: RepresentativeIDType) =>
-            onChange(UploadDocumentKeys.REPRESENTATIVE_ID_TYPE, type)
-          }
+          onChange={representativeTypeChangeHandler}
         />
       </div>
       <div className="flex w-full max-w-3xl flex-col space-y-6">
@@ -71,10 +68,9 @@ const DocumentUploadForm = ({
               {t('KYC.BUSINESS_REGISTRATION_CERTIFICATE')}
             </h3>
             <UploadArea
+              type={UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE}
               uploadFile={data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE].file}
-              uploadHandler={(file: File | null, status: ProgressStatus) =>
-                onChange(UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE, { file, status })
-              }
+              uploadHandler={bussinessRegistrationUploadHandler}
             />
           </div>
           <div>
@@ -82,10 +78,9 @@ const DocumentUploadForm = ({
               {t('KYC.TAX_STATUS_CERTIFICATE')}
             </h3>
             <UploadArea
+              type={UploadDocumentKeys.TAX_STATUS_CERTIFICATE}
               uploadFile={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE].file}
-              uploadHandler={(file: File | null, status: ProgressStatus) =>
-                onChange(UploadDocumentKeys.TAX_STATUS_CERTIFICATE, { file, status })
-              }
+              uploadHandler={taxStatusUploadHandler}
             />
           </div>
         </div>
@@ -96,10 +91,9 @@ const DocumentUploadForm = ({
             })}
           </h3>
           <UploadArea
+            type={UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE}
             uploadFile={data[UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE].file}
-            uploadHandler={(file: File | null, status: ProgressStatus) =>
-              onChange(UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE, { file, status })
-            }
+            uploadHandler={representativeUploadHandler}
           />
         </div>
       </div>

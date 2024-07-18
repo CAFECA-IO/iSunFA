@@ -33,9 +33,11 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
               value={option.value}
               checked={selectedValue === option.value}
               onChange={() => onChange(option.value)}
-              className="h-5 w-5 text-blue-600"
+              className="h-5 w-5 text-primaryYellow5"
             />
-            <label htmlFor={id}>{option.label}</label>
+            <label htmlFor={id} className="text-primaryYellow5">
+              {option.label}
+            </label>
           </div>
         );
       })}

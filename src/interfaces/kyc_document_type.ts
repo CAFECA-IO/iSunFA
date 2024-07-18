@@ -38,20 +38,27 @@ export interface IUploadDocuments {
   [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE]: {
     file: File | null;
     status: ProgressStatus | null;
+    fileId: string | null;
   };
   [UploadDocumentKeys.TAX_STATUS_CERTIFICATE]: {
     file: File | null;
     status: ProgressStatus | null;
+    fileId: string | null;
   };
   [UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE]: {
     file: File | null;
     status: ProgressStatus | null;
+    fileId: string | null;
   };
 }
 
 export const initialUploadDocuments: IUploadDocuments = {
   [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]: RepresentativeIDType.PASSPORT,
-  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE]: { file: null, status: null },
-  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE]: { file: null, status: null },
-  [UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE]: { file: null, status: null },
+  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE]: {
+    file: null,
+    status: null,
+    fileId: null,
+  },
+  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE]: { file: null, status: null, fileId: null },
+  [UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE]: { file: null, status: null, fileId: null },
 };

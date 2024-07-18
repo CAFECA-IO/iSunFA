@@ -5,23 +5,64 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ProgressStatus } from '@/constants/account';
 import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
+import { UploadDocumentKeys } from '@/interfaces/kyc_document_type';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { IAccountResultStatus } from '@/interfaces/accounting_account';
 
 const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
 
+const sizeFormatter = (size: number): string => {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  } else if (size >= 1024) {
+    return `${(size / 1024).toFixed(2)} KB`;
+  } else {
+    return `${size} Bytes`;
+  }
+};
+
 const UploadArea = ({
+  type,
   uploadFile,
   uploadHandler,
 }: {
+  type: UploadDocumentKeys;
   uploadFile: File | null;
-  uploadHandler: (file: File | null, status: ProgressStatus) => void;
+  uploadHandler: (file: File | null, status: ProgressStatus | null, fileId: string | null) => void;
 }) => {
   const { t } = useTranslation('common');
+  const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isError, setIsError] = useState<boolean>(false);
   const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const readerRef = useRef<FileReader | null>(null);
+  const { trigger: uploadFileAPI } = APIHandler<IAccountResultStatus>(
+    APIName.FILE_UPLOAD,
+    {},
+    false,
+    false
+  );
+  const { trigger: deleteFileAPI } = APIHandler<void>(APIName.FILE_DELETE, {}, false, false);
+  const [fileId, setFileId] = useState<string | null>(null);
+
+  const handleError = useCallback(
+    (code: string | undefined) => {
+      setIsError(true);
+      messageModalDataHandler({
+        title: 'Upload File Failed',
+        content: `File read failed${code ? ` , error code: ${code}` : ''}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    },
+    [messageModalDataHandler, messageModalVisibilityHandler]
+  );
 
   const handleUploadFile = useCallback(
     async (file: File) => {
@@ -37,7 +78,7 @@ const UploadArea = ({
         return;
       }
 
-      uploadHandler(file, ProgressStatus.IN_PROGRESS);
+      uploadHandler(file, ProgressStatus.IN_PROGRESS, null);
 
       const reader = new FileReader();
       readerRef.current = reader;
@@ -52,19 +93,30 @@ const UploadArea = ({
       reader.onloadend = async () => {
         if (reader.readyState === FileReader.DONE) {
           setUploadProgress(100);
-          uploadHandler(file, ProgressStatus.SUCCESS);
+          // uploadHandler(file, ProgressStatus.SUCCESS);
+          const formData = new FormData();
+          formData.append('file', file);
+          const { success, code, data } = await uploadFileAPI({
+            params: {
+              companyId: selectedCompany?.id,
+            },
+            query: {
+              type,
+            },
+            body: formData,
+          });
+          if (success === false) {
+            handleError(code);
+            uploadHandler(file, ProgressStatus.SYSTEM_ERROR, null);
+          }
+          if (success && data) {
+            setFileId(data.resultId);
+            uploadHandler(file, ProgressStatus.SUCCESS, data.resultId);
+          }
         }
 
         reader.onerror = () => {
-          setIsError(true);
-          messageModalDataHandler({
-            title: 'Upload File Failed',
-            content: 'File read failed',
-            messageType: MessageType.ERROR,
-            submitBtnStr: 'Close',
-            submitBtnFunction: () => messageModalVisibilityHandler(),
-          });
-          messageModalVisibilityHandler();
+          handleError(undefined);
         };
       };
 
@@ -121,9 +173,17 @@ const UploadArea = ({
     if (readerRef.current) {
       readerRef.current.abort();
     }
+    if (fileId) {
+      await deleteFileAPI({
+        params: {
+          companyId: selectedCompany?.id,
+          fileId,
+        },
+      });
+    }
     setUploadProgress(0);
     setStatus(ProgressStatus.IN_PROGRESS);
-    uploadHandler(null, ProgressStatus.NOT_FOUND);
+    uploadHandler(null, null, null);
   };
 
   return (
@@ -137,8 +197,18 @@ const UploadArea = ({
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px">
           <div className="inline-flex w-full items-center gap-16px">
             <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="error_icon" />
-            <div>{uploadFile.name}</div>
+            <div className="flex flex-col items-start gap-5px">
+              <div>
+                {uploadFile.name}
+                <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
+                  {sizeFormatter(uploadFile.size)}
+                </p>
+              </div>
+            </div>
           </div>
+          <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
+            {sizeFormatter(uploadFile.size)}
+          </p>
           <div className="mb-4 flex w-full items-center gap-16px">
             <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
               <div
@@ -175,7 +245,7 @@ const UploadArea = ({
         </div>
       ) : (
         <label
-          htmlFor="journal-upload-area"
+          htmlFor={type}
           className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
             isDragOver
               ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
@@ -190,8 +260,8 @@ const UploadArea = ({
           <p className="text-center text-lightGray4">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
 
           <input
-            id="journal-upload-area"
-            name="journal-upload-area"
+            id={type}
+            name={type}
             type="file"
             className="hidden"
             onChange={handleFileChange}

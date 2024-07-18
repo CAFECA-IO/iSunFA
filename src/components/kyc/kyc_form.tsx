@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import KYCStepper from '@/components/kyc/kyc_stepper';
 import KYCFormController from '@/components/kyc/kyc_form_controller';
 import { BasicInfoKeys, IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
@@ -19,8 +19,28 @@ import {
   UploadDocumentKeys,
 } from '@/interfaces/kyc_document_type';
 import { ProgressStatus } from '@/constants/account';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
+  const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
+  const {
+    data: uploadedData,
+    success: getSuccess,
+    code: getCode,
+  } = APIHandler<IUploadDocuments>(
+    APIName.FILE_LIST_UPLOADED,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+      },
+    },
+    false
+  );
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
@@ -46,10 +66,26 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
 
   const handleDocumentChange = (
     key: UploadDocumentKeys,
-    value: { file: File | null; status: ProgressStatus } | RepresentativeIDType
+    value:
+      | { file: File | null; status: ProgressStatus | null; fileId: string | null }
+      | RepresentativeIDType
   ) => {
     setUploadDocuments((prev) => ({ ...prev, [key]: value }));
   };
+
+  useEffect(() => {
+    if (getSuccess && uploadedData) {
+      setUploadDocuments(uploadedData);
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `listUploadedFiles-${getCode}`,
+        content: `Failed to list uploaded files: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [uploadedData, getSuccess, getCode]);
 
   return (
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">
