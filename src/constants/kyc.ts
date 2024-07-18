@@ -6,7 +6,7 @@ export enum CityOptions {
 }
 
 export enum CountryOptions {
-  DEFAULT = '',
+  DEFAULT = '', // Info: (今天 - Liz) This is the default value for the dropdown to show placeholder
   TAIWAN = 'Taiwan',
   UNITED_STATES = 'United States',
   CHINA = 'China',
@@ -14,7 +14,7 @@ export enum CountryOptions {
 }
 
 export enum LegalStructureOptions {
-  DEFAULT = '',
+  DEFAULT = '', // Info: (今天 - Liz) This is the default value for the dropdown to show placeholder
   SOLE_PROPRIETORSHIP = 'Sole Proprietorship',
   PARTNERSHIP = 'Partnership',
   CORPORATION = 'Corporation',
@@ -69,6 +69,13 @@ export enum IndustryOptions {
   RETAIL = 'Retail',
   THEMATIC_REPORTS = 'Thematic reports',
   TRANSPORT_INDUSTRY = 'Transport industry',
+}
+
+export enum AreaCodeOptions {
+  TAIWAN = '+886',
+  UNITED_STATES = '+01',
+  HONG_KONG = '+852',
+  CHINA = '+86',
 }
 
 // Info: (240717 - Liz) 以下是暫存，等確定設計稿是國家還是城市後會再調整邏輯
