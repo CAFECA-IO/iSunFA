@@ -25,7 +25,7 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
       {options.map((option, index) => {
         const id = `${name}-${index}`;
         return (
-          <div key={option.value} className="flex items-center space-x-2 text-gray-700">
+          <label htmlFor={id} className="inline-flex items-center">
             <input
               id={id}
               type="radio"
@@ -33,12 +33,19 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
               value={option.value}
               checked={selectedValue === option.value}
               onChange={() => onChange(option.value)}
-              className="h-5 w-5 text-primaryYellow5"
+              className="hidden"
             />
-            <label htmlFor={id} className="text-primaryYellow5">
-              {option.label}
-            </label>
-          </div>
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-navy-blue-400 ${
+                selectedValue === option.value ? 'bg-navy-blue-400' : ''
+              }`}
+            >
+              {selectedValue === option.value && (
+                <span className="h-2.5 w-2.5 rounded-full bg-white" />
+              )}
+            </span>
+            <span className="ml-2 text-navy-blue-400">{option.label}</span>
+          </label>
         );
       })}
     </div>

@@ -642,6 +642,14 @@
     "MAXIMUM_SIZE": "最大档案大小：50MB"
   },
   "KYC": {
+    "COMPANY_VERIFICATION": "公司验证",
+    "BASIC_INFO": "基本资讯",
+    "REGISTRATION_INFO": "注册资讯",
+    "CONTACT_INFO": "联络资讯",
+    "UPLOAD_DOCUMENT": "上传文件",
+    "NEXT": "下一步",
+    "SUBMIT": "提交",
+    "CANCEL": "取消",
     "BUSINESS_REGISTRATION_CERTIFICATE": "商业登记证书",
     "TAX_STATUS_CERTIFICATE": "税务状况证明",
     "REPRESENTATIVE_ID_CERTIFICATE": "代表人{{type}}证明",

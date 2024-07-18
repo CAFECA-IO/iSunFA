@@ -206,9 +206,6 @@ const UploadArea = ({
               </div>
             </div>
           </div>
-          <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
-            {sizeFormatter(uploadFile.size)}
-          </p>
           <div className="mb-4 flex w-full items-center gap-16px">
             <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
               <div

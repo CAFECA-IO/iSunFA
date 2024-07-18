@@ -644,6 +644,14 @@
     "MAXIMUM_SIZE": "Maximum size: 50MB"
   },
   "KYC": {
+    "COMPANY_VERIFICATION": "Company Verification",
+    "BASIC_INFO": "Basic Info",
+    "REGISTRATION_INFO": "Registration Info",
+    "CONTACT_INFO": "Contact Info",
+    "UPLOAD_DOCUMENT": "Upload Document",
+    "NEXT": "Next",
+    "SUBMIT": "Submit",
+    "CANCEL": "Cancel",
     "BUSINESS_REGISTRATION_CERTIFICATE": "Business Registration Certificate",
     "TAX_STATUS_CERTIFICATE": "Tax Status Certification",
     "REPRESENTATIVE_ID_CERTIFICATE": "Upload the pictures of the data page of key company representative’s {{type}}",
