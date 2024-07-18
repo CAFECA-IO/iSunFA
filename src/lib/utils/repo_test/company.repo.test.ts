@@ -1,4 +1,4 @@
-import { getCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyByCode, getCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
 import companies from '@/seed_json/company.json';
 
 describe('Company Repository Tests', () => {
@@ -18,6 +18,21 @@ describe('Company Repository Tests', () => {
     it('should return null if the company is not found', async () => {
       const nonExistentCompanyId = 9999;
       const company = await getCompanyById(nonExistentCompanyId);
+      expect(company).toBeNull();
+    });
+  });
+
+  describe('getCompanyByCode', () => {
+    it('should return a company when a valid code is provided', async () => {
+      const validCode = 'TEST123'; // Assuming 'VALIDCODE' exists in the database
+      const company = await getCompanyByCode(validCode);
+      expect(company).toBeDefined();
+      expect(company?.code).toEqual(validCode);
+    });
+
+    it('should return null when an invalid code is provided', async () => {
+      const invalidCode = 'INVALIDCODE';
+      const company = await getCompanyByCode(invalidCode);
       expect(company).toBeNull();
     });
   });

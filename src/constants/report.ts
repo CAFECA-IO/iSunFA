@@ -1,8 +1,9 @@
 import { AccountType } from "@/constants/account";
+import { FinancialReportTypesKey } from "@/interfaces/report_type";
 
 export enum ReportType {
-    FINANCIAL = 'financial',
-    ANALYSIS = 'analysis',
+  FINANCIAL = 'financial',
+  ANALYSIS = 'analysis',
 }
 
 export enum ReportSheetType {
@@ -19,14 +20,15 @@ export enum ReportSheetTypeDisplay {
   CHANGE_IN_EQUITY_STATEMENT = 'Statement of Changes in Equity',
 }
 
+export enum ReportStatusType {
+  PENDING = 'pending',
+  GENERATED = 'generated',
+}
+
 export const ReportSheetAccountTypeMap: {
   [key in ReportSheetType]: AccountType[];
 } = {
-  [ReportSheetType.BALANCE_SHEET]: [
-    AccountType.ASSET,
-    AccountType.LIABILITY,
-    AccountType.EQUITY,
-  ],
+  [ReportSheetType.BALANCE_SHEET]: [AccountType.ASSET, AccountType.LIABILITY, AccountType.EQUITY],
   [ReportSheetType.INCOME_STATEMENT]: [
     AccountType.REVENUE,
     AccountType.COST,
@@ -40,10 +42,19 @@ export const ReportSheetAccountTypeMap: {
 };
 
 export const ReportSheetTypeDisplayMap: {
-    [key in ReportSheetType]: string
+  [key in ReportSheetType]: string;
 } = {
   [ReportSheetType.BALANCE_SHEET]: ReportSheetTypeDisplay.BALANCE_SHEET,
   [ReportSheetType.INCOME_STATEMENT]: ReportSheetTypeDisplay.INCOME_STATEMENT,
   [ReportSheetType.CASH_FLOW_STATEMENT]: ReportSheetTypeDisplay.CASH_FLOW_STATEMENT,
   [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: ReportSheetTypeDisplay.CHANGE_IN_EQUITY_STATEMENT,
+};
+
+export const ReportSheetTypeFinancialFinancialReportTypesKeyMapping: {
+  [key in ReportSheetType]: FinancialReportTypesKey
+} = {
+  [ReportSheetType.BALANCE_SHEET]: FinancialReportTypesKey.balance_sheet,
+  [ReportSheetType.INCOME_STATEMENT]: FinancialReportTypesKey.comprehensive_income_statement,
+  [ReportSheetType.CASH_FLOW_STATEMENT]: FinancialReportTypesKey.cash_flow_statement,
+  [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: FinancialReportTypesKey.change_in_equity_statement,
 };

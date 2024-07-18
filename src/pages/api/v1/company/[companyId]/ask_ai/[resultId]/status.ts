@@ -11,7 +11,7 @@ export default async function handler(
   res: NextApiResponse<IResponseData<ProgressStatus>>
 ) {
   try {
-    const { resultId, aiApi = "vouchers" } = req.query;
+    const { resultId, aiApi = 'vouchers' } = req.query;
 
     // Info Murky (20240416): Check if resultId is string
     if (typeof resultId !== 'string' || !resultId || Array.isArray(resultId)) {
@@ -23,7 +23,7 @@ export default async function handler(
         const fetchResult = await fetch(`${AICH_URI}/api/v1/${aiApi}/${resultId}/process_status`);
 
         if (fetchResult.status === 404) {
-            throw new Error(STATUS_MESSAGE.AICH_API_NOT_FOUND);
+          throw new Error(STATUS_MESSAGE.AICH_API_NOT_FOUND);
         }
 
         if (!fetchResult.ok) {
