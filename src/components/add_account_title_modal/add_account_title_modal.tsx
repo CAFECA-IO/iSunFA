@@ -56,62 +56,66 @@ const AddAccountTitleModal = ({
         <div className="grid grid-flow-row grid-cols-2 gap-x-20px gap-y-16px px-40px py-20px">
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Accounting Type</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              Accounting Type
+            </p>
             <input
               id="input-accounting-type"
               type="text"
               value={accountingTypeValue}
               onChange={handleAccountingTypeChange}
               placeholder="Assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
           {/* Info: (20240717 - Julian) Asset Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Asset Type</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Asset Type</p>
             <input
               id="input-asset-type"
               type="text"
               value={assetTypeValue}
               onChange={handleAssetTypeChange}
               placeholder="Non-Current Assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
           {/* Info: (20240717 - Julian) Current Asset Type */}
           <div className="col-span-2 flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Current Asset Type</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              Current Asset Type
+            </p>
             <input
               id="input-current-asset-type"
               type="text"
               value={currentAssetTypeValue}
               onChange={handleCurrentAssetTypeChange}
               placeholder="Consolidated financial assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
           {/* Info: (20240717 - Julian) Code */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Code</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Code</p>
             <input
               id="input-code"
               type="text"
               value={codeValue}
               onChange={handleCodeChange}
               placeholder="1234"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Name</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Name</p>
             <input
               id="input-name"
               type="text"
               value={nameValue}
               onChange={handleNameChange}
               placeholder="Enter name"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
         </div>

@@ -47,3 +47,71 @@ export interface IAccountReadyForFrontend {
   prePeriodPercentage: number;
   indent: number;
 }
+
+export interface IAccountingTitle {
+  id: string;
+  code: string;
+  name: string;
+  accountingType: string;
+  assetType: string;
+  currentAssetType: string;
+  isFavorite: boolean;
+}
+
+// ToDo: (20240717 - Julian) to be removed
+export const dummyAccountingTitleData: IAccountingTitle[] = [
+  {
+    id: '1',
+    code: '1517',
+    name: 'Consolidated financial assets',
+    accountingType: 'Assets',
+    assetType: 'Current assets',
+    currentAssetType: 'Consolidated financial assets',
+    isFavorite: false,
+  },
+  {
+    id: '2',
+    code: '1550',
+    name: 'Equity-method investments',
+    accountingType: 'Assets',
+    assetType: 'Current assets',
+    currentAssetType: 'Consolidated financial assets',
+    isFavorite: false,
+  },
+  {
+    id: '3',
+    code: '1660',
+    name: 'Real estate, property and equipment',
+    accountingType: 'Assets',
+    assetType: 'Current assets',
+    currentAssetType: 'Consolidated financial assets',
+    isFavorite: true,
+  },
+  {
+    id: '4',
+    code: '1755',
+    name: 'Royalty assets',
+    accountingType: 'Assets',
+    assetType: 'Current assets',
+    currentAssetType: 'Consolidated financial assets',
+    isFavorite: false,
+  },
+  {
+    id: '5',
+    code: '1780',
+    name: 'Intangible assets',
+    accountingType: 'Assets',
+    assetType: 'Current assets',
+    currentAssetType: 'Consolidated financial assets',
+    isFavorite: false,
+  },
+  {
+    id: '6',
+    code: '1840',
+    name: 'Deferred tax assets',
+    accountingType: 'Assets',
+    assetType: 'Current assets',
+    currentAssetType: 'Consolidated financial assets',
+    isFavorite: true,
+  },
+];
