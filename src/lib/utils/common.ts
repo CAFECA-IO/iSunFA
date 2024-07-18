@@ -5,9 +5,10 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   ALLOWED_ORIGINS,
+  BASE_STORAGE_PATH,
   DEFAULT_PAGE_LIMIT,
   DEFAULT_PAGE_START_AT,
-  FORMIDABLE_CONFIG,
+  VERCEL_STORAGE_PATH,
 } from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
@@ -362,14 +363,12 @@ export const getTodayPeriodInSec = () => {
 };
 
 // Info Murky (20240531): This function can only be used in the server side
-export async function mkUploadFolder() {
-  const uploadFolder =
-    process.env.VERCEL === '1'
-      ? FORMIDABLE_CONFIG.uploadDir
-      : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+export async function mkUploadFolder(subDir: string) {
+  const uploadDir =
+    process.env.VERCEL === '1' ? VERCEL_STORAGE_PATH : path.join(BASE_STORAGE_PATH, subDir);
 
   try {
-    await fs.mkdir(uploadFolder, { recursive: false });
+    await fs.mkdir(uploadDir, { recursive: false });
   } catch (error) {
     // Info: (20240329) Murky: Do nothing if /tmp already exist
   }

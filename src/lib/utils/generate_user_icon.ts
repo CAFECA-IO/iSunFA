@@ -1,4 +1,8 @@
-import { FORMIDABLE_CONFIG, USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
+import {
+  BASE_STORAGE_PATH,
+  USER_ICON_BACKGROUND_COLORS,
+  VERCEL_STORAGE_PATH,
+} from '@/constants/config';
 import path from 'path';
 import {
   generateDestinationFileNameInGoogleBucket,
@@ -6,9 +10,7 @@ import {
 } from '@/lib/utils/google_image_upload';
 
 const savePath =
-  process.env.VERCEL === '1'
-    ? FORMIDABLE_CONFIG.uploadDir
-    : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+  process.env.VERCEL === '1' ? VERCEL_STORAGE_PATH : path.join(BASE_STORAGE_PATH, 'tmp');
 
 function isChinese(name: string): boolean {
   return /[\u3400-\u9FBF]/.test(name);
