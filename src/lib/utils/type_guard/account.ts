@@ -8,7 +8,7 @@ import {
   VoucherType,
 } from '@/constants/account';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountForSheetDisplay, IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IAccountForSheetDisplay, IAccountResultStatus, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
@@ -75,6 +75,33 @@ export function isIAccountForSheetDisplayArray(value: unknown): value is IAccoun
     return false;
   }
   return value.every((item) => isIAccountForSheetDisplay(item));
+}
+
+export function isIAccountReadyForFrontend(value: unknown): value is IAccountReadyForFrontend {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const { code, name, curPeriodAmount, curPeriodAmountString, curPeriodPercentage, prePeriodAmount, prePeriodAmountString, prePeriodPercentage, indent } = value as IAccountReadyForFrontend;
+  const isValid = (
+    typeof code === 'string' &&
+    typeof name === 'string' &&
+    typeof curPeriodAmount === 'number' &&
+    typeof curPeriodAmountString === 'string' &&
+    typeof curPeriodPercentage === 'number' &&
+    typeof prePeriodAmount === 'number' &&
+    typeof prePeriodAmountString === 'string' &&
+    typeof prePeriodPercentage === 'number' &&
+    typeof indent === 'number'
+  );
+  return isValid;
+}
+
+export function isIAccountReadyForFrontendArray(value: unknown): value is IAccountReadyForFrontend[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every((item) => isIAccountReadyForFrontend(item));
 }
 
 export function assertIsIAccountResultStatus(
