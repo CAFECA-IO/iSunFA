@@ -58,8 +58,8 @@ export async function listEmployees(
     const hasNextPage = employees.length > pageSize;
     const hasPreviousPage = targetPage > 1;
 
-    if (employees.length > pageSize) {
-      employees.pop();
+    if (hasNextPage) {
+      formattedEmployees.pop();
     }
 
     return {
@@ -91,7 +91,6 @@ export async function createEmployee(
     const departmentData = await prisma.department.findFirst({
       where: { name: department, companyId },
     });
-
     if (!departmentData) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }

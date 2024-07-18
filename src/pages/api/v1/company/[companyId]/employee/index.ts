@@ -46,50 +46,8 @@ function checkInput(
   salary: number,
   bonus: number
 ): boolean {
-  return !!name && !!department && !!salaryPayMode && !!payFrequency && !!salary && !!bonus;
+  return !!name && !!department && !!salaryPayMode && !!payFrequency && salary !== undefined && bonus !== undefined;
 }
-
-// export default function handler(
-//   req: NextApiRequest,
-//   res: NextApiResponse<IResponseData<IEasyEmployee[] | IEasyEmployee>>
-// ) {
-
-//     if (req.method === 'POST') {
-//       const {
-//         name,
-//         salary,
-//         departmentId,
-//         bonus,
-//         salaryPayMode,
-//         startDate,
-//         payFrequency,
-//       }: IEmployee = req.body;
-//       if (
-//         !name ||
-//         !salary ||
-//         !departmentId ||
-//         !startDate ||
-//         !bonus ||
-//         !salaryPayMode ||
-//         !payFrequency
-//       ) {
-//         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-//       }
-//       const { httpCode, result } = formatApiResponse<IEasyEmployee>(
-//         STATUS_MESSAGE.CREATED,
-//         {} as IEasyEmployee
-//       );
-//       res.status(httpCode).json(result);
-//     }
-//   } catch (_error) {
-//     const error = _error as Error;
-//     const { httpCode, result } = formatApiResponse<IEasyEmployee>(
-//       error.message,
-//       {} as IEasyEmployee
-//     );
-//     res.status(httpCode).json(result);
-//   }
-// }
 
 async function handleGetRequest(
   req: NextApiRequest,
