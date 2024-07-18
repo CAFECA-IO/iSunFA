@@ -52,9 +52,8 @@ export function formatQuery(query: any) {
 
   const startDateInSecond = startDate ? timestampInSeconds(startDate) : undefined;
   const endDateInSecond = endDate ? timestampInSeconds(endDate) : undefined;
-
   const cleanQuery = {
-    isUploaded: !!isUploaded,
+    isUploaded: isUploaded === 'true',
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
     pageSize: pageSize ? Number(pageSize) : DEFAULT_PAGE_LIMIT,
     eventType: eventType || undefined,
@@ -119,7 +118,7 @@ export default async function handler(
       if (!isCompanyIdValid(companyId)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const { httpCode, result } = await handleGetRequest(companyId, req);
+      const { httpCode, result } = await handleGetRequest(1, req);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
