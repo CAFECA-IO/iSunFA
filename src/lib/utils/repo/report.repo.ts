@@ -144,8 +144,7 @@ export async function findManyReports(
         OR: searchQuery ? [
             { name: { contains: searchQuery, mode: 'insensitive' } },
             { type: { contains: searchQuery, mode: 'insensitive' } },
-            { reportType: { contains: searchQuery, mode: 'insensitive' } },
-            { status: { contains: searchQuery, mode: 'insensitive' } },
+            { reportType: { contains: searchQuery, mode: 'insensitive' } }
         ] : undefined,
     };
 
