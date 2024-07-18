@@ -2,14 +2,15 @@ import { IncomingForm, Fields, Files } from 'formidable';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextApiRequest } from 'next';
-import { BASE_STORAGE_PATH, FORMIDABLE_OPTIONS, VERCEL_STORAGE_PATH } from '@/constants/config';
+import { FORMIDABLE_OPTIONS } from '@/constants/config';
+import { BASE_STORAGE_FOLDER, FILE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
 
 export const parseForm = async (
   req: NextApiRequest,
-  subDir: string = 'tmp' // 預設子資料夾名稱為tmp
+  subDir: string = FILE_FOLDER.TMP // 預設子資料夾名稱為tmp
 ) => {
   const uploadDir =
-    process.env.VERCEL === '1' ? VERCEL_STORAGE_PATH : path.join(BASE_STORAGE_PATH, subDir);
+    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
   const options = {
     ...FORMIDABLE_OPTIONS,
     uploadDir,

@@ -3,17 +3,12 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import {
-  ALLOWED_ORIGINS,
-  BASE_STORAGE_PATH,
-  DEFAULT_PAGE_LIMIT,
-  DEFAULT_PAGE_START_AT,
-  VERCEL_STORAGE_PATH,
-} from '@/constants/config';
+import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import path from 'path';
+import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -365,7 +360,7 @@ export const getTodayPeriodInSec = () => {
 // Info Murky (20240531): This function can only be used in the server side
 export async function mkUploadFolder(subDir: string) {
   const uploadDir =
-    process.env.VERCEL === '1' ? VERCEL_STORAGE_PATH : path.join(BASE_STORAGE_PATH, subDir);
+    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
 
   try {
     await fs.mkdir(uploadDir, { recursive: false });

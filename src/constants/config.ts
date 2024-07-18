@@ -138,10 +138,6 @@ export const ALLOWED_ORIGINS = [
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
 
-export const BASE_STORAGE_PATH = process.env.BASE_STORAGE_PATH || 'home/isunfa';
-
-export const VERCEL_STORAGE_PATH = '/tmp';
-
 // 定義 Formidable 的 options
 export const FORMIDABLE_OPTIONS: Partial<Options> = {
   encoding: 'utf-8',
