@@ -252,7 +252,7 @@ export default async function handler(
       case 'GET': {
         payload = await handleGETRequest(companyId, req);
 
-        statusMessage = STATUS_MESSAGE.CREATED;
+        statusMessage = STATUS_MESSAGE.SUCCESS;
         break;
       }
       default: {
