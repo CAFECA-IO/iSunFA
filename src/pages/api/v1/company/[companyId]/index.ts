@@ -41,7 +41,7 @@ export default async function handler(
           statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
         }
         if (shouldContinue) {
-          // await checkRole(req, res, ROLE_NAME.OWNER);
+          await checkRole(req, res, ROLE_NAME.OWNER);
           const updatedCompany = await updateCompanyById(companyId, code, name, regional);
           if (!updatedCompany) {
             shouldContinue = false;
