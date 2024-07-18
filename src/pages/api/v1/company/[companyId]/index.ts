@@ -37,7 +37,7 @@ export default async function handler(
       }
       case 'PUT': {
         const { code, name, regional } = req.body;
-        if (!code || !name || !regional) {
+        if (!code && !name && !regional) {
           shouldContinue = false;
           statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
         }

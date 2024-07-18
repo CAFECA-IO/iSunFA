@@ -170,11 +170,6 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
       companyId,
     },
   });
-  await prisma.company.delete({
-    where: {
-      id: companyId,
-    },
-  });
   return count;
 }
 
