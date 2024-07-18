@@ -143,6 +143,19 @@ const JournalListBody = () => {
     [currentTab, currentPage, filteredJournalType, filteredJournalSortBy, filteredPeriod, search]
   );
 
+  const datePickerHandler = async (start: number, end: number) => {
+    await getJournalList({
+      filteredPeriod: {
+        startTimeStamp: start,
+        endTimeStamp: end,
+      },
+    });
+  };
+
+  useEffect(() => {
+    getJournalList({});
+  }, [currentTab, currentPage, filteredJournalType, filteredJournalSortBy]);
+
   const displayedTypeDropMenu = (
     <div
       onClick={toggleTypeMenu}
@@ -218,6 +231,7 @@ const JournalListBody = () => {
         type={DatePickerType.TEXT_PERIOD}
         period={filteredPeriod}
         setFilteredPeriod={setFilteredPeriod}
+        datePickerHandler={datePickerHandler}
       />
     </div>
   );
@@ -341,10 +355,6 @@ const JournalListBody = () => {
       </button>
     </div>
   );
-
-  useEffect(() => {
-    getJournalList({});
-  }, [currentTab, currentPage, filteredJournalType, filteredJournalSortBy, filteredPeriod]);
 
   return (
     <>
