@@ -26,7 +26,7 @@ export async function findFirstReportByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging perpose
+    // Deprecate: (20240710 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -45,7 +45,7 @@ export async function findUniqueReportById(reportId: number) {
     });
   } catch (error) {
     report = null;
-    // Deprecate: (20240710 - Murky) Debugging perpose
+    // Deprecate: (20240710 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -138,7 +138,7 @@ export async function findManyReports(
         companyId,
         status,
         AND: [
-            { from: { gte: startDateInSecond } },
+            // { from: { gte: startDateInSecond } },
             { to: { lte: endDateInSecond } },
         ],
         OR: searchQuery ? [
@@ -149,27 +149,16 @@ export async function findManyReports(
         ] : undefined,
     };
 
-    const totalCount = await prisma.report.count({ where });
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    if (targetPage < 1) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-
     const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };
 
     const include: Prisma.ReportInclude = {
         project: true,
     };
 
-    const skip = pageToOffset(targetPage, pageSize);
-
     const findManyArgs = {
         where,
         orderBy,
         include,
-        skip,
-        take: pageSize,
     };
     try {
         reports = await prisma.report.findMany(findManyArgs);
@@ -179,15 +168,29 @@ export async function findManyReports(
         console.error(error);
     }
 
-    const hasNextPage = reports.length > pageSize;
-    const hasPreviousPage = targetPage > 1;
+    const filteredReports = reports.filter((report) => {
+      if (report.reportType !== ReportSheetType.BALANCE_SHEET && startDateInSecond !== undefined) {
+        return report.from >= startDateInSecond;
+      }
+      return true;
+    });
 
-    if (hasNextPage) {
-        reports.pop();
+    const totalCount = filteredReports.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    if (targetPage < 1) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
+    const skip = pageToOffset(targetPage, pageSize);
+
+    const paginatedReports = filteredReports.slice(skip, skip + pageSize);
+
+    const hasNextPage = skip + pageSize < totalCount;
+    const hasPreviousPage = targetPage > 1;
+
     return {
-        data: reports,
+        data: paginatedReports,
         page: targetPage,
         totalPages,
         totalCount,
