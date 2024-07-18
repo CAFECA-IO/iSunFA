@@ -5,6 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { getInsuranceInfo } from '@/lib/utils/insurance';
 
 export async function listEmployees(
   companyId: number,
@@ -88,6 +89,8 @@ export async function createEmployee(
   try {
     const now = Date.now();
     const nowTimestamp = timestampInSeconds(now);
+    const insuranceInfo = getInsuranceInfo(salary);
+    const insurancePayment = insuranceInfo.employerTotalContribution;
     const departmentData = await prisma.department.findFirst({
       where: { name: department, companyId },
     });
@@ -107,7 +110,7 @@ export async function createEmployee(
         startDate: nowTimestamp,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
-        insurancePayment: 0,
+        insurancePayment,
       },
     });
     return {
