@@ -181,6 +181,15 @@ const AccountingTitlePageBody = () => {
           </div>
         </div>
       </div>
+      {/* Info: (20240717 - Julian) Search bar */}
+      <div className="mt-20px flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px placeholder:text-input-text-input-placeholder lg:mt-20px">
+        <input
+          type="text"
+          placeholder="Search"
+          className="flex-1 bg-transparent text-input-text-input-filled outline-none"
+        />
+        <FiSearch size={20} />
+      </div>
       {/* Info: (20240717 - Julian) Favorite Accounting Title Divider */}
       <div className="my-40px flex items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
@@ -190,12 +199,10 @@ const AccountingTitlePageBody = () => {
         <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       {/* Info: (20240717 - Julian) Favorite Accounting Table */}
-      <div className="flex flex-col items-center gap-y-32px">
-        <AccountingTitleTable
-          accountingTitleData={favoriteAccountingTitleData}
-          actionType={ActionType.FAV_AND_ADD}
-        />
-      </div>
+      <AccountingTitleTable
+        accountingTitleData={favoriteAccountingTitleData}
+        actionType={ActionType.FAV_AND_ADD}
+      />
       {/* Info: (20240717 - Julian) My new accounting title Divider */}
       <div className="my-40px flex items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
@@ -207,7 +214,7 @@ const AccountingTitlePageBody = () => {
       {/* Info: (20240717 - Julian) My new accounting title Table */}
       <AccountingTitleTable
         accountingTitleData={dummyAccountingTitleData.slice(0, 3)}
-        actionType={ActionType.EDIT_AND_DELETE}
+        actionType={ActionType.EDIT_AND_REMOVE}
       />
       {/* Info: (20240717 - Julian) Accounting Title Divider */}
       <div className="my-40px flex items-center gap-4 lg:my-5">
@@ -217,17 +224,8 @@ const AccountingTitlePageBody = () => {
         </div>
         <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
-      {/* Info: (20240717 - Julian) Search bar */}
-      <div className="flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px placeholder:text-input-text-input-placeholder lg:mt-20px">
-        <input
-          type="text"
-          placeholder="Search"
-          className="flex-1 bg-transparent text-input-text-input-filled outline-none"
-        />
-        <FiSearch size={20} />
-      </div>
       {/* Info: (20240717 - Julian) All Accounting Table */}
-      <div className="mt-40px flex flex-col items-center gap-y-32px">
+      <div className="flex flex-col items-center gap-y-32px">
         <AccountingTitleTable
           accountingTitleData={dummyAccountingTitleData}
           actionType={ActionType.FAV_AND_ADD}

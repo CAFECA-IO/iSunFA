@@ -19,6 +19,7 @@ const MessageModal = ({
     title,
     subtitle,
     content,
+    notes,
     hideCloseBtn,
     subMsg,
     submitBtnStr,
@@ -128,7 +129,8 @@ const MessageModal = ({
           {/* Info: (20240507 - Julian) sub message (red color) */}
           <p className="text-base text-lightRed">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <div className="space-y-1 text-sm text-lightGray5">{displayedContent}</div>
+          <div className="space-y-1 text-sm text-text-neutral-primary">{displayedContent}</div>
+          <div className="text-alert-text-paragraph text-sm font-semibold">{notes}</div>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}

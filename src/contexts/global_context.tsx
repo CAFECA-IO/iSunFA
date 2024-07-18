@@ -49,6 +49,7 @@ import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salar
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 
@@ -112,6 +113,9 @@ interface IGlobalContext {
 
   isAddAccountTitleModalVisible: boolean;
   addAccountTitleModalVisibilityHandler: () => void;
+
+  isEditAccountTitleModalVisible: boolean;
+  editAccountTitleModalVisibilityHandler: () => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -205,6 +209,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
   const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
+
+  const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
 
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
@@ -309,6 +315,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const addAccountTitleModalVisibilityHandler = () => {
     setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
+  };
+
+  const editAccountTitleModalVisibilityHandler = () => {
+    setIsEditAccountTitleModalVisible(!isEditAccountTitleModalVisible);
   };
 
   const teamSettingModalVisibilityHandler = () => {
@@ -566,6 +576,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     salaryBookConfirmModalVisibilityHandler,
     isAddAccountTitleModalVisible,
     addAccountTitleModalVisibilityHandler,
+    isEditAccountTitleModalVisible,
+    editAccountTitleModalVisibilityHandler,
     toastHandler,
     eliminateToast,
 
@@ -699,6 +711,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddAccountTitleModal
         isModalVisible={isAddAccountTitleModalVisible}
         modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
+      />
+
+      <EditAccountTitleModal
+        isModalVisible={isEditAccountTitleModalVisible}
+        modalVisibilityHandler={editAccountTitleModalVisibilityHandler}
       />
 
       <TeamSettingModal

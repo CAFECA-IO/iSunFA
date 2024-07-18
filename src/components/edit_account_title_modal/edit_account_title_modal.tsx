@@ -1,17 +1,21 @@
-import { RxCross2 } from 'react-icons/rx';
-import { FaPlus } from 'react-icons/fa6';
 import { useState } from 'react';
+import { RxCross2 } from 'react-icons/rx';
+import { RiDeleteBinLine } from 'react-icons/ri';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
 import { Button } from '@/components/button/button';
+import { MessageType } from '@/interfaces/message_modal';
 
-interface IAddAccountTitleModalProps {
+interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
 }
 
-const AddAccountTitleModal = ({
+const EditAccountTitleModal = ({
   isModalVisible,
   modalVisibilityHandler,
-}: IAddAccountTitleModalProps) => {
+}: IEditAccountTitleModalProps) => {
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   // ToDo: (20240717 - Julian) placeholder from props
 
   const [accountingTypeValue, setAccountingTypeValue] = useState('');
@@ -36,6 +40,20 @@ const AddAccountTitleModal = ({
     setNameValue(event.target.value);
   };
 
+  const handleRemove = () => {
+    messageModalDataHandler({
+      title: 'Remove Accounting title',
+      content: 'Are you sure you want to remove this accounting title?',
+      notes: nameValue,
+      messageType: MessageType.WARNING,
+      submitBtnStr: 'Remove',
+      // ToDo: (20240717 - Julian) call API to remove accounting title
+      submitBtnFunction: () => {},
+      backBtnStr: 'Cancel',
+    });
+    messageModalVisibilityHandler();
+  };
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 font-barlow">
       <div
@@ -43,7 +61,7 @@ const AddAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          <h1>Add New Accounting Title</h1>
+          <h1>Edit My New Accounting Title</h1>
           <button
             type="button"
             onClick={modalVisibilityHandler}
@@ -56,9 +74,7 @@ const AddAccountTitleModal = ({
         <div className="grid grid-flow-row grid-cols-2 gap-x-20px gap-y-16px px-40px py-20px">
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              Accounting Type
-            </p>
+            <p className="font-semibold text-input-text-primary">Accounting Type</p>
             <input
               id="input-accounting-type"
               type="text"
@@ -70,7 +86,7 @@ const AddAccountTitleModal = ({
           </div>
           {/* Info: (20240717 - Julian) Asset Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Asset Type</p>
+            <p className="font-semibold text-input-text-primary">Asset Type</p>
             <input
               id="input-asset-type"
               type="text"
@@ -82,9 +98,7 @@ const AddAccountTitleModal = ({
           </div>
           {/* Info: (20240717 - Julian) Current Asset Type */}
           <div className="col-span-2 flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              Current Asset Type
-            </p>
+            <p className="font-semibold text-input-text-primary">Current Asset Type</p>
             <input
               id="input-current-asset-type"
               type="text"
@@ -96,7 +110,7 @@ const AddAccountTitleModal = ({
           </div>
           {/* Info: (20240717 - Julian) Code */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Code</p>
+            <p className="font-semibold text-input-text-primary">Code</p>
             <input
               id="input-code"
               type="text"
@@ -108,7 +122,7 @@ const AddAccountTitleModal = ({
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Name</p>
+            <p className="font-semibold text-input-text-primary">Name</p>
             <input
               id="input-name"
               type="text"
@@ -118,14 +132,25 @@ const AddAccountTitleModal = ({
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
+          {/* Info: (20240718 - Julian) Remove Button */}
+          <div className="col-span-2 mx-auto mt-20px">
+            <Button
+              id="remove-accounting-title-button"
+              type="button"
+              variant="secondaryOutline"
+              onClick={handleRemove}
+            >
+              <RiDeleteBinLine /> <p>Remove Accounting Title</p>
+            </Button>
+          </div>
         </div>
         {/* Info: (20240717 - Julian) Buttons */}
         <div className="flex items-center justify-end gap-12px px-20px py-16px text-sm">
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
             Cancel
           </Button>
-          <Button id="add-accounting-title-button" type="button" variant="tertiary">
-            <p>Add</p> <FaPlus />
+          <Button id="save-accounting-title-button" type="button" variant="tertiary">
+            Save
           </Button>
         </div>
       </div>
@@ -135,4 +160,4 @@ const AddAccountTitleModal = ({
   return isDisplayModal;
 };
 
-export default AddAccountTitleModal;
+export default EditAccountTitleModal;

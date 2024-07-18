@@ -5,10 +5,11 @@ import { FiEdit } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccountingTitle } from '@/interfaces/accounting_account';
+import { MessageType } from '@/interfaces/message_modal';
 
 export enum ActionType {
   FAV_AND_ADD = 'favorite_and_add',
-  EDIT_AND_DELETE = 'edit_and_delete',
+  EDIT_AND_REMOVE = 'edit_and_REMOVE',
 }
 
 interface IAccountingTitleTableProps {
@@ -22,7 +23,12 @@ interface IAccountingTitleRowProps {
 }
 
 const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
-  const { addAccountTitleModalVisibilityHandler } = useGlobalCtx();
+  const {
+    addAccountTitleModalVisibilityHandler,
+    editAccountTitleModalVisibilityHandler,
+    messageModalDataHandler,
+    messageModalVisibilityHandler,
+  } = useGlobalCtx();
   const { code, name, isFavorite: favorite } = rowData;
 
   const [isFavorite, setIsFavorite] = useState(favorite);
@@ -32,6 +38,20 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   // ToDo: (20240717 - Julian) call API to update favorite status
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
+  };
+
+  const handleRemove = () => {
+    messageModalDataHandler({
+      title: 'Remove Accounting title',
+      content: 'Are you sure you want to remove this accounting title?',
+      notes: name,
+      messageType: MessageType.WARNING,
+      submitBtnStr: 'Remove',
+      // ToDo: (20240717 - Julian) call API to remove accounting title
+      submitBtnFunction: () => {},
+      backBtnStr: 'Cancel',
+    });
+    messageModalVisibilityHandler();
   };
 
   const displayStar = isFavorite ? (
@@ -64,26 +84,26 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         </button>
       </div>
     ) : (
-      // Info: (20240717 - Julian) Actions for Edit and Delete
+      // Info: (20240717 - Julian) Actions for Edit and Remove
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
         {/* Info: (20240717 - Julian) Edit button */}
         <button
           type="button"
           className="group flex items-center gap-4px text-checkbox-text-secondary"
-          onClick={addAccountTitleModalVisibilityHandler}
+          onClick={editAccountTitleModalVisibilityHandler}
         >
           <FiEdit className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">Edit</p>
         </button>
-        {/* Info: (20240717 - Julian) Delete button */}
+        {/* Info: (20240717 - Julian) Remove button */}
         <button
           type="button"
           className="group flex items-center gap-4px text-checkbox-text-secondary"
-          onClick={addAccountTitleModalVisibilityHandler}
+          onClick={handleRemove}
         >
           <RiDeleteBinLine className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            Delete
+            Remove
           </p>
         </button>
       </div>
@@ -111,19 +131,21 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         </button>
       </div>
     ) : (
-      // Info: (20240717 - Julian) Actions for Edit and Delete
+      // Info: (20240717 - Julian) Actions for Edit and Remove
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
         {/* Info: (20240717 - Julian) Edit button */}
         <button
           type="button"
           className="flex items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
+          onClick={editAccountTitleModalVisibilityHandler}
         >
           <FiEdit />
         </button>
-        {/* Info: (20240717 - Julian) Delete button */}
+        {/* Info: (20240717 - Julian) Remove button */}
         <button
           type="button"
           className="flex items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
+          onClick={handleRemove}
         >
           <RiDeleteBinLine />
         </button>
