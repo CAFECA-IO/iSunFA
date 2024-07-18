@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import KYCStepper from '@/components/kyc/kyc_stepper';
 import KYCFormController from '@/components/kyc/kyc_form_controller';
 import { BasicInfoKeys, IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
@@ -12,13 +12,41 @@ import RegistrationInfoForm from '@/components/kyc/registration_info_form';
 import { ContactInfoKeys, IContactInfo, initialContactInfo } from '@/interfaces/kyc_contact_info';
 import ContactInfoForm from '@/components/kyc/contact_info_form ';
 import DocumentUploadForm from '@/components/kyc/document_upload_form';
+import {
+  initialUploadDocuments,
+  IUploadDocuments,
+  RepresentativeIDType,
+  UploadDocumentKeys,
+} from '@/interfaces/kyc_document_type';
+import { ProgressStatus } from '@/constants/account';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
+  const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
+  const {
+    data: uploadedData,
+    success: getSuccess,
+    code: getCode,
+  } = APIHandler<IUploadDocuments>(
+    APIName.FILE_LIST_UPLOADED,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+      },
+    },
+    false
+  );
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
     useState<IRegistrationInfo>(initialRegistrationInfo);
   const [contactInfoValues, setContactInfoValues] = useState<IContactInfo>(initialContactInfo);
+  const [uploadDocuments, setUploadDocuments] = useState<IUploadDocuments>(initialUploadDocuments);
 
   const handleBasicInfoChange = (key: BasicInfoKeys, value: string) => {
     setBasicInfoValues((prev) => ({ ...(prev ?? {}), [key]: value }));
@@ -35,6 +63,30 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleStepChange = (newStep: number) => {
     setStep(newStep);
   };
+
+  const handleDocumentChange = (
+    key: UploadDocumentKeys,
+    value:
+      | { file: File | null; status: ProgressStatus | null; fileId: string | null }
+      | RepresentativeIDType
+  ) => {
+    setUploadDocuments((prev) => ({ ...prev, [key]: value }));
+  };
+
+  useEffect(() => {
+    if (getSuccess && uploadedData) {
+      setUploadDocuments(uploadedData);
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `listUploadedFiles-${getCode}`,
+        content: `Failed to list uploaded files: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [uploadedData, getSuccess, getCode]);
+
   return (
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
@@ -49,7 +101,9 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
         {step === 2 && (
           <ContactInfoForm data={contactInfoValues} onChange={handleContactInfoChange} />
         )}
-        {step === 3 && <DocumentUploadForm />}
+        {step === 3 && (
+          <DocumentUploadForm data={uploadDocuments} onChange={handleDocumentChange} />
+        )}
         <KYCFormController
           step={step}
           onCancel={onCancel}
