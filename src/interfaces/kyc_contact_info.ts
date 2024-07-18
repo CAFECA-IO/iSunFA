@@ -1,3 +1,5 @@
+import { AreaCodeOptions } from '@/constants/kyc';
+
 export enum ContactInfoKeys {
   KEY_CONTACT_PERSON = 'keyContactPerson',
   AREA_CODE = 'areaCode',
@@ -8,7 +10,7 @@ export enum ContactInfoKeys {
 
 export interface IContactInfo {
   [ContactInfoKeys.KEY_CONTACT_PERSON]: string;
-  [ContactInfoKeys.AREA_CODE]: string;
+  [ContactInfoKeys.AREA_CODE]: AreaCodeOptions;
   [ContactInfoKeys.CONTACT_NUMBER]: string;
   [ContactInfoKeys.EMAIL_ADDRESS]: string;
   [ContactInfoKeys.COMPANY_WEBSITE]: string;
@@ -16,7 +18,7 @@ export interface IContactInfo {
 
 export const initialContactInfo: IContactInfo = {
   [ContactInfoKeys.KEY_CONTACT_PERSON]: '',
-  [ContactInfoKeys.AREA_CODE]: '',
+  [ContactInfoKeys.AREA_CODE]: AreaCodeOptions.TAIWAN,
   [ContactInfoKeys.CONTACT_NUMBER]: '',
   [ContactInfoKeys.EMAIL_ADDRESS]: '',
   [ContactInfoKeys.COMPANY_WEBSITE]: '',
