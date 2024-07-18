@@ -18,17 +18,17 @@ const ContactInfoForm = ({
   data: IContactInfo;
   onChange: (key: ContactInfoKeys, value: string) => void;
 }) => {
-  // Info: (240718 - Liz) OuterClick Hook
+  // Info: (20240718 - Liz) OuterClick Hook
   const {
     targetRef: areaCodeMenuRef,
     componentVisible: isAreaCodeMenuOpen,
     setComponentVisible: setIsAreaCodeMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
-  // Info: (240718 - Liz) 開啟/關閉下拉選單
+  // Info: (20240718 - Liz) 開啟/關閉下拉選單
   const areaCodeMenuOpenHandler = () => setIsAreaCodeMenuOpen(!isAreaCodeMenuOpen);
 
-  // Info: (240718 - Liz) 下拉選單選項
+  // Info: (20240718 - Liz) 下拉選單選項
   const areaCodeDropmenu = Object.values(AreaCodeOptions).map((areaCode) => {
     const selectionClickHandler = () => {
       onChange(ContactInfoKeys.AREA_CODE, areaCode);
@@ -53,7 +53,7 @@ const ContactInfoForm = ({
     );
   });
 
-  // Info: (240718 - Liz) Input Handlers
+  // Info: (20240718 - Liz) Input Handlers
   const keyContactPersonInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(ContactInfoKeys.KEY_CONTACT_PERSON, e.target.value);
   };
