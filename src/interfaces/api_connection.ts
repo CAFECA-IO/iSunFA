@@ -44,7 +44,13 @@ export type IAPIName =
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
   | 'FILE_DELETE'
-  | 'FILE_LIST_UPLOADED';
+  | 'FILE_LIST_UPLOADED'
+  | 'COMPANY_GET_BY_ID'
+  | 'COMPANY_DELETE'
+  | 'COMPANY_UPDATE'
+  | 'ROLE_GET_BY_ID'
+  | 'ROLE_DELETE'
+  | 'ROLE_UPDATE';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
