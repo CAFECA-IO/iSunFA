@@ -113,6 +113,7 @@ interface IGlobalContext {
 
   isAddAccountTitleModalVisible: boolean;
   addAccountTitleModalVisibilityHandler: () => void;
+  addAccountTitleDataHandler: (id: number) => void;
 
   isEditAccountTitleModalVisible: boolean;
   editAccountTitleModalVisibilityHandler: () => void;
@@ -209,6 +210,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
   const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
+  const [addAccountTitleId, setAddAccountTitleId] = useState(0);
 
   const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
 
@@ -315,6 +317,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const addAccountTitleModalVisibilityHandler = () => {
     setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
+  };
+
+  const addAccountTitleDataHandler = (id: number) => {
+    setAddAccountTitleId(id);
   };
 
   const editAccountTitleModalVisibilityHandler = () => {
@@ -576,6 +582,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     salaryBookConfirmModalVisibilityHandler,
     isAddAccountTitleModalVisible,
     addAccountTitleModalVisibilityHandler,
+    addAccountTitleDataHandler,
     isEditAccountTitleModalVisible,
     editAccountTitleModalVisibilityHandler,
     toastHandler,
@@ -711,6 +718,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddAccountTitleModal
         isModalVisible={isAddAccountTitleModalVisible}
         modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
+        modalData={{ accountId: addAccountTitleId }}
       />
 
       <EditAccountTitleModal

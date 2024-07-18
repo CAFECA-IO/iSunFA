@@ -4,7 +4,7 @@ import { FaRegSquarePlus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { IAccountingTitle } from '@/interfaces/accounting_account';
+import { IAccount } from '@/interfaces/accounting_account';
 import { MessageType } from '@/interfaces/message_modal';
 
 export enum ActionType {
@@ -13,31 +13,38 @@ export enum ActionType {
 }
 
 interface IAccountingTitleTableProps {
-  accountingTitleData: IAccountingTitle[];
+  accountingTitleData: IAccount[];
   actionType: ActionType;
 }
 
 interface IAccountingTitleRowProps {
-  rowData: IAccountingTitle;
+  rowData: IAccount;
   actionType: ActionType;
 }
 
 const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   const {
     addAccountTitleModalVisibilityHandler,
+    addAccountTitleDataHandler,
     editAccountTitleModalVisibilityHandler,
     messageModalDataHandler,
     messageModalVisibilityHandler,
   } = useGlobalCtx();
-  const { code, name, isFavorite: favorite } = rowData;
+  const { id, code, name } = rowData;
 
-  const [isFavorite, setIsFavorite] = useState(favorite);
+  // ToDo: (20240717 - Julian) favorite status from API
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const codeAndName = `${code} - ${name}`;
 
   // ToDo: (20240717 - Julian) call API to update favorite status
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
+  };
+
+  const handleAddAccount = () => {
+    addAccountTitleDataHandler(id);
+    addAccountTitleModalVisibilityHandler();
   };
 
   const handleRemove = () => {
@@ -75,7 +82,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         <button
           type="button"
           className="group flex items-center gap-4px text-checkbox-text-secondary"
-          onClick={addAccountTitleModalVisibilityHandler}
+          onClick={handleAddAccount}
         >
           <FaRegSquarePlus className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
@@ -125,7 +132,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         <button
           type="button"
           className="flex items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
-          onClick={addAccountTitleModalVisibilityHandler}
+          onClick={handleAddAccount}
         >
           <FaRegSquarePlus />
         </button>

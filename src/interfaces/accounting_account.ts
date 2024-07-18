@@ -13,6 +13,7 @@ export interface IAccount {
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
+  // ToDo: (20240717 - Julian) Missing 'isFavorite' property
 }
 
 // Info Murky (20240416): Interface
@@ -53,65 +54,89 @@ export interface IAccountingTitle {
   code: string;
   name: string;
   accountingType: string;
-  assetType: string;
+  liquidity: string;
   currentAssetType: string;
   isFavorite: boolean;
 }
 
 // ToDo: (20240717 - Julian) to be removed
-export const dummyAccountingTitleData: IAccountingTitle[] = [
+export const dummyAccountingTitleData: IAccount[] = [
   {
-    id: '1',
+    id: 1,
     code: '1517',
     name: 'Consolidated financial assets',
-    accountingType: 'Assets',
-    assetType: 'Current assets',
-    currentAssetType: 'Consolidated financial assets',
-    isFavorite: false,
+    companyId: 0,
+    system: '',
+    type: 'Equity',
+    debit: true,
+    liquidity: true,
+    createdAt: 162938973,
+    updatedAt: 162938973,
+    deletedAt: null,
   },
   {
-    id: '2',
+    id: 2,
     code: '1550',
     name: 'Equity-method investments',
-    accountingType: 'Assets',
-    assetType: 'Current assets',
-    currentAssetType: 'Consolidated financial assets',
-    isFavorite: false,
+    companyId: 0,
+    system: '',
+    type: 'Equity',
+    debit: true,
+    liquidity: true,
+    createdAt: 162938973,
+    updatedAt: 162938973,
+    deletedAt: null,
   },
   {
-    id: '3',
+    id: 3,
     code: '1660',
     name: 'Real estate, property and equipment',
-    accountingType: 'Assets',
-    assetType: 'Current assets',
-    currentAssetType: 'Consolidated financial assets',
-    isFavorite: true,
+    companyId: 0,
+    system: '',
+    type: 'Equity',
+    liquidity: true,
+    debit: true,
+    createdAt: 162938973,
+    updatedAt: 162938973,
+    deletedAt: null,
   },
   {
-    id: '4',
+    id: 4,
     code: '1755',
     name: 'Royalty assets',
-    accountingType: 'Assets',
-    assetType: 'Current assets',
-    currentAssetType: 'Consolidated financial assets',
-    isFavorite: false,
+    liquidity: false,
+    companyId: 0,
+    system: '',
+    type: 'Equity',
+    debit: false,
+    createdAt: 162938973,
+    updatedAt: 162938973,
+    deletedAt: null,
   },
   {
-    id: '5',
+    id: 5,
     code: '1780',
     name: 'Intangible assets',
-    accountingType: 'Assets',
-    assetType: 'Current assets',
-    currentAssetType: 'Consolidated financial assets',
-    isFavorite: false,
+    liquidity: false,
+    companyId: 0,
+    system: '',
+    type: 'Equity',
+    debit: false,
+    createdAt: 162938973,
+    updatedAt: 162938973,
+    deletedAt: null,
   },
   {
-    id: '6',
+    id: 6,
     code: '1840',
     name: 'Deferred tax assets',
-    accountingType: 'Assets',
-    assetType: 'Current assets',
-    currentAssetType: 'Consolidated financial assets',
-    isFavorite: true,
+    liquidity: false,
+    companyId: 0,
+    system: '',
+    type: 'Equity',
+    debit: false,
+    createdAt: 162938973,
+    updatedAt: 162938973,
+    deletedAt: null,
   },
 ];

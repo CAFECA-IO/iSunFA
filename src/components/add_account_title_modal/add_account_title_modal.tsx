@@ -2,39 +2,36 @@ import { RxCross2 } from 'react-icons/rx';
 import { FaPlus } from 'react-icons/fa6';
 import { useState } from 'react';
 import { Button } from '@/components/button/button';
+import { dummyAccountingTitleData } from '@/interfaces/accounting_account';
 
 interface IAddAccountTitleModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  modalData: {
+    accountId: number;
+  };
 }
 
 const AddAccountTitleModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  modalData,
 }: IAddAccountTitleModalProps) => {
-  // ToDo: (20240717 - Julian) placeholder from props
+  const { accountId } = modalData;
+  // ToDo: (20240717 - Julian) placeholder from API data
+  const parentAccount = dummyAccountingTitleData.find((data) => data.id === accountId);
 
-  const [accountingTypeValue, setAccountingTypeValue] = useState('');
-  const [assetTypeValue, setAssetTypeValue] = useState('');
-  const [currentAssetTypeValue, setCurrentAssetTypeValue] = useState('');
-  const [codeValue, setCodeValue] = useState('');
+  const accountingType = parentAccount?.type;
+  const liquidity = parentAccount?.liquidity;
+  const currentAssetType = parentAccount?.name;
+
   const [nameValue, setNameValue] = useState('');
 
-  const handleAccountingTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAccountingTypeValue(event.target.value);
-  };
-  const handleAssetTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAssetTypeValue(event.target.value);
-  };
-  const handleCurrentAssetTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentAssetTypeValue(event.target.value);
-  };
-  const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCodeValue(event.target.value);
-  };
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNameValue(event.target.value);
   };
+
+  const disableSubmit = !nameValue;
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 font-barlow">
@@ -62,48 +59,33 @@ const AddAccountTitleModal = ({
             <input
               id="input-accounting-type"
               type="text"
-              value={accountingTypeValue}
-              onChange={handleAccountingTypeChange}
-              placeholder="Assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+              value={accountingType}
+              disabled
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
-          {/* Info: (20240717 - Julian) Asset Type */}
+          {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Asset Type</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Liquidity</p>
             <input
-              id="input-asset-type"
+              id="input-liquidity"
               type="text"
-              value={assetTypeValue}
-              onChange={handleAssetTypeChange}
-              placeholder="Non-Current Assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+              value={`${liquidity}`}
+              disabled
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
-          {/* Info: (20240717 - Julian) Current Asset Type */}
+          {/* Info: (20240717 - Julian) Current Asset */}
           <div className="col-span-2 flex flex-col gap-y-8px">
             <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              Current Asset Type
+              Current Asset
             </p>
             <input
               id="input-current-asset-type"
               type="text"
-              value={currentAssetTypeValue}
-              onChange={handleCurrentAssetTypeChange}
-              placeholder="Consolidated financial assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            />
-          </div>
-          {/* Info: (20240717 - Julian) Code */}
-          <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Code</p>
-            <input
-              id="input-code"
-              type="text"
-              value={codeValue}
-              onChange={handleCodeChange}
-              placeholder="1234"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+              value={currentAssetType}
+              disabled
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
           {/* Info: (20240717 - Julian) Name */}
@@ -115,7 +97,7 @@ const AddAccountTitleModal = ({
               value={nameValue}
               onChange={handleNameChange}
               placeholder="Enter name"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
         </div>
@@ -124,7 +106,12 @@ const AddAccountTitleModal = ({
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
             Cancel
           </Button>
-          <Button id="add-accounting-title-button" type="button" variant="tertiary">
+          <Button
+            id="add-accounting-title-button"
+            type="button"
+            variant="tertiary"
+            disabled={disableSubmit}
+          >
             <p>Add</p> <FaPlus />
           </Button>
         </div>
