@@ -120,7 +120,7 @@ export async function listJournal(
     const totalCount = await prisma.journal.count({ where });
     const totalPages = calculateTotalPages(totalCount, pageSize);
 
-    if (page < 1 || page > totalPages) {
+    if (totalPages > 0 && (page < 1 || page > totalPages)) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
