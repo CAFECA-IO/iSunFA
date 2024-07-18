@@ -41,7 +41,10 @@ export type IAPIName =
   | 'REPORT_GENERATE_FINANCIAL'
   | 'REPORT_GENERATE_ANALYSIS'
   | 'SESSION_GET'
-  | 'ACCOUNT_LIST';
+  | 'ACCOUNT_LIST'
+  | 'FILE_UPLOAD'
+  | 'FILE_DELETE'
+  | 'FILE_LIST_UPLOADED';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

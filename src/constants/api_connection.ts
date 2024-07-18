@@ -1,7 +1,13 @@
-import { IAPIConfig, IAPIName } from '@/interfaces/api_connection';
+import { IAPIConfig, IAPIInput, IAPIName, IAPIOutput } from '@/interfaces/api_connection';
 
 const apiVersion = 'v1';
 const apiPrefix = `/api/${apiVersion}`;
+const initialInput: IAPIInput = {
+  header: {},
+  body: {},
+  params: {},
+  query: {},
+};
 
 export enum HttpMethod {
   GET = 'GET',
@@ -54,6 +60,9 @@ export enum APIName {
   REPORT_GENERATE_ANALYSIS = 'REPORT_GENERATE_ANALYSIS',
   SESSION_GET = 'SESSION_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
+  FILE_UPLOAD = 'FILE_UPLOAD',
+  FILE_DELETE = 'FILE_DELETE',
+  FILE_LIST_UPLOADED = 'FILE_LIST_UPLOADED',
 }
 
 export enum APIPath {
@@ -97,528 +106,248 @@ export enum APIPath {
   REPORT_GENERATE_ANALYSIS = `${apiPrefix}/company/:companyId/report_analysis`,
   SESSION_GET = `${apiPrefix}/session`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
+  FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
+  FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
+  FILE_LIST_UPLOADED = `${apiPrefix}/company/:companyId/file/`,
 }
+const createConfig = ({
+  name,
+  method,
+  path,
+  input = initialInput,
+  output = {},
+  useWorker = false,
+}: {
+  name: IAPIName;
+  method: HttpMethod;
+  path: APIPath;
+  input?: IAPIInput;
+  output?: IAPIOutput;
+  useWorker?: boolean;
+}): IAPIConfig => ({
+  name,
+  method,
+  path,
+  input,
+  output,
+  useWorker,
+});
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
-  [APIName.CREATE_CHALLENGE]: {
+  [APIName.CREATE_CHALLENGE]: createConfig({
     name: APIName.CREATE_CHALLENGE,
     method: HttpMethod.GET,
     path: APIPath.CREATE_CHALLENGE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.SIGN_UP]: {
+  }),
+  [APIName.SIGN_UP]: createConfig({
     name: APIName.SIGN_UP,
     method: HttpMethod.POST,
     path: APIPath.SIGN_UP,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.SIGN_IN]: {
+  }),
+  [APIName.SIGN_IN]: createConfig({
     name: APIName.SIGN_IN,
     method: HttpMethod.POST,
     path: APIPath.SIGN_IN,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.SIGN_OUT]: {
+  }),
+  [APIName.SIGN_OUT]: createConfig({
     name: APIName.SIGN_OUT,
     method: HttpMethod.POST,
     path: APIPath.SIGN_OUT,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.EMAIL]: {
+  }),
+  [APIName.EMAIL]: createConfig({
     name: APIName.EMAIL,
     method: HttpMethod.POST,
     path: APIPath.EMAIL,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.USER_GET_BY_ID]: {
+  }),
+  [APIName.USER_GET_BY_ID]: createConfig({
     name: APIName.USER_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.USER_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.OCR_RESULT_GET_BY_ID]: {
+  }),
+  [APIName.OCR_RESULT_GET_BY_ID]: createConfig({
     name: APIName.OCR_RESULT_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.OCR_RESULT_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.OCR_UPLOAD]: {
+  }),
+  [APIName.OCR_UPLOAD]: createConfig({
     name: APIName.OCR_UPLOAD,
     method: HttpMethod.POST,
     path: APIPath.OCR_UPLOAD,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.OCR_DELETE]: {
+  }),
+  [APIName.OCR_DELETE]: createConfig({
     name: APIName.OCR_DELETE,
     method: HttpMethod.DELETE,
     path: APIPath.OCR_DELETE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.INVOICE_CREATE]: {
+  }),
+  [APIName.INVOICE_CREATE]: createConfig({
     name: APIName.INVOICE_CREATE,
     method: HttpMethod.POST,
     path: APIPath.INVOICE_CREATE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.AI_ASK_STATUS]: {
+  }),
+  [APIName.AI_ASK_STATUS]: createConfig({
     name: APIName.AI_ASK_STATUS,
     method: HttpMethod.GET,
     path: APIPath.AI_ASK_STATUS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.AI_ASK_RESULT]: {
+  }),
+  [APIName.AI_ASK_RESULT]: createConfig({
     name: APIName.AI_ASK_RESULT,
     method: HttpMethod.GET,
     path: APIPath.AI_ASK_RESULT,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.VOUCHER_CREATE]: {
+  }),
+  [APIName.VOUCHER_CREATE]: createConfig({
     name: APIName.VOUCHER_CREATE,
     method: HttpMethod.POST,
     path: APIPath.VOUCHER_CREATE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.JOURNAL_LIST]: {
+  }),
+  [APIName.JOURNAL_LIST]: createConfig({
     name: APIName.JOURNAL_LIST,
     method: HttpMethod.GET,
     path: APIPath.JOURNAL_LIST,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.JOURNAL_GET_BY_ID]: {
+  }),
+  [APIName.JOURNAL_GET_BY_ID]: createConfig({
     name: APIName.JOURNAL_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.JOURNAL_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  USER_UPDATE: {
+  }),
+  USER_UPDATE: createConfig({
     name: APIName.USER_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.USER_UPDATE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  COMPANY_LIST: {
+  }),
+  COMPANY_LIST: createConfig({
     name: APIName.COMPANY_LIST,
     method: HttpMethod.GET,
     path: APIPath.COMPANY_LIST,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  COMPANY_ADD: {
+  }),
+  COMPANY_ADD: createConfig({
     name: APIName.COMPANY_ADD,
     method: HttpMethod.POST,
     path: APIPath.COMPANY_ADD,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  COMPANY_ADD_BY_INVITATION_CODE: {
+  }),
+  COMPANY_ADD_BY_INVITATION_CODE: createConfig({
     name: APIName.COMPANY_ADD_BY_INVITATION_CODE,
     method: HttpMethod.PUT,
     path: APIPath.COMPANY_ADD_BY_INVITATION_CODE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  PROFIT_GET_INSIGHT: {
+  }),
+  PROFIT_GET_INSIGHT: createConfig({
     name: APIName.PROFIT_GET_INSIGHT,
     method: HttpMethod.GET,
     path: APIPath.PROFIT_GET_INSIGHT,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  INCOME_EXPENSE_GET_TREND_IN_PERIOD: {
+  }),
+  INCOME_EXPENSE_GET_TREND_IN_PERIOD: createConfig({
     name: APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
     method: HttpMethod.GET,
     path: APIPath.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  PROJECT_LIST_PROGRESS: {
+  }),
+  PROJECT_LIST_PROGRESS: createConfig({
     name: APIName.PROJECT_LIST_PROGRESS,
     method: HttpMethod.GET,
     path: APIPath.PROJECT_LIST_PROGRESS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  PROJECT_LIST_PROFIT_COMPARISON: {
+  }),
+  PROJECT_LIST_PROFIT_COMPARISON: createConfig({
     name: APIName.PROJECT_LIST_PROFIT_COMPARISON,
     method: HttpMethod.GET,
     path: APIPath.PROJECT_LIST_PROFIT_COMPARISON,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  ASSET_MANAGEMENT_LIST: {
+  }),
+  ASSET_MANAGEMENT_LIST: createConfig({
     name: APIName.ASSET_MANAGEMENT_LIST,
     method: HttpMethod.GET,
     path: APIPath.ASSET_MANAGEMENT_LIST,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  ASSET_MANAGEMENT_ADD: {
+  }),
+  ASSET_MANAGEMENT_ADD: createConfig({
     name: APIName.ASSET_MANAGEMENT_ADD,
     method: HttpMethod.POST,
     path: APIPath.ASSET_MANAGEMENT_ADD,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  ASSET_MANAGEMENT_GET_BY_ID: {
+  }),
+  ASSET_MANAGEMENT_GET_BY_ID: createConfig({
     name: APIName.ASSET_MANAGEMENT_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.ASSET_MANAGEMENT_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  ASSET_MANAGEMENT_UPDATE: {
+  }),
+  ASSET_MANAGEMENT_UPDATE: createConfig({
     name: APIName.ASSET_MANAGEMENT_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.ASSET_MANAGEMENT_UPDATE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  JOURNAL_UPDATE: {
+  }),
+  JOURNAL_UPDATE: createConfig({
     name: APIName.JOURNAL_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.JOURNAL_UPDATE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  JOURNAL_DELETE: {
+  }),
+  JOURNAL_DELETE: createConfig({
     name: APIName.JOURNAL_DELETE,
     method: HttpMethod.DELETE,
     path: APIPath.JOURNAL_DELETE,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.COMPANY_SELECT]: {
+  }),
+  [APIName.COMPANY_SELECT]: createConfig({
     name: APIName.COMPANY_SELECT,
     method: HttpMethod.PUT,
     path: APIPath.COMPANY_SELECT,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  REPORT_LIST_PENDING: {
+  }),
+  REPORT_LIST_PENDING: createConfig({
     name: APIName.REPORT_LIST_PENDING,
     method: HttpMethod.GET,
     path: APIPath.REPORT_LIST_PENDING,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  REPORT_LIST_GENERATED: {
+  }),
+  REPORT_LIST_GENERATED: createConfig({
     name: APIName.REPORT_LIST_GENERATED,
     method: HttpMethod.GET,
     path: APIPath.REPORT_LIST_GENERATED,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
+  }),
 
-  [APIName.REPORT_FINANCIAL_GET_BY_ID]: {
+  [APIName.REPORT_FINANCIAL_GET_BY_ID]: createConfig({
     name: APIName.REPORT_FINANCIAL_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.REPORT_FINANCIAL_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.REPORT_ANALYSIS_GET_BY_ID]: {
+  }),
+  [APIName.REPORT_ANALYSIS_GET_BY_ID]: createConfig({
     name: APIName.REPORT_ANALYSIS_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.REPORT_ANALYSIS_GET_BY_ID,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.REPORT_GENERATE_FINANCIAL]: {
+  }),
+  [APIName.REPORT_GENERATE_FINANCIAL]: createConfig({
     name: APIName.REPORT_GENERATE_FINANCIAL,
     method: HttpMethod.POST,
     path: APIPath.REPORT_GENERATE_FINANCIAL,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.REPORT_GENERATE_ANALYSIS]: {
+  }),
+  [APIName.REPORT_GENERATE_ANALYSIS]: createConfig({
     name: APIName.REPORT_GENERATE_ANALYSIS,
     method: HttpMethod.POST,
     path: APIPath.REPORT_GENERATE_ANALYSIS,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.LABOR_COST_CHART]: {
+  }),
+  [APIName.LABOR_COST_CHART]: createConfig({
     name: APIName.LABOR_COST_CHART,
     method: HttpMethod.GET,
     path: APIPath.LABOR_COST_CHART,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.OCR_LIST]: {
+  }),
+  [APIName.OCR_LIST]: createConfig({
     name: APIName.OCR_LIST,
     method: HttpMethod.GET,
     path: APIPath.OCR_LIST,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.SESSION_GET]: {
+  }),
+  [APIName.SESSION_GET]: createConfig({
     name: APIName.SESSION_GET,
     method: HttpMethod.GET,
     path: APIPath.SESSION_GET,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
-  [APIName.ACCOUNT_LIST]: {
+  }),
+  [APIName.ACCOUNT_LIST]: createConfig({
     name: APIName.ACCOUNT_LIST,
     method: HttpMethod.GET,
     path: APIPath.ACCOUNT_LIST,
-    input: {
-      header: {},
-      body: {},
-      params: {},
-      query: {},
-    },
-    output: {},
-    useWorker: false,
-  },
+  }),
+  [APIName.FILE_UPLOAD]: createConfig({
+    name: APIName.FILE_UPLOAD,
+    method: HttpMethod.POST,
+    path: APIPath.FILE_UPLOAD,
+  }),
+  [APIName.FILE_DELETE]: createConfig({
+    name: APIName.FILE_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.FILE_DELETE,
+  }),
+  [APIName.FILE_LIST_UPLOADED]: createConfig({
+    name: APIName.FILE_LIST_UPLOADED,
+    method: HttpMethod.GET,
+    path: APIPath.FILE_LIST_UPLOADED,
+  }),
 };
