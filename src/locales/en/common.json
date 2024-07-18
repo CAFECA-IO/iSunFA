@@ -187,8 +187,7 @@
     "UNPOPULAR": "Unpopular",
     "ALL": "All",
     "RELEVANCY": "Relevancy",
-    "PAYMENT_PROCESS": "Payment Process",
-    "PROJECT_PROCESS": "Project Process"
+    "PAYMENT_PRICE": "Payment Price"
   },
   "FOOTER": {
     "POWERED_BY": "Powered by iSunFA",

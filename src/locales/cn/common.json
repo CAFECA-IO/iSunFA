@@ -185,8 +185,7 @@
     "UNPOPULAR": "冷门",
     "ALL": "全部",
     "RELEVANCY": "相关性",
-    "PAYMENT_PROCESS": "付款流程",
-    "PROJECT_PROCESS": "项目流程"
+    "PAYMENT_PRICE": "付款价格"
   },
   "FOOTER": {
     "POWERED_BY": "技术支持 阳光智能会计",
