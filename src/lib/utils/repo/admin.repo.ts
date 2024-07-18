@@ -41,6 +41,25 @@ export async function getAdminById(
   return admin;
 }
 
+export async function getOwnerByCompanyId(
+  companyId: number,
+  roleId: number
+): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+  const owner = await prisma.admin.findFirst({
+    where: {
+      companyId,
+      roleId,
+    },
+    include: {
+      user: true,
+      company: true,
+      role: true,
+    },
+  });
+
+  return owner;
+}
+
 export async function getAdminByCompanyIdAndUserId(
   companyId: number,
   userId: number

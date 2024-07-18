@@ -6,19 +6,18 @@ import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkRole, checkUser } from '@/lib/utils/auth_check';
 import { deleteCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { ROLE_NAME } from '@/constants/role_name';
-import {
-  deleteAdminListByCompanyId,
-  getAdminByCompanyIdAndUserId,
-} from '@/lib/utils/repo/admin.repo';
+import { deleteAdminListByCompanyId, getOwnerByCompanyId } from '@/lib/utils/repo/admin.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
+import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
+import { IAdmin } from '@/interfaces/admin';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | null>>
+  res: NextApiResponse<IResponseData<ICompany | IAdmin | null>>
 ) {
   let shouldContinue: boolean = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
+  let payload: ICompany | IAdmin | null = null;
 
   try {
     const session = await checkUser(req, res);
@@ -27,11 +26,11 @@ export default async function handler(
 
     switch (req.method) {
       case 'GET': {
-        const getAdmin = await getAdminByCompanyIdAndUserId(companyId, userId);
+        const getAdmin = await getOwnerByCompanyId(companyId, userId);
         if (getAdmin) {
-          const company = await formatCompany(getAdmin.company);
+          const owner = await formatAdmin(getAdmin);
           statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          payload = company;
+          payload = owner;
         }
         break;
       }
@@ -42,7 +41,7 @@ export default async function handler(
           statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
         }
         if (shouldContinue) {
-          await checkRole(req, res, ROLE_NAME.OWNER);
+          // await checkRole(req, res, ROLE_NAME.OWNER);
           const updatedCompany = await updateCompanyById(companyId, code, name, regional);
           if (!updatedCompany) {
             shouldContinue = false;
@@ -74,6 +73,6 @@ export default async function handler(
     payload = null;
   }
 
-  const { httpCode, result } = formatApiResponse<ICompany | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<ICompany | IAdmin | null>(statusMessage, payload);
   res.status(httpCode).json(result);
 }
