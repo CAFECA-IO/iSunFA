@@ -1,25 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
 
-// s
-
-// export interface KYCDocuments {
-//   [KYCDocumentType.BUSINESS_REGISTRATION_CERTIFICATE]: {
-//     file: File | null;
-//     status: ProgressStatus | null;
-//   };
-//   [KYCDocumentType.TAX_STATUS_CERTIFICATE]: { file: File | null; status: ProgressStatus | null };
-//   [KYCDocumentType.REPRESENTATIVE_ID_CERTIFICATE]: {
-//     file: File | null;
-//     status: ProgressStatus | null;
-//   };
-// }
-
-// export const initialKYCDocuments: KYCDocuments = {
-//   [KYCDocumentType.BUSINESS_REGISTRATION_CERTIFICATE]: { file: null, status: null },
-//   [KYCDocumentType.TAX_STATUS_CERTIFICATE]: { file: null, status: null },
-//   [KYCDocumentType.REPRESENTATIVE_ID_CERTIFICATE]: { file: null, status: null },
-// };
-
 export enum RepresentativeIDType {
   PASSPORT = 'PASSPORT',
   ID_CARD = 'ID_CARD',
