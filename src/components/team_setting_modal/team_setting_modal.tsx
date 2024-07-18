@@ -21,6 +21,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   const {
     trigger: updateTeam,
     data: updatedTeam,
+    isLoading: isUpdateTeamLoading,
     error: updateTeamError,
     code: updateTeamCode,
     success: updateTeamSuccess,
@@ -51,7 +52,8 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   };
 
   useEffect(() => {
-    if (!isModalVisible) return;
+    if (isUpdateTeamLoading) return;
+
     if (updateTeamSuccess && updatedTeam) {
       // TODO: dev (20240718 - Shirley)
       // eslint-disable-next-line no-console
@@ -65,7 +67,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
         closeable: true,
       });
     }
-  }, [updateTeamSuccess, updateTeamError, isModalVisible]);
+  }, [updateTeamSuccess, updateTeamError, isUpdateTeamLoading]);
 
   useEffect(() => {
     if (inputRef.current) {

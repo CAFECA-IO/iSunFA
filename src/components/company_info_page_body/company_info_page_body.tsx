@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from '@/components/button/button';
 import { APIName } from '@/constants/api_connection';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -14,7 +13,7 @@ import React, { useEffect, useState } from 'react';
 
 const CompanyInfoPageBody = () => {
   const router = useRouter();
-  const { selectedCompany, userAuth, selectCompany } = useUserCtx();
+  const { selectedCompany, selectCompany } = useUserCtx();
   const {
     teamSettingModalVisibilityHandler,
     messageModalVisibilityHandler,
@@ -22,31 +21,21 @@ const CompanyInfoPageBody = () => {
     transferCompanyModalVisibilityHandler,
   } = useGlobalCtx();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [company, setCompany] = useState<ICompany | null>(selectedCompany);
 
-  const {
-    trigger: deleteCompany,
-    code: deleteCompanyCode,
-    error: deleteCompanyError,
-    isLoading: isDeleteCompanyLoading,
-    success: deleteCompanySuccess,
-  } = APIHandler<ICompany>(
+  const { trigger: deleteCompany } = APIHandler<ICompany>(
     APIName.COMPANY_DELETE,
     {
       params: {
-        companyId: selectedCompany?.id ?? 1000,
+        companyId: selectedCompany?.id ?? -1,
       },
     },
     false,
     false
   );
 
-  // TODO: list one company data
   const {
     data: companyData,
-    isLoading: isCompanyDataLoading,
-    error: getCompanyDataError,
     code: getCompanyDataCode,
     success: getCompanyDataSuccessfully,
   } = APIHandler<ICompany>(APIName.COMPANY_GET_BY_ID, {
@@ -55,38 +44,15 @@ const CompanyInfoPageBody = () => {
     },
   });
 
-  // console.log('data in CompanyInfoPageBody', companyData);
-
-  /*
-  const { data, isLoading, error, success } = APIHandler<ICompany>(APIName.COMPANY_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? 1000,
-    },
-  });
-  */
-  /* eslint-disable no-console */
-  console.log('userAuth in CompanyInfoPageBody', userAuth);
-
   useEffect(() => {
-    console.log('companyData in CompanyInfoPageBody', companyData);
     if (getCompanyDataSuccessfully && companyData) {
       setCompany(companyData);
     }
   }, [companyData, getCompanyDataSuccessfully, getCompanyDataCode]);
 
-  // if (!company) {
-  //   return null;
-  // }
-
-  console.log('selectedCompany in CompanyInfoPageBody', selectedCompany?.id);
-
-  // useEffect(() => {
-  //   if (isDeleteCompanyLoading) return;
-  //   if (deleteCompanySuccess) {
-  //     selectCompany(null);
-  //     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-  //   }
-  // }, [deleteCompanySuccess, isDeleteCompanyLoading]);
+  useEffect(() => {
+    setCompany(selectedCompany);
+  }, [selectedCompany]);
 
   const editCompanyClickHandler = () => {
     teamSettingModalVisibilityHandler();
@@ -97,6 +63,7 @@ const CompanyInfoPageBody = () => {
   };
 
   const procedureOfDelete = () => {
+    if (!company) return;
     messageModalVisibilityHandler();
     deleteCompany();
 
