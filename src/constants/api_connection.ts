@@ -63,6 +63,12 @@ export enum APIName {
   FILE_UPLOAD = 'FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
   FILE_LIST_UPLOADED = 'FILE_LIST_UPLOADED',
+  COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
+  COMPANY_DELETE = 'COMPANY_DELETE',
+  COMPANY_UPDATE = 'COMPANY_UPDATE',
+  ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
+  ROLE_DELETE = 'ROLE_DELETE',
+  ROLE_UPDATE = 'ROLE_UPDATE',
 }
 
 export enum APIPath {
@@ -109,6 +115,12 @@ export enum APIPath {
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_LIST_UPLOADED = `${apiPrefix}/company/:companyId/file/`,
+  COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
+  COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
+  COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
+  ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
+  ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
+  ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
 }
 const createConfig = ({
   name,
@@ -349,5 +361,35 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.FILE_LIST_UPLOADED,
     method: HttpMethod.GET,
     path: APIPath.FILE_LIST_UPLOADED,
+  }),
+  [APIName.COMPANY_GET_BY_ID]: createConfig({
+    name: APIName.COMPANY_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.COMPANY_GET_BY_ID,
+  }),
+  [APIName.COMPANY_UPDATE]: createConfig({
+    name: APIName.COMPANY_UPDATE,
+    method: HttpMethod.PUT,
+    path: APIPath.COMPANY_UPDATE,
+  }),
+  [APIName.COMPANY_DELETE]: createConfig({
+    name: APIName.COMPANY_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.COMPANY_DELETE,
+  }),
+  [APIName.ROLE_GET_BY_ID]: createConfig({
+    name: APIName.ROLE_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ROLE_GET_BY_ID,
+  }),
+  [APIName.ROLE_DELETE]: createConfig({
+    name: APIName.ROLE_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.ROLE_DELETE,
+  }),
+  [APIName.ROLE_UPDATE]: createConfig({
+    name: APIName.ROLE_UPDATE,
+    method: HttpMethod.PUT,
+    path: APIPath.ROLE_UPDATE,
   }),
 };

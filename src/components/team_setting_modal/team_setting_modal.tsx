@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
+import { APIName } from '@/constants/api_connection';
+import { ICompany } from '@/interfaces/company';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface ITeamSettingModal {
   isModalVisible: boolean;
@@ -7,16 +14,58 @@ interface ITeamSettingModal {
 }
 
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
+  const { selectedCompany, selectCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    trigger: updateTeam,
+    data: updatedTeam,
+    error: updateTeamError,
+    code: updateTeamCode,
+    success: updateTeamSuccess,
+  } = APIHandler<ICompany>(
+    APIName.COMPANY_UPDATE,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? 0,
+      },
+    },
+    false,
+    false
+  );
 
   const saveClickHandler = async () => {
     if (inputRef.current) {
-      // TODO: send API request (20240717 - Shirley)
-      // const name = inputRef.current.value;
+      updateTeam({
+        body: {
+          name: inputRef.current.value,
+          code: selectedCompany?.code,
+          regional: selectedCompany?.regional,
+        },
+      });
+
       inputRef.current.value = '';
       modalVisibilityHandler();
     }
   };
+
+  useEffect(() => {
+    if (!isModalVisible) return;
+    if (updateTeamSuccess && updatedTeam) {
+      // TODO: dev (20240718 - Shirley)
+      // eslint-disable-next-line no-console
+      console.log('updatedTeam in TeamSettingModal', updatedTeam);
+      selectCompany(updatedTeam);
+    } else if (updateTeamError) {
+      toastHandler({
+        id: `update_team-${updateTeamCode}`,
+        type: ToastType.ERROR,
+        content: <p>Fail to update company name. Code: {updateTeamCode}</p>,
+        closeable: true,
+      });
+    }
+  }, [updateTeamSuccess, updateTeamError, isModalVisible]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -77,7 +126,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
                   ref={inputRef}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder="iSunCloud" // TODO: get company name from API (20240717 - Shirley)
+                  placeholder={selectedCompany?.name ?? 'your company name'}
                 />
               </div>
             </div>
