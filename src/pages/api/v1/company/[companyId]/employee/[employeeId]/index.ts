@@ -49,6 +49,7 @@ async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
       pay_frequency: employee.payFrequency,
       projects: projectNames,
       insurance_payments: employee.insurancePayment,
+      additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
     };
   }
   return employeeData;
@@ -142,6 +143,7 @@ async function updateEmployee(
       pay_frequency: employee.payFrequency,
       projects: projectNames,
       insurance_payments: employee.insurancePayment,
+      additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
     };
   }
   return employeeData;
