@@ -30,7 +30,8 @@ export const toEventType = (type: JOURNAL_TYPE): EventType | undefined => {
 export enum SORTING_OPTION {
   NEWEST = 'SORTING.NEWEST',
   OLDEST = 'SORTING.OLDEST',
-  PAYMENT_PRICE = 'SORTING.PAYMENT_PRICE',
+  HIGHEST_PAYMENT_PRICE = 'SORTING.HIGHEST_PAYMENT_PRICE',
+  LOWEST_PAYMENT_PRICE = 'SORTING.LOWEST_PAYMENT_PRICE',
 }
 
 export const toSort = (
@@ -40,14 +41,19 @@ export const toSort = (
   sortOrder: string;
 } => {
   switch (type) {
+    case SORTING_OPTION.LOWEST_PAYMENT_PRICE:
+      return {
+        sortBy: 'paymentPrice',
+        sortOrder: 'asc',
+      };
+    case SORTING_OPTION.HIGHEST_PAYMENT_PRICE:
+      return {
+        sortBy: 'paymentPrice',
+        sortOrder: 'desc',
+      };
     case SORTING_OPTION.OLDEST:
       return {
         sortBy: 'createdAt',
-        sortOrder: 'asc',
-      };
-    case SORTING_OPTION.PAYMENT_PRICE:
-      return {
-        sortBy: 'paymentPrice',
         sortOrder: 'asc',
       };
     case SORTING_OPTION.NEWEST:

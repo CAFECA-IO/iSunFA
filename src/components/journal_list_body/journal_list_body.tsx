@@ -44,7 +44,8 @@ const JournalListBody = () => {
   const sortingOptions = [
     SORTING_OPTION.NEWEST,
     SORTING_OPTION.OLDEST,
-    SORTING_OPTION.PAYMENT_PRICE,
+    SORTING_OPTION.HIGHEST_PAYMENT_PRICE,
+    SORTING_OPTION.LOWEST_PAYMENT_PRICE,
   ];
 
   const {
