@@ -14,14 +14,14 @@ const KYCFormController = ({
   const { t } = useTranslation('common');
 
   return (
-    <div className="mt-6 flex justify-between">
-      <button type="button" className="rounded bg-gray-500 px-4 py-2 text-white" onClick={onCancel}>
+    <div className="flex gap-20px self-end">
+      <button type="button" className="rounded px-4 py-2 text-secondaryBlue" onClick={onCancel}>
         {t('KYC.CANCEL')}
       </button>
       {step < 3 ? (
         <button
           type="button"
-          className="rounded bg-yellow-500 px-4 py-2 text-white"
+          className="rounded bg-primaryYellow5 px-4 py-2 text-primaryYellow2"
           onClick={onNext}
         >
           {t('KYC.NEXT')}
@@ -29,7 +29,7 @@ const KYCFormController = ({
       ) : (
         <button
           type="button"
-          className="rounded bg-yellow-500 px-4 py-2 text-white"
+          className="rounded bg-primaryYellow5 px-4 py-2 text-primaryYellow2"
           onSubmit={onSubmit}
         >
           {t('KYC.SUBMIT')}
