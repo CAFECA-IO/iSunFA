@@ -1,9 +1,10 @@
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { dummyAccountingTitleData } from '@/interfaces/accounting_account';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useUserCtx } from '@/contexts/user_context';
 import Pagination from '@/components/pagination/pagination';
 import AccountingTitleTable, {
   ActionType,
@@ -17,6 +18,8 @@ enum AssetOptions {
 
 enum LiabilityOptions {
   ALL = 'All',
+  CURRENT = 'Current',
+  NON_CURRENT = 'Non-Current',
 }
 
 enum EquityOptions {
@@ -24,12 +27,21 @@ enum EquityOptions {
 }
 
 const AccountingTitlePageBody = () => {
+  const { selectedCompany } = useUserCtx();
+  const { getAccountListHandler, accountList } = useAccountingCtx();
+
   const [selectedAsset, setSelectedAsset] = useState(AssetOptions.ALL);
   const [selectedLiability, setSelectedLiability] = useState(LiabilityOptions.ALL);
   const [selectedEquity, setSelectedEquity] = useState(EquityOptions.ALL);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPage = Math.ceil(dummyAccountingTitleData.length / 10);
+  const totalPage = Math.ceil(accountList.length / 10);
+
+  useEffect(() => {
+    if (selectedCompany) {
+      getAccountListHandler(selectedCompany.id);
+    }
+  }, []);
 
   const {
     targetRef: assetRef,
@@ -187,18 +199,14 @@ const AccountingTitlePageBody = () => {
         <FiSearch size={20} />
       </div>
       {/* Info: (20240717 - Julian) Favorite Accounting Title Divider */}
-      <div className="my-40px flex items-center gap-4 lg:my-5">
+      {/* ToDo: (20240718 - Julian) 現階段不做 Favorite Accounting Title */}
+      <div className="my-40px hidden items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
           <Image src="/icons/favorite.svg" width={16} height={16} alt="favorite_icon" />
           <p>Favorite Accounting Title</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
-      {/* Info: (20240717 - Julian) Favorite Accounting Table */}
-      <AccountingTitleTable
-        accountingTitleData={dummyAccountingTitleData.slice(0, 3)}
-        actionType={ActionType.FAV_AND_ADD}
-      />
       {/* Info: (20240717 - Julian) My new accounting title Divider */}
       <div className="my-40px flex items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
@@ -209,7 +217,7 @@ const AccountingTitlePageBody = () => {
       </div>
       {/* Info: (20240717 - Julian) My new accounting title Table */}
       <AccountingTitleTable
-        accountingTitleData={dummyAccountingTitleData.slice(0, 3)}
+        accountingTitleData={accountList} // ToDo: (20240718 - Julian) filter
         actionType={ActionType.EDIT_AND_REMOVE}
       />
       {/* Info: (20240717 - Julian) Accounting Title Divider */}
@@ -223,7 +231,7 @@ const AccountingTitlePageBody = () => {
       {/* Info: (20240717 - Julian) All Accounting Table */}
       <div className="flex flex-col items-center gap-y-32px">
         <AccountingTitleTable
-          accountingTitleData={dummyAccountingTitleData}
+          accountingTitleData={accountList}
           actionType={ActionType.FAV_AND_ADD}
         />
 

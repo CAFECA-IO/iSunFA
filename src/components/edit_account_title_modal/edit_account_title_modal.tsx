@@ -3,9 +3,9 @@ import { RxCross2 } from 'react-icons/rx';
 import { RiDeleteBinLine } from 'react-icons/ri';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { Button } from '@/components/button/button';
 import { MessageType } from '@/interfaces/message_modal';
-import { dummyAccountingTitleData } from '@/interfaces/accounting_account';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -23,8 +23,9 @@ const EditAccountTitleModal = ({
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
   // ToDo: (20240718 - Julian) get data from API
+  const { accountList } = useAccountingCtx();
   const { accountId } = modalData;
-  const parentAccount = dummyAccountingTitleData.find((data) => data.id === accountId);
+  const parentAccount = accountList.find((data) => data.id === accountId);
   const accountingType = parentAccount?.type;
   const liquidity = parentAccount?.liquidity;
   const currentAssetType = parentAccount?.name;
@@ -36,6 +37,7 @@ const EditAccountTitleModal = ({
   };
 
   const disableSubmit = !nameValue;
+  const displayLiquidity = liquidity ? 'Current' : 'Non-current';
 
   const handleRemove = () => {
     messageModalDataHandler({
@@ -86,7 +88,7 @@ const EditAccountTitleModal = ({
             <input
               id="input-liability"
               type="text"
-              value={`${liquidity}`}
+              value={displayLiquidity}
               disabled
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />

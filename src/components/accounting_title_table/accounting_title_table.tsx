@@ -78,7 +78,12 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
       // Info: (20240717 - Julian) Actions for Favorite and Add New Sub
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
         {/* Info: (20240717 - Julian) Favorite button */}
-        <button type="button" className="group flex items-center gap-4px" onClick={handleFavorite}>
+        {/* Info: (20240718 - Julian) 現階段不做 Favorite 功能 */}
+        <button
+          type="button"
+          className="group hidden items-center gap-4px"
+          onClick={handleFavorite}
+        >
           {displayStar}
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
             Favorite
@@ -127,9 +132,10 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
       // Info: (20240717 - Julian) Actions for Favorite and Add New Sub
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
         {/* Info: (20240717 - Julian) Favorite button */}
+        {/* Info: (20240718 - Julian) 現階段不做 Favorite 功能 */}
         <button
           type="button"
-          className="flex items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
+          className="hidden items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
           onClick={handleFavorite}
         >
           {displayStar}
