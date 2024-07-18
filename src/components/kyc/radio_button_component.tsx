@@ -35,13 +35,9 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
               onChange={() => onChange(option.value)}
               className="hidden"
             />
-            <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-navy-blue-400 ${
-                selectedValue === option.value ? 'bg-navy-blue-400' : ''
-              }`}
-            >
+            <span className="flex h-5 w-5 items-center justify-center rounded-full border border-navy-blue-400 bg-white">
               {selectedValue === option.value && (
-                <span className="h-2.5 w-2.5 rounded-full bg-white" />
+                <span className="h-3 w-3 rounded-full bg-navy-blue-400" />
               )}
             </span>
             <span className="ml-2 text-navy-blue-400">{option.label}</span>
