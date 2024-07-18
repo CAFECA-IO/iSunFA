@@ -112,13 +112,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IPaginatedData<IJournalListItem[]> | null>>
 ) {
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
-  if (!isCompanyIdValid(companyId)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
   try {
     if (req.method === 'GET') {
+      const session = await checkAdmin(req, res);
+      const { companyId } = session;
+      if (!isCompanyIdValid(companyId)) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
       const { httpCode, result } = await handleGetRequest(companyId, req);
       res.status(httpCode).json(result);
     } else {
