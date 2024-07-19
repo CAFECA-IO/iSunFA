@@ -32,7 +32,7 @@ export const truncateString = (str: string, length: number) => {
   return result;
 };
 
-export const timestampToString = (timestamp: number | undefined) => {
+export const timestampToString = (timestamp: number | undefined, separator: string = '-') => {
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
     return {
       date: '-',
@@ -95,21 +95,23 @@ export const timestampToString = (timestamp: number | undefined) => {
 
   const monthNameShort = monthNamesInShort[monthIndex];
   const monthName = monthFullName[monthIndex];
-  const dateString = `${year}-${month.toString().padStart(2, '0')}-${day
+  const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
+    .toString()
+    .padStart(2, '0')}`;
+  const dateString = `${year}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
     .padStart(2, '0')}`;
   const dayString = `${day.toString().padStart(2, '0')}`;
+  const tomorrowString = `${year}${separator}${(month + 1)
+    .toString()
+    .padStart(2, '0')}${separator}${(day + 1).toString().padStart(2, '0')}`;
   const monthString = MONTH_LIST[monthIndex];
 
   return {
     date: dateString, // e.g. 2021-01-01
-    dateOfLastYear: `${year - 1}-${month.toString().padStart(2, '0')}-${day
-      .toString()
-      .padStart(2, '0')}`, // e.g. 2020-01-01
+    dateOfLastYear: dateOfLastYearString, // e.g. 2020-01-01
     day: `${dayString}`, // e.g. 01
-    tomorrow: `${year}-${month.toString().padStart(2, '0')}-${(day + 1)
-      .toString()
-      .padStart(2, '0')}`, // e.g. 2021-01-02
+    tomorrow: tomorrowString, // e.g. 2021-01-02
     month: `${month}`.padStart(2, '0'), // e.g. 01
     monthString: `${monthString}`, // e.g. January (with i18n)
     monthShortName: `${monthNameShort}`, // e.g. Jan.

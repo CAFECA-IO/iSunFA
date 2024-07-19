@@ -158,9 +158,9 @@ function setNewCode(parentAccount: Account, latestSubAccount: Account | null) {
     if (latestSubAccountCodeParts.length > 1) {
       const latestSubAccountNumber = Number(latestSubAccountCodeParts.pop());
       newCode = `${parentCode}-${latestSubAccountNumber + 1}`;
-    } else {
-      newCode = `${parentCode}-1`;
     }
+  } else {
+    newCode = `${parentCode}-1`;
   }
   return newCode;
 }
