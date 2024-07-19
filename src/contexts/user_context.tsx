@@ -33,6 +33,8 @@ interface UserContextType {
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
+  returnUrl: string | null;
+  clearReturnUrl: () => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -50,6 +52,8 @@ export const UserContext = createContext<UserContextType>({
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: true,
+  returnUrl: null,
+  clearReturnUrl: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -77,6 +81,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
 
   const { trigger: signOutAPI } = APIHandler<void>(
     APIName.SIGN_OUT,
@@ -249,6 +255,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const clearReturnUrl = () => {
+    setReturnUrl(null);
+  };
+
   const clearState = () => {
     setUserAuth(null);
     setUsername(null);
@@ -317,10 +327,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
   useEffect(() => {
-    if (!signedIn && !isGetUserSessionLoading) {
+    if (!signedIn && isGetUserSessionLoading === false) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        const returnUrl = encodeURIComponent(router.asPath);
-        router.push(`${ISUNFA_ROUTE.LOGIN}?returnUrl=${returnUrl}`);
+        setReturnUrl(encodeURIComponent(router.asPath));
+        router.push(ISUNFA_ROUTE.LOGIN);
       }
     }
   }, [signedIn, isGetUserSessionLoading, router]);
@@ -398,6 +408,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
+      returnUrl: returnUrlRef.current,
+      clearReturnUrl,
     }),
     [
       credentialRef.current,
@@ -406,6 +418,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
+      returnUrlRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

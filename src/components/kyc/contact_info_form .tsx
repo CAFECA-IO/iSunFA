@@ -1,7 +1,7 @@
-import { ContactInfoKeys, IContactInfo } from '@/interfaces/kyc_contact_info';
+import { IContactInfo } from '@/interfaces/kyc_contact_info';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { AreaCodeOptions } from '@/constants/kyc';
+import { ContactInfoKeys, AreaCodeOptions } from '@/constants/kyc';
 
 // Info: (20240718 - Liz) 根據 Area Code 對應到國家的國旗
 const areaCodeFlagMap: Record<AreaCodeOptions, string> = {

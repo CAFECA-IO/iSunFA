@@ -15,13 +15,14 @@ import { useTranslation } from 'next-i18next';
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { signedIn, isAuthLoading } = useUserCtx();
+  const { signedIn, isAuthLoading, selectedCompany, returnUrl, clearReturnUrl } = useUserCtx();
 
   useEffect(() => {
     if (signedIn) {
-      const returnUrl = router.query.returnUrl as string;
-      if (returnUrl) {
-        router.push(decodeURIComponent(returnUrl));
+      if (selectedCompany && returnUrl) {
+        const urlString = decodeURIComponent(returnUrl);
+        clearReturnUrl();
+        router.push(urlString);
       } else {
         router.push(ISUNFA_ROUTE.SELECT_COMPANY);
       }

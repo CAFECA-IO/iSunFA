@@ -1,8 +1,8 @@
-import { BasicInfoKeys, IBasicInfo } from '@/interfaces/kyc_basic_info';
+import { BasicInfoKeys, CountryOptions } from '@/constants/kyc';
+import { IBasicInfo } from '@/interfaces/kyc_basic_info';
 import Image from 'next/image';
 import { useState } from 'react';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { CountryOptions } from '@/constants/kyc';
 import { useTranslation } from 'next-i18next';
 
 // Info: (20240719 - Liz) 根據 Country Options 對應到國家的國旗。P.S.目前國旗的下拉選單不會傳值給後端，因為在下一個表單的第一個欄位已有國家選項，會傳那個給後端(可搜尋 id="country-menu")
@@ -77,8 +77,8 @@ const BasicInfoForm = ({
   const zipCodeInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(BasicInfoKeys.ZIP_CODE, e.target.value);
   };
-  const streetInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(BasicInfoKeys.STREET, e.target.value);
+  const addressInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(BasicInfoKeys.ADDRESS, e.target.value);
   };
   const keyCompanyRepresentativesInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME, e.target.value);
@@ -187,7 +187,7 @@ const BasicInfoForm = ({
           placeholder="Street Address"
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
-          onChange={streetInputHandler}
+          onChange={addressInputHandler}
         />
       </div>
 

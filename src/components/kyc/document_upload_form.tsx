@@ -1,64 +1,31 @@
 import UploadArea from '@/components/kyc/upload_area';
 import RadioButtonComponent from '@/components/kyc/radio_button_component';
 import { useTranslation } from 'react-i18next';
-import {
-  IUploadDocuments,
-  RepresentativeIDType,
-  UploadDocumentKeys,
-} from '@/interfaces/kyc_document_type';
-import { ProgressStatus } from '@/constants/account';
+import { IUploadDocuments } from '@/interfaces/kyc_document_upload';
+import { UploadDocumentKeys, RepresentativeIDType } from '@/constants/kyc';
 
 const DocumentUploadForm = ({
   data,
   onChange,
+  onSelect,
 }: {
   data: IUploadDocuments;
   onChange: (
+    operation: 'add' | 'delete',
     key: UploadDocumentKeys,
-    value:
-      | { file: File | null; status: ProgressStatus | null; fileId: string | null }
-      | RepresentativeIDType
+    id: string | undefined,
+    file: File | undefined
   ) => void;
+  onSelect: (value: RepresentativeIDType) => void;
 }) => {
   const { t } = useTranslation('common');
 
-  const representativeTypeChangeHandler = (type: RepresentativeIDType) =>
-    onChange(UploadDocumentKeys.REPRESENTATIVE_ID_TYPE, type);
-
-  const bussinessRegistrationUploadHandler = (
-    file: File | null,
-    status: ProgressStatus | null,
-    fileId: string | null
-  ) =>
-    onChange(UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE, {
-      file,
-      status,
-      fileId,
-    });
-
-  const taxStatusUploadHandler = (
-    file: File | null,
-    status: ProgressStatus | null,
-    fileId: string | null
-  ) => onChange(UploadDocumentKeys.TAX_STATUS_CERTIFICATE, { file, status, fileId });
-
-  const representativeUploadHandler = (
-    file: File | null,
-    status: ProgressStatus | null,
-    fileId: string | null
-  ) =>
-    onChange(UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE, {
-      file,
-      status,
-      fileId,
-    });
-
   return (
-    <div className="mb-14 flex flex-col items-center bg-gray-100">
+    <div className="flex flex-col items-center bg-gray-100">
       <div className="mb-8">
         <RadioButtonComponent
           selectedValue={data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}
-          onChange={representativeTypeChangeHandler}
+          onChange={onSelect}
         />
       </div>
       <div className="flex w-full max-w-3xl flex-col space-y-6">
@@ -68,9 +35,12 @@ const DocumentUploadForm = ({
               {t('KYC.BUSINESS_REGISTRATION_CERTIFICATE')}
             </h3>
             <UploadArea
-              type={UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE}
-              uploadFile={data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE].file}
-              uploadHandler={bussinessRegistrationUploadHandler}
+              type={UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID}
+              backendUniqueIdentifier={
+                data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID].id
+              }
+              uploadedFile={data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID].file}
+              onChange={onChange}
             />
           </div>
           <div>
@@ -78,9 +48,10 @@ const DocumentUploadForm = ({
               {t('KYC.TAX_STATUS_CERTIFICATE')}
             </h3>
             <UploadArea
-              type={UploadDocumentKeys.TAX_STATUS_CERTIFICATE}
-              uploadFile={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE].file}
-              uploadHandler={taxStatusUploadHandler}
+              type={UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID}
+              backendUniqueIdentifier={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID].id}
+              uploadedFile={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID].file}
+              onChange={onChange}
             />
           </div>
         </div>
@@ -91,9 +62,10 @@ const DocumentUploadForm = ({
             })}
           </h3>
           <UploadArea
-            type={UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE}
-            uploadFile={data[UploadDocumentKeys.REPRESENTATIVE_ID_CERTIFICATE].file}
-            uploadHandler={representativeUploadHandler}
+            type={UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID}
+            backendUniqueIdentifier={data[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID].id}
+            uploadedFile={data[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID].file}
+            onChange={onChange}
           />
         </div>
       </div>

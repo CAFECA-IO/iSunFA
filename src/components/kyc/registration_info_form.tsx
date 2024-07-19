@@ -1,9 +1,14 @@
-import { RegistrationInfoKeys, IRegistrationInfo } from '@/interfaces/kyc_registration_info';
+import { IRegistrationInfo } from '@/interfaces/kyc_registration_info';
 import { useEffect, useState } from 'react';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
 import { useTranslation } from 'next-i18next';
-import { CountryOptions, LegalStructureOptions, IndustryOptions } from '@/constants/kyc';
+import {
+  RegistrationInfoKeys,
+  CountryOptions,
+  LegalStructureOptions,
+  IndustryOptions,
+} from '@/constants/kyc';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 
