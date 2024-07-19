@@ -19,6 +19,7 @@ const MessageModal = ({
     title,
     subtitle,
     content,
+    notes,
     hideCloseBtn,
     subMsg,
     submitBtnStr,
@@ -126,9 +127,10 @@ const MessageModal = ({
           <h1 className={`text-base font-medium ${titleColor}`}>{displayedSubtitles}</h1>
           <Image src={imgStr} width={48} height={48} alt={imgAlt} />
           {/* Info: (20240507 - Julian) sub message (red color) */}
-          <p className="text-base text-lightRed">{subMsg}</p>
+          <p className="text-base text-text-state-error">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
-          <div className="space-y-1 text-sm text-lightGray5">{displayedContent}</div>
+          <div className="space-y-1 text-sm text-text-neutral-primary">{displayedContent}</div>
+          <div className="text-sm font-semibold text-lightGray5">{notes}</div>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}

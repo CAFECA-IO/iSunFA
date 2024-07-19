@@ -104,13 +104,13 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
         {step === 3 && (
           <DocumentUploadForm data={uploadDocuments} onChange={handleDocumentChange} />
         )}
-        <KYCFormController
-          step={step}
-          onCancel={onCancel}
-          onNext={() => handleStepChange(step + 1)}
-          onSubmit={() => {}}
-        />
       </form>
+      <KYCFormController
+        step={step}
+        onCancel={onCancel}
+        onNext={() => handleStepChange(step + 1)}
+        onSubmit={() => {}}
+      />
     </section>
   );
 };

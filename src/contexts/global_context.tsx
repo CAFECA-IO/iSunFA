@@ -49,6 +49,7 @@ import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salar
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 
@@ -112,6 +113,11 @@ interface IGlobalContext {
 
   isAddAccountTitleModalVisible: boolean;
   addAccountTitleModalVisibilityHandler: () => void;
+  addAccountTitleDataHandler: (id: number) => void;
+
+  isEditAccountTitleModalVisible: boolean;
+  editAccountTitleModalVisibilityHandler: () => void;
+  editAccountTitleDataHandler: (id: number) => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -205,6 +211,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
   const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
+  const [addAccountTitleId, setAddAccountTitleId] = useState(0);
+
+  const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
+  const [editAccountTitleId, setEditAccountTitleId] = useState(0);
 
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
@@ -311,6 +321,18 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
   };
 
+  const addAccountTitleDataHandler = (id: number) => {
+    setAddAccountTitleId(id);
+  };
+
+  const editAccountTitleModalVisibilityHandler = () => {
+    setIsEditAccountTitleModalVisible(!isEditAccountTitleModalVisible);
+  };
+
+  const editAccountTitleDataHandler = (id: number) => {
+    setEditAccountTitleId(id);
+  };
+
   const teamSettingModalVisibilityHandler = () => {
     setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
   };
@@ -361,7 +383,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
-    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const autoClose = closeable ? (isAutoClose ?? 5000) : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
     const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable; // Info:(20240513 - Julian) default draggable true
@@ -566,6 +588,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     salaryBookConfirmModalVisibilityHandler,
     isAddAccountTitleModalVisible,
     addAccountTitleModalVisibilityHandler,
+    addAccountTitleDataHandler,
+    isEditAccountTitleModalVisible,
+    editAccountTitleModalVisibilityHandler,
+    editAccountTitleDataHandler,
     toastHandler,
     eliminateToast,
 
@@ -699,6 +725,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddAccountTitleModal
         isModalVisible={isAddAccountTitleModalVisible}
         modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
+        modalData={{ accountId: addAccountTitleId }}
+      />
+
+      <EditAccountTitleModal
+        isModalVisible={isEditAccountTitleModalVisible}
+        modalVisibilityHandler={editAccountTitleModalVisibilityHandler}
+        modalData={{ accountId: editAccountTitleId }}
       />
 
       <TeamSettingModal

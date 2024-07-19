@@ -19,7 +19,6 @@ const TransferCompanyModal = ({
   const saveClickHandler = async () => {
     if (inputRef.current) {
       // TODO: send API request (20240717 - Shirley)
-      // const userId = inputRef.current.value;
       inputRef.current.value = '';
       modalVisibilityHandler();
 
