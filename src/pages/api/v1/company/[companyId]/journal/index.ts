@@ -24,20 +24,9 @@ export function isCompanyIdValid(companyId: any): companyId is number {
 // ToDo: (20240625 - Murky) Need to move to type guard
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatQuery(query: any) {
-  const {
-    isUploaded,
-    page,
-    pageSize,
-    eventType,
-    sortBy,
-    sortOrder,
-    startDate,
-    endDate,
-    searchQuery,
-  } = query;
+  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } = query;
 
   if (
-    (isUploaded && typeof isUploaded !== 'string') ||
     (page && !Number.isInteger(Number(page))) ||
     (pageSize && !Number.isInteger(Number(pageSize))) ||
     (sortBy && typeof sortBy !== 'string') ||
@@ -53,7 +42,6 @@ export function formatQuery(query: any) {
   const startDateInSecond = startDate ? timestampInSeconds(startDate) : undefined;
   const endDateInSecond = endDate ? timestampInSeconds(endDate) : undefined;
   const cleanQuery = {
-    isUploaded: isUploaded === 'true',
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
     pageSize: pageSize ? Number(pageSize) : DEFAULT_PAGE_LIMIT,
     eventType: eventType || undefined,
@@ -68,19 +56,10 @@ export function formatQuery(query: any) {
 }
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
-  const {
-    isUploaded,
-    page,
-    pageSize,
-    eventType,
-    sortBy,
-    sortOrder,
-    startDate,
-    endDate,
-    searchQuery,
-  } = formatQuery(req.query);
-
-  const pagenatedJournalList = await listJournal(
+  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
+    formatQuery(req.query);
+  const isUploaded = true;
+  const uploadedPagenatedJournalList = await listJournal(
     companyId,
     isUploaded,
     page,
@@ -92,14 +71,32 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     endDate,
     searchQuery
   );
-  const pagenatedJournalListItems = {
-    ...pagenatedJournalList,
-    data: formatIJournalListItems(pagenatedJournalList.data),
+
+  const upComingPagenatedJournalList = await listJournal(
+    companyId,
+    !isUploaded,
+    page,
+    pageSize,
+    eventType,
+    sortBy,
+    sortOrder,
+    startDate,
+    endDate,
+    searchQuery
+  );
+  const uploadedPagenatedJournalListItems = {
+    ...uploadedPagenatedJournalList,
+    data: formatIJournalListItems(uploadedPagenatedJournalList.data),
   };
 
-  const { httpCode, result } = formatApiResponse<IPaginatedData<IJournalListItem[]>>(
+  const upComingPagenatedJournalListItems = {
+    ...upComingPagenatedJournalList,
+    data: formatIJournalListItems(upComingPagenatedJournalList.data),
+  };
+
+  const { httpCode, result } = formatApiResponse<IPaginatedData<IJournalListItem[]>[]>(
     STATUS_MESSAGE.SUCCESS_LIST,
-    pagenatedJournalListItems
+    [uploadedPagenatedJournalListItems, upComingPagenatedJournalListItems]
   );
   return {
     httpCode,
@@ -109,7 +106,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<IJournalListItem[]> | null>>
+  res: NextApiResponse<IResponseData<IPaginatedData<IJournalListItem[]>[] | null>>
 ) {
   try {
     if (req.method === 'GET') {
@@ -118,7 +115,7 @@ export default async function handler(
       if (!isCompanyIdValid(companyId)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const { httpCode, result } = await handleGetRequest(1, req);
+      const { httpCode, result } = await handleGetRequest(companyId, req);
       res.status(httpCode).json(result);
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);

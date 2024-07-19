@@ -5,6 +5,7 @@ import { IJournalFromPrismaIncludeProjectContractInvoiceVoucher } from '@/interf
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
 import { calculateTotalPages } from '@/lib/utils/common';
+import { JOURNAL_EVENT, SortBy, SortOrder } from '@/constants/journal';
 
 export async function findManyJournalsInPrisma(
   companyId: number,
@@ -91,8 +92,8 @@ export async function listJournal(
   page: number = 1, // 将 pageDelta 改为 targetPage，默认值为 1
   pageSize: number = DEFAULT_PAGE_LIMIT,
   eventType: string | undefined = undefined,
-  sortBy: 'createdAt' | 'paymentPrice' = 'createdAt',
-  sortOrder: 'asc' | 'desc' = 'desc',
+  sortBy: SortBy = SortBy.CREATED_AT,
+  sortOrder: SortOrder = SortOrder.DESC,
   startDateInSecond?: number,
   endDateInSecond?: number,
   searchQuery?: string
@@ -125,7 +126,7 @@ export async function listJournal(
     }
 
     const orderBy =
-      sortBy === 'paymentPrice'
+      sortBy === SortBy.PAYMENT_PRICE
         ? { invoice: { payment: { price: sortOrder } } }
         : { [sortBy]: sortOrder };
 
@@ -154,6 +155,7 @@ export async function listJournal(
     if (journalList.length > pageSize) {
       journalList.pop(); // 移除多余的记录
     }
+    const journalEvent = isUploaded === true ? JOURNAL_EVENT.UPLOADED : JOURNAL_EVENT.UPCOMING;
     const pagenatedJournalList = {
       data: journalList,
       page,
@@ -162,8 +164,10 @@ export async function listJournal(
       pageSize,
       hasNextPage,
       hasPreviousPage,
-      sortOrder,
-      sortBy: sortBy + ' + isUploaded: ' + isUploaded,
+      sort: [
+        { sortBy, sortOrder },
+        { sortBy: journalEvent, sortOrder: '' },
+      ],
     };
 
     return pagenatedJournalList;

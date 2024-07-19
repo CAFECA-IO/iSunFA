@@ -34,6 +34,16 @@ export enum SORTING_OPTION {
   LOWEST_PAYMENT_PRICE = 'SORTING.LOWEST_PAYMENT_PRICE',
 }
 
+export enum SortBy {
+  CREATED_AT = 'createdAt',
+  PAYMENT_PRICE = 'paymentPrice',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
 export const toSort = (
   type: SORTING_OPTION
 ): {
@@ -43,24 +53,24 @@ export const toSort = (
   switch (type) {
     case SORTING_OPTION.LOWEST_PAYMENT_PRICE:
       return {
-        sortBy: 'paymentPrice',
-        sortOrder: 'asc',
+        sortBy: SortBy.PAYMENT_PRICE,
+        sortOrder: SortOrder.ASC,
       };
     case SORTING_OPTION.HIGHEST_PAYMENT_PRICE:
       return {
-        sortBy: 'paymentPrice',
-        sortOrder: 'desc',
+        sortBy: SortBy.PAYMENT_PRICE,
+        sortOrder: SortOrder.DESC,
       };
     case SORTING_OPTION.OLDEST:
       return {
-        sortBy: 'createdAt',
-        sortOrder: 'asc',
+        sortBy: SortBy.CREATED_AT,
+        sortOrder: SortOrder.ASC,
       };
     case SORTING_OPTION.NEWEST:
     default:
       return {
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
+        sortBy: SortBy.CREATED_AT,
+        sortOrder: SortOrder.DESC,
       };
   }
 };
