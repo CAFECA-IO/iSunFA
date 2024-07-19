@@ -1,22 +1,14 @@
-enum FileFolder {
+export enum FileFolder {
   INVOICE = 'invoice',
   KYC = 'kyc',
   TMP = 'tmp',
 }
 
-enum UploadDocumentType {
+export enum UploadDocumentType {
   BUSINESS_REGISTRATION_CERTIFICATE = 'business_registration_certificate',
   TAX_STATUS_CERTIFICATE = 'tax_status_certificate',
   REPRESENTATIVE_ID_CERTIFICATE = 'representative_id_certificate',
 }
-
-export const FILE_FOLDER = {
-  ...FileFolder,
-};
-
-export const UPLOAD_DOCUMENT_TYPE = {
-  ...UploadDocumentType,
-};
 
 export const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || 'home/isunfa';
 

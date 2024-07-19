@@ -3,12 +3,13 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextApiRequest } from 'next';
 import { FORMIDABLE_OPTIONS } from '@/constants/config';
-import { BASE_STORAGE_FOLDER, FILE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { BASE_STORAGE_FOLDER, FileFolder, VERCEL_STORAGE_FOLDER } from '@/constants/file';
 
 export const parseForm = async (
   req: NextApiRequest,
-  subDir: string = FILE_FOLDER.TMP // 預設子資料夾名稱為tmp
+  subDir: string = FileFolder.TMP // 預設子資料夾名稱為tmp
 ) => {
+  // const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || 'kyc';
   const uploadDir =
     process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
   const options = {
