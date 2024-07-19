@@ -7,7 +7,6 @@ import {
   getTimestampOfLastSecondOfDate,
   getTimestampOfSameDateOfLastYear,
   isParamNumeric,
-  isParamString,
   timestampInSeconds,
   timestampToString,
 } from '@/lib/utils/common';
@@ -33,10 +32,11 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 // Info: (20240710 - Murky) Down below are Post related functions
-export function formatReportSheetTypeFromQuery(reportType: string | string[] | undefined) {
+//
+export function formatReportSheetTypeFromQuery(reportType: unknown) {
   let reportSheetType = ReportSheetType.BALANCE_SHEET;
 
-  if (isParamString(reportType) && isReportSheetType(reportType)) {
+  if (typeof reportType === "string" && isReportSheetType(reportType)) {
     reportSheetType = convertStringToReportSheetType(reportType);
   }
   return reportSheetType;
@@ -57,8 +57,8 @@ export function getLastPeriodStartAndEndDate(
 
 export function formatStartAndEndDateFromQuery(
   reportSheetType: ReportSheetType,
-  startDate: string | string[] | undefined,
-  endDate: string | string[] | undefined
+  startDate: unknown,
+  endDate: unknown
 ) {
   const today = new Date();
   const todayInTimestamp = today.getTime();
@@ -68,12 +68,12 @@ export function formatStartAndEndDateFromQuery(
     reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : getTimestampOfFirstDateOfThisYear();
   let endDateInSecond = getTimestampOfLastSecondOfDate(todayInTimestamp);
 
-  if (startDate && isParamNumeric(startDate)) {
+  if (startDate && typeof startDate === 'string' && isParamNumeric(startDate)) {
     const startDateInSecondString = parseInt(startDate as string, 10);
     startDateInSecond = timestampInSeconds(startDateInSecondString);
   }
 
-  if (endDate && isParamNumeric(endDate)) {
+  if (endDate && typeof endDate === 'string' && isParamNumeric(endDate)) {
     const endDateInSecondString = parseInt(endDate as string, 10);
     endDateInSecond = timestampInSeconds(endDateInSecondString);
   }
@@ -92,42 +92,42 @@ export function formatStartAndEndDateFromQuery(
   };
 }
 
-export function formatProjectIdFromQuery(projectId: string | string[] | undefined): number | null {
+export function formatProjectIdFromQuery(projectId: unknown): number | null {
   let projectIdNumber = null;
 
-  if (isParamNumeric(projectId)) {
+  if (typeof projectId === "string" && isParamNumeric(projectId)) {
     projectIdNumber = parseInt(projectId as string, 10);
   }
   return projectIdNumber;
 }
 
-export function formatStatusFromQuery(status: string | string[] | undefined): ReportStatusType {
+export function formatStatusFromQuery(status: unknown): ReportStatusType {
   let statusString = ReportStatusType.GENERATED;
 
-  if (isParamString(status) && isReportStatusType(status)) {
+  if (typeof status === "string" && isReportStatusType(status)) {
     statusString = status as ReportStatusType;
   }
   return statusString;
 }
 
 export function formatReportLanguageFromQuery(
-  reportLanguage: string | string[] | undefined
+  reportLanguage: unknown
 ): ReportLanguagesKey {
   let reportLanguageString = ReportLanguagesKey.tw;
 
-  if (isParamString(reportLanguage) && isReportLanguagesKey(reportLanguage)) {
+  if (typeof reportLanguage === 'string' && isReportLanguagesKey(reportLanguage)) {
     reportLanguageString = reportLanguage;
   }
   return reportLanguageString;
 }
 
 export function formatFinancialOrAnalysisFromQuery(
-  financialOrAnalysis: string | string[] | undefined
+  financialOrAnalysis: unknown
 ): string {
   // Deprecate: (20240710 - Murky) this function is to separate financial and analysis temperately
   let financialOrAnalysisString = 'financial';
 
-  if (isParamString(financialOrAnalysis)) {
+  if (typeof financialOrAnalysis === 'string') {
     financialOrAnalysisString = financialOrAnalysis as string;
   }
   return financialOrAnalysisString;
@@ -135,7 +135,7 @@ export function formatFinancialOrAnalysisFromQuery(
 
 export function formatPostRequestQuery(req: NextApiRequest) {
   const { projectId, reportType, reportLanguage, startDate, endDate, financialOrAnalysis } =
-    req.query;
+    req.body;
 
   const projectIdNumber = formatProjectIdFromQuery(projectId);
 
