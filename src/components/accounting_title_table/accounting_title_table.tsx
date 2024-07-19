@@ -4,8 +4,11 @@ import { FaRegSquarePlus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { MessageType } from '@/interfaces/message_modal';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 export enum ActionType {
   FAV_AND_ADD = 'favorite_and_add',
@@ -31,6 +34,8 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     messageModalDataHandler,
     messageModalVisibilityHandler,
   } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
+  const { deleteOwnAccountTitle } = useAccountingCtx();
   const { id, code, name } = rowData;
 
   // ToDo: (20240717 - Julian) favorite status from API
@@ -60,8 +65,8 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
       notes: name,
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
-      // ToDo: (20240717 - Julian) call API to remove accounting title
-      submitBtnFunction: () => {},
+      submitBtnFunction: () =>
+        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, id),
       backBtnStr: 'Cancel',
     });
     messageModalVisibilityHandler();
