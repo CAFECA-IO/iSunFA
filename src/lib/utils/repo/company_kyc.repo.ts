@@ -1,6 +1,5 @@
 import prisma from '@/client';
 import {
-  CityOptions,
   CountryOptions,
   IndustryOptions,
   LegalStructureOptions,
@@ -43,11 +42,6 @@ export async function createCompanyKYC(
     throw new Error(`Invalid country value: ${country}`);
   }
 
-  const cityEnumValue = getEnumValue(CityOptions, city);
-  if (!cityEnumValue) {
-    throw new Error(`Invalid city value: ${city}`);
-  }
-
   const structureEnumValue = getEnumValue(LegalStructureOptions, structure);
   if (!structureEnumValue) {
     throw new Error(`Invalid structure value: ${structure}`);
@@ -71,7 +65,7 @@ export async function createCompanyKYC(
       },
       legalName,
       country: countryEnumValue,
-      city: cityEnumValue,
+      city,
       address,
       zipCode,
       representativeName,

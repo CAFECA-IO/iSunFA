@@ -6,13 +6,6 @@ export enum CountryOptions {
   HONG_KONG = 'Hong Kong',
 }
 
-export enum CityOptions {
-  DEFAULT = '',
-  GB = 'United Kingdom',
-  US = 'United States',
-  TW = 'Taiwan',
-}
-
 export enum LegalStructureOptions {
   DEFAULT = '', // Info: (20240718 - Liz) This is the default value for the dropdown to show placeholder
   SOLE_PROPRIETORSHIP = 'Sole Proprietorship',
@@ -77,44 +70,6 @@ export enum AreaCodeOptions {
   HONG_KONG = '+852',
   CHINA = '+86',
 }
-
-// Info: (20240717 - Liz) 以下是暫存，等確定設計稿是國家還是城市後會再調整邏輯
-
-export enum CountryCode {
-  DEFAULT = '',
-  GB = 'GB',
-  US = 'US',
-  TW = 'TW',
-}
-
-interface ICountryInfo {
-  title: string;
-  svg: string;
-  translationKey: string;
-}
-
-export const CountryInfos: Record<CountryCode, ICountryInfo> = {
-  [CountryCode.DEFAULT]: {
-    title: '',
-    svg: '',
-    translationKey: 'KYC.DEFAULT',
-  },
-  [CountryCode.GB]: {
-    title: 'United Kingdom',
-    svg: '🇬🇧',
-    translationKey: 'KYC.GB',
-  },
-  [CountryCode.US]: {
-    title: 'United States',
-    svg: '🇺🇸',
-    translationKey: 'KYC.US',
-  },
-  [CountryCode.TW]: {
-    title: 'Taiwan',
-    svg: '🇹🇼',
-    translationKey: 'KYC.TW',
-  },
-} as const;
 
 export enum RepresentativeIDType {
   PASSPORT = 'PASSPORT',
