@@ -50,7 +50,8 @@ export type IAPIName =
   | 'COMPANY_UPDATE'
   | 'ROLE_GET_BY_ID'
   | 'ROLE_DELETE'
-  | 'ROLE_UPDATE';
+  | 'ROLE_UPDATE'
+  | 'ACCOUNT_GET_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

@@ -69,6 +69,7 @@ export enum APIName {
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
   ROLE_UPDATE = 'ROLE_UPDATE',
+  ACCOUNT_GET_BY_ID = 'ACCOUNT_GET_BY_ID',
 }
 
 export enum APIPath {
@@ -121,6 +122,7 @@ export enum APIPath {
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
+  ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
 }
 const createConfig = ({
   name,
@@ -391,5 +393,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ROLE_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.ROLE_UPDATE,
+  }),
+  [APIName.ACCOUNT_GET_BY_ID]: createConfig({
+    name: APIName.ACCOUNT_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ACCOUNT_GET_BY_ID,
   }),
 };

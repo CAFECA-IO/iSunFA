@@ -65,6 +65,10 @@ const AccountingTitlePageBody = () => {
   const liabilityDropmenuToggleHandler = () => setLiabilityVisible(!liabilityVisible);
   const equityDropmenuToggleHandler = () => setEquityVisible(!equityVisible);
 
+  const myAccountingTitleList = accountList.filter((account) => {
+    return account.id.toString().includes('-');
+  });
+
   const assetDropmenu = (
     <div
       ref={assetRef}
@@ -217,7 +221,7 @@ const AccountingTitlePageBody = () => {
       </div>
       {/* Info: (20240717 - Julian) My new accounting title Table */}
       <AccountingTitleTable
-        accountingTitleData={accountList} // ToDo: (20240718 - Julian) filter
+        accountingTitleData={myAccountingTitleList}
         actionType={ActionType.EDIT_AND_REMOVE}
       />
       {/* Info: (20240717 - Julian) Accounting Title Divider */}
