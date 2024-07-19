@@ -23,7 +23,19 @@ import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import CashFlowDisplay from '@/components/financial_report_section/cash_flow_display_1';
+import { FinancialFinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
 
+const [period, setPeriod] = useState(default30DayPeriodInSec);
+const [selectedProjectName, setSelectedProjectName] =
+  useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
+const [searchQuery, setSearchQuery] = useState('');
+const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
+  FinancialReportTypesKey.balance_sheet
+);
+const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
+  ReportLanguagesKey.en
+);
+const [datePickerType, setDatePickerType] = useState(DatePickerType.TEXT_DATE);
 const FinancialReportSection = () => {
   const { t } = useTranslation('common');
   const [showCashFlow, setShowCashFlow] = useState(false);
@@ -42,22 +54,17 @@ const FinancialReportSection = () => {
       params: {
         companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
       },
+      query: {
+        reportType: FinancialFinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
+        reportLanguage: selectedReportLanguage,
+        startDate,
+      },
     },
+    // const { projectId, reportType, reportLanguage, startDate, endDate, financialOrAnalysis } =
+    //   req.query;
     false,
     false
   );
-  const [period, setPeriod] = useState(default30DayPeriodInSec);
-  const [selectedProjectName, setSelectedProjectName] =
-    useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
-    FinancialReportTypesKey.balance_sheet
-  );
-  const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
-    ReportLanguagesKey.en
-  );
-  const [datePickerType, setDatePickerType] = useState(DatePickerType.TEXT_DATE);
-
   const {
     targetRef: projectMenuRef,
     componentVisible: isProjectMenuOpen,

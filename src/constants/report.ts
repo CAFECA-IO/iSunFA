@@ -58,3 +58,11 @@ export const ReportSheetTypeFinancialFinancialReportTypesKeyMapping: {
   [ReportSheetType.CASH_FLOW_STATEMENT]: FinancialReportTypesKey.cash_flow_statement,
   [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: FinancialReportTypesKey.change_in_equity_statement,
 };
+export const FinancialFinancialReportTypesKeyReportSheetTypeMapping: {
+  [key in FinancialReportTypesKey]: ReportSheetType;
+} = {
+  [FinancialReportTypesKey.balance_sheet]: ReportSheetType.BALANCE_SHEET,
+  [FinancialReportTypesKey.comprehensive_income_statement]: ReportSheetType.INCOME_STATEMENT,
+  [FinancialReportTypesKey.cash_flow_statement]: ReportSheetType.CASH_FLOW_STATEMENT,
+  [FinancialReportTypesKey.change_in_equity_statement]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
+};
