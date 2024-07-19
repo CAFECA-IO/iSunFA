@@ -13,6 +13,7 @@ import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import path from 'path';
+import { UploadDocumentKeys } from '@/constants/kyc';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -497,3 +498,78 @@ export function formatNumberSeparateByComma(num: number) {
   // Info: (20240716 - Murky) 如果 num 是負數，則將結果包裹在括號內
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
+
+export const readFilesFromLocalStorage = (
+  type: string = 'KYCFiles'
+): {
+  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+} => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  return data;
+};
+
+export const saveFilesToLocalStorage = (
+  fileType: UploadDocumentKeys,
+  file?: File,
+  fileId?: string,
+  type: string = 'KYCFiles'
+) => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  const newData = {
+    ...data,
+    [fileType]: {
+      id: fileId,
+      file,
+    },
+  };
+  localStorage.setItem(type, JSON.stringify(newData));
+};
+
+export const deleteFilesFromLocalStorage = (
+  fileId?: string,
+  fileType?: UploadDocumentKeys,
+  type: string = 'KYCFiles'
+) => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  let newData = {
+    ...data,
+  };
+  if (fileType) {
+    newData = {
+      ...data,
+      [fileType]: {
+        id: undefined,
+        file: undefined,
+      },
+    };
+  } else {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const key in data) {
+      if (data[key].id === fileId) {
+        newData = {
+          ...data,
+          [key]: {
+            id: undefined,
+            file: undefined,
+          },
+        };
+        break;
+      }
+    }
+  }
+  localStorage.setItem(type, JSON.stringify(newData));
+};

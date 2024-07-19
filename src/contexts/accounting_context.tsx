@@ -57,7 +57,13 @@ interface IAccountingContext {
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number, update: boolean) => void;
   accountList: IAccount[];
-  getAccountListHandler: (companyId: number) => void;
+  getAccountListHandler: (
+    companyId: number,
+    type?: string,
+    liquidity?: string,
+    page?: number,
+    limit?: number
+  ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
@@ -93,6 +99,8 @@ interface IAccountingContext {
   totalCredit: number;
 
   generateAccountTitle: (account: IAccount | null) => string;
+
+  deleteOwnAccountTitle: (companyId: number, id: number) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -132,6 +140,8 @@ const initialAccountingContext: IAccountingContext = {
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
+
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -155,6 +165,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     success: listSuccess,
     code: listCode,
   } = APIHandler<IOCR[]>(APIName.OCR_LIST, {}, false, false);
+  const {
+    trigger: deleteAccountById,
+    data: deleteResult,
+    success: deleteSuccess,
+  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID, {}, false, false);
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);
@@ -166,6 +181,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     listSuccess: undefined,
     listCode: undefined,
   });
+
   const [selectedOCR, setSelectedOCR] = useState<IOCR | undefined>(undefined);
   const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
@@ -186,8 +202,23 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
 
-  const getAccountListHandler = (companyId: number) => {
-    getAccountList({ params: { companyId } });
+  const getAccountListHandler = (
+    companyId: number,
+    type?: string,
+    liquidity?: string,
+    page?: number,
+    limit?: number
+    // ToDo: (20240719 - Julian) lack of keyword search
+  ) => {
+    getAccountList({
+      params: { companyId },
+      query: {
+        type,
+        liquidity,
+        page,
+        limit,
+      },
+    });
   };
 
   const getAIStatusHandler = (
@@ -258,6 +289,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const generateAccountTitle = (account: IAccount | null) => {
     if (account) return account.code.substring(0, 4) + ' - ' + account.name;
     return 'Account Title';
+  };
+
+  const deleteOwnAccountTitle = (companyId: number, id: number) => {
+    deleteAccountById({
+      params: { companyId, accountId: id },
+    });
   };
 
   // Info: (20240430 - Julian) 新增日記帳列
@@ -415,6 +452,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalCredit(credit);
   }, [accountingVoucher]);
 
+  useEffect(() => {
+    if (deleteSuccess && deleteResult) {
+      // Info: (20240719 - Julian) 重新取得 account list
+      getAccountListHandler(deleteResult.companyId);
+    }
+  }, [deleteSuccess, deleteResult]);
+
   const setInvoiceIdHandler = useCallback(
     (id: string | undefined) => setInvoiceId(id),
     [invoiceId]
@@ -504,6 +548,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
       generateAccountTitle,
       changeVoucherAccountHandler,
+      deleteOwnAccountTitle,
     }),
     [
       OCRList,

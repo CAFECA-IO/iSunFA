@@ -1,16 +1,16 @@
-export enum CityOptions {
-  DEFAULT = '',
-  GB = 'United Kingdom',
-  US = 'United States',
-  TW = 'Taiwan',
-}
-
 export enum CountryOptions {
   DEFAULT = '', // Info: (20240718 - Liz) This is the default value for the dropdown to show placeholder
   TAIWAN = 'Taiwan',
   UNITED_STATES = 'United States',
   CHINA = 'China',
   HONG_KONG = 'Hong Kong',
+}
+
+export enum CityOptions {
+  DEFAULT = '',
+  GB = 'United Kingdom',
+  US = 'United States',
+  TW = 'Taiwan',
 }
 
 export enum LegalStructureOptions {
@@ -21,7 +21,7 @@ export enum LegalStructureOptions {
   LIMITED_LIABILITY_COMPANY = 'Limited Liability Company',
 }
 
-// Info: (240717 - Liz)  Industry Options
+// Info: (20240717 - Liz)  Industry Options
 // 1. Accommodation and food services
 // 2. Administrative and support services
 // 3. Arts and Recreation services
@@ -115,3 +115,41 @@ export const CountryInfos: Record<CountryCode, ICountryInfo> = {
     translationKey: 'KYC.TW',
   },
 } as const;
+
+export enum RepresentativeIDType {
+  PASSPORT = 'PASSPORT',
+  ID_CARD = 'ID_CARD',
+  DRIVER_LICENSE = 'DRIVER_LICENSE',
+}
+
+export enum BasicInfoKeys {
+  LEGAL_COMPANY_NAME = 'legalName',
+  CITY = 'city',
+  ZIP_CODE = 'zipCode',
+  ADDRESS = 'address',
+  KEY_COMPANY_REPRESENTATIVES_NAME = 'representativeName',
+}
+
+export enum RegistrationInfoKeys {
+  COUNTRY = 'country',
+  LEGAL_STRUCTURE = 'structure',
+  BUSINESS_REGISTRATION_NUMBER = 'registrationNumber',
+  REGISTRATION_DATE = 'registrationDate',
+  INDUSTRY = 'industry',
+}
+
+export enum ContactInfoKeys {
+  AREA_CODE = 'areaCode',
+  CONTACT_NUMBER = 'contactNumber',
+  CONTACT_PHONE = 'contactPhone',
+  KEY_CONTACT_PERSON = 'contactPerson',
+  EMAIL_ADDRESS = 'contactEmail',
+  COMPANY_WEBSITE = 'website',
+}
+
+export enum UploadDocumentKeys {
+  REPRESENTATIVE_ID_TYPE = 'representativeIdType',
+  BUSINESS_REGISTRATION_CERTIFICATE_ID = 'registrationCertificateId',
+  TAX_STATUS_CERTIFICATE_ID = 'taxCertificateId',
+  REPRESENTATIVE_CERTIFICATE_ID = 'representativeIdCardId',
+}

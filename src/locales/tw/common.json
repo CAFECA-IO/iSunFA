@@ -23,7 +23,8 @@
     "SUBSCRIPTION_BILLS": "訂閱和帳單",
     "SETTING": "設定",
     "LOGOUT": "登出",
-    "NOTIFICATION": "通知"
+    "NOTIFICATION": "通知",
+    "LINK_NOT_OPEN": "此功能目前尚未開放使用"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -649,6 +650,7 @@
     "NEXT": "下一步",
     "SUBMIT": "提交",
     "CANCEL": "取消",
+    "CONFIRM": "確認",
     "BUSINESS_REGISTRATION_CERTIFICATE": "商業登記證書",
     "TAX_STATUS_CERTIFICATE": "稅務狀態證明",
     "REPRESENTATIVE_ID_CERTIFICATE": "代表人{{type}}證明",
@@ -697,6 +699,13 @@
     "INDUSTRY_REAL_ESTATE_ACTIVITIES": "Real estate activities",
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
-    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
-  }
+    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry",
+
+    "SUBMIT_SUCCESS": "你的申請已提交成功",
+    "SUBMIT_SUCCESS_MESSAGE": "我們的工作人員將在 3 - 5個工作日內審核您的申請，請耐心等待。",
+    "SUBMIT_FAILED": "提交失敗",
+    "SUBMIT_FAILED_MESSAGE": "錯誤代碼: {{code}}" },
+    "CONTACT_SERVICE_TEAM": "如果您有任何疑問，請聯繫我們的客服。",
+    "INCOMPLETE_FORM": "請填寫完整表格",
+    "INCOMPLETE_FORM_SUB_MESSAGE": "請確補齊下列欄位資訊: {{fields}}。"
 }
