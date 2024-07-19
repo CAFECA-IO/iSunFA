@@ -23,7 +23,8 @@
     "SUBSCRIPTION_BILLS": "订阅和帐单",
     "SETTING": "设置",
     "LOGOUT": "登出",
-    "NOTIFICATION": "通知"
+    "NOTIFICATION": "通知",
+    "LINK_NOT_OPEN": "此功能目前尚未開放使用"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",

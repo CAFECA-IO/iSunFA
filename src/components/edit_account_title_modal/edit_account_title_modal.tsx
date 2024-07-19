@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { RiDeleteBinLine } from 'react-icons/ri';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
 import { MessageType } from '@/interfaces/message_modal';
+import { APIName } from '@/constants/api_connection';
+import { IAccount } from '@/interfaces/accounting_account';
+import APIHandler from '@/lib/utils/api_handler';
+import { ToastType } from '@/interfaces/toastify';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -20,24 +27,108 @@ const EditAccountTitleModal = ({
   modalVisibilityHandler,
   modalData,
 }: IEditAccountTitleModalProps) => {
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-
-  // ToDo: (20240718 - Julian) get data from API
-  const { accountList } = useAccountingCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
   const { accountId } = modalData;
-  const parentAccount = accountList.find((data) => data.id === accountId);
-  const accountingType = parentAccount?.type;
-  const liquidity = parentAccount?.liquidity;
-  const currentAssetType = parentAccount?.name;
 
+  const {
+    trigger: getAccountById,
+    data: accountData,
+    isLoading: isAccountDataLoading,
+    success: isAccountDataSuccess,
+    code: errorCode,
+  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: updateAccountInfoById,
+    data: updateResult,
+    success: updateSuccess,
+    code: updateCode,
+  } = APIHandler<IAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID, {}, false, false);
+
+  const [accountingType, setAccountingType] = useState('');
+  const [liquidity, setLiquidity] = useState(false);
+  const [currentAssetType, setCurrentAssetType] = useState('');
   const [nameValue, setNameValue] = useState('');
+
+  useEffect(() => {
+    if (selectedCompany && accountId) {
+      getAccountById({
+        params: { companyId: selectedCompany.id, accountId },
+      });
+    }
+  }, [selectedCompany, accountId]);
+
+  useEffect(() => {
+    if (accountData) {
+      setAccountingType(accountData.type);
+      setLiquidity(accountData.liquidity);
+      setCurrentAssetType(accountData.name);
+      setNameValue(accountData.name);
+    }
+  }, [accountData]);
+
+  useEffect(() => {
+    if (updateSuccess && updateResult && selectedCompany) {
+      // Info: (20240719 - Julian) 關閉 modal
+      modalVisibilityHandler();
+      // Info: (20240719 - Julian) 重新取得 account list
+      getAccountListHandler(selectedCompany.id);
+      // Info: (20240719 - Julian) 顯示 toast
+      toastHandler({
+        id: `updateAccount-${updateCode}`,
+        type: ToastType.SUCCESS,
+        content: `Successfully updated account: ${updateResult.name}`,
+        closeable: true,
+      });
+    } else if (updateSuccess === false) {
+      toastHandler({
+        id: `updateAccount-${updateCode}`,
+        type: ToastType.ERROR,
+        content: 'Failed to update account, please try again later.',
+        closeable: true,
+      });
+    }
+  }, [updateSuccess, updateResult, updateCode]);
+
+  useEffect(() => {
+    if (!isModalVisible) {
+      setNameValue('');
+      setAccountingType('');
+      setLiquidity(false);
+      setCurrentAssetType('');
+    }
+  }, [isModalVisible]);
+
+  useEffect(() => {
+    if (isAccountDataSuccess === false && isModalVisible) {
+      toastHandler({
+        id: `getAccount-${errorCode}`,
+        type: ToastType.ERROR,
+        content: 'Failed to get account data, please try again later.',
+        closeable: true,
+      });
+    }
+  }, [errorCode]);
+
+  const disableSubmit = !nameValue || nameValue === currentAssetType;
+  const liquidityText = liquidity ? 'Current' : 'Non-current';
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNameValue(event.target.value);
   };
 
-  const disableSubmit = !nameValue;
-  const displayLiquidity = liquidity ? 'Current' : 'Non-current';
+  const handleSave = () => {
+    if (selectedCompany && accountId) {
+      updateAccountInfoById({
+        params: { companyId: selectedCompany.id, accountId },
+        body: {
+          name: nameValue,
+        },
+      });
+    }
+  };
 
   const handleRemove = () => {
     messageModalDataHandler({
@@ -46,12 +137,50 @@ const EditAccountTitleModal = ({
       notes: nameValue,
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
-      // ToDo: (20240717 - Julian) call API to remove accounting title
-      submitBtnFunction: () => {},
+      submitBtnFunction: () => {
+        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, accountId);
+        modalVisibilityHandler();
+      },
       backBtnStr: 'Cancel',
     });
     messageModalVisibilityHandler();
   };
+
+  const displayType = isAccountDataLoading ? (
+    <Skeleton width={210} height={46} rounded />
+  ) : (
+    <input
+      id="input-accounting-type"
+      type="text"
+      value={accountingType}
+      disabled
+      className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+    />
+  );
+
+  const displayLiquidity = isAccountDataLoading ? (
+    <Skeleton width={210} height={46} rounded />
+  ) : (
+    <input
+      id="input-liquidity"
+      type="text"
+      value={liquidityText}
+      disabled
+      className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+    />
+  );
+
+  const displayCurrentAsset = isAccountDataLoading ? (
+    <Skeleton width={440} height={46} rounded />
+  ) : (
+    <input
+      id="input-current-asset-type"
+      type="text"
+      value={currentAssetType}
+      disabled
+      className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+    />
+  );
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 font-barlow">
@@ -74,35 +203,17 @@ const EditAccountTitleModal = ({
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">Accounting Type</p>
-            <input
-              id="input-accounting-type"
-              type="text"
-              value={accountingType}
-              disabled
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            />
+            {displayType}
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">Liquidity</p>
-            <input
-              id="input-liability"
-              type="text"
-              value={displayLiquidity}
-              disabled
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            />
+            {displayLiquidity}
           </div>
           {/* Info: (20240717 - Julian) Current Liquidity */}
           <div className="col-span-2 flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">Current Liquidity</p>
-            <input
-              id="input-current-asset-type"
-              type="text"
-              value={currentAssetType}
-              disabled
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-            />
+            {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
@@ -138,6 +249,7 @@ const EditAccountTitleModal = ({
             type="button"
             variant="tertiary"
             disabled={disableSubmit}
+            onClick={handleSave}
           >
             Save
           </Button>

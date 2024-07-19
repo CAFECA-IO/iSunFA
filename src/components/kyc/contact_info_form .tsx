@@ -3,7 +3,7 @@ import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ContactInfoKeys, AreaCodeOptions } from '@/constants/kyc';
 
-// Info: (240718 - Liz) 根據 Area Code 對應到國家的國旗
+// Info: (20240718 - Liz) 根據 Area Code 對應到國家的國旗
 const areaCodeFlagMap: Record<AreaCodeOptions, string> = {
   [AreaCodeOptions.TAIWAN]: '/flags/tw.svg',
   [AreaCodeOptions.UNITED_STATES]: '/flags/us.svg',

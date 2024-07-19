@@ -143,7 +143,7 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
   let files: formidable.Files;
 
   try {
-    const parsedForm = await parseForm(req);
+    const parsedForm = await parseForm(req, 'invoice');
     files = parsedForm.files;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);

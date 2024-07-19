@@ -70,6 +70,10 @@ export enum APIName {
   ROLE_DELETE = 'ROLE_DELETE',
   ROLE_UPDATE = 'ROLE_UPDATE',
   KYC_UPLOAD = 'KYC_UPLOAD',
+  ACCOUNT_GET_BY_ID = 'ACCOUNT_GET_BY_ID',
+  CREATE_NEW_SUB_ACCOUNT = 'CREATE_NEW_SUB_ACCOUNT',
+  UPDATE_ACCOUNT_INFO_BY_ID = 'UPDATE_ACCOUNT_INFO_BY_ID',
+  DELETE_ACCOUNT_BY_ID = 'DELETE_ACCOUNT_BY_ID',
 }
 
 export enum APIPath {
@@ -123,6 +127,10 @@ export enum APIPath {
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
   KYC_UPLOAD = `${apiPrefix}/company/:companyId/kyc`,
+  ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
+  CREATE_NEW_SUB_ACCOUNT = `${apiPrefix}/company/:companyId/account`,
+  UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
+  DELETE_ACCOUNT_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
 }
 const createConfig = ({
   name,
@@ -398,5 +406,25 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.KYC_UPLOAD,
     method: HttpMethod.POST,
     path: APIPath.KYC_UPLOAD,
+  }),
+  [APIName.ACCOUNT_GET_BY_ID]: createConfig({
+    name: APIName.ACCOUNT_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ACCOUNT_GET_BY_ID,
+  }),
+  [APIName.CREATE_NEW_SUB_ACCOUNT]: createConfig({
+    name: APIName.CREATE_NEW_SUB_ACCOUNT,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_NEW_SUB_ACCOUNT,
+  }),
+  [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: createConfig({
+    name: APIName.UPDATE_ACCOUNT_INFO_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNT_INFO_BY_ID,
+  }),
+  [APIName.DELETE_ACCOUNT_BY_ID]: createConfig({
+    name: APIName.DELETE_ACCOUNT_BY_ID,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_ACCOUNT_BY_ID,
   }),
 };

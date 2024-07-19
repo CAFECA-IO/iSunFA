@@ -127,6 +127,8 @@ const initialData: ITableData[] = [
   },
 ];
 
+const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
+
 const AuditReport = () => {
   const { t } = useTranslation('common');
   const [data, setData] = React.useState<ITableData[]>(initialData);
@@ -248,7 +250,7 @@ const AuditReport = () => {
             <input
               type="text"
               placeholder={t('AUDIT_REPORT.SEARCH')}
-              className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none "
+              className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
             />
           </div>
           <div className="cursor-pointer px-3 py-2.5">
@@ -625,10 +627,20 @@ const AuditReport = () => {
       </nav>
 
       <main className="w-screen overflow-hidden">
-        <div className="min-h-screen bg-navy-blue-600 font-barlow">
-          {desktopVer}
-          {mobileVer}
-        </div>
+        {isAuditReportDisabled ? (
+          <div className="min-h-screen bg-navy-blue-600 font-barlow">
+            <div className="mx-auto w-fit pt-300px">
+              <h1 className="text-lg font-bold text-gray-300 md:text-40px">
+                {t('NAV_BAR.LINK_NOT_OPEN')}
+              </h1>
+            </div>
+          </div>
+        ) : (
+          <div className="min-h-screen bg-navy-blue-600 font-barlow">
+            {desktopVer}
+            {mobileVer}
+          </div>
+        )}
       </main>
     </>
   );

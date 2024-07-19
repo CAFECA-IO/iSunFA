@@ -12,8 +12,11 @@ import AccountingTitleTable, {
 
 enum AssetOptions {
   ALL = 'All',
-  CURRENT_ASSETS = 'Current Assets',
-  NON_CURRENT_ASSETS = 'Non-Current Assets',
+  ASSET = 'Asset',
+  LIABILITY = 'Liability',
+  EQUITY = 'Equity',
+  INCOME = 'Income',
+  EXPENSE = 'Expense',
 }
 
 enum LiabilityOptions {
@@ -34,14 +37,36 @@ const AccountingTitlePageBody = () => {
   const [selectedLiability, setSelectedLiability] = useState(LiabilityOptions.ALL);
   const [selectedEquity, setSelectedEquity] = useState(EquityOptions.ALL);
 
+  // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
+  const ownAccountList = accountList.filter((account) => account.code.includes('-'));
+  // Info: (20240719 - Julian) 原始的 account ，取前 10 筆
+  const originalAccountList = accountList
+    .filter((account) => !account.code.includes('-'))
+    .slice(0, 10);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPage = Math.ceil(accountList.length / 10);
+  const totalPage = 5; // ToDo: (20240719 - Julian) call API to get total page
 
   useEffect(() => {
     if (selectedCompany) {
-      getAccountListHandler(selectedCompany.id);
+      const assetQuery =
+        selectedAsset === AssetOptions.ALL ? undefined : selectedAsset.toLowerCase();
+      const liabilityQuery =
+        selectedLiability === LiabilityOptions.ALL
+          ? undefined
+          : selectedLiability === LiabilityOptions.CURRENT
+            ? 'true'
+            : 'false';
+
+      getAccountListHandler(
+        selectedCompany.id,
+        assetQuery,
+        liabilityQuery,
+        currentPage,
+        20 // ToDo: (20240719 - Julian) Remove after api update
+      );
     }
-  }, []);
+  }, [selectedAsset, selectedLiability, currentPage, selectedCompany]);
 
   const {
     targetRef: assetRef,
@@ -68,8 +93,7 @@ const AccountingTitlePageBody = () => {
   const assetDropmenu = (
     <div
       ref={assetRef}
-      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input
-      ${
+      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
         assetVisible
           ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
           : 'grid-rows-0 border-transparent'
@@ -92,12 +116,11 @@ const AccountingTitlePageBody = () => {
   const liabilityOptions = (
     <div
       ref={liabilityRef}
-      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input
-    ${
-      liabilityVisible
-        ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
-        : 'grid-rows-0 border-transparent'
-    } overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
+        liabilityVisible
+          ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
+          : 'grid-rows-0 border-transparent'
+      } overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <ul className={`flex w-full flex-col items-start p-2`}>
         {Object.values(LiabilityOptions).map((liability) => (
@@ -116,12 +139,11 @@ const AccountingTitlePageBody = () => {
   const equityOptions = (
     <div
       ref={equityRef}
-      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input
-  ${
-    equityVisible
-      ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
-      : 'grid-rows-0 border-transparent'
-  } overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
+        equityVisible
+          ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
+          : 'grid-rows-0 border-transparent'
+      } overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <ul className={`flex w-full flex-col items-start p-2`}>
         {Object.values(EquityOptions).map((equity) => (
@@ -151,9 +173,7 @@ const AccountingTitlePageBody = () => {
           <p className="font-semibold text-input-text-primary">Assets</p>
           <div
             onClick={assetDropmenuToggleHandler}
-            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background
-                ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px py-10px hover:cursor-pointer`}
+            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
             <p className="text-input-text-input-placeholder">{selectedAsset}</p>
             <FaChevronDown />
@@ -165,9 +185,7 @@ const AccountingTitlePageBody = () => {
           <p className="font-semibold text-input-text-primary">Liability</p>
           <div
             onClick={liabilityDropmenuToggleHandler}
-            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background
-                ${liabilityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px py-10px hover:cursor-pointer`}
+            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${liabilityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
             <p className="text-input-text-input-placeholder">{selectedLiability}</p>
             <FaChevronDown />
@@ -179,9 +197,7 @@ const AccountingTitlePageBody = () => {
           <p className="font-semibold text-input-text-primary">Equity</p>
           <div
             onClick={equityDropmenuToggleHandler}
-            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background
-                ${equityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px py-10px hover:cursor-pointer`}
+            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${equityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
             <p className="text-input-text-input-placeholder">{selectedEquity}</p>
             <FaChevronDown />
@@ -217,7 +233,7 @@ const AccountingTitlePageBody = () => {
       </div>
       {/* Info: (20240717 - Julian) My new accounting title Table */}
       <AccountingTitleTable
-        accountingTitleData={accountList} // ToDo: (20240718 - Julian) filter
+        accountingTitleData={ownAccountList}
         actionType={ActionType.EDIT_AND_REMOVE}
       />
       {/* Info: (20240717 - Julian) Accounting Title Divider */}
@@ -231,7 +247,7 @@ const AccountingTitlePageBody = () => {
       {/* Info: (20240717 - Julian) All Accounting Table */}
       <div className="flex flex-col items-center gap-y-32px">
         <AccountingTitleTable
-          accountingTitleData={accountList}
+          accountingTitleData={originalAccountList}
           actionType={ActionType.FAV_AND_ADD}
         />
 
