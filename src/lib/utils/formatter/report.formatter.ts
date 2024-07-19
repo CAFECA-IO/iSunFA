@@ -1,10 +1,20 @@
-import { ReportSheetType, ReportSheetTypeFinancialFinancialReportTypesKeyMapping, ReportType } from "@/constants/report";
-import { IReport, IReportIncludeProject } from "@/interfaces/report";
-import { Report } from "@prisma/client";
-import { isReportSheetType, isReportType } from "@/lib/utils/type_guard/report";
-import { IAccountReadyForFrontend } from "@/interfaces/accounting_account";
-import { isIAccountReadyForFrontendArray } from "@/lib/utils/type_guard/account";
-import { IPendingReportItem, IGeneratedReportItem, IBasicReportItem, IPaginatedPendingReportItem, IPaginatedGeneratedReportItem } from "@/interfaces/report_item";
+import {
+  ReportSheetType,
+  ReportSheetTypeFinancialFinancialReportTypesKeyMapping,
+  ReportType,
+} from '@/constants/report';
+import { IReport, IReportIncludeProject } from '@/interfaces/report';
+import { Report } from '@prisma/client';
+import { isReportSheetType, isReportType } from '@/lib/utils/type_guard/report';
+import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import { isIAccountReadyForFrontendArray } from '@/lib/utils/type_guard/account';
+import {
+  IPendingReportItem,
+  IGeneratedReportItem,
+  IBasicReportItem,
+  IPaginatedPendingReportItem,
+  IPaginatedGeneratedReportItem,
+} from '@/interfaces/report_item';
 
 export function formatIReport(report: Report): IReport {
   const type: ReportType = isReportType(report.reportType)
@@ -43,66 +53,76 @@ export function formatIReport(report: Report): IReport {
 }
 
 export function formatIBasicReportItem(report: IReportIncludeProject): IBasicReportItem {
-    const id = report.id.toString();
-    const type = report.reportType as ReportType;
-    const reportSheetType = report.reportType as ReportSheetType;
-    const reportType = ReportSheetTypeFinancialFinancialReportTypesKeyMapping[reportSheetType];
-    const reportItem: IBasicReportItem = {
-        id,
-        name: report.name,
-        createdTimestamp: report.createdAt,
-        period: {
-            startTimestamp: report.from,
-            endTimestamp: report.to,
-        },
-        type,
-        reportType
-    };
-    return reportItem;
+  const id = report.id.toString();
+  const type = report.reportType as ReportType;
+  const reportSheetType = report.reportType as ReportSheetType;
+  const reportType = ReportSheetTypeFinancialFinancialReportTypesKeyMapping[reportSheetType];
+  const reportItem: IBasicReportItem = {
+    id,
+    name: report.name,
+    createdTimestamp: report.createdAt,
+    period: {
+      startTimestamp: report.from,
+      endTimestamp: report.to,
+    },
+    type,
+    reportType,
+  };
+  return reportItem;
 }
 
 export function formatIPendingReportItem(report: IReportIncludeProject): IPendingReportItem {
-    const basicReportItem = formatIBasicReportItem(report);
-    const reportItem: IPendingReportItem = {
-        ...basicReportItem,
-        remainingSeconds: report.remainingSeconds || 0,
-        paused: report.paused || false,
-    };
-    return reportItem;
+  const basicReportItem = formatIBasicReportItem(report);
+  const reportItem: IPendingReportItem = {
+    ...basicReportItem,
+    remainingSeconds: report.remainingSeconds || 0,
+    paused: report.paused || false,
+  };
+  return reportItem;
 }
 
 export function formatIGeneratedReportItem(report: IReportIncludeProject): IGeneratedReportItem {
-    const basicReportItem = formatIBasicReportItem(report);
-    const project = report.project ? {
+  const basicReportItem = formatIBasicReportItem(report);
+  const project = report.project
+    ? {
         id: report.project.id.toString(),
         name: report.project.name,
         code: report.project.name,
-    } : null;
-    const reportItem: IGeneratedReportItem = {
-        ...basicReportItem,
-        project,
-        reportLinkId: report.reportLink || '',
-        downloadLink: report.downloadLink || '',
-        blockchainExplorerLink: report.blockChainExplorerLink || '',
-        evidenceId: report.evidenceId || '',
-    };
-    return reportItem;
+      }
+    : null;
+  const reportItem: IGeneratedReportItem = {
+    ...basicReportItem,
+    project,
+    reportLinkId: report.reportLink || '',
+    downloadLink: report.downloadLink || '',
+    blockchainExplorerLink: report.blockChainExplorerLink || '',
+    evidenceId: report.evidenceId || '',
+  };
+  return reportItem;
 }
 
-export function formatIPaginatedPendingReportItem(pendingItems: IPendingReportItem[], page: number, totalPages: number): IPaginatedPendingReportItem {
-    const paginatedPendingReportItem: IPaginatedPendingReportItem = {
-      data: pendingItems,
-      page,
-      totalPages
-    };
-    return paginatedPendingReportItem;
+export function formatIPaginatedPendingReportItem(
+  pendingItems: IPendingReportItem[],
+  page: number,
+  totalPages: number
+): IPaginatedPendingReportItem {
+  const paginatedPendingReportItem: IPaginatedPendingReportItem = {
+    data: pendingItems,
+    page,
+    totalPages,
+  };
+  return paginatedPendingReportItem;
 }
 
-export function formatIPaginatedGeneratedReportItem(generatedItems: IGeneratedReportItem[], page: number, totalPages: number): IPaginatedGeneratedReportItem {
-    const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
-      data: generatedItems,
-      page,
-      totalPages
-    };
-    return paginatedGeneratedReportItem;
+export function formatIPaginatedGeneratedReportItem(
+  generatedItems: IGeneratedReportItem[],
+  page: number,
+  totalPages: number
+): IPaginatedGeneratedReportItem {
+  const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
+    data: generatedItems,
+    page,
+    totalPages,
+  };
+  return paginatedGeneratedReportItem;
 }

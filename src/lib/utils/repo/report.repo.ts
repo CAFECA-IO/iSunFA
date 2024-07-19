@@ -122,81 +122,83 @@ export async function createFinancialReport(
 }
 
 export async function findManyReports(
-    companyId: number,
-    status: ReportStatusType,
-    targetPage: number = DEFAULT_PAGE_NUMBER,
-    pageSize: number = DEFAULT_PAGE_LIMIT,
-    sortBy: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt',
-    sortOrder: 'asc' | 'desc' = 'desc',
-    startDateInSecond?: number,
-    endDateInSecond?: number,
-    searchQuery?: string
+  companyId: number,
+  status: ReportStatusType,
+  targetPage: number = DEFAULT_PAGE_NUMBER,
+  pageSize: number = DEFAULT_PAGE_LIMIT,
+  sortBy: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt',
+  sortOrder: 'asc' | 'desc' = 'desc',
+  startDateInSecond?: number,
+  endDateInSecond?: number,
+  searchQuery?: string
 ) {
-    let reports: IReportIncludeProject[] = [];
+  let reports: IReportIncludeProject[] = [];
 
-    const where: Prisma.ReportWhereInput = {
-        companyId,
-        status,
-        AND: [
-            // { from: { gte: startDateInSecond } },
-            { to: { lte: endDateInSecond } },
-        ],
-        OR: searchQuery ? [
-            { name: { contains: searchQuery, mode: 'insensitive' } },
-            { type: { contains: searchQuery, mode: 'insensitive' } },
-            { reportType: { contains: searchQuery, mode: 'insensitive' } }
-        ] : undefined,
-    };
+  const where: Prisma.ReportWhereInput = {
+    companyId,
+    status,
+    AND: [
+      // { from: { gte: startDateInSecond } },
+      { to: { lte: endDateInSecond } },
+    ],
+    OR: searchQuery
+      ? [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { type: { contains: searchQuery, mode: 'insensitive' } },
+          { reportType: { contains: searchQuery, mode: 'insensitive' } },
+        ]
+      : undefined,
+  };
 
-    const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };
+  const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };
 
-    const include: Prisma.ReportInclude = {
-        project: true,
-    };
+  const include: Prisma.ReportInclude = {
+    project: true,
+  };
 
-    const findManyArgs = {
-        where,
-        orderBy,
-        include,
-    };
-    try {
-        reports = await prisma.report.findMany(findManyArgs);
-    } catch (error) {
-        // Deprecate: (20240710 - Murky) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.error(error);
+  const findManyArgs = {
+    where,
+    orderBy,
+    include,
+  };
+  try {
+    reports = await prisma.report.findMany(findManyArgs);
+  } catch (error) {
+    // Deprecate: (20240710 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+
+  const filteredReports = reports.filter((report) => {
+    if (report.reportType !== ReportSheetType.BALANCE_SHEET && startDateInSecond !== undefined) {
+      return report.from >= startDateInSecond;
     }
+    return true;
+  });
 
-    const filteredReports = reports.filter((report) => {
-      if (report.reportType !== ReportSheetType.BALANCE_SHEET && startDateInSecond !== undefined) {
-        return report.from >= startDateInSecond;
-      }
-      return true;
-    });
+  const totalCount = filteredReports.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
-    const totalCount = filteredReports.length;
-    const totalPages = Math.ceil(totalCount / pageSize);
+  if (targetPage < 1) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
-    if (targetPage < 1) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
+  const skip = pageToOffset(targetPage, pageSize);
 
-    const skip = pageToOffset(targetPage, pageSize);
+  const paginatedReports = filteredReports.slice(skip, skip + pageSize);
 
-    const paginatedReports = filteredReports.slice(skip, skip + pageSize);
+  const hasNextPage = skip + pageSize < totalCount;
+  const hasPreviousPage = targetPage > 1;
 
-    const hasNextPage = skip + pageSize < totalCount;
-    const hasPreviousPage = targetPage > 1;
-
-    return {
-        data: paginatedReports,
-        page: targetPage,
-        totalPages,
-        totalCount,
-        pageSize,
-        hasNextPage,
-        hasPreviousPage,
-        sortOrder,
-        sortBy
-    };
+  return {
+    data: paginatedReports,
+    page: targetPage,
+    totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sortOrder,
+    sortBy,
+  };
 }

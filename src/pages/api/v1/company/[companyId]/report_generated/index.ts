@@ -65,7 +65,15 @@ export function formatSearchQueryFromQuery(searchQuery: string | string[] | unde
 }
 
 export function formatGetRequestQuery(req: NextApiRequest) {
-  const { targetPage, pageSize, sortBy, sortOrder, startDateInSecond, endDateInSecond, searchQuery } = req.query;
+  const {
+    targetPage,
+    pageSize,
+    sortBy,
+    sortOrder,
+    startDateInSecond,
+    endDateInSecond,
+    searchQuery,
+  } = req.query;
 
   const statusString = ReportStatusType.PENDING;
   const targetPageNumber = formatTargetPageFromQuery(targetPage);
@@ -75,12 +83,42 @@ export function formatGetRequestQuery(req: NextApiRequest) {
   const startDateInSecondFromQuery = formatDateInSecondFromQuery(startDateInSecond);
   const endDateInSecondFromQuery = formatDateInSecondFromQuery(endDateInSecond);
   const searchQueryString = formatSearchQueryFromQuery(searchQuery);
-  return { statusString, targetPageNumber, pageSizeNumber, sortByString, sortOrderString, startDateInSecondFromQuery, endDateInSecondFromQuery, searchQueryString };
+  return {
+    statusString,
+    targetPageNumber,
+    pageSizeNumber,
+    sortByString,
+    sortOrderString,
+    startDateInSecondFromQuery,
+    endDateInSecondFromQuery,
+    searchQueryString,
+  };
 }
 
-export async function handleGetRequest(companyId: number, req: NextApiRequest): Promise<IPaginatedGeneratedReportItem> {
-  const { targetPageNumber, pageSizeNumber, sortByString, sortOrderString, startDateInSecondFromQuery, endDateInSecondFromQuery, searchQueryString } = formatGetRequestQuery(req);
-  const generatedData = await findManyReports(companyId, ReportStatusType.GENERATED, targetPageNumber, pageSizeNumber, sortByString, sortOrderString, startDateInSecondFromQuery, endDateInSecondFromQuery, searchQueryString);
+export async function handleGetRequest(
+  companyId: number,
+  req: NextApiRequest
+): Promise<IPaginatedGeneratedReportItem> {
+  const {
+    targetPageNumber,
+    pageSizeNumber,
+    sortByString,
+    sortOrderString,
+    startDateInSecondFromQuery,
+    endDateInSecondFromQuery,
+    searchQueryString,
+  } = formatGetRequestQuery(req);
+  const generatedData = await findManyReports(
+    companyId,
+    ReportStatusType.GENERATED,
+    targetPageNumber,
+    pageSizeNumber,
+    sortByString,
+    sortOrderString,
+    startDateInSecondFromQuery,
+    endDateInSecondFromQuery,
+    searchQueryString
+  );
   const generatedReportItems: IGeneratedReportItem[] = generatedData.data.map((data) => {
     return formatIGeneratedReportItem(data);
   });
@@ -88,14 +126,14 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest): 
   const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
     data: generatedReportItems,
     page: generatedData.page,
-    totalPages: generatedData.totalPages
+    totalPages: generatedData.totalPages,
   };
   return paginatedGeneratedReportItem;
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData< IPaginatedGeneratedReportItem | null>>
+  res: NextApiResponse<IResponseData<IPaginatedGeneratedReportItem | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedGeneratedReportItem | null = null;
@@ -118,6 +156,9 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<IPaginatedGeneratedReportItem | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<IPaginatedGeneratedReportItem | null>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }
