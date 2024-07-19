@@ -9,3 +9,7 @@ export interface ICompany {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface ICompanyDetail extends ICompany {
+  ownerId: number;
+}
