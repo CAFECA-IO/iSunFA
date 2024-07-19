@@ -703,14 +703,22 @@
     "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
   },
   "COMPANY_BASIC_INFO": {
+    "BASIC_INFO": "Basic Info",
     "COMPANY_NAME": "Company Name",
     "COMPANY_INFO": "Company Info",
+    "TAX_ID_NUMBER": "Tax ID Number",
     "ADMIN_ACCOUNT_ID": "Admin Account ID",
     "CREATED_DATE": "Created Date",
-    "UNLOCK_ALL_FUNCTIONS": "Unlock All Functions",
+    "KYC": "KYC",
+    "UNLOCK": "Unlock",
+    "ALL_FUNCTIONS": "All Functions",
     "ON_ISUNFA": "On iSunFA",
     "AI_AUDIT_REPORT": "AI Audit Report",
     "HIGHER_SECURITY": "Higher security",
-    "CHANGE_TO_OFFICIAL_ACCOUNT": "Change to official account"
+    "CHANGE_TO_OFFICIAL_ACCOUNT": "Upgrade to official account",
+    "GO_KYC": "Go KYC",
+    "ACCOUNT": "Account",
+    "DELETE_COMPANY": "Delete Company",
+    "TRANSFER_ADMINISTRATION": "Transfer Administration"
   }
 }
