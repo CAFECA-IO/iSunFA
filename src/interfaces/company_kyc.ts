@@ -143,3 +143,11 @@ export function isKYCFormComplete(data: ICompanyKYCForm): {
     missingFields,
   };
 }
+
+export function createFormData(data: ICompanyKYCForm): FormData {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+  return formData;
+}

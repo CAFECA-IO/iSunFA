@@ -69,6 +69,7 @@ export enum APIName {
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
   ROLE_UPDATE = 'ROLE_UPDATE',
+  KYC_UPLOAD = 'KYC_UPLOAD',
 }
 
 export enum APIPath {
@@ -121,6 +122,7 @@ export enum APIPath {
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
+  KYC_UPLOAD = `${apiPrefix}/company/:companyId/kyc`,
 }
 const createConfig = ({
   name,
@@ -391,5 +393,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ROLE_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.ROLE_UPDATE,
+  }),
+  [APIName.KYC_UPLOAD]: createConfig({
+    name: APIName.KYC_UPLOAD,
+    method: HttpMethod.POST,
+    path: APIPath.KYC_UPLOAD,
   }),
 };

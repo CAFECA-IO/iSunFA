@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import KYCStepper from '@/components/kyc/kyc_stepper';
 import KYCFormController from '@/components/kyc/kyc_form_controller';
 import { IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
@@ -22,10 +22,13 @@ import {
   ContactInfoKeys,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { ICompanyKYCForm, isKYCFormComplete } from '@/interfaces/company_kyc';
+import { createFormData, ICompanyKYCForm, isKYCFormComplete } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
+import { useTranslation } from 'react-i18next';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
+  const { t } = useTranslation('common');
+  const formRef = useRef<HTMLFormElement>(null);
   const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const {
@@ -41,6 +44,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     },
     false
   );
+  const { trigger: triggerUpload } = APIHandler(APIName.FILE_UPLOAD, {}, false, false);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
@@ -73,11 +77,20 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     setUploadDocuments((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleOnSubmit = () => {
+  const handleSubmitClick = () => {
+    if (formRef.current) {
+      formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
       ...registrationInfoValues,
       ...contactInfoValues,
+      [ContactInfoKeys.CONTACT_PHONE]: contactInfoValues.areaCode + contactInfoValues.contactNumber,
       [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]:
         uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE],
       registrationCertificateId:
@@ -88,17 +101,43 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
     if (isComplete) {
-      // eslint-disable-next-line no-console
-      console.log('KYC Form is complete');
+      const formData = createFormData(companyKYCForm);
+      const { success, code } = await triggerUpload({
+        params: {
+          companyId: selectedCompany?.id,
+        },
+        body: formData,
+      });
+      if (success) {
+        messageModalDataHandler({
+          messageType: MessageType.SUCCESS,
+          title: t('KYC.SUBMIT_SUCCESS'),
+          content: t('KYC.SUBMIT_SUCCESS_MESSAGE'),
+          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnFunction: messageModalVisibilityHandler,
+          backBtnStr: t('KYC.CANCEL'),
+        });
+        messageModalVisibilityHandler();
+      } else if (success === false) {
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: t('KYC.SUBMIT_FAILED'),
+          content: t('KYC.CONTACT_SERVICE_TEAM'),
+          subMsg: t('KYC.SUBMIT_FAILED_MESSAGE', code),
+          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnFunction: messageModalVisibilityHandler,
+          backBtnStr: t('KYC.CANCEL'),
+        });
+      }
     } else {
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: 'Incomplete Form',
-        content: `Please fill in the following fields: ${missingFields.join(', ')}`,
-        subMsg: `If you have any questions, please contact us.`,
-        submitBtnStr: 'Confrim',
+        title: t('KYC.INCOMPLETE_FORM'),
+        subMsg: t('KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
+        content: t('KYC.CONTACT_SERVICE_TEAM'),
+        submitBtnStr: t('KYC.CONFIRM'),
         submitBtnFunction: messageModalVisibilityHandler,
-        backBtnStr: 'Cancel',
+        backBtnStr: t('KYC.CANCEL'),
       });
       messageModalVisibilityHandler();
     }
@@ -121,7 +160,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   return (
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
-      <form>
+      <form ref={formRef} onSubmit={handleSubmit}>
         {step === 0 && <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
         {step === 1 && (
           <RegistrationInfoForm
@@ -140,7 +179,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
         step={step}
         onCancel={onCancel}
         onNext={() => handleStepChange(step + 1)}
-        onSubmit={handleOnSubmit}
+        onSubmit={handleSubmitClick}
       />
     </section>
   );

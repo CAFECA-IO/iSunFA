@@ -51,7 +51,7 @@ const DocumentUploadForm = ({
     });
 
   return (
-    <div className="mb-14 flex flex-col items-center bg-gray-100">
+    <div className="flex flex-col items-center bg-gray-100">
       <div className="mb-8">
         <RadioButtonComponent
           selectedValue={data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}
