@@ -1,9 +1,12 @@
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyDetail } from '@/interfaces/company';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { timestampToString } from '@/lib/utils/common';
@@ -25,12 +28,13 @@ const CompanyInfoPageBody = () => {
   } = useGlobalCtx();
 
   const [company, setCompany] = useState<ICompany | null>(selectedCompany);
+  const [ownerId, setOwnerId] = useState<number | null>(null);
 
   const { trigger: deleteCompany } = APIHandler<ICompany>(
     APIName.COMPANY_DELETE,
     {
       params: {
-        companyId: selectedCompany?.id ?? -1,
+        companyId: selectedCompany?.id ?? NON_EXISTING_COMPANY_ID,
       },
     },
     false,
@@ -39,17 +43,19 @@ const CompanyInfoPageBody = () => {
 
   const {
     data: companyData,
+    isLoading: isCompanyDataLoading,
     code: getCompanyDataCode,
     success: getCompanyDataSuccessfully,
-  } = APIHandler<ICompany>(APIName.COMPANY_GET_BY_ID, {
+  } = APIHandler<ICompanyDetail>(APIName.COMPANY_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? 1000,
+      companyId: selectedCompany?.id ?? PUBLIC_COMPANY_ID,
     },
   });
 
   useEffect(() => {
     if (getCompanyDataSuccessfully && companyData) {
       setCompany(companyData);
+      setOwnerId(companyData.ownerId);
     }
   }, [companyData, getCompanyDataSuccessfully, getCompanyDataCode]);
 
@@ -82,7 +88,7 @@ const CompanyInfoPageBody = () => {
         'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
       backBtnStr: 'Cancel',
       submitBtnStr: 'Delete',
-      submitBtnFunction: procedureOfDelete, // TODO: send API request (20240717 - Shirley)
+      submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
   };
@@ -90,6 +96,16 @@ const CompanyInfoPageBody = () => {
   const transferOwnershipClickHandler = () => {
     transferCompanyModalVisibilityHandler();
   };
+
+  const displayedOwnerId = isCompanyDataLoading ? (
+    <div className="mt-5">
+      <Skeleton width={80} height={20} />
+    </div>
+  ) : (
+    <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">
+      {ownerId ?? '-'}
+    </div>
+  );
 
   return (
     <div className="font-barlow">
@@ -142,7 +158,7 @@ const CompanyInfoPageBody = () => {
                   {t('COMPANY_BASIC_INFO.COMPANY_INFO')}{' '}
                 </div>
                 <div className="flex gap-0 text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:text-3xl">
-                  <div>iSunCloud </div>
+                  <div>{company?.name ?? '-'} </div>
                   <Button
                     onClick={editCompanyClickHandler}
                     variant={'secondaryBorderless'}
@@ -210,8 +226,8 @@ const CompanyInfoPageBody = () => {
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
                 {t('COMPANY_BASIC_INFO.ADMIN_ACCOUNT_ID')}{' '}
               </div>
-              {/* TODO: owner account id (20240718 - Shirley) */}
-              <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">-</div>
+
+              {displayedOwnerId}
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">

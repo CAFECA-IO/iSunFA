@@ -149,31 +149,35 @@ export const DEFAULT_PAGE_OFFSET = 0;
 export const USER_ICON_BACKGROUND_COLORS = [
   // Info: (20230814 - Murky) color from surface/support/strong/Light_Mode and Dark_Mode
   {
-    lightMode: "#FD853A",
-    darkMode: "#EC4A0A",
+    lightMode: '#FD853A',
+    darkMode: '#EC4A0A',
   },
   {
-    lightMode: "#9B8AFB",
-    darkMode: "#6938EF",
+    lightMode: '#9B8AFB',
+    darkMode: '#6938EF',
   },
   {
-    lightMode: "#FD6F8E",
-    darkMode: "#E31B54",
+    lightMode: '#FD6F8E',
+    darkMode: '#E31B54',
   },
   {
-    lightMode: "#F670C7",
-    darkMode: "#DD2590",
+    lightMode: '#F670C7',
+    darkMode: '#DD2590',
   },
   {
-    lightMode: "#8098F9",
-    darkMode: "#444CE7",
+    lightMode: '#8098F9',
+    darkMode: '#444CE7',
   },
   {
-    lightMode: "#53B1FD",
-    darkMode: "#1570EF",
+    lightMode: '#53B1FD',
+    darkMode: '#1570EF',
   },
   {
-    lightMode: "#6CDEA0",
-    darkMode: "#29B368",
+    lightMode: '#6CDEA0',
+    darkMode: '#29B368',
   },
 ];
+
+export const FREE_COMPANY_ID = 1000;
+
+export const NON_EXISTING_COMPANY_ID = -1;

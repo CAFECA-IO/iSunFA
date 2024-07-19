@@ -19,7 +19,6 @@ const TransferCompanyModal = ({
   const saveClickHandler = async () => {
     if (inputRef.current) {
       // TODO: send API request (20240717 - Shirley)
-      inputRef.current.value = '';
       modalVisibilityHandler();
 
       // TODO: validate the userId (20240717 - Shirley)
@@ -27,16 +26,24 @@ const TransferCompanyModal = ({
       messageModalDataHandler({
         messageType: MessageType.WARNING,
         title: 'Transfer company',
-        content: `Are you sure you want to transfer the company to \n\nUSER_NAME.`, // TODO: message color (20240717 - Shirley)
+        content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: message color (20240717 - Shirley)
         backBtnStr: 'Cancel',
         submitBtnStr: 'Transfer',
         submitBtnFunction: messageModalVisibilityHandler, // TODO: send API request (20240717 - Shirley)
       });
+
+      inputRef.current.value = '';
       messageModalVisibilityHandler();
     }
   };
 
   useEffect(() => {
+    if (!isModalVisible) {
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    }
+
     if (inputRef.current) {
       inputRef.current.focus();
     }

@@ -37,7 +37,11 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   );
 
   const saveClickHandler = async () => {
-    if (inputRef.current) {
+    if (
+      inputRef.current &&
+      !!inputRef.current.value &&
+      inputRef.current.value !== selectedCompany?.name
+    ) {
       updateTeam({
         body: {
           name: inputRef.current.value,
@@ -144,7 +148,12 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
             >
               Cancel
             </Button>
-            <Button variant={'tertiary'} onClick={saveClickHandler} className="flex-1 rounded-xs">
+            <Button
+              disabled={isUpdateTeamLoading}
+              variant={'tertiary'}
+              onClick={saveClickHandler}
+              className="flex-1 rounded-xs"
+            >
               Save
             </Button>
           </div>
