@@ -698,5 +698,24 @@
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
     "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
+  },
+  "COMPANY_BASIC_INFO": {
+    "BASIC_INFO": "基本資訊",
+    "COMPANY_NAME": "公司名稱",
+    "COMPANY_INFO": "公司資訊",
+    "TAX_ID_NUMBER": "公司識別碼",
+    "ADMIN_ACCOUNT_ID": "管理員帳號ID",
+    "CREATED_DATE": "創建日期",
+    "KYC": "KYC",
+    "UNLOCK": "解鎖",
+    "ALL_FUNCTIONS": "所有功能",
+    "ON_ISUNFA": "",
+    "AI_AUDIT_REPORT": "AI 審計報告",
+    "HIGHER_SECURITY": "更高的安全性",
+    "CHANGE_TO_OFFICIAL_ACCOUNT": "升級為正式帳號",
+    "GO_KYC": "前往 KYC",
+    "ACCOUNT": "帳號",
+    "DELETE_COMPANY": "刪除公司",
+    "TRANSFER_ADMINISTRATION": "轉移管理權"
   }
 }
