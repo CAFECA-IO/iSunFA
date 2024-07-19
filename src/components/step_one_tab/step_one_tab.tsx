@@ -4,7 +4,7 @@ import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
@@ -22,7 +22,7 @@ const StepOneTab = () => {
   const { selectedCompany } = useUserCtx();
   const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler } = useAccountingCtx();
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
+  const [fileList, setFileList] = useState<IOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
   const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
 
@@ -49,7 +49,7 @@ const StepOneTab = () => {
     return () => {};
   }, [OCRList, OCRListStatus]);
 
-  const handleOCRClick = (unprocessOCR: IUnprocessedOCR) => {
+  const handleOCRClick = (unprocessOCR: IOCR) => {
     if (unprocessOCR.status === ProgressStatus.SUCCESS) {
       selectOCRHandler(unprocessOCR);
     }

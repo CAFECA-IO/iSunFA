@@ -57,6 +57,20 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   return ocrData;
 }
 
+export async function getOcrByResultId(aichResultId: string) {
+  let ocrData: Ocr | null = null;
+
+  if (aichResultId) {
+    ocrData = await prisma.ocr.findUnique({
+      where: {
+        aichResultId,
+      },
+    });
+  }
+
+  return ocrData;
+}
+
 export async function createOcrInPrisma(
   companyId: number,
   aichResult: {
@@ -92,4 +106,13 @@ export async function createOcrInPrisma(
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
+}
+
+export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
+  const ocr = await prisma.ocr.delete({
+    where: {
+      aichResultId,
+    },
+  });
+  return ocr;
 }

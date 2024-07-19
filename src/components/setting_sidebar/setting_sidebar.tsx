@@ -16,7 +16,7 @@ const SettingSidebar = () => {
         {/* Info: Main icon (20240423 - Shirley) */}
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
-          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100 `}>Setting</p>
+          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>Setting</p>
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
@@ -53,7 +53,7 @@ const SettingSidebar = () => {
                   ></path>
                 </g>
               </svg>
-              <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+              <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                 Personal Setting
               </p>
               {/* </Link> */}
@@ -95,7 +95,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Basic Info{' '}
                 </p>
               </Link>
@@ -127,7 +127,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Accounting Title{' '}
                 </p>
               </Link>
@@ -161,7 +161,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Trading Partner List{' '}
                 </p>
                 {/* </Link> */}
@@ -195,7 +195,7 @@ const SettingSidebar = () => {
                     ></path>
                   </g>
                 </svg>
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Administrator{' '}
                 </p>
                 {/* </Link> */}
@@ -230,7 +230,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
 
-                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base `}>
+                <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                   Subscription&Bills{' '}
                 </p>
                 {/* </Link> */}
@@ -242,11 +242,11 @@ const SettingSidebar = () => {
 
       {/* TODO: developing (20240715 - Shirley) */}
       {/* Info: ----- mobile version (20240507 - Shirley) ----- */}
-      <div className="fixed bottom-0 z-50 grid h-72px w-screen grid-cols-6 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
+      <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-white px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
         <Link
           href={ISUNFA_ROUTE.COMPANY_INFO}
           className={cn(
-            'mx-auto p-16px',
+            'flex items-center justify-center',
             router.pathname.includes(ISUNFA_ROUTE.COMPANY_INFO)
               ? 'text-tabs-text-active'
               : 'text-tabs-text-default hover:text-tabs-text-active'
@@ -272,7 +272,7 @@ const SettingSidebar = () => {
         <Link
           href={ISUNFA_ROUTE.ACCOUNTING_TITLE}
           className={cn(
-            'mx-auto p-16px',
+            'flex items-center justify-center',
             router.pathname.includes(ISUNFA_ROUTE.ACCOUNTING_TITLE)
               ? 'text-tabs-text-active'
               : 'text-tabs-text-default hover:text-tabs-text-active'
@@ -297,7 +297,7 @@ const SettingSidebar = () => {
           </svg>
         </Link>
 
-        <div className="mx-auto p-16px text-tabs-text-disable">
+        <div className="flex items-center justify-center text-tabs-text-disable">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -317,7 +317,7 @@ const SettingSidebar = () => {
           </svg>
         </div>
 
-        <div className="mx-auto p-16px text-tabs-text-disable">
+        <div className="flex items-center justify-center text-tabs-text-disable">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -337,7 +337,7 @@ const SettingSidebar = () => {
           </svg>
         </div>
 
-        <div className="mx-auto p-16px text-tabs-text-disable">
+        <div className="flex items-center justify-center text-tabs-text-disable">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -352,26 +352,6 @@ const SettingSidebar = () => {
                 strokeLinejoin="round"
                 strokeWidth="1.5"
                 d="M3.333 6.5c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093C5.233 2.5 5.933 2.5 7.333 2.5h5.333c1.4 0 2.1 0 2.635.272a2.5 2.5 0 011.093 1.093c.272.535.272 1.235.272 2.635v11l-2.291-1.667L12.29 17.5 10 15.833 7.708 17.5l-2.083-1.667L3.333 17.5v-11z"
-              ></path>
-            </g>
-          </svg>
-        </div>
-
-        <div className="mx-auto p-16px text-tabs-text-disable">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <g>
-              <path
-                className="stroke-current"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M7.5 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M12.084 6.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM9.167 17.5l2.585-.738c.123-.036.185-.053.243-.08a.831.831 0 00.145-.085c.051-.038.097-.084.188-.175l5.38-5.38a1.473 1.473 0 00-2.083-2.084l-5.38 5.381a1.753 1.753 0 00-.175.188.84.84 0 00-.085.145c-.027.058-.044.12-.08.243L9.167 17.5z"
               ></path>
             </g>
           </svg>

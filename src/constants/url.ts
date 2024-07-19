@@ -12,6 +12,7 @@ export const ISUNFA_ROUTE = {
   CONTACT_US: '/#contact-us',
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
+  KYC: '/users/kyc',
   SALARY: '/users/salary',
   SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
   ACCOUNTING: '/users/accounting',
@@ -23,7 +24,6 @@ export const ISUNFA_ROUTE = {
   USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
   USERS_MY_REPORTS: '/users/reports/my-reports',
   PROJECT_LIST: '/users/project',
-  KYC: '/users/kyc',
   COMPANY_INFO: '/users/setting/company-info',
   ACCOUNTING_TITLE: '/users/setting/accounting-title',
 };

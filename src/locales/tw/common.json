@@ -23,7 +23,8 @@
     "SUBSCRIPTION_BILLS": "訂閱和帳單",
     "SETTING": "設定",
     "LOGOUT": "登出",
-    "NOTIFICATION": "通知"
+    "NOTIFICATION": "通知",
+    "LINK_NOT_OPEN": "此功能目前尚未開放使用"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -634,5 +635,77 @@
     "CASH": "現金",
     "TRANSFER": "轉帳",
     "CREDIT_CARD": "信用卡"
-  }
+  },
+  "UPLOAD_AREA": {
+    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
+    "BROWSE": "瀏覽",
+    "MAXIMUM_SIZE": "最大檔案大小：50MB"
+  },
+  "KYC": {
+    "COMPANY_VERIFICATION": "公司驗證",
+    "BASIC_INFO": "基本資訊",
+    "REGISTRATION_INFO": "註冊資訊",
+    "CONTACT_INFO": "聯絡資訊",
+    "UPLOAD_DOCUMENT": "上傳文件",
+    "NEXT": "下一步",
+    "SUBMIT": "提交",
+    "CANCEL": "取消",
+    "CONFIRM": "確認",
+    "BUSINESS_REGISTRATION_CERTIFICATE": "商業登記證書",
+    "TAX_STATUS_CERTIFICATE": "稅務狀態證明",
+    "REPRESENTATIVE_ID_CERTIFICATE": "代表人{{type}}證明",
+    "PASSPORT": "護照",
+    "ID_CARD": "身份證",
+    "DRIVER_LICENSE": "駕駛執照",
+    "SELECT_REPRESENTATIVE_ID_TYPE": "選擇公司主要代表人的身份證明類型",
+
+    "KYC": "KYC",
+    "CITY_DEFAULT": "City",
+    "CITY_GB": "United Kingdom",
+    "CITY_US": "United States",
+    "CITY_TW": "Taiwan",
+
+    "COUNTRY_DEFAULT": "Choose the country that your company registered in",
+    "COUNTRY_TAIWAN": "Taiwan",
+    "COUNTRY_UNITED_STATES": "United States",
+    "COUNTRY_CHINA": "China",
+    "COUNTRY_HONG_KONG": "Hong Kong",
+
+    "LEGAL_STRUCTURE_DEFAULT": "What is the legal form of your company",
+    "LEGAL_STRUCTURE_SOLE_PROPRIETORSHIP": "Sole Proprietorship",
+    "LEGAL_STRUCTURE_PARTNERSHIP": "Partnership",
+    "LEGAL_STRUCTURE_CORPORATION": "Corporation",
+    "LEGAL_STRUCTURE_LIMITED_LIABILITY_COMPANY": "Limited Liability Company",
+
+    "INDUSTRY_DEFAULT": "Select your industry",
+    "INDUSTRY_ACCOMMODATION_AND_FOOD_SERVICES": "Accommodation and food services",
+    "INDUSTRY_ADMINISTRATIVE_AND_SUPPORT_SERVICES": "Administrative and support services",
+    "INDUSTRY_ARTS_AND_RECREATION_SERVICES": "Arts and Recreation services",
+    "INDUSTRY_BASIC_METAL_PRODUCTION": "Basic metal production",
+    "INDUSTRY_BUSINESS_FRANCHISES": "Business franchises",
+    "INDUSTRY_CHEMICAL_SUBSTANCE": "Chemical substance",
+    "INDUSTRY_COMMERCE": "Commerce",
+    "INDUSTRY_COMPUTER_AND_ELECTRONIC_PRODUCT": "Computer and Electronic Product",
+    "INDUSTRY_CONSTRUCTION": "Construction",
+    "INDUSTRY_EDUCATION": "Education",
+    "INDUSTRY_FINANCE_AND_INSURANCE": "Finance and insurance",
+    "INDUSTRY_FINANCIAL_SERVICES": "Financial services",
+    "INDUSTRY_FOOD_INDUSTRY": "Food industry",
+    "INDUSTRY_HEALTHCARE_AND_SOCIAL_ASSISTANCE": "Healthcare and social assistance",
+    "INDUSTRY_INFORMATION": "Information",
+    "INDUSTRY_MINING": "Mining",
+    "INDUSTRY_OTHER_SERVICE_ACTIVITIES": "Other service activities",
+    "INDUSTRY_PERSONAL_SERVICES": "Personal services",
+    "INDUSTRY_REAL_ESTATE_ACTIVITIES": "Real estate activities",
+    "INDUSTRY_RETAIL": "Retail",
+    "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
+    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry",
+
+    "SUBMIT_SUCCESS": "你的申請已提交成功",
+    "SUBMIT_SUCCESS_MESSAGE": "我們的工作人員將在 3 - 5個工作日內審核您的申請，請耐心等待。",
+    "SUBMIT_FAILED": "提交失敗",
+    "SUBMIT_FAILED_MESSAGE": "錯誤代碼: {{code}}" },
+    "CONTACT_SERVICE_TEAM": "如果您有任何疑問，請聯繫我們的客服。",
+    "INCOMPLETE_FORM": "請填寫完整表格",
+    "INCOMPLETE_FORM_SUB_MESSAGE": "請確補齊下列欄位資訊: {{fields}}。"
 }

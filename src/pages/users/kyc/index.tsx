@@ -26,7 +26,7 @@ const KYCIntroPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('SALARY.SALARY_ISUNFA')}</title>
+        <title>{t('KYC.KYC')}</title>
       </Head>
 
       <div className="min-h-screen bg-surface-neutral-main-background font-barlow">

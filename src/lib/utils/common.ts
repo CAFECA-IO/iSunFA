@@ -9,6 +9,7 @@ import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import path from 'path';
 import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { UploadDocumentKeys } from '@/constants/kyc';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -28,7 +29,7 @@ export const truncateString = (str: string, length: number) => {
   return result;
 };
 
-export const timestampToString = (timestamp: number | undefined) => {
+export const timestampToString = (timestamp: number | undefined, separator: string = '-') => {
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
     return {
       date: '-',
@@ -91,21 +92,23 @@ export const timestampToString = (timestamp: number | undefined) => {
 
   const monthNameShort = monthNamesInShort[monthIndex];
   const monthName = monthFullName[monthIndex];
-  const dateString = `${year}-${month.toString().padStart(2, '0')}-${day
+  const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
+    .toString()
+    .padStart(2, '0')}`;
+  const dateString = `${year}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
     .padStart(2, '0')}`;
   const dayString = `${day.toString().padStart(2, '0')}`;
+  const tomorrowString = `${year}${separator}${(month + 1)
+    .toString()
+    .padStart(2, '0')}${separator}${(day + 1).toString().padStart(2, '0')}`;
   const monthString = MONTH_LIST[monthIndex];
 
   return {
     date: dateString, // e.g. 2021-01-01
-    dateOfLastYear: `${year - 1}-${month.toString().padStart(2, '0')}-${day
-      .toString()
-      .padStart(2, '0')}`, // e.g. 2020-01-01
+    dateOfLastYear: dateOfLastYearString, // e.g. 2020-01-01
     day: `${dayString}`, // e.g. 01
-    tomorrow: `${year}-${month.toString().padStart(2, '0')}-${(day + 1)
-      .toString()
-      .padStart(2, '0')}`, // e.g. 2021-01-02
+    tomorrow: tomorrowString, // e.g. 2021-01-02
     month: `${month}`.padStart(2, '0'), // e.g. 01
     monthString: `${monthString}`, // e.g. January (with i18n)
     monthShortName: `${monthNameShort}`, // e.g. Jan.
@@ -489,3 +492,78 @@ export function formatNumberSeparateByComma(num: number) {
   // Info: (20240716 - Murky) 如果 num 是負數，則將結果包裹在括號內
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
+
+export const readFilesFromLocalStorage = (
+  type: string = 'KYCFiles'
+): {
+  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+} => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  return data;
+};
+
+export const saveFilesToLocalStorage = (
+  fileType: UploadDocumentKeys,
+  file?: File,
+  fileId?: string,
+  type: string = 'KYCFiles'
+) => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  const newData = {
+    ...data,
+    [fileType]: {
+      id: fileId,
+      file,
+    },
+  };
+  localStorage.setItem(type, JSON.stringify(newData));
+};
+
+export const deleteFilesFromLocalStorage = (
+  fileId?: string,
+  fileType?: UploadDocumentKeys,
+  type: string = 'KYCFiles'
+) => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  let newData = {
+    ...data,
+  };
+  if (fileType) {
+    newData = {
+      ...data,
+      [fileType]: {
+        id: undefined,
+        file: undefined,
+      },
+    };
+  } else {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const key in data) {
+      if (data[key].id === fileId) {
+        newData = {
+          ...data,
+          [key]: {
+            id: undefined,
+            file: undefined,
+          },
+        };
+        break;
+      }
+    }
+  }
+  localStorage.setItem(type, JSON.stringify(newData));
+};

@@ -2,7 +2,7 @@ import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import { IJournal } from '@/interfaces/journal';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
@@ -53,19 +53,25 @@ interface IAccountingContext {
   // addTempJournal: (journal: IJournal) => void;
   // duplicateTempJournal: (id: string) => void;
   // removeTempJournal: (id: string) => void;
-  OCRList: IUnprocessedOCR[];
+  OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number, update: boolean) => void;
   accountList: IAccount[];
-  getAccountListHandler: (companyId: number) => void;
+  getAccountListHandler: (
+    companyId: number,
+    type?: string,
+    liquidity?: string,
+    page?: number,
+    limit?: number
+  ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
   ) => void;
   AIStatus: ProgressStatus;
 
-  selectedOCR: IUnprocessedOCR | undefined;
-  selectOCRHandler: (journal: IUnprocessedOCR | undefined) => void;
+  selectedOCR: IOCR | undefined;
+  selectOCRHandler: (journal: IOCR | undefined) => void;
   selectedJournal: IJournal | undefined;
   selectJournalHandler: (journal: IJournal | undefined) => void;
 
@@ -77,7 +83,7 @@ interface IAccountingContext {
   setVoucherPreviewHandler: (voucher: IVoucher | undefined) => void;
 
   accountingVoucher: IAccountingVoucher[];
-  addVoucherRowHandler: (type?: VoucherRowType) => void;
+  addVoucherRowHandler: (count: number, type?: VoucherRowType) => void;
   changeVoucherAccountHandler: (index: number, account: IAccount | undefined) => void;
   deleteVoucherRowHandler: (id: number) => void;
   changeVoucherStringHandler: (index: number, value: string, type: VoucherString) => void;
@@ -87,12 +93,14 @@ interface IAccountingContext {
     type: VoucherRowType,
     description?: string
   ) => void;
-  clearVoucherHandler: () => void;
+  resetVoucherHandler: () => void;
 
   totalDebit: number;
   totalCredit: number;
 
   generateAccountTitle: (account: IAccount | null) => string;
+
+  deleteOwnAccountTitle: (companyId: number, id: number) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -126,12 +134,14 @@ const initialAccountingContext: IAccountingContext = {
   changeVoucherStringHandler: () => {},
   changeVoucherAccountHandler: () => {},
   changeVoucherAmountHandler: () => {},
-  clearVoucherHandler: () => {},
+  resetVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
+
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -154,12 +164,16 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     error: listError,
     success: listSuccess,
     code: listCode,
-  } = APIHandler<IUnprocessedOCR[]>(APIName.OCR_LIST, {}, false, false);
-
+  } = APIHandler<IOCR[]>(APIName.OCR_LIST, {}, false, false);
+  const {
+    trigger: deleteAccountById,
+    data: deleteResult,
+    success: deleteSuccess,
+  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID, {}, false, false);
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);
-  const [OCRList, setOCRList] = useState<IUnprocessedOCR[]>([]);
+  const [OCRList, setOCRList] = useState<IOCR[]>([]);
   const [OCRListStatus, setOCRLisStatus] = useState<{
     listSuccess: boolean | undefined;
     listCode: string | undefined;
@@ -167,7 +181,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     listSuccess: undefined,
     listCode: undefined,
   });
-  const [selectedOCR, setSelectedOCR] = useState<IUnprocessedOCR | undefined>(undefined);
+
+  const [selectedOCR, setSelectedOCR] = useState<IOCR | undefined>(undefined);
   const [selectedJournal, setSelectedJournal] = useState<IJournal | undefined>(undefined);
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
@@ -187,8 +202,23 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
 
-  const getAccountListHandler = (companyId: number) => {
-    getAccountList({ params: { companyId } });
+  const getAccountListHandler = (
+    companyId: number,
+    type?: string,
+    liquidity?: string,
+    page?: number,
+    limit?: number
+    // ToDo: (20240719 - Julian) lack of keyword search
+  ) => {
+    getAccountList({
+      params: { companyId },
+      query: {
+        type,
+        liquidity,
+        page,
+        limit,
+      },
+    });
   };
 
   const getAIStatusHandler = (
@@ -261,48 +291,59 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     return 'Account Title';
   };
 
+  const deleteOwnAccountTitle = (companyId: number, id: number) => {
+    deleteAccountById({
+      params: { companyId, accountId: id },
+    });
+  };
+
   // Info: (20240430 - Julian) 新增日記帳列
   const addVoucherRowHandler = useCallback(
-    (type?: VoucherRowType) => {
+    (count: number, type?: VoucherRowType) => {
       // Info: (20240530 - Julian) 檢查 accountingVoucher 是否有列
-      const isVoucherEmpty = !!accountingVoucher && accountingVoucher.length > 0;
-      // Info: (20240530 - Julian) 若 accountingVoucher 為空，則新增 id = 0，否則最後一列 id + 1
-      const newId = isVoucherEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
+      const isNotEmpty = !!accountingVoucher && accountingVoucher.length > 0;
+      const newId = isNotEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
 
       switch (type) {
         // Info: (20240530 - Julian) 新增借方列
-        case VoucherRowType.DEBIT:
-          setAccountingVoucher((prev) => [
-            ...prev,
-            {
-              id: newId,
-              account: null,
-              particulars: '',
-              debit: 1,
-              credit: 0,
-            },
-          ]);
+        case VoucherRowType.DEBIT: {
+          const newDebitRow = Array.from({ length: count }, (_, i) => ({
+            id: i + (isNotEmpty ? 0 : 1) + newId,
+            account: null,
+            particulars: '',
+            debit: 1,
+            credit: 0,
+          }));
+
+          setAccountingVoucher((prev) => [...prev, ...newDebitRow]);
           break;
+        }
         // Info: (20240530 - Julian) 新增貸方列
-        case VoucherRowType.CREDIT:
-          setAccountingVoucher((prev) => [
-            ...prev,
-            {
-              id: newId,
-              account: null,
-              particulars: '',
-              debit: 0,
-              credit: 1,
-            },
-          ]);
+        case VoucherRowType.CREDIT: {
+          const newCreditRow = Array.from({ length: count }, (_, i) => ({
+            id: i + (isNotEmpty ? 0 : 1) + newId,
+            account: null,
+            particulars: '',
+            debit: 0,
+            credit: 1,
+          }));
+
+          setAccountingVoucher((prev) => [...prev, ...newCreditRow]);
           break;
+        }
         // Info: (20240530 - Julian) 新增空白列
-        default:
-          setAccountingVoucher((prev) => [
-            ...prev,
-            { id: newId, account: null, particulars: '', debit: 0, credit: 0 },
-          ]);
+        default: {
+          const newRow = Array.from({ length: count }, (_, i) => ({
+            id: i + (isNotEmpty ? 0 : 1) + newId,
+            account: null,
+            particulars: '',
+            debit: 0,
+            credit: 0,
+          }));
+
+          setAccountingVoucher((prev) => [...prev, ...newRow]);
           break;
+        }
       }
     },
     [accountingVoucher]
@@ -319,6 +360,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const changeVoucherAccountHandler = useCallback(
     (index: number, account: IAccount | undefined) => {
       setAccountingVoucher((prev) => {
+        if (index > prev.length - 1) {
+          return prev;
+        }
+
         const newVoucher = [...prev];
         const targetId = prev.findIndex((voucher) => voucher.id === index);
         newVoucher[targetId].account = account ?? null;
@@ -348,6 +393,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const changeVoucherAmountHandler = useCallback(
     (index: number, value: number | null, type: VoucherRowType, description?: string) => {
       setAccountingVoucher((prev) => {
+        // Info: (20240716 - Julian) 若 index 大於傳票長度，則不寫入
+        if (index > prev.length - 1) {
+          return prev;
+        }
+
         // Info: (20240430 - Julian) 複製現有的傳票
         const newVoucher = [...prev];
 
@@ -379,8 +429,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [accountingVoucher]
   );
 
-  // Info: (20240503 - Julian) 清空傳票
-  const clearVoucherHandler = useCallback(() => {
+  // Info: (20240503 - Julian) 重置傳票
+  const resetVoucherHandler = useCallback(() => {
     setAskAIParams((prev) => (prev ? { ...prev, update: false } : prev));
     setAccountingVoucher([defaultAccountingVoucher]); // Info: (20240503 - Julian) 清空傳票列表
     changeVoucherAmountHandler(0, 0, VoucherRowType.DEBIT); // Info: (20240503 - Julian) 清空借方 input
@@ -401,6 +451,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTotalDebit(debit);
     setTotalCredit(credit);
   }, [accountingVoucher]);
+
+  useEffect(() => {
+    if (deleteSuccess && deleteResult) {
+      // Info: (20240719 - Julian) 重新取得 account list
+      getAccountListHandler(deleteResult.companyId);
+    }
+  }, [deleteSuccess, deleteResult]);
 
   const setInvoiceIdHandler = useCallback(
     (id: string | undefined) => setInvoiceId(id),
@@ -450,7 +507,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // );
 
   const selectOCRHandler = useCallback(
-    (OCR: IUnprocessedOCR | undefined) => setSelectedOCR(OCR),
+    (OCR: IOCR | undefined) => setSelectedOCR(OCR),
     [selectedOCR]
   );
 
@@ -473,7 +530,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
-      clearVoucherHandler,
+      resetVoucherHandler,
       totalDebit,
       totalCredit,
 
@@ -491,6 +548,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
       generateAccountTitle,
       changeVoucherAccountHandler,
+      deleteOwnAccountTitle,
     }),
     [
       OCRList,
@@ -503,7 +561,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteVoucherRowHandler,
       changeVoucherStringHandler,
       changeVoucherAmountHandler,
-      clearVoucherHandler,
+      resetVoucherHandler,
       totalDebit,
       totalCredit,
       invoiceId,

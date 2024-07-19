@@ -1,23 +1,30 @@
+import {
+  CityOptions,
+  CountryOptions,
+  IndustryOptions,
+  LegalStructureOptions,
+  RepresentativeIDType,
+} from '@/constants/kyc';
 import { createCompanyKYC, deleteCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 
 describe('CompanyKYC Repository Tests', () => {
   const testCompanyId = 1000;
   const newCompanyKYCData = {
     legalName: 'New Legal Name',
-    country: 'New Country',
-    city: 'New City',
+    country: CountryOptions.TAIWAN,
+    city: CityOptions.TW,
     address: 'New Address',
     zipCode: '54321',
     representativeName: 'New Representative',
-    structure: 'Corporation',
+    structure: LegalStructureOptions.CORPORATION,
     registrationNumber: '987654321',
     registrationDate: '2023-01-02',
-    industry: 'Finance',
+    industry: IndustryOptions.FINANCIAL_SERVICES,
     contactPerson: 'Jane Doe',
     contactPhone: '+987654321',
     contactEmail: 'jane.doe@example.com',
     website: 'https://newexample.com',
-    representativeIdType: 'Driver License',
+    representativeIdType: RepresentativeIDType.DRIVER_LICENSE,
     registrationCertificateId: 'newcert123',
     taxCertificateId: 'newtax123',
     representativeIdCardId: 'newid123',

@@ -520,7 +520,7 @@ CREATE TABLE "voucher_salary_record" (
     "id" SERIAL NOT NULL,
     "voucher_id" INTEGER NOT NULL,
     "salary_record_id" INTEGER NOT NULL,
-    "voucher_salary_record_folder_id" INTEGER,
+    "voucher_salary_record_folder_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
 
@@ -533,6 +533,7 @@ CREATE TABLE "voucher_salary_record_folder" (
     "name" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
 
     CONSTRAINT "voucher_salary_record_folder_pkey" PRIMARY KEY ("id")
 );
@@ -757,6 +758,18 @@ ALTER TABLE "work_rate" ADD CONSTRAINT "work_rate_employee_project_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "report" ADD CONSTRAINT "report_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_salary_record_id_fkey" FOREIGN KEY ("salary_record_id") REFERENCES "salary_record"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_voucher_salary_record_folder_id_fkey" FOREIGN KEY ("voucher_salary_record_folder_id") REFERENCES "voucher_salary_record_folder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "admin_id_seq" RESTART WITH 10000000;

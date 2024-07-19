@@ -1,14 +1,30 @@
 import { useRouter } from 'next/router';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 const BackButton = () => {
   const router = useRouter();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
   const handleBack = () => {
     router.back();
   };
 
+  const leaveClickHandler = () => {
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Leave this page',
+      content: `You might lose progress if you leave.`,
+      subMsg: `Are you sure you want to leave this page?`,
+      submitBtnStr: 'Leave Now',
+      submitBtnFunction: handleBack,
+      backBtnStr: 'Cancel',
+    });
+    messageModalVisibilityHandler();
+  };
+
   return (
-    <button type="button" onClick={handleBack}>
+    <button type="button" onClick={leaveClickHandler}>
       <div className="rounded-xs border border-button-stroke-secondary p-10px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover">
         <svg
           xmlns="http://www.w3.org/2000/svg"

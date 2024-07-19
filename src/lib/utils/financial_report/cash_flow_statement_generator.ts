@@ -74,14 +74,20 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   // Info: (20240710 - Murky) This method is only used in this class
   // eslint-disable-next-line class-methods-use-this
   private mergeMap(
-    balanceSheetMap:Map<string, {
-      accountNode: IAccountNode;
-      percentage: number;
-    }>,
-    incomeStatementMap:Map<string, {
-      accountNode: IAccountNode;
-      percentage: number;
-    }>
+    balanceSheetMap: Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >,
+    incomeStatementMap: Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
   ): Map<string, IAccountNode> {
     const mergedMap = new Map<string, IAccountNode>();
 
@@ -250,7 +256,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     let creditAmount = 0;
     voucher.lineItems.forEach((lineItem) => {
       if (
-        Array.from(CASH_AND_CASH_EQUIVALENTS_REGEX).some((regex) => regex.test(lineItem.account.code))
+        Array.from(CASH_AND_CASH_EQUIVALENTS_REGEX).some((regex) => {
+          return regex.test(lineItem.account.code);
+        })
       ) {
         if (lineItem.debit) {
           debitAmount += lineItem.amount;
@@ -415,14 +423,22 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // ToDo: (20240710 - Murky) Need to implement later
   // eslint-disable-next-line class-methods-use-this
-  public override async generateFinancialReportMap(): Promise<Map<string, {
-    accountNode: IAccountNode;
-    percentage: number;
-  }>> {
-    return new Map<string, {
-      accountNode: IAccountNode;
-      percentage: number;
-    }>();
+  public override async generateFinancialReportMap(): Promise<
+    Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  > {
+    return new Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >();
   }
 
   // ToDo: (20240710 - Murky) Need to implement complete cash flow not just indirect
