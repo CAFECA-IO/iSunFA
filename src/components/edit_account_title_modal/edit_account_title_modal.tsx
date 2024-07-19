@@ -137,8 +137,10 @@ const EditAccountTitleModal = ({
       notes: nameValue,
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
-      submitBtnFunction: () =>
-        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, accountId),
+      submitBtnFunction: () => {
+        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, accountId);
+        modalVisibilityHandler();
+      },
       backBtnStr: 'Cancel',
     });
     messageModalVisibilityHandler();

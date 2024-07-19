@@ -12,8 +12,11 @@ import AccountingTitleTable, {
 
 enum AssetOptions {
   ALL = 'All',
-  CURRENT_ASSETS = 'Current Assets',
-  NON_CURRENT_ASSETS = 'Non-Current Assets',
+  ASSET = 'Asset',
+  LIABILITY = 'Liability',
+  EQUITY = 'Equity',
+  INCOME = 'Income',
+  EXPENSE = 'Expense',
 }
 
 enum LiabilityOptions {
@@ -34,30 +37,36 @@ const AccountingTitlePageBody = () => {
   const [selectedLiability, setSelectedLiability] = useState(LiabilityOptions.ALL);
   const [selectedEquity, setSelectedEquity] = useState(EquityOptions.ALL);
 
-  const [ownAccountList, setOwnAccountList] = useState(
-    accountList.filter((account) => account.code.includes('-'))
-  );
-  const [originalAccountList, setOriginalAccountList] = useState(
-    accountList.filter((account) => !account.code.includes('-')).slice(0, 10)
-  );
+  // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
+  const ownAccountList = accountList.filter((account) => account.code.includes('-'));
+  // Info: (20240719 - Julian) 原始的 account ，取前 10 筆
+  const originalAccountList = accountList
+    .filter((account) => !account.code.includes('-'))
+    .slice(0, 10);
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPage = 5; // ToDo: (20240719 - Julian) call API to get total page
 
   useEffect(() => {
     if (selectedCompany) {
-      getAccountListHandler(selectedCompany.id);
-    }
-  }, []);
+      const assetQuery =
+        selectedAsset === AssetOptions.ALL ? undefined : selectedAsset.toLowerCase();
+      const liabilityQuery =
+        selectedLiability === LiabilityOptions.ALL
+          ? undefined
+          : selectedLiability === LiabilityOptions.CURRENT
+            ? 'true'
+            : 'false';
 
-  useEffect(() => {
-    // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
-    setOwnAccountList(accountList.filter((account) => account.code.includes('-')));
-    // Info: (20240719 - Julian) 原始的 account ，取前 10 筆
-    setOriginalAccountList(
-      accountList.filter((account) => !account.code.includes('-')).slice(0, 10)
-    );
-  }, [accountList]);
+      getAccountListHandler(
+        selectedCompany.id,
+        assetQuery,
+        liabilityQuery,
+        currentPage,
+        20 // ToDo: (20240719 - Julian) Remove after api update
+      );
+    }
+  }, [selectedAsset, selectedLiability, currentPage, selectedCompany]);
 
   const {
     targetRef: assetRef,

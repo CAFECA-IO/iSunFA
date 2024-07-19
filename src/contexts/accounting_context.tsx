@@ -57,7 +57,13 @@ interface IAccountingContext {
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number, update: boolean) => void;
   accountList: IAccount[];
-  getAccountListHandler: (companyId: number) => void;
+  getAccountListHandler: (
+    companyId: number,
+    type?: string,
+    liquidity?: string,
+    page?: number,
+    limit?: number
+  ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
     update: boolean
@@ -145,14 +151,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     trigger: getAccountList,
     data: accountTitleList,
     success: accountSuccess,
-  } = APIHandler<IAccount[]>(
-    APIName.ACCOUNT_LIST,
-    {
-      query: { limit: 20 }, // ToDo: (20240719 - Julian) Remove after api update
-    },
-    false,
-    false
-  );
+  } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {}, false, false);
   const {
     trigger: getAIStatus,
     data: status,
@@ -203,8 +202,23 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
 
-  const getAccountListHandler = (companyId: number) => {
-    getAccountList({ params: { companyId } });
+  const getAccountListHandler = (
+    companyId: number,
+    type?: string,
+    liquidity?: string,
+    page?: number,
+    limit?: number
+    // ToDo: (20240719 - Julian) lack of keyword search
+  ) => {
+    getAccountList({
+      params: { companyId },
+      query: {
+        type,
+        liquidity,
+        page,
+        limit,
+      },
+    });
   };
 
   const getAIStatusHandler = (
