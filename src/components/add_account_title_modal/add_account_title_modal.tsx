@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import APIHandler from '@/lib/utils/api_handler';
@@ -26,15 +27,24 @@ const AddAccountTitleModal = ({
 }: IAddAccountTitleModalProps) => {
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
+  const { getAccountListHandler } = useAccountingCtx();
+
   const { accountId } = modalData;
 
   const {
     trigger: getAccountById,
     data: accountData,
-    isLoading,
-    success,
+    isLoading: isAccountDataLoading,
+    success: isAccountDataSuccess,
     code: errorCode,
   } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: createNewSubAccount,
+    data: result,
+    success: createSuccess,
+    code: createCode,
+  } = APIHandler<IAccount>(APIName.CREATE_NEW_SUB_ACCOUNT, {}, false, false);
 
   const [accountingType, setAccountingType] = useState('');
   const [liquidity, setLiquidity] = useState(false);
@@ -50,6 +60,37 @@ const AddAccountTitleModal = ({
   }, [selectedCompany, accountId]);
 
   useEffect(() => {
+    if (accountData) {
+      setAccountingType(accountData.type);
+      setLiquidity(accountData.liquidity);
+      setCurrentAssetType(accountData.name);
+    }
+  }, [accountData]);
+
+  useEffect(() => {
+    if (createSuccess && result && selectedCompany) {
+      // Info: (20240719 - Julian) 關閉 modal
+      modalVisibilityHandler();
+      // Info: (20240719 - Julian) 重新取得 account list
+      getAccountListHandler(selectedCompany.id);
+      // Info: (20240719 - Julian) 顯示 toast
+      toastHandler({
+        id: `createSubAccount-${createCode}`,
+        type: ToastType.SUCCESS,
+        content: `Successfully created new sub account: ${result.name}`,
+        closeable: true,
+      });
+    } else if (createSuccess === false) {
+      toastHandler({
+        id: `createSubAccount-${createCode}`,
+        type: ToastType.ERROR,
+        content: 'Failed to create new sub account, please try again later.',
+        closeable: true,
+      });
+    }
+  }, [createSuccess, result, createCode]);
+
+  useEffect(() => {
     if (!isModalVisible) {
       setNameValue('');
       setAccountingType('');
@@ -59,15 +100,7 @@ const AddAccountTitleModal = ({
   }, [isModalVisible]);
 
   useEffect(() => {
-    if (accountData) {
-      setAccountingType(accountData.type);
-      setLiquidity(accountData.liquidity);
-      setCurrentAssetType(accountData.name);
-    }
-  }, [accountData]);
-
-  useEffect(() => {
-    if (success === false && isModalVisible) {
+    if (isAccountDataSuccess === false && isModalVisible) {
       toastHandler({
         id: `getAccount-${errorCode}`,
         type: ToastType.ERROR,
@@ -81,10 +114,22 @@ const AddAccountTitleModal = ({
     setNameValue(event.target.value);
   };
 
+  const addNewSubAccount = () => {
+    if (selectedCompany && accountId) {
+      createNewSubAccount({
+        params: { companyId: selectedCompany.id },
+        body: {
+          accountId,
+          name: nameValue,
+        },
+      });
+    }
+  };
+
   const disableSubmit = !nameValue;
   const liquidityText = liquidity ? 'Current' : 'Non-current';
 
-  const displayType = isLoading ? (
+  const displayType = isAccountDataLoading ? (
     <Skeleton width={210} height={46} rounded />
   ) : (
     <input
@@ -96,7 +141,7 @@ const AddAccountTitleModal = ({
     />
   );
 
-  const displayLiquidity = isLoading ? (
+  const displayLiquidity = isAccountDataLoading ? (
     <Skeleton width={210} height={46} rounded />
   ) : (
     <input
@@ -108,7 +153,7 @@ const AddAccountTitleModal = ({
     />
   );
 
-  const displayCurrentAsset = isLoading ? (
+  const displayCurrentAsset = isAccountDataLoading ? (
     <Skeleton width={440} height={46} rounded />
   ) : (
     <input
@@ -166,6 +211,7 @@ const AddAccountTitleModal = ({
               value={nameValue}
               onChange={handleNameChange}
               placeholder="Enter name"
+              required
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
@@ -180,6 +226,7 @@ const AddAccountTitleModal = ({
             type="button"
             variant="tertiary"
             disabled={disableSubmit}
+            onClick={addNewSubAccount}
           >
             <p>Add</p> <FaPlus />
           </Button>

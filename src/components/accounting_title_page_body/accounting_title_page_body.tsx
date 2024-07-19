@@ -65,9 +65,11 @@ const AccountingTitlePageBody = () => {
   const liabilityDropmenuToggleHandler = () => setLiabilityVisible(!liabilityVisible);
   const equityDropmenuToggleHandler = () => setEquityVisible(!equityVisible);
 
-  const myAccountingTitleList = accountList.filter((account) => {
-    return account.id.toString().includes('-');
-  });
+  // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
+  const myAccountingTitleList = accountList.filter((account) => account.code.includes('-'));
+
+  // Info: (20240719 - Julian) original account list
+  const originalAccountList = accountList.filter((account) => !account.code.includes('-'));
 
   const assetDropmenu = (
     <div
@@ -235,7 +237,7 @@ const AccountingTitlePageBody = () => {
       {/* Info: (20240717 - Julian) All Accounting Table */}
       <div className="flex flex-col items-center gap-y-32px">
         <AccountingTitleTable
-          accountingTitleData={accountList}
+          accountingTitleData={originalAccountList}
           actionType={ActionType.FAV_AND_ADD}
         />
 

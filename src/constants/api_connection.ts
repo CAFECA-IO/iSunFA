@@ -70,6 +70,7 @@ export enum APIName {
   ROLE_DELETE = 'ROLE_DELETE',
   ROLE_UPDATE = 'ROLE_UPDATE',
   ACCOUNT_GET_BY_ID = 'ACCOUNT_GET_BY_ID',
+  CREATE_NEW_SUB_ACCOUNT = 'CREATE_NEW_SUB_ACCOUNT',
 }
 
 export enum APIPath {
@@ -123,6 +124,7 @@ export enum APIPath {
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
+  CREATE_NEW_SUB_ACCOUNT = `${apiPrefix}/company/:companyId/account`,
 }
 const createConfig = ({
   name,
@@ -398,5 +400,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ACCOUNT_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.ACCOUNT_GET_BY_ID,
+  }),
+  [APIName.CREATE_NEW_SUB_ACCOUNT]: createConfig({
+    name: APIName.CREATE_NEW_SUB_ACCOUNT,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_NEW_SUB_ACCOUNT,
   }),
 };
