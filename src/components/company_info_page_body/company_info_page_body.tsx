@@ -10,8 +10,11 @@ import { timestampToString } from '@/lib/utils/common';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const CompanyInfoPageBody = () => {
+  const { t } = useTranslation('common');
+
   const router = useRouter();
   const { selectedCompany, selectCompany } = useUserCtx();
   const {
@@ -93,7 +96,7 @@ const CompanyInfoPageBody = () => {
       <div className="mt-28 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-10 pb-0">
         <div className="mx-0 text-base font-semibold leading-10 text-text-neutral-tertiary max-md:max-w-full lg:mx-0 lg:text-4xl">
           <span className="font-bold text-text-brand-primary-lv2">{company?.name ?? '-'}</span>{' '}
-          Basic Info
+          {t('COMPANY_BASIC_INFO.COMPANY_NAME')}
         </div>
         <div className="mt-3 h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full lg:mx-0 lg:mt-6" />
         <div className="mt-7 flex flex-col rounded-lg py-5 max-md:max-w-full lg:px-10">
@@ -117,7 +120,7 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>Company Info</div>
+              <div>{t('COMPANY_BASIC_INFO.COMPANY_INFO')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
@@ -205,7 +208,7 @@ const CompanyInfoPageBody = () => {
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Owner Account ID
+                Admin Account ID{' '}
               </div>
               {/* TODO: owner account id (20240718 - Shirley) */}
               <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">-</div>
@@ -437,7 +440,7 @@ const CompanyInfoPageBody = () => {
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                <p>Transfer Ownership</p>
+                <p>Transfer Administration</p>
               </Button>
             </div>
           </div>

@@ -698,5 +698,16 @@
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
     "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
+  },
+  "COMPANY_BASIC_INFO": {
+    "COMPANY_NAME": "公司名稱",
+    "COMPANY_INFO": "公司資訊",
+    "ADMIN_ACCOUNT_ID": "管理員帳號ID",
+    "CREATED_DATE": "創建日期",
+    "UNLOCK_ALL_FUNCTIONS": "解鎖所有功能",
+    "ON_ISUNFA": "在 iSunFA 上",
+    "AI_AUDIT_REPORT": "AI 審計報告",
+    "HIGHER_SECURITY": "更高的安全性",
+    "CHANGE_TO_OFFICIAL_ACCOUNT": "更改為正式帳號"
   }
 }

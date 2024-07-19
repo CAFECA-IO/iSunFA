@@ -701,5 +701,16 @@
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
     "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
+  },
+  "COMPANY_BASIC_INFO": {
+    "COMPANY_NAME": "Company Name",
+    "COMPANY_INFO": "Company Info",
+    "ADMIN_ACCOUNT_ID": "Admin Account ID",
+    "CREATED_DATE": "Created Date",
+    "UNLOCK_ALL_FUNCTIONS": "Unlock All Functions",
+    "ON_ISUNFA": "On iSunFA",
+    "AI_AUDIT_REPORT": "AI Audit Report",
+    "HIGHER_SECURITY": "Higher security",
+    "CHANGE_TO_OFFICIAL_ACCOUNT": "Change to official account"
   }
 }
