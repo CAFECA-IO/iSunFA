@@ -11,7 +11,6 @@ import { findFileByName, parseForm } from '@/lib/utils/parse_image_form';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 
-
 export const config = {
   api: {
     bodyParser: false,
