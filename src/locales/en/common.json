@@ -23,7 +23,8 @@
     "SUBSCRIPTION_BILLS": "Subscription & Bills",
     "SETTING": "Setting",
     "LOGOUT": "Logout",
-    "NOTIFICATION": "Notification"
+    "NOTIFICATION": "Notification",
+    "LINK_NOT_OPEN": "This feature is not currently open for use"
   },
   "USER": {
     "MY_ADDRESS": "My Address page",

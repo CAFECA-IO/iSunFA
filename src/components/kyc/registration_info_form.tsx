@@ -12,7 +12,7 @@ import {
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 
-// Info: (240717 - Liz) 翻譯對應的 country 選項
+// Info: (20240717 - Liz) 翻譯對應的 country 選項
 const countryTranslationMap: { [key in CountryOptions]: string } = {
   [CountryOptions.DEFAULT]: 'KYC.COUNTRY_DEFAULT',
   [CountryOptions.TAIWAN]: 'KYC.COUNTRY_TAIWAN',
@@ -21,7 +21,7 @@ const countryTranslationMap: { [key in CountryOptions]: string } = {
   [CountryOptions.HONG_KONG]: 'KYC.COUNTRY_HONG_KONG',
 };
 
-// Info: (240717 - Liz) 翻譯對應的 legal structure 選項
+// Info: (20240717 - Liz) 翻譯對應的 legal structure 選項
 const legalStructureTranslationMap: { [key in LegalStructureOptions]: string } = {
   [LegalStructureOptions.DEFAULT]: 'KYC.LEGAL_STRUCTURE_DEFAULT',
   [LegalStructureOptions.SOLE_PROPRIETORSHIP]: 'KYC.LEGAL_STRUCTURE_SOLE_PROPRIETORSHIP',
@@ -31,7 +31,7 @@ const legalStructureTranslationMap: { [key in LegalStructureOptions]: string } =
     'KYC.LEGAL_STRUCTURE_LIMITED_LIABILITY_COMPANY',
 };
 
-// Info: (240717 - Liz) 翻譯對應的 industry 選項
+// Info: (20240717 - Liz) 翻譯對應的 industry 選項
 const industryTranslationMap: { [key in IndustryOptions]: string } = {
   [IndustryOptions.DEFAULT]: 'KYC.INDUSTRY_DEFAULT',
   [IndustryOptions.ACCOMMODATION_AND_FOOD_SERVICES]: 'KYC.INDUSTRY_ACCOMMODATION_AND_FOOD_SERVICES',
@@ -75,7 +75,7 @@ const RegistrationInfoForm = ({
     onChange(RegistrationInfoKeys.REGISTRATION_DATE, selectedDate.startTimeStamp.toString());
   }, [selectedDate]);
 
-  // Info: (240717 - Liz) OuterClick Hook
+  // Info: (20240717 - Liz) OuterClick Hook
   const {
     targetRef: countryMenuRef,
     componentVisible: isCountryMenuOpen,
@@ -94,7 +94,7 @@ const RegistrationInfoForm = ({
     setComponentVisible: setIsIndustryMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
-  // Info: (240717 - Liz) 開啟/關閉下拉選單
+  // Info: (20240717 - Liz) 開啟/關閉下拉選單
   const countryMenuOpenHandler = () => setIsCountryMenuOpen(!isCountryMenuOpen);
 
   const legalStructureMenuOpenHandler = () =>
@@ -102,7 +102,7 @@ const RegistrationInfoForm = ({
 
   const industryMenuOpenHandler = () => setIsIndustryMenuOpen(!isIndustryMenuOpen);
 
-  // Info: (240717 - Liz) 下拉選單選項
+  // Info: (20240717 - Liz) 下拉選單選項
   const countryDropmenu = Object.values(CountryOptions).map((country: CountryOptions) => {
     const selectionClickHandler = () => {
       onChange(RegistrationInfoKeys.COUNTRY, country);
@@ -153,7 +153,7 @@ const RegistrationInfoForm = ({
     );
   });
 
-  // Info: (240717 - Liz) Input Handlers
+  // Info: (20240717 - Liz) Input Handlers
   const businessRegistrationNumberInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER, e.target.value);
   };

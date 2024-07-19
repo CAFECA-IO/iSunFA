@@ -1,10 +1,3 @@
-export enum CityOptions {
-  DEFAULT = '',
-  GB = 'United Kingdom',
-  US = 'United States',
-  TW = 'Taiwan',
-}
-
 export enum CountryOptions {
   DEFAULT = '', // Info: (20240718 - Liz) This is the default value for the dropdown to show placeholder
   TAIWAN = 'Taiwan',
@@ -21,7 +14,7 @@ export enum LegalStructureOptions {
   LIMITED_LIABILITY_COMPANY = 'Limited Liability Company',
 }
 
-// Info: (240717 - Liz)  Industry Options
+// Info: (20240717 - Liz)  Industry Options
 // 1. Accommodation and food services
 // 2. Administrative and support services
 // 3. Arts and Recreation services
