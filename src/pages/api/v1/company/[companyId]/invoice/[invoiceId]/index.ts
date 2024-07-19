@@ -118,18 +118,23 @@ export async function handlePutRequest(companyId: number, req: NextApiRequest): 
   journalId: number;
   resultStatus: IAccountResultStatus;
 }> {
-  const { invoiceId } = req.query;
-  const invoiceIdNumber = formatInvoiceId(invoiceId);
+  // ToDo: (20240719 - Murky) 目前先從journal來決定是要upload哪一個invoice而不是從invoiceId, 需要再調整
+  // const { invoiceId } = req.query;
+  // const invoiceIdNumber = formatInvoiceId(invoiceId);
   const { invoice: invoiceFromBody } = req.body;
   const invoiceToUpdate = formatInvoiceFromBody(invoiceFromBody);
   const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);
 
   const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-  const journalIdBeUpdated = await handlePrismaUpdateLogic(invoicesToUpdate, companyId, resultStatus);
+  const journalIdBeUpdated = await handlePrismaUpdateLogic(invoiceToUpdate, resultStatus.resultId, companyId);
+  return { journalId: journalIdBeUpdated, resultStatus };
 }
 // Info Murky (20240719): Post request code above
 
-type ApiReturnTypes = IInvoice | null;
+type ApiReturnTypes = IInvoice | null | {
+  journalId: number;
+  resultStatus: IAccountResultStatus;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -144,6 +149,11 @@ export default async function handler(
     switch (req.method) {
       case 'GET':
           payload = await handleGetRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.SUCCESS;
+        break;
+      case 'PUT':
+          payload = await handlePutRequest(companyId, req);
+
           statusMessage = STATUS_MESSAGE.SUCCESS;
         break;
       default:
