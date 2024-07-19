@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
@@ -16,7 +16,7 @@ interface ITeamSettingModal {
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
   const { selectedCompany, selectCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [companyName, setCompanyName] = useState<string>(selectedCompany?.name ?? '');
 
   const {
     trigger: updateTeam,
@@ -37,20 +37,16 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   );
 
   const saveClickHandler = async () => {
-    if (
-      inputRef.current &&
-      !!inputRef.current.value &&
-      inputRef.current.value !== selectedCompany?.name
-    ) {
+    if (companyName && companyName !== selectedCompany?.name) {
       updateTeam({
         body: {
-          name: inputRef.current.value,
+          name: companyName,
           code: selectedCompany?.code,
           regional: selectedCompany?.regional,
         },
       });
 
-      inputRef.current.value = '';
+      setCompanyName('');
       modalVisibilityHandler();
     }
   };
@@ -59,9 +55,6 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     if (isUpdateTeamLoading) return;
 
     if (updateTeamSuccess && updatedTeam) {
-      // TODO: dev (20240718 - Shirley)
-      // eslint-disable-next-line no-console
-      console.log('updatedTeam in TeamSettingModal', updatedTeam);
       selectCompany(updatedTeam);
     } else if (updateTeamError) {
       toastHandler({
@@ -74,10 +67,10 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   }, [updateTeamSuccess, updateTeamError, isUpdateTeamLoading]);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (isModalVisible) {
+      setCompanyName(selectedCompany?.name ?? '');
     }
-  }, [isModalVisible]);
+  }, [isModalVisible, selectedCompany]);
 
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -129,7 +122,8 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
             <div className="flex gap-0 rounded-sm border border-solid border-lightGray3 bg-white shadow-sm">
               <div className="flex flex-1">
                 <input
-                  ref={inputRef}
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
                   placeholder={selectedCompany?.name ?? 'your company name'}
@@ -149,7 +143,9 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               Cancel
             </Button>
             <Button
-              disabled={isUpdateTeamLoading}
+              disabled={
+                isUpdateTeamLoading || !companyName || companyName === selectedCompany?.name
+              }
               variant={'tertiary'}
               onClick={saveClickHandler}
               className="flex-1 rounded-xs"
