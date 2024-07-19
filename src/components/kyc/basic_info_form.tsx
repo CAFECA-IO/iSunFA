@@ -90,7 +90,7 @@ const BasicInfoForm = ({
             <p
               className={`${data[BasicInfoKeys.CITY] === CityOptions.DEFAULT ? 'text-input-text-input-placeholder' : ''}`}
             >
-              {t(cityTranslationMap[data[BasicInfoKeys.CITY]])}
+              {t(cityTranslationMap[data[BasicInfoKeys.CITY] as CityOptions])}
             </p>
             <FaChevronDown />
             {/* Info: Dropmenu */}

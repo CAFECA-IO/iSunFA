@@ -1,6 +1,5 @@
 import {
   CountryOptions,
-  CityOptions,
   LegalStructureOptions,
   IndustryOptions,
   RepresentativeIDType,
@@ -15,7 +14,7 @@ export interface ICompanyKYC {
   companyId: number;
   legalName: string;
   country: CountryOptions;
-  city: CityOptions;
+  city: string;
   address: string;
   zipCode: string;
   representativeName: string;
@@ -37,7 +36,7 @@ export interface ICompanyKYC {
 
 export interface ICompanyKYCForm {
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: string;
-  [BasicInfoKeys.CITY]: CityOptions;
+  [BasicInfoKeys.CITY]: string;
   [BasicInfoKeys.ZIP_CODE]: string;
   [BasicInfoKeys.ADDRESS]: string;
   [BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME]: string;
@@ -62,7 +61,7 @@ export function isCompanyKYC(data: ICompanyKYC): data is ICompanyKYC {
     typeof data.companyId === 'number' &&
     typeof data.legalName === 'string' &&
     Object.values(CountryOptions).includes(data.country) &&
-    Object.values(CityOptions).includes(data.city) &&
+    typeof data.city === 'string' &&
     typeof data.address === 'string' &&
     typeof data.zipCode === 'string' &&
     typeof data.representativeName === 'string' &&
@@ -93,7 +92,7 @@ export function isKYCFormComplete(data: ICompanyKYCForm): {
   if (!Object.values(CountryOptions).includes(data.country) || !data.country) {
     missingFields.push('country');
   }
-  if (!Object.values(CityOptions).includes(data.city) || !data.city) missingFields.push('city');
+  if (typeof data.city !== 'string' || !data.city) missingFields.push('city');
   if (typeof data.address !== 'string' || !data.address) missingFields.push('address');
   if (typeof data.zipCode !== 'string' || !data.zipCode) missingFields.push('zipCode');
   if (typeof data.representativeName !== 'string' || !data.representativeName) {

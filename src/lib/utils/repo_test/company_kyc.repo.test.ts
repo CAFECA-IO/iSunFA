@@ -1,5 +1,4 @@
 import {
-  CityOptions,
   CountryOptions,
   IndustryOptions,
   LegalStructureOptions,
@@ -12,7 +11,7 @@ describe('CompanyKYC Repository Tests', () => {
   const newCompanyKYCData = {
     legalName: 'New Legal Name',
     country: CountryOptions.TAIWAN,
-    city: CityOptions.TW,
+    city: 'New City',
     address: 'New Address',
     zipCode: '54321',
     representativeName: 'New Representative',

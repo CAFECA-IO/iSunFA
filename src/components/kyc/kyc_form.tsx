@@ -113,6 +113,9 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
       [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]:
         uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID].id || '',
     };
+
+    // eslint-disable-next-line no-console
+    console.log('companyKYCForm', companyKYCForm);
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
     if (isComplete) {
       const formData = createFormData(companyKYCForm);
