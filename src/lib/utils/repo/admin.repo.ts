@@ -42,13 +42,14 @@ export async function getAdminById(
 }
 
 export async function getOwnerByCompanyId(
-  companyId: number,
-  roleId: number
+  companyId: number
 ): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
   const owner = await prisma.admin.findFirst({
     where: {
       companyId,
-      roleId,
+      role: {
+        name: ROLE_NAME.OWNER,
+      },
     },
     include: {
       user: true,
