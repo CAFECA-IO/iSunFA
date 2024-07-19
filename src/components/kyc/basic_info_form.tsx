@@ -1,9 +1,8 @@
-import { BasicInfoKeys, CityOptions } from '@/constants/kyc';
+import { BasicInfoKeys, CountryOptions } from '@/constants/kyc';
 import { IBasicInfo } from '@/interfaces/kyc_basic_info';
 import Image from 'next/image';
 import { useState } from 'react';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { CountryOptions } from '@/constants/kyc';
 import { useTranslation } from 'next-i18next';
 
 // Info: (20240719 - Liz) 根據 Country Options 對應到國家的國旗。P.S.目前國旗的下拉選單不會傳值給後端，因為在下一個表單的第一個欄位已有國家選項，會傳那個給後端(可搜尋 id="country-menu")

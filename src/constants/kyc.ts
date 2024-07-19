@@ -6,6 +6,13 @@ export enum CountryOptions {
   HONG_KONG = 'Hong Kong',
 }
 
+export enum CityOptions {
+  DEFAULT = '',
+  GB = 'United Kingdom',
+  US = 'United States',
+  TW = 'Taiwan',
+}
+
 export enum LegalStructureOptions {
   DEFAULT = '', // Info: (20240718 - Liz) This is the default value for the dropdown to show placeholder
   SOLE_PROPRIETORSHIP = 'Sole Proprietorship',
