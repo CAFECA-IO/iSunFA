@@ -40,12 +40,10 @@ export default async function handler(
         const { file } = files;
         const { type } = fields;
         if (file && type) {
+          const id = file[0].newFilename.split('.')[0];
           payload = {
-            originalname: file[0].originalFilename || '',
-            newName: file[0].newFilename,
+            id,
             size: file[0].size,
-            type: type[0],
-            mimetype: file[0].mimetype || '',
           };
         }
         const { httpCode, result } = formatApiResponse<IFile | null>(

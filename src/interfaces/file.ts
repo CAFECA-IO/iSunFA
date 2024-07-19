@@ -1,7 +1,4 @@
 export interface IFile {
-  originalname: string;
-  newName: string;
+  id: string;
   size: number;
-  type: string;
-  mimetype: string;
 }
