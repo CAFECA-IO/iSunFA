@@ -8,7 +8,6 @@ import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { UploadDocumentKeys } from '@/constants/kyc';
 
 const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
@@ -25,12 +24,19 @@ const sizeFormatter = (size: number): string => {
 
 const UploadArea = ({
   type,
-  uploadFile,
-  uploadHandler,
+  backendUniqueIdentifier,
+  uploadedFile,
+  onChange,
 }: {
   type: UploadDocumentKeys;
-  uploadFile: File | null;
-  uploadHandler: (file: File | null, status: ProgressStatus | null, fileId: string | null) => void;
+  backendUniqueIdentifier: string | undefined;
+  uploadedFile: File | undefined;
+  onChange: (
+    operation: 'add' | 'delete',
+    key: UploadDocumentKeys,
+    id: string | undefined,
+    file: File | undefined
+  ) => void;
 }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
@@ -40,14 +46,8 @@ const UploadArea = ({
   const [isError, setIsError] = useState<boolean>(false);
   const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const readerRef = useRef<FileReader | null>(null);
-  const { trigger: uploadFileAPI } = APIHandler<IAccountResultStatus>(
-    APIName.FILE_UPLOAD,
-    {},
-    false,
-    false
-  );
+  const { trigger: uploadFileAPI } = APIHandler<string>(APIName.FILE_UPLOAD, {}, false, false);
   const { trigger: deleteFileAPI } = APIHandler<void>(APIName.FILE_DELETE, {}, false, false);
-  const [fileId, setFileId] = useState<string | null>(null);
 
   const handleError = useCallback(
     (code: string | undefined) => {
@@ -78,7 +78,7 @@ const UploadArea = ({
         return;
       }
 
-      uploadHandler(file, ProgressStatus.IN_PROGRESS, null);
+      onChange('add', type, undefined, file); // Info: Save file to localStorage without backendUniqueIdentifier first (20240719 - TzuHan)
 
       const reader = new FileReader();
       readerRef.current = reader;
@@ -93,7 +93,6 @@ const UploadArea = ({
       reader.onloadend = async () => {
         if (reader.readyState === FileReader.DONE) {
           setUploadProgress(100);
-          // uploadHandler(file, ProgressStatus.SUCCESS);
           const formData = new FormData();
           formData.append('file', file);
           const { success, code, data } = await uploadFileAPI({
@@ -107,11 +106,9 @@ const UploadArea = ({
           });
           if (success === false) {
             handleError(code);
-            uploadHandler(file, ProgressStatus.SYSTEM_ERROR, null);
           }
           if (success && data) {
-            setFileId(data.resultId);
-            uploadHandler(file, ProgressStatus.SUCCESS, data.resultId);
+            onChange('add', type, data, file);
           }
         }
 
@@ -122,11 +119,11 @@ const UploadArea = ({
 
       reader.readAsArrayBuffer(file);
     },
-    [uploadHandler, messageModalDataHandler, messageModalVisibilityHandler]
+    [onChange, messageModalDataHandler, messageModalVisibilityHandler]
   );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (uploadFile) return;
+    if (uploadedFile) return;
     event.preventDefault();
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
@@ -135,7 +132,7 @@ const UploadArea = ({
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    if (uploadFile) return;
+    if (uploadedFile) return;
     event.preventDefault();
     setIsDragOver(true);
   };
@@ -146,7 +143,7 @@ const UploadArea = ({
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    if (uploadFile) return;
+    if (uploadedFile) return;
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
@@ -163,7 +160,7 @@ const UploadArea = ({
         reader.abort();
         setStatus(ProgressStatus.PAUSED);
       } else {
-        handleUploadFile(uploadFile!);
+        handleUploadFile(uploadedFile!);
         setStatus(ProgressStatus.IN_PROGRESS);
       }
     }
@@ -173,17 +170,17 @@ const UploadArea = ({
     if (readerRef.current) {
       readerRef.current.abort();
     }
-    if (fileId) {
+    if (backendUniqueIdentifier) {
       await deleteFileAPI({
         params: {
           companyId: selectedCompany?.id,
-          fileId,
+          backendUniqueIdentifier,
         },
       });
     }
     setUploadProgress(0);
     setStatus(ProgressStatus.IN_PROGRESS);
-    uploadHandler(null, null, null);
+    onChange('delete', type, undefined, undefined);
   };
 
   return (
@@ -193,15 +190,15 @@ const UploadArea = ({
       onDrop={handleDrop}
       className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1`}
     >
-      {uploadFile ? (
+      {uploadedFile ? (
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px">
           <div className="inline-flex w-full items-center gap-16px">
             <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="error_icon" />
             <div className="flex flex-col items-start gap-5px">
               <div>
-                {uploadFile.name}
+                {uploadedFile.name}
                 <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
-                  {sizeFormatter(uploadFile.size)}
+                  {sizeFormatter(uploadedFile.size)}
                 </p>
               </div>
             </div>
@@ -262,7 +259,7 @@ const UploadArea = ({
             type="file"
             className="hidden"
             onChange={handleFileChange}
-            disabled={uploadFile !== null}
+            disabled={uploadedFile !== null}
           />
         </label>
       )}
