@@ -12,6 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -27,7 +28,7 @@ const EditAccountTitleModal = ({
   modalData,
 }: IEditAccountTitleModalProps) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
-  const { getAccountListHandler } = useAccountingCtx();
+  const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { selectedCompany } = useUserCtx();
   const { accountId } = modalData;
 
@@ -41,7 +42,7 @@ const EditAccountTitleModal = ({
 
   const {
     trigger: updateAccountInfoById,
-    data: result,
+    data: updateResult,
     success: updateSuccess,
     code: updateCode,
   } = APIHandler<IAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID, {}, false, false);
@@ -69,7 +70,7 @@ const EditAccountTitleModal = ({
   }, [accountData]);
 
   useEffect(() => {
-    if (updateSuccess && result && selectedCompany) {
+    if (updateSuccess && updateResult && selectedCompany) {
       // Info: (20240719 - Julian) 關閉 modal
       modalVisibilityHandler();
       // Info: (20240719 - Julian) 重新取得 account list
@@ -78,7 +79,7 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.SUCCESS,
-        content: `Successfully updated account: ${result.name}`,
+        content: `Successfully updated account: ${updateResult.name}`,
         closeable: true,
       });
     } else if (updateSuccess === false) {
@@ -89,7 +90,7 @@ const EditAccountTitleModal = ({
         closeable: true,
       });
     }
-  }, [updateSuccess, result, updateCode]);
+  }, [updateSuccess, updateResult, updateCode]);
 
   useEffect(() => {
     if (!isModalVisible) {
@@ -136,8 +137,8 @@ const EditAccountTitleModal = ({
       notes: nameValue,
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
-      // ToDo: (20240717 - Julian) call API to remove accounting title
-      submitBtnFunction: () => {},
+      submitBtnFunction: () =>
+        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, accountId),
       backBtnStr: 'Cancel',
     });
     messageModalVisibilityHandler();

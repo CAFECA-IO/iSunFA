@@ -34,14 +34,30 @@ const AccountingTitlePageBody = () => {
   const [selectedLiability, setSelectedLiability] = useState(LiabilityOptions.ALL);
   const [selectedEquity, setSelectedEquity] = useState(EquityOptions.ALL);
 
+  const [ownAccountList, setOwnAccountList] = useState(
+    accountList.filter((account) => account.code.includes('-'))
+  );
+  const [originalAccountList, setOriginalAccountList] = useState(
+    accountList.filter((account) => !account.code.includes('-')).slice(0, 10)
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPage = Math.ceil(accountList.length / 10);
+  const totalPage = 5; // ToDo: (20240719 - Julian) call API to get total page
 
   useEffect(() => {
     if (selectedCompany) {
       getAccountListHandler(selectedCompany.id);
     }
   }, []);
+
+  useEffect(() => {
+    // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
+    setOwnAccountList(accountList.filter((account) => account.code.includes('-')));
+    // Info: (20240719 - Julian) 原始的 account ，取前 10 筆
+    setOriginalAccountList(
+      accountList.filter((account) => !account.code.includes('-')).slice(0, 10)
+    );
+  }, [accountList]);
 
   const {
     targetRef: assetRef,
@@ -64,12 +80,6 @@ const AccountingTitlePageBody = () => {
   const assetDropmenuToggleHandler = () => setAssetVisible(!assetVisible);
   const liabilityDropmenuToggleHandler = () => setLiabilityVisible(!liabilityVisible);
   const equityDropmenuToggleHandler = () => setEquityVisible(!equityVisible);
-
-  // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
-  const myAccountingTitleList = accountList.filter((account) => account.code.includes('-'));
-
-  // Info: (20240719 - Julian) original account list
-  const originalAccountList = accountList.filter((account) => !account.code.includes('-'));
 
   const assetDropmenu = (
     <div
@@ -223,7 +233,7 @@ const AccountingTitlePageBody = () => {
       </div>
       {/* Info: (20240717 - Julian) My new accounting title Table */}
       <AccountingTitleTable
-        accountingTitleData={myAccountingTitleList}
+        accountingTitleData={ownAccountList}
         actionType={ActionType.EDIT_AND_REMOVE}
       />
       {/* Info: (20240717 - Julian) Accounting Title Divider */}

@@ -53,7 +53,8 @@ export type IAPIName =
   | 'ROLE_UPDATE'
   | 'ACCOUNT_GET_BY_ID'
   | 'CREATE_NEW_SUB_ACCOUNT'
-  | 'UPDATE_ACCOUNT_INFO_BY_ID';
+  | 'UPDATE_ACCOUNT_INFO_BY_ID'
+  | 'DELETE_ACCOUNT_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
