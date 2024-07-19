@@ -115,3 +115,41 @@ export const CountryInfos: Record<CountryCode, ICountryInfo> = {
     translationKey: 'KYC.TW',
   },
 } as const;
+
+export enum RepresentativeIDType {
+  PASSPORT = 'PASSPORT',
+  ID_CARD = 'ID_CARD',
+  DRIVER_LICENSE = 'DRIVER_LICENSE',
+}
+
+export enum BasicInfoKeys {
+  LEGAL_COMPANY_NAME = 'legalName',
+  CITY = 'city',
+  ZIP_CODE = 'zipCode',
+  ADDRESS = 'address',
+  KEY_COMPANY_REPRESENTATIVES_NAME = 'representativeName',
+}
+
+export enum RegistrationInfoKeys {
+  COUNTRY = 'country',
+  LEGAL_STRUCTURE = 'structure',
+  BUSINESS_REGISTRATION_NUMBER = 'registrationNumber',
+  REGISTRATION_DATE = 'registrationDate',
+  INDUSTRY = 'industry',
+}
+
+export enum ContactInfoKeys {
+  AREA_CODE = 'areaCode',
+  CONTACT_NUMBER = 'contactNumber',
+  CONTACT_PHONE = 'contactPhone',
+  KEY_CONTACT_PERSON = 'contactPerson',
+  EMAIL_ADDRESS = 'contactEmail',
+  COMPANY_WEBSITE = 'website',
+}
+
+export enum UploadDocumentKeys {
+  REPRESENTATIVE_ID_TYPE = 'representativeIdType',
+  BUSINESS_REGISTRATION_CERTIFICATE = 'registrationCertificate',
+  TAX_STATUS_CERTIFICATE = 'taxCertificate',
+  REPRESENTATIVE_ID_CERTIFICATE = 'representativeIdCertificate',
+}

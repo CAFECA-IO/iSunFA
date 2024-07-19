@@ -1,5 +1,5 @@
-import { CityOptions } from '@/constants/kyc';
-import { BasicInfoKeys, IBasicInfo } from '@/interfaces/kyc_basic_info';
+import { BasicInfoKeys, CityOptions } from '@/constants/kyc';
+import { IBasicInfo } from '@/interfaces/kyc_basic_info';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
 import { useTranslation } from 'next-i18next';
@@ -55,8 +55,8 @@ const BasicInfoForm = ({
   const zipCodeInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(BasicInfoKeys.ZIP_CODE, e.target.value);
   };
-  const streetInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(BasicInfoKeys.STREET, e.target.value);
+  const addressInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(BasicInfoKeys.ADDRESS, e.target.value);
   };
   const keyCompanyRepresentativesInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME, e.target.value);
@@ -129,7 +129,7 @@ const BasicInfoForm = ({
           placeholder="Street Address"
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
-          onChange={streetInputHandler}
+          onChange={addressInputHandler}
         />
       </div>
 

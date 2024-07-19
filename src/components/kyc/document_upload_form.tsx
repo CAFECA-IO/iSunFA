@@ -1,12 +1,9 @@
 import UploadArea from '@/components/kyc/upload_area';
 import RadioButtonComponent from '@/components/kyc/radio_button_component';
 import { useTranslation } from 'react-i18next';
-import {
-  IUploadDocuments,
-  RepresentativeIDType,
-  UploadDocumentKeys,
-} from '@/interfaces/kyc_document_type';
+import { IUploadDocuments } from '@/interfaces/kyc_document_type';
 import { ProgressStatus } from '@/constants/account';
+import { UploadDocumentKeys, RepresentativeIDType } from '@/constants/kyc';
 
 const DocumentUploadForm = ({
   data,

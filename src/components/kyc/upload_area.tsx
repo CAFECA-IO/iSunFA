@@ -5,11 +5,11 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ProgressStatus } from '@/constants/account';
 import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
-import { UploadDocumentKeys } from '@/interfaces/kyc_document_type';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { UploadDocumentKeys } from '@/constants/kyc';
 
 const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
 
