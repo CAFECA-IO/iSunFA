@@ -290,8 +290,12 @@ export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedPendingReport
   pageSize: 5,
   hasNextPage: true,
   hasPreviousPage: false,
-  sortOrder: 'asc',
-  sortBy: 'createdTimestamp',
+  sort: [
+    {
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
+    },
+  ],
 };
 
 export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedGeneratedReportItem = {
@@ -302,6 +306,10 @@ export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedGeneratedRe
   pageSize: 5,
   hasNextPage: true,
   hasPreviousPage: false,
-  sortOrder: 'asc',
-  sortBy: 'createdTimestamp',
+  sort: [
+    {
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
+    },
+  ],
 };

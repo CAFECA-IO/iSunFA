@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
@@ -38,9 +38,12 @@ export function formatQuery(query: any) {
   ) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-
-  const startDateInSecond = startDate ? timestampInSeconds(startDate) : undefined;
-  const endDateInSecond = endDate ? timestampInSeconds(endDate) : undefined;
+  const startDateNumber = startDate ? convertStringToNumber(startDate) : undefined;
+  const endDateNumber = endDate ? convertStringToNumber(endDate) : undefined;
+  const startDateInSecond =
+    startDateNumber !== undefined ? timestampInSeconds(startDateNumber) : undefined;
+  const endDateInSecond =
+    endDateNumber !== undefined ? timestampInSeconds(endDateNumber) : undefined;
   const cleanQuery = {
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
     pageSize: pageSize ? Number(pageSize) : DEFAULT_PAGE_LIMIT,
