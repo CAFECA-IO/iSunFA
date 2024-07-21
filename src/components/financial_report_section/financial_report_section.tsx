@@ -8,10 +8,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  default30DayPeriodInSec,
-} from '@/constants/display';
+import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -23,6 +20,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import CashFlowDisplay from '@/components/financial_report_section/cash_flow_display_1';
 import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
+// import { ReportSheetType } from '@/constants/report';
 
 const FinancialReportSection = () => {
   const { t } = useTranslation('common');
@@ -108,20 +106,16 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  const generateReportHandler = () => {
+  const generateReportHandler = async () => {
     const body: IFinancialReportRequest = {
       projectId: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
       reportType: FinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
       reportLanguage: selectedReportLanguage,
       startDate: period.startTimeStamp,
       endDate: period.endTimeStamp,
-      financialOrAnalysis: 'financial'
+      financialOrAnalysis: 'financial',
     };
 
-    //   generateFinancialReport({
-    //     body,
-    //   });
-    // };
     generateFinancialReport({
       body,
     }).then(() => {
@@ -162,7 +156,7 @@ const FinancialReportSection = () => {
           subtitle: t('MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
           content: t('MY_REPORTS_SECTION.TAKE_MINUTES'),
           submitBtnStr: t('COMMON.CLOSE'),
-          submitBtnFunction: () => { },
+          submitBtnFunction: () => {},
           messageType: MessageType.SUCCESS,
           submitBtnVariant: 'secondaryBorderless',
           submitBtnClassName: 'text-link-text-success hover:text-link-text-success-hover',
@@ -202,8 +196,9 @@ const FinancialReportSection = () => {
   const displayedProjectMenu = (
     <div ref={projectMenuRef} className="relative flex w-full">
       <div
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
-          }`}
+        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+          isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
       >
         <div className="flex items-center justify-center space-x-4 self-center pl-2.5 text-center">
           <div
@@ -213,8 +208,9 @@ const FinancialReportSection = () => {
             {t('REPORTS_HISTORY_LIST.PROJECT')}
           </div>
           <div
-            className={`h-11 w-px ${isProjectMenuOpen ? 'bg-input-stroke-selected' : 'bg-dropdown-stroke-menu'
-              }`}
+            className={`h-11 w-px ${
+              isProjectMenuOpen ? 'bg-input-stroke-selected' : 'bg-dropdown-stroke-menu'
+            }`}
           />
         </div>
 
@@ -253,10 +249,11 @@ const FinancialReportSection = () => {
       {/* Info: Project Menu (20240425 - Shirley) */}
       <div
         // eslint-disable-next-line tailwindcss/no-arbitrary-value, tailwindcss/no-unnecessary-arbitrary-value
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${isProjectMenuOpen
-          ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
-          : 'grid-rows-0 border-transparent'
-          }`}
+        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isProjectMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
@@ -324,7 +321,7 @@ const FinancialReportSection = () => {
                     <div className="text-base font-medium leading-6 tracking-normal">
                       {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
-                        'Overall'
+                      'Overall'
                         ? t('PROJECT.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
@@ -341,8 +338,9 @@ const FinancialReportSection = () => {
     <div ref={typeMenuRef} className="relative flex w-full">
       <button
         type="button"
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
-          }`}
+        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
+          isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
@@ -370,10 +368,11 @@ const FinancialReportSection = () => {
       {/* Info: Report Type Menu (20240425 - Shirley) */}
       <div
         // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${isTypeMenuOpen
-          ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
-          : 'grid-rows-0 border-transparent'
-          }`}
+        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isTypeMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
           {Object.entries(FinancialReportTypesMap).map(([id, { name }]) => (
@@ -395,8 +394,9 @@ const FinancialReportSection = () => {
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
         type="button"
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
-          }`}
+        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
+          isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+        }`}
         onClick={languageMenuClickHandler}
       >
         <Image
@@ -430,10 +430,11 @@ const FinancialReportSection = () => {
       {/* Info: Language Menu (20240425 - Shirley) */}
       <div
         // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${isLanguageMenuOpen
-          ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
-          : 'grid-rows-0 border-transparent'
-          }`}
+        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+          isLanguageMenuOpen
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+            : 'grid-rows-0 border-transparent'
+        }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
           {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
@@ -734,7 +735,7 @@ const FinancialReportSection = () => {
           </div>
         </>
       ) : (
-        <CashFlowDisplay />
+        <CashFlowDisplay reportType={FinancialReportTypesKeyReportSheetTypeMapping} />
       )}
     </div>
   );
