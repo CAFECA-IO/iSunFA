@@ -23,7 +23,8 @@
     "SUBSCRIPTION_BILLS": "订阅和帐单",
     "SETTING": "设置",
     "LOGOUT": "登出",
-    "NOTIFICATION": "通知"
+    "NOTIFICATION": "通知",
+    "LINK_NOT_OPEN": "此功能目前尚未開放使用"
   },
   "USER": {
     "MY_ADDRESS": "我的地址",
@@ -651,6 +652,7 @@
     "NEXT": "下一步",
     "SUBMIT": "提交",
     "CANCEL": "取消",
+    "CONFIRM": "确认",
     "BUSINESS_REGISTRATION_CERTIFICATE": "商业登记证书",
     "TAX_STATUS_CERTIFICATE": "税务状况证明",
     "REPRESENTATIVE_ID_CERTIFICATE": "代表人{{type}}证明",
@@ -699,6 +701,14 @@
     "INDUSTRY_REAL_ESTATE_ACTIVITIES": "Real estate activities",
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
-    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
+    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry",
+
+    "SUBMIT_SUCCESS": "你的申请已经提交成功",
+    "SUBMIT_SUCCESS_MESSAGE": "我们将在3-5个工作日内审核你的申请，谢谢你的耐心。",
+    "SUBMIT_FAILED": "提交失败",
+    "SUBMIT_FAILED_MESSAGE": "错误代码: {{code}}",
+    "CONTACT_SERVICE_TEAM": "如果问题仍然存在，请联系我们的客服团队。",
+    "INCOMPLETE_FORM": "请填写完整表格",
+    "INCOMPLETE_FORM_SUB_MESSAGE": "请补齐下列栏位资讯: {{fields}}。"
   }
 }

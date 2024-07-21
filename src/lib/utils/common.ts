@@ -3,16 +3,13 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import {
-  ALLOWED_ORIGINS,
-  DEFAULT_PAGE_LIMIT,
-  DEFAULT_PAGE_START_AT,
-  FORMIDABLE_CONFIG,
-} from '@/constants/config';
+import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import path from 'path';
+import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { UploadDocumentKeys } from '@/constants/kyc';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -364,14 +361,12 @@ export const getTodayPeriodInSec = () => {
 };
 
 // Info Murky (20240531): This function can only be used in the server side
-export async function mkUploadFolder() {
-  const uploadFolder =
-    process.env.VERCEL === '1'
-      ? FORMIDABLE_CONFIG.uploadDir
-      : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+export async function mkUploadFolder(subDir: string) {
+  const uploadDir =
+    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
 
   try {
-    await fs.mkdir(uploadFolder, { recursive: false });
+    await fs.mkdir(uploadDir, { recursive: false });
   } catch (error) {
     // Info: (20240329) Murky: Do nothing if /tmp already exist
   }
@@ -497,3 +492,78 @@ export function formatNumberSeparateByComma(num: number) {
   // Info: (20240716 - Murky) 如果 num 是負數，則將結果包裹在括號內
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
+
+export const readFilesFromLocalStorage = (
+  type: string = 'KYCFiles'
+): {
+  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: {
+    id: string | undefined;
+    file: File | undefined;
+  };
+} => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  return data;
+};
+
+export const saveFilesToLocalStorage = (
+  fileType: UploadDocumentKeys,
+  file?: File,
+  fileId?: string,
+  type: string = 'KYCFiles'
+) => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  const newData = {
+    ...data,
+    [fileType]: {
+      id: fileId,
+      file,
+    },
+  };
+  localStorage.setItem(type, JSON.stringify(newData));
+};
+
+export const deleteFilesFromLocalStorage = (
+  fileId?: string,
+  fileType?: UploadDocumentKeys,
+  type: string = 'KYCFiles'
+) => {
+  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const data = currentData;
+  let newData = {
+    ...data,
+  };
+  if (fileType) {
+    newData = {
+      ...data,
+      [fileType]: {
+        id: undefined,
+        file: undefined,
+      },
+    };
+  } else {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const key in data) {
+      if (data[key].id === fileId) {
+        newData = {
+          ...data,
+          [key]: {
+            id: undefined,
+            file: undefined,
+          },
+        };
+        break;
+      }
+    }
+  }
+  localStorage.setItem(type, JSON.stringify(newData));
+};

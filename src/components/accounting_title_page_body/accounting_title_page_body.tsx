@@ -12,8 +12,11 @@ import AccountingTitleTable, {
 
 enum AssetOptions {
   ALL = 'All',
-  CURRENT_ASSETS = 'Current Assets',
-  NON_CURRENT_ASSETS = 'Non-Current Assets',
+  ASSET = 'Asset',
+  LIABILITY = 'Liability',
+  EQUITY = 'Equity',
+  INCOME = 'Income',
+  EXPENSE = 'Expense',
 }
 
 enum LiabilityOptions {
@@ -34,14 +37,36 @@ const AccountingTitlePageBody = () => {
   const [selectedLiability, setSelectedLiability] = useState(LiabilityOptions.ALL);
   const [selectedEquity, setSelectedEquity] = useState(EquityOptions.ALL);
 
+  // Info: (20240719 - Julian) code 中有 '-' 的 account 代表是用戶自己新增的
+  const ownAccountList = accountList.filter((account) => account.code.includes('-'));
+  // Info: (20240719 - Julian) 原始的 account ，取前 10 筆
+  const originalAccountList = accountList
+    .filter((account) => !account.code.includes('-'))
+    .slice(0, 10);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPage = Math.ceil(accountList.length / 10);
+  const totalPage = 5; // ToDo: (20240719 - Julian) call API to get total page
 
   useEffect(() => {
     if (selectedCompany) {
-      getAccountListHandler(selectedCompany.id);
+      const assetQuery =
+        selectedAsset === AssetOptions.ALL ? undefined : selectedAsset.toLowerCase();
+      const liabilityQuery =
+        selectedLiability === LiabilityOptions.ALL
+          ? undefined
+          : selectedLiability === LiabilityOptions.CURRENT
+            ? 'true'
+            : 'false';
+
+      getAccountListHandler(
+        selectedCompany.id,
+        assetQuery,
+        liabilityQuery,
+        currentPage,
+        20 // ToDo: (20240719 - Julian) Remove after api update
+      );
     }
-  }, []);
+  }, [selectedAsset, selectedLiability, currentPage, selectedCompany]);
 
   const {
     targetRef: assetRef,
@@ -208,7 +233,7 @@ const AccountingTitlePageBody = () => {
       </div>
       {/* Info: (20240717 - Julian) My new accounting title Table */}
       <AccountingTitleTable
-        accountingTitleData={accountList} // ToDo: (20240718 - Julian) filter
+        accountingTitleData={ownAccountList}
         actionType={ActionType.EDIT_AND_REMOVE}
       />
       {/* Info: (20240717 - Julian) Accounting Title Divider */}
@@ -222,7 +247,7 @@ const AccountingTitlePageBody = () => {
       {/* Info: (20240717 - Julian) All Accounting Table */}
       <div className="flex flex-col items-center gap-y-32px">
         <AccountingTitleTable
-          accountingTitleData={accountList}
+          accountingTitleData={originalAccountList}
           actionType={ActionType.FAV_AND_ADD}
         />
 
