@@ -11,6 +11,7 @@ import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter
 import { IJournalListItem } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { EVENT_TYPE } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
 
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,10 +98,12 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     data: formatIJournalListItems(upComingPagenatedJournalList.data),
   };
 
-  const { httpCode, result } = formatApiResponse<IPaginatedData<IJournalListItem[]>[]>(
-    STATUS_MESSAGE.SUCCESS_LIST,
-    [uploadedPagenatedJournalListItems, upComingPagenatedJournalListItems]
-  );
+  const { httpCode, result } = formatApiResponse<{
+    [key: string]: IPaginatedData<IJournalListItem[]>;
+  }>(STATUS_MESSAGE.SUCCESS_LIST, {
+    [JOURNAL_EVENT.UPLOADED]: uploadedPagenatedJournalListItems,
+    [JOURNAL_EVENT.UPCOMING]: upComingPagenatedJournalListItems,
+  });
   return {
     httpCode,
     result,
@@ -109,7 +112,11 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<IJournalListItem[]>[] | null>>
+  res: NextApiResponse<
+    IResponseData<{
+      [key: string]: IPaginatedData<IJournalListItem[]>;
+    } | null>
+  >
 ) {
   try {
     if (req.method === 'GET') {
