@@ -65,4 +65,5 @@ export type IAccountQueryArgs = {
   limit?: number;
   sortBy?: 'code' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
+  searchKey?: string;
 };

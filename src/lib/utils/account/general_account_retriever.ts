@@ -14,7 +14,8 @@ export class GeneralAccountRetriever extends AbstractAccountRetriever {
         page?: number,
         limit?: number,
         sortBy?: 'code' | 'createdAt',
-        sortOrder?: 'asc' | 'desc'
+        sortOrder?: 'asc' | 'desc',
+        searchKey?: string
     ) {
         super({
             companyId,
@@ -27,7 +28,8 @@ export class GeneralAccountRetriever extends AbstractAccountRetriever {
             page,
             limit,
             sortBy,
-            sortOrder
+            sortOrder,
+            searchKey
         });
     }
 }

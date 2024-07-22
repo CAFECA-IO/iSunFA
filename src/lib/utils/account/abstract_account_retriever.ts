@@ -28,6 +28,8 @@ export abstract class AbstractAccountRetriever {
 
     protected sortOrder: 'asc' | 'desc' = 'asc';
 
+    protected searchKey: string | undefined;
+
     constructor({
         companyId,
         includeDefaultAccount,
@@ -39,7 +41,8 @@ export abstract class AbstractAccountRetriever {
         page,
         limit,
         sortBy,
-        sortOrder
+        sortOrder,
+        searchKey
     }: IAccountQueryArgs) {
         this.companyId = companyId;
         this.includeDefaultAccount = includeDefaultAccount;
@@ -52,6 +55,7 @@ export abstract class AbstractAccountRetriever {
         this.limit = limit || this.limit;
         this.sortBy = sortBy || this.sortBy;
         this.sortOrder = sortOrder || this.sortOrder;
+        this.searchKey = searchKey;
     }
 
     public async getAccounts(): Promise<IPaginatedAccount> {
@@ -66,7 +70,8 @@ export abstract class AbstractAccountRetriever {
             page: this.page,
             limit: this.limit,
             sortBy: this.sortBy,
-            sortOrder: this.sortOrder
+            sortOrder: this.sortOrder,
+            searchKey: this.searchKey
         });
         return {
             data: accounts.data,

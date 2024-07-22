@@ -101,6 +101,14 @@ function formatSortOrder(sortOrder: unknown): 'asc' | 'desc' | undefined {
   return formattedSortOrder;
 }
 
+function formatSearchKey(searchKey: unknown): string | undefined {
+  let formattedSearchKey: string | undefined;
+  if (searchKey && typeof searchKey === 'string') {
+    formattedSearchKey = searchKey;
+  }
+  return formattedSearchKey;
+}
+
 export function formatGetQuery(
   companyId: number,
   req: NextApiRequest
@@ -116,7 +124,8 @@ export function formatGetQuery(
     page,
     limit,
     sortBy,
-    sortOrder
+    sortOrder,
+    searchKey,
   } = req.query;
 
   const formattedIncludeDefaultAccount = formatIncludeDefaultAccount(includeDefaultAccount);
@@ -129,6 +138,7 @@ export function formatGetQuery(
   const formattedLimit = formatPageOrLimit(limit);
   const formattedSortBy = formatSortBy(sortBy);
   const formattedSortOrder = formatSortOrder(sortOrder);
+  const formattedSearchKey = formatSearchKey(searchKey);
 
   return {
     companyId,
@@ -142,6 +152,7 @@ export function formatGetQuery(
     limit: formattedLimit,
     sortBy: formattedSortBy,
     sortOrder: formattedSortOrder,
+    searchKey: formattedSearchKey,
   };
 }
 

@@ -20,6 +20,7 @@ export async function findManyAccountsInPrisma({
   limit = DEFAULT_PAGE_LIMIT,
   sortBy = 'code',
   sortOrder = 'asc',
+  searchKey,
 }:{
   companyId: number,
   includeDefaultAccount: boolean,
@@ -33,6 +34,7 @@ export async function findManyAccountsInPrisma({
   limit: number,
   sortBy: 'code' | 'createdAt',
   sortOrder: 'asc' | 'desc',
+  searchKey?: string,
 }): Promise<{
   data: Account[],
   page: number,
@@ -70,6 +72,14 @@ export async function findManyAccountsInPrisma({
           in: EQUITY_TYPE_TO_CODE_MAP[equityType],
         },
       } : {},
+      {
+        OR: searchKey
+          ? [
+            { name: { contains: searchKey, mode: 'insensitive' } },
+            { code: { contains: searchKey, mode: 'insensitive' } },
+          ]
+          : [],
+      }
     ],
   };
 
