@@ -185,8 +185,8 @@
     "UNPOPULAR": "冷門",
     "ALL": "全部",
     "RELEVANCY": "相關性",
-    "PAYMENT_PROCESS": "付款流程",
-    "PROJECT_PROCESS": "專案流程"
+    "HIGHEST_PAYMENT_PRICE": "最高支付價格",
+    "LOWEST_PAYMENT_PRICE": "最低支付價格"
   },
   "FOOTER": {
     "POWERED_BY": "技術支持 陽光智能會計",
