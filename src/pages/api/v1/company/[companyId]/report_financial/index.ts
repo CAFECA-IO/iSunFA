@@ -127,7 +127,7 @@ export function formatStatusFromQuery(status: unknown): ReportStatusType {
 }
 
 export function formatReportLanguageFromQuery(
-  reportLanguage: unknown
+  reportLanguage: string | string[] | undefined
 ): ReportLanguagesKey {
   let reportLanguageString = ReportLanguagesKey.tw;
 
