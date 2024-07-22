@@ -1,5 +1,5 @@
-import { AccountType } from "@/constants/account";
-import { FinancialReportTypesKey } from "@/interfaces/report_type";
+import { AccountType } from '@/constants/account';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
 export enum ReportType {
   FINANCIAL = 'financial',
@@ -51,7 +51,7 @@ export const ReportSheetTypeDisplayMap: {
 };
 
 export const ReportSheetTypeFinancialFinancialReportTypesKeyMapping: {
-  [key in ReportSheetType]: FinancialReportTypesKey
+  [key in ReportSheetType]: FinancialReportTypesKey;
 } = {
   [ReportSheetType.BALANCE_SHEET]: FinancialReportTypesKey.balance_sheet,
   [ReportSheetType.INCOME_STATEMENT]: FinancialReportTypesKey.comprehensive_income_statement,

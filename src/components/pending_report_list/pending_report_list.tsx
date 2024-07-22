@@ -243,17 +243,20 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
     </div>
   );
 
-  const displayedList = reportItems.map((reportItem, index) => (
-    <PendingReportItem
-      key={reportItem.id}
-      report={reportItem}
-      checked={individualChecks[index]}
-      isCheckboxVisible={isCheckboxVisible}
-      onCheckChange={() => individualCheckHandler(index)}
-      onReportItemUpdate={handleReportItemUpdate}
-      onReportItemDelete={handleReportItemDelete}
-    />
-  ));
+  const displayedList = reportItems
+    // Info: (20240722 - Julian) 依照 createdTimestamp 由新到舊排序
+    .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
+    .map((reportItem, index) => (
+      <PendingReportItem
+        key={reportItem.id}
+        report={reportItem}
+        checked={individualChecks[index]}
+        isCheckboxVisible={isCheckboxVisible}
+        onCheckChange={() => individualCheckHandler(index)}
+        onReportItemUpdate={handleReportItemUpdate}
+        onReportItemDelete={handleReportItemDelete}
+      />
+    ));
 
   const displayedCheckbox = isCheckboxVisible ? (
     <th className="flex h-10 justify-center pt-10px">

@@ -14,8 +14,8 @@ export enum ProgressStatus {
 }
 
 export enum EventType {
-  INCOME = 'income',
   PAYMENT = 'payment',
+  INCOME = 'income',
   TRANSFER = 'transfer',
 }
 

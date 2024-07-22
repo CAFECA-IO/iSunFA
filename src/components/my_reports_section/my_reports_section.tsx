@@ -33,6 +33,8 @@ import { useTranslation } from 'next-i18next';
 import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 
+const MAX_TIME_STAMP = 2099999999;
+
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
@@ -74,23 +76,19 @@ const MyReportsSection = () => {
     FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
   );
 
-  const isPendingDataLoading = false;
-  const isHistoryDataLoading = false;
-
-  // const pendingTotalPages = FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
-  // const historyTotalPages = FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
-
   const {
     trigger: fetchPendingReports,
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
+    isLoading: isPendingDataLoading,
   } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: {
       sortBy: sortOptionQuery[filteredPendingSort],
       startDateInSecond: pendingPeriod.startTimeStamp,
-      endDateInSecond: pendingPeriod.endTimeStamp,
+      endDateInSecond:
+        pendingPeriod.endTimeStamp === 0 ? MAX_TIME_STAMP : pendingPeriod.endTimeStamp,
       searchQuery: searchPendingQuery,
       targetPage: pendingCurrentPage,
       pageSize: LIMIT_FOR_REPORT_PAGE,
@@ -102,19 +100,23 @@ const MyReportsSection = () => {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
+    isLoading: isHistoryDataLoading,
   } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: {
       sortBy: sortOptionQuery[filteredHistorySort],
       startDateInSecond: historyPeriod.startTimeStamp,
-      endDateInSecond: historyPeriod.endTimeStamp,
+      endDateInSecond:
+        historyPeriod.endTimeStamp === 0 ? MAX_TIME_STAMP : historyPeriod.endTimeStamp,
       searchQuery: searchHistoryQuery,
       targetPage: historyCurrentPage,
       pageSize: LIMIT_FOR_REPORT_PAGE,
     },
   });
-  const pendingTotalPages = pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
-  const historyTotalPages = generatedReports?.totalPages || FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
+  const pendingTotalPages =
+    pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
+  const historyTotalPages =
+    generatedReports?.totalPages || FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
   useEffect(() => {
     if (listPendingSuccess && pendingReports?.data) {
       setPendingData(pendingReports.data);
