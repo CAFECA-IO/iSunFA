@@ -9,7 +9,7 @@ import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 
 export async function findManyAccountsInPrisma({
   companyId,
-  includeDefaultAccount = true,
+  includeDefaultAccount,
   liquidity,
   type,
   reportType,
@@ -23,7 +23,7 @@ export async function findManyAccountsInPrisma({
   searchKey,
 }:{
   companyId: number,
-  includeDefaultAccount: boolean,
+  includeDefaultAccount?: boolean,
   liquidity?: boolean,
   type?: AccountType,
   reportType?: ReportSheetType,
@@ -55,6 +55,7 @@ export async function findManyAccountsInPrisma({
     forUser,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     AND: [
+
       {
         OR: type
           ? [{ type }]
@@ -63,9 +64,11 @@ export async function findManyAccountsInPrisma({
             : [],
       },
       {
-        OR: includeDefaultAccount
-          ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID },]
-          : [{ companyId }],
+        OR: includeDefaultAccount !== undefined
+          ? includeDefaultAccount
+            ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID },]
+            : [{ companyId }]
+          : [],
       },
       type === AccountType.EQUITY && equityType ? {
         code: {

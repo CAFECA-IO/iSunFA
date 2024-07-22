@@ -8,7 +8,7 @@ import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
 export abstract class AbstractAccountRetriever {
     protected companyId: number;
 
-    protected includeDefaultAccount: boolean;
+    protected includeDefaultAccount: boolean | undefined;
 
     protected liquidity: boolean | undefined;
 

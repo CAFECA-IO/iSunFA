@@ -5,7 +5,7 @@ import { AbstractAccountRetriever } from "@/lib/utils/account/abstract_account_r
 export class IncomeStatementAccountRetriever extends AbstractAccountRetriever {
     constructor(
         companyId: number,
-        includeDefaultAccount: boolean,
+        includeDefaultAccount?: boolean,
         liquidity?: boolean,
         type?: AccountType,
         reportType?: ReportSheetType,

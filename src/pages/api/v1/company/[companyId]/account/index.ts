@@ -33,8 +33,12 @@ function formatCompanyIdAccountId(companyId: unknown, accountId: string | string
   };
 }
 
-function formatIncludeDefaultAccount(includeDefaultAccount: unknown): boolean {
-  return includeDefaultAccount !== 'false';
+function formatIncludeDefaultAccount(includeDefaultAccount: unknown): boolean | undefined {
+  let formattedIncludeDefaultAccount: boolean | undefined;
+  if (includeDefaultAccount && typeof includeDefaultAccount === 'string') {
+    formattedIncludeDefaultAccount = includeDefaultAccount === 'true' ? true : includeDefaultAccount === 'false' ? false : undefined;
+  }
+  return formattedIncludeDefaultAccount;
 }
 
 function formatLiquidity(liquidity: unknown): boolean | undefined {
