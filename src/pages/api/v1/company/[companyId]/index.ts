@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ICompany, ICompanyDetail } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
@@ -12,15 +12,14 @@ import {
 } from '@/lib/utils/repo/admin.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
-import { IRole } from '@/interfaces/role';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | { company: ICompanyDetail; role: IRole } | null>>
+  res: NextApiResponse<IResponseData<ICompany | ICompanyAndRole | null>>
 ) {
   let shouldContinue: boolean = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | { company: ICompanyDetail; role: IRole } | null = null;
+  let payload: ICompany | ICompanyAndRole | null = null;
 
   try {
     const { userId } = await checkUser(req, res);
@@ -75,8 +74,9 @@ export default async function handler(
     payload = null;
   }
 
-  const { httpCode, result } = formatApiResponse<
-    ICompany | { company: ICompanyDetail; role: IRole } | null
-  >(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<ICompany | ICompanyAndRole | null>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }
