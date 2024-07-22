@@ -12,6 +12,7 @@ import {
   createCompanyAndRole,
 } from '@/lib/utils/repo/admin.repo';
 import admins from '@/seed_json/admin.json';
+import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
 
 describe('Admin Repository Tests', () => {
   const testAdminId = 1000;
@@ -128,6 +129,7 @@ describe('Admin Repository Tests', () => {
       const regional = 'Test Regional';
       const companyRole = await createCompanyAndRole(testUserId, code, name, regional);
       await deleteAdminListByCompanyId(companyRole.company.id);
+      await deleteCompanyById(companyRole.company.id);
       expect(companyRole).toBeDefined();
       expect(companyRole.company.code).toBe(code);
       expect(companyRole.company.name).toBe(name);
