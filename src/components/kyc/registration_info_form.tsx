@@ -163,7 +163,7 @@ const RegistrationInfoForm = ({
       {/* ===== Country ===== */}
       <div className="flex flex-col items-start gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          Which country is your Company registered in ?
+          {t('KYC.WHICH_COUNTRY_IS_YOUR_COMPANY_REGISTERED_IN')} ?
         </h6>
 
         <div
@@ -193,7 +193,9 @@ const RegistrationInfoForm = ({
 
       {/* ===== Legal Structure ===== */}
       <div className="flex flex-col items-start gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Legal Structure</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">
+          {t('KYC.LEGAL_STRUCTURE')}
+        </h6>
 
         <div
           id="legal-structure-menu"
@@ -223,12 +225,12 @@ const RegistrationInfoForm = ({
       {/* ===== Business Registration Number ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          Business Registration Number
+          {t('KYC.BUSINESS_REGISTRATION_NUMBER')}{' '}
         </h6>
         <input
           id="business-registration-number"
           type="text"
-          placeholder="example"
+          placeholder={t('KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={businessRegistrationNumberInputHandler}
@@ -237,7 +239,9 @@ const RegistrationInfoForm = ({
 
       {/* ===== Registration Date ===== */}
       <div className="flex flex-col items-start gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Registration Date </h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">
+          {t('KYC.REGISTRATION_DATE')}
+        </h6>
 
         <div className="w-full">
           <DatePicker
@@ -251,7 +255,7 @@ const RegistrationInfoForm = ({
 
       {/* ===== Industry ===== */}
       <div className="flex flex-col items-start gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Industry </h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.INDUSTRY')}</h6>
 
         <div
           id="industry-menu"
