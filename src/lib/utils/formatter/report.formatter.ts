@@ -93,7 +93,7 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
   const reportItem: IGeneratedReportItem = {
     ...basicReportItem,
     project,
-    reportLinkId: report.reportLink || '',
+    reportLinkId: report.id.toString() || '',
     downloadLink: report.downloadLink || '',
     blockchainExplorerLink: report.blockChainExplorerLink || '',
     evidenceId: report.evidenceId || '',
@@ -104,12 +104,28 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
 export function formatIPaginatedPendingReportItem(
   pendingItems: IPendingReportItem[],
   page: number,
-  totalPages: number
+  totalPages: number,
+  totalCount: number, // 總數量
+  pageSize: number, // 每頁顯示的項目數量
+  hasNextPage: boolean, // 是否有下一頁
+  hasPreviousPage: boolean, // 是否有上一頁
+  sortBy: string, // 排序欄位
+  sortOrder: string // 排序方式
 ): IPaginatedPendingReportItem {
   const paginatedPendingReportItem: IPaginatedPendingReportItem = {
     data: pendingItems,
     page,
     totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sort: [
+      {
+        sortBy,
+        sortOrder,
+      },
+    ],
   };
   return paginatedPendingReportItem;
 }
@@ -117,12 +133,28 @@ export function formatIPaginatedPendingReportItem(
 export function formatIPaginatedGeneratedReportItem(
   generatedItems: IGeneratedReportItem[],
   page: number,
-  totalPages: number
+  totalPages: number,
+  totalCount: number, // 總數量
+  pageSize: number, // 每頁顯示的項目數量
+  hasNextPage: boolean, // 是否有下一頁
+  hasPreviousPage: boolean, // 是否有上一頁
+  sortBy: string, // 排序欄位
+  sortOrder: string // 排序方式
 ): IPaginatedGeneratedReportItem {
   const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
     data: generatedItems,
     page,
     totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sort: [
+      {
+        sortBy,
+        sortOrder,
+      },
+    ],
   };
   return paginatedGeneratedReportItem;
 }

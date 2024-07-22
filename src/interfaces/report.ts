@@ -62,11 +62,12 @@ export type AnalysisReportType =
 export type FinancialReportLanguage = (typeof ReportLanguagesKey)[keyof typeof ReportLanguagesKey];
 
 export interface IFinancialReportRequest {
-  project_id: string;
-  type: FinancialReportType;
-  language: FinancialReportLanguage;
-  start_date: Date;
-  end_date: Date;
+  projectId?: string;
+  reportType?: ReportSheetType;
+  reportLanguage?: ReportLanguagesKey;
+  startDate?: number;
+  endDate?: number;
+  financialOrAnalysis?: 'financial' | 'analysis';
 }
 
 export function isFinancialReportType(data: string): data is FinancialReportType {
