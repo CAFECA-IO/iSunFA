@@ -4,35 +4,35 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkRole, checkUser } from '@/lib/utils/auth_check';
-import {
-  deleteCompanyById,
-  getCompanyWithOwner,
-  updateCompanyById,
-} from '@/lib/utils/repo/company.repo';
+import { deleteCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { ROLE_NAME } from '@/constants/role_name';
-import { deleteAdminListByCompanyId } from '@/lib/utils/repo/admin.repo';
-import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
-import { IAdmin } from '@/interfaces/admin';
+import {
+  deleteAdminListByCompanyId,
+  getCompanyDetailAndRoleByCompanyId,
+} from '@/lib/utils/repo/admin.repo';
+import { formatCompany } from '@/lib/utils/formatter/company.formatter';
+import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
+import { IRole } from '@/interfaces/role';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | ICompanyDetail | null>>
+  res: NextApiResponse<IResponseData<ICompany | { company: ICompanyDetail; role: IRole } | null>>
 ) {
   let shouldContinue: boolean = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | IAdmin | null = null;
+  let payload: ICompany | { company: ICompanyDetail; role: IRole } | null = null;
 
   try {
-    await checkUser(req, res);
+    const { userId } = await checkUser(req, res);
     const companyId = convertStringToNumber(req.query.companyId);
 
     switch (req.method) {
       case 'GET': {
-        const companyWithOwner = await getCompanyWithOwner(companyId);
+        const companyWithOwner = await getCompanyDetailAndRoleByCompanyId(userId, companyId);
         if (companyWithOwner) {
-          const owner: ICompanyDetail = await formatCompanyDetail(companyWithOwner);
+          const companyDetailAndRole = formatCompanyDetailAndRole(companyWithOwner);
           statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          payload = owner;
+          payload = companyDetailAndRole;
         }
         break;
       }
@@ -75,9 +75,8 @@ export default async function handler(
     payload = null;
   }
 
-  const { httpCode, result } = formatApiResponse<ICompany | ICompanyDetail | null>(
-    statusMessage,
-    payload
-  );
+  const { httpCode, result } = formatApiResponse<
+    ICompany | { company: ICompanyDetail; role: IRole } | null
+  >(statusMessage, payload);
   res.status(httpCode).json(result);
 }
