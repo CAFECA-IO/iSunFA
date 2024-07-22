@@ -2,22 +2,8 @@ import { AccountType, EquityType } from "@/constants/account";
 import { DEFAULT_PAGE_LIMIT } from "@/constants/config";
 import { DEFAULT_PAGE_NUMBER } from "@/constants/display";
 import { ReportSheetType } from "@/constants/report";
-import { IPaginatedAccount } from "@/interfaces/accounting_account";
+import { IAccountQueryArgs, IPaginatedAccount } from "@/interfaces/accounting_account";
 import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
-
-type constructorArgs = {
-    companyId: number;
-    includeDefaultAccount: boolean,
-    liquidity?: boolean;
-    type?: AccountType;
-    reportType?: ReportSheetType;
-    equityType?: EquityType;
-    forUser?: boolean;
-    page?: number;
-    limit?: number;
-    sortBy?: 'code' | 'createdAt';
-    sortOrder?: 'asc' | 'desc';
-}
 
 export abstract class AbstractAccountRetriever {
     protected companyId: number;
@@ -54,7 +40,7 @@ export abstract class AbstractAccountRetriever {
         limit,
         sortBy,
         sortOrder
-    }: constructorArgs) {
+    }: IAccountQueryArgs) {
         this.companyId = companyId;
         this.includeDefaultAccount = includeDefaultAccount;
         this.liquidity = liquidity;

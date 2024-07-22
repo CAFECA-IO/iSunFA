@@ -1,20 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAccount, IAccountQueryArgs, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, timestampInSeconds } from '@/lib/utils/common';
-import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { AccountType } from '@/constants/account';
-import { convertStringToAccountType, isAccountType } from '@/lib/utils/type_guard/account';
+import { AccountType, EquityType } from '@/constants/account';
+import { convertStringToAccountType, isAccountType, isEquityType } from '@/lib/utils/type_guard/account';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import {
-  findManyAccountsInPrisma,
   findFirstAccountInPrisma,
   findLatestSubAccountInPrisma,
 } from '@/lib/utils/repo/account.repo';
-import { formatAccounts } from '@/lib/utils/formatter/account.formatter';
 import prisma from '@/client';
 import { Account } from '@prisma/client';
+import { ReportSheetType } from '@/constants/report';
+import { convertStringToReportSheetType, isReportSheetType } from '@/lib/utils/type_guard/report';
+import { getSession } from '@/lib/utils/session';
+import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -32,122 +33,137 @@ function formatCompanyIdAccountId(companyId: unknown, accountId: string | string
   };
 }
 
-export function isTypeValid(type: string | string[] | undefined): type is AccountType | undefined {
-  if (Array.isArray(type)) {
-    return false;
-  }
-
-  if (!type) {
-    return true;
-  }
-
-  return isAccountType(type);
+function formatIncludeDefaultAccount(includeDefaultAccount: unknown): boolean {
+  return includeDefaultAccount !== 'false';
 }
 
-export function isLiquidityValid(
-  liquidity: string | string[] | undefined
-): liquidity is string | undefined {
-  if (Array.isArray(liquidity)) {
-    return false;
+function formatLiquidity(liquidity: unknown): boolean | undefined {
+  let formattedLiquidity: boolean | undefined;
+  if (liquidity && typeof liquidity === 'string') {
+    formattedLiquidity = liquidity === 'true' ? true : liquidity === 'false' ? false : undefined;
   }
-
-  if (!liquidity) {
-    return true;
-  }
-
-  return liquidity === 'true' || liquidity === 'false';
+  return formattedLiquidity;
 }
 
-export function isPageValid(page: string | string[] | undefined): page is string | undefined {
-  if (Array.isArray(page)) {
-    return false;
+function formatType(type: unknown): AccountType | undefined {
+  let formattedType: AccountType | undefined;
+  if (type && typeof type === 'string' && isAccountType(type)) {
+    formattedType = convertStringToAccountType(type);
   }
-
-  if (!page) {
-    return true;
-  }
-
-  return isParamNumeric(page);
+  return formattedType;
 }
 
-export function isLimitValid(limit: string | string[] | undefined): limit is string | undefined {
-  if (Array.isArray(limit)) {
-    return false;
+function formatReportType(reportType: unknown): ReportSheetType | undefined {
+  let formattedReportType: ReportSheetType | undefined;
+  if (reportType && typeof reportType === 'string' && isReportSheetType(reportType)) {
+    formattedReportType = convertStringToReportSheetType(reportType);
   }
-
-  if (!limit) {
-    return true;
-  }
-
-  return isParamNumeric(limit);
+  return formattedReportType;
 }
 
-export function formatParams(
-  companyId: unknown,
-  type: string | string[] | undefined,
-  liquidity: string | string[] | undefined,
-  page: string | string[] | undefined,
-  limit: string | string[] | undefined
-) {
+function formatEquityType(equityType: unknown): EquityType | undefined {
+  let formattedEquityType: EquityType | undefined;
+  if (equityType && typeof equityType === 'string' && isEquityType(equityType)) {
+    formattedEquityType = equityType as EquityType;
+  }
+  return formattedEquityType;
+}
+
+function formatForUser(forUser: unknown): boolean | undefined {
+  let formattedForUser: boolean | undefined;
+  if (forUser && typeof forUser === 'string') {
+    formattedForUser = forUser === 'true' ? true : forUser === 'false' ? false : undefined;
+  }
+  return formattedForUser;
+}
+
+function formatPageOrLimit(pageOrLimit: unknown): number | undefined {
+  let formattedPageOrLimit: number | undefined;
+  if (pageOrLimit && typeof pageOrLimit === 'string' && isParamNumeric(pageOrLimit)) {
+    formattedPageOrLimit = Number(pageOrLimit);
+  }
+  return formattedPageOrLimit;
+}
+
+function formatSortBy(sortBy: unknown): 'code' | 'createdAt' | undefined {
+  let formattedSortBy: 'code' | 'createdAt' | undefined;
+  if (sortBy && typeof sortBy === 'string') {
+    formattedSortBy = sortBy === 'code' || sortBy === 'createdAt' ? sortBy : undefined;
+  }
+  return formattedSortBy;
+}
+
+function formatSortOrder(sortOrder: unknown): 'asc' | 'desc' | undefined {
+  let formattedSortOrder: 'asc' | 'desc' | undefined;
+  if (sortOrder && typeof sortOrder === 'string') {
+    formattedSortOrder = sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : undefined;
+  }
+  return formattedSortOrder;
+}
+
+export function formatGetQuery(
+  companyId: number,
+  req: NextApiRequest
+): IAccountQueryArgs {
   // ToDo: (20240613 - Murky) - need to move to type guard
-  const isCompanyIdValid = !companyId || typeof companyId === 'number';
-  const typeIsValid = isTypeValid(type);
-  const liquidityIsValid = isLiquidityValid(liquidity);
-  const pageIsValid = isPageValid(page);
-  const limitIsValid = isLimitValid(limit);
+  const {
+    includeDefaultAccount,
+    liquidity,
+    type,
+    reportType,
+    equityType,
+    forUser,
+    page,
+    limit,
+    sortBy,
+    sortOrder
+  } = req.query;
 
-  if (!(isCompanyIdValid && typeIsValid && liquidityIsValid && pageIsValid && limitIsValid)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  const typeEnum = type ? convertStringToAccountType(type) : undefined;
-  const liquidityBoolean = liquidity ? liquidity === 'true' : undefined;
-  const pageNumber = Number(page) || DEFAULT_PAGE_START_AT;
-  const limitNumber = Number(limit) || DEFAULT_PAGE_LIMIT;
-  const companyIdNumber = Number(companyId);
+  const formattedIncludeDefaultAccount = formatIncludeDefaultAccount(includeDefaultAccount);
+  const formattedLiquidity = formatLiquidity(liquidity);
+  const formattedType = formatType(type);
+  const formattedReportType = formatReportType(reportType);
+  const formattedEquityType = formatEquityType(equityType);
+  const formattedForUser = formatForUser(forUser);
+  const formattedPage = formatPageOrLimit(page);
+  const formattedLimit = formatPageOrLimit(limit);
+  const formattedSortBy = formatSortBy(sortBy);
+  const formattedSortOrder = formatSortOrder(sortOrder);
 
   return {
-    companyIdNumber,
-    typeEnum,
-    liquidityBoolean,
-    pageNumber,
-    limitNumber,
+    companyId,
+    includeDefaultAccount: formattedIncludeDefaultAccount,
+    liquidity: formattedLiquidity,
+    type: formattedType,
+    reportType: formattedReportType,
+    equityType: formattedEquityType,
+    forUser: formattedForUser,
+    page: formattedPage,
+    limit: formattedLimit,
+    sortBy: formattedSortBy,
+    sortOrder: formattedSortOrder,
   };
 }
 
 export async function handleGetRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount[]>>
+  res: NextApiResponse<IResponseData<IPaginatedAccount | null>>
 ) {
-  const { type, liquidity, page, limit } = req.query;
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
+  const { companyId } = await getSession(req, res);
+  const formattedQuery = formatGetQuery(companyId, req);
 
-  const { companyIdNumber, typeEnum, liquidityBoolean, pageNumber, limitNumber } = formatParams(
-    companyId,
-    type,
-    liquidity,
-    page,
-    limit
-  );
+  const accountRetriever = AccountRetrieverFactory.createRetriever(formattedQuery);
+  let paginatedAccount: IPaginatedAccount | null = null;
 
-  // Info (20240701 - Murky) - User can only get accounts that are for user
-  const onlyForUser = true;
-  const rawAccounts = await findManyAccountsInPrisma(
-    companyIdNumber,
-    onlyForUser,
-    pageNumber,
-    limitNumber,
-    typeEnum,
-    liquidityBoolean,
-    false
-  );
-  const accounts = formatAccounts(rawAccounts);
-  const { httpCode, result } = formatApiResponse<IAccount[]>(STATUS_MESSAGE.SUCCESS_GET, accounts);
-  return {
-    httpCode,
-    result,
-  };
+  try {
+    paginatedAccount = await accountRetriever.getAccounts();
+  } catch (error) {
+    // Deprecate (20240722 - Murky) - Debugging error
+    // eslint-disable-next-line no-console
+    console.log('error', error);
+  }
+
+  return paginatedAccount;
 }
 
 function setNewCode(parentAccount: Account, latestSubAccount: Account | null) {
@@ -167,7 +183,7 @@ function setNewCode(parentAccount: Account, latestSubAccount: Account | null) {
 
 export async function handlePostRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount[]>>
+  res: NextApiResponse<IResponseData<IAccount>>
 ) {
   const { companyId } = await checkAdmin(req, res);
   const { accountId, name } = req.body;
@@ -198,39 +214,35 @@ export async function handlePostRequest(
   const savedNewOwnAccount = await prisma.account.create({
     data: newOwnAccount,
   });
-  const { httpCode, result } = formatApiResponse<IAccount>(
-    STATUS_MESSAGE.CREATED,
-    savedNewOwnAccount
-  );
-  return {
-    httpCode,
-    result,
-  };
-}
-
-export function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IAccount[]>(message, {} as IAccount[]);
-  return {
-    httpCode,
-    result,
-  };
+  return savedNewOwnAccount;
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount[] | IAccount>>
+  res: NextApiResponse<IResponseData<IAccount | IPaginatedAccount | null>>
 ) {
+  let payload: IAccount | IPaginatedAccount | null = null;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   try {
-    if (req.method === 'GET') {
-      const { httpCode, result } = await handleGetRequest(req, res);
-      res.status(httpCode).json(result);
-    } else if (req.method === 'POST') {
-      const { httpCode, result } = await handlePostRequest(req, res);
-      res.status(httpCode).json(result);
+    switch (req.method) {
+      case 'GET':
+        payload = await handleGetRequest(req, res);
+        statusMessage = STATUS_MESSAGE.SUCCESS;
+        break;
+      case 'POST':
+        payload = await handlePostRequest(req, res);
+        statusMessage = STATUS_MESSAGE.CREATED;
+        break;
+      default:
+        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = handleErrorResponse(res, error.message);
-    res.status(httpCode).json(result);
+    // Deprecate (20240722 - Murky) - Debugging error
+    // eslint-disable-next-line no-console
+    console.log('error', error);
+    statusMessage = error.message;
   }
+  const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

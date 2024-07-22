@@ -29,7 +29,5 @@ export class GeneralAccountRetriever extends AbstractAccountRetriever {
             sortBy,
             sortOrder
         });
-
     }
-
 }

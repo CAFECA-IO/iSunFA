@@ -1,5 +1,6 @@
-import { ProgressStatus } from '@/constants/account';
+import { AccountType, EquityType, ProgressStatus } from '@/constants/account';
 import { Account } from '@prisma/client';
+import { ReportSheetType } from '@/constants/report';
 import { IPaginatedData } from './pagination';
 
 export interface IAccount {
@@ -51,3 +52,17 @@ export interface IAccountReadyForFrontend {
   prePeriodPercentage: number;
   indent: number;
 }
+
+export type IAccountQueryArgs = {
+  companyId: number;
+  includeDefaultAccount: boolean,
+  liquidity?: boolean;
+  type?: AccountType;
+  reportType?: ReportSheetType;
+  equityType?: EquityType;
+  forUser?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: 'code' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+};
