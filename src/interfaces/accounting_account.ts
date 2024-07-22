@@ -1,5 +1,6 @@
 import { ProgressStatus } from '@/constants/account';
 import { Account } from '@prisma/client';
+import { IPaginatedData } from './pagination';
 
 export interface IAccount {
   id: number;
@@ -15,6 +16,8 @@ export interface IAccount {
   deletedAt: number | null;
   // ToDo: (20240717 - Julian) Missing 'isFavorite' property
 }
+
+export interface IPaginatedAccount extends IPaginatedData<IAccount> {}
 
 // Info Murky (20240416): Interface
 export interface IAccountResultStatus {

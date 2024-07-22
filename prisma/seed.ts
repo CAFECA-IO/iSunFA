@@ -7,7 +7,9 @@ import IncomeExpenses from '@/seed_json/income_expense.json';
 import roles from '@/seed_json/role.json';
 import users from '@/seed_json/user.json';
 import milestones from '@/seed_json/milestone.json';
-import generatedReports from '@/seed_json/generated_report.json';
+
+// Info (2024722 - Murky) - Uncomment this line to seed generated reports
+// import generatedReports from '@/seed_json/generated_report.json';
 import pendingReports from '@/seed_json/pending_report.json';
 import departments from '@/seed_json/department.json';
 import employees from '@/seed_json/employee.json';
@@ -33,11 +35,12 @@ async function createMilestones() {
   });
 }
 
-async function createGeneratedReports() {
-  await prisma.report.createMany({
-    data: generatedReports,
-  });
-}
+// Info (2024722 - Murky) - Uncomment this line to seed generated reports
+// async function createGeneratedReports() {
+//   await prisma.report.createMany({
+//     data: generatedReports,
+//   });
+// }
 
 async function createPendingReports() {
   await prisma.report.createMany({
@@ -246,7 +249,9 @@ async function main() {
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });
-  await createGeneratedReports();
+
+  // Info (20240316 - Murky) - Uncomment this line to seed generated reports
+  // await createGeneratedReports();
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });

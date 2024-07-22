@@ -1,54 +1,129 @@
-import { AccountType } from '@/constants/account';
+import { AccountType, EQUITY_TYPE_TO_CODE_MAP, EquityType } from '@/constants/account';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from '@/constants/config';
 import prisma from '@/client';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
-import { Account } from '@prisma/client';
+import { Account, Prisma } from '@prisma/client';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 
-export async function findManyAccountsInPrisma(
+export async function findManyAccountsInPrisma({
+  companyId,
+  includeDefaultAccount = true,
+  liquidity,
+  type,
+  reportType,
+  equityType,
+  forUser = true,
+  isDeleted,
+  page = DEFAULT_PAGE_OFFSET,
+  limit = DEFAULT_PAGE_LIMIT,
+  sortBy = 'code',
+  sortOrder = 'asc',
+}:{
   companyId: number,
-  onlyForUser: boolean = true,
-  page: number = DEFAULT_PAGE_OFFSET,
-  limit: number = DEFAULT_PAGE_LIMIT,
-  type?: AccountType,
+  includeDefaultAccount: boolean,
   liquidity?: boolean,
-  selectDeleted: boolean = false
-): Promise<Account[]> {
+  type?: AccountType,
+  reportType?: ReportSheetType,
+  equityType?: EquityType,
+  forUser?: boolean,
+  isDeleted?: boolean,
+  page: number,
+  limit: number,
+  sortBy: 'code' | 'createdAt',
+  sortOrder: 'asc' | 'desc',
+}): Promise<{
+  data: Account[],
+  page: number,
+  limit: number,
+  totalPage: number,
+  totalCount: number,
+  hasNextPage: boolean,
+  hasPreviousPage: boolean,
+  sortOrder: 'asc' | 'desc',
+  sortBy: 'code' | 'createdAt',
+}> {
   let accounts: Account[] = [];
 
-  try {
-    const offset = pageToOffset(page, limit);
-    accounts = await prisma.account.findMany({
-      skip: offset,
-      take: limit,
-      orderBy: [
-        {
-          code: 'asc',
-        },
-      ],
-      where: {
-        type,
-        liquidity,
-        forUser: onlyForUser ? true : undefined,
-        OR: [
-          {
-            companyId,
-          },
-          {
-            companyId: PUBLIC_COMPANY_ID,
-          },
-        ],
-        // Info: (20240701 - Murky) 根據 selectDeleted 設置 deletedAt 的篩選條件
-        deletedAt: selectDeleted ? { not: null } : null,
+  const accountTypes = reportType ? ReportSheetAccountTypeMap[reportType] : [];
+  const where: Prisma.AccountWhereInput = {
+    liquidity,
+
+    forUser,
+    deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
+    AND: [
+      {
+        OR: type
+          ? [{ type }]
+          : accountTypes.length > 0
+            ? [{ type: { in: accountTypes, }, }]
+            : [],
       },
-    });
+      {
+        OR: includeDefaultAccount
+          ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID },]
+          : [{ companyId }],
+      },
+      type === AccountType.EQUITY && equityType ? {
+        code: {
+          in: EQUITY_TYPE_TO_CODE_MAP[equityType],
+        },
+      } : {},
+    ],
+  };
+
+  let totalCount = 0;
+
+  try {
+    totalCount = await prisma.account.count({ where });
   } catch (error) {
-    // Info (20240516 - Murky) - Debugging error
+    // Info (20240722 - Murky) - Debugging error
     // eslint-disable-next-line no-console
     console.error(error);
   }
 
-  return accounts;
+  const totalPage = Math.ceil(totalCount / limit);
+
+  const offset = pageToOffset(page, limit);
+  const orderBy = { [sortBy]: sortOrder };
+  const include = {};
+  const findManyArgs = {
+    skip: offset,
+    take: limit + 1,
+    orderBy,
+    include,
+    where,
+  };
+
+  try {
+    accounts = await prisma.account.findMany(findManyArgs);
+  } catch (error) {
+    // Info (20240722 - Murky) - Debugging error
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+
+  const hasNextPage = accounts.length > limit;
+  const hasPreviousPage = page > DEFAULT_PAGE_NUMBER; // 1;
+
+  if (hasNextPage) {
+    accounts.pop();
+  }
+
+  const returnValue = {
+    data: accounts,
+    page,
+    limit,
+    totalPage,
+    totalCount,
+    hasNextPage,
+    hasPreviousPage,
+    sortOrder,
+    sortBy,
+  };
+
+  return returnValue;
 }
 
 export async function findFirstAccountInPrisma(accountId: number, companyId: number) {
