@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -8,39 +8,28 @@ import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { UploadDocumentKeys } from '@/constants/kyc';
-
-const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
-
-const sizeFormatter = (size: number): string => {
-  if (size >= 1024 * 1024) {
-    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-  } else if (size >= 1024) {
-    return `${(size / 1024).toFixed(2)} KB`;
-  } else {
-    return `${size} Bytes`;
-  }
-};
+import {
+  KYCFiles,
+  MAX_FILE_SIZE_IN_MB,
+  MAX_SIZE_IN_BYTES,
+  sizeFormatter,
+  UploadDocumentKeys,
+} from '@/constants/kyc';
+import { loadFileFromLocalStorage, deleteFileFromLocalStorage } from '@/lib/utils/common';
+import { ToastType } from '@/interfaces/toastify';
 
 const UploadArea = ({
+  loacalStorageFilesKey = KYCFiles,
   type,
-  backendUniqueIdentifier,
-  uploadedFile,
   onChange,
 }: {
+  loacalStorageFilesKey: string;
   type: UploadDocumentKeys;
-  backendUniqueIdentifier: string | undefined;
-  uploadedFile: File | undefined;
-  onChange: (
-    operation: 'add' | 'delete',
-    key: UploadDocumentKeys,
-    id: string | undefined,
-    file: File | undefined
-  ) => void;
+  onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
 }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isError, setIsError] = useState<boolean>(false);
@@ -48,15 +37,28 @@ const UploadArea = ({
   const readerRef = useRef<FileReader | null>(null);
   const { trigger: uploadFileAPI } = APIHandler<string>(APIName.FILE_UPLOAD, {}, false, false);
   const { trigger: deleteFileAPI } = APIHandler<void>(APIName.FILE_DELETE, {}, false, false);
+  const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
+  const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
+  const {
+    trigger: listUploadedFiles,
+    data: uploadedData,
+    success: getSuccess,
+    code: getCode,
+  } = APIHandler<
+    {
+      fileId: string;
+      fileSize: number;
+    }[]
+  >(APIName.FILE_LIST_UPLOADED, {}, false, false);
 
   const handleError = useCallback(
-    (code: string | undefined) => {
+    (title: string, content: string) => {
       setIsError(true);
       messageModalDataHandler({
-        title: 'Upload File Failed',
-        content: `File read failed${code ? ` , error code: ${code}` : ''}`,
+        title,
+        content,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -64,22 +66,53 @@ const UploadArea = ({
     [messageModalDataHandler, messageModalVisibilityHandler]
   );
 
-  const handleUploadFile = useCallback(
+  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: string) => {
+    const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+    const data = currentData;
+
+    if (data[fileType]) {
+      data[fileType].id = fileId;
+      localStorage.setItem(loacalStorageFilesKey, JSON.stringify(data));
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { success, code, data } = await uploadFileAPI({
+      params: {
+        companyId: selectedCompany?.id,
+      },
+      query: {
+        type,
+      },
+      body: formData,
+    });
+    if (success === false) {
+      handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.FILE_UPLOAD_ERROR', { code }));
+      onChange(type, undefined);
+      setStatus(ProgressStatus.SYSTEM_ERROR);
+    }
+    if (success && data) {
+      onChange(type, data);
+      setUploadedFileId(data);
+      updateFileIdInLocalStorage(type, data);
+      setStatus(ProgressStatus.SUCCESS);
+    }
+  };
+
+  const saveFileToLocalStorage = useCallback(
     async (file: File) => {
       if (file.size > MAX_SIZE_IN_BYTES) {
-        messageModalDataHandler({
-          title: 'Upload File Failed',
-          content: `File size exceeds the limit: ${MAX_SIZE_IN_BYTES} bytes`,
-          messageType: MessageType.ERROR,
-          submitBtnStr: 'Close',
-          submitBtnFunction: () => messageModalVisibilityHandler(),
-        });
-        messageModalVisibilityHandler();
+        handleError(
+          t('KYC.UPLOAD_FILE_FAILED'),
+          t('KYC.FILE_SIZE_EXCEEDS_LIMIT', { size: `${MAX_FILE_SIZE_IN_MB}MB` })
+        );
         return;
       }
 
-      onChange('add', type, undefined, file); // Info: Save file to localStorage without backendUniqueIdentifier first (20240719 - TzuHan)
-
+      const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+      const localStorageData = currentData;
       const reader = new FileReader();
       readerRef.current = reader;
 
@@ -93,31 +126,36 @@ const UploadArea = ({
       reader.onloadend = async () => {
         if (reader.readyState === FileReader.DONE) {
           setUploadProgress(100);
-          const formData = new FormData();
-          formData.append('file', file);
-          const { success, code, data } = await uploadFileAPI({
-            params: {
-              companyId: selectedCompany?.id,
+          const base64File = reader.result;
+          const newData = {
+            ...localStorageData,
+            [type]: {
+              id: undefined,
+              name: file.name,
+              type: file.type,
+              file: base64File,
             },
-            query: {
-              type,
-            },
-            body: formData,
-          });
-          if (success === false) {
-            handleError(code);
-          }
-          if (success && data) {
-            onChange('add', type, data, file);
-          }
+          };
+          localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
+          // eslint-disable-next-line no-console
+          console.log(
+            `onloadend filename: ${file.name}, file:`,
+            file,
+            `newData in localStorage:`,
+            newData
+          );
+          setUploadedFile(file);
+
+          await handleFileUpload(file);
         }
 
         reader.onerror = () => {
-          handleError(undefined);
+          handleError(t('KYC.READ_FILE_FAILED'), t('KYC.FILE_READ_ERROR'));
+          onChange(type, undefined);
         };
       };
 
-      reader.readAsArrayBuffer(file);
+      reader.readAsDataURL(file);
     },
     [onChange, messageModalDataHandler, messageModalVisibilityHandler]
   );
@@ -127,7 +165,7 @@ const UploadArea = ({
     event.preventDefault();
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-      handleUploadFile(file);
+      saveFileToLocalStorage(file);
     }
   };
 
@@ -147,7 +185,7 @@ const UploadArea = ({
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
-      handleUploadFile(droppedFile);
+      saveFileToLocalStorage(droppedFile);
       setIsDragOver(false);
     }
   };
@@ -159,8 +197,8 @@ const UploadArea = ({
       if (status === ProgressStatus.IN_PROGRESS) {
         reader.abort();
         setStatus(ProgressStatus.PAUSED);
-      } else {
-        handleUploadFile(uploadedFile!);
+      } else if (status === ProgressStatus.PAUSED) {
+        saveFileToLocalStorage(uploadedFile!);
         setStatus(ProgressStatus.IN_PROGRESS);
       }
     }
@@ -170,18 +208,70 @@ const UploadArea = ({
     if (readerRef.current) {
       readerRef.current.abort();
     }
-    if (backendUniqueIdentifier) {
-      await deleteFileAPI({
+    let success: boolean = true;
+    if (uploadedFileId) {
+      const result = await deleteFileAPI({
         params: {
           companyId: selectedCompany?.id,
-          backendUniqueIdentifier,
+          fileId: uploadedFileId,
         },
       });
+      success = result.success;
+      if (!success) {
+        handleError(t('KYC.DELETE_FILE_FAILED'), t('KYC.FILE_DELETE_ERROR', { code: result.code }));
+      }
     }
-    setUploadProgress(0);
-    setStatus(ProgressStatus.IN_PROGRESS);
-    onChange('delete', type, undefined, undefined);
+    if (success) {
+      setUploadProgress(0);
+      setStatus(ProgressStatus.NOT_FOUND);
+      onChange(type, undefined);
+      deleteFileFromLocalStorage(type, loacalStorageFilesKey, uploadedFileId);
+      setUploadedFile(undefined);
+      setUploadedFileId(undefined);
+    }
   };
+
+  useEffect(() => {
+    try {
+      const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
+      setUploadedFile(file);
+      setUploadedFileId(id);
+      setUploadProgress(100);
+      // eslint-disable-next-line no-console
+      console.log(`loadFileFromLocalStorage id: ${id}, filename: ${file?.name}, file:`, file);
+      if (id && file) {
+        listUploadedFiles({
+          params: {
+            companyId: selectedCompany?.id,
+          },
+          query: {
+            ids: id,
+          },
+        });
+      } else if (file) {
+        handleFileUpload(file);
+      }
+    } catch (error) {
+      handleError(t('KYC.READ_FILE_FAILED'), t('KYC.FILE_READ_ERROR'));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (getSuccess && uploadedData && uploadedFile) {
+      const data = uploadedData.find((item) => item.fileId === uploadedFileId);
+      if (!data) {
+        handleFileUpload(uploadedFile);
+      }
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `listUploadedFiles-${getCode}`,
+        content: `Failed to list uploaded files: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [getSuccess, uploadedData, getCode, uploadedFile]);
 
   return (
     <div
@@ -259,7 +349,7 @@ const UploadArea = ({
             type="file"
             className="hidden"
             onChange={handleFileChange}
-            disabled={uploadedFile !== null}
+            disabled={uploadedFile !== undefined}
           />
         </label>
       )}

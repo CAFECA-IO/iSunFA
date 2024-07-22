@@ -148,7 +148,7 @@
     "SELECT_DATE": "Choose the Date",
     "TODAY": "Today",
     "TO": "to",
-    "JAN": "Janaury",
+    "JAN": "January",
     "FEB": "February",
     "MAR": "March",
     "APR": "April",
@@ -188,8 +188,8 @@
     "UNPOPULAR": "Unpopular",
     "ALL": "All",
     "RELEVANCY": "Relevancy",
-    "PAYMENT_PROCESS": "Payment Process",
-    "PROJECT_PROCESS": "Project Process"
+    "HIGHEST_PAYMENT_PRICE": "Highest Payment Price",
+    "LOWEST_PAYMENT_PRICE": "Lowest Payment Price"
   },
   "FOOTER": {
     "POWERED_BY": "Powered by iSunFA",
@@ -211,6 +211,7 @@
     "COMPREHENSIVE_INCOME_STATEMENT": "Comprehensive Income Statement",
     "BALANCE_SHEET": "Balance Sheet",
     "CASH_FLOW_STATEMENT": "Cash Flow Statement",
+    "CHANGE_IN_EQUITY_STATEMENT": "Change in Equity Statement",
     "RED_FLAG_ANALYSIS": "Red Flag Analysis",
     "POWERED_BY": "Powered by"
   },
@@ -661,13 +662,16 @@
     "ID_CARD": "National ID card",
     "DRIVER_LICENSE": "Driver's License",
     "SELECT_REPRESENTATIVE_ID_TYPE": "What is the type the key company representative’s ID?",
+    "SUBMIT_SUCCESS": "Your Application Has Been Submitted",
+    "SUBMIT_SUCCESS_MESSAGE": "It will take 3 to 5 business day to review your application, thank you for your patient.",
+    "CONTACT_SERVICE_TEAM": "If you have any question, please contact our customer service.",
+    "SUBMIT_FAILED": "Your Application Has Been Failed",
+    "SUBMIT_FAILED_MESSAGE": "Error Code: {{code}}",
+    "INCOMPLETE_FORM": "Please complete the form",
+    "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}.",
 
     "KYC": "KYC",
-    "CITY_DEFAULT": "City",
-    "CITY_GB": "United Kingdom",
-    "CITY_US": "United States",
-    "CITY_TW": "Taiwan",
-
+    "START_KYC": "Start KYC",
     "COUNTRY_DEFAULT": "Choose the country that your company registered in",
     "COUNTRY_TAIWAN": "Taiwan",
     "COUNTRY_UNITED_STATES": "United States",
@@ -704,6 +708,14 @@
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
     "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry",
 
+    "UPLOAD_FILE_FAILED": "Upload file failed",
+    "FILE_UPLOAD_ERROR": "File upload error, Error Code: {{code}}",
+    "FILE_SIZE_EXCEEDS_LIMIT": "File size exceeds limit, please upload a file smaller than {{size}}",
+    "READ_FILE_FAILED": "Read file failed",
+    "FILE_READ_ERROR": "File read error",
+    "DELETE_FILE_FAILED": "Delete file failed, Error Code: {{code}}",
+    "DELETE_FILE_ERROR": "Delete file error",
+
     "SUBMIT_SUCCESS": "Your Application Has Been Submitted",
     "SUBMIT_SUCCESS_MESSAGE": "It will take 3 to 5 business day to review your application, thank you for your patient.",
     "CONTACT_SERVICE_TEAM": "If you have any question, please contact our customer service.",
@@ -711,6 +723,36 @@
     "SUBMIT_FAILED_MESSAGE": "Error Code: {{code}}",
     "INCOMPLETE_FORM": "Please complete the form",
     "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}."
+
+    "LEGAL_COMPANY_NAME": "Legal Company Name",
+    "COMPANY_ADDRESS": "Company Address",
+    "ZIP_CODE": "Zip Code",
+    "KEY_COMPANY_REPRESENTATIVE_S_NAME": "Key Company Representative's Name",
+
+    "KEY_CONTACT_PERSON": "Key Contact Person",
+    "CONTACT_NUMBER": "Contact Number",
+    "EMAIL_ADDRESS": "Email Address",
+    "COMPANY_WEBSITE_OPTIONAL": "Company Website (Optional)",
+
+    "IN_THIS_VERIFICATION_PROCESS_YOU_WILL_NEED_TO": "In this verification process you will need to",
+    "ENTER_COMPANY_INFORMATION": "Enter Company Information",
+    "UPLOAD_BUSINESS_REGISTRATION_CERTIFICATE": "Upload Business Registration Certificate",
+    "UPLOAD_TAX_STATUS_CERTIFICATION_ISSUED_WITHIN_6_MONTHS": "Upload Tax Status Certification (Issued within 6 months)",
+    "UPLOAD_PHOTO_OF_KEY_COMPANY_REPRESENTATIVE_S_ID": "Upload photo of Key Company Representative's ID",
+
+    "EXAMPLE": "Example",
+    "CITY": "City",
+    "STREET_ADDRESS": "Street Address",
+    "WHICH_COUNTRY_IS_YOUR_COMPANY_REGISTERED_IN": "Which country is your Company registered in",
+    "LEGAL_STRUCTURE": "Legal Structure",
+    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number",
+    "REGISTRATION_DATE": "Registration Date",
+    "INDUSTRY": "Industry",
+
+    "LEAVE_THIS_PAGE": "Leave this page",
+    "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
+    "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
+    "LEAVE_NOW": "Leave now"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "Basic Info",
