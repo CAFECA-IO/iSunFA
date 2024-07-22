@@ -32,8 +32,8 @@ export interface IGeneratedReportItem extends IBasicReportItem {
   evidenceId: string;
 }
 
-export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem> {}
-export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem> {}
+export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem[]> {}
+export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem[]> {}
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
   const now = new Date();
@@ -282,10 +282,30 @@ export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedPendingReport
   data: FIXED_DUMMY_PENDING_REPORT_ITEMS,
   page: 1,
   totalPages: 2,
+  totalCount: 5,
+  pageSize: 5,
+  hasNextPage: true,
+  hasPreviousPage: false,
+  sort: [
+    {
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
+    },
+  ],
 };
 
 export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedGeneratedReportItem = {
   data: FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   page: 1,
   totalPages: 2,
+  totalCount: 5,
+  pageSize: 5,
+  hasNextPage: true,
+  hasPreviousPage: false,
+  sort: [
+    {
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
+    },
+  ],
 };

@@ -36,8 +36,6 @@ async function authenticateUser(
         publicKey: user.publicKey,
         algorithm: typeOfAlgorithm,
       };
-      // eslint-disable-next-line no-console
-      console.log('authentication-------', authentication);
       try {
         await server.verifyAuthentication(authentication, registeredCredential, expected);
       } catch (error) {

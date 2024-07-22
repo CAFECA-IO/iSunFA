@@ -9,7 +9,7 @@ import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import path from 'path';
 import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
-import { UploadDocumentKeys } from '@/constants/kyc';
+import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -349,6 +349,10 @@ export function pageToOffset(
   return (page - 1) * limit;
 }
 
+export function calculateTotalPages(totalCount: number, pageSize: number): number {
+  return Math.ceil(totalCount / pageSize);
+}
+
 export const getTodayPeriodInSec = () => {
   const today = new Date();
   const startTimeStamp = timestampInSeconds(
@@ -493,51 +497,66 @@ export function formatNumberSeparateByComma(num: number) {
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
 
-export const readFilesFromLocalStorage = (
-  type: string = 'KYCFiles'
-): {
-  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: {
-    id: string | undefined;
-    file: File | undefined;
-  };
-  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: {
-    id: string | undefined;
-    file: File | undefined;
-  };
-  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: {
-    id: string | undefined;
-    file: File | undefined;
-  };
-} => {
-  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
-  const data = currentData;
-  return data;
-};
-
-export const saveFilesToLocalStorage = (
+export const loadFileFromLocalStorage = (
   fileType: UploadDocumentKeys,
-  file?: File,
-  fileId?: string,
-  type: string = 'KYCFiles'
+  localStorageFilesKey: string = 'KYCFiles'
 ) => {
-  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
-  const data = currentData;
-  const newData = {
-    ...data,
-    [fileType]: {
-      id: fileId,
-      file,
-    },
-  };
-  localStorage.setItem(type, JSON.stringify(newData));
+  try {
+    const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
+    // eslint-disable-next-line no-console
+    console.log('Loaded from localStorage:', data);
+
+    let fileObject: {
+      id: string | undefined;
+      file: File | undefined;
+    } = {
+      id: undefined,
+      file: undefined,
+    };
+
+    if (data[fileType]) {
+      const {
+        id,
+        name,
+        file: fileData,
+      } = data[fileType] as {
+        id: string | undefined;
+        file: string | undefined;
+        name: string;
+        type: string;
+      };
+
+      if (fileData) {
+        const byteString = atob(fileData.split(',')[1]);
+        const mimeString = fileData.split(',')[0].split(':')[1].split(';')[0];
+
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i += 1) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+
+        const blob = new Blob([ab], { type: mimeString });
+        fileObject = { id, file: new File([blob], name, { type: mimeString }) };
+      } else {
+        fileObject = { id, file: undefined };
+      }
+    }
+
+    return fileObject;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error loading file from localStorage:', error);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
 };
 
-export const deleteFilesFromLocalStorage = (
-  fileId?: string,
-  fileType?: UploadDocumentKeys,
-  type: string = 'KYCFiles'
+export const deleteFileFromLocalStorage = (
+  fileType: UploadDocumentKeys,
+  loacalStorageFilesKey: string = KYCFiles,
+  fileId?: string
 ) => {
-  const currentData = JSON.parse(localStorage.getItem(type) || '{}');
+  const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
   const data = currentData;
   let newData = {
     ...data,
@@ -565,5 +584,5 @@ export const deleteFilesFromLocalStorage = (
       }
     }
   }
-  localStorage.setItem(type, JSON.stringify(newData));
+  localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
 };
