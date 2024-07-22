@@ -2,6 +2,7 @@ import { IContactInfo } from '@/interfaces/kyc_contact_info';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ContactInfoKeys, AreaCodeOptions } from '@/constants/kyc';
+import { useTranslation } from 'next-i18next';
 
 // Info: (20240718 - Liz) 根據 Area Code 對應到國家的國旗
 const areaCodeFlagMap: Record<AreaCodeOptions, string> = {
@@ -18,6 +19,8 @@ const ContactInfoForm = ({
   data: IContactInfo;
   onChange: (key: ContactInfoKeys, value: string) => void;
 }) => {
+  const { t } = useTranslation('common');
+
   // Info: (20240718 - Liz) OuterClick Hook
   const {
     targetRef: areaCodeMenuRef,
@@ -74,11 +77,13 @@ const ContactInfoForm = ({
     <section className="flex flex-col gap-40px md:w-600px">
       {/* ===== Key Contact Person ===== */}
       <div className="space-y-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Key Contact Person</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">
+          {t('KYC.KEY_CONTACT_PERSON')}
+        </h6>
         <input
           id="keyContactPerson"
           type="text"
-          placeholder="example"
+          placeholder={t('KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyContactPersonInputHandler}
@@ -87,7 +92,7 @@ const ContactInfoForm = ({
 
       {/* ===== Area Code & Contact Number ===== */}
       <div className="flex flex-col gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Contact Number</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.CONTACT_NUMBER')}</h6>
 
         <div className="relative flex rounded-sm border border-lightGray3 bg-white p-10px">
           {/* Area Code */}
@@ -137,7 +142,7 @@ const ContactInfoForm = ({
           <input
             id="contactNumber"
             type="text"
-            placeholder="example"
+            placeholder={t('KYC.EXAMPLE')}
             required
             className="w-full cursor-pointer bg-white outline-none placeholder:text-input-text-input-placeholder"
             onChange={contactNumberInputHandler}
@@ -147,7 +152,7 @@ const ContactInfoForm = ({
 
       {/* ===== Email Address ===== */}
       <div className="flex flex-col gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Email Address</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.EMAIL_ADDRESS')}</h6>
         <div className="flex rounded-sm border border-lightGray3 bg-white">
           <div className="flex items-center border-r border-lightGray3 px-12px">
             <svg
@@ -174,7 +179,7 @@ const ContactInfoForm = ({
           <input
             id="emailAddress"
             type="text"
-            placeholder="example"
+            placeholder={t('KYC.EXAMPLE')}
             required
             className="m-10px w-full cursor-pointer bg-white outline-none placeholder:text-input-text-input-placeholder"
             onChange={emailAddressInputHandler}
@@ -185,7 +190,7 @@ const ContactInfoForm = ({
       {/* ===== Company Website (Optional) ===== */}
       <div className="flex flex-col gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          Company Website (Optional)
+          {t('KYC.COMPANY_WEBSITE_OPTIONAL')}
         </h6>
         <div className="flex rounded-sm border border-lightGray3 bg-white">
           <p className="flex items-center border-r border-lightGray3 px-12px text-input-text-input-placeholder">
@@ -194,7 +199,7 @@ const ContactInfoForm = ({
           <input
             id="emailAddress"
             type="text"
-            placeholder="example"
+            placeholder={t('KYC.EXAMPLE')}
             required
             className="m-10px w-full cursor-pointer bg-white outline-none placeholder:text-input-text-input-placeholder"
             onChange={companyWebsiteInputHandler}

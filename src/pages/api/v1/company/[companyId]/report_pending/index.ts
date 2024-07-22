@@ -127,6 +127,16 @@ export async function handleGetRequest(
     data: pendingReportItems,
     page: pendingData.page,
     totalPages: pendingData.totalPages,
+    totalCount: pendingData.totalCount,
+    pageSize: pendingData.pageSize,
+    hasNextPage: pendingData.hasNextPage,
+    hasPreviousPage: pendingData.hasPreviousPage,
+    sort: [
+      {
+        sortBy: sortByString,
+        sortOrder: sortOrderString,
+      },
+    ],
   };
   return paginatedPendingReportItem;
 }

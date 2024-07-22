@@ -92,11 +92,13 @@ const BasicInfoForm = ({
     <section className="flex w-600px flex-col gap-40px">
       {/* Legal Company Name */}
       <div className="space-y-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">Legal Company Name</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">
+          {t('KYC.LEGAL_COMPANY_NAME')}
+        </h6>
         <input
           id="legal-company-name"
           type="text"
-          placeholder="example"
+          placeholder={t('KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={legalCompanyNameInputHandler}
@@ -107,7 +109,9 @@ const BasicInfoForm = ({
       <div className="flex gap-20px">
         {/*  Country & City  */}
         <div className="flex flex-1 flex-col gap-8px">
-          <h6 className="text-sm font-semibold text-input-text-primary">Company Address</h6>
+          <h6 className="text-sm font-semibold text-input-text-primary">
+            {t('KYC.COMPANY_ADDRESS')}
+          </h6>
 
           <div className="relative flex rounded-sm border border-lightGray3 bg-white p-10px">
             {/* Country */}
@@ -157,7 +161,7 @@ const BasicInfoForm = ({
             <input
               id="city"
               type="text"
-              placeholder="City"
+              placeholder={t('KYC.CITY')}
               required
               className="w-full cursor-pointer bg-white outline-none placeholder:text-input-text-input-placeholder"
               onChange={cityInputHandler}
@@ -167,11 +171,11 @@ const BasicInfoForm = ({
 
         {/* Zip Code */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <h6 className="text-sm font-semibold text-input-text-primary">Zip Code</h6>
+          <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.ZIP_CODE')}</h6>
           <input
             id="zip-code"
             type="text"
-            placeholder="Zip Code"
+            placeholder={t('KYC.ZIP_CODE')}
             required
             className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={zipCodeInputHandler}
@@ -184,22 +188,22 @@ const BasicInfoForm = ({
         <input
           id="street"
           type="text"
-          placeholder="Street Address"
+          placeholder={t('KYC.STREET_ADDRESS')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={addressInputHandler}
         />
       </div>
 
-      {/* ===== Key Company Representative’s Name ===== */}
+      {/* ===== Key Company Representative's Name ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          Key Company Representative’s Name
+          {t('KYC.KEY_COMPANY_REPRESENTATIVE_S_NAME')}
         </h6>
         <input
           id="key-company-representatives-name"
           type="text"
-          placeholder="example"
+          placeholder={t('KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyCompanyRepresentativesInputHandler}
