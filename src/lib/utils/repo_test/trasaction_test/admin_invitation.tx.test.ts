@@ -1,6 +1,7 @@
 import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import invitations from '@/seed_json/invitation.json';
 import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
+import { deleteAdminById } from '@/lib/utils/repo/admin.repo';
 
 describe('Admin Invitation Repository Tests', () => {
   const testUserId = 1000; // Assuming this is a valid user ID from your seed data or setup
@@ -9,6 +10,7 @@ describe('Admin Invitation Repository Tests', () => {
   describe('createAdminByInvitation', () => {
     it('should create an admin by invitation and mark the invitation as used', async () => {
       const createdAdmin = await createAdminByInvitation(testUserId, testInvitation);
+      await deleteAdminById(createdAdmin.id);
       expect(createdAdmin).toBeDefined();
       expect(createdAdmin.email).toEqual(testInvitation.email);
       // Assuming the created admin should have a status of true
