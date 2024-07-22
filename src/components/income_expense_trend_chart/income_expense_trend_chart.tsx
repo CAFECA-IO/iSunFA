@@ -119,7 +119,7 @@ const LineChart = ({ data }: LineChartProps) => {
         fillColors: ['#4BD394', '#FB5C5C', '#FFA502'],
         // width: 20, // 標記的寬度
         // height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        // radius: 0, // 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
 

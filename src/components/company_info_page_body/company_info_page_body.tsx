@@ -1,17 +1,23 @@
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyDetail } from '@/interfaces/company';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { timestampToString } from '@/lib/utils/common';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const CompanyInfoPageBody = () => {
+  const { t } = useTranslation('common');
+
   const router = useRouter();
   const { selectedCompany, selectCompany } = useUserCtx();
   const {
@@ -22,12 +28,13 @@ const CompanyInfoPageBody = () => {
   } = useGlobalCtx();
 
   const [company, setCompany] = useState<ICompany | null>(selectedCompany);
+  const [ownerId, setOwnerId] = useState<number | null>(null);
 
   const { trigger: deleteCompany } = APIHandler<ICompany>(
     APIName.COMPANY_DELETE,
     {
       params: {
-        companyId: selectedCompany?.id ?? -1,
+        companyId: selectedCompany?.id ?? NON_EXISTING_COMPANY_ID,
       },
     },
     false,
@@ -36,17 +43,19 @@ const CompanyInfoPageBody = () => {
 
   const {
     data: companyData,
+    isLoading: isCompanyDataLoading,
     code: getCompanyDataCode,
     success: getCompanyDataSuccessfully,
-  } = APIHandler<ICompany>(APIName.COMPANY_GET_BY_ID, {
+  } = APIHandler<ICompanyDetail>(APIName.COMPANY_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? 1000,
+      companyId: selectedCompany?.id ?? PUBLIC_COMPANY_ID,
     },
   });
 
   useEffect(() => {
     if (getCompanyDataSuccessfully && companyData) {
       setCompany(companyData);
+      setOwnerId(companyData.ownerId);
     }
   }, [companyData, getCompanyDataSuccessfully, getCompanyDataCode]);
 
@@ -79,7 +88,7 @@ const CompanyInfoPageBody = () => {
         'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
       backBtnStr: 'Cancel',
       submitBtnStr: 'Delete',
-      submitBtnFunction: procedureOfDelete, // TODO: send API request (20240717 - Shirley)
+      submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
   };
@@ -88,12 +97,22 @@ const CompanyInfoPageBody = () => {
     transferCompanyModalVisibilityHandler();
   };
 
+  const displayedOwnerId = isCompanyDataLoading ? (
+    <div className="mt-5">
+      <Skeleton width={80} height={20} />
+    </div>
+  ) : (
+    <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">
+      {ownerId ?? '-'}
+    </div>
+  );
+
   return (
     <div className="font-barlow">
       <div className="mt-28 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-10 pb-0">
         <div className="mx-0 text-base font-semibold leading-10 text-text-neutral-tertiary max-md:max-w-full lg:mx-0 lg:text-4xl">
           <span className="font-bold text-text-brand-primary-lv2">{company?.name ?? '-'}</span>{' '}
-          Basic Info
+          {t('COMPANY_BASIC_INFO.BASIC_INFO')}
         </div>
         <div className="mt-3 h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full lg:mx-0 lg:mt-6" />
         <div className="mt-7 flex flex-col rounded-lg py-5 max-md:max-w-full lg:px-10">
@@ -117,7 +136,7 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>Company Info</div>
+              <div>{t('COMPANY_BASIC_INFO.COMPANY_INFO')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
@@ -136,10 +155,10 @@ const CompanyInfoPageBody = () => {
               </div>
               <div className="my-auto flex flex-col flex-wrap content-center self-stretch lg:hidden">
                 <div className="self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:self-start lg:font-semibold">
-                  Company Name
+                  {t('COMPANY_BASIC_INFO.COMPANY_INFO')}{' '}
                 </div>
                 <div className="flex gap-0 text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:text-3xl">
-                  <div>iSunCloud </div>
+                  <div>{company?.name ?? '-'} </div>
                   <Button
                     onClick={editCompanyClickHandler}
                     variant={'secondaryBorderless'}
@@ -167,7 +186,7 @@ const CompanyInfoPageBody = () => {
 
             <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
               <div className="hidden self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:flex lg:self-start lg:font-semibold">
-                Company Name
+                {t('COMPANY_BASIC_INFO.COMPANY_NAME')}{' '}
               </div>
               <div className="hidden gap-1 self-end text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:flex lg:self-center lg:text-3xl">
                 <div>{company?.name ?? '-'}</div>
@@ -197,7 +216,7 @@ const CompanyInfoPageBody = () => {
 
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Tax ID Number
+                {t('COMPANY_BASIC_INFO.TAX_ID_NUMBER')}{' '}
               </div>
               <div className="text-xl font-bold leading-8 text-text-brand-secondary-lv1 lg:mt-4">
                 {company?.code ?? '-'}
@@ -205,14 +224,14 @@ const CompanyInfoPageBody = () => {
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Owner Account ID
+                {t('COMPANY_BASIC_INFO.ADMIN_ACCOUNT_ID')}{' '}
               </div>
-              {/* TODO: owner account id (20240718 - Shirley) */}
-              <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">-</div>
+
+              {displayedOwnerId}
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Created Date
+                {t('COMPANY_BASIC_INFO.CREATED_DATE')}{' '}
               </div>
               <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">
                 {timestampToString(company?.createdAt, '/').date}
@@ -238,7 +257,7 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>KYC</div>
+              <div>{t('COMPANY_BASIC_INFO.KYC')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
@@ -257,7 +276,9 @@ const CompanyInfoPageBody = () => {
                     className="rounded rounded-tl-lg"
                   />
                   <div className="absolute left-4 top-6">
-                    <p className="text-3xl font-bold text-text-brand-primary-lv2">KYC</p>
+                    <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                      {t('COMPANY_BASIC_INFO.KYC')}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -274,7 +295,9 @@ const CompanyInfoPageBody = () => {
                       className=""
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-3xl font-bold text-text-brand-primary-lv2">KYC</p>
+                      <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                        {t('COMPANY_BASIC_INFO.KYC')}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -287,15 +310,15 @@ const CompanyInfoPageBody = () => {
                       <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                            Unlock
+                            {t('COMPANY_BASIC_INFO.UNLOCK')}
                           </span>{' '}
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                            All Functions
+                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
                           </span>
                           <br />
                           <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                            On iSunFA
+                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
                           </span>
                         </div>
                       </div>
@@ -308,9 +331,9 @@ const CompanyInfoPageBody = () => {
                       <div className="flex w-100% flex-col max-lg:items-center">
                         <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
                           <ul className="list-disc pl-0 lg:pl-5">
-                            <li> AI Audit Report</li>
-                            <li> Higher security</li>
-                            <li> Change to official account</li>
+                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
                           </ul>
                         </div>
                       </div>
@@ -334,7 +357,7 @@ const CompanyInfoPageBody = () => {
                 variant={'secondaryOutline'}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <p>Go KYC</p>
+                <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -387,7 +410,7 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>Account</div>
+              <div>{t('COMPANY_BASIC_INFO.ACCOUNT')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
@@ -414,7 +437,7 @@ const CompanyInfoPageBody = () => {
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                <p>Delete Company</p>
+                <p>{t('COMPANY_BASIC_INFO.DELETE_COMPANY')}</p>
               </Button>
             </div>
             <div className="">
@@ -437,7 +460,7 @@ const CompanyInfoPageBody = () => {
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                <p>Transfer Ownership</p>
+                <p>{t('COMPANY_BASIC_INFO.TRANSFER_ADMINISTRATION')}</p>
               </Button>
             </div>
           </div>
