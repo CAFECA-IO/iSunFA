@@ -1,16 +1,121 @@
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
+import { APIName } from '@/constants/api_connection';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
+import { ICompany, ICompanyDetail } from '@/interfaces/company';
+import { MessageType } from '@/interfaces/message_modal';
+import APIHandler from '@/lib/utils/api_handler';
+import { timestampToString } from '@/lib/utils/common';
 import Image from 'next/image';
-import React from 'react';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const CompanyInfoPageBody = () => {
+  const { t } = useTranslation('common');
+
+  const router = useRouter();
+  const { selectedCompany, selectCompany } = useUserCtx();
+  const {
+    teamSettingModalVisibilityHandler,
+    messageModalVisibilityHandler,
+    messageModalDataHandler,
+    transferCompanyModalVisibilityHandler,
+  } = useGlobalCtx();
+
+  const [company, setCompany] = useState<ICompany | null>(selectedCompany);
+  const [ownerId, setOwnerId] = useState<number | null>(null);
+
+  const { trigger: deleteCompany } = APIHandler<ICompany>(
+    APIName.COMPANY_DELETE,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? NON_EXISTING_COMPANY_ID,
+      },
+    },
+    false,
+    false
+  );
+
+  const {
+    data: companyData,
+    isLoading: isCompanyDataLoading,
+    code: getCompanyDataCode,
+    success: getCompanyDataSuccessfully,
+  } = APIHandler<ICompanyDetail>(APIName.COMPANY_GET_BY_ID, {
+    params: {
+      companyId: selectedCompany?.id ?? PUBLIC_COMPANY_ID,
+    },
+  });
+
+  useEffect(() => {
+    if (getCompanyDataSuccessfully && companyData) {
+      setCompany(companyData);
+      setOwnerId(companyData.ownerId);
+    }
+  }, [companyData, getCompanyDataSuccessfully, getCompanyDataCode]);
+
+  useEffect(() => {
+    setCompany(selectedCompany);
+  }, [selectedCompany]);
+
+  const editCompanyClickHandler = () => {
+    teamSettingModalVisibilityHandler();
+  };
+
+  const goKYCClickHandler = () => {
+    router.push(ISUNFA_ROUTE.KYC);
+  };
+
+  const procedureOfDelete = () => {
+    if (!company) return;
+    messageModalVisibilityHandler();
+    deleteCompany();
+
+    selectCompany(null);
+    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+  };
+
+  const deleteCompanyClickHandler = () => {
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Delete company',
+      content:
+        'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
+      backBtnStr: 'Cancel',
+      submitBtnStr: 'Delete',
+      submitBtnFunction: procedureOfDelete,
+    });
+    messageModalVisibilityHandler();
+  };
+
+  const transferOwnershipClickHandler = () => {
+    transferCompanyModalVisibilityHandler();
+  };
+
+  const displayedOwnerId = isCompanyDataLoading ? (
+    <div className="mt-5">
+      <Skeleton width={80} height={20} />
+    </div>
+  ) : (
+    <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">
+      {ownerId ?? '-'}
+    </div>
+  );
+
   return (
-    <div>
+    <div className="font-barlow">
       <div className="mt-28 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-10 pb-0">
-        <div className="text-4xl font-semibold leading-10 text-text-neutral-tertiary max-md:max-w-full">
-          <span className="font-bold text-text-brand-primary-lv2">iSunCloud</span> Basic Info
+        <div className="mx-0 text-base font-semibold leading-10 text-text-neutral-tertiary max-md:max-w-full lg:mx-0 lg:text-4xl">
+          <span className="font-bold text-text-brand-primary-lv2">{company?.name ?? '-'}</span>{' '}
+          {t('COMPANY_BASIC_INFO.BASIC_INFO')}
         </div>
-        <div className="mt-6 h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-        <div className="mt-7 flex flex-col rounded-lg px-10 py-5 max-md:max-w-full max-md:px-5">
+        <div className="mt-3 h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full lg:mx-0 lg:mt-6" />
+        <div className="mt-7 flex flex-col rounded-lg py-5 max-md:max-w-full lg:px-10">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
             <div className="flex gap-2 text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
@@ -31,26 +136,65 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>Company Info</div>
+              <div>{t('COMPANY_BASIC_INFO.COMPANY_INFO')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-10 flex items-center justify-between gap-5 pr-4 max-md:max-w-full max-md:flex-wrap">
-            <Image
-              src="/elements/example_company_image.png"
-              alt="example company image"
-              width={100}
-              height={100}
-            />
-            <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Company Name
+          <div className="mt-10 flex flex-col items-center justify-between gap-8 max-md:max-w-full max-md:flex-wrap lg:flex-row lg:gap-5 lg:pr-4">
+            <div className="flex w-full justify-between lg:w-fit">
+              {' '}
+              <div className="w-64px lg:w-fit">
+                <Image
+                  src={company?.imageId ?? '/elements/example_company_image.png'}
+                  alt="company image"
+                  width={100}
+                  height={100}
+                />
               </div>
-              <div className="mt-4 flex gap-4 text-3xl font-bold leading-9 text-text-brand-secondary-lv2">
-                <div>iSunCloud </div>
-                <Button variant={'secondaryBorderless'} size={'extraSmall'}>
+              <div className="my-auto flex flex-col flex-wrap content-center self-stretch lg:hidden">
+                <div className="self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:self-start lg:font-semibold">
+                  {t('COMPANY_BASIC_INFO.COMPANY_INFO')}{' '}
+                </div>
+                <div className="flex gap-0 text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:text-3xl">
+                  <div>{company?.name ?? '-'} </div>
+                  <Button
+                    onClick={editCompanyClickHandler}
+                    variant={'secondaryBorderless'}
+                    size={'extraSmall'}
+                  >
+                    {' '}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="21"
+                      height="20"
+                      fill="none"
+                      viewBox="0 0 21 20"
+                    >
+                      <path
+                        className="fill-current"
+                        fillRule="evenodd"
+                        d="M15.639 1.554a2.518 2.518 0 013.56 3.56l-7.969 7.97-.046.046c-.243.243-.447.448-.693.598-.216.133-.452.23-.698.29-.28.067-.57.067-.912.066H7.419a.75.75 0 01-.75-.75V11.94v-.066c0-.343 0-.632.067-.912.059-.247.157-.483.289-.699.15-.246.355-.45.598-.692l.047-.047 7.969-7.969zm2.5 1.06a1.018 1.018 0 00-1.44 0l-7.969 7.97c-.313.313-.38.387-.426.462a.917.917 0 00-.11.265c-.02.085-.025.185-.025.628v.645h.645c.444 0 .543-.004.629-.025a.917.917 0 00.265-.11c.074-.046.148-.113.462-.426l7.969-7.969a1.018 1.018 0 000-1.44zm-11.751-.03H9.919a.75.75 0 110 1.5h-3.5c-.712 0-1.202.001-1.581.032-.37.03-.57.086-.714.16a1.75 1.75 0 00-.764.764c-.074.144-.13.343-.16.713-.03.38-.031.869-.031 1.581v7c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.167.33.435.597.764.765.145.073.344.129.714.159.38.03.869.031 1.58.031h7c.713 0 1.203 0 1.582-.031.37-.03.57-.086.713-.16a1.75 1.75 0 00.765-.764c.074-.144.13-.343.16-.714.03-.379.03-.868.03-1.58v-3.5a.75.75 0 011.5 0v3.53c.001.674.001 1.225-.036 1.673-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.447.036-.998.036-1.672.036H6.388c-.674 0-1.225 0-1.672-.036-.463-.038-.882-.119-1.273-.318a3.25 3.25 0 01-1.42-1.42c-.199-.39-.28-.81-.318-1.272-.036-.448-.036-.999-.036-1.672V7.303c0-.673 0-1.224.036-1.672.038-.463.12-.881.318-1.272a3.25 3.25 0 011.42-1.42c.391-.2.81-.28 1.273-.318.447-.037.998-.037 1.672-.037z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
+              <div className="hidden self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:flex lg:self-start lg:font-semibold">
+                {t('COMPANY_BASIC_INFO.COMPANY_NAME')}{' '}
+              </div>
+              <div className="hidden gap-1 self-end text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:flex lg:self-center lg:text-3xl">
+                <div>{company?.name ?? '-'}</div>
+                <Button
+                  onClick={editCompanyClickHandler}
+                  variant={'secondaryBorderless'}
+                  size={'extraSmall'}
+                >
                   {' '}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -69,28 +213,28 @@ const CompanyInfoPageBody = () => {
                 </Button>
               </div>
             </div>
-            <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
+
+            <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Tax ID Number
+                {t('COMPANY_BASIC_INFO.TAX_ID_NUMBER')}{' '}
               </div>
-              <div className="mt-4 text-xl font-bold leading-8 text-text-brand-secondary-lv1">
-                52414797
+              <div className="text-xl font-bold leading-8 text-text-brand-secondary-lv1 lg:mt-4">
+                {company?.code ?? '-'}
               </div>
             </div>
-            <div className="my-auto flex flex-col justify-center self-stretch">
+            <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Owner Account ID
+                {t('COMPANY_BASIC_INFO.ADMIN_ACCOUNT_ID')}{' '}
               </div>
-              <div className="mt-5 text-xl font-bold leading-8 text-text-neutral-primary">
-                ISFABC-00001
-              </div>
+
+              {displayedOwnerId}
             </div>
-            <div className="my-auto flex flex-col justify-center self-stretch">
+            <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                Created Date
+                {t('COMPANY_BASIC_INFO.CREATED_DATE')}{' '}
               </div>
-              <div className="mt-5 text-xl font-bold leading-8 text-text-neutral-primary">
-                2024/01/26
+              <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">
+                {timestampToString(company?.createdAt, '/').date}
               </div>
             </div>
           </div>
@@ -113,64 +257,87 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>KYC</div>
+              <div>{t('COMPANY_BASIC_INFO.KYC')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-10 flex flex-col rounded-3xl bg-white pb-3.5 shadow-xl">
+          <div className="kycCardShadow mt-10 flex flex-col rounded-3xl bg-white pb-3.5">
             <div className="max-md:max-w-full">
-              <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                <div className="flex w-44% flex-col">
-                  <div className="grow max-md:mt-10">
-                    <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                      <div className="w-100px min-w-100px">
-                        <div className="relative">
-                          {/* Info: 圓形 (20240716 - Shirley) */}
-                          <Image
-                            src="/elements/ellipse_16.png"
-                            width={100}
-                            height={100}
-                            alt="ellipse"
-                            className="rounded rounded-tl-lg"
-                          />
-                          <div className="absolute left-4 top-6">
-                            <p className="text-3xl font-bold text-text-brand-primary-lv2">KYC</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-5 flex w-70% flex-col max-md:ml-0 max-md:w-full">
-                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-md:mt-10">
+              <div className="hidden w-100px min-w-100px lg:absolute lg:block">
+                <div className="relative">
+                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  <Image
+                    src="/elements/ellipse_16.png"
+                    width={100}
+                    height={100}
+                    alt="ellipse"
+                    className="rounded rounded-tl-lg"
+                  />
+                  <div className="absolute left-4 top-6">
+                    <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                      {t('COMPANY_BASIC_INFO.KYC')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex w-full justify-center lg:hidden">
+                <div className="flex items-center justify-center">
+                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  <div className="relative">
+                    <Image
+                      src="/elements/ellipse_16_mobile.png"
+                      width={160}
+                      height={160}
+                      alt="ellipse"
+                      className=""
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                        {t('COMPANY_BASIC_INFO.KYC')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-0 max-lg:flex-col max-lg:gap-0 lg:ml-1/20">
+                <div className="flex w-100% flex-col">
+                  <div className="grow">
+                    <div className="flex gap-0 max-md:flex-col max-md:gap-0">
+                      <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
+                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                            Unlock
+                            {t('COMPANY_BASIC_INFO.UNLOCK')}
                           </span>{' '}
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                            All Functions
+                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
                           </span>
                           <br />
                           <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                            On iSunFA
+                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="ml-5 flex w-56% flex-col max-md:ml-0 max-md:w-full">
+                <div className="ml-5 flex w-100% flex-col max-lg:pb-10">
                   <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
-                    <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-                      <div className="flex w-83% flex-col max-md:ml-0 max-md:w-full">
-                        <div className="mt-24 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary max-md:mt-10">
-                          <ul className="list-disc pl-5">
-                            <li> AI Audit Report</li>
-                            <li> Higher security</li>
-                            <li> Change to official account</li>
+                    <div className="flex gap-5 max-lg:flex-col">
+                      <div className="flex w-100% flex-col max-lg:items-center">
+                        <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
+                          <ul className="list-disc pl-0 lg:pl-5">
+                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
                           </ul>
                         </div>
                       </div>
-                      <div className="relative flex w-full justify-end">
+                      <div className="hidden w-full justify-end lg:relative lg:flex">
                         <Image
                           src="/elements/padlock_square.svg"
                           width={78}
@@ -184,12 +351,13 @@ const CompanyInfoPageBody = () => {
                 </div>
               </div>
             </div>
-            <div className="mr-2 mt-2 flex justify-center gap-2 self-end">
+            <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
               <Button
+                onClick={goKYCClickHandler}
                 variant={'secondaryOutline'}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <p>Go KYC</p>
+                <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -242,15 +410,19 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>Account</div>
+              <div>{t('COMPANY_BASIC_INFO.ACCOUNT')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-divider-text-lv-1 bg-divider-text-lv-1 max-md:max-w-full" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
             </div>
           </div>
-          <div className="mt-10 flex justify-between gap-5 self-start text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv1 max-md:flex-wrap">
+          <div className="mt-10 flex justify-center gap-5 self-start text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv1 max-md:flex-wrap lg:justify-between">
             <div className="">
-              <Button variant={'secondaryOutline'} className="px-6 py-2.5 max-md:px-5">
+              <Button
+                onClick={deleteCompanyClickHandler}
+                variant={'secondaryOutline'}
+                className="max-md:w-220px"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -265,11 +437,15 @@ const CompanyInfoPageBody = () => {
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                <p>Delete Company</p>
+                <p>{t('COMPANY_BASIC_INFO.DELETE_COMPANY')}</p>
               </Button>
             </div>
             <div className="">
-              <Button variant={'secondaryOutline'} className="px-6 py-2.5 max-md:px-5">
+              <Button
+                onClick={transferOwnershipClickHandler}
+                variant={'secondaryOutline'}
+                className="max-md:w-220px"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -284,7 +460,7 @@ const CompanyInfoPageBody = () => {
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                <p> Ownership Transfer</p>
+                <p>{t('COMPANY_BASIC_INFO.TRANSFER_ADMINISTRATION')}</p>
               </Button>
             </div>
           </div>

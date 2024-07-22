@@ -1,7 +1,8 @@
 import { ReportSheetType, ReportType } from '@/constants/report';
-import { IAccountForSheetDisplay, IAccountResultStatus } from '@/interfaces/accounting_account';
+import { IAccountReadyForFrontend, IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
+import { Prisma } from '@prisma/client';
 
 export interface IAnalysisReportRequest {
   project_id: string;
@@ -29,10 +30,16 @@ export interface IReport {
   downloadLink: string;
   blockChainExplorerLink: string;
   evidenceId: string;
-  content: IAccountForSheetDisplay[];
+  content: IAccountReadyForFrontend[];
   createdAt: number;
   updatedAt: number;
 }
+
+export type IReportIncludeProject = Prisma.ReportGetPayload<{
+  include: {
+    project: true;
+  };
+}>;
 export interface IReportOld {
   reportTypesName: {
     id: FinancialReportTypesKey | AnalysisReportTypesKey;

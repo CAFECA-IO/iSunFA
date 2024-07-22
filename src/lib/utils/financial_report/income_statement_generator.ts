@@ -28,10 +28,15 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     return updatedAccountForest;
   }
 
-  public override async generateFinancialReportMap(): Promise<Map<string, {
-    accountNode: IAccountNode;
-    percentage: number;
-  }>> {
+  public override async generateFinancialReportMap(): Promise<
+    Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  > {
     const accountForest = await this.generateFinancialReportTree();
     const accountMap = transformForestToMap(accountForest);
     return accountMap;

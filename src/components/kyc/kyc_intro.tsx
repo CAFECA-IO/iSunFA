@@ -21,7 +21,7 @@ const KYCIntro = () => {
       className={
         isMobile
           ? `flex flex-col gap-40px px-16px py-100px lg:hidden`
-          : `hidden space-y-80px px-40px pb-120px pt-100px lg:block`
+          : `hidden space-y-80px px-40px pb-300px pt-100px lg:block`
       }
     >
       {/* Page Title */}

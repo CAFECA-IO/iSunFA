@@ -1,23 +1,22 @@
-export enum RegistrationInfoKeys {
-  COUNTRY = 'country',
-  LEGAL_STRUCTURE = 'legalStructure',
-  BUSINESS_REGISTRATION_NUMBER = 'businessRegistrationNumber',
-  REGISTRATION_DATE = 'registrationDate',
-  INDUSTRY = 'industry',
-}
+import {
+  CountryOptions,
+  LegalStructureOptions,
+  IndustryOptions,
+  RegistrationInfoKeys,
+} from '@/constants/kyc';
 
 export interface IRegistrationInfo {
-  [RegistrationInfoKeys.COUNTRY]: string;
-  [RegistrationInfoKeys.LEGAL_STRUCTURE]: string;
+  [RegistrationInfoKeys.COUNTRY]: CountryOptions;
+  [RegistrationInfoKeys.LEGAL_STRUCTURE]: LegalStructureOptions;
   [RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]: string;
   [RegistrationInfoKeys.REGISTRATION_DATE]: string;
-  [RegistrationInfoKeys.INDUSTRY]: string;
+  [RegistrationInfoKeys.INDUSTRY]: IndustryOptions;
 }
 
 export const initialRegistrationInfo: IRegistrationInfo = {
-  [RegistrationInfoKeys.COUNTRY]: '',
-  [RegistrationInfoKeys.LEGAL_STRUCTURE]: '',
+  [RegistrationInfoKeys.COUNTRY]: CountryOptions.DEFAULT,
+  [RegistrationInfoKeys.LEGAL_STRUCTURE]: LegalStructureOptions.DEFAULT,
   [RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]: '',
   [RegistrationInfoKeys.REGISTRATION_DATE]: '',
-  [RegistrationInfoKeys.INDUSTRY]: '',
+  [RegistrationInfoKeys.INDUSTRY]: IndustryOptions.DEFAULT,
 };

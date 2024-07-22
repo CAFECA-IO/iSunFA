@@ -19,7 +19,7 @@ import {
   createOcrInPrisma,
   findManyOCRByCompanyIdWithoutUsedInPrisma,
 } from '@/lib/utils/repo/ocr.repo';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
@@ -143,7 +143,7 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
   let files: formidable.Files;
 
   try {
-    const parsedForm = await parseForm(req);
+    const parsedForm = await parseForm(req, 'invoice');
     files = parsedForm.files;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
@@ -183,14 +183,14 @@ export function calculateProgress(createdAt: number, status: ProgressStatus) {
   return process;
 }
 
-export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IUnprocessedOCR[]> {
+export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
   const unprocessedOCRs = await Promise.all(
     ocrData.map(async (ocr) => {
       const status = await fetchStatus(ocr.aichResultId);
       const progress = calculateProgress(ocr.createdAt, status);
       const imageSize = transformBytesToFileSizeString(ocr.imageSize);
       const createdAt = timestampInSeconds(ocr.createdAt);
-      const unprocessedOCR: IUnprocessedOCR = {
+      const unprocessedOCR: IOCR = {
         id: ocr.id,
         aichResultId: ocr.aichResultId,
         imageUrl: ocr.imageUrl,
@@ -294,10 +294,10 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
-  // ToDo: (20240611 - Murky) format prisma ocr to IUnprocessedOCR
+  // ToDo: (20240611 - Murky) format prisma ocr to IOCR
   const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
   // ToDo: formatApiResponse
-  const { httpCode, result } = formatApiResponse<IUnprocessedOCR[]>(
+  const { httpCode, result } = formatApiResponse<IOCR[]>(
     STATUS_MESSAGE.SUCCESS_GET,
     unprocessedOCRs
   );
@@ -317,7 +317,7 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountResultStatus[] | IUnprocessedOCR[]>>
+  res: NextApiResponse<IResponseData<IAccountResultStatus[] | IOCR[]>>
 ) {
   try {
     switch (req.method) {

@@ -8,7 +8,11 @@ import {
   VoucherType,
 } from '@/constants/account';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountForSheetDisplay, IAccountResultStatus } from '@/interfaces/accounting_account';
+import {
+  IAccountForSheetDisplay,
+  IAccountResultStatus,
+  IAccountReadyForFrontend,
+} from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
@@ -77,19 +81,63 @@ export function isIAccountForSheetDisplayArray(value: unknown): value is IAccoun
   return value.every((item) => isIAccountForSheetDisplay(item));
 }
 
-export function assertIsIAccountResultStatus(value: unknown): asserts value is IAccountResultStatus {
+export function isIAccountReadyForFrontend(value: unknown): value is IAccountReadyForFrontend {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const {
+    code,
+    name,
+    curPeriodAmount,
+    curPeriodAmountString,
+    curPeriodPercentage,
+    prePeriodAmount,
+    prePeriodAmountString,
+    prePeriodPercentage,
+    indent,
+  } = value as IAccountReadyForFrontend;
+  const isValid =
+    typeof code === 'string' &&
+    typeof name === 'string' &&
+    typeof curPeriodAmount === 'number' &&
+    typeof curPeriodAmountString === 'string' &&
+    typeof curPeriodPercentage === 'number' &&
+    typeof prePeriodAmount === 'number' &&
+    typeof prePeriodAmountString === 'string' &&
+    typeof prePeriodPercentage === 'number' &&
+    typeof indent === 'number';
+  return isValid;
+}
+
+export function isIAccountReadyForFrontendArray(
+  value: unknown
+): value is IAccountReadyForFrontend[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every((item) => isIAccountReadyForFrontend(item));
+}
+
+export function assertIsIAccountResultStatus(
+  value: unknown
+): asserts value is IAccountResultStatus {
   if (!isIAccountResultStatus(value)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
 }
 
-export function assertIsIAccountForSheetDisplay(value: unknown): asserts value is IAccountForSheetDisplay {
+export function assertIsIAccountForSheetDisplay(
+  value: unknown
+): asserts value is IAccountForSheetDisplay {
   if (!isIAccountForSheetDisplay(value)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
 }
 
-export function assertIsIAccountForSheetDisplayArray(value: unknown): asserts value is IAccountForSheetDisplay[] {
+export function assertIsIAccountForSheetDisplayArray(
+  value: unknown
+): asserts value is IAccountForSheetDisplay[] {
   if (!isIAccountForSheetDisplayArray(value)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }

@@ -133,6 +133,7 @@ model Company {
   incomeExpenses  IncomeExpense[]
   accounts        Account[]
   reports         Report[]
+  voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
 
   @@map("company")
 }
@@ -555,6 +556,7 @@ model SalaryRecord {
   createdAt        Int      @map("created_at")
   updatedAt        Int      @map("updated_at")
   employee         Employee @relation(fields: [employeeId], references: [id])
+  voucherSalaryRecords VoucherSalaryRecord[]
 
   @@map("salary_record")
 }
@@ -597,6 +599,7 @@ model Voucher {
 
   assets    Asset[]
   lineItems LineItem[]
+  voucherSalaryRecords VoucherSalaryRecord[]
 
   journal Journal @relation(fields: [journalId], references: [id])
 
@@ -607,19 +610,25 @@ model VoucherSalaryRecord {
   id                          Int  @id @default(autoincrement())
   voucherId                   Int  @map("voucher_id")
   salaryRecordId              Int  @map("salary_record_id")
-  voucherSalaryRecordFolderId Int? @map("voucher_salary_record_folder_id")
+  voucherSalaryRecordFolderId Int  @map("voucher_salary_record_folder_id")
   createdAt                   Int  @map("created_at")
   updatedAt                   Int  @map("updated_at")
+  voucher                     Voucher @relation(fields: [voucherId], references: [id])
+  salaryRecord                SalaryRecord @relation(fields: [salaryRecordId], references: [id])
+  voucherSalaryRecordFolder   VoucherSalaryRecordFolder @relation(fields: [voucherSalaryRecordFolderId], references: [id])
 
   @@map("voucher_salary_record")
 }
 
 model VoucherSalaryRecordFolder {
-  id        Int    @id @default(autoincrement())
-  name      String
-  createdAt Int    @map("created_at")
-  updatedAt Int    @map("updated_at")
-
+  id           Int    @id @default(autoincrement())
+  name         String
+  createdAt    Int    @map("created_at")
+  updatedAt    Int    @map("updated_at")
+  companyId    Int    @map("company_id")
+  company     Company @relation(fields: [companyId], references: [id])
+  voucherSalaryRecords VoucherSalaryRecord[]
+  
   @@map("voucher_salary_record_folder")
 }
 

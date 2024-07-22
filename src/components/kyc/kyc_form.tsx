@@ -1,24 +1,58 @@
-import { useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import KYCStepper from '@/components/kyc/kyc_stepper';
 import KYCFormController from '@/components/kyc/kyc_form_controller';
-import { BasicInfoKeys, IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
-import BacicInfoForm from '@/components/kyc/basic_info_form';
-import {
-  initialRegistrationInfo,
-  IRegistrationInfo,
-  RegistrationInfoKeys,
-} from '@/interfaces/kyc_registration_info';
+import { IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
+import BasicInfoForm from '@/components/kyc/basic_info_form';
+import { initialRegistrationInfo, IRegistrationInfo } from '@/interfaces/kyc_registration_info';
 import RegistrationInfoForm from '@/components/kyc/registration_info_form';
-import { ContactInfoKeys, IContactInfo, initialContactInfo } from '@/interfaces/kyc_contact_info';
+import { IContactInfo, initialContactInfo } from '@/interfaces/kyc_contact_info';
 import ContactInfoForm from '@/components/kyc/contact_info_form ';
 import DocumentUploadForm from '@/components/kyc/document_upload_form';
+import { initialUploadDocuments, IUploadDocuments } from '@/interfaces/kyc_document_upload';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
+import {
+  RepresentativeIDType,
+  BasicInfoKeys,
+  RegistrationInfoKeys,
+  ContactInfoKeys,
+  UploadDocumentKeys,
+} from '@/constants/kyc';
+import { createFormData, ICompanyKYCForm, isKYCFormComplete } from '@/interfaces/company_kyc';
+import { MessageType } from '@/interfaces/message_modal';
+import { useTranslation } from 'react-i18next';
+import {
+  deleteFilesFromLocalStorage,
+  readFilesFromLocalStorage,
+  saveFilesToLocalStorage,
+} from '@/lib/utils/common';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
+  const { t } = useTranslation('common');
+  const formRef = useRef<HTMLFormElement>(null);
+  const { selectedCompany } = useUserCtx();
+  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const {
+    // trigger: listUploadedFiles,
+    data: uploadedData,
+    success: getSuccess,
+    code: getCode,
+  } = APIHandler<
+    {
+      fileId: string;
+      fileSize: number;
+    }[]
+  >(APIName.FILE_LIST_UPLOADED, {}, false, false);
+  const { trigger: triggerUpload } = APIHandler(APIName.FILE_UPLOAD, {}, false, false);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
     useState<IRegistrationInfo>(initialRegistrationInfo);
   const [contactInfoValues, setContactInfoValues] = useState<IContactInfo>(initialContactInfo);
+  const [uploadDocuments, setUploadDocuments] = useState<IUploadDocuments>(initialUploadDocuments);
 
   const handleBasicInfoChange = (key: BasicInfoKeys, value: string) => {
     setBasicInfoValues((prev) => ({ ...(prev ?? {}), [key]: value }));
@@ -35,11 +69,151 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleStepChange = (newStep: number) => {
     setStep(newStep);
   };
+
+  const handleDocumentChange = (
+    operation: 'add' | 'delete',
+    key: UploadDocumentKeys,
+    id: string | undefined,
+    file: File | undefined
+  ) => {
+    if (operation === 'add') {
+      setUploadDocuments((prev) => ({ ...prev, [key]: { id, file } }));
+      saveFilesToLocalStorage(key, file, id, 'KYCFiles');
+    }
+    if (operation === 'delete') {
+      setUploadDocuments((prev) => ({ ...prev, [key]: { id: undefined, file: undefined } }));
+      deleteFilesFromLocalStorage(undefined, key, 'KYCFiles');
+    }
+  };
+
+  const handleSelectRepresentativeType = (value: RepresentativeIDType) => {
+    setUploadDocuments((prev) => ({ ...prev, [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]: value }));
+  };
+
+  const handleSubmitClick = () => {
+    if (formRef.current) {
+      formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const companyKYCForm: ICompanyKYCForm = {
+      ...basicInfoValues,
+      ...registrationInfoValues,
+      ...contactInfoValues,
+      [ContactInfoKeys.CONTACT_PHONE]: contactInfoValues.areaCode + contactInfoValues.contactNumber,
+      [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]:
+        uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE],
+      [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]:
+        uploadDocuments[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID].id || '',
+      [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]:
+        uploadDocuments[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID].id || '',
+      [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]:
+        uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID].id || '',
+    };
+    const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
+    if (isComplete) {
+      const formData = createFormData(companyKYCForm);
+      const { success, code } = await triggerUpload({
+        params: {
+          companyId: selectedCompany?.id,
+        },
+        body: formData,
+      });
+      if (success) {
+        messageModalDataHandler({
+          messageType: MessageType.SUCCESS,
+          title: t('KYC.SUBMIT_SUCCESS'),
+          content: t('KYC.SUBMIT_SUCCESS_MESSAGE'),
+          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnFunction: messageModalVisibilityHandler,
+          backBtnStr: t('KYC.CANCEL'),
+        });
+        messageModalVisibilityHandler();
+      } else if (success === false) {
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: t('KYC.SUBMIT_FAILED'),
+          content: t('KYC.CONTACT_SERVICE_TEAM'),
+          subMsg: t('KYC.SUBMIT_FAILED_MESSAGE', code),
+          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnFunction: messageModalVisibilityHandler,
+          backBtnStr: t('KYC.CANCEL'),
+        });
+      }
+    } else {
+      messageModalDataHandler({
+        messageType: MessageType.WARNING,
+        title: t('KYC.INCOMPLETE_FORM'),
+        subMsg: t('KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
+        content: t('KYC.CONTACT_SERVICE_TEAM'),
+        submitBtnStr: t('KYC.CONFIRM'),
+        submitBtnFunction: messageModalVisibilityHandler,
+        backBtnStr: t('KYC.CANCEL'),
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  useEffect(() => {
+    const files = readFilesFromLocalStorage('KYCFiles');
+    setUploadDocuments((prev) => ({
+      ...prev,
+      ...files,
+    }));
+    // Info: (20240719 - TzuHan) temporary comment out
+    // const fileIds = Object.values(files ?? {}).reduce(
+    //   (acc, curr) => {
+    //     if (curr && curr.id) {
+    //       acc.push(curr.id);
+    //     }
+    //     return acc;
+    //   },
+    //   [] as string[]
+    // );
+    // if (fileIds.length > 0) {
+    //   listUploadedFiles({
+    //     params: {
+    //       companyId: selectedCompany?.id,
+    //     },
+    //     query: {
+    //       ids: fileIds.join(','),
+    //     },
+    //   });
+    // }
+  }, []);
+
+  useEffect(() => {
+    if (getSuccess && uploadedData) {
+      // ToDo: implement delete files from local storage if not found in backend (20240719 - TzuHan)
+      /**
+      Object.values(uploadDocuments).forEach((doc) => {
+        if (doc.id) {
+          const found = uploadedData.find((data) => data.fileId === doc.id);
+          if (!found) {
+            deleteFilesFromLocalStorage(doc.id, undefined,'KYCFiles');
+          }
+        }
+      });
+       */
+    }
+    if (getSuccess === false) {
+      toastHandler({
+        id: `listUploadedFiles-${getCode}`,
+        content: `Failed to list uploaded files: ${getCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+  }, [getSuccess, uploadedData, getCode]);
+
   return (
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
-      <form>
-        {step === 0 && <BacicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
+      <form ref={formRef} onSubmit={handleSubmit}>
+        {step === 0 && <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
         {step === 1 && (
           <RegistrationInfoForm
             data={registrationInfoValues}
@@ -49,14 +223,20 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
         {step === 2 && (
           <ContactInfoForm data={contactInfoValues} onChange={handleContactInfoChange} />
         )}
-        {step === 3 && <DocumentUploadForm />}
-        <KYCFormController
-          step={step}
-          onCancel={onCancel}
-          onNext={() => handleStepChange(step + 1)}
-          onSubmit={() => {}}
-        />
+        {step === 3 && (
+          <DocumentUploadForm
+            data={uploadDocuments}
+            onChange={handleDocumentChange}
+            onSelect={handleSelectRepresentativeType}
+          />
+        )}
       </form>
+      <KYCFormController
+        step={step}
+        onCancel={onCancel}
+        onNext={() => handleStepChange(step + 1)}
+        onSubmit={handleSubmitClick}
+      />
     </section>
   );
 };
