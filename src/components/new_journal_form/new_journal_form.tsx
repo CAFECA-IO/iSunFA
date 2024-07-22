@@ -22,6 +22,7 @@ import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
+import NumericInputComma from '@/components/numeric_input/numeric_input_comma';
 
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
@@ -87,6 +88,10 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 };
 
 const NewJournalForm = () => {
+  // Deprecated: (20240722 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('into NewJournalForm~~~');
+
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const disabledAddNewAsset = true;
@@ -143,6 +148,11 @@ const NewJournalForm = () => {
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
+
+  // Deprecated: (20240722 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('inputTotalPrice', { inputTotalPrice });
+
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
@@ -766,15 +776,18 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240423 - Julian) Total Price */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
+            <p className="border-4 border-lime-600 text-sm font-semibold text-navyBlue2">
+              {t('JOURNAL.TOTAL_PRICE')}
+            </p>
             <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
-              <NumericInput
+              <NumericInputComma
                 id="input-total-price"
                 name="input-total-price"
                 value={inputTotalPrice}
                 setValue={setInputTotalPrice}
                 isDecimal
                 required
+                isComma
                 className="flex-1 bg-transparent px-10px outline-none"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -997,10 +1010,7 @@ const NewJournalForm = () => {
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label
-                htmlFor="input-unpaid"
-                className=" flex items-center gap-8px whitespace-nowrap"
-              >
+              <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
                   id="input-unpaid"
