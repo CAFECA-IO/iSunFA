@@ -41,6 +41,26 @@ export async function getAdminById(
   return admin;
 }
 
+export async function getOwnerByCompanyId(
+  companyId: number
+): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+  const owner = await prisma.admin.findFirst({
+    where: {
+      companyId,
+      role: {
+        name: ROLE_NAME.OWNER,
+      },
+    },
+    include: {
+      user: true,
+      company: true,
+      role: true,
+    },
+  });
+
+  return owner;
+}
+
 export async function getAdminByCompanyIdAndUserId(
   companyId: number,
   userId: number
@@ -168,11 +188,6 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
   const { count } = await prisma.admin.deleteMany({
     where: {
       companyId,
-    },
-  });
-  await prisma.company.delete({
-    where: {
-      id: companyId,
     },
   });
   return count;

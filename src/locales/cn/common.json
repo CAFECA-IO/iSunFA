@@ -710,5 +710,24 @@
     "CONTACT_SERVICE_TEAM": "如果问题仍然存在，请联系我们的客服团队。",
     "INCOMPLETE_FORM": "请填写完整表格",
     "INCOMPLETE_FORM_SUB_MESSAGE": "请补齐下列栏位资讯: {{fields}}。"
+  },
+  "COMPANY_BASIC_INFO": {
+    "BASIC_INFO": "基本信息",
+    "COMPANY_NAME": "公司名称",
+    "COMPANY_INFO": "公司信息",
+    "TAX_ID_NUMBER": "公司识别码",
+    "ADMIN_ACCOUNT_ID": "管理员账号ID",
+    "CREATED_DATE": "创建日期",
+    "KYC": "KYC",
+    "UNLOCK": "解锁",
+    "ALL_FUNCTIONS": "所有功能",
+    "ON_ISUNFA": "",
+    "AI_AUDIT_REPORT": "AI 审计报告",
+    "HIGHER_SECURITY": "更高的安全性",
+    "CHANGE_TO_OFFICIAL_ACCOUNT": "升级为正式账号",
+    "GO_KYC": "前往 KYC",
+    "ACCOUNT": "账号",
+    "DELETE_COMPANY": "删除公司",
+    "TRANSFER_ADMINISTRATION": "转移管理权"
   }
 }

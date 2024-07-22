@@ -1,5 +1,5 @@
-import { ICompany } from '@/interfaces/company';
-import { Company } from '@prisma/client';
+import { ICompany, ICompanyDetail } from '@/interfaces/company';
+import { Admin, Company } from '@prisma/client';
 
 export async function formatCompanyList(companyList: Company[]): Promise<ICompany[]> {
   const formattedCompanyList: ICompany[] = companyList.map((company) => {
@@ -19,4 +19,18 @@ export async function formatCompany(company: Company): Promise<ICompany> {
     imageId: company.imageId ?? '',
   };
   return formattedCompany;
+}
+
+export async function formatCompanyDetail(
+  company: Company & {
+    admins: Admin[];
+  }
+): Promise<ICompanyDetail> {
+  const { admins, ...companyWithoutAdmins } = company;
+  const formattedCompanyDetail: ICompanyDetail = {
+    ...companyWithoutAdmins,
+    imageId: companyWithoutAdmins.imageId ?? '',
+    ownerId: admins[0].userId ?? 0,
+  };
+  return formattedCompanyDetail;
 }

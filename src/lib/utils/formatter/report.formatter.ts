@@ -93,7 +93,7 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
   const reportItem: IGeneratedReportItem = {
     ...basicReportItem,
     project,
-    reportLinkId: report.id.toString(),
+    reportLinkId: report.reportLink || '',
     downloadLink: report.downloadLink || '',
     blockchainExplorerLink: report.blockChainExplorerLink || '',
     evidenceId: report.evidenceId || '',

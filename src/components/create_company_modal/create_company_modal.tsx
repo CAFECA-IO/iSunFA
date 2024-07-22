@@ -71,11 +71,15 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setRegistrationNumberValue(e.target.value);
   };
 
-  const cancelBtnClickHandler = () => {
-    modalVisibilityHandler();
+  const resetValues = () => {
     setNameValue('');
     setRegistrationNumberValue('');
     setIsMenuOpen(false);
+  };
+
+  const cancelBtnClickHandler = () => {
+    modalVisibilityHandler();
+    resetValues();
   };
 
   useEffect(() => {
@@ -83,6 +87,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
       selectCompany(companyAndRole.company);
       modalVisibilityHandler();
+      resetValues();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
