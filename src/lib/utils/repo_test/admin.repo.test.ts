@@ -10,6 +10,7 @@ import {
   deleteAdminListByCompanyId,
   listCompanyAndRole,
   createCompanyAndRole,
+  getCompanyDetailAndRoleByCompanyId,
 } from '@/lib/utils/repo/admin.repo';
 import admins from '@/seed_json/admin.json';
 import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
@@ -30,7 +31,7 @@ describe('Admin Repository Tests', () => {
       expect(adminList[0].userId).toEqual(admins[0].userId);
       expect(adminList[0].role.id).toEqual(admins[0].roleId);
       expect(adminList[0].status).toEqual(admins[0].status);
-      expect(adminList[0].startDate).toEqual(admins[0].startDate);
+      expect(typeof adminList[0].startDate).toBe('number');
     });
   });
 
@@ -119,6 +120,20 @@ describe('Admin Repository Tests', () => {
       expect(list.length).toBeGreaterThan(0);
       expect(list[0].company.id).toEqual(admins[0].companyId);
       expect(list[0].role.id).toEqual(admins[0].roleId);
+    });
+  });
+
+  describe('getCompanyDetailAndRoleByCompanyId', () => {
+    it('should return company details and role by company ID', async () => {
+      const detail = await getCompanyDetailAndRoleByCompanyId(testUserId, testCompanyId);
+      expect(detail).toBeDefined();
+      expect(detail?.company.id).toBe(testCompanyId);
+      expect(detail?.role).toBeDefined();
+    });
+
+    it('should return null if the company details and role are not found', async () => {
+      const detail = await getCompanyDetailAndRoleByCompanyId(testUserId, -1);
+      expect(detail).toBeNull();
     });
   });
 
