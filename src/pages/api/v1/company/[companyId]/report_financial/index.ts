@@ -53,6 +53,17 @@ export function getLastPeriodStartAndEndDate(
       : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
   const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
   return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
+export function getLastPeriodStartAndEndDate(
+  reportSheetType: ReportSheetType,
+  startDateInSecond: number,
+  endDateInSecond: number
+) {
+  const lastPeriodStartDateInSecond =
+    reportSheetType === ReportSheetType.BALANCE_SHEET
+      ? 0
+      : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
+  const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
+  return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
 }
 
 export function formatStartAndEndDateFromQuery(
@@ -78,6 +89,11 @@ export function formatStartAndEndDateFromQuery(
     endDateInSecond = timestampInSeconds(endDateInSecondString);
   }
 
+  const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
+    reportSheetType,
+    startDateInSecond,
+    endDateInSecond
+  );
   const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
     reportSheetType,
     startDateInSecond,
@@ -208,6 +224,39 @@ export function generateIAccountReadyForFrontendArray(
 ): IAccountReadyForFrontend[] {
   const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
 
+  if (
+    curPeriodContent &&
+    prePeriodContent &&
+    curPeriodContent.length > 0 &&
+    prePeriodContent.length > 0 &&
+    curPeriodContent.length === prePeriodContent.length
+  ) {
+    curPeriodContent.forEach((curPeriodAccount, index) => {
+      const lastPeriodAccount = prePeriodContent[index];
+      const curPeriodAmount = curPeriodAccount.amount || 0;
+      const prePeriodAmount = lastPeriodAccount.amount || 0;
+      const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
+      const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
+      const curPeriodPercentage = curPeriodAccount?.percentage
+        ? Math.round(curPeriodAccount.percentage * 100)
+        : 0;
+      const prePeriodPercentage = lastPeriodAccount?.percentage
+        ? Math.round(lastPeriodAccount.percentage * 100)
+        : 0;
+      const accountReadyForFrontend: IAccountReadyForFrontend = {
+        code: curPeriodAccount.code,
+        name: curPeriodAccount.name,
+        curPeriodAmount,
+        curPeriodPercentage,
+        curPeriodAmountString,
+        prePeriodAmount,
+        prePeriodPercentage,
+        prePeriodAmountString,
+        indent: curPeriodAccount.indent,
+      };
+      curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
+    });
+  }
   if (
     curPeriodContent &&
     prePeriodContent &&

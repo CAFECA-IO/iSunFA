@@ -12,6 +12,32 @@ import { ToastType } from '@/interfaces/toastify';
 import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
 import Pagination from '@/components/pagination/pagination';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+
+// Anna
+interface CashFlowDisplayProps {
+  reportType: unknown;
+}
+// Anna
+interface FinancialReportItem {
+  code: string;
+  name: string;
+  curPeriodAmount: number;
+  curPeriodAmountString: string;
+  curPeriodPercentage: number;
+  prePeriodAmount: number;
+  prePeriodAmountString: string;
+  prePeriodPercentage: number;
+  indent: number;
+}
+// Anna
+interface FinancialReport {
+  general: FinancialReportItem[];
+  details: FinancialReportItem[];
+}
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
 
@@ -337,6 +363,8 @@ const ViewFinancialSection = ({
 }: IViewReportSectionProps) => {
   const { t } = useTranslation('common');
   const globalCtx = useGlobalCtx();
+  const { selectedCompany } = useUserCtx(); // Anna 新增 useUserCtx 來取得選擇的公司
+  const { toastHandler } = useGlobalCtx(); // Anna 新增 toastHandler 來處理 toast 訊息
 
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
   const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
@@ -351,7 +379,8 @@ const ViewFinancialSection = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   // Info: (2024721 - Anna) 財報分頁器
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 12; // 假设总页数为12
+  const totalPages = 12; // 假設總頁數為12
+  const [reportData, setReportData] = useState<FinancialReport>({ general: [], details: [] }); // Anna 新增 reportData 狀態來存儲財務報告資料
 
   function onDocumentLoadSuccess(data: { numPages: number }): void {
     setNumPages(data.numPages);
@@ -437,6 +466,32 @@ const ViewFinancialSection = ({
     }
   };
 
+  // Anna 新增的 useEffect，用來調用 API 獲取財務報告資料
+  const {
+    data: reportFinancial,
+    code: getReportFinancialCode,
+    success: getReportFinancialSuccess,
+  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: {
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      reportId: '10000003',
+    },
+  });
+
+  useEffect(() => {
+    if (getReportFinancialSuccess === false) {
+      toastHandler({
+        id: `getReportFinancialCode-${getReportFinancialCode}}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET')} ${t('DASHBOARD.REPORT')} ${getReportFinancialCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+    if (getReportFinancialSuccess && reportFinancial) {
+      setReportData(reportFinancial);
+    }
+  }, [getReportFinancialSuccess, getReportFinancialCode, reportFinancial, t, toastHandler]);
+  // ----------
   useEffect(() => {
     if (!pdfFile) return;
 
@@ -1117,83 +1172,23 @@ const ViewFinancialSection = ({
                           資產
                         </td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-300 p-2 text-sm">11XX</td>
-                        <td className="border border-gray-300 p-2 text-sm">流動資產合計</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          2,194,032,910
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">40</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          2,052,896,744
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">41</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-gray-300 p-2 text-sm">15XX</td>
-                        <td className="border border-gray-300 p-2 text-sm">非流動資產合計</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          3,338,338,305
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">60</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          2,911,882,134
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">59</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-gray-300 p-2 text-sm">1XXX</td>
-                        <td className="border border-gray-300 p-2 text-sm">資產總計</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          5,532,371,215
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">100</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          4,964,778,878
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">100</td>
-                      </tr>
-                      <tr>
-                        <td colSpan={6} className="border border-gray-300 p-2 font-semibold">
-                          負債及權益
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border border-gray-300 p-2 text-sm">21XX</td>
-                        <td className="border border-gray-300 p-2 text-sm">流動負債合計</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          913,583,316
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">16</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          944,226,817
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">19</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-gray-300 p-2 text-sm">21XX</td>
-                        <td className="border border-gray-300 p-2 text-sm">非流動負債合計</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          1,135,525,052
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">21</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          944,226,817
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">19</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-gray-300 p-2 text-sm">21XX</td>
-                        <td className="border border-gray-300 p-2 text-sm">負債總計</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          2,049,108,368
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">37</td>
-                        <td className="border border-gray-300 p-2 text-right text-sm">
-                          944,226,817
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center text-sm">40</td>
-                      </tr>
+                      {Object.prototype.hasOwnProperty.call(reportData, 'general') &&
+                        reportData.general.slice(0, 8).map((value) => (
+                          <tr key={value.name}>
+                            <td className="border border-gray-300 p-2 text-sm">11XX</td>
+                            <td className="border border-gray-300 p-2 text-end text-sm">
+                              {value.name}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-right text-sm">
+                              2,194,032,910
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center text-sm">40</td>
+                            <td className="border border-gray-300 p-2 text-right text-sm">
+                              2,052,896,744
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center text-sm">41</td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </section>

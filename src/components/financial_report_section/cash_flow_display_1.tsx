@@ -1,8 +1,4 @@
 import React, { useEffect } from 'react';
-// import './reset.css';
-// import './balance_sheet_display.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-// import Image from 'next/image';
 import Script from 'next/script';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -109,7 +105,7 @@ const CashFlowDisplay: React.FC<CashFlowDisplayProps> = ({ reportType }) => {
   }, [getReportFinancialSuccess, getReportFinancialCode, reportFinancial]);
 
   // eslint-disable-next-line no-console
-  console.log('reportData', reportData.general);
+  // console.log('reportData', reportData.general);
   return (
     <div className="container">
       <header>
