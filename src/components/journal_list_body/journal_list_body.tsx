@@ -24,11 +24,13 @@ import { IPaginatedData } from '@/interfaces/pagination';
 const JournalListBody = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const [journals, setJournals] = useState<IJournalListItem[]>([]);
+  const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
+    [key: string]: IPaginatedData<IJournalListItem[]>;
+  } | null>(null);
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [code, setCode] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
-  const { trigger } = APIHandler<IPaginatedData<IJournalListItem[]>>(
+  const { trigger } = APIHandler<{ [key: string]: IPaginatedData<IJournalListItem[]> }>(
     APIName.JOURNAL_LIST,
     {},
     false,
@@ -69,6 +71,8 @@ const JournalListBody = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [currentTab, setCurrentTab] = useState<JOURNAL_EVENT>(JOURNAL_EVENT.UPLOADED);
   const [search, setSearch] = useState<string>('');
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [journals, setJournals] = useState<IJournalListItem[]>([]);
 
   // Info: (20240418 - Julian) for css
   const [isTypeSelected, setIsTypeSelected] = useState(false);
@@ -77,17 +81,16 @@ const JournalListBody = () => {
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
 
-  const tabClickHandler = (event: JOURNAL_EVENT) => setCurrentTab(event);
+  const tabClickHandler = (event: JOURNAL_EVENT) => {
+    setCurrentTab(event);
+    setJournals(pagenatedJournalListItems?.[event]?.data ?? []);
+    setTotalPages(pagenatedJournalListItems?.[event]?.totalPages ?? 0);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
 
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [uploadedEventsCount, setUploadedEventsCount] = useState<number>(0);
-  const [upcomingEventsCount, setUpcomingEventsCount] = useState<number>(0);
-
   const getJournalList = useCallback(
     async (query: {
-      currentTab?: JOURNAL_EVENT;
       currentPage?: number;
       filteredJournalType?: JOURNAL_TYPE;
       filteredJournalSortBy?: SORTING_OPTION;
@@ -97,29 +100,20 @@ const JournalListBody = () => {
       setIsLoading(true);
       setSuccess(undefined);
       setCode(undefined);
-      setJournals([]);
-      setTotalPages(1);
-      setUploadedEventsCount(0);
-      setUpcomingEventsCount(0);
+      setPagenatedJournalListItems(null);
       const {
-        currentTab: tab,
         currentPage: page,
         filteredJournalType: type,
         filteredJournalSortBy: sortBy,
         filteredPeriod: period,
         search: searchString,
       } = query;
-      const {
-        success: s,
-        code: c,
-        data,
-      } = await trigger({
+      const response = await trigger({
         params: {
           companyId: selectedCompany?.id,
         },
         query: {
           ...toSort(sortBy ?? filteredJournalSortBy),
-          isUploaded: (tab ?? currentTab) === JOURNAL_EVENT.UPLOADED,
           page: page ?? currentPage,
           eventType: toEventType(type ?? filteredJournalType),
           startDate: !(period ?? filteredPeriod).startTimeStamp
@@ -131,17 +125,16 @@ const JournalListBody = () => {
           searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
         },
       });
-      setSuccess(s);
-      setCode(c);
+      setSuccess(response.success);
+      setCode(response.code);
       setIsLoading(false);
-      if (success && data) {
-        setJournals(data.data);
-        setTotalPages(data.totalPages);
-        if (currentTab === JOURNAL_EVENT.UPLOADED) setUploadedEventsCount(data.totalCount);
-        else setUpcomingEventsCount(data.totalCount);
+      if (response.success && response.data) {
+        setJournals(response.data[currentTab].data ?? []);
+        setTotalPages(response.data[currentTab].totalPages ?? 0);
+        setPagenatedJournalListItems(response.data);
       }
     },
-    [currentTab, currentPage, filteredJournalType, filteredJournalSortBy, filteredPeriod, search]
+    [currentPage, filteredJournalType, filteredJournalSortBy, filteredPeriod, search]
   );
 
   const datePickerHandler = async (start: number, end: number) => {
@@ -155,7 +148,7 @@ const JournalListBody = () => {
 
   useEffect(() => {
     getJournalList({});
-  }, [currentTab, currentPage, filteredJournalType, filteredJournalSortBy]);
+  }, [currentPage, filteredJournalType, filteredJournalSortBy]);
 
   const displayedTypeDropMenu = (
     <div
@@ -337,7 +330,9 @@ const JournalListBody = () => {
           {t('JOURNAL.UPLOADED')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-          {uploadedEventsCount}
+          {pagenatedJournalListItems
+            ? pagenatedJournalListItems[JOURNAL_EVENT.UPLOADED]?.totalCount
+            : 0}
         </div>
       </button>
       <button
@@ -351,7 +346,9 @@ const JournalListBody = () => {
           {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-          {upcomingEventsCount}
+          {pagenatedJournalListItems
+            ? pagenatedJournalListItems[JOURNAL_EVENT.UPCOMING]?.totalCount
+            : 0}
         </div>
       </button>
     </div>
