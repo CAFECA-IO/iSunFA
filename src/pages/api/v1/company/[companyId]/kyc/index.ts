@@ -46,7 +46,7 @@ export default async function handler(
         address,
         zipCode,
         representativeName,
-        registerCountry,
+        // registerCountry, // Info: To Jacky, this field is duplicated with country and according to ICompanyKYC this field should be removed (20240719 - Tzuhan)
         structure,
         registrationNumber,
         registrationDate,
@@ -64,7 +64,7 @@ export default async function handler(
         !address ||
         !zipCode ||
         !representativeName ||
-        !registerCountry ||
+        // !registerCountry ||
         !structure ||
         !registrationNumber ||
         !registrationDate ||
@@ -72,7 +72,7 @@ export default async function handler(
         !contactPerson ||
         !contactPhone ||
         !contactEmail ||
-        !website ||
+        !website || // Info: To Jacky, this field is optional (20240719 - Tzuhan)
         !representativeIdType
       ) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -99,7 +99,7 @@ export default async function handler(
         contactPerson[0],
         contactPhone[0],
         contactEmail[0],
-        website[0],
+        website[0], // Info: To Jacky, this field is optional (20240719 - Tzuhan)
         representativeIdType[0],
         registrationCertificateId,
         taxCertificateId,

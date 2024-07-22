@@ -1,3 +1,5 @@
+import { Options } from 'formidable';
+
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
@@ -136,8 +138,18 @@ export const ALLOWED_ORIGINS = [
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
 
-export const FORMIDABLE_CONFIG = {
-  uploadDir: 'tmp',
+// 定義 Formidable 的 options
+export const FORMIDABLE_OPTIONS: Partial<Options> = {
+  encoding: 'utf-8',
+  keepExtensions: true,
+  maxFieldsSize: 200 * 1024 * 1024, // (200mb),
+  maxFields: 1000,
+  multiples: false,
+
+  // 過濾器例子，保留圖片類型
+  filter({ mimetype }) {
+    return !!(mimetype && mimetype.includes('image'));
+  },
 };
 
 export const AICH_URI = process.env.AICH_URI as string;

@@ -1,4 +1,4 @@
-import { RepresentativeIDType } from '@/interfaces/kyc_document_type';
+import { RepresentativeIDType } from '@/constants/kyc';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

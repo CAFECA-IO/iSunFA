@@ -23,7 +23,8 @@
     "SUBSCRIPTION_BILLS": "Subscription & Bills",
     "SETTING": "Setting",
     "LOGOUT": "Logout",
-    "NOTIFICATION": "Notification"
+    "NOTIFICATION": "Notification",
+    "LINK_NOT_OPEN": "This feature is not currently open for use"
   },
   "USER": {
     "MY_ADDRESS": "My Address page",
@@ -652,6 +653,7 @@
     "NEXT": "Next",
     "SUBMIT": "Submit",
     "CANCEL": "Cancel",
+    "CONFIRM": "Confirm",
     "BUSINESS_REGISTRATION_CERTIFICATE": "Business Registration Certificate",
     "TAX_STATUS_CERTIFICATE": "Tax Status Certification",
     "REPRESENTATIVE_ID_CERTIFICATE": "Upload the pictures of the data page of key company representative’s {{type}}",
@@ -700,7 +702,15 @@
     "INDUSTRY_REAL_ESTATE_ACTIVITIES": "Real estate activities",
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
-    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry"
+    "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry",
+
+    "SUBMIT_SUCCESS": "Your Application Has Been Submitted",
+    "SUBMIT_SUCCESS_MESSAGE": "It will take 3 to 5 business day to review your application, thank you for your patient.",
+    "CONTACT_SERVICE_TEAM": "If you have any question, please contact our customer service.",
+    "SUBMIT_FAILED":  "Your Application Has Been Failed",
+    "SUBMIT_FAILED_MESSAGE": "Error Code: {{code}}",
+    "INCOMPLETE_FORM": "Please complete the form",
+    "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}."
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "Basic Info",
