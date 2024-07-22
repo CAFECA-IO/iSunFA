@@ -112,7 +112,7 @@ const PieChart = ({ data }: PieChartProps) => {
       markers: {
         // width: 20,
         // height: 12,
-        radius: 0,
+        // radius: 0,
       },
       width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
       height: 140,
