@@ -59,9 +59,10 @@ export async function getCompanyWithOwner(companyId: number): Promise<
 
 export async function updateCompanyById(
   companyId: number,
-  code: string,
-  name: string,
-  regional: string
+  code?: string,
+  name?: string,
+  regional?: string,
+  imageId?: string
 ): Promise<Company | null> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -75,6 +76,7 @@ export async function updateCompanyById(
         code,
         name,
         regional,
+        imageId,
         updatedAt: nowTimestamp,
       },
     });

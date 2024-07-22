@@ -13,7 +13,7 @@ export async function formatCompanyList(companyList: Company[]): Promise<ICompan
   return formattedCompanyList;
 }
 
-export async function formatCompany(company: Company): Promise<ICompany> {
+export function formatCompany(company: Company): ICompany {
   const formattedCompany: ICompany = {
     ...company,
     imageId: company.imageId ?? '',

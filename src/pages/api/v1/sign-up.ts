@@ -5,16 +5,16 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { server } from '@passwordless-id/webauthn';
 import { getSession, setSession } from '@/lib/utils/session';
-import { generateUserIcon } from '@/lib/utils/generate_user_icon';
 import { createUser } from '@/lib/utils/repo/user.repo';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { useInvitation } from '@/lib/utils/invitation';
 import { RegistrationEncoded, RegistrationParsed } from '@passwordless-id/webauthn/dist/esm/types';
 import { verifyChallengeTimestamp } from '@/lib/utils/authorization';
+import { generateIcon } from '@/lib/utils/generate_user_icon';
 
 async function createUserByRegistrationParsed(registrationParsed: RegistrationParsed) {
   let user: IUser | null = null;
-  const imageUrl = await generateUserIcon(registrationParsed.username);
+  const imageUrl = await generateIcon(registrationParsed.username);
   try {
     const createdUser = await createUser(
       registrationParsed.username,

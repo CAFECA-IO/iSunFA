@@ -7,6 +7,7 @@ import { checkUserAdmin } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
 import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.formatter';
 import { getSession } from '@/lib/utils/session';
+import { generateIcon } from '@/lib/utils/generate_user_icon';
 
 export default async function handler(
   req: NextApiRequest,
@@ -34,7 +35,14 @@ export default async function handler(
             shouldContinue = false;
           }
           if (shouldContinue) {
-            const createdProject = await createProject(companyId, name, stage, memberIdList);
+            const porjectIcon = await generateIcon(name);
+            const createdProject = await createProject(
+              companyId,
+              name,
+              stage,
+              memberIdList,
+              porjectIcon
+            );
             const project = await formatProject(createdProject);
             statusMessage = STATUS_MESSAGE.CREATED;
             payload = project;

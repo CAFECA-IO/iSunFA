@@ -213,6 +213,7 @@ export async function createCompanyAndRole(
   code: string,
   name: string,
   regional: string,
+  imageId?: string,
   email?: string
 ): Promise<{ company: Company; role: Role }> {
   const now = Date.now();
@@ -229,6 +230,7 @@ export async function createCompanyAndRole(
           code,
           name,
           regional,
+          imageId,
           kycStatus: false,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
