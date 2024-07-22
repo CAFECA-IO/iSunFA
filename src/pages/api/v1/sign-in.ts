@@ -36,9 +36,6 @@ async function authenticateUser(
         publicKey: user.publicKey,
         algorithm: typeOfAlgorithm,
       };
-      // eslint-disable-next-line no-console
-      // console.log('authentication-------', authentication);
-      // Deprecated: temporary console.log debug information (20240722 - Anna)
       try {
         await server.verifyAuthentication(authentication, registeredCredential, expected);
       } catch (error) {
