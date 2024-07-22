@@ -36,23 +36,12 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 export function formatReportSheetTypeFromQuery(reportType: unknown) {
   let reportSheetType = ReportSheetType.BALANCE_SHEET;
 
-  if (typeof reportType === "string" && isReportSheetType(reportType)) {
+  if (typeof reportType === 'string' && isReportSheetType(reportType)) {
     reportSheetType = convertStringToReportSheetType(reportType);
   }
   return reportSheetType;
 }
 
-export function getLastPeriodStartAndEndDate(
-  reportSheetType: ReportSheetType,
-  startDateInSecond: number,
-  endDateInSecond: number
-) {
-  const lastPeriodStartDateInSecond =
-    reportSheetType === ReportSheetType.BALANCE_SHEET
-      ? 0
-      : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
-  const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
-  return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
 export function getLastPeriodStartAndEndDate(
   reportSheetType: ReportSheetType,
   startDateInSecond: number,
@@ -94,11 +83,6 @@ export function formatStartAndEndDateFromQuery(
     startDateInSecond,
     endDateInSecond
   );
-  const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
-    reportSheetType,
-    startDateInSecond,
-    endDateInSecond
-  );
 
   return {
     startDateInSecond,
@@ -111,7 +95,7 @@ export function formatStartAndEndDateFromQuery(
 export function formatProjectIdFromQuery(projectId: unknown): number | null {
   let projectIdNumber = null;
 
-  if (typeof projectId === "string" && isParamNumeric(projectId)) {
+  if (typeof projectId === 'string' && isParamNumeric(projectId)) {
     projectIdNumber = parseInt(projectId as string, 10);
   }
   return projectIdNumber;
@@ -120,7 +104,7 @@ export function formatProjectIdFromQuery(projectId: unknown): number | null {
 export function formatStatusFromQuery(status: unknown): ReportStatusType {
   let statusString = ReportStatusType.GENERATED;
 
-  if (typeof status === "string" && isReportStatusType(status)) {
+  if (typeof status === 'string' && isReportStatusType(status)) {
     statusString = status as ReportStatusType;
   }
   return statusString;
@@ -137,9 +121,7 @@ export function formatReportLanguageFromQuery(
   return reportLanguageString;
 }
 
-export function formatFinancialOrAnalysisFromQuery(
-  financialOrAnalysis: unknown
-): string {
+export function formatFinancialOrAnalysisFromQuery(financialOrAnalysis: unknown): string {
   // Deprecate: (20240710 - Murky) this function is to separate financial and analysis temperately
   let financialOrAnalysisString = 'financial';
 
