@@ -93,8 +93,7 @@ const AccountingTitlePageBody = () => {
   const assetDropmenu = (
     <div
       ref={assetRef}
-      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input
-      ${
+      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
         assetVisible
           ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
           : 'grid-rows-0 border-transparent'
@@ -117,12 +116,11 @@ const AccountingTitlePageBody = () => {
   const liabilityOptions = (
     <div
       ref={liabilityRef}
-      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input
-    ${
-      liabilityVisible
-        ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
-        : 'grid-rows-0 border-transparent'
-    } overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
+        liabilityVisible
+          ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
+          : 'grid-rows-0 border-transparent'
+      } overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <ul className={`flex w-full flex-col items-start p-2`}>
         {Object.values(LiabilityOptions).map((liability) => (
@@ -141,12 +139,11 @@ const AccountingTitlePageBody = () => {
   const equityOptions = (
     <div
       ref={equityRef}
-      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input
-  ${
-    equityVisible
-      ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
-      : 'grid-rows-0 border-transparent'
-  } overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
+        equityVisible
+          ? 'grid-rows-1 border-dropdown-stroke-menu bg-input-surface-input-background shadow-dropmenu'
+          : 'grid-rows-0 border-transparent'
+      } overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <ul className={`flex w-full flex-col items-start p-2`}>
         {Object.values(EquityOptions).map((equity) => (
@@ -176,9 +173,7 @@ const AccountingTitlePageBody = () => {
           <p className="font-semibold text-input-text-primary">Assets</p>
           <div
             onClick={assetDropmenuToggleHandler}
-            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background
-                ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px py-10px hover:cursor-pointer`}
+            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
             <p className="text-input-text-input-placeholder">{selectedAsset}</p>
             <FaChevronDown />
@@ -190,9 +185,7 @@ const AccountingTitlePageBody = () => {
           <p className="font-semibold text-input-text-primary">Liability</p>
           <div
             onClick={liabilityDropmenuToggleHandler}
-            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background
-                ${liabilityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px py-10px hover:cursor-pointer`}
+            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${liabilityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
             <p className="text-input-text-input-placeholder">{selectedLiability}</p>
             <FaChevronDown />
@@ -204,9 +197,7 @@ const AccountingTitlePageBody = () => {
           <p className="font-semibold text-input-text-primary">Equity</p>
           <div
             onClick={equityDropmenuToggleHandler}
-            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background
-                ${equityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px py-10px hover:cursor-pointer`}
+            className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${equityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
             <p className="text-input-text-input-placeholder">{selectedEquity}</p>
             <FaChevronDown />

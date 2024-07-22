@@ -46,7 +46,14 @@ function checkInput(
   salary: number,
   bonus: number
 ): boolean {
-  return !!name && !!department && !!salaryPayMode && !!payFrequency && salary !== undefined && bonus !== undefined;
+  return (
+    !!name &&
+    !!department &&
+    !!salaryPayMode &&
+    !!payFrequency &&
+    salary !== undefined &&
+    bonus !== undefined
+  );
 }
 
 async function handleGetRequest(
