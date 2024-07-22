@@ -5,7 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { checkUserAdmin } from '@/lib/utils/auth_check';
-import { updateEmployeeProject } from '@/lib/utils/repo/employee.repo'
+import { updateEmployeeProject } from '@/lib/utils/repo/employee.repo';
 import prisma from '@/client';
 
 async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
