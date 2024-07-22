@@ -4,6 +4,7 @@ import { DEFAULT_PAGE_NUMBER } from "@/constants/display";
 import { ReportSheetType } from "@/constants/report";
 import { IAccountQueryArgs, IPaginatedAccount } from "@/interfaces/accounting_account";
 import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
+import { formatIPaginatedAccount } from "@/lib/utils/formatter/account.formatter";
 
 export abstract class AbstractAccountRetriever {
     protected companyId: number;
@@ -73,10 +74,8 @@ export abstract class AbstractAccountRetriever {
             sortOrder: this.sortOrder,
             searchKey: this.searchKey
         });
-        return {
-            data: accounts.data,
-            page: accounts.page,
-            totalPages: accounts.totalPage,
-        };
+
+        const paginatedAccount = formatIPaginatedAccount(accounts);
+        return paginatedAccount;
     }
 }

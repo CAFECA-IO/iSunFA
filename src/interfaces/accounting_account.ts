@@ -18,7 +18,7 @@ export interface IAccount {
   // ToDo: (20240717 - Julian) Missing 'isFavorite' property
 }
 
-export interface IPaginatedAccount extends IPaginatedData<IAccount> {}
+export interface IPaginatedAccount extends IPaginatedData<IAccount[]> {}
 
 // Info Murky (20240416): Interface
 export interface IAccountResultStatus {
