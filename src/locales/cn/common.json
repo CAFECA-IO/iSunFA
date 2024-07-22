@@ -186,8 +186,8 @@
     "UNPOPULAR": "冷门",
     "ALL": "全部",
     "RELEVANCY": "相关性",
-    "PAYMENT_PROCESS": "付款流程",
-    "PROJECT_PROCESS": "项目流程"
+    "HIGHEST_PAYMENT_PRICE": "最高支付价格",
+    "LOWEST_PAYMENT_PRICE": "最低支付价格"
   },
   "FOOTER": {
     "POWERED_BY": "技术支持 阳光智能会计",
@@ -209,6 +209,7 @@
     "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
     "BALANCE_SHEET": "资产负债表",
     "CASH_FLOW_STATEMENT": "现金流量表",
+    "CHANGE_IN_EQUITY_STATEMENT": "权益变动表",
     "RED_FLAG_ANALYSIS": "风险分析",
     "POWERED_BY": "技术支持"
   },

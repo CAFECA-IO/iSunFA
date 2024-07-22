@@ -1,9 +1,9 @@
 import { IAdmin } from '@/interfaces/admin';
 import { Admin, Company, Role, User } from '@prisma/client';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyDetail } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
-import { formatCompany } from '@/lib/utils/formatter/company.formatter';
+import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
 
 export async function formatAdminList(
   listedAdmin: (Admin & { company: Company; user: User; role: Role })[]
@@ -59,5 +59,16 @@ export async function formatCompanyAndRole(companyAndRole: {
 }): Promise<{ company: ICompany; role: IRole }> {
   const formattedCompany = await formatCompany(companyAndRole.company);
   const formattedRole = companyAndRole.role;
+  return { company: formattedCompany, role: formattedRole };
+}
+
+export function formatCompanyDetailAndRole(companyDetailAndRole: {
+  company: Company & {
+    admins: Admin[];
+  };
+  role: Role;
+}): { company: ICompanyDetail; role: IRole } {
+  const formattedCompany = formatCompanyDetail(companyDetailAndRole.company);
+  const formattedRole = companyDetailAndRole.role;
   return { company: formattedCompany, role: formattedRole };
 }
