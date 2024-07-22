@@ -13,6 +13,7 @@ export interface IAccount {
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
+  // ToDo: (20240717 - Julian) Missing 'isFavorite' property
 }
 
 // Info Murky (20240416): Interface

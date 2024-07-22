@@ -1,12 +1,9 @@
-import { CountryOptions, LegalStructureOptions, IndustryOptions } from '@/constants/kyc';
-
-export enum RegistrationInfoKeys {
-  COUNTRY = 'country',
-  LEGAL_STRUCTURE = 'legalStructure',
-  BUSINESS_REGISTRATION_NUMBER = 'businessRegistrationNumber',
-  REGISTRATION_DATE = 'registrationDate',
-  INDUSTRY = 'industry',
-}
+import {
+  CountryOptions,
+  LegalStructureOptions,
+  IndustryOptions,
+  RegistrationInfoKeys,
+} from '@/constants/kyc';
 
 export interface IRegistrationInfo {
   [RegistrationInfoKeys.COUNTRY]: CountryOptions;

@@ -98,7 +98,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         fillColors: ['#4BD394B2', '#FB5C5CB2'],
         // width: 20, // 標記的寬度
         // height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        // radius: 0, // 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
 

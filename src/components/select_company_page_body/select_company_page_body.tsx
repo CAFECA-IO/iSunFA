@@ -22,8 +22,16 @@ const SelectCompanyPageBody = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
-    useUserCtx();
+  const {
+    signedIn,
+    username,
+    selectCompany,
+    successSelectCompany,
+    errorCode,
+    userAuth,
+    returnUrl,
+    clearReturnUrl,
+  } = useUserCtx();
   const {
     toastHandler,
     companyInvitationModalVisibilityHandler,
@@ -69,7 +77,14 @@ const SelectCompanyPageBody = () => {
   const selectCompanyClickHandler = () => {
     if (selectedCompany === null) return;
     selectCompany(selectedCompany);
-    router.push(ISUNFA_ROUTE.DASHBOARD);
+
+    if (returnUrl) {
+      const urlString = decodeURIComponent(returnUrl);
+      clearReturnUrl();
+      router.push(urlString);
+    } else {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    }
   };
 
   useEffect(() => {
@@ -141,9 +156,7 @@ const SelectCompanyPageBody = () => {
   const displayCompanyMenu = (
     <div
       ref={companyMenuRef}
-      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5
-      ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
-      `}
+      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5 ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240514 - Julian) search bar */}
@@ -230,7 +243,7 @@ const SelectCompanyPageBody = () => {
                 onClick={menuOpenHandler}
                 className="flex shrink grow items-center justify-between px-16px py-8px text-center text-base font-medium leading-normal tracking-tight"
               >
-                <p className=" text-lightGray4">{selectedCompanyName}</p>
+                <p className="text-lightGray4">{selectedCompanyName}</p>
                 <FaChevronDown
                   size={16}
                   className={`text-darkBlue2 ${isCompanyMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}

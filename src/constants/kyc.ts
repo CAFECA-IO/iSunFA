@@ -1,12 +1,5 @@
-export enum CityOptions {
-  DEFAULT = '',
-  GB = 'United Kingdom',
-  US = 'United States',
-  TW = 'Taiwan',
-}
-
 export enum CountryOptions {
-  DEFAULT = '',
+  DEFAULT = '', // Info: (20240718 - Liz) This is the default value for the dropdown to show placeholder
   TAIWAN = 'Taiwan',
   UNITED_STATES = 'United States',
   CHINA = 'China',
@@ -14,14 +7,14 @@ export enum CountryOptions {
 }
 
 export enum LegalStructureOptions {
-  DEFAULT = '',
+  DEFAULT = '', // Info: (20240718 - Liz) This is the default value for the dropdown to show placeholder
   SOLE_PROPRIETORSHIP = 'Sole Proprietorship',
   PARTNERSHIP = 'Partnership',
   CORPORATION = 'Corporation',
   LIMITED_LIABILITY_COMPANY = 'Limited Liability Company',
 }
 
-// Info: (240717 - Liz)  Industry Options
+// Info: (20240717 - Liz)  Industry Options
 // 1. Accommodation and food services
 // 2. Administrative and support services
 // 3. Arts and Recreation services
@@ -71,40 +64,47 @@ export enum IndustryOptions {
   TRANSPORT_INDUSTRY = 'Transport industry',
 }
 
-// Info: (240717 - Liz) 以下是暫存，等確定設計稿是國家還是城市後會再調整邏輯
-
-export enum CountryCode {
-  DEFAULT = '',
-  GB = 'GB',
-  US = 'US',
-  TW = 'TW',
+export enum AreaCodeOptions {
+  TAIWAN = '+886',
+  UNITED_STATES = '+01',
+  HONG_KONG = '+852',
+  CHINA = '+86',
 }
 
-interface ICountryInfo {
-  title: string;
-  svg: string;
-  translationKey: string;
+export enum RepresentativeIDType {
+  PASSPORT = 'PASSPORT',
+  ID_CARD = 'ID_CARD',
+  DRIVER_LICENSE = 'DRIVER_LICENSE',
 }
 
-export const CountryInfos: Record<CountryCode, ICountryInfo> = {
-  [CountryCode.DEFAULT]: {
-    title: '',
-    svg: '',
-    translationKey: 'KYC.DEFAULT',
-  },
-  [CountryCode.GB]: {
-    title: 'United Kingdom',
-    svg: '🇬🇧',
-    translationKey: 'KYC.GB',
-  },
-  [CountryCode.US]: {
-    title: 'United States',
-    svg: '🇺🇸',
-    translationKey: 'KYC.US',
-  },
-  [CountryCode.TW]: {
-    title: 'Taiwan',
-    svg: '🇹🇼',
-    translationKey: 'KYC.TW',
-  },
-} as const;
+export enum BasicInfoKeys {
+  LEGAL_COMPANY_NAME = 'legalName',
+  CITY = 'city',
+  ZIP_CODE = 'zipCode',
+  ADDRESS = 'address',
+  KEY_COMPANY_REPRESENTATIVES_NAME = 'representativeName',
+}
+
+export enum RegistrationInfoKeys {
+  COUNTRY = 'country',
+  LEGAL_STRUCTURE = 'structure',
+  BUSINESS_REGISTRATION_NUMBER = 'registrationNumber',
+  REGISTRATION_DATE = 'registrationDate',
+  INDUSTRY = 'industry',
+}
+
+export enum ContactInfoKeys {
+  AREA_CODE = 'areaCode',
+  CONTACT_NUMBER = 'contactNumber',
+  CONTACT_PHONE = 'contactPhone',
+  KEY_CONTACT_PERSON = 'contactPerson',
+  EMAIL_ADDRESS = 'contactEmail',
+  COMPANY_WEBSITE = 'website',
+}
+
+export enum UploadDocumentKeys {
+  REPRESENTATIVE_ID_TYPE = 'representativeIdType',
+  BUSINESS_REGISTRATION_CERTIFICATE_ID = 'registrationCertificateId',
+  TAX_STATUS_CERTIFICATE_ID = 'taxCertificateId',
+  REPRESENTATIVE_CERTIFICATE_ID = 'representativeIdCardId',
+}

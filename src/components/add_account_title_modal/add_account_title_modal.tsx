@@ -1,43 +1,172 @@
 import { RxCross2 } from 'react-icons/rx';
 import { FaPlus } from 'react-icons/fa6';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
+import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IAccount } from '@/interfaces/accounting_account';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IAddAccountTitleModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  modalData: {
+    accountId: number;
+  };
 }
 
 const AddAccountTitleModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  modalData,
 }: IAddAccountTitleModalProps) => {
-  // ToDo: (20240717 - Julian) placeholder from props
+  const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
+  const { getAccountListHandler } = useAccountingCtx();
 
-  const [accountingTypeValue, setAccountingTypeValue] = useState('');
-  const [assetTypeValue, setAssetTypeValue] = useState('');
-  const [currentAssetTypeValue, setCurrentAssetTypeValue] = useState('');
-  const [codeValue, setCodeValue] = useState('');
+  const { accountId } = modalData;
+
+  const {
+    trigger: getAccountById,
+    data: accountData,
+    isLoading: isAccountDataLoading,
+    success: isAccountDataSuccess,
+    code: errorCode,
+  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID, {}, false, false);
+
+  const {
+    trigger: createNewSubAccount,
+    data: result,
+    success: createSuccess,
+    code: createCode,
+  } = APIHandler<IAccount>(APIName.CREATE_NEW_SUB_ACCOUNT, {}, false, false);
+
+  const [accountingType, setAccountingType] = useState('');
+  const [liquidity, setLiquidity] = useState(false);
+  const [currentAssetType, setCurrentAssetType] = useState('');
   const [nameValue, setNameValue] = useState('');
 
-  const handleAccountingTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAccountingTypeValue(event.target.value);
-  };
-  const handleAssetTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAssetTypeValue(event.target.value);
-  };
-  const handleCurrentAssetTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentAssetTypeValue(event.target.value);
-  };
-  const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCodeValue(event.target.value);
-  };
+  useEffect(() => {
+    if (selectedCompany && accountId) {
+      getAccountById({
+        params: { companyId: selectedCompany.id, accountId },
+      });
+    }
+  }, [selectedCompany, accountId]);
+
+  useEffect(() => {
+    if (accountData) {
+      setAccountingType(accountData.type);
+      setLiquidity(accountData.liquidity);
+      setCurrentAssetType(accountData.name);
+    }
+  }, [accountData]);
+
+  useEffect(() => {
+    if (createSuccess && result && selectedCompany) {
+      // Info: (20240719 - Julian) 關閉 modal
+      modalVisibilityHandler();
+      // Info: (20240719 - Julian) 重新取得 account list
+      getAccountListHandler(selectedCompany.id);
+      // Info: (20240719 - Julian) 顯示 toast
+      toastHandler({
+        id: `createSubAccount-${createCode}`,
+        type: ToastType.SUCCESS,
+        content: `Successfully created new sub account: ${result.name}`,
+        closeable: true,
+      });
+    } else if (createSuccess === false) {
+      toastHandler({
+        id: `createSubAccount-${createCode}`,
+        type: ToastType.ERROR,
+        content: 'Failed to create new sub account, please try again later.',
+        closeable: true,
+      });
+    }
+  }, [createSuccess, result, createCode]);
+
+  useEffect(() => {
+    if (!isModalVisible) {
+      setNameValue('');
+      setAccountingType('');
+      setLiquidity(false);
+      setCurrentAssetType('');
+    }
+  }, [isModalVisible]);
+
+  useEffect(() => {
+    if (isAccountDataSuccess === false && isModalVisible) {
+      toastHandler({
+        id: `getAccount-${errorCode}`,
+        type: ToastType.ERROR,
+        content: 'Failed to get account data, please try again later.',
+        closeable: true,
+      });
+    }
+  }, [errorCode]);
+
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNameValue(event.target.value);
   };
 
+  const addNewSubAccount = () => {
+    if (selectedCompany && accountId) {
+      createNewSubAccount({
+        params: { companyId: selectedCompany.id },
+        body: {
+          accountId,
+          name: nameValue,
+        },
+      });
+    }
+  };
+
+  const disableSubmit = !nameValue;
+  const liquidityText = liquidity ? 'Current' : 'Non-current';
+
+  const displayType = isAccountDataLoading ? (
+    <Skeleton width={210} height={46} rounded />
+  ) : (
+    <input
+      id="input-accounting-type"
+      type="text"
+      value={accountingType}
+      disabled
+      className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+    />
+  );
+
+  const displayLiquidity = isAccountDataLoading ? (
+    <Skeleton width={210} height={46} rounded />
+  ) : (
+    <input
+      id="input-liquidity"
+      type="text"
+      value={liquidityText}
+      disabled
+      className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+    />
+  );
+
+  const displayCurrentAsset = isAccountDataLoading ? (
+    <Skeleton width={440} height={46} rounded />
+  ) : (
+    <input
+      id="input-current-asset-type"
+      type="text"
+      value={currentAssetType}
+      disabled
+      className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
+    />
+  );
+
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 font-barlow">
       <div
         className={`flex w-90vw flex-col items-stretch divide-y divide-stroke-neutral-quaternary rounded-sm bg-surface-neutral-surface-lv2 lg:w-520px`}
       >
@@ -56,62 +185,34 @@ const AddAccountTitleModal = ({
         <div className="grid grid-flow-row grid-cols-2 gap-x-20px gap-y-16px px-40px py-20px">
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Accounting Type</p>
-            <input
-              id="input-accounting-type"
-              type="text"
-              value={accountingTypeValue}
-              onChange={handleAccountingTypeChange}
-              placeholder="Assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
-            />
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              Accounting Type
+            </p>
+            {displayType}
           </div>
-          {/* Info: (20240717 - Julian) Asset Type */}
+          {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Asset Type</p>
-            <input
-              id="input-asset-type"
-              type="text"
-              value={assetTypeValue}
-              onChange={handleAssetTypeChange}
-              placeholder="Non-Current Assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
-            />
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Liquidity</p>
+            {displayLiquidity}
           </div>
-          {/* Info: (20240717 - Julian) Current Asset Type */}
+          {/* Info: (20240717 - Julian) Current Asset */}
           <div className="col-span-2 flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Current Asset Type</p>
-            <input
-              id="input-current-asset-type"
-              type="text"
-              value={currentAssetTypeValue}
-              onChange={handleCurrentAssetTypeChange}
-              placeholder="Consolidated financial assets"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
-            />
-          </div>
-          {/* Info: (20240717 - Julian) Code */}
-          <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Code</p>
-            <input
-              id="input-code"
-              type="text"
-              value={codeValue}
-              onChange={handleCodeChange}
-              placeholder="1234"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
-            />
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              Current Asset
+            </p>
+            {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Name</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Name</p>
             <input
               id="input-name"
               type="text"
               value={nameValue}
               onChange={handleNameChange}
               placeholder="Enter name"
-              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+              required
+              className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
         </div>
@@ -120,7 +221,13 @@ const AddAccountTitleModal = ({
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
             Cancel
           </Button>
-          <Button id="add-accounting-title-button" type="button" variant="tertiary">
+          <Button
+            id="add-accounting-title-button"
+            type="button"
+            variant="tertiary"
+            disabled={disableSubmit}
+            onClick={addNewSubAccount}
+          >
             <p>Add</p> <FaPlus />
           </Button>
         </div>

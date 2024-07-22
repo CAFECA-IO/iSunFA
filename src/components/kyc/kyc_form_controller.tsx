@@ -14,7 +14,7 @@ const KYCFormController = ({
   const { t } = useTranslation('common');
 
   return (
-    <div className="flex justify-end gap-20px">
+    <div className="flex gap-20px self-end">
       <button type="button" className="rounded px-4 py-2 text-secondaryBlue" onClick={onCancel}>
         {t('KYC.CANCEL')}
       </button>
@@ -29,8 +29,8 @@ const KYCFormController = ({
       ) : (
         <button
           type="button"
+          onClick={onSubmit}
           className="rounded bg-primaryYellow5 px-4 py-2 text-primaryYellow2"
-          onSubmit={onSubmit}
         >
           {t('KYC.SUBMIT')}
         </button>

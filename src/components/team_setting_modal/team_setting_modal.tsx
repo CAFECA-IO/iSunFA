@@ -1,5 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
+import { APIName } from '@/constants/api_connection';
+import { ICompany } from '@/interfaces/company';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface ITeamSettingModal {
   isModalVisible: boolean;
@@ -7,22 +14,63 @@ interface ITeamSettingModal {
 }
 
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { selectedCompany, selectCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
+  const [companyName, setCompanyName] = useState<string>(selectedCompany?.name ?? '');
+
+  const {
+    trigger: updateTeam,
+    data: updatedTeam,
+    isLoading: isUpdateTeamLoading,
+    error: updateTeamError,
+    code: updateTeamCode,
+    success: updateTeamSuccess,
+  } = APIHandler<ICompany>(
+    APIName.COMPANY_UPDATE,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? 0,
+      },
+    },
+    false,
+    false
+  );
 
   const saveClickHandler = async () => {
-    if (inputRef.current) {
-      // TODO: send API request (20240717 - Shirley)
-      // const name = inputRef.current.value;
-      inputRef.current.value = '';
+    if (companyName && companyName !== selectedCompany?.name) {
+      updateTeam({
+        body: {
+          name: companyName,
+          code: selectedCompany?.code,
+          regional: selectedCompany?.regional,
+        },
+      });
+
+      setCompanyName('');
       modalVisibilityHandler();
     }
   };
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (isUpdateTeamLoading) return;
+
+    if (updateTeamSuccess && updatedTeam) {
+      selectCompany(updatedTeam);
+    } else if (updateTeamError) {
+      toastHandler({
+        id: `update_team-${updateTeamCode}`,
+        type: ToastType.ERROR,
+        content: <p>Fail to update company name. Code: {updateTeamCode}</p>,
+        closeable: true,
+      });
     }
-  }, [isModalVisible]);
+  }, [updateTeamSuccess, updateTeamError, isUpdateTeamLoading]);
+
+  useEffect(() => {
+    if (isModalVisible) {
+      setCompanyName(selectedCompany?.name ?? '');
+    }
+  }, [isModalVisible, selectedCompany]);
 
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -74,10 +122,11 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
             <div className="flex gap-0 rounded-sm border border-solid border-lightGray3 bg-white shadow-sm">
               <div className="flex flex-1">
                 <input
-                  ref={inputRef}
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder="iSunCloud" // TODO: get company name from API (20240717 - Shirley)
+                  placeholder={selectedCompany?.name ?? 'your company name'}
                 />
               </div>
             </div>
@@ -93,7 +142,14 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
             >
               Cancel
             </Button>
-            <Button variant={'tertiary'} onClick={saveClickHandler} className="flex-1 rounded-xs">
+            <Button
+              disabled={
+                isUpdateTeamLoading || !companyName || companyName === selectedCompany?.name
+              }
+              variant={'tertiary'}
+              onClick={saveClickHandler}
+              className="flex-1 rounded-xs"
+            >
               Save
             </Button>
           </div>

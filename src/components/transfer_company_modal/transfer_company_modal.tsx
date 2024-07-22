@@ -19,8 +19,10 @@ const TransferCompanyModal = ({
   const saveClickHandler = async () => {
     if (inputRef.current) {
       // TODO: send API request (20240717 - Shirley)
-      // const userId = inputRef.current.value;
-      inputRef.current.value = '';
+      if (inputRef.current.value === '') {
+        modalVisibilityHandler();
+        return;
+      }
       modalVisibilityHandler();
 
       // TODO: validate the userId (20240717 - Shirley)
@@ -28,16 +30,32 @@ const TransferCompanyModal = ({
       messageModalDataHandler({
         messageType: MessageType.WARNING,
         title: 'Transfer company',
-        content: `Are you sure you want to transfer the company to \n\nUSER_NAME.`, // TODO: message color (20240717 - Shirley)
+        content: (
+          <div className="flex w-full flex-col gap-2">
+            <p className="text-text-neutral-secondary">
+              Are you sure you want to transfer the administration to
+            </p>
+            <p className="text-text-neutral-primary">{inputRef.current.value}</p>
+          </div>
+        ), // TODO: message color (20240717 - Shirley)
+        // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: message color (20240717 - Shirley)
         backBtnStr: 'Cancel',
         submitBtnStr: 'Transfer',
         submitBtnFunction: messageModalVisibilityHandler, // TODO: send API request (20240717 - Shirley)
       });
+
+      inputRef.current.value = '';
       messageModalVisibilityHandler();
     }
   };
 
   useEffect(() => {
+    if (!isModalVisible) {
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    }
+
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -96,7 +114,7 @@ const TransferCompanyModal = ({
                   ref={inputRef}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder="User ID" // TODO: get company name from API (20240717 - Shirley)
+                  placeholder="User ID"
                 />
               </div>
             </div>
