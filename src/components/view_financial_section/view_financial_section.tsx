@@ -11,7 +11,33 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { ToastType } from '@/interfaces/toastify';
 import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
+import Pagination from '@/components/pagination/pagination';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 
+// Anna
+interface CashFlowDisplayProps {
+  reportType: unknown;
+}
+// Anna
+interface FinancialReportItem {
+  code: string;
+  name: string;
+  curPeriodAmount: number;
+  curPeriodAmountString: string;
+  curPeriodPercentage: number;
+  prePeriodAmount: number;
+  prePeriodAmountString: string;
+  prePeriodPercentage: number;
+  indent: number;
+}
+// Anna
+interface FinancialReport {
+  general: FinancialReportItem[];
+  details: FinancialReportItem[];
+}
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
 
@@ -337,6 +363,8 @@ const ViewFinancialSection = ({
 }: IViewReportSectionProps) => {
   const { t } = useTranslation('common');
   const globalCtx = useGlobalCtx();
+  const { selectedCompany } = useUserCtx(); // Anna 新增 useUserCtx 來取得選擇的公司
+  const { toastHandler } = useGlobalCtx(); // Anna 新增 toastHandler 來處理 toast 訊息
 
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
   const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
@@ -349,6 +377,10 @@ const ViewFinancialSection = ({
   const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Info: (2024721 - Anna) 財報分頁器
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = 12; // 假設總頁數為12
+  const [reportData, setReportData] = useState<FinancialReport>({ general: [], details: [] }); // Anna 新增 reportData 狀態來存儲財務報告資料
 
   function onDocumentLoadSuccess(data: { numPages: number }): void {
     setNumPages(data.numPages);
@@ -434,6 +466,32 @@ const ViewFinancialSection = ({
     }
   };
 
+  // Anna 新增的 useEffect，用來調用 API 獲取財務報告資料
+  const {
+    data: reportFinancial,
+    code: getReportFinancialCode,
+    success: getReportFinancialSuccess,
+  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: {
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      reportId: '10000003',
+    },
+  });
+
+  useEffect(() => {
+    if (getReportFinancialSuccess === false) {
+      toastHandler({
+        id: `getReportFinancialCode-${getReportFinancialCode}}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET')} ${t('DASHBOARD.REPORT')} ${getReportFinancialCode}`,
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    }
+    if (getReportFinancialSuccess && reportFinancial) {
+      setReportData(reportFinancial);
+    }
+  }, [getReportFinancialSuccess, getReportFinancialCode, reportFinancial, t, toastHandler]);
+  // ----------
   useEffect(() => {
     if (!pdfFile) return;
 
@@ -754,7 +812,229 @@ const ViewFinancialSection = ({
                   </button>
                 ))
               ) : (
-                <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+                // <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+                // Info: (2024721 - Anna) 財報畫面-縮圖
+                <>
+                  {' '}
+                  <div
+                    className="outer-container mx-auto bg-white"
+                    style={{
+                      width: '150px',
+                      height: 'auto',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}
+                  >
+                    <div
+                      className="scale-container"
+                      style={{
+                        transform: 'scale(0.25)',
+                        transformOrigin: 'top left',
+                        width: '600px',
+                        height: 'auto',
+                      }}
+                    >
+                      <div className="container mx-auto bg-white">
+                        <header className="mb-20 flex justify-between p-5 text-white">
+                          <div className="w-1/3 bg-blue-900 p-5 font-bold">
+                            <div>
+                              <h1 className="mb-7 text-lg">
+                                2330 <br />
+                                台灣積體電路製造股份有限公司
+                              </h1>
+                              <p className="font-semibold">
+                                2023年第四季 <br />
+                                合併財務報告 - 資產負債表
+                              </p>
+                            </div>
+                          </div>
+                          <div className="relative w-1/3 pr-5 pt-6 text-right">
+                            <h2 className="relative inline-block pb-1 text-lg font-bold text-gray-400">
+                              Balance Sheet
+                              <div className="relative">
+                                <span className="block h-2 w-full bg-yellow-500"></span>
+                                <span
+                                  className="block h-1 w-3/4 bg-blue-900"
+                                  style={{ marginTop: '-0.125rem' }}
+                                ></span>
+                              </div>
+                            </h2>
+                          </div>
+                        </header>
+                        <section className="p-5">
+                          <div className="mb-4 flex justify-between font-semibold text-blue-900">
+                            <p>一、項目彙總格式</p>
+                            <p>單位：新台幣仟元</p>
+                          </div>
+                          <table className="w-full border-collapse bg-white">
+                            <thead>
+                              <tr>
+                                <th className="border border-gray-300 bg-yellow-200 p-2 text-sm font-semibold">
+                                  代號
+                                </th>
+                                <th className="border border-gray-300 bg-yellow-200 p-2 text-sm font-semibold">
+                                  會計項目
+                                </th>
+                                <th className="border border-gray-300 bg-yellow-200 p-2 text-right text-sm font-semibold">
+                                  2023-12-31
+                                </th>
+                                <th className="border border-gray-300 bg-yellow-200 p-2 text-center text-sm font-semibold">
+                                  %
+                                </th>
+                                <th className="border border-gray-300 bg-yellow-200 p-2 text-right text-sm font-semibold">
+                                  2022-12-31
+                                </th>
+                                <th className="border border-gray-300 bg-yellow-200 p-2 text-center text-sm font-semibold">
+                                  %
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td
+                                  colSpan={6}
+                                  className="border border-gray-300 p-2 font-semibold"
+                                >
+                                  資產
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2 text-sm">11XX</td>
+                                <td className="border border-gray-300 p-2 text-sm">流動資產合計</td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  2,194,032,910
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  40
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  2,052,896,744
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  41
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2 text-sm">15XX</td>
+                                <td className="border border-gray-300 p-2 text-sm">
+                                  非流動資產合計
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  3,338,338,305
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  60
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  2,911,882,134
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  59
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2 text-sm">1XXX</td>
+                                <td className="border border-gray-300 p-2 text-sm">資產總計</td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  5,532,371,215
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  100
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  4,964,778,878
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  100
+                                </td>
+                              </tr>
+                              <tr>
+                                <td
+                                  colSpan={6}
+                                  className="border border-gray-300 p-2 font-semibold"
+                                >
+                                  負債及權益
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2 text-sm">21XX</td>
+                                <td className="border border-gray-300 p-2 text-sm">流動負債合計</td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  913,583,316
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  16
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  944,226,817
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  19
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2 text-sm">21XX</td>
+                                <td className="border border-gray-300 p-2 text-sm">
+                                  非流動負債合計
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  1,135,525,052
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  21
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  944,226,817
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  19
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="border border-gray-300 p-2 text-sm">21XX</td>
+                                <td className="border border-gray-300 p-2 text-sm">負債總計</td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  2,049,108,368
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  37
+                                </td>
+                                <td className="border border-gray-300 p-2 text-right text-sm">
+                                  944,226,817
+                                </td>
+                                <td className="border border-gray-300 p-2 text-center text-sm">
+                                  40
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </section>
+                        <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-blue-900 p-2">
+                          <p className="m-0 text-xs text-white">1</p>
+                          <div className="font-bold text-white">
+                            <img src="./logo.png" alt="" />
+                          </div>
+                        </footer>
+                        <div className="pointer-events-none fixed top-1/2 flex w-full -translate-y-1/2 justify-between">
+                          <button
+                            id="prevPage"
+                            type="button"
+                            className="pointer-events-auto cursor-pointer border-none bg-none text-2xl text-gray-600"
+                          >
+                            <i className="bi bi-arrow-left"></i>
+                          </button>
+                          <button
+                            id="nextPage"
+                            type="button"
+                            className="pointer-events-auto cursor-pointer border-none bg-none text-2xl text-gray-600"
+                          >
+                            <i className="bi bi-arrow-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -828,9 +1108,108 @@ const ViewFinancialSection = ({
           </div>
         ) : (
           <div className="flex h-850px w-full flex-1 justify-center bg-white">
-            <p className="text-stroke-brand-secondary">{t('MY_REPORTS_SECTION.LOADING')}</p>
+            {/* <p className="text-stroke-brand-secondary">{t('MY_REPORTS_SECTION.LOADING')}</p> */}
+            {/* Info: (2024721 - Anna) 財報畫面 */}
+            <div className="container mx-auto">
+              <div className="bg-white">
+                <header className="mb-20 flex justify-between p-5 text-white">
+                  <div className="w-1/3 bg-blue-900 p-5 font-bold">
+                    <div>
+                      <h1 className="mb-7 text-lg">
+                        2330 <br />
+                        台灣積體電路製造股份有限公司
+                      </h1>
+                      <p className="font-semibold">
+                        2023年第四季 <br />
+                        合併財務報告 - 資產負債表
+                      </p>
+                    </div>
+                  </div>
+                  <div className="relative w-1/3 pr-5 pt-6 text-right">
+                    <h2 className="relative inline-block pb-1 text-lg font-bold text-gray-400">
+                      Balance Sheet
+                      <div className="relative">
+                        <span className="block h-2 w-full bg-yellow-500"></span>
+                        <span
+                          className="block h-1 w-3/4 bg-blue-900"
+                          style={{ marginTop: '-0.125rem' }}
+                        ></span>
+                      </div>
+                    </h2>
+                  </div>
+                </header>
+                <section className="p-5">
+                  <div className="mb-4 flex justify-between font-semibold text-blue-900">
+                    <p>一、項目彙總格式</p>
+                    <p>單位：新台幣仟元</p>
+                  </div>
+                  <table className="w-full border-collapse bg-white">
+                    <thead>
+                      <tr>
+                        <th className="border border-gray-300 bg-yellow-200 p-2 text-sm font-semibold">
+                          代號
+                        </th>
+                        <th className="border border-gray-300 bg-yellow-200 p-2 text-sm font-semibold">
+                          會計項目
+                        </th>
+                        <th className="border border-gray-300 bg-yellow-200 p-2 text-right text-sm font-semibold">
+                          2023-12-31
+                        </th>
+                        <th className="border border-gray-300 bg-yellow-200 p-2 text-center text-sm font-semibold">
+                          %
+                        </th>
+                        <th className="border border-gray-300 bg-yellow-200 p-2 text-right text-sm font-semibold">
+                          2022-12-31
+                        </th>
+                        <th className="border border-gray-300 bg-yellow-200 p-2 text-center text-sm font-semibold">
+                          %
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan={6} className="border border-gray-300 p-2 font-semibold">
+                          資產
+                        </td>
+                      </tr>
+                      {Object.prototype.hasOwnProperty.call(reportData, 'general') &&
+                        reportData.general.slice(0, 8).map((value) => (
+                          <tr key={value.name}>
+                            <td className="border border-gray-300 p-2 text-sm">11XX</td>
+                            <td className="border border-gray-300 p-2 text-end text-sm">
+                              {value.name}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-right text-sm">
+                              2,194,032,910
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center text-sm">40</td>
+                            <td className="border border-gray-300 p-2 text-right text-sm">
+                              2,052,896,744
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center text-sm">41</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </section>
+                <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-blue-900 p-2">
+                  <p className="m-0 text-xs text-white">1</p>
+                  <div className="font-bold text-white">
+                    <img src="./logo.png" alt="" />
+                  </div>
+                </footer>
+              </div>
+            </div>
           </div>
         )}
+      </div>
+      <div className="mt-5 flex justify-center">
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+          pagePrefix="page"
+        />
       </div>
     </div>
   );
