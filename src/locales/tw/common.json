@@ -709,6 +709,22 @@
     "ZIP_CODE": "郵遞區號",
     "KEY_COMPANY_REPRESENTATIVE_S_NAME": "主要公司代表的姓名",
 
+    "UPLOAD_FILE_FAILED": "上傳文件失敗",
+    "FILE_UPLOAD_ERROR": "文件上傳錯誤代碼: {{code}}",
+    "FILE_SIZE_EXCEEDS_LIMIT": "文件大小超過限制，請選擇小於 {{size}} 的文件。",
+    "READ_FILE_FAILED": "讀取文件失敗",
+    "FILE_READ_ERROR": "文件讀取時發生錯誤",
+    "DELETE_FILE_FAILED": "刪除文件失敗",
+    "DELETE_FILE_ERROR": "刪除文件錯誤代碼: {{code}}",
+
+    "SUBMIT_SUCCESS": "你的申請已提交成功",
+    "SUBMIT_SUCCESS_MESSAGE": "我們的工作人員將在 3 - 5個工作日內審核您的申請，請耐心等待。",
+    "SUBMIT_FAILED": "提交失敗",
+    "SUBMIT_FAILED_MESSAGE": "錯誤代碼: {{code}}",
+    "CONTACT_SERVICE_TEAM": "如果您有任何疑問，請聯繫我們的客服。",
+    "INCOMPLETE_FORM": "請填寫完整表格",
+    "INCOMPLETE_FORM_SUB_MESSAGE": "請確補齊下列欄位資訊: {{fields}}。"
+
     "KEY_CONTACT_PERSON": "主要聯絡人",
     "CONTACT_NUMBER": "聯絡電話",
     "EMAIL_ADDRESS": "電子郵件地址",
