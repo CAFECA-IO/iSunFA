@@ -58,11 +58,11 @@ const AccountingSidebar = () => {
         <div className="my-16px flex w-full flex-col items-center text-lg">
           <Link
             href={ISUNFA_ROUTE.ACCOUNTING}
-            className={`flex w-full items-center gap-8px ${isExpanded ? 'bg-tertiaryBlue p-16px text-white hover:opacity-75' : 'p-8px text-secondaryBlue'} rounded transition-all duration-300 ease-in-out`}
+            className={`flex w-full items-center justify-center ${isExpanded ? 'bg-tertiaryBlue p-16px text-white hover:opacity-75' : 'p-8px text-secondaryBlue'} rounded transition-all duration-300 ease-in-out`}
           >
             <FiPlusCircle size={24} />
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
             >
               {t('JOURNAL.ADD_NEW_JOURNAL')}
             </p>
@@ -75,13 +75,13 @@ const AccountingSidebar = () => {
 
           <Link
             href={ISUNFA_ROUTE.JOURNAL_LIST}
-            className={`flex w-full items-center gap-8px p-8px hover:text-tabs-text-active
+            className={`flex w-full items-center justify-center p-8px hover:text-tabs-text-active
             ${pathname.includes('journal-list') ? 'text-tabs-text-active' : 'text-secondaryBlue'}
             `}
           >
             <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
             >
               {t('JOURNAL.JOURNAL')}
             </p>
