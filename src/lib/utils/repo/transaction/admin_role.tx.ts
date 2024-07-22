@@ -1,11 +1,14 @@
 import prisma from '@/client';
 import { ROLE_NAME } from '@/constants/role_name';
+import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function transferOwnership(
   currentOwnerId: number,
   companyId: number,
   newOwnerId: number
 ) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const result = await prisma.$transaction(async (tx) => {
     const updatedAdmins = [];
 
@@ -27,30 +30,36 @@ export async function transferOwnership(
         },
       });
 
-      if (currentOwner && newOwner) {
-        const ownerRole = await tx.role.findUnique({
-          where: { name: ROLE_NAME.OWNER },
+      if (currentOwner) {
+        const updatedCurrentOwner = await tx.admin.update({
+          where: { id: currentOwner.id },
+          data: {
+            role: {
+              connect: {
+                name: ROLE_NAME.ADMIN,
+              },
+            },
+            updatedAt: nowTimestamp,
+            // Todo (20240722 - Jacky) should add a deleteAt
+          },
+          include: {
+            user: true,
+            company: true,
+            role: true,
+          },
         });
 
-        if (ownerRole) {
+        updatedAdmins.push(updatedCurrentOwner);
+        if (newOwner) {
           const updatedNewOwnerAdmin = await tx.admin.update({
             where: { id: newOwner.id },
-            data: { roleId: ownerRole.id },
-            include: {
-              user: true,
-              company: true,
-              role: true,
-            },
-          });
-
-          const updatedCurrentOwner = await tx.admin.update({
-            where: { id: currentOwner.id },
             data: {
               role: {
                 connect: {
                   name: ROLE_NAME.ADMIN,
                 },
               },
+              updatedAt: nowTimestamp,
             },
             include: {
               user: true,
@@ -60,7 +69,26 @@ export async function transferOwnership(
           });
 
           updatedAdmins.push(updatedNewOwnerAdmin);
-          updatedAdmins.push(updatedCurrentOwner);
+        } else {
+          const newOwnerAdmin = await tx.admin.create({
+            data: {
+              userId: newOwnerId,
+              companyId,
+              roleId: currentOwner.roleId,
+              email: '',
+              status: true,
+              startDate: nowTimestamp,
+              createdAt: nowTimestamp,
+              updatedAt: nowTimestamp,
+            },
+            include: {
+              user: true,
+              company: true,
+              role: true,
+            },
+          });
+
+          updatedAdmins.push(newOwnerAdmin);
         }
       }
     }
