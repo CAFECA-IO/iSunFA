@@ -1,6 +1,9 @@
 import { INSURANCETABLE } from '@/constants/insurance_pension_table';
 
-export function getInsuranceInfo(salary: number): { insuredSalary: number; employerTotalContribution: number } {
+export function getInsuranceInfo(salary: number): {
+  insuredSalary: number;
+  employerTotalContribution: number;
+} {
   const insuranceTable = INSURANCETABLE;
   const { length } = insuranceTable;
   if (salary < insuranceTable[0].insuredSalary) {
@@ -10,8 +13,10 @@ export function getInsuranceInfo(salary: number): { insuredSalary: number; emplo
     return insuranceTable[length - 1];
   }
   const insuranceInfo = insuranceTable.find((data) => salary <= data.insuredSalary);
-  return insuranceInfo ? {
-    insuredSalary: insuranceInfo.insuredSalary,
-    employerTotalContribution: insuranceInfo.employerTotalContribution
-  } : insuranceTable[length - 1];
+  return insuranceInfo
+    ? {
+        insuredSalary: insuranceInfo.insuredSalary,
+        employerTotalContribution: insuranceInfo.employerTotalContribution,
+      }
+    : insuranceTable[length - 1];
 }

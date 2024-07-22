@@ -10,7 +10,7 @@ export enum MessageType {
 
 export interface IMessageModal {
   title: string;
-  content: string;
+  content: string | JSX.Element;
   notes?: string;
   hideCloseBtn?: boolean;
   submitBtnStr: string;

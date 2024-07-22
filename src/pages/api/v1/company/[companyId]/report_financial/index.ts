@@ -14,8 +14,18 @@ import {
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountForSheetDisplay, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { getSession } from '@/lib/utils/session';
-import { ReportSheetType, ReportSheetTypeDisplayMap, ReportStatusType, ReportType } from '@/constants/report';
-import { isReportSheetType, convertStringToReportSheetType, isReportLanguagesKey, isReportStatusType } from '@/lib/utils/type_guard/report';
+import {
+  ReportSheetType,
+  ReportSheetTypeDisplayMap,
+  ReportStatusType,
+  ReportType,
+} from '@/constants/report';
+import {
+  isReportSheetType,
+  convertStringToReportSheetType,
+  isReportLanguagesKey,
+  isReportStatusType,
+} from '@/lib/utils/type_guard/report';
 import FinancialReportGeneratorFactory from '@/lib/utils/financial_report/financial_report_generator_factory';
 import { createFinancialReport, getReportIdByFromTo } from '@/lib/utils/repo/report.repo';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
@@ -32,10 +42,17 @@ export function formatReportSheetTypeFromQuery(reportType: string | string[] | u
   return reportSheetType;
 }
 
-export function getLastPeriodStartAndEndDate(reportSheetType: ReportSheetType, startDateInSecond: number, endDateInSecond: number) {
-    const lastPeriodStartDateInSecond = reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
-    const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
-    return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
+export function getLastPeriodStartAndEndDate(
+  reportSheetType: ReportSheetType,
+  startDateInSecond: number,
+  endDateInSecond: number
+) {
+  const lastPeriodStartDateInSecond =
+    reportSheetType === ReportSheetType.BALANCE_SHEET
+      ? 0
+      : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
+  const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
+  return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
 }
 
 export function formatStartAndEndDateFromQuery(
@@ -61,7 +78,11 @@ export function formatStartAndEndDateFromQuery(
     endDateInSecond = timestampInSeconds(endDateInSecondString);
   }
 
-  const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(reportSheetType, startDateInSecond, endDateInSecond);
+  const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
+    reportSheetType,
+    startDateInSecond,
+    endDateInSecond
+  );
 
   return {
     startDateInSecond,
@@ -89,7 +110,9 @@ export function formatStatusFromQuery(status: string | string[] | undefined): Re
   return statusString;
 }
 
-export function formatReportLanguageFromQuery(reportLanguage: string | string[] | undefined): ReportLanguagesKey {
+export function formatReportLanguageFromQuery(
+  reportLanguage: string | string[] | undefined
+): ReportLanguagesKey {
   let reportLanguageString = ReportLanguagesKey.tw;
 
   if (isParamString(reportLanguage) && isReportLanguagesKey(reportLanguage)) {
@@ -185,39 +208,39 @@ export function generateIAccountReadyForFrontendArray(
 ): IAccountReadyForFrontend[] {
   const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
 
-    if (
-      curPeriodContent &&
-      prePeriodContent &&
-      curPeriodContent.length > 0 &&
-      prePeriodContent.length > 0 &&
-      curPeriodContent.length === prePeriodContent.length
-    ) {
-      curPeriodContent.forEach((curPeriodAccount, index) => {
-        const lastPeriodAccount = prePeriodContent[index];
-        const curPeriodAmount = curPeriodAccount.amount || 0;
-        const prePeriodAmount = lastPeriodAccount.amount || 0;
-        const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-        const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
-        const curPeriodPercentage = curPeriodAccount?.percentage
-          ? Math.round(curPeriodAccount.percentage * 100)
-          : 0;
-        const prePeriodPercentage = lastPeriodAccount?.percentage
-          ? Math.round(lastPeriodAccount.percentage * 100)
-          : 0;
-        const accountReadyForFrontend: IAccountReadyForFrontend = {
-          code: curPeriodAccount.code,
-          name: curPeriodAccount.name,
-          curPeriodAmount,
-          curPeriodPercentage,
-          curPeriodAmountString,
-          prePeriodAmount,
-          prePeriodPercentage,
-          prePeriodAmountString,
-          indent: curPeriodAccount.indent,
-        };
-        curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
-      });
-    }
+  if (
+    curPeriodContent &&
+    prePeriodContent &&
+    curPeriodContent.length > 0 &&
+    prePeriodContent.length > 0 &&
+    curPeriodContent.length === prePeriodContent.length
+  ) {
+    curPeriodContent.forEach((curPeriodAccount, index) => {
+      const lastPeriodAccount = prePeriodContent[index];
+      const curPeriodAmount = curPeriodAccount.amount || 0;
+      const prePeriodAmount = lastPeriodAccount.amount || 0;
+      const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
+      const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
+      const curPeriodPercentage = curPeriodAccount?.percentage
+        ? Math.round(curPeriodAccount.percentage * 100)
+        : 0;
+      const prePeriodPercentage = lastPeriodAccount?.percentage
+        ? Math.round(lastPeriodAccount.percentage * 100)
+        : 0;
+      const accountReadyForFrontend: IAccountReadyForFrontend = {
+        code: curPeriodAccount.code,
+        name: curPeriodAccount.name,
+        curPeriodAmount,
+        curPeriodPercentage,
+        curPeriodAmountString,
+        prePeriodAmount,
+        prePeriodPercentage,
+        prePeriodAmountString,
+        indent: curPeriodAccount.indent,
+      };
+      curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
+    });
+  }
   return curPeriodAccountReadyForFrontendArray;
 }
 
@@ -253,7 +276,10 @@ export async function generateReportIfNotExist(
       reportSheetType
     );
 
-    const reportContentSavingToDB = generateIAccountReadyForFrontendArray(reportContentCurPeriodJSON, reportContentPastPeriodJson);
+    const reportContentSavingToDB = generateIAccountReadyForFrontendArray(
+      reportContentCurPeriodJSON,
+      reportContentPastPeriodJson
+    );
 
     const name = await generateReportName(
       companyId,
@@ -480,7 +506,7 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData< number | null>>
+  res: NextApiResponse<IResponseData<number | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
