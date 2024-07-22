@@ -127,6 +127,16 @@ export async function handleGetRequest(
     data: generatedReportItems,
     page: generatedData.page,
     totalPages: generatedData.totalPages,
+    totalCount: generatedData.totalCount,
+    pageSize: generatedData.pageSize,
+    hasNextPage: generatedData.hasNextPage,
+    hasPreviousPage: generatedData.hasPreviousPage,
+    sort: [
+      {
+        sortBy: sortByString,
+        sortOrder: sortOrderString,
+      },
+    ],
   };
   return paginatedGeneratedReportItem;
 }

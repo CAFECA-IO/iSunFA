@@ -17,6 +17,8 @@ import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
+  IPaginatedGeneratedReportItem,
+  IPaginatedPendingReportItem,
   IPendingReportItem,
 } from '@/interfaces/report_item';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -60,7 +62,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
+  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
   });
@@ -69,14 +71,14 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
+  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
   });
 
   useEffect(() => {
-    if (listPendingSuccess && pendingReports) {
-      setPendingData(pendingReports);
+    if (listPendingSuccess && pendingReports?.data) {
+      setPendingData(pendingReports.data);
     } else if (listPendingSuccess === false) {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
@@ -89,8 +91,8 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
   useEffect(() => {
-    if (listGeneratedSuccess && generatedReports) {
-      setHistoryData(generatedReports);
+    if (listGeneratedSuccess && generatedReports?.data) {
+      setHistoryData(generatedReports.data);
     } else if (listGeneratedSuccess === false) {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,

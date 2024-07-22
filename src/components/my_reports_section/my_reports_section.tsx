@@ -15,6 +15,8 @@ import {
   FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
+  IPaginatedGeneratedReportItem,
+  IPaginatedPendingReportItem,
   IPendingReportItem,
 } from '@/interfaces/report_item';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
@@ -75,23 +77,23 @@ const MyReportsSection = () => {
   const isPendingDataLoading = false;
   const isHistoryDataLoading = false;
 
-  const pendingTotalPages = FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
-  const historyTotalPages = FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
+  // const pendingTotalPages = FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
+  // const historyTotalPages = FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
 
   const {
     trigger: fetchPendingReports,
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
+  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: {
-      sort: sortOptionQuery[filteredPendingSort],
-      begin: pendingPeriod.startTimeStamp,
-      end: pendingPeriod.endTimeStamp,
-      search: searchPendingQuery,
-      page: pendingCurrentPage,
-      limit: LIMIT_FOR_REPORT_PAGE,
+      sortBy: sortOptionQuery[filteredPendingSort],
+      startDateInSecond: pendingPeriod.startTimeStamp,
+      endDateInSecond: pendingPeriod.endTimeStamp,
+      searchQuery: searchPendingQuery,
+      targetPage: pendingCurrentPage,
+      pageSize: LIMIT_FOR_REPORT_PAGE,
     },
   });
 
@@ -100,21 +102,22 @@ const MyReportsSection = () => {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
+  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: {
-      sort: sortOptionQuery[filteredHistorySort],
-      begin: historyPeriod.startTimeStamp,
-      end: historyPeriod.endTimeStamp,
-      search: searchHistoryQuery,
-      page: historyCurrentPage,
-      limit: LIMIT_FOR_REPORT_PAGE,
+      sortBy: sortOptionQuery[filteredHistorySort],
+      startDateInSecond: historyPeriod.startTimeStamp,
+      endDateInSecond: historyPeriod.endTimeStamp,
+      searchQuery: searchHistoryQuery,
+      targetPage: historyCurrentPage,
+      pageSize: LIMIT_FOR_REPORT_PAGE,
     },
   });
-
+  const pendingTotalPages = pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
+  const historyTotalPages = generatedReports?.totalPages || FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
   useEffect(() => {
-    if (listPendingSuccess && pendingReports) {
-      setPendingData(pendingReports);
+    if (listPendingSuccess && pendingReports?.data) {
+      setPendingData(pendingReports.data);
     } else if (listPendingSuccess === false) {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
@@ -127,8 +130,8 @@ const MyReportsSection = () => {
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
   useEffect(() => {
-    if (listGeneratedSuccess && generatedReports) {
-      setHistoryData(generatedReports);
+    if (listGeneratedSuccess && generatedReports?.data) {
+      setHistoryData(generatedReports.data);
     } else if (listGeneratedSuccess === false) {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
@@ -204,7 +207,7 @@ const MyReportsSection = () => {
       className={`group relative flex h-44px w-200px cursor-pointer ${isPendingSortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isPendingSortMenuOpen ? ' text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isPendingSortMenuOpen ? 'text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredPendingSort)}
       </p>
@@ -414,7 +417,7 @@ const MyReportsSection = () => {
       className={`group relative flex h-44px w-200px cursor-pointer ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? 'text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredHistorySort)}
       </p>

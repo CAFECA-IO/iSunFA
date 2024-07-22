@@ -201,6 +201,7 @@ const DatePicker = ({
   alignCalendar,
   datePickerClassName,
   disabled,
+  datePickerHandler,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -234,6 +235,11 @@ const DatePicker = ({
         startTimeStamp: dateOneStamp,
         endTimeStamp: isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp,
       });
+      datePickerHandler &&
+        datePickerHandler(
+          dateOneStamp,
+          isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp
+        );
       // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
       if (onClose) {
         onClose();
