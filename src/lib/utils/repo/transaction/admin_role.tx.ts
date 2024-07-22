@@ -56,7 +56,7 @@ export async function transferOwnership(
             data: {
               role: {
                 connect: {
-                  name: ROLE_NAME.ADMIN,
+                  name: ROLE_NAME.OWNER,
                 },
               },
               updatedAt: nowTimestamp,
