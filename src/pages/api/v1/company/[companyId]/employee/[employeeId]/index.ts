@@ -5,6 +5,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { checkUserAdmin } from '@/lib/utils/auth_check';
+import { updateEmployeeProject } from '@/lib/utils/repo/employee.repo'
 import prisma from '@/client';
 
 async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
@@ -30,12 +31,15 @@ async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
     select: {
       project: {
         select: {
+          id: true,
           name: true,
         },
       },
     },
   });
-  const projectNames = projects.map((project) => project.project.name);
+  const projectIdsNames = projects.map((project) => {
+    return { id: project.project.id, name: project.project.name };
+  });
   let employeeData = {} as IEmployeeData;
   if (employee) {
     employeeData = {
@@ -47,7 +51,7 @@ async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
       bonus: employee.bonus,
       salary_payment_mode: employee.salaryPayMode,
       pay_frequency: employee.payFrequency,
-      projects: projectNames,
+      projects: projectIdsNames,
       insurance_payments: employee.insurancePayment,
       additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
     };
@@ -66,6 +70,7 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
       },
       data: {
         endDate: targetTime,
+        updatedAt: targetTime,
       },
     });
   } catch (error) {
@@ -81,9 +86,12 @@ async function updateEmployee(
   bonus: number,
   insurancePayment: number,
   salaryPayMode: string,
-  payFrequency: string
+  payFrequency: string,
+  projectIdsNames: { id: number, name: string }[]
 ): Promise<IEmployeeData> {
   try {
+    const nowTime = new Date().getTime();
+    const targetTime = timestampInSeconds(nowTime);
     await prisma.employee.update({
       where: {
         id: employeeIdNumber,
@@ -95,8 +103,10 @@ async function updateEmployee(
         insurancePayment,
         salaryPayMode,
         payFrequency,
+        updatedAt: targetTime,
       },
     });
+    await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
     // Info: (20240627 - Gibbs) console error only
     // eslint-disable-next-line no-console
@@ -124,12 +134,15 @@ async function updateEmployee(
     select: {
       project: {
         select: {
+          id: true,
           name: true,
         },
       },
     },
   });
-  const projectNames = projects.map((project) => project.project.name);
+  const formatProjectIdsNames = projects.map((project) => {
+    return { id: project.project.id, name: project.project.name };
+  });
   let employeeData = {} as IEmployeeData;
   if (employee) {
     employeeData = {
@@ -141,7 +154,7 @@ async function updateEmployee(
       bonus: employee.bonus,
       salary_payment_mode: employee.salaryPayMode,
       pay_frequency: employee.payFrequency,
-      projects: projectNames,
+      projects: formatProjectIdsNames,
       insurance_payments: employee.insurancePayment,
       additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
     };
@@ -190,14 +203,15 @@ export default async function handler(
       }
       case 'PUT': {
         if (shouldContinue) {
-          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency } = req.body;
+          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency, projectIdsNames } = req.body;
           const employeeData = await updateEmployee(
             employeeIdNumber,
             salary,
             bonus,
             insurancePayment,
             salaryPayMode,
-            payFrequency
+            payFrequency,
+            projectIdsNames
           );
           statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
           payload = employeeData;
