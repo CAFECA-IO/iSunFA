@@ -1,8 +1,10 @@
 import { useRouter } from 'next/router';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
+import { useTranslation } from 'next-i18next';
 
 const BackButton = () => {
+  const { t } = useTranslation('common');
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
@@ -13,12 +15,12 @@ const BackButton = () => {
   const leaveClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: 'Leave this page',
-      content: `You might lose progress if you leave.`,
-      subMsg: `Are you sure you want to leave this page?`,
-      submitBtnStr: 'Leave Now',
+      title: t('KYC.LEAVE_THIS_PAGE'),
+      content: t('KYC.YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE'),
+      subMsg: `${t('KYC.ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE')} ?`,
+      submitBtnStr: t('KYC.LEAVE_NOW'),
       submitBtnFunction: handleBack,
-      backBtnStr: 'Cancel',
+      backBtnStr: t('KYC.CANCEL'),
     });
     messageModalVisibilityHandler();
   };

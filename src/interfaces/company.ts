@@ -1,3 +1,5 @@
+import { IRole } from '@/interfaces/role';
+
 export interface ICompany {
   id: number;
   code: string;
@@ -12,4 +14,9 @@ export interface ICompany {
 
 export interface ICompanyDetail extends ICompany {
   ownerId: number;
+}
+
+export interface ICompanyAndRole {
+  company: ICompanyDetail;
+  role: IRole;
 }

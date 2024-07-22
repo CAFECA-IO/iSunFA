@@ -1,10 +1,8 @@
-/* eslint-disable */
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import NumberAnimation, {
-  MobileNumberAnimation,
-} from '@/components/number_animation/number_animation';
+import NumberAnimation from '@/components/number_animation/number_animation';
 import { TranslateFunction } from '@/interfaces/locale';
+import { INTERVAL_NUMBER_ANIMATION } from '@/constants/display';
 
 const NumberAnimationSection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -34,10 +32,10 @@ const NumberAnimationSection = () => {
   ];
 
   const numberBlockList = numberBlockContent.map(
-    ({ image, alt, description, targetNumber, unit }, index) => (
+    ({ image, alt, description, targetNumber, unit }) => (
       <div
-        key={index}
-        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-tertiaryBlue px-0 py-10 drop-shadow-101 lg:w-300px"
+        key={description}
+        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-tertiaryBlue px-0 py-10 lg:w-300px"
       >
         {/* Info:(20230815 - Shirley) Image */}
         <div className="absolute -top-10 h-100px w-100px">
@@ -47,7 +45,6 @@ const NumberAnimationSection = () => {
             alt={alt}
             fill
             style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
-            loading="lazy"
           />
           <div className="relative left-0 top-7rem">
             <Image
@@ -56,18 +53,14 @@ const NumberAnimationSection = () => {
               alt={alt}
               width={75}
               height={15}
-              loading="lazy"
             />
           </div>
         </div>
 
         {/* Info:(20240315 - Shirley) Number animation */}
         <div className="flex w-full items-baseline justify-center space-x-2 font-bold">
-          <div className="hidden lg:flex">
-            <NumberAnimation targetNumber={targetNumber} />
-          </div>
-          <div className="flex lg:hidden">
-            <MobileNumberAnimation targetNumber={targetNumber} />
+          <div className="flex">
+            <NumberAnimation targetNumber={targetNumber} interval={INTERVAL_NUMBER_ANIMATION} />
           </div>
           <p className="text-h4 leading-h4">{unit}</p>
         </div>
