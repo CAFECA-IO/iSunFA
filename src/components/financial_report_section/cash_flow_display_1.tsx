@@ -106,6 +106,7 @@ const CashFlowDisplay: React.FC<CashFlowDisplayProps> = ({ reportType }) => {
 
   // eslint-disable-next-line no-console
   // console.log('reportData', reportData.general);
+  // Deprecated: temporary console.log debug information (20240722 - Anna)
   return (
     <div className="container">
       <header>
