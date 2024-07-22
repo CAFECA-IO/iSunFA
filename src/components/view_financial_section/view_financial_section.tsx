@@ -625,7 +625,7 @@ const ViewFinancialSection = ({
     }
   }, [query]);
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
-  console.log('reportData', reportData.general);
+  // console.log('reportData', reportData.general);
   // Deprecated: temporary console.log debug information (20240722 - Anna)
   if (pageNumber === 1) {
     return (
