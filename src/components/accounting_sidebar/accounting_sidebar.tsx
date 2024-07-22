@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { FiBookOpen, FiPlusCircle } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
@@ -11,6 +12,8 @@ const AccountingSidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
+
+  const { pathname } = useRouter();
 
   const { selectedCompany } = useUserCtx();
   const companyName = selectedCompany?.name;
@@ -72,7 +75,9 @@ const AccountingSidebar = () => {
 
           <Link
             href={ISUNFA_ROUTE.JOURNAL_LIST}
-            className="flex w-full items-center gap-8px p-8px text-secondaryBlue hover:text-primaryYellow"
+            className={`flex w-full items-center gap-8px p-8px hover:text-tabs-text-active
+            ${pathname.includes('journal-list') ? 'text-tabs-text-active' : 'text-secondaryBlue'}
+            `}
           >
             <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />
             <p
