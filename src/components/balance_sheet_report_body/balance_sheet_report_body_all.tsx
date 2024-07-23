@@ -3,26 +3,10 @@
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
+import { FinancialReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React from 'react';
-
-interface FinancialReportItem {
-  code: string;
-  name: string;
-  curPeriodAmount: number;
-  curPeriodAmountString: string;
-  curPeriodPercentage: number;
-  prePeriodAmount: number;
-  prePeriodAmountString: string;
-  prePeriodPercentage: number;
-  indent: number;
-}
-
-interface FinancialReport {
-  general: FinancialReportItem[];
-  details: FinancialReportItem[];
-}
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;

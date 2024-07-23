@@ -193,3 +193,5 @@ export const USER_ICON_BACKGROUND_COLORS = [
 export const FREE_COMPANY_ID = 1001;
 
 export const NON_EXISTING_COMPANY_ID = -1;
+
+export const DOMAIN = 'https://isunfa.com';

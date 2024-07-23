@@ -10,6 +10,13 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { ToastType } from '@/interfaces/toastify';
 import useStateRef from 'react-usestateref';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { FinancialReport } from '@/interfaces/report';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
+import Skeleton from '@/components/skeleton/skeleton';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -17,6 +24,7 @@ interface IViewReportSectionProps {
   tokenContract: string;
   tokenId: string;
   reportLink: string;
+  reportId: string;
 }
 
 const balanceReportThumbnails = [
@@ -329,12 +337,17 @@ const cashFlowReportThumbnails = [
 ];
 
 const ViewFinancialSection = ({
+  reportId,
+
   reportTypesName,
   tokenContract,
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
+  console.log('reportLink in viewFinancialSection', reportLink);
+
   const globalCtx = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
 
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
   const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
@@ -347,6 +360,20 @@ const ViewFinancialSection = ({
   const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const {
+    data: reportFinancial,
+    code: getReportFinancialCode,
+    success: getReportFinancialSuccess,
+    isLoading: getReportFinancialIsLoading,
+  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: {
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      reportId: reportId ?? '10000003',
+    },
+  });
+
+  console.log('reportFinancial in viewFinancialSection', reportFinancial);
 
   function onDocumentLoadSuccess(data: { numPages: number }): void {
     setNumPages(data.numPages);
@@ -412,10 +439,7 @@ const ViewFinancialSection = ({
 
   const fetchPDF = async () => {
     try {
-      const uri = encodeURIComponent(
-        'https://i-sun-ej6d483kw-cafeca.vercel.app/v1/12345/balance-sheet'
-      );
-      // const uri = encodeURIComponent(reportLink);
+      const uri = encodeURIComponent(reportLink);
 
       const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
@@ -503,6 +527,12 @@ const ViewFinancialSection = ({
     handleResize();
   }, [globalCtx.width]);
 
+  const displayedReportType = getReportFinancialIsLoading ? (
+    <Skeleton width={200} height={80} />
+  ) : (
+    <>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</>
+  );
+
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
@@ -532,7 +562,7 @@ const ViewFinancialSection = ({
           </div>
         </Button>
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
-          {reportTypesName?.name}
+          {displayedReportType}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
