@@ -8,7 +8,7 @@ import {
   removeInterestExpenseFromNetIncome,
   removeInterestOrDividendRevenueFromNetIncome,
   removeInvestAndFinancialExpenseFromNetIncome,
-} from '@/lib/utils/account';
+} from '@/lib/utils/account/common';
 
 // Info: (20240708 - Murky) Indirect Cash flow from operating activities
 

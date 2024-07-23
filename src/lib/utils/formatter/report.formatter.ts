@@ -102,7 +102,8 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
 }
 
 export function formatIPaginatedPendingReportItem(
-  pendingItems: IPendingReportItem[],
+  reports:{
+  data: IReportIncludeProject[],
   page: number,
   totalPages: number,
   totalCount: number, // 總數量
@@ -111,19 +112,21 @@ export function formatIPaginatedPendingReportItem(
   hasPreviousPage: boolean, // 是否有上一頁
   sortBy: string, // 排序欄位
   sortOrder: string // 排序方式
+}
 ): IPaginatedPendingReportItem {
+  const pendingItems = reports.data.map((report) => formatIPendingReportItem(report));
   const paginatedPendingReportItem: IPaginatedPendingReportItem = {
     data: pendingItems,
-    page,
-    totalPages,
-    totalCount,
-    pageSize,
-    hasNextPage,
-    hasPreviousPage,
+    page: reports.page,
+    totalPages: reports.totalPages,
+    totalCount: reports.totalCount,
+    pageSize: reports.pageSize,
+    hasNextPage: reports.hasNextPage,
+    hasPreviousPage: reports.hasPreviousPage,
     sort: [
       {
-        sortBy,
-        sortOrder,
+        sortBy: reports.sortBy,
+        sortOrder: reports.sortOrder
       },
     ],
   };
@@ -131,28 +134,31 @@ export function formatIPaginatedPendingReportItem(
 }
 
 export function formatIPaginatedGeneratedReportItem(
-  generatedItems: IGeneratedReportItem[],
-  page: number,
-  totalPages: number,
-  totalCount: number, // 總數量
-  pageSize: number, // 每頁顯示的項目數量
-  hasNextPage: boolean, // 是否有下一頁
-  hasPreviousPage: boolean, // 是否有上一頁
-  sortBy: string, // 排序欄位
-  sortOrder: string // 排序方式
+  reports:{
+    data: IReportIncludeProject[],
+    page: number,
+    totalPages: number,
+    totalCount: number, // 總數量
+    pageSize: number, // 每頁顯示的項目數量
+    hasNextPage: boolean, // 是否有下一頁
+    hasPreviousPage: boolean, // 是否有上一頁
+    sortBy: string, // 排序欄位
+    sortOrder: string // 排序方式
+  }
 ): IPaginatedGeneratedReportItem {
+  const generatedItems = reports.data.map((report) => formatIGeneratedReportItem(report));
   const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
     data: generatedItems,
-    page,
-    totalPages,
-    totalCount,
-    pageSize,
-    hasNextPage,
-    hasPreviousPage,
+    page: reports.page,
+    totalPages: reports.totalPages,
+    totalCount: reports.totalCount,
+    pageSize: reports.pageSize,
+    hasNextPage: reports.hasNextPage,
+    hasPreviousPage: reports.hasPreviousPage,
     sort: [
       {
-        sortBy,
-        sortOrder,
+        sortBy: reports.sortBy,
+        sortOrder: reports.sortOrder
       },
     ],
   };
