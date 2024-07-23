@@ -4,7 +4,7 @@ import {
   getUserByCredential,
   createUser,
   updateUserById,
-  deleteUserById,
+  deleteUserByIdForTesting,
 } from '@/lib/utils/repo/user.repo';
 import users from '@/seed_json/user.json';
 
@@ -70,7 +70,7 @@ describe('User Repository', () => {
         newUser.algorithm,
         newUser.imageUrl
       );
-      await deleteUserById(user.id); // Clean up after test
+      await deleteUserByIdForTesting(user.id); // Clean up after test
       expect(user).toBeDefined();
       expect(user.name).toBe(newUser.name);
       expect(user.credentialId).toBe(newUser.credentialId);
@@ -88,7 +88,7 @@ describe('User Repository', () => {
     });
   });
 
-  describe('deleteUserById', () => {
+  describe('deleteUserByIdForTesting', () => {
     it('should delete a user by their ID', async () => {
       const newUser = await createUser(
         'Delete Test User',
@@ -97,7 +97,7 @@ describe('User Repository', () => {
         'delete_test_algorithm',
         'delete_test_image_url'
       );
-      const deletedUser = await deleteUserById(newUser.id);
+      const deletedUser = await deleteUserByIdForTesting(newUser.id);
       expect(deletedUser).toBeDefined();
       expect(deletedUser.id).toBe(newUser.id);
     });

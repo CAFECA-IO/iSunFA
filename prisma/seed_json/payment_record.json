@@ -9,7 +9,8 @@
     "method": "Credit Card",
     "status": "Completed",
     "createdAt": 1634567890,
-    "updatedAt": 1634567890
+    "updatedAt": 1634567890,
+    "deletedAt": null
   },
   {
     "id": 1001,
@@ -21,6 +22,7 @@
     "method": "PayPal",
     "status": "Completed",
     "createdAt": 1634567900,
-    "updatedAt": 1634567900
+    "updatedAt": 1634567900,
+    "deletedAt": null
   }
 ]

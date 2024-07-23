@@ -1,6 +1,6 @@
 import prisma from '@/client';
-import { Admin, Company } from '@prisma/client';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { Admin, Company, Prisma } from '@prisma/client';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { ROLE_NAME } from '@/constants/role_name';
 
 export async function getCompanyById(companyId: number): Promise<Company | null> {
@@ -83,10 +83,22 @@ export async function updateCompanyById(
 }
 
 export async function deleteCompanyById(companyId: number): Promise<Company> {
-  const company = await prisma.company.delete({
-    where: {
-      id: companyId,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.CompanyWhereUniqueInput = {
+    id: companyId,
+    deletedAt: null,
+  };
+
+  const data: Prisma.CompanyUpdateInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs = {
+    where,
+    data,
+  };
+
+  const company = await prisma.company.update(updateArgs);
   return company;
 }

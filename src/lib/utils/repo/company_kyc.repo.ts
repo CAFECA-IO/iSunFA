@@ -6,7 +6,8 @@ import {
   RepresentativeIDType,
 } from '@/constants/kyc';
 import { ICompanyKYC } from '@/interfaces/company_kyc';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma } from '@prisma/client';
 
 export function getEnumValue<T extends object>(enumObj: T, value: string): T[keyof T] | undefined {
   return (Object.values(enumObj) as unknown as string[]).includes(value)
@@ -90,10 +91,34 @@ export async function createCompanyKYC(
 }
 
 export async function deleteCompanyKYC(id: number): Promise<ICompanyKYC> {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.CompanyKYCWhereUniqueInput = {
+    id,
+    deletedAt: null,
+  };
+
+  const data: Prisma.CompanyKYCUpdateInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs = {
+    where,
+    data,
+  };
+  const companyKYC = await prisma.companyKYC.update(updateArgs);
+
+  return companyKYC as ICompanyKYC;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteCompanyKYCForTesting(id: number): Promise<ICompanyKYC> {
+  const where: Prisma.CompanyKYCWhereUniqueInput = {
+    id,
+  };
+
   const companyKYC = await prisma.companyKYC.delete({
-    where: {
-      id,
-    },
+    where,
   });
 
   return companyKYC as ICompanyKYC;

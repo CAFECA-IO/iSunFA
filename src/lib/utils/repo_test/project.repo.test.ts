@@ -4,7 +4,7 @@ import {
   getProjectById,
   createProject,
   updateProjectById,
-  deleteProjectById,
+  deleteProjectByIdForTest,
 } from '@/lib/utils/repo/project.repo';
 import projects from '@/seed_json/project.json';
 
@@ -55,7 +55,7 @@ describe('Project Repository', () => {
       const stage = MILESTONE.BETA_TESTING;
       const members = [] as number[];
       const project = await createProject(companyId, name, stage, members);
-      await deleteProjectById(project.id);
+      await deleteProjectByIdForTest(project.id);
       expect(project).toBeDefined();
       expect(project.name).toBe(name);
       expect(project.stage).toBe(stage);

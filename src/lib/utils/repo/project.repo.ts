@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { Employee, Project, Value } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
 export async function listProject(companyId: number) {
   const listedProject = await prisma.project.findMany({
@@ -195,26 +195,55 @@ export async function updateProjectById(
 }
 
 export async function deleteProjectById(projectId: number) {
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20240723 - Murky) All delete can use same "where" and data
+  const where = {
+    projectId,
+    deletedAt: null,
+  };
+
+  const data = {
+    deletedAt: nowInSecond
+  };
+
+  const updateArgs = {
+    where,
+    data,
+  };
+
   await prisma.$transaction([
-    prisma.milestone.deleteMany({
-      where: {
-        projectId,
-      },
-    }),
-    prisma.value.delete({
-      where: {
-        projectId,
-      },
-    }),
-    prisma.employeeProject.deleteMany({
-      where: {
-        projectId,
-      },
-    }),
-    prisma.project.delete({
+    prisma.milestone.updateMany(updateArgs),
+    prisma.value.updateMany(updateArgs),
+    prisma.employeeProject.updateMany(updateArgs),
+    prisma.project.updateMany({
       where: {
         id: projectId,
       },
+      data,
+    }),
+  ]);
+}
+
+export async function deleteProjectByIdForTest(projectId: number) {
+  // Info: (20240723 - Murky) All delete can use same "where" and data
+  const where = {
+    projectId,
+    deletedAt: null,
+  };
+
+  const deleteArg = {
+    where,
+  };
+
+  await prisma.$transaction([
+    prisma.milestone.deleteMany(deleteArg),
+    prisma.value.deleteMany(deleteArg),
+    prisma.employeeProject.deleteMany(deleteArg),
+    prisma.project.deleteMany({
+      where: {
+        id: projectId,
+      }
     }),
   ]);
 }

@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
-import { timestampInSeconds } from '@/lib/utils/common';
-import { Admin, Company, Role, User } from '@prisma/client';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Admin, Company, Prisma, Role, User } from '@prisma/client';
 
 export async function listAdminByCompanyId(
   companyId: number
@@ -171,25 +171,51 @@ export async function updateAdminById(
 export async function deleteAdminById(
   adminId: number
 ): Promise<Admin & { company: Company; user: User; role: Role }> {
-  const deletedAdmin = await prisma.admin.delete({
-    where: {
-      id: adminId,
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.AdminWhereUniqueInput = {
+    id: adminId,
+    deletedAt: null,
+  };
+
+  const include: Prisma.AdminInclude = {
+    user: true,
+    company: true,
+    role: true,
+  };
+
+  const data: Prisma.AdminUpdateInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs = {
+    data,
+    where,
+    include
+  };
+  const deletedAdmin = await prisma.admin.update(updateArgs);
+
   return deletedAdmin;
 }
 
 export async function deleteAdminListByCompanyId(companyId: number): Promise<number> {
-  const { count } = await prisma.admin.deleteMany({
-    where: {
-      companyId,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.AdminWhereInput = {
+    companyId,
+    deletedAt: null,
+  };
+
+  const data: Prisma.AdminUpdateManyMutationInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs = {
+    data,
+    where
+  };
+
+  const { count } = await prisma.admin.updateMany(updateArgs);
   return count;
 }
 
@@ -303,4 +329,40 @@ export async function createCompanyAndRole(
   });
 
   return newCompanyRoleList;
+}
+
+// Info (20240721 - Murky) For testing, real delete
+export async function deleteAdminByIdForTesting(
+  adminId: number
+): Promise<Admin & { company: Company; user: User; role: Role }> {
+  const where: Prisma.AdminWhereUniqueInput = {
+    id: adminId,
+  };
+
+  const include: Prisma.AdminInclude = {
+    user: true,
+    company: true,
+    role: true,
+  };
+
+  const deleteArgs = {
+    where,
+    include
+  };
+  const deletedAdmin = await prisma.admin.delete(deleteArgs);
+
+  return deletedAdmin;
+}
+
+export async function deleteAdminListByCompanyIdForTesting(companyId: number): Promise<number> {
+  const where: Prisma.AdminWhereInput = {
+    companyId,
+  };
+
+  const deleteArgs = {
+    where
+  };
+
+  const { count } = await prisma.admin.deleteMany(deleteArgs);
+  return count;
 }

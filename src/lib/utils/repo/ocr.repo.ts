@@ -2,8 +2,8 @@ import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { timestampInSeconds } from '@/lib/utils/common';
-import { Ocr } from '@prisma/client';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Ocr, Prisma } from '@prisma/client';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -33,20 +33,30 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   companyId: number,
-  ocrtype: string = 'invoice'
-) {
+  ocrType: string = 'invoice'
+): Promise<Ocr[]> {
   let ocrData: Ocr[];
 
+  const where: Prisma.OcrWhereInput = {
+    companyId,
+    type: ocrType,
+    deletedAt: null,
+    status: {
+      not: ProgressStatus.HAS_BEEN_USED,
+    },
+  };
+
+  const orderBy: Prisma.OcrOrderByWithRelationInput = {
+    createdAt: 'asc',
+  };
+
+  const findManyOptions: Prisma.OcrFindManyArgs = {
+    where,
+    orderBy
+  };
+
   try {
-    ocrData = await prisma.ocr.findMany({
-      where: {
-        companyId,
-        type: ocrtype,
-        status: {
-          not: ProgressStatus.HAS_BEEN_USED,
-        },
-      },
-    });
+    ocrData = await prisma.ocr.findMany(findManyOptions);
   } catch (error) {
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
@@ -109,10 +119,20 @@ export async function createOcrInPrisma(
 }
 
 export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
-  const ocr = await prisma.ocr.delete({
-    where: {
-      aichResultId,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+  const where: Prisma.OcrWhereUniqueInput = {
+    aichResultId,
+    deletedAt: null,
+  };
+
+  const data: Prisma.OcrUpdateInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updatedArgs: Prisma.OcrUpdateArgs = {
+    where,
+    data,
+  };
+  const ocr = await prisma.ocr.update(updatedArgs);
   return ocr;
 }
