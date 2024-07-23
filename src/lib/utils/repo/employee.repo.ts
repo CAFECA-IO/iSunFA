@@ -134,7 +134,11 @@ export async function createEmployee(
   }
 }
 
-async function createEmployeeProject(projectsToAdd: { id: number, name: string }[], employeeId: number, targetTime: number) {
+async function createEmployeeProject(
+  projectsToAdd: { id: number; name: string }[],
+  employeeId: number,
+  targetTime: number
+) {
   const employeeProjectData = projectsToAdd.map((project) => {
     return {
       employeeId,
@@ -142,53 +146,67 @@ async function createEmployeeProject(projectsToAdd: { id: number, name: string }
       startDate: targetTime,
       endDate: null,
       createdAt: targetTime,
-      updatedAt: targetTime
+      updatedAt: targetTime,
     };
   });
   await prisma.employeeProject.createMany({
-    data: employeeProjectData
+    data: employeeProjectData,
   });
 }
 
-async function updateEmployeeProjectEndDate(projectsToEnd: { project: { id: number, name: string } }[], employeeIdNumber: number, targetTime: number) {
+async function updateEmployeeProjectEndDate(
+  projectsToEnd: { project: { id: number; name: string } }[],
+  employeeIdNumber: number,
+  targetTime: number
+) {
   await prisma.employeeProject.updateMany({
-        where: {
-          employeeId: employeeIdNumber,
-          projectId: {
-            in: projectsToEnd.map((project) => project.project.id)
-          },
-          endDate: null
-        },
-        data: {
-          endDate: targetTime,
-          updatedAt: targetTime
-        }
-      });
+    where: {
+      employeeId: employeeIdNumber,
+      projectId: {
+        in: projectsToEnd.map((project) => project.project.id),
+      },
+      endDate: null,
+    },
+    data: {
+      endDate: targetTime,
+      updatedAt: targetTime,
+    },
+  });
 }
 
-export async function updateEmployeeProject(employeeIdNumber: number, projectIdsNames: { id: number, name: string }[], targetTime: number) {
+export async function updateEmployeeProject(
+  employeeIdNumber: number,
+  projectIdsNames: { id: number; name: string }[],
+  targetTime: number
+) {
   const currentProjectIdsNames = await prisma.employeeProject.findMany({
     where: {
       employeeId: employeeIdNumber,
-      endDate: null
+      endDate: null,
     },
     select: {
       project: {
         select: {
           id: true,
-          name: true
-        }
-      }
-    }
+          name: true,
+        },
+      },
+    },
   });
   if (currentProjectIdsNames.length === 0) {
     await createEmployeeProject(projectIdsNames, employeeIdNumber, targetTime);
   } else {
-    const projectsToAdd = projectIdsNames.filter((project) => !currentProjectIdsNames.some((currentProject) => currentProject.project.id === project.id));
+    const projectsToAdd = projectIdsNames.filter(
+      (project) =>
+        !currentProjectIdsNames.some((currentProject) => currentProject.project.id === project.id)
+    );
     if (projectsToAdd.length > 0) {
       await createEmployeeProject(projectsToAdd, employeeIdNumber, targetTime);
     }
-    const projectsToEnd = currentProjectIdsNames.filter((currentProject) => !projectIdsNames.some((project) => project.id === currentProject.project.id));
+    const projectsToEnd = currentProjectIdsNames.filter(
+      (currentProject) =>
+        !projectIdsNames.some((project) => project.id === currentProject.project.id)
+    );
     if (projectsToEnd.length > 0) {
       await updateEmployeeProjectEndDate(projectsToEnd, employeeIdNumber, targetTime);
     }
