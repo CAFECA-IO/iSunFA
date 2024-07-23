@@ -241,9 +241,14 @@ const DatePicker = ({
           isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp
         );
       // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
-      if (onClose) {
-        onClose();
-      }
+      onClose && onClose();
+    } else if (dateOneStamp === 0 && dateTwoStamp === 0) {
+      setFilteredPeriod({
+        startTimeStamp: 0,
+        endTimeStamp: 0,
+      });
+      onClose && onClose();
+      datePickerHandler && datePickerHandler(0, 0);
     } else {
       setFilteredPeriod({
         startTimeStamp: 0,
