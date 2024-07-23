@@ -6,86 +6,73 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { getSession } from '@/lib/utils/session';
-import { checkUserAdmin } from '@/lib/utils/auth_check';
-import { findFileByName, parseForm } from '@/lib/utils/parse_image_form';
+import { findFileByName } from '@/lib/utils/parse_image_form';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 async function checkAuth(userId: number, companyId: number): Promise<boolean> {
   const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
   return !!admin;
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: string | null = null;
+  let payload: IFile | null = null;
   const session = await getSession(req, res);
   const { userId, companyId } = session;
   const isAuth = await checkAuth(userId, companyId);
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
-    const { filename } = req.query;
+    const { fileId } = req.query;
+    const fileIdStr = fileId as string;
+    const companyIdStr = companyId.toString();
+    const filename = `${companyIdStr}-${fileIdStr}`;
     const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
-    const filePath = await findFileByName(tmpFolder, filename as string);
+    const filePath = await findFileByName(tmpFolder, filename);
     if (!filePath) {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    } else if (!fs.existsSync(filePath)) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
     } else {
-      if (!fs.existsSync(filePath)) {
-        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-      } else {
-        try {
-          fs.unlinkSync(filePath); // 删除文件
-          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-        } catch (error) {
-          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-        }
-      }
-      payload = filePath;
+      const stat = fs.statSync(filePath);
+      payload = { id: fileId as string, size: stat.size, existed: true };
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     }
   }
   return { statusMessage, payload };
 }
 
-async function handlePostRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
-): Promise<{ statusMessage: string; payload: IFile | null }> {
+async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
-
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkUserAdmin({ userId, companyId });
-
+  const isAuth = await checkAuth(userId, companyId);
   if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
-    try {
-      const parsedForm = await parseForm(req, FileFolder.TMP);
-      const { files, fields } = parsedForm;
-      const { file } = files;
-      const { type } = fields;
-
-      if (!file || !type) {
-        statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
-      } else {
-        const id = file[0].newFilename.split('.')[0];
-        payload = { id, size: file[0].size };
-        statusMessage = STATUS_MESSAGE.CREATED;
+    const { fileId } = req.query;
+    const fileIdStr = fileId as string;
+    const companyIdStr = companyId.toString();
+    const filename = `${companyIdStr}-${fileIdStr}`;
+    const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
+    const filePath = await findFileByName(tmpFolder, filename);
+    if (!filePath) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    } else if (!fs.existsSync(filePath)) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    } else {
+      try {
+        const stat = fs.statSync(filePath);
+        fs.unlinkSync(filePath); // 删除文件
+        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+        payload = { id: fileId as string, size: stat.size, existed: false };
+      } catch (error) {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
-    } catch (error) {
-      // 错误处理保持不变
-      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
-
   return { statusMessage, payload };
 }
 
@@ -95,7 +82,7 @@ const methodHandlers: {
     res: NextApiResponse<IResponseData<IFile | string | null>>
   ) => Promise<{ statusMessage: string; payload: IFile | string | null }>;
 } = {
-  POST: handlePostRequest,
+  GET: handleGetRequest,
   DELETE: handleDeleteRequest,
 };
 

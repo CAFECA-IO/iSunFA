@@ -35,6 +35,37 @@ export const parseForm = async (
 
 export async function findFileByName(baseFolder: string, fileName: string): Promise<string | null> {
   const files = await fs.readdir(baseFolder);
-  const foundFile = files.find((file) => path.basename(file, path.extname(file)) === fileName);
+  const foundFile = files.find((file) => file.includes(fileName));
   return foundFile ? path.join(baseFolder, foundFile) : null;
+}
+
+/**
+ * 讀取目標資料夾中的某個檔案，並將其加上前綴後改名
+ * @param fileName - 要加前綴的檔案名稱
+ * @param prefix - 要加的前綴
+ * @param ext - 新的副檔名
+ */
+export async function addPrefixToFile(
+  folder: string,
+  fileName: string,
+  prefix: string,
+  ext: string
+): Promise<string> {
+  const targetFolder = path.join(process.cwd(), folder); // 確保是從專案根目錄開始找目標資料夾
+
+  // 檔案的完整路徑
+  const oldFilePath = path.join(targetFolder, fileName);
+  const currentExt = path.extname(fileName).slice(1); // 去除開頭的點 (.)
+
+  // 根據現有副檔名與新的副檔名來決定是否需要更改
+  const newFilePath = path.join(
+    targetFolder,
+    `${prefix}-${fileName}${currentExt === ext ? '' : `.${ext}`}`
+  );
+
+  // 檢查檔案是否存在
+  await fs.access(oldFilePath);
+  // 改名檔案
+  await fs.rename(oldFilePath, newFilePath);
+  return newFilePath;
 }

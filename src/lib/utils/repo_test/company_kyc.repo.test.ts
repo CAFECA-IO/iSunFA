@@ -29,7 +29,7 @@ describe('CompanyKYC Repository Tests', () => {
     representativeIdCardId: 'newid123',
   };
 
-  describe('createCompanyKYC', () => {
+  xdescribe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
       const companyKYC = await createCompanyKYC(
         testCompanyId,

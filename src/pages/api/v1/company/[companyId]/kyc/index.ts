@@ -3,17 +3,9 @@ import { ICompanyKYC } from '@/interfaces/company_kyc';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
-import { parseForm } from '@/lib/utils/parse_image_form';
-import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
-
-// Info Murky (20240424) 要使用formidable要先關掉bodyParsor
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+import { isCompanyKYC, isCompanyKYCForm } from '@/lib/utils/type_guard/company_kyc';
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,87 +16,16 @@ export default async function handler(
     if (req.method === 'POST') {
       const session = await checkAdmin(req, res);
       const { companyId } = session;
-      let files: formidable.Files;
-      let fields: formidable.Fields;
-      try {
-        const parsedForm = await parseForm(req);
-        files = parsedForm.files;
-        fields = parsedForm.fields;
-      } catch (error) {
-        throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
-      }
-      const { registrationCertificate, taxCertificate, representativeIdCard } = files;
-      if (!registrationCertificate || !taxCertificate || !representativeIdCard) {
-        throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
-      }
-      // Todo: (20240517 - Jacky) send image to cloud storage
-      // const promises = [uploadImage(businessRegi), uploadImage(taxStatus), uploadImage(passport)];
-      const {
-        legalName,
-        country,
-        city,
-        address,
-        zipCode,
-        representativeName,
-        // registerCountry, // Info: To Jacky, this field is duplicated with country and according to ICompanyKYC this field should be removed (20240719 - Tzuhan)
-        structure,
-        registrationNumber,
-        registrationDate,
-        industry,
-        contactPerson,
-        contactPhone,
-        contactEmail,
-        website,
-        representativeIdType,
-      } = fields;
-      if (
-        !legalName ||
-        !country ||
-        !city ||
-        !address ||
-        !zipCode ||
-        !representativeName ||
-        // !registerCountry ||
-        !structure ||
-        !registrationNumber ||
-        !registrationDate ||
-        !industry ||
-        !contactPerson ||
-        !contactPhone ||
-        !contactEmail ||
-        !website || // Info: To Jacky, this field is optional (20240719 - Tzuhan)
-        !representativeIdType
-      ) {
+      const { companyKYCForm } = req.body;
+      const bodyType = isCompanyKYCForm(companyKYCForm);
+      if (!bodyType) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      // Todo: (20240517 - Jacky) get image ids from cloud storage
-      // const imageIds = promise.all(promises);
-      const { registrationCertificateId, taxCertificateId, representativeIdCardId } = {
-        registrationCertificateId: '123',
-        taxCertificateId: '123',
-        representativeIdCardId: '123',
-      };
-      const companyKYC: ICompanyKYC = await createCompanyKYC(
-        companyId,
-        legalName[0],
-        country[0],
-        city[0],
-        address[0],
-        zipCode[0],
-        representativeName[0],
-        structure[0],
-        registrationNumber[0],
-        registrationDate[0],
-        industry[0],
-        contactPerson[0],
-        contactPhone[0],
-        contactEmail[0],
-        website[0], // Info: To Jacky, this field is optional (20240719 - Tzuhan)
-        representativeIdType[0],
-        registrationCertificateId,
-        taxCertificateId,
-        representativeIdCardId
-      );
+      const companyKYC = await createCompanyKYC(companyId, companyKYCForm);
+      const payloadType = isCompanyKYC(companyKYC);
+      if (!payloadType) {
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      }
       const { httpCode, result } = formatApiResponse<ICompanyKYC>(
         STATUS_MESSAGE.CREATED,
         companyKYC

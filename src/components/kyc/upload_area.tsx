@@ -37,7 +37,7 @@ const UploadArea = ({
   const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const readerRef = useRef<FileReader | null>(null);
   const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
-  const { trigger: deleteFileAPI } = APIHandler<boolean>(APIName.FILE_DELETE, {}, false, false);
+  const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE, {}, false, false);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
   const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
   const {
@@ -209,7 +209,7 @@ const UploadArea = ({
           fileId: uploadedFileId,
         },
       });
-      success = result.success && result.data === true;
+      success = result.success && result.data?.existed === false;
       if (!success) {
         handleError(t('KYC.DELETE_FILE_FAILED'), t('KYC.FILE_DELETE_ERROR', { code: result.code }));
       }
@@ -236,9 +236,7 @@ const UploadArea = ({
         listUploadedFiles({
           params: {
             companyId: selectedCompany?.id,
-          },
-          query: {
-            ids: id,
+            fileId: id,
           },
         });
       } else if (file) {
