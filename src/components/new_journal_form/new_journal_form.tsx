@@ -784,9 +784,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240423 - Julian) Total Price */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="border-4 border-lime-600 text-sm font-semibold text-navyBlue2">
-              {t('JOURNAL.TOTAL_PRICE')}
-            </p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
             <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
               <NumericInput
                 id="input-total-price"
