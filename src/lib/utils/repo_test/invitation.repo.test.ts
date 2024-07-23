@@ -1,7 +1,7 @@
 import {
   getInvitationByCode,
   createInvitation,
-  deleteInvitation,
+  deleteInvitationForTesting,
 } from '@/lib/utils/repo/invitation.repo';
 import invitations from '@/seed_json/invitation.json';
 
@@ -59,7 +59,7 @@ describe('Invitation Repository', () => {
       expect(invitation.email).toBe(newInvitation.email);
       expect(invitation.phone).toBe(newInvitation.phone);
       // Assuming there's a cleanup function to delete the created invitation
-      await deleteInvitation(invitation.id);
+      await deleteInvitationForTesting(invitation.id);
     });
   });
 });

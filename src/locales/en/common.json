@@ -723,8 +723,7 @@
     "SUBMIT_FAILED": "Your Application Has Been Failed",
     "SUBMIT_FAILED_MESSAGE": "Error Code: {{code}}",
     "INCOMPLETE_FORM": "Please complete the form",
-    "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}."
-
+    "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}.",
     "LEGAL_COMPANY_NAME": "Legal Company Name",
     "COMPANY_ADDRESS": "Company Address",
     "ZIP_CODE": "Zip Code",
