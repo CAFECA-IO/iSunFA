@@ -102,23 +102,16 @@ const NewJournalForm = () => {
     data: OCRResult,
     code: getCode,
   } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
-  const {
-    trigger: createInvoice,
-    data: invoiceReturn,
-    success: createSuccess,
-    code: createCode,
-  } = APIHandler<{ journalId: number; resultStatus: IAccountResultStatus }>(
-    APIName.INVOICE_CREATE,
+  const { trigger: createInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_CREATE, {}, false, false);
+  const { trigger: updateInvoice } = APIHandler<IAccountResultStatus>(
+    APIName.INVOICE_UPDATE,
     {},
     false,
     false
   );
-  const {
-    trigger: updateInvoice,
-    success: updateSuccess,
-    code: updateCode,
-    data: updateAIResult,
-  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_UPDATE, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -157,6 +150,7 @@ const NewJournalForm = () => {
   });
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+  const [journalId, setJournalId] = useState<number | null>(selectedJournal?.id || null);
 
   useEffect(() => {
     if (selectedOCR !== undefined) {
@@ -391,8 +385,63 @@ const NewJournalForm = () => {
     messageModalVisibilityHandler();
   };
 
+  const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
+    const {
+      success: updateSuccess,
+      data: updateAIResult,
+      code: updateCode,
+    } = await updateInvoice({
+      params: { companyId, journalId: updateJournalId },
+      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+    });
+    if (updateSuccess && updateAIResult?.resultId && updateAIResult?.status) {
+      confirmModalDataHandler({
+        journalId: updateJournalId,
+        askAIId: updateAIResult.resultId,
+      });
+      confirmModalVisibilityHandler();
+    } else if (updateSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Update Invoice Failed',
+        content: `Update Invoice failed: ${updateCode}`,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  const createInvoiceHandler = async (invoiceData: IInvoice) => {
+    const {
+      data: invoice,
+      success: createSuccess,
+      code: createCode,
+    } = await createInvoice({
+      params: { companyId },
+      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+    });
+    if (createSuccess && invoice?.journalId && invoice?.resultStatus) {
+      setJournalId(invoice.journalId);
+      confirmModalDataHandler({
+        journalId: invoice.journalId,
+        askAIId: invoice.resultStatus.resultId,
+      });
+      confirmModalVisibilityHandler();
+    } else if (createSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Create Invoice Failed',
+        content: `Create Invoice failed: ${createCode}`,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
   // Info: (20240429 - Julian) 上傳日記帳資料
-  const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const invoiceData: IInvoice = {
       journalId: selectedJournal?.id || null,
@@ -420,57 +469,13 @@ const NewJournalForm = () => {
         status: paymentStatus,
       },
     };
-    if (selectedJournal || (createSuccess && invoiceReturn)) {
-      const journalId = selectedJournal?.id || invoiceReturn?.journalId;
-      updateInvoice({
-        params: { companyId, journalId },
-        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
-      });
+    const updateJournalId = selectedJournal?.id || journalId;
+    if (updateJournalId) {
+      await updateInvoiceHandler(updateJournalId, invoiceData);
     } else {
-      createInvoice({
-        params: { companyId },
-        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
-      });
+      await createInvoiceHandler(invoiceData);
     }
   };
-
-  useEffect(() => {
-    if (createSuccess && invoiceReturn?.journalId && invoiceReturn?.resultStatus) {
-      confirmModalDataHandler({
-        journalId: invoiceReturn.journalId,
-        askAIId: invoiceReturn.resultStatus.resultId,
-      });
-      confirmModalVisibilityHandler();
-    } else if (createSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Create Invoice Failed',
-        content: `Create Invoice failed: ${createCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [createSuccess, invoiceReturn, createCode]);
-
-  useEffect(() => {
-    if (updateSuccess && updateAIResult?.resultId && updateAIResult?.status) {
-      confirmModalDataHandler({
-        journalId: selectedJournal!.id,
-        askAIId: updateAIResult.resultId,
-      });
-      confirmModalVisibilityHandler();
-    } else if (updateSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Update Journal Failed',
-        content: `Update Journal failed: ${updateCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [updateSuccess, updateCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
@@ -1183,7 +1188,7 @@ const NewJournalForm = () => {
   return (
     <div>
       <form
-        onSubmit={createInvoiceHandler}
+        onSubmit={submitHandler}
         onChange={formChangedHandler}
         className="flex flex-col gap-8px"
       >
