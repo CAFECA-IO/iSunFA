@@ -34,9 +34,19 @@ export const parseForm = async (
 };
 
 export async function findFileByName(baseFolder: string, fileName: string): Promise<string | null> {
-  const files = await fs.readdir(baseFolder);
-  const foundFile = files.find((file) => file.includes(fileName));
-  return foundFile ? path.join(baseFolder, foundFile) : null;
+  let foundFile: string | null = null;
+
+  try {
+    const files = await fs.readdir(baseFolder);
+    foundFile = files.find((file) => file.includes(fileName)) || null;
+    if (foundFile) {
+      foundFile = path.join(baseFolder, foundFile);
+    }
+  } catch {
+    foundFile = null;
+  }
+
+  return foundFile;
 }
 
 /**
