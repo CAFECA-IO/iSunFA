@@ -2,7 +2,7 @@ import UploadArea from '@/components/kyc/upload_area';
 import RadioButtonComponent from '@/components/kyc/radio_button_component';
 import { useTranslation } from 'react-i18next';
 import { IUploadDocuments } from '@/interfaces/kyc_document_upload';
-import { UploadDocumentKeys, RepresentativeIDType } from '@/constants/kyc';
+import { UploadDocumentKeys, RepresentativeIDType, KYCFiles } from '@/constants/kyc';
 
 const DocumentUploadForm = ({
   data,
@@ -10,12 +10,7 @@ const DocumentUploadForm = ({
   onSelect,
 }: {
   data: IUploadDocuments;
-  onChange: (
-    operation: 'add' | 'delete',
-    key: UploadDocumentKeys,
-    id: string | undefined,
-    file: File | undefined
-  ) => void;
+  onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
   onSelect: (value: RepresentativeIDType) => void;
 }) => {
   const { t } = useTranslation('common');
@@ -35,11 +30,8 @@ const DocumentUploadForm = ({
               {t('KYC.BUSINESS_REGISTRATION_CERTIFICATE')}
             </h3>
             <UploadArea
+              loacalStorageFilesKey={KYCFiles}
               type={UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID}
-              backendUniqueIdentifier={
-                data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID].id
-              }
-              uploadedFile={data[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID].file}
               onChange={onChange}
             />
           </div>
@@ -48,9 +40,8 @@ const DocumentUploadForm = ({
               {t('KYC.TAX_STATUS_CERTIFICATE')}
             </h3>
             <UploadArea
+              loacalStorageFilesKey={KYCFiles}
               type={UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID}
-              backendUniqueIdentifier={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID].id}
-              uploadedFile={data[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID].file}
               onChange={onChange}
             />
           </div>
@@ -62,9 +53,8 @@ const DocumentUploadForm = ({
             })}
           </h3>
           <UploadArea
+            loacalStorageFilesKey={KYCFiles}
             type={UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID}
-            backendUniqueIdentifier={data[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID].id}
-            uploadedFile={data[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID].file}
             onChange={onChange}
           />
         </div>

@@ -27,7 +27,7 @@ export interface IEmployeeData {
   bonus: number;
   salary_payment_mode: string;
   pay_frequency: string;
-  projects: string[];
+  projects: { id: number; name: string }[];
   insurance_payments: number;
   additionalOfTotal: number;
 }

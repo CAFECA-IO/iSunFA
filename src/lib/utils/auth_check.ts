@@ -75,6 +75,18 @@ export async function checkUserAdmin(params: {
   return !!admin;
 }
 
+export async function checkUserCompanyOwner(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+    params.companyId,
+    params.userId,
+    RoleName.OWNER
+  );
+  return !!admin;
+}
+
 export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
   const translatedRoleName = getTranslatedRoleName(roleName);
   const session = await getSession(req, res);

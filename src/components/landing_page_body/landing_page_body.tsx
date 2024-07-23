@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import LandingFooter from '@/components/landing_footer/landing_footer';
 import HowWeWork from '@/components/how_we_work/how_we_work';
 import CTASection from '@/components/cta_section/cta_section';
@@ -9,6 +10,23 @@ import WhyISunFASection from '@/components/why_isunfa_section/why_isunfa_section
 import ContactFormSection from '@/components/contact_form_section/contact_form_section';
 
 function LandingPageBody() {
+  const [isSafari, setIsSafari] = useState(false);
+
+  useEffect(() => {
+    function detectIsSafari() {
+      return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    }
+    const bool = detectIsSafari();
+    setIsSafari(bool);
+    if (bool) {
+      document.querySelectorAll('.mix-blend-color-dodge').forEach((element) => {
+        const htmlElement = element as HTMLElement;
+        htmlElement.classList.remove('mix-blend-color-dodge');
+        htmlElement.style.opacity = '0'; // example of alternative style
+      });
+    }
+  }, []);
+
   return (
     <div className="">
       <div className="flex min-h-screen w-screen flex-col bg-secondaryBlue font-barlow">
@@ -27,9 +45,9 @@ function LandingPageBody() {
           </div>
 
           {/* Info: --- light_down svg --- (20240318 - Shirley) */}
-          <div className="absolute h-screen w-screen mix-blend-screen">
+          <div className={isSafari ? 'hidden' : 'absolute h-screen w-screen mix-blend-screen'}>
             {' '}
-            <div className="bottomShadow absolute -left-1/10 top-1/5 z-0 aspect-4/3 w-60vw bg-light_down bg-contain bg-no-repeat bg-blend-color-dodge shadow-md md:-top-1/5 md:h-1800px lg:-top-1/3 lg:w-1400px"></div>
+            <div className="bottomShadow absolute -left-1/10 top-1/5 z-0 w-60vw bg-light_down bg-contain bg-no-repeat bg-blend-color-dodge shadow-md md:-top-1/5 md:h-1800px lg:-top-1/3 lg:w-1400px"></div>
           </div>
 
           {/* Info: --- green_light_left svg --- (20240318 - Shirley) */}

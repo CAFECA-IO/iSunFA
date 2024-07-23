@@ -25,8 +25,8 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
-  [EventType.INCOME]: 'PROJECT.INCOME',
   [EventType.PAYMENT]: 'JOURNAL.PAYMENT',
+  [EventType.INCOME]: 'PROJECT.INCOME',
   [EventType.TRANSFER]: 'JOURNAL.TRANSFER',
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];
@@ -136,9 +136,9 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Basic Info states
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.INCOME);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.PAYMENT);
 
-  const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
+  const [inputReason, setInputReason] = useState<string>('');
   const [inputDescription, setInputDescription] = useState<string>('');
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
@@ -192,7 +192,7 @@ const NewJournalForm = () => {
       } else {
         const { invoice } = selectedJournal;
         setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
-        setInputPaymentReason(invoice.paymentReason);
+        setInputReason(invoice.paymentReason);
         setSelectedEventType(invoice.eventType as EventType);
         setInputDescription(invoice.description);
         setInputVendor(invoice.vendorOrSupplier);
@@ -240,7 +240,7 @@ const NewJournalForm = () => {
       // Info: (20240506 - Julian) 設定表單的預設值
       setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
       setSelectedEventType(OCRResult.eventType);
-      setInputPaymentReason(OCRResult.paymentReason);
+      setInputReason(OCRResult.paymentReason);
       setInputDescription(OCRResult.description);
       setInputVendor(OCRResult.vendorOrSupplier);
       setInputTotalPrice(OCRResult.payment.price);
@@ -337,8 +337,8 @@ const NewJournalForm = () => {
   const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
 
   // Info: (20240423 - Julian) 處理 input 輸入
-  const paymentReasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputPaymentReason(e.target.value);
+  const reasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputReason(e.target.value);
   };
   const descriptionChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputDescription(e.target.value);
@@ -369,7 +369,7 @@ const NewJournalForm = () => {
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
     setSelectedEventType(EventType.INCOME);
-    setInputPaymentReason('');
+    setInputReason('');
     setInputDescription('');
     setInputVendor('');
     setInputTotalPrice(0);
@@ -412,7 +412,7 @@ const NewJournalForm = () => {
       journalId: selectedJournal?.id || null,
       date: datePeriod.startTimeStamp,
       eventType: selectedEventType,
-      paymentReason: inputPaymentReason,
+      paymentReason: inputReason,
       description: inputDescription,
       vendorOrSupplier: inputVendor,
       project: selectedProject.name,
@@ -497,12 +497,29 @@ const NewJournalForm = () => {
   const contractName =
     selectedContract.id === null ? t(selectedContract.name) : selectedContract.name;
 
+  // Info: (20240722 - Julian) 根據收支類型，顯示不同的文字
+  const reasonText =
+    selectedEventType === EventType.INCOME
+      ? t('JOURNAL.RECEIVING_REASON')
+      : t('JOURNAL.PAYMENT_REASON');
+  const reasonPlaceholder =
+    selectedEventType === EventType.INCOME
+      ? t('JOURNAL.WHY_YOU_RECEIVE')
+      : t('JOURNAL.WHY_YOU_PAY');
+  const vendorText =
+    selectedEventType === EventType.INCOME
+      ? t('JOURNAL.CLIENT_SOURCE')
+      : t('JOURNAL.VENDOR_SUPPLIER');
+  const vendorPlaceholder =
+    selectedEventType === EventType.INCOME ? t('JOURNAL.FROM_WHOM') : t('JOURNAL.TO_WHOM');
+  const isHideAddAssetBtn = selectedEventType === EventType.INCOME;
+
   // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
   const isUploadDisabled =
     // Info: (20240429 - Julian) 檢查日期是否有填寫
     datePeriod.startTimeStamp === 0 ||
     datePeriod.endTimeStamp === 0 ||
-    inputPaymentReason === '' ||
+    inputReason === '' ||
     inputDescription === '' ||
     inputVendor === '' ||
     isAccountNumberInvalid ||
@@ -675,16 +692,16 @@ const NewJournalForm = () => {
             </div>
           </div>
 
-          {/* Info: (20240423 - Julian) Payment Reason */}
+          {/* Info: (20240423 - Julian) Reason */}
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
-            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_REASON')}</p>
+            <p className="text-sm font-semibold text-navyBlue2">{reasonText}</p>
             <input
-              id="input-payment-reason"
-              name="input-payment-reason"
+              id="input-reason"
+              name="input-reason"
               type="text"
-              placeholder={t('JOURNAL.WHY_YOU_PAY')}
-              value={inputPaymentReason}
-              onChange={paymentReasonChangeHandler}
+              placeholder={reasonPlaceholder}
+              value={inputReason}
+              onChange={reasonChangeHandler}
               required
               className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
             />
@@ -709,7 +726,7 @@ const NewJournalForm = () => {
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}
-              className={`ml-auto ${disabledAddNewAsset ? 'text-gray-400' : 'text-secondaryBlue hover:text-primaryYellow'}`}
+              className={`ml-auto ${isHideAddAssetBtn ? 'opacity-0' : 'opacity-100'} ${disabledAddNewAsset ? 'text-gray-400' : 'text-secondaryBlue hover:text-primaryYellow'}`}
               disabled={disabledAddNewAsset}
             >
               {t('JOURNAL.ADD_NEW_ASSET')}
@@ -734,14 +751,14 @@ const NewJournalForm = () => {
             />
           </div>
 
-          {/* Info: (20240423 - Julian) Vendor/Supplier */}
+          {/* Info: (20240423 - Julian) vendor */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.VENDOR_SUPPLIER')}</p>
+            <p className="text-sm font-semibold text-navyBlue2">{vendorText}</p>
             <input
               id="input-vendor"
               name="input-vendor"
               type="text"
-              placeholder={t('JOURNAL.TO_WHOM')}
+              placeholder={vendorPlaceholder}
               value={inputVendor}
               onChange={vendorChangeHandler}
               required
