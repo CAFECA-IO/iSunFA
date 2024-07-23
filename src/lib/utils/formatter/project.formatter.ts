@@ -35,7 +35,7 @@ export async function formatProjectList(
   return projectList;
 }
 
-export async function formatProject(
+export function formatProject(
   getProject: Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;

@@ -95,10 +95,7 @@ export default function Carousel({
             {children.map((_, i) => (
               <div
                 key={i}
-                className={`
-              h-1 w-3 rounded-full  transition-all
-              ${curr === i ? 'bg-primaryYellow' : 'bg-tertiaryBlue'}
-            `}
+                className={`h-1 w-3 rounded-full transition-all ${curr === i ? 'bg-primaryYellow' : 'bg-tertiaryBlue'} `}
               />
             ))}
           </div>

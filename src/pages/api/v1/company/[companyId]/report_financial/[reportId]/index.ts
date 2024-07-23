@@ -222,12 +222,14 @@ export async function handleGETRequest(companyId: number, req: NextApiRequest) {
   return {
     general,
     details,
+    reportType,
   };
 }
 
 interface APIResponse {
   general: IAccountReadyForFrontend[];
   details: IAccountReadyForFrontend[];
+  reportType: ReportSheetType;
 }
 
 export default async function handler(
@@ -238,6 +240,7 @@ export default async function handler(
   let payload: APIResponse = {
     general: [],
     details: [],
+    reportType: ReportSheetType.BALANCE_SHEET,
   };
   try {
     const session = await getSession(req, res);

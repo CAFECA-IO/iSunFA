@@ -1,6 +1,6 @@
 import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
@@ -62,7 +62,15 @@ interface IAccountingContext {
     type?: string,
     liquidity?: string,
     page?: number,
-    limit?: number
+    limit?: number,
+    // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
+    includeDefaultAccount?: boolean,
+    reportType?: string,
+    equityType?: string,
+    forUser?: boolean,
+    sortBy?: string,
+    sortOrder?: string,
+    searchKey?: string,
   ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
@@ -111,37 +119,37 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => {},
+  updateOCRListHandler: () => { },
   accountList: [],
-  getAccountListHandler: () => {},
-  getAIStatusHandler: () => {},
+  getAccountListHandler: () => { },
+  getAIStatusHandler: () => { },
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => {},
+  selectOCRHandler: () => { },
   selectedJournal: undefined,
-  selectJournalHandler: () => {},
+  selectJournalHandler: () => { },
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => {},
+  setInvoiceIdHandler: () => { },
   voucherId: undefined,
-  setVoucherIdHandler: () => {},
+  setVoucherIdHandler: () => { },
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => {},
+  setVoucherPreviewHandler: () => { },
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => {},
-  deleteVoucherRowHandler: () => {},
-  changeVoucherStringHandler: () => {},
-  changeVoucherAccountHandler: () => {},
-  changeVoucherAmountHandler: () => {},
-  resetVoucherHandler: () => {},
+  addVoucherRowHandler: () => { },
+  deleteVoucherRowHandler: () => { },
+  changeVoucherStringHandler: () => { },
+  changeVoucherAccountHandler: () => { },
+  changeVoucherAmountHandler: () => { },
+  resetVoucherHandler: () => { },
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => {},
+  deleteOwnAccountTitle: () => { },
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -151,7 +159,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     trigger: getAccountList,
     data: accountTitleList,
     success: accountSuccess,
-  } = APIHandler<IAccount[]>(APIName.ACCOUNT_LIST, {}, false, false);
+  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST, {}, false, false);
   const {
     trigger: getAIStatus,
     data: status,
@@ -207,8 +215,16 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     type?: string,
     liquidity?: string,
     page?: number,
-    limit?: number
+    limit?: number,
     // ToDo: (20240719 - Julian) lack of keyword search
+    // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
+    includeDefaultAccount?: boolean,
+    reportType?: string,
+    equityType?: string,
+    forUser?: boolean,
+    sortBy?: string,
+    sortOrder?: string,
+    searchKey?: string,
   ) => {
     getAccountList({
       params: { companyId },
@@ -217,6 +233,14 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         liquidity,
         page,
         limit,
+        // Info: (20240720 - Murky) @Julian, I set default value for these query params
+        includeDefaultAccount,
+        reportType,
+        equityType,
+        forUser,
+        sortBy,
+        sortOrder,
+        searchKey
       },
     });
   };
@@ -237,7 +261,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   useEffect(() => {
     if (accountSuccess && accountTitleList) {
-      setAccountList(accountTitleList);
+      setAccountList(accountTitleList.data);
     }
   }, [accountSuccess, accountTitleList]);
 

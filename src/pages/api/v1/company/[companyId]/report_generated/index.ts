@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IGeneratedReportItem, IPaginatedGeneratedReportItem } from '@/interfaces/report_item';
+import { IPaginatedGeneratedReportItem } from '@/interfaces/report_item';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, isParamString } from '@/lib/utils/common';
@@ -7,7 +7,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportStatusType } from '@/constants/report';
 import { findManyReports } from '@/lib/utils/repo/report.repo';
-import { formatIGeneratedReportItem } from '@/lib/utils/formatter/report.formatter';
+import { formatIPaginatedGeneratedReportItem } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
@@ -108,6 +108,7 @@ export async function handleGetRequest(
     endDateInSecondFromQuery,
     searchQueryString,
   } = formatGetRequestQuery(req);
+
   const generatedData = await findManyReports(
     companyId,
     ReportStatusType.GENERATED,
@@ -119,25 +120,7 @@ export async function handleGetRequest(
     endDateInSecondFromQuery,
     searchQueryString
   );
-  const generatedReportItems: IGeneratedReportItem[] = generatedData.data.map((data) => {
-    return formatIGeneratedReportItem(data);
-  });
-
-  const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
-    data: generatedReportItems,
-    page: generatedData.page,
-    totalPages: generatedData.totalPages,
-    totalCount: generatedData.totalCount,
-    pageSize: generatedData.pageSize,
-    hasNextPage: generatedData.hasNextPage,
-    hasPreviousPage: generatedData.hasPreviousPage,
-    sort: [
-      {
-        sortBy: sortByString,
-        sortOrder: sortOrderString,
-      },
-    ],
-  };
+  const paginatedGeneratedReportItem = formatIPaginatedGeneratedReportItem(generatedData);
   return paginatedGeneratedReportItem;
 }
 
