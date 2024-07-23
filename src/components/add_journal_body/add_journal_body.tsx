@@ -9,10 +9,6 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useTranslation } from 'next-i18next';
 
 const AddJournalBody = () => {
-  // Deprecated: (20240722 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('into AddJournalBody!!!');
-
   const { t } = useTranslation('common');
   const { selectedOCR, selectOCRHandler, selectedJournal } = useAccountingCtx();
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);

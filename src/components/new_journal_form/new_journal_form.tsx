@@ -22,7 +22,6 @@ import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
-import NumericInputComma from '@/components/numeric_input/numeric_input_comma';
 
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
@@ -88,10 +87,6 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 };
 
 const NewJournalForm = () => {
-  // Deprecated: (20240722 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('into NewJournalForm~~~');
-
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const disabledAddNewAsset = true;
@@ -149,10 +144,6 @@ const NewJournalForm = () => {
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
 
-  // Deprecated: (20240722 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('inputTotalPrice', { inputTotalPrice });
-
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
@@ -163,6 +154,10 @@ const NewJournalForm = () => {
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
   const [inputInstallment, setInputInstallment] = useState<number>(0);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.UNPAID);
+
+  // Deprecated: (20240722 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('inputTotalPrice', { inputTotalPrice }, 'inputFee:', { inputFee });
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
@@ -780,14 +775,14 @@ const NewJournalForm = () => {
               {t('JOURNAL.TOTAL_PRICE')}
             </p>
             <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
-              <NumericInputComma
+              <NumericInput
                 id="input-total-price"
                 name="input-total-price"
                 value={inputTotalPrice}
                 setValue={setInputTotalPrice}
                 isDecimal
                 required
-                isComma
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -859,6 +854,7 @@ const NewJournalForm = () => {
                 value={inputFee}
                 setValue={setInputFee}
                 isDecimal
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1047,6 +1043,7 @@ const NewJournalForm = () => {
                     value={inputPartialPaid}
                     setValue={setInputPartialPaid}
                     isDecimal
+                    hasComma
                     disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
@@ -1095,6 +1092,7 @@ const NewJournalForm = () => {
             value={inputEstimatedCost}
             setValue={setInputEstimatedCost}
             isDecimal
+            hasComma
             className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
           />
           <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
