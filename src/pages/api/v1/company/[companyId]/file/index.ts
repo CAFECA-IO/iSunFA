@@ -4,12 +4,6 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { formatApiResponse } from '@/lib/utils/common';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 async function handlePostRequest(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   req: NextApiRequest,
