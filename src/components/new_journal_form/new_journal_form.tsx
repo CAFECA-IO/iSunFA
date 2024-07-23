@@ -60,15 +60,9 @@ const ficSelection: string[] = [
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 const projectSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'JOURNAL.NONE' },
-  { id: 1, name: 'Project A' },
-  { id: 2, name: 'Project B' },
-  { id: 3, name: 'Project C' },
 ];
 const contractSelection: { id: number | null; name: string }[] = [
   { id: null, name: 'JOURNAL.NONE' },
-  { id: 1, name: 'Contract A' },
-  { id: 2, name: 'Contract B' },
-  { id: 3, name: 'Contract C' },
 ];
 
 const getIdAndName = (id: number | null, array: { id: number | null; name: string }[]) => {
@@ -1014,10 +1008,7 @@ const NewJournalForm = () => {
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label
-                htmlFor="input-unpaid"
-                className=" flex items-center gap-8px whitespace-nowrap"
-              >
+              <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
                   id="input-unpaid"
