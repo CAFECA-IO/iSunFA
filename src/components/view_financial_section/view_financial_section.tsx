@@ -528,7 +528,7 @@ const ViewFinancialSection = ({
   }, [globalCtx.width]);
 
   const displayedReportType = getReportFinancialIsLoading ? (
-    <Skeleton width={200} height={80} />
+    <Skeleton width={200} height={40} />
   ) : (
     <>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</>
   );
