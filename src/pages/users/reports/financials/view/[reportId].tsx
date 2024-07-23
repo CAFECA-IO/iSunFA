@@ -114,7 +114,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           }
           tokenContract={reportData.tokenContract}
           tokenId={reportData.tokenId}
-          reportLink={`${DOMAIN}/users/report/v1/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+          reportLink={`${DOMAIN}/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
           reportId={reportId}
         />
       </div>
