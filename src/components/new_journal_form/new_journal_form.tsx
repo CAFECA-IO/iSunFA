@@ -72,13 +72,13 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
   const idAndName =
     obj === undefined
       ? {
-          id: array[0].id,
-          name: array[0].name,
-        }
+        id: array[0].id,
+        name: array[0].name,
+      }
       : {
-          id: obj.id,
-          name: obj.name,
-        };
+        id: obj.id,
+        name: obj.name,
+      };
   return idAndName;
 };
 
@@ -106,7 +106,7 @@ const NewJournalForm = () => {
     journalId: number;
     resultStatus: IAccountResultStatus;
   }>(APIName.INVOICE_CREATE, {}, false, false);
-  const { trigger: updateInvoice } = APIHandler<IAccountResultStatus>(
+  const { trigger: updateInvoice } = APIHandler<{ journalId: number, resultStatus: IAccountResultStatus }>(
     APIName.INVOICE_UPDATE,
     {},
     false,
@@ -236,11 +236,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -386,18 +386,24 @@ const NewJournalForm = () => {
   };
 
   const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
+    const invoiceDataToUpdate: IInvoice = {
+      ...invoiceData,
+      journalId: updateJournalId
+    };
     const {
       success: updateSuccess,
       data: updateAIResult,
       code: updateCode,
     } = await updateInvoice({
-      params: { companyId, journalId: updateJournalId },
-      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+      params: { companyId, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
+      body: { invoice: invoiceDataToUpdate },
     });
-    if (updateSuccess && updateAIResult?.resultId && updateAIResult?.status) {
+    // eslint-disable-next-line no-console
+    console.log("updateSuccess", updateSuccess, "updateAIResult", updateAIResult, "updateCode", updateCode);
+    if (updateSuccess && updateAIResult?.resultStatus?.resultId && updateAIResult?.resultStatus?.status) {
       confirmModalDataHandler({
         journalId: updateJournalId,
-        askAIId: updateAIResult.resultId,
+        askAIId: updateAIResult.resultStatus.resultId,
       });
       confirmModalVisibilityHandler();
     } else if (updateSuccess === false) {
