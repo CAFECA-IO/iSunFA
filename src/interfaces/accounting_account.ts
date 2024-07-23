@@ -1,5 +1,7 @@
-import { ProgressStatus } from '@/constants/account';
+import { AccountType, EquityType, ProgressStatus } from '@/constants/account';
 import { Account } from '@prisma/client';
+import { ReportSheetType } from '@/constants/report';
+import { IPaginatedData } from './pagination';
 
 export interface IAccount {
   id: number;
@@ -15,6 +17,8 @@ export interface IAccount {
   deletedAt: number | null;
   // ToDo: (20240717 - Julian) Missing 'isFavorite' property
 }
+
+export interface IPaginatedAccount extends IPaginatedData<IAccount[]> {}
 
 // Info Murky (20240416): Interface
 export interface IAccountResultStatus {
@@ -48,3 +52,18 @@ export interface IAccountReadyForFrontend {
   prePeriodPercentage: number;
   indent: number;
 }
+
+export type IAccountQueryArgs = {
+  companyId: number;
+  includeDefaultAccount?: boolean,
+  liquidity?: boolean;
+  type?: AccountType;
+  reportType?: ReportSheetType;
+  equityType?: EquityType;
+  forUser?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: 'code' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+  searchKey?: string;
+};

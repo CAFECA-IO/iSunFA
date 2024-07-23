@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { Prisma, User } from '@prisma/client';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
 export async function listUser(): Promise<User[]> {
   const userList = await prisma.user.findMany({
@@ -99,10 +99,35 @@ export async function updateUserById(
 }
 
 export async function deleteUserById(userId: number): Promise<User> {
-  const user = await prisma.user.delete({
-    where: {
-      id: userId,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.UserWhereUniqueInput = {
+    id: userId,
+    deletedAt: null,
+  };
+
+  const data: Prisma.UserUpdateInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs: Prisma.UserUpdateArgs = {
+    where,
+    data,
+  };
+
+  const user = await prisma.user.update(updateArgs);
   return user;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteUserByIdForTesting(userId: number): Promise<User> {
+  const where: Prisma.UserWhereUniqueInput = {
+    id: userId,
+  };
+
+  const deletedUser = await prisma.user.delete({
+    where,
+  });
+
+  return deletedUser;
 }

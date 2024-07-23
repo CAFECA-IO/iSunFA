@@ -1,6 +1,7 @@
 // ToDo (20240605 - Murk): 不同的type guard 需要放在屬於他的資料夾，不要都放在這個檔案裡
 import {
   AccountType,
+  EquityType,
   EventType,
   PaymentPeriodType,
   PaymentStatusType,
@@ -119,6 +120,11 @@ export function isIAccountReadyForFrontendArray(
   return value.every((item) => isIAccountReadyForFrontend(item));
 }
 
+export function isEquityType(data: unknown): data is EquityType {
+  const isValid = Object.values(EquityType).includes(data as EquityType);
+  return isValid;
+}
+
 export function assertIsIAccountResultStatus(
   value: unknown
 ): asserts value is IAccountResultStatus {
@@ -177,4 +183,11 @@ export function convertStringToAccountType(data: string) {
     throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
   }
   return data as AccountType;
+}
+
+export function convertStringToEquityType(data: string) {
+  if (!isEquityType(data)) {
+    throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
+  }
+  return data as EquityType;
 }

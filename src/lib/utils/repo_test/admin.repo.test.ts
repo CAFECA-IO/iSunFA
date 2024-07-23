@@ -6,11 +6,11 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   createAdmin,
   updateAdminById,
-  deleteAdminById,
-  deleteAdminListByCompanyId,
   listCompanyAndRole,
   createCompanyAndRole,
   getCompanyDetailAndRoleByCompanyId,
+  deleteAdminByIdForTesting,
+  deleteAdminListByCompanyIdForTesting,
 } from '@/lib/utils/repo/admin.repo';
 import admins from '@/seed_json/admin.json';
 import { deleteCompanyById } from '@/lib/utils/repo/company.repo';
@@ -93,7 +93,7 @@ describe('Admin Repository Tests', () => {
   describe('createAdmin', () => {
     it('should create a new admin', async () => {
       const admin = await createAdmin(testUserId, testCompanyId, testRoleId);
-      await deleteAdminById(admin.id); // Clean up after test
+      await deleteAdminByIdForTesting(admin.id); // Clean up after test
       expect(admin).toBeDefined();
       expect(admin.userId).toBe(testUserId);
       expect(admin.companyId).toBe(testCompanyId);
@@ -143,7 +143,7 @@ describe('Admin Repository Tests', () => {
       const name = 'Test Company';
       const regional = 'Test Regional';
       const companyRole = await createCompanyAndRole(testUserId, code, name, regional);
-      await deleteAdminListByCompanyId(companyRole.company.id);
+      await deleteAdminListByCompanyIdForTesting(companyRole.company.id);
       await deleteCompanyById(companyRole.company.id);
       expect(companyRole).toBeDefined();
       expect(companyRole.company.code).toBe(code);

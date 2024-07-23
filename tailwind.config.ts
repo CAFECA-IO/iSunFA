@@ -68,7 +68,7 @@ module.exports = {
           800: 'var(--neutral-800)',
           900: 'var(--neutral-900)',
           white: 'var(--neutral-white)',
-          'neutral-secondary': 'var(--neutral-secondary)',
+          // 'neutral-secondary': 'var(--neutral-secondary)',
         },
         orange: {
           100: 'var(--orange-100)',

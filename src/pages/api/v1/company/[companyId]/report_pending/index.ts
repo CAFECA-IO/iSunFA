@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IPaginatedPendingReportItem, IPendingReportItem } from '@/interfaces/report_item';
+import { IPaginatedPendingReportItem } from '@/interfaces/report_item';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, isParamString } from '@/lib/utils/common';
@@ -7,7 +7,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportStatusType } from '@/constants/report';
 import { findManyReports } from '@/lib/utils/repo/report.repo';
-import { formatIPendingReportItem } from '@/lib/utils/formatter/report.formatter';
+import { formatIPaginatedPendingReportItem } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
@@ -108,6 +108,7 @@ export async function handleGetRequest(
     endDateInSecondFromQuery,
     searchQueryString,
   } = formatGetRequestQuery(req);
+
   const pendingData = await findManyReports(
     companyId,
     ReportStatusType.PENDING,
@@ -119,25 +120,8 @@ export async function handleGetRequest(
     endDateInSecondFromQuery,
     searchQueryString
   );
-  const pendingReportItems: IPendingReportItem[] = pendingData.data.map((data) => {
-    return formatIPendingReportItem(data);
-  });
 
-  const paginatedPendingReportItem: IPaginatedPendingReportItem = {
-    data: pendingReportItems,
-    page: pendingData.page,
-    totalPages: pendingData.totalPages,
-    totalCount: pendingData.totalCount,
-    pageSize: pendingData.pageSize,
-    hasNextPage: pendingData.hasNextPage,
-    hasPreviousPage: pendingData.hasPreviousPage,
-    sort: [
-      {
-        sortBy: sortByString,
-        sortOrder: sortOrderString,
-      },
-    ],
-  };
+  const paginatedPendingReportItem = formatIPaginatedPendingReportItem(pendingData);
   return paginatedPendingReportItem;
 }
 

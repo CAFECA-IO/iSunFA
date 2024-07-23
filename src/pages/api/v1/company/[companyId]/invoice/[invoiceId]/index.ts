@@ -154,7 +154,7 @@ export default async function handler(
       case 'PUT':
           payload = await handlePutRequest(companyId, req);
 
-          statusMessage = STATUS_MESSAGE.SUCCESS;
+          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
         break;
       default:
         statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
