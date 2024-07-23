@@ -87,7 +87,7 @@ async function updateEmployee(
   insurancePayment: number,
   salaryPayMode: string,
   payFrequency: string,
-  projectIdsNames: { id: number, name: string }[]
+  projectIdsNames: { id: number; name: string }[]
 ): Promise<IEmployeeData> {
   try {
     const nowTime = new Date().getTime();
@@ -203,7 +203,8 @@ export default async function handler(
       }
       case 'PUT': {
         if (shouldContinue) {
-          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency, projectIdsNames } = req.body;
+          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency, projectIdsNames } =
+            req.body;
           const employeeData = await updateEmployee(
             employeeIdNumber,
             salary,

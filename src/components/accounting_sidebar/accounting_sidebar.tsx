@@ -75,9 +75,7 @@ const AccountingSidebar = () => {
 
           <Link
             href={ISUNFA_ROUTE.JOURNAL_LIST}
-            className={`flex w-full items-center justify-center p-8px hover:text-tabs-text-active
-            ${pathname.includes('journal-list') ? 'text-tabs-text-active' : 'text-secondaryBlue'}
-            `}
+            className={`flex w-full items-center justify-center p-8px hover:text-tabs-text-active ${pathname.includes('journal-list') ? 'text-tabs-text-active' : 'text-secondaryBlue'} `}
           >
             <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />
             <p

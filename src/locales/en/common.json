@@ -717,13 +717,6 @@
     "DELETE_FILE_FAILED": "Delete file failed, Error Code: {{code}}",
     "DELETE_FILE_ERROR": "Delete file error",
 
-    "SUBMIT_SUCCESS": "Your Application Has Been Submitted",
-    "SUBMIT_SUCCESS_MESSAGE": "It will take 3 to 5 business day to review your application, thank you for your patient.",
-    "CONTACT_SERVICE_TEAM": "If you have any question, please contact our customer service.",
-    "SUBMIT_FAILED": "Your Application Has Been Failed",
-    "SUBMIT_FAILED_MESSAGE": "Error Code: {{code}}",
-    "INCOMPLETE_FORM": "Please complete the form",
-    "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}.",
     "LEGAL_COMPANY_NAME": "Legal Company Name",
     "COMPANY_ADDRESS": "Company Address",
     "ZIP_CODE": "Zip Code",
