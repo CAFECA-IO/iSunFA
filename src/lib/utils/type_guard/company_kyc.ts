@@ -61,7 +61,7 @@ export function isCompanyKYCForm(obj: ICompanyKYCForm): obj is ICompanyKYCForm {
     typeof obj[BasicInfoKeys.ZIP_CODE] === 'string' &&
     typeof obj[BasicInfoKeys.ADDRESS] === 'string' &&
     typeof obj[BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME] === 'string' &&
-    typeof obj[RegistrationInfoKeys.LEGAL_STRUCTURE] === 'object' &&
+    typeof obj[RegistrationInfoKeys.LEGAL_STRUCTURE] === 'string' &&
     typeof obj[RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER] === 'string' &&
     typeof obj[RegistrationInfoKeys.REGISTRATION_DATE] === 'string' &&
     typeof obj[RegistrationInfoKeys.INDUSTRY] === 'string' &&

@@ -1,5 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompanyKYC } from '@/interfaces/company_kyc';
+import { ICompanyKYC, ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -16,7 +16,7 @@ export default async function handler(
     if (req.method === 'POST') {
       const session = await checkAdmin(req, res);
       const { companyId } = session;
-      const { companyKYCForm } = req.body;
+      const companyKYCForm: ICompanyKYCForm = req.body;
       const bodyType = isCompanyKYCForm(companyKYCForm);
       if (!bodyType) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

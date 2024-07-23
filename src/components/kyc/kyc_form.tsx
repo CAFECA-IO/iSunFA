@@ -71,10 +71,11 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
       ...registrationInfoValues,
-      ...contactInfoValues,
+      ...restContactInfoValues,
       [ContactInfoKeys.CONTACT_PHONE]: contactInfoValues.areaCode + contactInfoValues.contactNumber,
       ...uploadDocuments,
     };

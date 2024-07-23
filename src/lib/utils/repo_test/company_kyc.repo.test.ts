@@ -31,27 +31,7 @@ describe('CompanyKYC Repository Tests', () => {
 
   xdescribe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
-      const companyKYC = await createCompanyKYC(
-        testCompanyId,
-        newCompanyKYCData.legalName,
-        newCompanyKYCData.country,
-        newCompanyKYCData.city,
-        newCompanyKYCData.address,
-        newCompanyKYCData.zipCode,
-        newCompanyKYCData.representativeName,
-        newCompanyKYCData.structure,
-        newCompanyKYCData.registrationNumber,
-        newCompanyKYCData.registrationDate,
-        newCompanyKYCData.industry,
-        newCompanyKYCData.contactPerson,
-        newCompanyKYCData.contactPhone,
-        newCompanyKYCData.contactEmail,
-        newCompanyKYCData.website,
-        newCompanyKYCData.representativeIdType,
-        newCompanyKYCData.registrationCertificateId,
-        newCompanyKYCData.taxCertificateId,
-        newCompanyKYCData.representativeIdCardId
-      );
+      const companyKYC = await createCompanyKYC(testCompanyId, newCompanyKYCData);
       await deleteCompanyKYC(companyKYC.id); // Clean up after test
       expect(companyKYC).toBeDefined();
       expect(companyKYC.companyId).toBe(testCompanyId);
