@@ -155,10 +155,6 @@ const NewJournalForm = () => {
   const [inputInstallment, setInputInstallment] = useState<number>(0);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(PaymentStatusType.UNPAID);
 
-  // Deprecated: (20240722 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('inputTotalPrice', { inputTotalPrice }, 'inputFee:', { inputFee });
-
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
   const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>({
