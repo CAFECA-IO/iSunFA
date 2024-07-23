@@ -222,6 +222,7 @@ export async function handleGETRequest(companyId: number, req: NextApiRequest) {
   return {
     general,
     details,
+    reportType
   };
 }
 
