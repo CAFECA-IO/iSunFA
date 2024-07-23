@@ -66,3 +66,20 @@ export const FinancialReportTypesKeyReportSheetTypeMapping: {
   [FinancialReportTypesKey.cash_flow_statement]: ReportSheetType.CASH_FLOW_STATEMENT,
   [FinancialReportTypesKey.change_in_equity_statement]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
 };
+
+export const ACCOUNT_TYPE_REPORT_SHEET_TYPE_MAPPING: {
+  [key in AccountType]: ReportSheetType
+} = {
+  [AccountType.ASSET]: ReportSheetType.BALANCE_SHEET,
+  [AccountType.LIABILITY]: ReportSheetType.BALANCE_SHEET,
+  [AccountType.EQUITY]: ReportSheetType.BALANCE_SHEET,
+  [AccountType.REVENUE]: ReportSheetType.INCOME_STATEMENT,
+  [AccountType.COST]: ReportSheetType.INCOME_STATEMENT,
+  [AccountType.INCOME]: ReportSheetType.INCOME_STATEMENT,
+  [AccountType.EXPENSE]: ReportSheetType.INCOME_STATEMENT,
+  [AccountType.GAIN_OR_LOSS]: ReportSheetType.INCOME_STATEMENT,
+  [AccountType.OTHER_COMPREHENSIVE_INCOME]: ReportSheetType.INCOME_STATEMENT,
+  [AccountType.CASH_FLOW]: ReportSheetType.CASH_FLOW_STATEMENT,
+  [AccountType.CHANGE_IN_EQUITY]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
+  [AccountType.OTHER]: ReportSheetType.BALANCE_SHEET,
+};

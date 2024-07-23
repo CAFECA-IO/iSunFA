@@ -1,4 +1,4 @@
-import { buildAccountForest } from '@/lib/utils/account';
+import { buildAccountForest } from '@/lib/utils/account/common';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
@@ -56,21 +56,26 @@ export default abstract class FinancialReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
-    const onlyForUser = false;
+    const forUser = false;
     const page = 1;
     const limit = Number.MAX_SAFE_INTEGER;
     const liquidity = undefined;
-    const selectDeleted = false;
-    const accounts = await findManyAccountsInPrisma(
-      this.companyId,
-      onlyForUser,
+    const isDeleted = false;
+    const accounts = await findManyAccountsInPrisma({
+      companyId: this.companyId,
+      includeDefaultAccount: true,
+      liquidity,
+      type: accountType,
+      reportType: undefined,
+      equityType: undefined,
+      forUser,
+      isDeleted,
       page,
       limit,
-      accountType,
-      liquidity,
-      selectDeleted
-    );
-    const forest = buildAccountForest(accounts);
+      sortBy: 'code',
+      sortOrder: 'asc'
+    });
+    const forest = buildAccountForest(accounts.data);
     return forest;
   }
 

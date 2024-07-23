@@ -43,7 +43,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
         id="I18nMenuDesktop"
         className={`absolute -left-16 top-30px z-20 w-150px rounded-sm ${
           globalVisible ? 'visible opacity-100' : 'invisible opacity-0'
-        }  rounded-none bg-white shadow-dropmenu transition-all duration-300`}
+        } rounded-none bg-white shadow-dropmenu transition-all duration-300`}
       >
         <ul className="py-1 text-base text-button-text-secondary" aria-labelledby="i18nButton">
           {internationalizationList.map((item) => (

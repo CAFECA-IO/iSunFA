@@ -5,7 +5,7 @@ import {
   transformForestToMap,
   transformLineItemsFromDBToMap,
   updateAccountAmounts,
-} from '@/lib/utils/account';
+} from '@/lib/utils/account/common';
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 
