@@ -13,17 +13,13 @@ interface IBalanceSheetPageProps {
 const BalanceSheetGeneralPage = ({ reportId }: IBalanceSheetPageProps) => {
   const { isAuthLoading } = useUserCtx();
 
-  // TODO: 從 API 取得 reportId 的資料 (20240723 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('reportId to get API response', reportId);
-
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
     <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-      <BalanceSheetReportBodyAll />
+      <BalanceSheetReportBodyAll reportId={reportId} />
     </div>
   );
 
