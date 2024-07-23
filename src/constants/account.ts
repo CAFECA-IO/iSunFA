@@ -14,8 +14,8 @@ export enum ProgressStatus {
 }
 
 export enum EventType {
-  INCOME = 'income',
   PAYMENT = 'payment',
+  INCOME = 'income',
   TRANSFER = 'transfer',
 }
 
@@ -92,3 +92,7 @@ export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
 // };
 
 export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];
+
+export const EVENT_TYPE = {
+  ...EventType,
+};

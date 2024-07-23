@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
@@ -19,25 +19,23 @@ import {
   toSort,
 } from '@/constants/journal';
 import JournalList from '@/components/journal_list/journal_list';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const [journals, setJournals] = useState<IJournalListItem[]>([]);
-  const {
-    trigger: getJournalList,
-    isLoading,
-    success,
-    code,
-    data,
-  } = APIHandler<IJournalListItem[]>(APIName.JOURNAL_LIST, {
-    params: {
-      companyId: selectedCompany?.id,
-    },
-    query: {
-      event: JOURNAL_EVENT.UPLOADED,
-    },
-  });
+  const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
+    [key: string]: IPaginatedData<IJournalListItem[]>;
+  } | null>(null);
+  const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const [code, setCode] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
+  const { trigger } = APIHandler<{ [key: string]: IPaginatedData<IJournalListItem[]> }>(
+    APIName.JOURNAL_LIST,
+    {},
+    false,
+    false
+  );
 
   const types = [
     JOURNAL_TYPE.ALL,
@@ -48,8 +46,8 @@ const JournalListBody = () => {
   const sortingOptions = [
     SORTING_OPTION.NEWEST,
     SORTING_OPTION.OLDEST,
-    SORTING_OPTION.PAYMENT_PROCESS,
-    SORTING_OPTION.PROJECT_PROCESS,
+    SORTING_OPTION.HIGHEST_PAYMENT_PRICE,
+    SORTING_OPTION.LOWEST_PAYMENT_PRICE,
   ];
 
   const {
@@ -66,71 +64,91 @@ const JournalListBody = () => {
 
   // Info: (20240419 - Julian) Filtered states
   const [filteredJournalType, setFilteredJournalType] = useState<JOURNAL_TYPE>(JOURNAL_TYPE.ALL);
-  useEffect(() => {
-    setFilteredJournalType(JOURNAL_TYPE.ALL);
-  }, [t]);
   const [filteredJournalSortBy, setFilteredJournalSortBy] = useState<SORTING_OPTION>(
     SORTING_OPTION.NEWEST
   );
-  useEffect(() => {
-    setFilteredJournalSortBy(SORTING_OPTION.NEWEST);
-  }, [t]);
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [currentTab, setCurrentTab] = useState<JOURNAL_EVENT>(JOURNAL_EVENT.UPLOADED);
+  const [search, setSearch] = useState<string>('');
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [journals, setJournals] = useState<IJournalListItem[]>([]);
 
   // Info: (20240418 - Julian) for css
-  const isTypeSelected = filteredJournalType !== JOURNAL_TYPE.ALL;
-  const isSortBySelected = filteredJournalSortBy !== SORTING_OPTION.NEWEST;
-  //  const isTypeSelected = filteredJournalType !== 'All';
-  //  const isSortBySelected = filteredJournalSortBy !== 'Newest';
+  const [isTypeSelected, setIsTypeSelected] = useState(false);
+  const [isSortBySelected, setIsSortBySelected] = useState(false);
 
   const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
   const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
 
-  const tabClickHandler = (event: JOURNAL_EVENT) => setCurrentTab(event);
-
-  const [search, setSearch] = useState<string>('');
+  const tabClickHandler = (event: JOURNAL_EVENT) => {
+    setCurrentTab(event);
+    setJournals(pagenatedJournalListItems?.[event]?.data ?? []);
+    setTotalPages(pagenatedJournalListItems?.[event]?.totalPages ?? 0);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
 
-  // ToDo: (20240418 - Julian) Replace with real data
-  const totalPages = 1;
-  const uploadedEventsCount = currentTab === JOURNAL_EVENT.UPLOADED ? journals.length : 0;
-  const upcomingEventsCount = currentTab === JOURNAL_EVENT.UPCOMING ? journals.length : 0;
-
-  useEffect(() => {
-    if (success && data) {
-      setJournals(data);
-    }
-  }, [success, data]);
-
-  useEffect(() => {
-    if (isLoading === false && selectedCompany) {
-      getJournalList({
+  const getJournalList = useCallback(
+    async (query: {
+      currentPage?: number;
+      filteredJournalType?: JOURNAL_TYPE;
+      filteredJournalSortBy?: SORTING_OPTION;
+      filteredPeriod?: IDatePeriod;
+      search?: string;
+    }) => {
+      setIsLoading(true);
+      setSuccess(undefined);
+      setCode(undefined);
+      setPagenatedJournalListItems(null);
+      const {
+        currentPage: page,
+        filteredJournalType: type,
+        filteredJournalSortBy: sortBy,
+        filteredPeriod: period,
+        search: searchString,
+      } = query;
+      const response = await trigger({
         params: {
           companyId: selectedCompany?.id,
         },
         query: {
-          event: currentTab,
-          page: currentPage,
-          eventType: toEventType(filteredJournalType),
-          sortBy: toSort(filteredJournalSortBy),
-          startTimeStamp: filteredPeriod.startTimeStamp,
-          endTimeStamp: filteredPeriod.endTimeStamp,
-          search,
+          ...toSort(sortBy ?? filteredJournalSortBy),
+          page: page ?? currentPage,
+          eventType: toEventType(type ?? filteredJournalType),
+          startDate: !(period ?? filteredPeriod).startTimeStamp
+            ? undefined
+            : (period ?? filteredPeriod).startTimeStamp,
+          endDate: !(period ?? filteredPeriod).endTimeStamp
+            ? undefined
+            : (period ?? filteredPeriod).endTimeStamp,
+          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
         },
       });
-    }
-  }, [
-    selectedCompany,
-    currentPage,
-    currentTab,
-    filteredJournalType,
-    filteredPeriod,
-    filteredJournalSortBy,
-    search,
-  ]);
+      setSuccess(response.success);
+      setCode(response.code);
+      setIsLoading(false);
+      if (response.success && response.data) {
+        setJournals(response.data[currentTab].data ?? []);
+        setTotalPages(response.data[currentTab].totalPages ?? 0);
+        setPagenatedJournalListItems(response.data);
+      }
+    },
+    [currentPage, filteredJournalType, filteredJournalSortBy, filteredPeriod, search]
+  );
+
+  const datePickerHandler = async (start: number, end: number) => {
+    await getJournalList({
+      filteredPeriod: {
+        startTimeStamp: start,
+        endTimeStamp: end,
+      },
+    });
+  };
+
+  useEffect(() => {
+    getJournalList({});
+  }, [currentPage, filteredJournalType, filteredJournalSortBy]);
 
   const displayedTypeDropMenu = (
     <div
@@ -138,7 +156,7 @@ const JournalListBody = () => {
       className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeSelected ? '' : 'text-lightGray3'}`}
+        className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? '' : 'text-lightGray3'}`}
       >
         {t(filteredJournalType)}
       </p>
@@ -154,6 +172,7 @@ const JournalListBody = () => {
               onClick={() => {
                 setFilteredJournalType(type);
                 setIsTypeMenuOpen(false);
+                setIsTypeSelected(true);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -171,7 +190,7 @@ const JournalListBody = () => {
       className={`group relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? ' text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? 'text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
       >
         {t(filteredJournalSortBy)}
       </p>
@@ -187,6 +206,7 @@ const JournalListBody = () => {
               onClick={() => {
                 setFilteredJournalSortBy(sorting);
                 setIsSortByMenuOpen(false);
+                setIsSortBySelected(true);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -205,6 +225,7 @@ const JournalListBody = () => {
         type={DatePickerType.TEXT_PERIOD}
         period={filteredPeriod}
         setFilteredPeriod={setFilteredPeriod}
+        datePickerHandler={datePickerHandler}
       />
     </div>
   );
@@ -217,7 +238,11 @@ const JournalListBody = () => {
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
         onChange={handleInputChange}
       />
-      <FiSearch size={20} className="absolute right-3 top-3 cursor-pointer" />
+      <FiSearch
+        size={20}
+        className="absolute right-3 top-3 cursor-pointer"
+        onClick={() => getJournalList({ search })}
+      />
     </div>
   );
 
@@ -305,7 +330,9 @@ const JournalListBody = () => {
           {t('JOURNAL.UPLOADED')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-          {uploadedEventsCount}
+          {pagenatedJournalListItems
+            ? pagenatedJournalListItems[JOURNAL_EVENT.UPLOADED]?.totalCount
+            : 0}
         </div>
       </button>
       <button
@@ -319,7 +346,9 @@ const JournalListBody = () => {
           {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-          {upcomingEventsCount}
+          {pagenatedJournalListItems
+            ? pagenatedJournalListItems[JOURNAL_EVENT.UPCOMING]?.totalCount
+            : 0}
         </div>
       </button>
     </div>

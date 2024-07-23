@@ -27,8 +27,6 @@ const JournalList = ({
   paginationProps: IPaginationProps;
 }) => {
   const { journals, isLoading, success, code } = journalsProps;
-  // eslint-disable-next-line no-console
-  console.log(`isLoading: ${isLoading}, success: ${success}, code: ${code}, journals: `, journals);
   const { currentPage, setCurrentPage, totalPages } = paginationProps;
   const { t } = useTranslation('common');
   const [checkedItems, setCheckedItems] = useState<string[]>([]);

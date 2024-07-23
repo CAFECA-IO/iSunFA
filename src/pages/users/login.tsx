@@ -34,7 +34,7 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <div className="pt-16">
+    <div className="pt-10">
       <LoginPageBody invitation={invitation} action={action} />
     </div>
   );

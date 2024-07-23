@@ -108,3 +108,19 @@ export enum UploadDocumentKeys {
   TAX_STATUS_CERTIFICATE_ID = 'taxCertificateId',
   REPRESENTATIVE_CERTIFICATE_ID = 'representativeIdCardId',
 }
+
+export const MAX_FILE_SIZE_IN_MB = 50;
+
+export const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
+
+export const sizeFormatter = (size: number): string => {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  } else if (size >= 1024) {
+    return `${(size / 1024).toFixed(2)} KB`;
+  } else {
+    return `${size} Bytes`;
+  }
+};
+
+export const KYCFiles = 'KYCFiles';

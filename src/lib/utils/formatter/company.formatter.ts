@@ -21,11 +21,11 @@ export function formatCompany(company: Company): ICompany {
   return formattedCompany;
 }
 
-export async function formatCompanyDetail(
+export function formatCompanyDetail(
   company: Company & {
     admins: Admin[];
   }
-): Promise<ICompanyDetail> {
+): ICompanyDetail {
   const { admins, ...companyWithoutAdmins } = company;
   const formattedCompanyDetail: ICompanyDetail = {
     ...companyWithoutAdmins,

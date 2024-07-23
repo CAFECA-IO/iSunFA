@@ -32,8 +32,8 @@ export interface IGeneratedReportItem extends IBasicReportItem {
   evidenceId: string;
 }
 
-export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem> {}
-export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem> {}
+export interface IPaginatedPendingReportItem extends IPaginatedData<IPendingReportItem[]> {}
+export interface IPaginatedGeneratedReportItem extends IPaginatedData<IGeneratedReportItem[]> {}
 
 export const generateRandomPendingReportItem = (daysAgo: number): IPendingReportItem => {
   const now = new Date();
@@ -199,7 +199,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
     downloadLink: 'https://BFample.com/download/report.pdf',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL
+    type: ReportType.FINANCIAL,
   },
   {
     id: 'y11ggs',
@@ -214,7 +214,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL
+    type: ReportType.FINANCIAL,
   },
   {
     id: 'uiz7oa',
@@ -229,7 +229,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL
+    type: ReportType.FINANCIAL,
   },
   {
     id: '6pa0sq',
@@ -244,7 +244,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.comprehensive_income_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL
+    type: ReportType.FINANCIAL,
   },
   {
     id: 'c353qc',
@@ -259,7 +259,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.balance_sheet,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL
+    type: ReportType.FINANCIAL,
   },
   {
     id: 'jsasdrho',
@@ -274,7 +274,7 @@ export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
       '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
     reportType: FinancialReportTypesKey.cash_flow_statement,
     evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL
+    type: ReportType.FINANCIAL,
   },
 ];
 
@@ -282,10 +282,30 @@ export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedPendingReport
   data: FIXED_DUMMY_PENDING_REPORT_ITEMS,
   page: 1,
   totalPages: 2,
+  totalCount: 5,
+  pageSize: 5,
+  hasNextPage: true,
+  hasPreviousPage: false,
+  sort: [
+    {
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
+    },
+  ],
 };
 
 export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedGeneratedReportItem = {
   data: FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   page: 1,
   totalPages: 2,
+  totalCount: 5,
+  pageSize: 5,
+  hasNextPage: true,
+  hasPreviousPage: false,
+  sort: [
+    {
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
+    },
+  ],
 };

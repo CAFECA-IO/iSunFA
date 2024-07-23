@@ -142,7 +142,7 @@ const StepOneTab = () => {
               height={16}
               alt="upload_file_icon"
             />
-            <p>{t('JOURNAL.UPLOADED FILE')}</p>
+            <p>{t('JOURNAL.UPLOADED_FILE')}</p>
           </div>
           <hr className="flex-1 border-lightGray4" />
         </div>

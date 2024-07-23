@@ -17,6 +17,8 @@ import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
+  IPaginatedGeneratedReportItem,
+  IPaginatedPendingReportItem,
   IPendingReportItem,
 } from '@/interfaces/report_item';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -60,7 +62,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
+  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
   });
@@ -69,14 +71,14 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
+  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
   });
 
   useEffect(() => {
-    if (listPendingSuccess && pendingReports) {
-      setPendingData(pendingReports);
+    if (listPendingSuccess && pendingReports?.data) {
+      setPendingData(pendingReports.data);
     } else if (listPendingSuccess === false) {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
@@ -89,8 +91,8 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
   useEffect(() => {
-    if (listGeneratedSuccess && generatedReports) {
-      setHistoryData(generatedReports);
+    if (listGeneratedSuccess && generatedReports?.data) {
+      setHistoryData(generatedReports.data);
     } else if (listGeneratedSuccess === false) {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
@@ -142,17 +144,13 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     <div
       ref={pendingSortMenuRef}
       onClick={togglePendingSortMenu}
-      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
-        ${isPendingSortMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-        bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input ${isPendingSortMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
       <p className="text-text-neutral-primary">{t(pendingSorting)}</p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
-        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-        ${isPendingSortMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-        z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${isPendingSortMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
       >
         <button
           type="button"
@@ -176,17 +174,13 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     <div
       ref={historySortMenuRef}
       onClick={toggleHistorySortMenu}
-      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
-        ${isHistorySortMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-        bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input ${isHistorySortMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
       <p className="text-text-neutral-primary">{t(historySorting)}</p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
-        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-        ${isHistorySortMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-        z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${isHistorySortMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
       >
         <button
           type="button"
@@ -210,17 +204,13 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     <div
       ref={pendingTypeMenuRef}
       onClick={togglePendingTypeMenu}
-      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
-        ${isPendingTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-        bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input ${isPendingTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
       <p className="text-text-neutral-primary">{pendingFilteredType}</p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
-        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-        ${isPendingTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-        z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${isPendingTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
       >
         {typeOptions.map((option) => (
           <button
@@ -240,17 +230,13 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     <div
       ref={historyTypeMenuRef}
       onClick={toggleHistoryTypeMenu}
-      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input 
-        ${isHistoryTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-        bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+      className={`relative flex w-full items-center justify-between rounded-xs border border-input-stroke-input ${isHistoryTypeMenuOpen ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
     >
       <p className="text-text-neutral-primary">{historyFilteredType}</p>
       <FaChevronDown size={16} />
       {/* Info: (20240624 - Julian) Sort By Drop Menu */}
       <div
-        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-        ${isHistoryTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-        z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${isHistoryTypeMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
       >
         {typeOptions.map((option) => (
           <button

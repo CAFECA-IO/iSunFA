@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { FiBookOpen, FiPlusCircle } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
@@ -11,6 +12,8 @@ const AccountingSidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
+
+  const { pathname } = useRouter();
 
   const { selectedCompany } = useUserCtx();
   const companyName = selectedCompany?.name;
@@ -55,11 +58,11 @@ const AccountingSidebar = () => {
         <div className="my-16px flex w-full flex-col items-center text-lg">
           <Link
             href={ISUNFA_ROUTE.ACCOUNTING}
-            className={`flex w-full items-center gap-8px ${isExpanded ? 'bg-tertiaryBlue p-16px text-white hover:opacity-75' : 'p-8px text-secondaryBlue'} rounded transition-all duration-300 ease-in-out`}
+            className={`flex w-full items-center justify-center ${isExpanded ? 'bg-tertiaryBlue p-16px text-white hover:opacity-75' : 'p-8px text-secondaryBlue'} rounded transition-all duration-300 ease-in-out`}
           >
             <FiPlusCircle size={24} />
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
             >
               {t('JOURNAL.ADD_NEW_JOURNAL')}
             </p>
@@ -72,11 +75,11 @@ const AccountingSidebar = () => {
 
           <Link
             href={ISUNFA_ROUTE.JOURNAL_LIST}
-            className="flex w-full items-center gap-8px p-8px text-secondaryBlue hover:text-primaryYellow"
+            className={`flex w-full items-center justify-center p-8px hover:text-tabs-text-active ${pathname.includes('journal-list') ? 'text-tabs-text-active' : 'text-secondaryBlue'} `}
           >
             <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
             >
               {t('JOURNAL.JOURNAL')}
             </p>
