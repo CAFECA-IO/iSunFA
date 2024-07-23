@@ -161,6 +161,12 @@ const NewJournalForm = () => {
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
 
+  // Info: (20240723 - Julian) For Hint
+  const [isSelectingDate, setIsSelectingDate] = useState<boolean>(true);
+  const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
+  const [isInstallmentValid, setIsInstallmentValid] = useState<boolean>(true);
+  const [isPartialPaidValid, setIsPartialPaidValid] = useState<boolean>(true);
+
   useEffect(() => {
     if (selectedOCR !== undefined) {
       getOCRResult({
@@ -396,7 +402,50 @@ const NewJournalForm = () => {
 
   // Info: (20240429 - Julian) 上傳日記帳資料
   const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
+    // Info: (20240723 - Julian) 防止表單預設行為
     event.preventDefault();
+
+    // Info: (20240723 - Julian) 檢查日期填寫
+    if (datePeriod.startTimeStamp === 0 && datePeriod.endTimeStamp === 0) {
+      // Info: (20240723 - Julian) 將錨點指向 date-picker
+      document.getElementById('date-picker')?.scrollIntoView();
+      setIsSelectingDate(false);
+      return;
+    } else {
+      setIsSelectingDate(true);
+    }
+
+    // Info: (20240429 - Julian) 檢查金額是否為正數
+    if (inputTotalPrice <= 0) {
+      // Info: (20240723 - Julian) 將錨點指向 price
+      document.getElementById('price')?.scrollIntoView();
+      setIsPriceValid(false);
+      return;
+    } else {
+      setIsPriceValid(true);
+    }
+
+    // Info: (20240429 - Julian) 檢查分期付款是否為正數
+    if (paymentPeriod === PaymentPeriodType.INSTALLMENT && inputInstallment <= 0) {
+      // Info: (20240723 - Julian) 將錨點指向 installment
+      document.getElementById('installment')?.scrollIntoView();
+      setIsInstallmentValid(false);
+      return;
+    } else {
+      setIsInstallmentValid(true);
+    }
+
+    // Info: (20240429 - Julian) 檢查部分付款是否為正數
+    if (paymentStatus === PaymentStatusType.PARTIAL && inputPartialPaid <= 0) {
+      // Info: (20240723 - Julian) 將錨點指向 partial-paid
+      document.getElementById('partial-paid')?.scrollIntoView();
+      setIsPartialPaidValid(false);
+      return;
+    } else {
+      setIsPartialPaidValid(true);
+    }
+
+    // Info: (20240429 - Julian) 整理日記帳資料
     const invoiceData: IInvoice = {
       journalId: selectedJournal?.id || null,
       date: datePeriod.startTimeStamp,
@@ -477,8 +526,6 @@ const NewJournalForm = () => {
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
-  // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
-  const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
 
   // Info: (20240715 - Julian) 專案名稱翻譯
   const projectName = selectedProject.id === null ? t(selectedProject.name) : selectedProject.name;
@@ -502,22 +549,6 @@ const NewJournalForm = () => {
   const vendorPlaceholder =
     selectedEventType === EventType.INCOME ? t('JOURNAL.FROM_WHOM') : t('JOURNAL.TO_WHOM');
   const isHideAddAssetBtn = selectedEventType === EventType.INCOME;
-
-  // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
-  const isUploadDisabled =
-    // Info: (20240429 - Julian) 檢查日期是否有填寫
-    datePeriod.startTimeStamp === 0 ||
-    datePeriod.endTimeStamp === 0 ||
-    inputReason === '' ||
-    inputDescription === '' ||
-    inputVendor === '' ||
-    isAccountNumberInvalid ||
-    // Info: (20240429 - Julian) 檢查手續費是否有填寫
-    (!!feeToggle && inputFee === 0) ||
-    // Info: (20240429 - Julian) 檢查總價是否有填寫
-    (paymentPeriod === PaymentPeriodType.INSTALLMENT && inputInstallment === 0) ||
-    // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-    (paymentStatus === PaymentStatusType.PARTIAL && inputPartialPaid === 0);
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = Object.values(EventType).map((type: EventType) => {
@@ -648,13 +679,20 @@ const NewJournalForm = () => {
         {/* Info: (20240423 - Julian) First Column */}
         <div className="flex w-full flex-col items-start justify-between gap-y-24px md:flex-row">
           {/* Info: (20240423 - Julian) Date */}
-          <div className="flex w-full flex-col items-start gap-8px md:w-240px">
+          <div className="relative flex w-full flex-col items-start gap-8px md:w-240px">
+            <div id="date-picker" className="absolute -top-20"></div>
             <p className="text-sm font-semibold text-navyBlue2">{t('DATE_PICKER.DATE')}</p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
               type={DatePickerType.TEXT_DATE}
             />
+            {/* ToDo: (20240723 - Julian) i18n */}
+            <div
+              className={`ml-auto text-sm text-input-text-error ${isSelectingDate ? 'opacity-0' : 'opacity-100'}`}
+            >
+              <p>請選擇日期</p>
+            </div>
           </div>
 
           {/* Info: (20240423 - Julian) Event Type */}
@@ -774,9 +812,10 @@ const NewJournalForm = () => {
       {/* Info: (20240423 - Julian) Form */}
       <div className="my-20px flex flex-col gap-40px">
         {/* Info: (20240423 - Julian) First Column */}
-        <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-end">
+        <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-baseline">
           {/* Info: (20240423 - Julian) Total Price */}
-          <div className="flex w-full flex-1 flex-col items-start gap-8px">
+          <div className="relative flex w-full flex-1 flex-col items-start gap-8px">
+            <div id="price" className="absolute -top-20"></div>
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
             <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
               <NumericInput
@@ -798,6 +837,13 @@ const NewJournalForm = () => {
                 />
                 <p>{t('JOURNAL.TWD')}</p>
               </div>
+            </div>
+            {/* Info: (20240723 - Julian) Hint */}
+            {/* ToDo: (20240723 - Julian) i18n */}
+            <div
+              className={`ml-auto text-sm text-input-text-error ${isPriceValid ? 'opacity-0' : 'opacity-100'}`}
+            >
+              <p>請填入金額</p>
             </div>
           </div>
 
@@ -857,6 +903,7 @@ const NewJournalForm = () => {
                 value={inputFee}
                 setValue={setInputFee}
                 isDecimal
+                required={feeToggle}
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -949,7 +996,7 @@ const NewJournalForm = () => {
               {t('REPORTS_HISTORY_LIST.PERIOD')}
             </p>
             {/* Info: (20240424 - Julian) radio buttons */}
-            <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-center">
+            <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-baseline">
               {/* Info: (20240424 - Julian) At Once */}
               <label
                 htmlFor="input-at-once"
@@ -967,36 +1014,46 @@ const NewJournalForm = () => {
               </label>
 
               {/* Info: (20240424 - Julian) Installment */}
-              <div className="flex w-full flex-1 flex-col items-start gap-8px md:flex-row md:items-center">
-                <label
-                  htmlFor="input-installment"
-                  className="flex w-full items-center gap-8px whitespace-nowrap"
-                >
-                  <input
-                    type="radio"
-                    id="input-installment"
-                    name="payment-period"
-                    className={radioButtonStyle}
-                    checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
-                    onChange={installmentClickHandler}
-                  />
-                  {t('JOURNAL.INSTALLMENT')}
-                </label>
-                {/* Info: (20240424 - Julian) input */}
-                <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
-                >
-                  <NumericInput
-                    id="input-installment-times"
-                    name="input-installment-times"
-                    value={inputInstallment}
-                    setValue={setInputInstallment}
-                    disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
-                    className="flex-1 bg-transparent px-10px outline-none"
-                  />
-                  <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-                    <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.TIMES')}</p>
+              <div className="relative flex flex-col">
+                <div id="installment" className="absolute -top-20"></div>
+                <div className="flex w-full flex-1 flex-col items-start gap-8px md:flex-row md:items-center">
+                  <label
+                    htmlFor="input-installment"
+                    className="flex w-full items-center gap-8px whitespace-nowrap"
+                  >
+                    <input
+                      type="radio"
+                      id="input-installment"
+                      name="payment-period"
+                      className={radioButtonStyle}
+                      checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
+                      onChange={installmentClickHandler}
+                    />
+                    {t('JOURNAL.INSTALLMENT')}
+                  </label>
+                  {/* Info: (20240424 - Julian) input */}
+                  <div
+                    className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  >
+                    <NumericInput
+                      id="input-installment-times"
+                      name="input-installment-times"
+                      value={inputInstallment}
+                      setValue={setInputInstallment}
+                      required={paymentPeriod === PaymentPeriodType.INSTALLMENT}
+                      disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
+                      className="flex-1 bg-transparent px-10px outline-none"
+                    />
+                    <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+                      <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.TIMES')}</p>
+                    </div>
                   </div>
+                </div>
+                {/* ToDo: (20240723 - Julian) i18n */}
+                <div
+                  className={`ml-auto text-sm text-input-text-error ${isInstallmentValid ? 'opacity-0' : 'opacity-100'}`}
+                >
+                  <p>請填入次數</p>
                 </div>
               </div>
             </div>
@@ -1006,7 +1063,7 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_STATE')}</p>
             {/* Info: (20240424 - Julian) radio buttons */}
-            <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
+            <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
               <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
@@ -1020,44 +1077,54 @@ const NewJournalForm = () => {
                 <p>{t('JOURNAL.UNPAID')}</p>
               </label>
               {/* Info: (20240424 - Julian) Partial Paid */}
-              <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
-                <label
-                  htmlFor="input-partial-paid"
-                  className="flex items-center gap-8px whitespace-nowrap"
-                >
-                  <input
-                    type="radio"
-                    id="input-partial-paid"
-                    name="payment-status"
-                    className={radioButtonStyle}
-                    checked={paymentStatus === PaymentStatusType.PARTIAL}
-                    onChange={partialPaidClickHandler}
-                  />
-                  <p>{t('JOURNAL.PARTIAL_PAID')}</p>
-                </label>
-                {/* Info: (20240424 - Julian) input */}
-                <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
-                >
-                  <NumericInput
-                    id="input-partial-paid-amount"
-                    name="input-partial-paid-amount"
-                    value={inputPartialPaid}
-                    setValue={setInputPartialPaid}
-                    isDecimal
-                    disabled={paymentStatus !== PaymentStatusType.PARTIAL}
-                    className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
-                  />
-                  <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-                    <Image
-                      src="/currencies/twd.svg"
-                      width={16}
-                      height={16}
-                      alt="twd_icon"
-                      className="rounded-full"
+              <div className="relative flex flex-col">
+                <div id="partial-paid" className="absolute -top-20"></div>
+                <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
+                  <label
+                    htmlFor="input-partial-paid"
+                    className="flex items-center gap-8px whitespace-nowrap"
+                  >
+                    <input
+                      type="radio"
+                      id="input-partial-paid"
+                      name="payment-status"
+                      className={radioButtonStyle}
+                      checked={paymentStatus === PaymentStatusType.PARTIAL}
+                      onChange={partialPaidClickHandler}
                     />
-                    <p>{t('JOURNAL.TWD')}</p>
+                    <p>{t('JOURNAL.PARTIAL_PAID')}</p>
+                  </label>
+                  {/* Info: (20240424 - Julian) input */}
+                  <div
+                    className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+                  >
+                    <NumericInput
+                      id="input-partial-paid-amount"
+                      name="input-partial-paid-amount"
+                      value={inputPartialPaid}
+                      setValue={setInputPartialPaid}
+                      isDecimal
+                      required={paymentStatus === PaymentStatusType.PARTIAL}
+                      disabled={paymentStatus !== PaymentStatusType.PARTIAL}
+                      className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+                    />
+                    <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+                      <Image
+                        src="/currencies/twd.svg"
+                        width={16}
+                        height={16}
+                        alt="twd_icon"
+                        className="rounded-full"
+                      />
+                      <p>{t('JOURNAL.TWD')}</p>
+                    </div>
                   </div>
+                </div>
+                {/* ToDo: (20240723 - Julian) i18n */}
+                <div
+                  className={`ml-auto text-sm text-input-text-error ${isPartialPaidValid ? 'opacity-0' : 'opacity-100'}`}
+                >
+                  <p>請填入金額</p>
                 </div>
               </div>
               {/* Info: (20240424 - Julian) Paid */}
@@ -1093,6 +1160,7 @@ const NewJournalForm = () => {
             value={inputEstimatedCost}
             setValue={setInputEstimatedCost}
             isDecimal
+            required={selectedEventType === EventType.INCOME}
             className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
           />
           <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1213,7 +1281,7 @@ const NewJournalForm = () => {
             id="upload-btn"
             type="submit"
             className="px-16px py-8px"
-            disabled={isUploadDisabled}
+            // disabled={isUploadDisabled}
           >
             <p>{t('JOURNAL.UPLOAD')}</p>
             <svg
