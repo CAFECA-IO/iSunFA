@@ -9,6 +9,7 @@
         "netProfitGrowthIn30d": 3000,
         "netProfitGrowthInYear": 10000,
         "createdAt": 1634567890,
-        "updatedAt": 1634567890
+        "updatedAt": 1634567890,
+        "deletedAt": null
     }
 ]

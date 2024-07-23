@@ -6,7 +6,8 @@
         "totalSales": 1000,
         "comparison": 10,
         "createdAt": 1640995200,
-        "updatedAt": 1640995200
+        "updatedAt": 1640995200,
+        "deletedAt": null
     },
     {
         "id": 1001,
@@ -15,7 +16,8 @@
         "totalSales": 1500,
         "comparison": 15,
         "createdAt": 1641081600,
-        "updatedAt": 1641081600
+        "updatedAt": 1641081600,
+        "deletedAt": null
     },
     {
         "id": 1002,
@@ -24,6 +26,7 @@
         "totalSales": 1200,
         "comparison": 12,
         "createdAt": 1641168000,
-        "updatedAt": 1641168000
+        "updatedAt": 1641168000,
+        "deletedAt": null
     }
 ]

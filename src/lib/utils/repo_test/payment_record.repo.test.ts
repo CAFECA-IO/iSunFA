@@ -1,6 +1,6 @@
 import {
   createPaymentRecord,
-  deletePaymentRecord,
+  deletePaymentRecordForTesting,
   getPaymentRecordById,
   listPaymentRecords,
 } from '@/lib/utils/repo/payment_record.repo';
@@ -61,7 +61,7 @@ describe('Payment Record Repository', () => {
       expect(paymentRecord.method).toBe(newPaymentRecord.method);
       expect(paymentRecord.status).toBe(newPaymentRecord.status);
       // Clean up after test
-      await deletePaymentRecord(paymentRecord.id);
+      await deletePaymentRecordForTesting(paymentRecord.id);
     });
   });
 });

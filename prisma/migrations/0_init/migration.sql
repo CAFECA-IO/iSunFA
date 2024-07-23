@@ -38,6 +38,7 @@ CREATE TABLE "asset" (
     "depreciation_method" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "asset_pkey" PRIMARY KEY ("id")
 );
@@ -51,6 +52,7 @@ CREATE TABLE "audit_report" (
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "report_id" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "audit_report_pkey" PRIMARY KEY ("id")
 );
@@ -67,6 +69,7 @@ CREATE TABLE "admin" (
     "end_date" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "admin_pkey" PRIMARY KEY ("id")
 );
@@ -80,6 +83,7 @@ CREATE TABLE "client" (
     "favorite" BOOLEAN NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "client_pkey" PRIMARY KEY ("id")
 );
@@ -95,6 +99,7 @@ CREATE TABLE "company" (
     "start_date" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "company_pkey" PRIMARY KEY ("id")
 );
@@ -123,6 +128,7 @@ CREATE TABLE "company_kyc" (
     "zip_code" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "company_kyc_pkey" PRIMARY KEY ("id")
 );
@@ -137,6 +143,7 @@ CREATE TABLE "company_setting" (
     "reminder_freq" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "company_setting_pkey" PRIMARY KEY ("id")
 );
@@ -164,6 +171,7 @@ CREATE TABLE "contract" (
     "estimated_cost" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "contract_pkey" PRIMARY KEY ("id")
 );
@@ -175,6 +183,7 @@ CREATE TABLE "department" (
     "name" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "department_pkey" PRIMARY KEY ("id")
 );
@@ -195,6 +204,7 @@ CREATE TABLE "employee" (
     "end_date" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "employee_pkey" PRIMARY KEY ("id")
 );
@@ -208,6 +218,7 @@ CREATE TABLE "employee_project" (
     "end_date" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "employee_project_pkey" PRIMARY KEY ("id")
 );
@@ -225,6 +236,7 @@ CREATE TABLE "invoice" (
     "image_url" TEXT NOT NULL DEFAULT '',
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "invoice_pkey" PRIMARY KEY ("id")
 );
@@ -242,6 +254,7 @@ CREATE TABLE "invitation" (
     "expired_at" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "invitation_pkey" PRIMARY KEY ("id")
 );
@@ -255,6 +268,7 @@ CREATE TABLE "income_expense" (
     "project_id" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "income_expense_pkey" PRIMARY KEY ("id")
 );
@@ -270,6 +284,7 @@ CREATE TABLE "journal" (
     "company_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "journal_pkey" PRIMARY KEY ("id")
 );
@@ -284,6 +299,7 @@ CREATE TABLE "line_item" (
     "voucher_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "line_item_pkey" PRIMARY KEY ("id")
 );
@@ -297,6 +313,7 @@ CREATE TABLE "milestone" (
     "status" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "milestone_pkey" PRIMARY KEY ("id")
 );
@@ -313,6 +330,7 @@ CREATE TABLE "ocr" (
     "type" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "ocr_pkey" PRIMARY KEY ("id")
 );
@@ -325,6 +343,7 @@ CREATE TABLE "order" (
     "status" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "order_pkey" PRIMARY KEY ("id")
 );
@@ -339,6 +358,7 @@ CREATE TABLE "project" (
     "image_id" TEXT,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "project_pkey" PRIMARY KEY ("id")
 );
@@ -360,6 +380,7 @@ CREATE TABLE "payment" (
     "progress" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "payment_pkey" PRIMARY KEY ("id")
 );
@@ -376,6 +397,7 @@ CREATE TABLE "payment_record" (
     "status" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "payment_record_pkey" PRIMARY KEY ("id")
 );
@@ -389,6 +411,7 @@ CREATE TABLE "plan" (
     "annual_fee" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "plan_pkey" PRIMARY KEY ("id")
 );
@@ -400,6 +423,7 @@ CREATE TABLE "role" (
     "permissions" TEXT[],
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "role_pkey" PRIMARY KEY ("id")
 );
@@ -426,6 +450,7 @@ CREATE TABLE "report" (
     "content" JSONB NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "report_pkey" PRIMARY KEY ("id")
 );
@@ -440,6 +465,7 @@ CREATE TABLE "subscription" (
     "expired_date" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "subscription_pkey" PRIMARY KEY ("id")
 );
@@ -453,6 +479,7 @@ CREATE TABLE "sale" (
     "comparison" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "sale_pkey" PRIMARY KEY ("id")
 );
@@ -471,6 +498,7 @@ CREATE TABLE "salary_record" (
     "confirmed" BOOLEAN NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "salary_record_pkey" PRIMARY KEY ("id")
 );
@@ -483,6 +511,7 @@ CREATE TABLE "salary_record_project_hour" (
     "hour" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "salary_record_project_hour_pkey" PRIMARY KEY ("id")
 );
@@ -500,6 +529,7 @@ CREATE TABLE "user" (
     "image_id" TEXT,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );
@@ -511,6 +541,7 @@ CREATE TABLE "voucher" (
     "no" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "voucher_pkey" PRIMARY KEY ("id")
 );
@@ -523,6 +554,7 @@ CREATE TABLE "voucher_salary_record" (
     "voucher_salary_record_folder_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "voucher_salary_record_pkey" PRIMARY KEY ("id")
 );
@@ -534,6 +566,7 @@ CREATE TABLE "voucher_salary_record_folder" (
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "company_id" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "voucher_salary_record_folder_pkey" PRIMARY KEY ("id")
 );
@@ -550,6 +583,7 @@ CREATE TABLE "value" (
     "net_profit_growth_in_year" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "value_pkey" PRIMARY KEY ("id")
 );
@@ -563,6 +597,7 @@ CREATE TABLE "work_rate" (
     "actual_hours" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
 
     CONSTRAINT "work_rate_pkey" PRIMARY KEY ("id")
 );
