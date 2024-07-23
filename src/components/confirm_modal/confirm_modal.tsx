@@ -187,9 +187,9 @@ const ConfirmModal = ({
         journalId: journal.id,
         lineItems,
       };
-      if (selectedJournal) {
+      if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
         updateVoucher({
-          params: { companyId, journalId: journal.id },
+          params: { companyId },
           body: { voucher },
         });
       } else {
