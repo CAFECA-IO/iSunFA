@@ -625,7 +625,7 @@ const ViewFinancialSection = ({
     }
   }, [query]);
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
-  // console.log('reportData', reportData.general);
+  console.log('reportData', reportData);
   // Deprecated: temporary console.log debug information (20240722 - Anna)
   if (pageNumber === 1) {
     return (
@@ -903,7 +903,7 @@ const ViewFinancialSection = ({
                       >
                         <div className="container mx-auto bg-white">
                           <header className="mb-20 flex justify-between p-5 text-white">
-                            <div className="w-1/3 bg-blue-900 p-5 font-bold">
+                            <div className="w-1/3 bg-[var(--navy-blue-500)] p-5 font-bold">
                               <div>
                                 <h1 className="mb-7 text-lg">
                                   2330 <br />
@@ -919,17 +919,33 @@ const ViewFinancialSection = ({
                               <h2 className="relative inline-block pb-1 text-lg font-bold text-gray-400">
                                 Balance Sheet
                                 <div className="relative">
-                                  <span className="block h-2 w-full bg-yellow-500"></span>
                                   <span
-                                    className="block h-1 w-3/4 bg-blue-900"
-                                    style={{ marginTop: '-0.125rem' }}
+                                    className="block"
+                                    style={{
+                                      background: '#FFA502',
+                                      height: '10px',
+                                      width: '150%',
+
+                                      left: '-25%',
+                                    }}
+                                  ></span>
+                                  <span
+                                    className="block w-3/4"
+                                    style={{
+                                      backgroundColor: 'var(--navy-blue-500)',
+                                      height: '5px',
+                                      marginTop: '4px',
+                                      right: '0',
+                                      position: 'absolute',
+                                    }}
                                   ></span>
                                 </div>
                               </h2>
                             </div>
                           </header>
+
                           <section className="p-5">
-                            <div className="mb-4 flex justify-between font-semibold text-blue-900">
+                            <div className="mb-4 flex justify-between font-semibold text-[var(--navy-blue-500)]">
                               <p>一、項目彙總格式</p>
                               <p>單位：新台幣仟元</p>
                             </div>
@@ -1080,7 +1096,7 @@ const ViewFinancialSection = ({
                               </tbody>
                             </table>
                           </section>
-                          <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-blue-900 p-2">
+                          <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-[var(--navy-blue-500)] p-2">
                             <p className="m-0 text-xs text-white">1</p>
                             <div className="font-bold text-white">
                               <img src="./logo.png" alt="" />
@@ -1188,7 +1204,7 @@ const ViewFinancialSection = ({
               <div className="container mx-auto">
                 <div className="bg-white">
                   <header className="mb-20 flex justify-between p-5 text-white">
-                    <div className="w-1/3 bg-blue-900 p-5 font-bold">
+                    <div className="w-1/4 bg-[var(--navy-blue-500)] p-5 font-bold">
                       <div>
                         <h1 className="mb-7 text-lg">
                           2330 <br />
@@ -1204,17 +1220,33 @@ const ViewFinancialSection = ({
                       <h2 className="relative inline-block pb-1 text-lg font-bold text-gray-400">
                         Balance Sheet
                         <div className="relative">
-                          <span className="block h-2 w-full bg-yellow-500"></span>
                           <span
-                            className="block h-1 w-3/4 bg-blue-900"
-                            style={{ marginTop: '-0.125rem' }}
+                            className="block w-full"
+                            style={{
+                              backgroundColor: '#FFA502',
+                              height: '10px',
+                              width: '150%',
+
+                              left: '-25%',
+                            }}
+                          ></span>
+                          <span
+                            className="block w-3/4"
+                            style={{
+                              backgroundColor: 'var(--navy-blue-500)',
+                              height: '5px',
+                              marginTop: '4px',
+                              right: '0',
+                              position: 'absolute',
+                            }}
                           ></span>
                         </div>
                       </h2>
                     </div>
                   </header>
+
                   <section className="p-5">
-                    <div className="mb-4 flex justify-between font-semibold text-blue-900">
+                    <div className="mb-4 flex justify-between font-semibold text-[var(--navy-blue-500)]">
                       <p>一、項目彙總格式</p>
                       <p>單位：新台幣仟元</p>
                     </div>
@@ -1269,7 +1301,7 @@ const ViewFinancialSection = ({
                       </tbody>
                     </table>
                   </section>
-                  <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-blue-900 p-2">
+                  <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-[var(--navy-blue-500)] p-2">
                     <p className="m-0 text-xs text-white">1</p>
                     <div className="font-bold text-white">
                       <img src="./logo.png" alt="" />
@@ -1291,6 +1323,7 @@ const ViewFinancialSection = ({
       </div>
     );
   }
+
   if (pageNumber === 2) {
     return (
       <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
@@ -1567,7 +1600,7 @@ const ViewFinancialSection = ({
                       >
                         <div className="container mx-auto bg-white">
                           <header className="mb-20 flex justify-between p-5 text-white">
-                            <div className="w-1/3 bg-blue-900 p-5 font-bold">
+                            <div className="w-1/3 bg-[var(--navy-blue-500)] p-5 font-bold">
                               <div>
                                 <h1 className="mb-7 text-lg">
                                   2330 <br />
@@ -1583,17 +1616,32 @@ const ViewFinancialSection = ({
                               <h2 className="relative inline-block pb-1 text-lg font-bold text-gray-400">
                                 Balance Sheet
                                 <div className="relative">
-                                  <span className="block h-2 w-full bg-yellow-500"></span>
                                   <span
-                                    className="block h-1 w-3/4 bg-blue-900"
-                                    style={{ marginTop: '-0.125rem' }}
+                                    className="block"
+                                    style={{
+                                      background: '#FFA502',
+                                      height: '10px',
+                                      width: '150%',
+
+                                      left: '-25%',
+                                    }}
+                                  ></span>
+                                  <span
+                                    className="block w-3/4"
+                                    style={{
+                                      backgroundColor: 'var(--navy-blue-500)',
+                                      height: '5px',
+                                      marginTop: '4px',
+                                      right: '0',
+                                      position: 'absolute',
+                                    }}
                                   ></span>
                                 </div>
                               </h2>
                             </div>
                           </header>
                           <section className="p-5">
-                            <div className="mb-4 flex justify-between font-semibold text-blue-900">
+                            <div className="mb-4 flex justify-between font-semibold text-[var(--navy-blue-500)]">
                               <p>一、項目彙總格式</p>
                               <p>單位：新台幣仟元</p>
                             </div>
@@ -1744,7 +1792,7 @@ const ViewFinancialSection = ({
                               </tbody>
                             </table>
                           </section>
-                          <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-blue-900 p-2">
+                          <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-[var(--navy-blue-500)] p-2">
                             <p className="m-0 text-xs text-white">1</p>
                             <div className="font-bold text-white">
                               <img src="./logo.png" alt="" />
@@ -1851,20 +1899,42 @@ const ViewFinancialSection = ({
               {/* Info: (2024721 - Anna) 財報畫面 */}
               <div className="container mx-auto">
                 <div className="bg-white">
-                  <header className="flex justify-between text-white">
-                    <div className="mt-8 flex w-1/3">
-                      <div className="bg-primary-blue h-2 w-4/5"></div>
-                      <div className="h-2 w-1/5 bg-yellow-500"></div>
+                  <header className="flex justify-between">
+                    <div className="mt-7 flex w-[28%]">
+                      <div className="h-2.5 w-[82.5%] bg-[var(--navy-blue-500)]"></div>
+                      <div className="h-2.5 w-[17.5%]" style={{ backgroundColor: '#FFA502' }}></div>
                     </div>
-                    <div className="w-1/3 pr-5 pt-6 text-right">
-                      <h2 className="border-b-10 relative border-yellow-500 pb-1 text-xl font-bold text-surface-brand-secondary-soft">
+                    <div className="relative w-1/3 pr-5 pt-6 text-right">
+                      <h2 className="relative inline-block pb-1 text-lg font-bold text-gray-400">
                         Balance Sheet
-                        <div className="bg-primary-blue absolute bottom-[-20px] right-0 h-1 w-3/4"></div>
+                        <div className="relative">
+                          <span
+                            className="block w-full"
+                            style={{
+                              backgroundColor: '#FFA502',
+                              height: '10px',
+                              width: '100%',
+
+                              left: '-25%',
+                            }}
+                          ></span>
+                          <span
+                            className="block w-3/4"
+                            style={{
+                              backgroundColor: 'var(--navy-blue-500)',
+                              height: '5px',
+                              marginTop: '4px',
+                              right: '0',
+                              position: 'absolute',
+                            }}
+                          ></span>
+                        </div>
                       </h2>
                     </div>
                   </header>
+
                   <section className="p-5">
-                    <div className="mb-4 flex justify-between font-semibold text-blue-900">
+                    <div className="mb-4 flex justify-between font-semibold text-[var(--navy-blue-500)]">
                       <p>一、項目彙總格式</p>
                       <p>單位：新台幣仟元</p>
                     </div>
@@ -1919,7 +1989,63 @@ const ViewFinancialSection = ({
                       </tbody>
                     </table>
                   </section>
-                  <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-blue-900 p-2">
+                  <section className="p-5">
+                    <div className="mb-4 flex justify-between font-semibold text-[var(--navy-blue-500)]">
+                      <p>二、細項分類格式</p>
+                      <p>單位：新台幣仟元</p>
+                    </div>
+                    <table className="w-full border-collapse bg-white">
+                      <thead>
+                        <tr className="text-neutral-400">
+                          <th className="border border-gray-300 bg-yellow-200 p-2 text-sm font-semibold">
+                            代號
+                          </th>
+                          <th className="border border-gray-300 bg-yellow-200 p-2 text-sm font-semibold">
+                            會計項目
+                          </th>
+                          <th className="border border-gray-300 bg-yellow-200 p-2 text-right text-sm font-semibold">
+                            2023-12-31
+                          </th>
+                          <th className="border border-gray-300 bg-yellow-200 p-2 text-center text-sm font-semibold">
+                            %
+                          </th>
+                          <th className="border border-gray-300 bg-yellow-200 p-2 text-right text-sm font-semibold">
+                            2022-12-31
+                          </th>
+                          <th className="border border-gray-300 bg-yellow-200 p-2 text-center text-sm font-semibold">
+                            %
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-neutral-400">
+                        {/* page2 */}
+                        {Object.prototype.hasOwnProperty.call(reportData, 'details') &&
+                          reportData.details.slice(0, 1).map((value) => (
+                            <tr key={value.name}>
+                              <td className="border border-gray-300 p-2 text-center text-sm">
+                                {value.code}
+                              </td>
+                              <td className="border border-gray-300 p-2 text-left text-sm">
+                                {value.name}
+                              </td>
+                              <td className="border border-gray-300 p-2 text-right text-sm">
+                                {value.curPeriodAmount}
+                              </td>
+                              <td className="border border-gray-300 p-2 text-center text-sm">
+                                {value.curPeriodPercentage}
+                              </td>
+                              <td className="border border-gray-300 p-2 text-right text-sm">
+                                {value.prePeriodAmount}
+                              </td>
+                              <td className="border border-gray-300 p-2 text-center text-sm">
+                                {value.prePeriodPercentage}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </section>
+                  <footer className="mt-5 flex items-center justify-between border-t-2 border-gray-300 bg-[var(--navy-blue-500)] p-2">
                     <p className="m-0 text-xs text-white">2</p>
                     <div className="font-bold text-white">
                       <img src="./logo.png" alt="" />
