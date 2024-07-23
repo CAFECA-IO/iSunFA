@@ -20,7 +20,7 @@ import {
   ContactInfoKeys,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { createFormData, ICompanyKYCForm, isKYCFormComplete } from '@/interfaces/company_kyc';
+import { ICompanyKYCForm, isKYCFormComplete } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'react-i18next';
 
@@ -79,12 +79,11 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
     if (isComplete) {
-      const formData = createFormData(companyKYCForm);
       const { success, code } = await triggerUpload({
         params: {
           companyId: selectedCompany?.id,
         },
-        body: formData,
+        body: companyKYCForm,
       });
       if (success) {
         messageModalDataHandler({

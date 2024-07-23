@@ -62,7 +62,7 @@ export enum APIName {
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
-  FILE_LIST_UPLOADED = 'FILE_LIST_UPLOADED',
+  FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
   COMPANY_DELETE = 'COMPANY_DELETE',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
@@ -119,7 +119,7 @@ export enum APIPath {
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
-  FILE_LIST_UPLOADED = `${apiPrefix}/company/:companyId/file/`,
+  FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
   COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
@@ -367,10 +367,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.DELETE,
     path: APIPath.FILE_DELETE,
   }),
-  [APIName.FILE_LIST_UPLOADED]: createConfig({
-    name: APIName.FILE_LIST_UPLOADED,
+  [APIName.FILE_GET]: createConfig({
+    name: APIName.FILE_GET,
     method: HttpMethod.GET,
-    path: APIPath.FILE_LIST_UPLOADED,
+    path: APIPath.FILE_GET,
   }),
   [APIName.COMPANY_GET_BY_ID]: createConfig({
     name: APIName.COMPANY_GET_BY_ID,
