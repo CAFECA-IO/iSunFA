@@ -11,11 +11,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  default30DayPeriodInSec,
-  radioButtonStyle,
-} from '@/constants/display';
+import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
@@ -98,16 +94,14 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
-
+  const companyId = selectedCompany?.id;
   const { selectedOCR, selectOCRHandler, selectedJournal, getAIStatusHandler } = useAccountingCtx();
-
   const {
     trigger: getOCRResult,
     success: getSuccess,
     data: OCRResult,
     code: getCode,
   } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
-
   const {
     trigger: createInvoice,
     data: invoiceReturn,
@@ -119,15 +113,12 @@ const NewJournalForm = () => {
     false,
     false
   );
-
-  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
-
   const {
-    trigger: updateJournal,
+    trigger: updateInvoice,
     success: updateSuccess,
     code: updateCode,
     data: updateAIResult,
-  } = APIHandler<IAccountResultStatus>(APIName.JOURNAL_UPDATE, {}, false, false);
+  } = APIHandler<IAccountResultStatus>(APIName.INVOICE_UPDATE, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -176,14 +167,14 @@ const NewJournalForm = () => {
   }, [selectedOCR]);
 
   useEffect(() => {
-    if (selectedJournal) {
+    if (selectedCompany && selectedJournal) {
       if (selectedJournal.invoice === null) {
         getOCRResult({
           params: {
             companyId,
             resultId: selectedJournal.aichResultId,
           },
-        }); // selectedOCR.aichResultId
+        });
       } else {
         const { invoice } = selectedJournal;
         setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
@@ -216,7 +207,7 @@ const NewJournalForm = () => {
       }
       getAIStatusHandler(
         {
-          companyId,
+          companyId: selectedCompany?.id,
           askAIId: selectedJournal.aichResultId,
         },
         true
@@ -227,7 +218,7 @@ const NewJournalForm = () => {
       });
       confirmModalVisibilityHandler();
     }
-  }, [selectedJournal, selectedOCR]);
+  }, [selectedCompany, selectedJournal, selectedOCR]);
 
   // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
@@ -431,7 +422,7 @@ const NewJournalForm = () => {
     };
     if (selectedJournal || (createSuccess && invoiceReturn)) {
       const journalId = selectedJournal?.id || invoiceReturn?.journalId;
-      updateJournal({
+      updateInvoice({
         params: { companyId, journalId },
         body: { invoice: invoiceData, ocrId: selectedOCR?.id },
       });
@@ -1014,10 +1005,7 @@ const NewJournalForm = () => {
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label
-                htmlFor="input-unpaid"
-                className=" flex items-center gap-8px whitespace-nowrap"
-              >
+              <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
                   id="input-unpaid"
