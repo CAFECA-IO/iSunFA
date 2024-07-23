@@ -41,8 +41,8 @@ const UploadArea = ({
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
   const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
   const {
-    trigger: listUploadedFiles,
-    data: uploadedData,
+    trigger: getFile,
+    data: getData,
     success: getSuccess,
     code: getCode,
   } = APIHandler<IFile>(APIName.FILE_GET, {}, false, false);
@@ -230,10 +230,8 @@ const UploadArea = ({
       setUploadedFile(file);
       setUploadedFileId(id);
       setUploadProgress(100);
-      // eslint-disable-next-line no-console
-      console.log(`loadFileFromLocalStorage id: ${id}, filename: ${file?.name}, file:`, file);
       if (id && file) {
-        listUploadedFiles({
+        getFile({
           params: {
             companyId: selectedCompany?.id,
             fileId: id,
@@ -248,20 +246,23 @@ const UploadArea = ({
   }, []);
 
   useEffect(() => {
-    if (getSuccess && uploadedData && uploadedFile) {
-      if (!uploadedData.existed) {
+    if (getSuccess) {
+      if (uploadedFile && ((getData && !getData.existed) || !getData)) {
         handleFileUpload(uploadedFile);
       }
     }
     if (getSuccess === false) {
       toastHandler({
-        id: `listUploadedFiles-${getCode}`,
+        id: `getFile-${getCode}`,
         content: `Failed to list uploaded files: ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
+      if (uploadedFile) {
+        handleFileUpload(uploadedFile);
+      }
     }
-  }, [getSuccess, uploadedData, getCode, uploadedFile]);
+  }, [getSuccess, getData, getCode, uploadedFile]);
 
   return (
     <div
