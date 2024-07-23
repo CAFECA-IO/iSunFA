@@ -143,6 +143,7 @@ const NewJournalForm = () => {
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
+
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
@@ -792,6 +793,7 @@ const NewJournalForm = () => {
                 setValue={setInputTotalPrice}
                 isDecimal
                 required
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -863,6 +865,7 @@ const NewJournalForm = () => {
                 value={inputFee}
                 setValue={setInputFee}
                 isDecimal
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1014,10 +1017,7 @@ const NewJournalForm = () => {
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label
-                htmlFor="input-unpaid"
-                className=" flex items-center gap-8px whitespace-nowrap"
-              >
+              <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
                   id="input-unpaid"
@@ -1054,6 +1054,7 @@ const NewJournalForm = () => {
                     value={inputPartialPaid}
                     setValue={setInputPartialPaid}
                     isDecimal
+                    hasComma
                     disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
@@ -1102,6 +1103,7 @@ const NewJournalForm = () => {
             value={inputEstimatedCost}
             setValue={setInputEstimatedCost}
             isDecimal
+            hasComma
             className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
           />
           <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
