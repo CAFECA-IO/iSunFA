@@ -127,7 +127,9 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
+          searchQuery: !(searchString ?? search)
+            ? undefined
+            : (searchString ?? search),
         },
       });
       setSuccess(response.success);
