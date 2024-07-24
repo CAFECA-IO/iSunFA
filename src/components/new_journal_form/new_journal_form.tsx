@@ -72,13 +72,13 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
   const idAndName =
     obj === undefined
       ? {
-        id: array[0].id,
-        name: array[0].name,
-      }
+          id: array[0].id,
+          name: array[0].name,
+        }
       : {
-        id: obj.id,
-        name: obj.name,
-      };
+          id: obj.id,
+          name: obj.name,
+        };
   return idAndName;
 };
 
@@ -106,12 +106,10 @@ const NewJournalForm = () => {
     journalId: number;
     resultStatus: IAccountResultStatus;
   }>(APIName.INVOICE_CREATE, {}, false, false);
-  const { trigger: updateInvoice } = APIHandler<{ journalId: number, resultStatus: IAccountResultStatus }>(
-    APIName.INVOICE_UPDATE,
-    {},
-    false,
-    false
-  );
+  const { trigger: updateInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_UPDATE, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -127,6 +125,7 @@ const NewJournalForm = () => {
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
+
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
@@ -236,11 +235,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-        projectSelection[0]
+          projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-        contractSelection[0]
+          contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -388,7 +387,7 @@ const NewJournalForm = () => {
   const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
     const invoiceDataToUpdate: IInvoice = {
       ...invoiceData,
-      journalId: updateJournalId
+      journalId: updateJournalId,
     };
     const {
       success: updateSuccess,
@@ -399,8 +398,19 @@ const NewJournalForm = () => {
       body: { invoice: invoiceDataToUpdate },
     });
     // eslint-disable-next-line no-console
-    console.log("updateSuccess", updateSuccess, "updateAIResult", updateAIResult, "updateCode", updateCode);
-    if (updateSuccess && updateAIResult?.resultStatus?.resultId && updateAIResult?.resultStatus?.status) {
+    console.log(
+      'updateSuccess',
+      updateSuccess,
+      'updateAIResult',
+      updateAIResult,
+      'updateCode',
+      updateCode
+    );
+    if (
+      updateSuccess &&
+      updateAIResult?.resultStatus?.resultId &&
+      updateAIResult?.resultStatus?.status
+    ) {
       getAIStatusHandler(
         {
           companyId: companyId!,
@@ -809,6 +819,7 @@ const NewJournalForm = () => {
                 setValue={setInputTotalPrice}
                 isDecimal
                 required
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -880,6 +891,7 @@ const NewJournalForm = () => {
                 value={inputFee}
                 setValue={setInputFee}
                 isDecimal
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1068,6 +1080,7 @@ const NewJournalForm = () => {
                     value={inputPartialPaid}
                     setValue={setInputPartialPaid}
                     isDecimal
+                    hasComma
                     disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                     className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
                   />
@@ -1116,6 +1129,7 @@ const NewJournalForm = () => {
             value={inputEstimatedCost}
             setValue={setInputEstimatedCost}
             isDecimal
+            hasComma
             className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
           />
           <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">

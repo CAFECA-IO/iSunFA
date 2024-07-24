@@ -75,7 +75,7 @@ export async function deleteOrder(id: number): Promise<IOrder> {
     deletedAt: nowInSecond,
   };
 
-  const updateArgs:Prisma.OrderUpdateArgs = {
+  const updateArgs: Prisma.OrderUpdateArgs = {
     where,
     data,
   };

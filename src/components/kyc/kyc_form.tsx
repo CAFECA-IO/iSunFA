@@ -20,16 +20,17 @@ import {
   ContactInfoKeys,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { createFormData, ICompanyKYCForm, isKYCFormComplete } from '@/interfaces/company_kyc';
+import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'react-i18next';
+import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslation('common');
   const formRef = useRef<HTMLFormElement>(null);
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { trigger: triggerUpload } = APIHandler(APIName.FILE_UPLOAD, {}, false, false);
+  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD, {}, false, false);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
@@ -70,21 +71,21 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
       ...registrationInfoValues,
-      ...contactInfoValues,
+      ...restContactInfoValues,
       [ContactInfoKeys.CONTACT_PHONE]: contactInfoValues.areaCode + contactInfoValues.contactNumber,
       ...uploadDocuments,
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
     if (isComplete) {
-      const formData = createFormData(companyKYCForm);
       const { success, code } = await triggerUpload({
         params: {
           companyId: selectedCompany?.id,
         },
-        body: formData,
+        body: companyKYCForm,
       });
       if (success) {
         messageModalDataHandler({
