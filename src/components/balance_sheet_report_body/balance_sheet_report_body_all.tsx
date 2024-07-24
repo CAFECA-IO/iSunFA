@@ -1588,6 +1588,16 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </tbody>
         </table>
+        {/* Info: watermark logo (20240723 - Anna) */}
+        <div className="relative -z-10">
+          <Image
+            className="absolute right-0 top-[-300px]"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
       </section>
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">9</p>
@@ -1655,6 +1665,15 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <PieChart data={[50, 30, 20]} />
           </div>
         </div>
+        <div className="relative -z-10">
+  <Image
+    className="absolute right-0 top-[-300px]"
+    src="/logo/watermark_logo.svg"
+    alt="isunfa logo"
+    width={450}
+    height={300}
+  />
+</div>
       </section>
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">10</p>
@@ -1773,6 +1792,15 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             />
           </div>
         </div>
+        <div className="relative -z-10">
+          <Image
+            className="absolute right-0 top-[-300px]"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
       </section>
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">11</p>
@@ -1852,9 +1880,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </tbody>
         </table>
-        <div className="relative bottom-0 right-0 -z-10 mt-[87px] flex justify-end">
+        <div className="relative -z-10">
           <Image
-            className="relative"
+            className="absolute right-0 top-[-300px]"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
