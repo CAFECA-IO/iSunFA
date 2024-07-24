@@ -4,7 +4,7 @@ import {
   LegalStructureOptions,
   RepresentativeIDType,
 } from '@/constants/kyc';
-import { createCompanyKYC, deleteCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
+import { createCompanyKYC, deleteCompanyKYCForTesting } from '@/lib/utils/repo/company_kyc.repo';
 
 describe('CompanyKYC Repository Tests', () => {
   const testCompanyId = 1000;
@@ -32,7 +32,7 @@ describe('CompanyKYC Repository Tests', () => {
   xdescribe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
       const companyKYC = await createCompanyKYC(testCompanyId, newCompanyKYCData);
-      await deleteCompanyKYC(companyKYC.id); // Clean up after test
+      await deleteCompanyKYCForTesting(companyKYC.id); // Clean up after test
       expect(companyKYC).toBeDefined();
       expect(companyKYC.companyId).toBe(testCompanyId);
       expect(companyKYC.legalName).toBe(newCompanyKYCData.legalName);

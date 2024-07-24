@@ -16,9 +16,11 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { IReportOld } from '@/interfaces/report';
+import { FinancialReport, IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
+import { DOMAIN } from '@/constants/config';
+import { ReportUrlMap } from '@/constants/report';
 
 interface IServerSideProps {
   reportId: string;
@@ -35,7 +37,7 @@ const ReportLink = {
   balance_sheet: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
   comprehensive_income_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`,
   cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
-  change_in_equity_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c10990000000000000000000000000000000000000007/change_in_equity_statement`
+  change_in_equity_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c10990000000000000000000000000000000000000007/change_in_equity_statement`,
 } as const;
 
 const DUMMY_DATA_FOR_REPORT = {
@@ -54,6 +56,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
+  // TODO: refactor and delete it (20240723 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -69,9 +73,12 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     data: reportFinancial,
     code: getFRCode,
     success: getFRSuccess,
-  } = APIHandler<IReportOld>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId },
   });
+
+  // eslint-disable-next-line no-console
+  console.log('reportFinancial in reportId', reportFinancial);
 
   useEffect(() => {
     if (getFRSuccess === false) {
@@ -83,7 +90,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       });
     }
     if (getFRSuccess && reportFinancial) {
-      setReportData(reportFinancial);
+      // setReportData(reportFinancial);
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 
@@ -105,11 +112,10 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
               name: string;
             }
           }
-          // reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
           tokenContract={reportData.tokenContract}
           tokenId={reportData.tokenId}
-          // reportLink={DUMMY_DATA_FOR_REPORT.reportLink}
-          reportLink={reportData.reportLink}
+          reportLink={`${DOMAIN}/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+          reportId={reportId}
         />
       </div>
     </>

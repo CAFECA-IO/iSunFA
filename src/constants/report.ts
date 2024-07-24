@@ -14,7 +14,7 @@ export enum ReportSheetType {
 }
 
 export enum ReportSheetTypeDisplay {
-  BALANCE_SHEET = 'Statement of Financial Position',
+  BALANCE_SHEET = 'Balance Sheet',
   INCOME_STATEMENT = 'Statement of Comprehensive Income',
   CASH_FLOW_STATEMENT = 'Statement of Cash Flows',
   CHANGE_IN_EQUITY_STATEMENT = 'Statement of Changes in Equity',
@@ -24,6 +24,15 @@ export enum ReportStatusType {
   PENDING = 'pending',
   GENERATED = 'generated',
 }
+
+export const ReportUrlMap: {
+  [key in ReportSheetType]: string;
+} = {
+  [ReportSheetType.BALANCE_SHEET]: 'balance-sheet',
+  [ReportSheetType.INCOME_STATEMENT]: 'income-statement',
+  [ReportSheetType.CASH_FLOW_STATEMENT]: 'cash-flow-statement',
+  [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: 'change-in-equity-statement',
+};
 
 export const ReportSheetAccountTypeMap: {
   [key in ReportSheetType]: AccountType[];
@@ -68,7 +77,7 @@ export const FinancialReportTypesKeyReportSheetTypeMapping: {
 };
 
 export const ACCOUNT_TYPE_REPORT_SHEET_TYPE_MAPPING: {
-  [key in AccountType]: ReportSheetType
+  [key in AccountType]: ReportSheetType;
 } = {
   [AccountType.ASSET]: ReportSheetType.BALANCE_SHEET,
   [AccountType.LIABILITY]: ReportSheetType.BALANCE_SHEET,

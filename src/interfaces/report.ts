@@ -70,6 +70,24 @@ export interface IFinancialReportRequest {
   financialOrAnalysis?: 'financial' | 'analysis';
 }
 
+export interface FinancialReportItem {
+  code: string;
+  name: string;
+  curPeriodAmount: number;
+  curPeriodAmountString: string;
+  curPeriodPercentage: number;
+  prePeriodAmount: number;
+  prePeriodAmountString: string;
+  prePeriodPercentage: number;
+  indent: number;
+}
+
+export interface FinancialReport {
+  reportType: ReportSheetType;
+  general: FinancialReportItem[];
+  details: FinancialReportItem[];
+}
+
 export function isFinancialReportType(data: string): data is FinancialReportType {
   return (
     data === FinancialReportTypesKey.balance_sheet ||
