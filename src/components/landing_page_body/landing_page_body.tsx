@@ -47,7 +47,7 @@ function LandingPageBody() {
           {/* Info: --- light_down svg --- (20240318 - Shirley) */}
           <div className={isSafari ? 'hidden' : 'absolute h-screen w-screen mix-blend-screen'}>
             {' '}
-            <div className="bottomShadow absolute -left-1/10 top-1/5 z-0  w-60vw bg-light_down bg-contain bg-no-repeat bg-blend-color-dodge shadow-md md:-top-1/5 md:h-1800px lg:-top-1/3 lg:w-1400px"></div>
+            <div className="bottomShadow absolute -left-1/10 top-1/5 z-0 w-60vw bg-light_down bg-contain bg-no-repeat bg-blend-color-dodge shadow-md md:-top-1/5 md:h-1800px lg:-top-1/3 lg:w-1400px"></div>
           </div>
 
           {/* Info: --- green_light_left svg --- (20240318 - Shirley) */}

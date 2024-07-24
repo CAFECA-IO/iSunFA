@@ -1,11 +1,43 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
+import { APIName } from '@/constants/api_connection';
+import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { useUserCtx } from '@/contexts/user_context';
+import { FinancialReport } from '@/interfaces/report';
+import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React from 'react';
 import PieChart from '@/components/balance_sheet_report_body/pie_chart';
 import PieChartAssets from '@/components/balance_sheet_report_body/pie_chart_assets';
 
-const BalanceSheetReportBodyAll = () => {
+interface IBalanceSheetReportBodyAllProps {
+  reportId: string;
+}
+
+const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
+  const { selectedCompany } = useUserCtx();
+  const {
+    data: reportFinancial,
+    code: getReportFinancialCode,
+    success: getReportFinancialSuccess,
+    isLoading: getReportFinancialIsLoading,
+  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: {
+      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      reportId: reportId ?? '10000003',
+    },
+  });
+
+  // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley)
+  // eslint-disable-next-line no-console
+  console.log('reportFinancial', reportFinancial);
+
+  if (getReportFinancialIsLoading) {
+    return <div>Loading...</div>;
+  } else if (!getReportFinancialSuccess) {
+    return <div>Error {getReportFinancialCode}</div>;
+  }
+
   const page1 = (
     <div className="">
       {/* Info: watermark logo (20240723 - Shirley) */}
@@ -78,37 +110,49 @@ const BalanceSheetReportBodyAll = () => {
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">11XX</td>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">流動資產合計</td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,194,032,910
+                {reportFinancial?.general[1].curPeriodAmountString}
               </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">40</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                {reportFinancial?.general[1].curPeriodPercentage}
+              </td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,052,896,744
+                {reportFinancial?.general[1].prePeriodAmountString}
               </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">41</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                {reportFinancial?.general[1].prePeriodPercentage}
+              </td>
             </tr>
             <tr>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">15XX</td>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">非流動資產合計</td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                3,338,338,305
+                {reportFinancial?.general[2].curPeriodAmountString}
               </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">60</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                {reportFinancial?.general[2].curPeriodPercentage}
+              </td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,911,882,134
+                {reportFinancial?.general[2].prePeriodAmountString}
               </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">59</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                {reportFinancial?.general[2].prePeriodPercentage}
+              </td>
             </tr>
             <tr>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">1XXX</td>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">資產總計</td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                5,532,371,215
+                {reportFinancial?.general[3].curPeriodAmountString}
               </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">100</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                {reportFinancial?.general[3].curPeriodPercentage}
+              </td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                4,964,778,878
+                {reportFinancial?.general[3].prePeriodAmountString}
               </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">100</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                {reportFinancial?.general[3].prePeriodPercentage}
+              </td>
             </tr>
             <tr>
               <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px]">

@@ -3,7 +3,7 @@ import {
   createOrder,
   getOrderById,
   updateOrder,
-  deleteOrder,
+  deleteOrderForTesting,
 } from '@/lib/utils/repo/order.repo';
 import orders from '@/seed_json/order.json';
 
@@ -16,7 +16,7 @@ describe('Order Repository Tests', () => {
   describe('createOrder', () => {
     it('should create a new order and return it', async () => {
       const newOrder = await createOrder(testCompanyId, testPlanId, testStatus);
-      await deleteOrder(newOrder.id); // Clean up after test
+      await deleteOrderForTesting(newOrder.id); // Clean up after test
       expect(newOrder).toBeDefined();
       expect(newOrder.companyId).toBe(testCompanyId);
       expect(newOrder.planId).toBe(testPlanId);
