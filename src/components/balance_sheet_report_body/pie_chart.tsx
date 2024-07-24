@@ -1,9 +1,9 @@
 // pie_chart.tsx
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { ApexOptions } from 'apexcharts'; // 导入 ApexOptions 类型
+import { ApexOptions } from 'apexcharts'; // 導入 ApexOptions 類型
 
-// 动态导入 ApexCharts，以避免在服务器端渲染时执行
+// 動態導入 ApexCharts，以避免在服務器端渲染時執行
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface PieChartProps {
@@ -11,7 +11,7 @@ interface PieChartProps {
 }
 
 const PieChart: React.FC<PieChartProps> = ({ data }) => {
-  const [chartOptions, setChartOptions] = useState<ApexOptions | null>(null); // 使用 ApexOptions 类型
+  const [chartOptions, setChartOptions] = useState<ApexOptions | null>(null); // 使用 ApexOptions 類型
   const [chartSeries, setChartSeries] = useState<number[]>([]);
 
   useEffect(() => {
@@ -34,13 +34,13 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
         dropShadow: {
           enabled: false,
         },
-        offsetX: 0, // Adjust the X offset
-        offsetY: 0, // Adjust the Y offset to move labels closer to the center
+        offsetX: 0, // 調整 X 偏移
+        offsetY: 0, // 調整 Y 偏移以使標籤更靠近中心
       },
       plotOptions: {
         pie: {
           dataLabels: {
-            offset: -20, // Move the data labels closer to the center
+            offset: -20, // 將資料標籤移近中心
             minAngleToShowLabel: 10,
           },
         },
