@@ -586,3 +586,9 @@ export const deleteFileFromLocalStorage = (
   }
   localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
 };
+
+export function getEnumValue<T extends object>(enumObj: T, value: string): T[keyof T] | undefined {
+  return (Object.values(enumObj) as unknown as string[]).includes(value)
+    ? (value as unknown as T[keyof T])
+    : undefined;
+}

@@ -52,7 +52,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
 
   const findManyOptions: Prisma.OcrFindManyArgs = {
     where,
-    orderBy
+    orderBy,
   };
 
   try {

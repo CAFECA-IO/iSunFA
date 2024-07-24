@@ -67,7 +67,7 @@ export async function deleteSubscription(id: number): Promise<ISubscription> {
 
   const updateArgs: Prisma.SubscriptionUpdateArgs = {
     where,
-    data
+    data,
   };
 
   const deletedSubscription = await prisma.subscription.update(updateArgs);
