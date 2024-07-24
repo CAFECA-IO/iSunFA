@@ -191,7 +191,7 @@ export async function deleteAdminById(
   const updateArgs = {
     data,
     where,
-    include
+    include,
   };
   const deletedAdmin = await prisma.admin.update(updateArgs);
 
@@ -212,7 +212,7 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
 
   const updateArgs = {
     data,
-    where
+    where,
   };
 
   const { count } = await prisma.admin.updateMany(updateArgs);
@@ -349,7 +349,7 @@ export async function deleteAdminByIdForTesting(
 
   const deleteArgs = {
     where,
-    include
+    include,
   };
   const deletedAdmin = await prisma.admin.delete(deleteArgs);
 
@@ -362,7 +362,7 @@ export async function deleteAdminListByCompanyIdForTesting(companyId: number): P
   };
 
   const deleteArgs = {
-    where
+    where,
   };
 
   const { count } = await prisma.admin.deleteMany(deleteArgs);

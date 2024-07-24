@@ -92,13 +92,15 @@ export default abstract class FinancialReportGenerator {
   protected async getAllLineItemsByReportSheet(reportSheetType?: ReportSheetType) {
     const reportSheetTypeForQuery = reportSheetType || this.reportSheetType;
     const accountTypes = ReportSheetAccountTypeMap[reportSheetTypeForQuery];
+    const isLineItemDeleted = false;
     const lineItemsFromDBArray = await Promise.all(
       accountTypes.map((type) => {
         return getLineItemsInPrisma(
           this.companyId,
           type,
           this.startDateInSecond,
-          this.endDateInSecond
+          this.endDateInSecond,
+          isLineItemDeleted
         );
       })
     );

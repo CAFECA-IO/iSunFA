@@ -20,11 +20,13 @@ const JournalList = ({
   companyId,
   journalsProps,
   paginationProps,
+  onDelete,
 }: {
   event: JOURNAL_EVENT;
   companyId: number;
   journalsProps: IJournalListProps;
   paginationProps: IPaginationProps;
+  onDelete: (companyId: number, journalId: number) => Promise<void>;
 }) => {
   const { journals, isLoading, success, code } = journalsProps;
   const { currentPage, setCurrentPage, totalPages } = paginationProps;
@@ -64,6 +66,7 @@ const JournalList = ({
       journal={journal}
       isChecked={checkedItems.includes(`${journal.voucherId}`)}
       checkHandler={checkHandler}
+      onDelete={onDelete}
     />
   ));
   const displayedListMobile = journals.map((journal) => (
@@ -73,6 +76,7 @@ const JournalList = ({
       journal={journal}
       isChecked={checkedItems.includes(`${journal.voucherId}`)}
       checkHandler={checkHandler}
+      onDelete={onDelete}
     />
   ));
 

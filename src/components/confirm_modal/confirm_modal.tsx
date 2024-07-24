@@ -76,16 +76,17 @@ const ConfirmModal = ({
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
   const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
+  const [journal, setJournal] = useState<IJournal | null>(null);
 
   const { trigger: updateVoucher } = APIHandler<void>(APIName.VOUCHER_UPDATE, {}, false, false);
 
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
-  const {
-    trigger: getJournalById,
-    success: getJournalSuccess,
-    data: journal,
-    code: getJournalCode,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
+  const { trigger: getJournalById } = APIHandler<IJournal>(
+    APIName.JOURNAL_GET_BY_ID,
+    {},
+    false,
+    false
+  );
 
   // Info: (20240527 - Julian) Get AI 生成的傳票
   const {
@@ -186,9 +187,9 @@ const ConfirmModal = ({
         journalId: journal.id,
         lineItems,
       };
-      if (selectedJournal) {
+      if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
         updateVoucher({
-          params: { companyId, journalId: journal.id },
+          params: { companyId },
           body: { voucher },
         });
       } else {
@@ -200,38 +201,17 @@ const ConfirmModal = ({
     }
   };
 
-  useEffect(() => {
-    if (journalId !== undefined) {
-      getJournalById({
-        params: { companyId, journalId },
-      });
-    }
-  }, [journalId]);
-
-  useEffect(() => {
-    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
-    resetVoucherHandler();
-
-    // Info: (20240528 - Julian) Call AI API first time
-    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
-  }, [isModalVisible]);
-
-  // ToDo: (20240528 - Julian) Error handling
-  useEffect(() => {
-    if (AIStatus === ProgressStatus.SUCCESS) {
-      getAIResult({
-        params: {
-          companyId,
-          resultId: askAIId,
-        },
-      });
-    }
-    return () => getAIStatusHandler(undefined, false);
-  }, [AIStatus]);
-
-  useEffect(() => {
-    if (journal && getJournalSuccess) {
-      const { invoice, voucher } = journal;
+  const openHandler = async () => {
+    const {
+      success: getJournalSuccess,
+      data,
+      code: getJournalCode,
+    } = await getJournalById({
+      params: { companyId, journalId },
+    });
+    if (data && getJournalSuccess) {
+      setJournal(data);
+      const { invoice, voucher } = data;
       if (invoice) {
         setDateTimestamp(invoice.date);
         setReason(invoice.paymentReason);
@@ -262,7 +242,28 @@ const ConfirmModal = ({
       });
       messageModalVisibilityHandler();
     }
-  }, [journal, getJournalSuccess, getJournalCode]);
+  };
+
+  useEffect(() => {
+    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    openHandler();
+
+    // Info: (20240528 - Julian) Call AI API first time
+    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
+  }, [isModalVisible]);
+
+  // ToDo: (20240528 - Julian) Error handling
+  useEffect(() => {
+    if (AIStatus === ProgressStatus.SUCCESS) {
+      getAIResult({
+        params: {
+          companyId,
+          resultId: askAIId,
+        },
+      });
+    }
+    return () => getAIStatusHandler(undefined, false);
+  }, [AIStatus]);
 
   useEffect(() => {
     // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
@@ -388,7 +389,7 @@ const ConfirmModal = ({
   const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
 
   const displayedHint =
-    AIResultSuccess === undefined ? (
+    AIStatus === ProgressStatus.SUCCESS && AIResultSuccess === undefined ? (
       <p className="text-slider-surface-bar">
         {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
         <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
