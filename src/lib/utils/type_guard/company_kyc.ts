@@ -38,7 +38,8 @@ export function isCompanyKYC(data: CompanyKYC): data is ICompanyKYC {
     typeof data.taxCertificateId === 'string' &&
     typeof data.representativeIdCardId === 'string' &&
     typeof data.createdAt === 'number' &&
-    typeof data.updatedAt === 'number'
+    typeof data.updatedAt === 'number' &&
+    (typeof data.deletedAt === 'number' || data.deletedAt === null)
   );
 }
 

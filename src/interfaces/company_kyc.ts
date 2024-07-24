@@ -32,6 +32,7 @@ export interface ICompanyKYC {
   representativeIdCardId: string;
   createdAt: number;
   updatedAt: number;
+  deletedAt: number | null;
 }
 
 export interface ICompanyKYCForm {
