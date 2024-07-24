@@ -35,8 +35,6 @@ import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
 
-// const MAX_TIME_STAMP = 2099999999;
-
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
@@ -54,7 +52,6 @@ const MyReportsSection = () => {
   } = useGlobalCtx();
 
   const { pending, history } = router.query;
-  const [mounted, setMounted] = useState(false);
 
   const [pendingPeriod, setPendingPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
@@ -146,47 +143,6 @@ const MyReportsSection = () => {
       setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
-  // TODO: 嘗試改成用 DatePicker 裡面觸發 callback 來達成 (20240710 - Shirley)
-  // useEffect(() => {
-  //   if (pendingPeriod.startTimeStamp === 0 && pendingPeriod.endTimeStamp === 0) return;
-  //   if ((pendingPeriod.startTimeStamp && !pendingPeriod.endTimeStamp) || !mounted) return;
-  //   fetchPendingReports();
-  // }, [pendingPeriod]);
-
-  // useEffect(() => {
-  //   // if (pendingPeriod.startTimeStamp === 0 && pendingPeriod.endTimeStamp === 0) return;
-  //   console.log('pendingPeriod', pendingPeriod);
-  //   if ((pendingPeriod.startTimeStamp && !pendingPeriod.endTimeStamp) || !mounted) return;
-  //   fetchPendingReports();
-  // }, [pendingPeriod]);
-
-  // useEffect(() => {
-  //   if (!mounted) return;
-  //   fetchPendingReports();
-  // }, [filteredPendingSort, pendingCurrentPage, searchPendingQuery]);
-
-  // // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
-  // // useEffect(() => {
-  // //   if ((historyPeriod.startTimeStamp && !historyPeriod.endTimeStamp) || !mounted) return;
-  // //   fetchGeneratedReports();
-  // // }, [historyPeriod]);
-
-  // useEffect(() => {
-  //   if (!mounted) return;
-  //   fetchGeneratedReports();
-  // }, [filteredHistorySort, historyCurrentPage, searchHistoryQuery]);
-
-  // useEffect(() => {
-  //   if (!mounted) return;
-  //   if (pendingPeriod.startTimeStamp !== 0 && pendingPeriod.endTimeStamp === 0) return;
-  //   fetchPendingReports();
-  // }, [filteredPendingSort, pendingCurrentPage, searchPendingQuery, pendingPeriod]);
 
   const {
     targetRef: pendingSortMenuRef,

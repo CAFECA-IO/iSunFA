@@ -22,7 +22,7 @@ function LandingPageBody() {
       document.querySelectorAll('.mix-blend-color-dodge').forEach((element) => {
         const htmlElement = element as HTMLElement;
         htmlElement.classList.remove('mix-blend-color-dodge');
-        htmlElement.style.opacity = '0'; // example of alternative style
+        htmlElement.style.opacity = '0';
       });
     }
   }, []);
