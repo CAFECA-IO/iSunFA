@@ -13,7 +13,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
-import { ToastType } from '@/interfaces/toastify';
 
 interface IJournalItemProps {
   event: JOURNAL_EVENT;
@@ -22,48 +21,28 @@ interface IJournalItemProps {
   companyId: number;
   // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
   journal: IJournalListItem;
+  onDelete: (companyId: number, journalId: number) => Promise<void>;
 }
 
-const Operations = ({ companyId, journalId }: { companyId: number; journalId: number }) => {
+const Operations = ({
+  companyId,
+  journalId,
+  onDelete,
+}: {
+  companyId: number;
+  journalId: number;
+  onDelete: (companyId: number, journalId: number) => Promise<void>;
+}) => {
   const router = useRouter();
   const { t } = useTranslation('common');
   const { selectJournalHandler } = useAccountingCtx();
-  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { trigger: getJournalById } = APIHandler<IJournal>(
     APIName.JOURNAL_GET_BY_ID,
     {},
     false,
     false
   );
-  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE, {}, false, false);
-
-  const deleteJournalHandler = async () => {
-    const { success, code } = await deleteJournalById({
-      params: { companyId, journalId },
-    });
-    if (success) {
-      toastHandler({
-        id: `deleteJournal-${journalId}`,
-        type: ToastType.SUCCESS,
-        content: (
-          <div className="flex items-center justify-between">
-            <p>{t('JOURNAL.DELETED_SUCCESSFULLY')}</p>
-          </div>
-        ),
-        closeable: true,
-      });
-    } else {
-      messageModalDataHandler({
-        title: t('JOURNAL.FAILED_TO_DELETE'),
-        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
-        content: `Error code: ${code}`,
-        messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
-        submitBtnFunction: () => messageModalVisibilityHandler(),
-      });
-      messageModalVisibilityHandler();
-    }
-  };
 
   const editJournalHandler = async () => {
     const {
@@ -122,7 +101,7 @@ const Operations = ({ companyId, journalId }: { companyId: number; journalId: nu
       <button
         type="button"
         className="rounded-xs text-secondaryBlue hover:text-primaryYellow"
-        onClick={deleteJournalHandler}
+        onClick={() => onDelete(companyId, journalId)}
       >
         <svg
           width="40"
@@ -151,7 +130,14 @@ const Operations = ({ companyId, journalId }: { companyId: number; journalId: nu
   );
 };
 
-const JournalItem = ({ event, isChecked, checkHandler, companyId, journal }: IJournalItemProps) => {
+const JournalItem = ({
+  event,
+  isChecked,
+  checkHandler,
+  companyId,
+  journal,
+  onDelete,
+}: IJournalItemProps) => {
   const { t } = useTranslation('common');
   const {
     id: journalId,
@@ -328,7 +314,7 @@ const JournalItem = ({ event, isChecked, checkHandler, companyId, journal }: IJo
         className="absolute left-46px h-80px w-95%"
       ></Link>
       {event === JOURNAL_EVENT.UPCOMING && (
-        <Operations companyId={companyId} journalId={journalId} />
+        <Operations companyId={companyId} journalId={journalId} onDelete={onDelete} />
       )}
     </tr>
   );
@@ -340,6 +326,7 @@ export const JournalItemMobile = ({
   checkHandler,
   companyId,
   journal,
+  onDelete,
 }: IJournalItemProps) => {
   const { t } = useTranslation('common');
   const { id, date, type: eventType, particulars: description, voucherNo } = journal;
@@ -440,7 +427,9 @@ export const JournalItemMobile = ({
       </td>
       <td>
         {event === JOURNAL_EVENT.UPLOADED && <div>{voucherNo}</div>}
-        {event === JOURNAL_EVENT.UPCOMING && <Operations companyId={companyId} journalId={id} />}
+        {event === JOURNAL_EVENT.UPCOMING && (
+          <Operations companyId={companyId} journalId={id} onDelete={onDelete} />
+        )}
       </td>
     </tr>
   );

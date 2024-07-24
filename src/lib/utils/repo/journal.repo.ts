@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IJournalFromPrismaIncludeProjectContractInvoiceVoucher } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
-import { calculateTotalPages } from '@/lib/utils/common';
+import { calculateTotalPages, getTimestampNow } from '@/lib/utils/common';
 import { JOURNAL_EVENT, SortBy, SortOrder } from '@/constants/journal';
 
 export async function findManyJournalsInPrisma(
@@ -100,6 +100,7 @@ export async function listJournal(
 ): Promise<IPaginatedData<IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]>> {
   try {
     const where: Prisma.JournalWhereInput = {
+      deletedAt: null,
       companyId,
       createdAt: {
         gte: startDateInSecond,
@@ -179,12 +180,12 @@ export async function listJournal(
 export async function findUniqueJournalInPrisma(journalId: number, companyId: number) {
   let journal: IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null;
   try {
-    journal = await prisma.journal.findUnique({
-      where: {
-        id: journalId,
-        companyId,
-      },
-      include: {
+    const where: Prisma.JournalWhereUniqueInput = {
+      id: journalId,
+      companyId,
+    };
+
+    const include = {
         project: true,
         contract: true,
         invoice: {
@@ -201,13 +202,116 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
             },
           },
         },
-      },
-    });
+    };
+
+    const findUniqueArgs = {
+      where,
+      include,
+    };
+
+    journal = await prisma.journal.findUnique(findUniqueArgs);
   } catch (error) {
     // Deprecated: (20240522 - Murk) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+  return journal;
+}
+
+export async function deleteJournalInPrisma(journalId: number, companyId: number): Promise<IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null> {
+  let journal: IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null = null;
+
+  let journalExists: IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null = null;
+  // Info: (20240723 - Murky) Check if journal exists and belongs to the company
+  try {
+    journalExists = await findUniqueJournalInPrisma(journalId, companyId);
+  } catch (error) {
+    // Deprecated: (20240522 - Murk) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+  }
+
+  if (journalExists) {
+    const nowInSecond = getTimestampNow();
+    try {
+      journal = await prisma.$transaction(async (prismaClient) => {
+        if (journalExists?.invoice?.payment) {
+          await prismaClient.payment.update({
+            data: {
+              deletedAt: nowInSecond,
+            },
+            where: {
+              id: journalExists.invoice.payment.id,
+            },
+          });
+        }
+
+        if (journalExists?.invoice) {
+          await prismaClient.invoice.update({
+            data: {
+              deletedAt: nowInSecond,
+            },
+            where: {
+              id: journalExists.invoice.id,
+            },
+          });
+        }
+        if (journalExists?.voucher) {
+          await Promise.all(journalExists.voucher.lineItems.map(async (lineItem) => {
+            await prismaClient.lineItem.update({
+              data: {
+                deletedAt: nowInSecond,
+              },
+              where: {
+                id: lineItem.id,
+              },
+            });
+          }));
+
+          await prismaClient.voucher.update({
+            data: {
+              deletedAt: nowInSecond,
+            },
+            where: {
+              id: journalExists.voucher.id,
+            },
+          });
+        }
+
+        return prismaClient.journal.update({
+          data: {
+            deletedAt: nowInSecond,
+          },
+          where: {
+            id: journalId,
+          },
+          include:
+          {
+            project: true,
+            contract: true,
+            invoice: {
+              include: {
+                payment: true,
+              },
+            },
+            voucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          }
+        });
+      });
+    } catch (error) {
+      // Deprecated: (20240522 - Murk) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(error);
+    }
   }
   return journal;
 }

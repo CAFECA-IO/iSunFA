@@ -106,12 +106,10 @@ const NewJournalForm = () => {
     journalId: number;
     resultStatus: IAccountResultStatus;
   }>(APIName.INVOICE_CREATE, {}, false, false);
-  const { trigger: updateInvoice } = APIHandler<IAccountResultStatus>(
-    APIName.INVOICE_UPDATE,
-    {},
-    false,
-    false
-  );
+  const { trigger: updateInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_UPDATE, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -387,18 +385,42 @@ const NewJournalForm = () => {
   };
 
   const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
+    const invoiceDataToUpdate: IInvoice = {
+      ...invoiceData,
+      journalId: updateJournalId,
+    };
     const {
       success: updateSuccess,
       data: updateAIResult,
       code: updateCode,
     } = await updateInvoice({
-      params: { companyId, journalId: updateJournalId },
-      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+      params: { companyId, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
+      body: { invoice: invoiceDataToUpdate },
     });
-    if (updateSuccess && updateAIResult?.resultId && updateAIResult?.status) {
+    // eslint-disable-next-line no-console
+    console.log(
+      'updateSuccess',
+      updateSuccess,
+      'updateAIResult',
+      updateAIResult,
+      'updateCode',
+      updateCode
+    );
+    if (
+      updateSuccess &&
+      updateAIResult?.resultStatus?.resultId &&
+      updateAIResult?.resultStatus?.status
+    ) {
+      getAIStatusHandler(
+        {
+          companyId: companyId!,
+          askAIId: updateAIResult.resultStatus.resultId,
+        },
+        true
+      );
       confirmModalDataHandler({
         journalId: updateJournalId,
-        askAIId: updateAIResult.resultId,
+        askAIId: updateAIResult.resultStatus.resultId,
       });
       confirmModalVisibilityHandler();
     } else if (updateSuccess === false) {
@@ -424,6 +446,13 @@ const NewJournalForm = () => {
     });
     if (createSuccess && invoice?.journalId && invoice?.resultStatus) {
       setJournalId(invoice.journalId);
+      getAIStatusHandler(
+        {
+          companyId: companyId!,
+          askAIId: invoice.resultStatus.resultId,
+        },
+        true
+      );
       confirmModalDataHandler({
         journalId: invoice.journalId,
         askAIId: invoice.resultStatus.resultId,
@@ -444,6 +473,7 @@ const NewJournalForm = () => {
   // Info: (20240429 - Julian) 上傳日記帳資料
   const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    getAIStatusHandler(undefined, false);
     const invoiceData: IInvoice = {
       journalId: selectedJournal?.id || null,
       date: datePeriod.startTimeStamp,
