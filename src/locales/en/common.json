@@ -485,7 +485,6 @@
     "FAILED": "Failed",
     "TRY_AGAIN": "Try again"
   },
-
   "SELECT_COMPANY": {
     "WELCOME_BACK": "Welcome back, ",
     "YOUR_COMPANY": "Select your company to log in, or create your own company.",
@@ -670,7 +669,6 @@
     "SUBMIT_FAILED_MESSAGE": "Error Code: {{code}}",
     "INCOMPLETE_FORM": "Please complete the form",
     "INCOMPLETE_FORM_SUB_MESSAGE": "Please fill in all the required fields: {{fields}}.",
-
     "KYC": "KYC",
     "START_KYC": "Start KYC",
     "COUNTRY_DEFAULT": "Choose the country that your company registered in",
@@ -678,13 +676,11 @@
     "COUNTRY_UNITED_STATES": "United States",
     "COUNTRY_CHINA": "China",
     "COUNTRY_HONG_KONG": "Hong Kong",
-
     "LEGAL_STRUCTURE_DEFAULT": "What is the legal form of your company",
     "LEGAL_STRUCTURE_SOLE_PROPRIETORSHIP": "Sole Proprietorship",
     "LEGAL_STRUCTURE_PARTNERSHIP": "Partnership",
     "LEGAL_STRUCTURE_CORPORATION": "Corporation",
     "LEGAL_STRUCTURE_LIMITED_LIABILITY_COMPANY": "Limited Liability Company",
-
     "INDUSTRY_DEFAULT": "Select your industry",
     "INDUSTRY_ACCOMMODATION_AND_FOOD_SERVICES": "Accommodation and food services",
     "INDUSTRY_ADMINISTRATIVE_AND_SUPPORT_SERVICES": "Administrative and support services",
@@ -708,7 +704,6 @@
     "INDUSTRY_RETAIL": "Retail",
     "INDUSTRY_THEMATIC_REPORTS": "Thematic reports",
     "INDUSTRY_TRANSPORT_INDUSTRY": "Transport industry",
-
     "UPLOAD_FILE_FAILED": "Upload file failed",
     "FILE_UPLOAD_ERROR": "File upload error, Error Code: {{code}}",
     "FILE_SIZE_EXCEEDS_LIMIT": "File size exceeds limit, please upload a file smaller than {{size}}",
@@ -716,23 +711,19 @@
     "FILE_READ_ERROR": "File read error",
     "DELETE_FILE_FAILED": "Delete file failed, Error Code: {{code}}",
     "DELETE_FILE_ERROR": "Delete file error",
-
     "LEGAL_COMPANY_NAME": "Legal Company Name",
     "COMPANY_ADDRESS": "Company Address",
     "ZIP_CODE": "Zip Code",
     "KEY_COMPANY_REPRESENTATIVE_S_NAME": "Key Company Representative's Name",
-
     "KEY_CONTACT_PERSON": "Key Contact Person",
     "CONTACT_NUMBER": "Contact Number",
     "EMAIL_ADDRESS": "Email Address",
     "COMPANY_WEBSITE_OPTIONAL": "Company Website (Optional)",
-
     "IN_THIS_VERIFICATION_PROCESS_YOU_WILL_NEED_TO": "In this verification process you will need to",
     "ENTER_COMPANY_INFORMATION": "Enter Company Information",
     "UPLOAD_BUSINESS_REGISTRATION_CERTIFICATE": "Upload Business Registration Certificate",
     "UPLOAD_TAX_STATUS_CERTIFICATION_ISSUED_WITHIN_6_MONTHS": "Upload Tax Status Certification (Issued within 6 months)",
     "UPLOAD_PHOTO_OF_KEY_COMPANY_REPRESENTATIVE_S_ID": "Upload photo of Key Company Representative's ID",
-
     "EXAMPLE": "Example",
     "CITY": "City",
     "STREET_ADDRESS": "Street Address",
@@ -741,7 +732,6 @@
     "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number",
     "REGISTRATION_DATE": "Registration Date",
     "INDUSTRY": "Industry",
-
     "LEAVE_THIS_PAGE": "Leave this page",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
