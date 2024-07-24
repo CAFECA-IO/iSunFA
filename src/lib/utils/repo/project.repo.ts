@@ -204,7 +204,7 @@ export async function deleteProjectById(projectId: number) {
   };
 
   const data = {
-    deletedAt: nowInSecond
+    deletedAt: nowInSecond,
   };
 
   const updateArgs = {
@@ -243,7 +243,7 @@ export async function deleteProjectByIdForTest(projectId: number) {
     prisma.project.deleteMany({
       where: {
         id: projectId,
-      }
+      },
     }),
   ]);
 }

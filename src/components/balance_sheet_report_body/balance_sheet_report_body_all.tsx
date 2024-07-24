@@ -50,7 +50,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </div>
 
       <header className="mb-[86px] flex justify-between pl-0 text-white">
-        <div className="w-[30%] bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
+        <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
             <h1 className="mb-30px text-h6">
               2330 <br />
@@ -65,17 +65,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="box-border w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
 
       <section className="text-text-neutral-secondary">
-        <div className="text-primary-surface-brand-secondary z-1 relative mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="relative z-1 mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
         </div>
-        <table className="z-1 relative w-full border-collapse bg-white">
+        <table className="relative z-1 w-full border-collapse bg-white">
           <thead>
             <tr>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
@@ -191,7 +191,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-[2px_solid_#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">1</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="" />
+          <Image src="/logo/white_isunfa_logo_light.svg" alt="" />
         </div>
       </footer>
     </div>
@@ -207,7 +207,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -394,7 +394,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">2</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="" />
+          <Image src="/logo/white_isunfa_logo_light.svg" alt="" />
         </div>
       </footer>
     </div>

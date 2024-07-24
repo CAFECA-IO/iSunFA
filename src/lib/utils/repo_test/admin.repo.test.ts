@@ -139,7 +139,7 @@ describe('Admin Repository Tests', () => {
 
   describe('createCompanyAndRole', () => {
     it('should create a company and role for a given user', async () => {
-      const code = 'TESTCODE';
+      const code = `TESTCODE-${Date.now()}`;
       const name = 'Test Company';
       const regional = 'Test Regional';
       const companyRole = await createCompanyAndRole(testUserId, code, name, regional);

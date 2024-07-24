@@ -3,64 +3,94 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IJournal } from '@/interfaces/journal';
-import { checkAdmin } from '@/lib/utils/auth_check';
-import { findUniqueJournalInPrisma } from '@/lib/utils/repo/journal.repo';
+import { deleteJournalInPrisma, findUniqueJournalInPrisma } from '@/lib/utils/repo/journal.repo';
 import { formatIJournal } from '@/lib/utils/formatter/journal.formatter';
+import { getSession } from '@/lib/utils/session';
 
-function isJournalIdValid(journalId: string | string[] | undefined): journalId is string {
-  return !!journalId && !Array.isArray(journalId) && typeof journalId === 'string';
+function formatJournalIdFromQuery(journalId: unknown): number {
+  let formattedJournalId: number = -1;
+
+  if (typeof journalId === 'string') {
+    formattedJournalId = Number(journalId);
+  }
+  return formattedJournalId;
 }
 
-// ToDo: (20240617 - Murky) Need to use function in type guard instead
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isCompanyIdValid(companyId: any): companyId is number {
-  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
-    return false;
-  }
-  return true;
+function formatGetQuery(req: NextApiRequest) {
+  const { journalId } = req.query;
+  const formattedJournalId = formatJournalIdFromQuery(journalId);
+
+  return { journalId: formattedJournalId };
+}
+
+function formatDeleteQuery(req: NextApiRequest) {
+  const { journalId } = req.query;
+  const formattedJournalId = formatJournalIdFromQuery(journalId);
+
+  return { journalId: formattedJournalId };
 }
 
 async function handleGetRequest(companyId: number, req: NextApiRequest) {
-  const { journalId } = req.query;
-  if (!isJournalIdValid(journalId)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  let journal: IJournal | null = null;
+
+  const { journalId } = formatGetQuery(req);
+
+  if (journalId > 0) {
+    try {
+      const journalData = await findUniqueJournalInPrisma(journalId, companyId);
+
+      if (journalData) {
+        journal = formatIJournal(journalData);
+      }
+    } catch (error) {
+      // Deprecated: Debugging purpose (20240724 - Luphia)
+      // eslint-disable-next-line no-console
+      console.log('error', error);
+    }
   }
-
-  const journalIdNumber = Number(journalId);
-  const journalData = await findUniqueJournalInPrisma(journalIdNumber, companyId);
-
-  // Info: (20240617 - Murky) If journalData is null, formatIJournal will return an empty object
-  const journal = journalData ? formatIJournal(journalData) : ({} as IJournal);
-  const { httpCode, result } = formatApiResponse<IJournal>(STATUS_MESSAGE.SUCCESS, journal);
-
-  return {
-    httpCode,
-    result,
-  };
+  return journal;
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IJournal>(message, {} as IJournal);
-  return {
-    httpCode,
-    result,
-  };
+async function handleDeleteRequest(companyId: number, req: NextApiRequest) {
+  let journal: IJournal | null = null;
+
+  const { journalId } = formatDeleteQuery(req);
+
+  if (journalId > 0) {
+    try {
+      const journalData = await deleteJournalInPrisma(journalId, companyId);
+
+      if (journalData) {
+        journal = formatIJournal(journalData);
+      }
+    } catch (error) {
+      // Deprecated: Debugging purpose (20240724 - Luphia)
+      // eslint-disable-next-line no-console
+      console.log('error', error);
+    }
+  }
+  return journal;
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJournal>>
+  res: NextApiResponse<IResponseData<IJournal | null>>
 ) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IJournal | null = null;
   try {
-    const session = await checkAdmin(req, res);
+    const session = await getSession(req, res);
     const { companyId } = session;
-    if (!isCompanyIdValid(companyId)) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
+
     switch (req.method) {
       case 'GET': {
-        const { httpCode, result } = await handleGetRequest(companyId, req);
-        res.status(httpCode).json(result);
+        payload = await handleGetRequest(companyId, req);
+        statusMessage = STATUS_MESSAGE.SUCCESS;
+        break;
+      }
+      case 'DELETE': {
+        payload = await handleDeleteRequest(companyId, req);
+        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
         break;
       }
       default: {
@@ -69,7 +99,8 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = handleErrorResponse(res, error.message);
-    res.status(httpCode).json(result);
+    statusMessage = error.message;
   }
+  const { httpCode, result } = formatApiResponse<IJournal | null>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

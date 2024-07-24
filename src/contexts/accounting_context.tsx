@@ -160,12 +160,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     data: accountTitleList,
     success: accountSuccess,
   } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST, {}, false, false);
-  const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    error: statusError,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
+  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(
+    APIName.AI_ASK_STATUS,
+    {},
+    false,
+    false
+  );
   const {
     trigger: listUnprocessedOCR,
     data: unprocessOCRs,
@@ -196,12 +196,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
   const [voucherStatus, setVoucherStatus] = useState<ProgressStatus | undefined>(undefined);
   const [voucherPreview, setVoucherPreview] = useState<IVoucher | undefined>(undefined);
-
-  const [askAIParams, setAskAIParams] = useState<{
-    params: { companyId: number; askAIId: string } | undefined;
-    update: boolean;
-  }>({ params: undefined, update: false });
   const [AIStatus, setAIStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
+  const [stopAskAI, setStopAskAI] = useState<boolean>(false);
   const [accountingVoucher, setAccountingVoucher] = useState<IAccountingVoucher[]>([
     defaultAccountingVoucher,
   ]);
@@ -209,6 +205,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [totalCredit, setTotalCredit] = useState<number>(0); // Info: (20240430 - Julian) 計算總貸方
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   const getAccountListHandler = (
     companyId: number,
@@ -224,7 +221,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     forUser?: boolean,
     sortBy?: string,
     sortOrder?: string,
-    searchKey?: string,
+    searchKey?: string
   ) => {
     getAccountList({
       params: { companyId },
@@ -240,17 +237,41 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         forUser,
         sortBy,
         sortOrder,
-        searchKey
+        searchKey,
       },
     });
   };
 
-  const getAIStatusHandler = (
-    params: { companyId: number; askAIId: string } | undefined,
-    update: boolean
-  ) => {
-    setAskAIParams({ params, update });
-  };
+  const getAIStatusHandler = useCallback(
+    (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
+      if (update) {
+        setStopAskAI(false);
+        const interval = setInterval(async () => {
+          const { success, data } = await getAIStatus({
+            params: {
+              companyId: params!.companyId,
+              resultId: params!.askAIId,
+            },
+          });
+          if ((success && data !== ProgressStatus.IN_PROGRESS) || success === false) {
+            setAIStatus(data ?? ProgressStatus.LLM_ERROR);
+            clearInterval(interval);
+          }
+        }, 5000);
+        setIntervalId(interval);
+      } else {
+        setStopAskAI(true);
+      }
+    },
+    [stopAskAI]
+  );
+
+  useEffect(() => {
+    if (stopAskAI && intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+  }, [stopAskAI, intervalId]);
 
   const updateOCRListHandler = (companyId: number, update: boolean) => {
     setOCRListParams({
@@ -290,25 +311,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
     return () => clearInterval(interval);
   }, [OCRListParams, listError, listSuccess, listCode, unprocessOCRs]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (askAIParams.params !== undefined && askAIParams.update) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId: askAIParams.params!.companyId,
-            resultId: askAIParams.params!.askAIId,
-          },
-        });
-      }, 2000);
-    }
-    if ((statusSuccess && status !== ProgressStatus.IN_PROGRESS) || statusError) {
-      setAIStatus(status ?? ProgressStatus.LLM_ERROR);
-      setAskAIParams((prev) => (prev ? { ...prev, update: false } : prev));
-    }
-    return () => clearInterval(interval);
-  }, [askAIParams, status, statusSuccess, statusError]);
 
   const generateAccountTitle = (account: IAccount | null) => {
     if (account) return account.code.substring(0, 4) + ' - ' + account.name;
@@ -455,7 +457,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   // Info: (20240503 - Julian) 重置傳票
   const resetVoucherHandler = useCallback(() => {
-    setAskAIParams((prev) => (prev ? { ...prev, update: false } : prev));
     setAccountingVoucher([defaultAccountingVoucher]); // Info: (20240503 - Julian) 清空傳票列表
     changeVoucherAmountHandler(0, 0, VoucherRowType.DEBIT); // Info: (20240503 - Julian) 清空借方 input
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
