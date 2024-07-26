@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVocuherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -15,23 +15,7 @@ import {
   getLatestVoucherNoInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
 
-type ApiResponseType = {
-  id: number;
-  createdAt: number;
-  updatedAt: number;
-  journalId: number;
-  no: string;
-  lineItems: {
-    id: number;
-    amount: number;
-    description: string;
-    debit: boolean;
-    accountId: number;
-    voucherId: number;
-    createdAt: number;
-    updatedAt: number;
-  }[];
-} | null;
+type ApiResponseType = IVocuherDataForAPIResponse | null;
 
 async function handleVoucherCreatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,

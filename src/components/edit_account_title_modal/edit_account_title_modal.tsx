@@ -12,7 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -138,7 +138,7 @@ const EditAccountTitleModal = ({
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
       submitBtnFunction: () => {
-        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, accountId);
+        deleteOwnAccountTitle(selectedCompany?.id ?? FREE_COMPANY_ID, accountId);
         modalVisibilityHandler();
       },
       backBtnStr: 'Cancel',

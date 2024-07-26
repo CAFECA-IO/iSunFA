@@ -1,5 +1,5 @@
 import { IResponseData } from '@/interfaces/response_data';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVocuherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -10,23 +10,7 @@ import {
   updateVoucherByJournalIdInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
 
-type ApiResponseType = {
-  id: number;
-  createdAt: number;
-  updatedAt: number;
-  journalId: number;
-  no: string;
-  lineItems: {
-    id: number;
-    amount: number;
-    description: string;
-    debit: boolean;
-    accountId: number;
-    voucherId: number;
-    createdAt: number;
-    updatedAt: number;
-  }[];
-} | null;
+type ApiResponseType = IVocuherDataForAPIResponse | null;
 
 function isVoucherValid(
   voucher: IVoucherDataForSavingToDB

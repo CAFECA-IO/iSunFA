@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import {
   SortOptions,
-  DEFAULT_DISPLAYED_COMPANY_ID,
   default30DayPeriodInSec,
   LIMIT_FOR_REPORT_PAGE,
   DEFAULT_PAGE_NUMBER,
@@ -34,6 +33,7 @@ import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
@@ -82,7 +82,7 @@ const MyReportsSection = () => {
     success: listPendingSuccess,
     isLoading: isPendingDataLoading,
   } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
     query: {
       sortBy: sortOptionQuery[filteredPendingSort],
       startDateInSecond:
@@ -101,7 +101,7 @@ const MyReportsSection = () => {
     success: listGeneratedSuccess,
     isLoading: isHistoryDataLoading,
   } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
     query: {
       sortBy: sortOptionQuery[filteredHistorySort],
       startDateInSecond:
@@ -175,7 +175,7 @@ const MyReportsSection = () => {
 
       await fetchPendingReports({
         params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
           sortBy: sortOptionQuery[sortBy ?? filteredPendingSort],
@@ -216,7 +216,7 @@ const MyReportsSection = () => {
 
       await fetchGeneratedReports({
         params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
           sortBy: sortOptionQuery[sortBy ?? filteredHistorySort],

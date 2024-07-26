@@ -10,9 +10,9 @@ import APIHandler from '@/lib/utils/api_handler';
 import { timestampToString } from '@/lib/utils/common';
 import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IVoucherItem {
   id: string;
@@ -49,7 +49,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     success,
     code,
   } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
+    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, journalId },
   });
 
   const [contractId, setContractId] = useState<string>('');
@@ -490,7 +490,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
                   <PiCopySimpleBold size={16} />
                 </button>
               </div>
-              <p className=" text-darkBlue">{journalTokenId}</p>
+              <p className="text-darkBlue">{journalTokenId}</p>
             </div>
             <button
               type="button"

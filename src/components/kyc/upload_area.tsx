@@ -18,6 +18,7 @@ import {
 import { loadFileFromLocalStorage, deleteFileFromLocalStorage } from '@/lib/utils/common';
 import { ToastType } from '@/interfaces/toastify';
 import { IFile } from '@/interfaces/file';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const UploadArea = ({
   loacalStorageFilesKey = KYCFiles,
@@ -77,7 +78,7 @@ const UploadArea = ({
     formData.append('file', file);
     const { success, code, data } = await uploadFileAPI({
       params: {
-        companyId: selectedCompany?.id,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       body: formData,
     });
@@ -205,7 +206,7 @@ const UploadArea = ({
     if (uploadedFileId) {
       const result = await deleteFileAPI({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
           fileId: uploadedFileId,
         },
       });
@@ -233,7 +234,7 @@ const UploadArea = ({
       if (id && file) {
         getFile({
           params: {
-            companyId: selectedCompany?.id,
+            companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
             fileId: id,
           },
         });

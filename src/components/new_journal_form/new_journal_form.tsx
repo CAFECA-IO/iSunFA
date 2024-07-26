@@ -18,6 +18,7 @@ import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
@@ -88,7 +89,7 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
-  const companyId = selectedCompany?.id;
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
   const { selectedOCR, selectOCRHandler, selectedJournal, getAIStatusHandler } = useAccountingCtx();
   const {
     trigger: getOCRResult,
@@ -200,7 +201,7 @@ const NewJournalForm = () => {
       }
       getAIStatusHandler(
         {
-          companyId: selectedCompany?.id,
+          companyId,
           askAIId: selectedJournal.aichResultId,
         },
         true

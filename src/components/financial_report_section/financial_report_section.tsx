@@ -8,7 +8,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
+import { default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -20,6 +20,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import CashFlowDisplay from '@/components/financial_report_section/cash_flow_display_1';
 import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
+import { FREE_COMPANY_ID } from '@/constants/config';
 // import { ReportSheetType } from '@/constants/report';
 
 const FinancialReportSection = () => {
@@ -38,7 +39,7 @@ const FinancialReportSection = () => {
     APIName.REPORT_GENERATE_FINANCIAL,
     {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
     },
     false,

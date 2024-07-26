@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
 import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
   DatePickerAlign,
   ITEMS_PER_PAGE_ON_DASHBOARD,
   MILLISECONDS_IN_A_SECOND,
@@ -23,6 +22,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -210,7 +210,7 @@ const ProjectRoiComparisonChart = () => {
     APIName.PROJECT_LIST_PROFIT_COMPARISON,
     {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       query: {
         page: currentPage,
@@ -254,7 +254,7 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage + 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
           page: currentPage + 1,
@@ -271,7 +271,7 @@ const ProjectRoiComparisonChart = () => {
       setCurrentPage(currentPage - 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
           page: currentPage - 1,
@@ -286,7 +286,7 @@ const ProjectRoiComparisonChart = () => {
   useEffect(() => {
     listProjectProfitComparison({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       query: {
         page: currentPage - 1,

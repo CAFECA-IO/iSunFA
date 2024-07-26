@@ -16,7 +16,7 @@ const KYCStepper = ({
   return (
     <div className="relative flex items-center justify-between md:w-500px">
       <div
-        className={`z-10 flex w-80px flex-col items-center gap-2px text-sm ${currentStep > 0 ? doneStepStyle : currentStepStyle}`}
+        className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 0 ? doneStepStyle : currentStepStyle}`}
         onClick={() => onClick(0)}
       >
         {currentStep > 0 ? (
@@ -74,11 +74,11 @@ const KYCStepper = ({
       </div>
 
       <div
-        className={`absolute left-55px top-12px h-4px w-80px md:w-110px ${currentStep > 0 ? 'bg-navyBlue2' : 'bg-lightGray6'}`}
+        className={`absolute left-65px top-12px h-4px w-80px md:w-110px ${currentStep > 0 ? 'bg-navyBlue2' : 'bg-lightGray6'}`}
       ></div>
 
       <div
-        className={`z-10 flex w-80px flex-col items-center gap-2px text-sm ${currentStep > 1 ? doneStepStyle : currentStep === 1 ? currentStepStyle : futureStepStyle}`}
+        className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 1 ? doneStepStyle : currentStep === 1 ? currentStepStyle : futureStepStyle}`}
         onClick={() => onClick(1)}
       >
         <svg
@@ -117,7 +117,7 @@ const KYCStepper = ({
       ></div>
 
       <div
-        className={`z-10 flex w-80px flex-col items-center gap-2px text-sm ${currentStep > 2 ? doneStepStyle : currentStep === 2 ? currentStepStyle : futureStepStyle}`}
+        className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 2 ? doneStepStyle : currentStep === 2 ? currentStepStyle : futureStepStyle}`}
         onClick={() => onClick(2)}
       >
         <svg
@@ -152,11 +152,11 @@ const KYCStepper = ({
       </div>
 
       <div
-        className={`absolute right-55px top-12px h-4px w-80px md:w-110px ${currentStep > 2 ? 'bg-navyBlue2' : 'bg-lightGray6'}`}
+        className={`absolute right-65px top-12px h-4px w-80px md:w-110px ${currentStep > 2 ? 'bg-navyBlue2' : 'bg-lightGray6'}`}
       ></div>
 
       <div
-        className={`z-10 flex w-80px flex-col items-center gap-2px text-sm ${currentStep > 3 ? doneStepStyle : currentStep === 3 ? currentStepStyle : futureStepStyle}`}
+        className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 3 ? doneStepStyle : currentStep === 3 ? currentStepStyle : futureStepStyle}`}
         onClick={() => onClick(3)}
       >
         <svg

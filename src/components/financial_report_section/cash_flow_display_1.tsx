@@ -3,10 +3,10 @@ import Script from 'next/script';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
 import { ToastType } from '@/interfaces/toastify';
+import { FREE_COMPANY_ID } from '@/constants/config';
 // import { ReportSheetType } from '@/constants/report';
 
 // REPORT_FINANCIAL_GET_BY_ID = 'REPORT_FINANCIAL_GET_BY_ID',
@@ -75,7 +75,7 @@ const CashFlowDisplay: React.FC<CashFlowDisplayProps> = ({ reportType }) => {
   } = APIHandler<ReportBody>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         reportId: '10000003',
       },
     },
