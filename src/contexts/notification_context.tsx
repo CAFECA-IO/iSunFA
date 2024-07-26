@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import useStateRef from 'react-usestateref';
 
 export interface INotificationProvider {
@@ -32,16 +32,16 @@ export const NotificationProvider = ({ children }: INotificationProvider) => {
   };
 
   // Deprecated: demo (20240527 - Shirley)
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setReportPendingStatus((prev) => !prev);
-  //     setReportGeneratedStatus((prev) => !prev);
-  //   }, 10000);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setReportPendingStatus((prev) => !prev);
+      setReportGeneratedStatus((prev) => !prev);
+    }, 10000);
 
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, []);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   // TODO: websocket connection of pending report and generated report (20240517 - Shirley)
 
