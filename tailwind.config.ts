@@ -1478,4 +1478,8 @@ module.exports = {
     },
   },
   plugins: [],
+  safelist: [
+    // Info: (20240726 - Liz) 在這裡添加自定義類別名稱
+    'toast-container',
+  ],
 };

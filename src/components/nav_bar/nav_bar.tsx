@@ -156,7 +156,7 @@ const NavBar = () => {
       <button
         type="button"
         onClick={appMenuMobileClickHandler}
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow`}
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
@@ -175,11 +175,11 @@ const NavBar = () => {
             d="M6.972 4.47a.75.75 0 011.06 0l5 5a.75.75 0 010 1.061l-5 5a.75.75 0 01-1.06-1.06l4.47-4.47-4.47-4.47a.75.75 0 010-1.06z"
             clipRule="evenodd"
           ></path>
-        </svg>{' '}
+        </svg>
       </button>
       <Link
-        href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        href={ISUNFA_ROUTE.DASHBOARD}
+        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow`}
       >
         <FiLayout size={20} />
 
@@ -294,7 +294,7 @@ const NavBar = () => {
         </div>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
+            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
           </div>
           <button
             type="button"
@@ -583,10 +583,11 @@ const NavBar = () => {
           </div>
 
           {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
-          <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:flex">
+          <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:ml-10 lg:flex">
             <Link
-              href={`${signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}`}
-              className="flex justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5 lg:ml-10"
+              href={ISUNFA_ROUTE.DASHBOARD}
+              // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+              className={`${selectedCompany ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-primaryYellow max-md:px-5`}
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -646,7 +647,11 @@ const NavBar = () => {
           <Notification />
           {/* Info: app menu (20240606 - Shirley) */}
           <div ref={appMenuRef}>
-            <button type="button" onClick={appMenuClickHandler}>
+            <button
+              type="button"
+              onClick={appMenuClickHandler}
+              className={selectedCompany ? 'flex' : 'hidden'} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+            >
               <Image src="/icons/app.svg" alt="app_icon" width={24} height={24} />
             </button>
             {displayedAppMenu}

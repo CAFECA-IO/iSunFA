@@ -1278,3 +1278,23 @@ input[type='checkbox']:checked::before {
   color: #fff;
   border: 0;
 } */
+
+/* // Info: (20240725 - Liz) 使用自定義樣式調整 toast container */
+
+.toast-container {
+  width: max-content;
+  margin-top: 80px;
+  pointer-events: none;
+}
+
+@media (max-width: 769px) {
+  .toast-container {
+    margin-bottom: 40px;
+  }
+}
+
+@media (max-width: 425px) {
+  .toast-container {
+    margin-bottom: 70px;
+  }
+}

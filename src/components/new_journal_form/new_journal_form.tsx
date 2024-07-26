@@ -34,7 +34,7 @@ enum PAYMENT_METHOD {
   CREDIT_CARD = 'PAYMENT_METHOD.CREDIT_CARD',
 }
 
-const paymentMethodSelection: string[] = [
+const paymentMethodSelection: PAYMENT_METHOD[] = [
   PAYMENT_METHOD.CASH,
   PAYMENT_METHOD.TRANSFER,
   PAYMENT_METHOD.CREDIT_CARD,
@@ -47,7 +47,7 @@ enum BANK {
   FIRST_COMMERCIAL_BANK = 'JOURNAL.FIRST_COMMERCIAL_BANK',
 }
 
-const ficSelection: string[] = [
+const ficSelection: BANK[] = [
   BANK.BANK_OF_TAIWAN,
   BANK.LAND_BANK_OF_TAIWAN,
   BANK.TAIWAN_COOPERATIVE_BANK,
@@ -125,7 +125,7 @@ const NewJournalForm = () => {
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
   const [inputFee, setInputFee] = useState<number>(0);
-  const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
+  const [selectedMethod, setSelectedMethod] = useState<PAYMENT_METHOD>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
@@ -181,7 +181,7 @@ const NewJournalForm = () => {
         setTaxRate(invoice.payment.taxPercentage);
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
-        setSelectedMethod(invoice.payment.method);
+        setSelectedMethod(invoice.payment.method as PAYMENT_METHOD);
         // setInputAccountNumber(invoice.payment.accountNumber);
         setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
         setInputInstallment(invoice.payment.installmentPeriod);
@@ -228,7 +228,7 @@ const NewJournalForm = () => {
       setTaxRate(OCRResult.payment.taxPercentage);
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
-      setSelectedMethod(OCRResult.payment.method);
+      setSelectedMethod(OCRResult.payment.method as PAYMENT_METHOD);
       // setInputAccountNumber(OCRResult.payment.accountNumber);
       setPaymentPeriod(OCRResult.payment.period);
       setInputInstallment(OCRResult.payment.installmentPeriod);
@@ -612,7 +612,7 @@ const NewJournalForm = () => {
     );
   });
 
-  const displayMethodDropmenu = paymentMethodSelection.map((methodKey: string) => {
+  const displayMethodDropmenu = paymentMethodSelection.map((methodKey: PAYMENT_METHOD) => {
     const method = t(methodKey);
     const selectionClickHandler = () => {
       setSelectedMethod(methodKey); // 使用方法鍵值而不是翻譯後的文字
