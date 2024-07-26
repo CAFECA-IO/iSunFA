@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { getSession } from '@/lib/utils/session';
-import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampOfSameDateOfLastYear, isParamNumeric } from '@/lib/utils/common';
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
 import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
@@ -191,12 +191,21 @@ export async function formatPayloadFromIReport(report: IReport) {
   const { reportType } = report;
   const details = report.content;
   const general = transformDetailsIntoGeneral(reportType, details);
-  const startDateInSecond = report.from;
-  const endDateInSecond = report.to;
+  const curFrom = report.from;
+  const curTo = report.to;
+
+  const preFrom = getTimestampOfSameDateOfLastYear(curFrom);
+  const preTo = getTimestampOfSameDateOfLastYear(curTo);
   return {
     reportType,
-    startDateInSecond,
-    endDateInSecond,
+    preDate: {
+      from: preFrom,
+      to: preTo
+    },
+    curDate: {
+      from: curFrom,
+      to: curTo
+    },
     details,
     general
   };
@@ -222,8 +231,14 @@ interface APIResponse {
   general: IAccountReadyForFrontend[];
   details: IAccountReadyForFrontend[];
   reportType: ReportSheetType;
-  startDateInSecond: number;
-  endDateInSecond: number;
+  preDate: {
+    from: number;
+    to: number;
+  };
+  curDate: {
+    from: number;
+    to: number;
+  };
 }
 
 export default async function handler(
