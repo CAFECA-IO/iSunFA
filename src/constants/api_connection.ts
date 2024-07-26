@@ -76,6 +76,7 @@ export enum APIName {
   CREATE_NEW_SUB_ACCOUNT = 'CREATE_NEW_SUB_ACCOUNT',
   UPDATE_ACCOUNT_INFO_BY_ID = 'UPDATE_ACCOUNT_INFO_BY_ID',
   DELETE_ACCOUNT_BY_ID = 'DELETE_ACCOUNT_BY_ID',
+  TRANSFER_OWNER = 'TRANSFER_OWNER',
 }
 
 export enum APIPath {
@@ -135,6 +136,7 @@ export enum APIPath {
   CREATE_NEW_SUB_ACCOUNT = `${apiPrefix}/company/:companyId/account`,
   UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   DELETE_ACCOUNT_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
+  TRANSFER_OWNER = `${apiPrefix}/company/:companyId/transfer_owner`,
 }
 const createConfig = ({
   name,
@@ -440,5 +442,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DELETE_ACCOUNT_BY_ID,
     method: HttpMethod.DELETE,
     path: APIPath.DELETE_ACCOUNT_BY_ID,
+  }),
+  [APIName.TRANSFER_OWNER]: createConfig({
+    name: APIName.TRANSFER_OWNER,
+    method: HttpMethod.PUT,
+    path: APIPath.TRANSFER_OWNER,
   }),
 };

@@ -3,6 +3,10 @@ import { Button } from '@/components/button/button';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+// import { NON_EXISTING_COMPANY_ID } from '@/constants/config'; // Deprecated: (今天丟棄 - Liz)
 
 interface ITransferCompanyModal {
   isModalVisible: boolean;
@@ -15,6 +19,29 @@ const TransferCompanyModal = ({
 }: ITransferCompanyModal) => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { selectedCompany } = useUserCtx();
+
+  interface ITransferOwner {
+    userId: string;
+  }
+
+  const { trigger: transferOwner } = APIHandler<ITransferOwner>(
+    APIName.TRANSFER_OWNER,
+    {},
+    false,
+    false
+  );
+
+  const handleSubmit = () => {
+    transferOwner({
+      params: { companyId: selectedCompany!.id },
+      body: {
+        // newOwnerId: '10000017',
+        newOwnerId: inputRef.current?.value,
+      },
+    });
+  };
 
   const saveClickHandler = async () => {
     if (inputRef.current) {
@@ -41,7 +68,7 @@ const TransferCompanyModal = ({
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: message color (20240717 - Shirley)
         backBtnStr: 'Cancel',
         submitBtnStr: 'Transfer',
-        submitBtnFunction: messageModalVisibilityHandler, // TODO: send API request (20240717 - Shirley)
+        submitBtnFunction: handleSubmit, // TODO: send API request (20240717 - Shirley)
       });
 
       inputRef.current.value = '';
