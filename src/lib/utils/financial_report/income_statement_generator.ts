@@ -16,6 +16,19 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
   }
 
+  // Info: Calculate revenue and expense ratio (20240416 - Murky)
+  // eslint-disable-next-line class-methods-use-this
+  private calculateRevenueAndExpenseRatio(accountMap: Map<string, {
+    accountNode: IAccountNode;
+    percentage: number;
+}>): number {
+    const revenue = accountMap.get('4000')?.accountNode.amount || 0;
+    const totalExpense = accountMap.get('6000')?.accountNode.amount || 0;
+    const totalCost = accountMap.get('5000')?.accountNode.amount || 0;
+    const totalCostAndExpense = totalExpense + totalCost;
+    return totalCostAndExpense === 0 ? 0 : revenue / totalCostAndExpense;
+}
+
   public override async generateFinancialReportTree(): Promise<IAccountNode[]> {
     const lineItemsFromDB = await this.getAllLineItemsByReportSheet();
     const accountForest = await this.getAccountForestByReportSheet();
@@ -45,6 +58,16 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   public override async generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]> {
     const accountMap = await this.generateFinancialReportMap();
 
-    return mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
+    // Info: Calculate revenue and expense ratio (20240726 - Murky)
+    const revenueAndExpenseRatio = this.calculateRevenueAndExpenseRatio(accountMap);
+    const accountList = mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
+    accountList.push({
+      code: 'RevenueAndExpenseRatio',
+      name: 'Revenue and Expense Ratio',
+      amount: revenueAndExpenseRatio,
+      percentage: null,
+      indent: 0,
+    });
+    return accountList;
   }
 }

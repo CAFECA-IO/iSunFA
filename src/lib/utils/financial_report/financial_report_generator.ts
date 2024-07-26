@@ -73,7 +73,7 @@ export default abstract class FinancialReportGenerator {
       page,
       limit,
       sortBy: 'code',
-      sortOrder: 'asc'
+      sortOrder: 'asc',
     });
     const forest = buildAccountForest(accounts.data);
     return forest;

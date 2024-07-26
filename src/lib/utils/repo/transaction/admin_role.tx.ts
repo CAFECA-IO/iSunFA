@@ -27,6 +27,7 @@ export async function transferOwnership(
         where: {
           userId: newOwnerId,
           companyId,
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
         },
       });
 
@@ -34,13 +35,9 @@ export async function transferOwnership(
         const updatedCurrentOwner = await tx.admin.update({
           where: { id: currentOwner.id },
           data: {
-            role: {
-              connect: {
-                name: ROLE_NAME.ADMIN,
-              },
-            },
             updatedAt: nowTimestamp,
-            // Todo (20240722 - Jacky) should add a deleteAt
+            deletedAt: nowTimestamp,
+            endDate: nowTimestamp,
           },
           include: {
             user: true,

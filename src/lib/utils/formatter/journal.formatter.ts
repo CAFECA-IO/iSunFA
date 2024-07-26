@@ -10,24 +10,20 @@ import {
   convertStringToPaymentPeriodType,
   convertStringToPaymentStatusType,
 } from '@/lib/utils/type_guard/account';
+import { sumLineItemsAndReturnBiggest } from '@/lib/utils/line_item';
 
 export function formatSingleIJournalListItem(
   journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
 ): IJournalListItem {
+  const { credit, debit } = sumLineItemsAndReturnBiggest(journalFromPrisma?.voucher?.lineItems);
+
   return {
     id: journalFromPrisma.id,
     date: journalFromPrisma.createdAt,
     type: journalFromPrisma.invoice?.eventType,
     particulars: journalFromPrisma.invoice?.description,
     fromTo: journalFromPrisma.invoice?.vendorOrSupplier,
-    account: journalFromPrisma.voucher?.lineItems.map((lineItem) => {
-      return {
-        id: lineItem.id,
-        debit: lineItem.debit,
-        account: lineItem.account.name,
-        amount: lineItem.amount,
-      };
-    }),
+    account: [debit, credit],
     projectName: journalFromPrisma.project?.name,
     projectImageId: journalFromPrisma.project?.imageId,
     voucherId: journalFromPrisma.voucher?.id,
