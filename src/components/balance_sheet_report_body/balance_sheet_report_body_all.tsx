@@ -34,7 +34,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   if (getReportFinancialIsLoading) {
     return <div>Loading...</div>;
-  } else if (!getReportFinancialSuccess) {
+  } else if (!getReportFinancialSuccess && reportFinancial) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
@@ -193,7 +193,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-[2px_solid_#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">1</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image src="/logo/white_isunfa_logo_light.svg" alt="" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -399,7 +399,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">2</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image src="/logo/white_isunfa_logo_light.svg" alt="" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -562,7 +562,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">3</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -735,7 +735,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">4</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
       <div className="mt-4 flex justify-center"></div>
@@ -907,7 +907,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">5</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1076,7 +1076,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">6</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1248,7 +1248,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">7</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1417,7 +1417,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">8</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1591,7 +1591,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         {/* Info: watermark logo (20240723 - Anna) */}
         <div className="relative -z-10">
           <Image
-            className="absolute right-0 top-[-300px]"
+            className="absolute -top-300px right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
@@ -1602,7 +1602,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">9</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1666,19 +1666,19 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
         </div>
         <div className="relative -z-10">
-  <Image
-    className="absolute right-0 top-[-300px]"
-    src="/logo/watermark_logo.svg"
-    alt="isunfa logo"
-    width={450}
-    height={300}
-  />
-</div>
+          <Image
+            className="absolute -top-300px right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
       </section>
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">10</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1765,7 +1765,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <span>應收帳款淨額</span>
               </li>
               <li className="flex items-center">
-                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#304872]"></span>
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-tertiaryBlue"></span>
                 <span>按攤銷後成本衡量之⾦融資產－流動</span>
               </li>
               <li className="flex items-center">
@@ -1794,7 +1794,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
         <div className="relative -z-10">
           <Image
-            className="absolute right-0 top-[-300px]"
+            className="absolute -top-300px right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
@@ -1805,7 +1805,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">11</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
@@ -1829,7 +1829,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
       </header>
       <section className="text-text-neutral-secondary">
-        <div className="mt-[30px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
           <p>五、應收帳款週轉天數</p>
           <p>單位：天</p>
         </div>
@@ -1882,7 +1882,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </table>
         <div className="relative -z-10">
           <Image
-            className="absolute right-0 top-[-300px]"
+            className="absolute -top-300px right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
@@ -1893,7 +1893,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">12</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="./logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
     </div>
