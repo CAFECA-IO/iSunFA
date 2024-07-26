@@ -22,7 +22,7 @@ enum ReportColumnType {
   PREVIOUS = 'previous',
 }
 
-const WHOLE_COLUMN = [
+const ACCOUNTINGS_WHOLE_COLUMN = [
   '資產',
   '負債及權益',
   '負債',
@@ -93,13 +93,14 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     ];
   };
 
+  // TODO: 改成拿後端的百分比，流動跟非流動資產的最大5筆 (20240726 - Shirley)
   const gatherAMRData = (type: ReportColumnType) => {
     if (!reportFinancial?.general || !reportFinancial?.details) return [0, 0, 0, 0, 0, 0];
 
     const periodAmount = type === ReportColumnType.CURRENT ? 'curPeriodAmount' : 'prePeriodAmount';
 
     const totalAssets = Number(
-      reportFinancial.general.find((item) => item.name === '資產')?.[periodAmount] || 0
+      reportFinancial.general.find((item) => item.name === '資產總計')?.[periodAmount] || 0
     );
 
     const equipment = Number(
@@ -172,7 +173,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 9).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -208,7 +209,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage2 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(9, 20).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -244,7 +245,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage2_1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 2).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -279,7 +280,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 14).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -315,7 +316,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage4 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(14, 26).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -351,7 +352,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage5 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(26, 39).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -387,7 +388,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage6 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(39, 56).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -423,7 +424,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage7 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(56, 75).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -459,7 +460,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage8 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(75, 90).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -495,7 +496,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(90, 102).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -531,7 +532,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage12 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(42, 54).map((item, index) => {
-      if (WHOLE_COLUMN.includes(item.name)) {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
