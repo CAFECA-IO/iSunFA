@@ -25,18 +25,21 @@ export function formatGetQuery(req: NextApiRequest) {
   return invoiceIdNumber;
 }
 
-export async function handleGetRequest(companyId: number, req: NextApiRequest): Promise<IInvoice | null> {
-      let invoice: IInvoice | null = null;
-      const invoiceIdNumber = formatGetQuery(req);
+export async function handleGetRequest(
+  companyId: number,
+  req: NextApiRequest
+): Promise<IInvoice | null> {
+  let invoice: IInvoice | null = null;
+  const invoiceIdNumber = formatGetQuery(req);
 
-      if (invoiceIdNumber > 0) {
-        const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceIdNumber, companyId);
+  if (invoiceIdNumber > 0) {
+    const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceIdNumber, companyId);
 
-        if (invoiceFromDB) {
-          invoice = formatIInvoice(invoiceFromDB);
-        }
-      }
-      return invoice;
+    if (invoiceFromDB) {
+      invoice = formatIInvoice(invoiceFromDB);
+    }
+  }
+  return invoice;
 }
 // Info Murky (20240719): Get request code above
 
@@ -114,7 +117,10 @@ export async function getPayloadFromResponseJSON(
   return json.payload as IAccountResultStatus;
 }
 
-export async function handlePutRequest(companyId: number, req: NextApiRequest): Promise<{
+export async function handlePutRequest(
+  companyId: number,
+  req: NextApiRequest
+): Promise<{
   journalId: number;
   resultStatus: IAccountResultStatus;
 }> {
@@ -126,15 +132,22 @@ export async function handlePutRequest(companyId: number, req: NextApiRequest): 
   const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);
 
   const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-  const journalIdBeUpdated = await handlePrismaUpdateLogic(invoiceToUpdate, resultStatus.resultId, companyId);
+  const journalIdBeUpdated = await handlePrismaUpdateLogic(
+    invoiceToUpdate,
+    resultStatus.resultId,
+    companyId
+  );
   return { journalId: journalIdBeUpdated, resultStatus };
 }
 // Info Murky (20240719): Post request code above
 
-type ApiReturnTypes = IInvoice | null | {
-  journalId: number;
-  resultStatus: IAccountResultStatus;
-};
+type ApiReturnTypes =
+  | IInvoice
+  | null
+  | {
+      journalId: number;
+      resultStatus: IAccountResultStatus;
+    };
 
 export default async function handler(
   req: NextApiRequest,
@@ -148,13 +161,13 @@ export default async function handler(
     const { companyId } = session;
     switch (req.method) {
       case 'GET':
-          payload = await handleGetRequest(companyId, req);
-          statusMessage = STATUS_MESSAGE.SUCCESS;
+        payload = await handleGetRequest(companyId, req);
+        statusMessage = STATUS_MESSAGE.SUCCESS;
         break;
       case 'PUT':
-          payload = await handlePutRequest(companyId, req);
+        payload = await handlePutRequest(companyId, req);
 
-          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
         break;
       default:
         statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;

@@ -70,7 +70,7 @@ interface IAccountingContext {
     forUser?: boolean,
     sortBy?: string,
     sortOrder?: string,
-    searchKey?: string,
+    searchKey?: string
   ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
@@ -119,37 +119,37 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => { },
+  updateOCRListHandler: () => {},
   accountList: [],
-  getAccountListHandler: () => { },
-  getAIStatusHandler: () => { },
+  getAccountListHandler: () => {},
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => { },
+  selectOCRHandler: () => {},
   selectedJournal: undefined,
-  selectJournalHandler: () => { },
+  selectJournalHandler: () => {},
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAccountHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  resetVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  resetVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => { },
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
