@@ -132,23 +132,6 @@ export async function getPeriodReport(reportId: number) {
   return curPeriodReport;
 }
 
-export async function getPeriodReportContent(reportId: number): Promise<{
-  content: IAccountReadyForFrontend[];
-  reportType: ReportSheetType;
-}> {
-  const curPeriodReport = await getPeriodReport(reportId);
-  let content: IAccountReadyForFrontend[] = [];
-  let reportType: ReportSheetType = ReportSheetType.BALANCE_SHEET;
-  if (curPeriodReport) {
-    content = curPeriodReport.content;
-    reportType = getReportTypeFromReport(curPeriodReport);
-  }
-  return {
-    content,
-    reportType,
-  };
-}
-
 export function getMappingByReportType(reportType: ReportSheetType): {
   code: string;
   name: string;
@@ -204,44 +187,51 @@ export function transformDetailsIntoGeneral(
   return general;
 }
 
-export async function handleGETRequest(companyId: number, req: NextApiRequest) {
-  let details: IAccountReadyForFrontend[] = [];
-  let general: IAccountReadyForFrontend[] = [];
-  let reportType: ReportSheetType = ReportSheetType.BALANCE_SHEET;
+export async function formatPayloadFromIReport(report: IReport) {
+  const { reportType } = report;
+  const details = report.content;
+  const general = transformDetailsIntoGeneral(reportType, details);
+  const startDateInSecond = report.from;
+  const endDateInSecond = report.to;
+  return {
+    reportType,
+    startDateInSecond,
+    endDateInSecond,
+    details,
+    general
+  };
+}
 
+export async function handleGETRequest(companyId: number, req: NextApiRequest) {
   const { reportIdNumber } = formatGetRequestQueryParams(req);
 
+  let payload = null;
+
   if (reportIdNumber !== null) {
-    const payload = await getPeriodReportContent(reportIdNumber);
-    details = payload.content;
-    reportType = payload.reportType;
+    const curPeriodReport = await getPeriodReport(reportIdNumber);
+
+    if (curPeriodReport) {
+      payload = await formatPayloadFromIReport(curPeriodReport);
+    }
   }
 
-  general = transformDetailsIntoGeneral(reportType, details);
-
-  return {
-    general,
-    details,
-    reportType,
-  };
+  return payload;
 }
 
 interface APIResponse {
   general: IAccountReadyForFrontend[];
   details: IAccountReadyForFrontend[];
   reportType: ReportSheetType;
+  startDateInSecond: number;
+  endDateInSecond: number;
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<APIResponse>>
+  res: NextApiResponse<IResponseData<APIResponse | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse = {
-    general: [],
-    details: [],
-    reportType: ReportSheetType.BALANCE_SHEET,
-  };
+  let payload: APIResponse | null = null;
   try {
     const session = await getSession(req, res);
     const { companyId } = session;
@@ -262,6 +252,6 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<APIResponse | null>(statusMessage, payload);
   res.status(httpCode).json(result);
 }
