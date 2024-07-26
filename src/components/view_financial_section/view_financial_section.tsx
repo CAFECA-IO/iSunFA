@@ -373,6 +373,8 @@ const ViewFinancialSection = ({
     },
   });
 
+  // TODO: until API integration (20240726 - Shirley)
+  // eslint-disable-next-line no-console
   console.log('reportFinancial in viewFinancialSection', reportFinancial);
 
   function onDocumentLoadSuccess(data: { numPages: number }): void {
