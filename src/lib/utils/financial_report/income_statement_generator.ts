@@ -16,7 +16,7 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
   }
 
-  // Info Murky (20240416): Calculate revenue and expense ratio
+  // Info: Calculate revenue and expense ratio (20240416 - Murky)
   // eslint-disable-next-line class-methods-use-this
   private calculateRevenueAndExpenseRatio(accountMap: Map<string, {
     accountNode: IAccountNode;
@@ -58,7 +58,7 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   public override async generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]> {
     const accountMap = await this.generateFinancialReportMap();
 
-    // Calculate revenue and expense ratio
+    // Info: Calculate revenue and expense ratio (20240726 - Murky)
     const revenueAndExpenseRatio = this.calculateRevenueAndExpenseRatio(accountMap);
     const accountList = mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
     accountList.push({
