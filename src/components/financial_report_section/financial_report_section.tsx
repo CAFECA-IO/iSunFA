@@ -289,6 +289,10 @@ const FinancialReportSection = () => {
                     .includes(searchQuery.toLowerCase())
                 // eslint-disable-next-line function-paren-newline
               )
+              // TODO: 串上 API 之後把 filter 拿掉 (20240726 - Shirley)
+              .filter((project) => {
+                return project.includes('Overall');
+              })
               .map((project) => (
                 <li
                   key={project}
