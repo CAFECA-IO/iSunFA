@@ -48,7 +48,7 @@ export function sumLineItemsAndReturnBiggest(lineItems: ILineItemIncludeAccount[
                 creditLargestAmount = lineItem.amount;
             }
 
-            credit.amount = lineItem.amount;
+            credit.amount += lineItem.amount;
         }
     });
 

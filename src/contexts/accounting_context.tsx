@@ -231,7 +231,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         page,
         limit: Number.MAX_SAFE_INTEGER,
         // Info: (20240720 - Murky) @Julian, I set default value for these query params
-        includeDefaultAccount,
+        includeDefaultAccount: true,
         reportType,
         equityType,
         forUser,
