@@ -2,7 +2,6 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
-import { LuTag } from 'react-icons/lu';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
@@ -151,7 +150,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       };
     });
 
-  // Info: (20240503 - Murky) To Julian, 如果ocr skip的話=> imageUrl: '', 這樣就不會有圖片 => 原本的位置會變成placeholder
+  // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
   const invoicePreviewSrc = journalDetail?.imageUrl ?? '';
 
   const copyTokenContractHandler = () => {
@@ -230,15 +229,16 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  const displayReason = (
-    <div className="flex flex-col items-center gap-x-12px md:flex-row">
-      <p>{reason}</p>
-      <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
-        <LuTag size={14} />
-        Printer
-      </div>
-    </div>
-  );
+  // Info: (20240726 - Julian) Interface lacks reason
+  // const displayReason = (
+  //   <div className="flex flex-col items-center gap-x-12px md:flex-row">
+  //     <p>{reason}</p>
+  //     <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+  //       <LuTag size={14} />
+  //       Printer
+  //     </div>
+  //   </div>
+  // );
 
   const displayVendor = <p className="font-semibold text-navyBlue2">{vendor}</p>;
 
@@ -490,7 +490,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
                   <PiCopySimpleBold size={16} />
                 </button>
               </div>
-              <p className=" text-darkBlue">{journalTokenId}</p>
+              <p className="text-darkBlue">{journalTokenId}</p>
             </div>
             <button
               type="button"
@@ -509,7 +509,15 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
               onClick={invoicePreviewClickHandler}
               className="border border-lightGray6"
             >
-              <Image src={invoicePreviewSrc} width={236} height={300} alt="certificate" />
+              <Image
+                src={invoicePreviewSrc}
+                width={236}
+                height={300}
+                alt="certificate"
+                onError={(e) => {
+                  e.currentTarget.src = '/elements/default_certificate.svg';
+                }}
+              />
             </button>
             {displayJournalType}
           </div>
@@ -526,10 +534,10 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
-            <div className="flex items-center justify-between gap-x-10px">
+            {/*             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
-            </div>
+            </div> */}
             {/* Info: (20240503 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
