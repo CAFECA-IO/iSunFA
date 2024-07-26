@@ -661,7 +661,7 @@ export const OPERATING_ACTIVITY_MAPPING: Map<string, IOperatingCashFlowMapping> 
       operatingFunction: noAdjustNetIncome,
       child: new Map([
         [
-          'A20100',
+          'A20010',
           {
             fromCode: [],
             name: '收益費損項目合計',

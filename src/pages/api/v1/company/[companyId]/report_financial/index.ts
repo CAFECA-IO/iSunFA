@@ -32,7 +32,7 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 // Info: (20240710 - Murky) Down below are Post related functions
-//
+
 export function formatReportSheetTypeFromQuery(reportType: unknown) {
   let reportSheetType = ReportSheetType.BALANCE_SHEET;
 
@@ -68,14 +68,12 @@ export function formatStartAndEndDateFromQuery(
     reportSheetType === ReportSheetType.BALANCE_SHEET ? 0 : getTimestampOfFirstDateOfThisYear();
   let endDateInSecond = getTimestampOfLastSecondOfDate(todayInTimestamp);
 
-  if (startDate && typeof startDate === 'string' && isParamNumeric(startDate)) {
-    const startDateInSecondString = parseInt(startDate as string, 10);
-    startDateInSecond = timestampInSeconds(startDateInSecondString);
+  if (startDate && typeof startDate === 'number') {
+    startDateInSecond = timestampInSeconds(startDate);
   }
 
-  if (endDate && typeof endDate === 'string' && isParamNumeric(endDate)) {
-    const endDateInSecondString = parseInt(endDate as string, 10);
-    endDateInSecond = timestampInSeconds(endDateInSecondString);
+  if (endDate && typeof endDate === 'number') {
+    endDateInSecond = timestampInSeconds(endDate);
   }
 
   const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
