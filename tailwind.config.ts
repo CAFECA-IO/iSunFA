@@ -1392,6 +1392,9 @@ module.exports = {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
       },
+      width: {
+        'full-available': '-webkit-fill-available',
+      },
       maxWidth: {
         '80px': '80px',
         '140px': '140px',

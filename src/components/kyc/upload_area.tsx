@@ -322,7 +322,7 @@ const UploadArea = ({
       ) : (
         <label
           htmlFor={type}
-          className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
+          className={`flex h-full w-full-available flex-col rounded-lg border border-dashed hover:cursor-pointer ${
             isDragOver
               ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
               : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'

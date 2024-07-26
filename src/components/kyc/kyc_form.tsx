@@ -124,7 +124,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   };
 
   return (
-    <section className="mx-auto flex w-fit flex-col items-center gap-40px">
+    <section className="mx-auto flex w-full flex-col items-center gap-40px md:w-fit">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
       <form ref={formRef} onSubmit={handleSubmit}>
         {step === 0 && <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
