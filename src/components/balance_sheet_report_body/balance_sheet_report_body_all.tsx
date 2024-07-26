@@ -11,6 +11,7 @@ import PieChart from '@/components/balance_sheet_report_body/pie_chart';
 import PieChartAssets from '@/components/balance_sheet_report_body/pie_chart_assets';
 import useStateRef from 'react-usestateref';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { timestampToString } from '@/lib/utils/common';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -44,6 +45,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<number>>([]);
   const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<number>>([]);
+
+  const [curDate, setCurDate] = useStateRef<string>('');
+  const [curYear, setCurYear] = useStateRef<string>('');
+  const [preDate, setPreDate] = useStateRef<string>('');
+  const [preYear, setPreYear] = useStateRef<string>('');
 
   const {
     data: reportFinancial,
@@ -142,10 +148,19 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       const preALR = gatherALRData(ReportColumnType.PREVIOUS);
       const curAMR = gatherAMRData(ReportColumnType.CURRENT);
       const preAMR = gatherAMRData(ReportColumnType.PREVIOUS);
+      const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
+      const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
+      const currentYear = currentDateString.year;
+      const previousYear = previousDateString.year;
+
       setCurAssetLiabilityRatio(curALR);
       setPreAssetLiabilityRatio(preALR);
       setCurAssetMixRatio(curAMR);
       setPreAssetMixRatio(preAMR);
+      setCurDate(currentDateString.date);
+      setPreDate(previousDateString.date);
+      setCurYear(currentYear);
+      setPreYear(previousYear);
     }
   }, [reportFinancial]);
 
@@ -571,7 +586,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               台灣積體電路製造股份有限公司
             </h1>
             <p className="font-normal">
-              2023年第4季 <br />
+              {curYear}年第4季 <br />
               合併財務報告 - 資產負債表
             </p>
           </div>
@@ -599,13 +614,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -658,13 +673,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}{' '}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -704,13 +719,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -783,13 +798,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -845,13 +860,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -908,13 +923,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -970,13 +985,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -1032,13 +1047,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -1097,7 +1112,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -1106,7 +1121,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -1162,13 +1177,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -1225,7 +1240,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
         <div className="flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">2023-12-31</p>
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center space-x-10">
               <ul className="space-y-2">
                 <li className="flex items-center">
@@ -1245,7 +1260,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </div>
           </div>
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">2022-12-31</p>
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center space-x-10">
               <ul className="space-y-2">
                 <li className="flex items-center">
@@ -1307,7 +1322,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
         <div className="flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">2023-12-31</p>
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 <li className="flex items-center">
@@ -1351,7 +1366,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
 
           <div className="flex flex-col space-y-5">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">2022-12-31</p>
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 <li className="flex items-center">
@@ -1456,18 +1471,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-12-31
+                {curYear}年度
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022年度
+                {preYear}年度
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">應收帳款週轉天數</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">34</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">37</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
             </tr>
           </tbody>
         </table>
@@ -1480,10 +1495,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <tr>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023年度
+                {curYear}年度
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022年度
+                {preYear}年度
               </th>
             </tr>
           </thead>
@@ -1493,9 +1508,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 reportFinancial.general &&
                 Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
                 rowsForPage12(reportFinancial.general)}
-              {/* <td className="border border-[#dee2e6] p-[10px] text-[14px]">存貨週轉天數</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">93</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">88</td> */}
+              <td className="border border-[#dee2e6] p-[10px] text-[14px]">存貨週轉天數</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
             </tr>
           </tbody>
         </table>
