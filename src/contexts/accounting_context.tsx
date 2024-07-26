@@ -245,6 +245,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const getAIStatusHandler = useCallback(
     (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
       if (update) {
+        setAIStatus(ProgressStatus.IN_PROGRESS);
         setStopAskAI(false);
         const interval = setInterval(async () => {
           const { success, data } = await getAIStatus({
@@ -392,6 +393,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
         const newVoucher = [...prev];
         const targetId = prev.findIndex((voucher) => voucher.id === index);
+
+        if (!newVoucher[targetId]) {
+          return prev;
+        }
+
         newVoucher[targetId].account = account ?? null;
         return newVoucher;
       });
@@ -433,6 +439,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         // Info: (20240430 - Julian) 找到要寫入的傳票 id
         const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index;
 
+        if (!newVoucher[targetId]) {
+          return prev;
+        }
+
         // Info: (20240710 - Julian) 如果有 description ，則寫入
         if (description) {
           newVoucher[targetId].particulars = description;
@@ -448,7 +458,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
           newVoucher[targetId].debit = newAmount;
           newVoucher[targetId].credit = null;
         }
-
         return newVoucher;
       });
     },

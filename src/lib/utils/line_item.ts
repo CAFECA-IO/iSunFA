@@ -1,14 +1,16 @@
-import { ILineItemIncludeAccount } from "@/interfaces/line_item";
+import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 
 type LineItemBiggest = {
-  id: number,
-  debit: boolean,
-  account: string,
-  amount: number
+  id: number;
+  debit: boolean;
+  account: string;
+  amount: number;
 };
-export function sumLineItemsAndReturnBiggest(lineItems: ILineItemIncludeAccount[] | null | undefined): {
-  credit: LineItemBiggest,
-  debit: LineItemBiggest
+export function sumLineItemsAndReturnBiggest(
+  lineItems: ILineItemIncludeAccount[] | null | undefined
+): {
+  credit: LineItemBiggest;
+  debit: LineItemBiggest;
 } {
   let creditLargestAmount = 0;
   let debitLargestAmount = 0;
@@ -16,20 +18,20 @@ export function sumLineItemsAndReturnBiggest(lineItems: ILineItemIncludeAccount[
     id: 0,
     debit: false,
     account: '',
-    amount: 0
+    amount: 0,
   };
 
   const debit = {
     id: 0,
     debit: true,
     account: '',
-    amount: 0
+    amount: 0,
   };
 
   if (!lineItems) {
     return {
       credit,
-      debit
+      debit,
     };
   }
 
@@ -54,6 +56,6 @@ export function sumLineItemsAndReturnBiggest(lineItems: ILineItemIncludeAccount[
 
   return {
     credit,
-    debit
+    debit,
   };
 }

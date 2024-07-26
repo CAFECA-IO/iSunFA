@@ -418,7 +418,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // Info: (20240710 - Murky) This method is only used in this class
   // eslint-disable-next-line class-methods-use-this
-  private transformMapToArray(accountMap: Map<string, IAccountForSheetDisplay>): IAccountForSheetDisplay[] {
+  private transformMapToArray(
+    accountMap: Map<string, IAccountForSheetDisplay>
+  ): IAccountForSheetDisplay[] {
     const result = CashFlowMapForDisplayJSON.map((account) => {
       const accountCode = account.code;
       const accountInfo = accountMap.get(accountCode);

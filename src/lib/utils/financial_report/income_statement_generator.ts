@@ -18,16 +18,21 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
 
   // Info: Calculate revenue and expense ratio (20240416 - Murky)
   // eslint-disable-next-line class-methods-use-this
-  private calculateRevenueAndExpenseRatio(accountMap: Map<string, {
-    accountNode: IAccountNode;
-    percentage: number;
-}>): number {
+  private calculateRevenueAndExpenseRatio(
+    accountMap: Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  ): number {
     const revenue = accountMap.get('4000')?.accountNode.amount || 0;
     const totalExpense = accountMap.get('6000')?.accountNode.amount || 0;
     const totalCost = accountMap.get('5000')?.accountNode.amount || 0;
     const totalCostAndExpense = totalExpense + totalCost;
     return totalCostAndExpense === 0 ? 0 : revenue / totalCostAndExpense;
-}
+  }
 
   public override async generateFinancialReportTree(): Promise<IAccountNode[]> {
     const lineItemsFromDB = await this.getAllLineItemsByReportSheet();

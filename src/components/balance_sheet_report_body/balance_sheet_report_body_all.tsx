@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -23,7 +23,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       reportId: reportId ?? '10000003',
     },
   });
@@ -1591,7 +1591,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         {/* Info: watermark logo (20240723 - Anna) */}
         <div className="relative -z-10">
           <Image
-            className="absolute right-0 top-[-300px]"
+            className="absolute -top-300px right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
@@ -1666,14 +1666,14 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
         </div>
         <div className="relative -z-10">
-  <Image
-    className="absolute right-0 top-[-300px]"
-    src="/logo/watermark_logo.svg"
-    alt="isunfa logo"
-    width={450}
-    height={300}
-  />
-</div>
+          <Image
+            className="absolute -top-300px right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
       </section>
       <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
         <p className="m-0 text-[12px] text-white">10</p>
@@ -1765,7 +1765,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <span>應收帳款淨額</span>
               </li>
               <li className="flex items-center">
-                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#304872]"></span>
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-tertiaryBlue"></span>
                 <span>按攤銷後成本衡量之⾦融資產－流動</span>
               </li>
               <li className="flex items-center">
@@ -1794,7 +1794,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
         <div className="relative -z-10">
           <Image
-            className="absolute right-0 top-[-300px]"
+            className="absolute -top-300px right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
@@ -1829,7 +1829,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
       </header>
       <section className="text-text-neutral-secondary">
-        <div className="mt-[30px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
           <p>五、應收帳款週轉天數</p>
           <p>單位：天</p>
         </div>
@@ -1882,7 +1882,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </table>
         <div className="relative -z-10">
           <Image
-            className="absolute right-0 top-[-300px]"
+            className="absolute -top-300px right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}

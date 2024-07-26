@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
 import { APIName } from '@/constants/api_connection';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -21,7 +21,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       reportId: reportId ?? '10000037',
     },
   });

@@ -24,6 +24,7 @@ import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'react-i18next';
 import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslation('common');
@@ -83,7 +84,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     if (isComplete) {
       const { success, code } = await triggerUpload({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         body: companyKYCForm,
       });
@@ -123,7 +124,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   };
 
   return (
-    <section className="mx-auto flex w-fit flex-col items-center gap-40px">
+    <section className="mx-auto flex w-full flex-col items-center gap-40px md:w-fit">
       <KYCStepper currentStep={step} onClick={handleStepChange} />
       <form ref={formRef} onSubmit={handleSubmit}>
         {step === 0 && <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}

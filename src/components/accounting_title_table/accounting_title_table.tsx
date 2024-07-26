@@ -8,7 +8,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 export enum ActionType {
   FAV_AND_ADD = 'favorite_and_add',
@@ -65,8 +65,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
       notes: name,
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
-      submitBtnFunction: () =>
-        deleteOwnAccountTitle(selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, id),
+      submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany?.id ?? FREE_COMPANY_ID, id),
       backBtnStr: 'Cancel',
     });
     messageModalVisibilityHandler();

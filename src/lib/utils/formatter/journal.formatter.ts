@@ -34,7 +34,9 @@ export function formatSingleIJournalListItem(
 export function formatIJournalListItems(
   journalsFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]
 ): IJournalListItem[] {
-  const journalLineItems = journalsFromPrisma.map((journalFromPrisma) => formatSingleIJournalListItem(journalFromPrisma));
+  const journalLineItems = journalsFromPrisma.map((journalFromPrisma) => {
+    return formatSingleIJournalListItem(journalFromPrisma);
+  });
   return journalLineItems;
 }
 

@@ -6,10 +6,10 @@ import { RxCross2 } from 'react-icons/rx';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVocuherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID, checkboxStyle } from '@/constants/display';
+import { checkboxStyle } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ILineItem } from '@/interfaces/line_item';
 import AccountingVoucherRow from '@/components/accounting_voucher_row/accounting_voucher_row';
@@ -25,6 +25,7 @@ import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -73,11 +74,8 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
   const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
   const [journal, setJournal] = useState<IJournal | null>(null);
-
-  const { trigger: updateVoucher } = APIHandler<void>(APIName.VOUCHER_UPDATE, {}, false, false);
 
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
   const { trigger: getJournalById } = APIHandler<IJournal>(
@@ -96,30 +94,21 @@ const ConfirmModal = ({
   } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
 
   // Info: (20240527 - Julian) 建立傳票
-  const {
-    trigger: createVoucher,
-    data: result,
-    success: createSuccess,
-    code: createCode,
-  } = APIHandler<{
-    id: number;
-    createdAt: number;
-    updatedAt: number;
-    journalId: number;
-    no: string;
-    lineItems: {
-      id: number;
-      amount: number;
-      description: string;
-      debit: boolean;
-      accountId: number;
-      voucherId: number;
-      createdAt: number;
-      updatedAt: number;
-    }[];
-  } | null>(APIName.VOUCHER_CREATE, {}, false, false);
+  const { trigger: createVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
+    APIName.VOUCHER_CREATE,
+    {},
+    false,
+    false
+  );
 
-  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
+  const { trigger: updateVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
+    APIName.VOUCHER_UPDATE,
+    {},
+    false,
+    false
+  );
+
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   // ToDo: (20240711 - Julian) Check if AI result is successful
@@ -129,30 +118,35 @@ const ConfirmModal = ({
   const addDebitRowHandler = () => addVoucherRowHandler(1, VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(1, VoucherRowType.CREDIT);
 
-  const importVoucherHandler = () => {
+  const importVoucherHandler = (initiallineItems?: ILineItem[]) => {
     // Info: (20240716 - Julian) 從 API response 取出傳票列表
-    const AILineItems = AIResult?.lineItems ?? [];
+    try {
+      const AILineItems = initiallineItems ?? AIResult?.lineItems ?? [];
 
-    // Info: (20240529 - Julian) 清空 accountingVoucher
-    resetVoucherHandler();
+      // Info: (20240529 - Julian) 清空 accountingVoucher
+      resetVoucherHandler();
 
-    // Info: (20240716 - Julian) 根據 AI 生成的傳票數量，新增 accountingVoucher
-    addVoucherRowHandler(AILineItems.length - 1);
+      // Info: (20240716 - Julian) 根據 AI 生成的傳票數量，新增 accountingVoucher
+      addVoucherRowHandler(AILineItems.length - 1);
 
-    // Info: (20240716 - Julian) 將 AI 生成的傳票逐一寫入 accountingVoucher
-    AILineItems.forEach((lineItem, index) => {
-      // Info: (20240716 - Julian) 在 accountList 中找到對應的 account
-      const rowAccount = accountList.find((account) => account.id === lineItem.accountId);
-      const rowAmount = lineItem.amount;
-      // Info: (20240716 - Julian) 判斷 row type
-      const rowType = lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
-      const rowDescription = lineItem.description;
-
-      // Info: (20240716 - Julian) 寫入 account
-      changeVoucherAccountHandler(index, rowAccount);
-      // Info: (20240716 - Julian) 寫入 description 和 amount
-      changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
-    });
+      // Info: (20240716 - Julian) 將 AI 生成的傳票逐一寫入 accountingVoucher
+      AILineItems.forEach((lineItem, index) => {
+        // Info: (20240716 - Julian) 在 accountList 中找到對應的 account
+        const rowAccount = accountList.find((account) => account.id === lineItem.accountId);
+        const rowAmount = lineItem.amount;
+        // Info: (20240716 - Julian) 判斷 row type
+        const rowType = lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
+        const rowDescription = lineItem.description;
+        // Info: (20240716 - Julian) 寫入 account
+        changeVoucherAccountHandler(index, rowAccount);
+        // Info: (20240716 - Julian) 寫入 description 和 amount
+        changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
+      });
+    } catch (err) {
+      // Debug: (20240726 - Tzuhan) Show error message
+      // eslint-disable-next-line no-console
+      console.log(`importVoucherHandler err: `, err);
+    }
   };
 
   const analysisBtnClickHandler = () => {
@@ -179,23 +173,93 @@ const ConfirmModal = ({
     resetVoucherHandler();
   };
 
+  const convertToLineItems = () => {
+    const newLineItems = accountingVoucher
+      .filter((voucher) => voucher.account)
+      .map((voucher) => {
+        const isDebit = voucher.debit !== null;
+        const debitAmount = voucher.debit ?? 0;
+        const creditAmount = voucher.credit ?? 0;
+
+        return {
+          accountId: voucher.account!.id,
+          lineItemIndex: `${voucher.id}`,
+          account: generateAccountTitle(voucher.account),
+          description: voucher.particulars,
+          debit: isDebit,
+          amount: isDebit ? debitAmount : creditAmount,
+        };
+      });
+    return newLineItems;
+  };
+
+  const handleAPIResponse = (res: {
+    success: boolean;
+    data: IVocuherDataForAPIResponse | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    if (res.success && res.data && journal) {
+      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
+      closeHandler();
+      resetVoucherHandler();
+      selectJournalHandler(undefined);
+
+      // Info: (20240527 - Julian) Toast notification
+      toastHandler({
+        id: `Voucher-${res.data.id}`,
+        type: ToastType.SUCCESS,
+        content: (
+          <div className="flex items-center justify-between">
+            <p>{t('CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
+            <Link
+              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
+              className="font-semibold text-link-text-success hover:opacity-70"
+            >
+              {t('AUDIT_REPORT.GO_CHECK_IT')}
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
+
+      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      window.location.href = `${ISUNFA_ROUTE.ACCOUNTING}/${res.data.journalId}`;
+    }
+    if (res.success === false) {
+      messageModalDataHandler({
+        title: t('CONFIRM_MODAL.UPLOAD_FAILED'),
+        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        content: t('COMMON.ERROR_CODE', { code: res.code }),
+        messageType: MessageType.ERROR,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
   // Info: (20240527 - Julian) 送出 Voucher
-  const confirmHandler = () => {
-    if (journal && journal.invoice && lineItems) {
+  const confirmHandler = async () => {
+    const newLineItems = convertToLineItems();
+
+    if (journal && journal.invoice && newLineItems) {
       const voucher: IVoucherDataForSavingToDB = {
         journalId: journal.id,
-        lineItems,
+        lineItems: newLineItems,
       };
       if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
-        updateVoucher({
+        const updateRes = await updateVoucher({
           params: { companyId },
           body: { voucher },
         });
+        handleAPIResponse(updateRes);
       } else {
-        createVoucher({
+        const createRes = await createVoucher({
           params: { companyId },
           body: { voucher },
         });
+        handleAPIResponse(createRes);
       }
     }
   };
@@ -227,7 +291,7 @@ const ConfirmModal = ({
         setContract(invoice.contract ?? 'None');
       }
       if (voucher) {
-        setLineItems(voucher.lineItems);
+        importVoucherHandler(voucher.lineItems);
       }
     }
     if (getJournalSuccess === false) {
@@ -265,75 +329,12 @@ const ConfirmModal = ({
   }, [AIStatus]);
 
   useEffect(() => {
-    // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
-    const newLineItems = accountingVoucher
-      .filter((voucher) => voucher.account)
-      .map((voucher) => {
-        const isDebit = voucher.debit !== null;
-        const debitAmount = voucher.debit ?? 0;
-        const creditAmount = voucher.credit ?? 0;
-
-        return {
-          accountId: voucher.account!.id,
-          lineItemIndex: `${voucher.id}`,
-          account: generateAccountTitle(voucher.account),
-          description: voucher.particulars,
-          debit: isDebit,
-          amount: isDebit ? debitAmount : creditAmount,
-        };
-      });
-
-    setLineItems(newLineItems);
-  }, [accountingVoucher]);
-
-  useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;
     const isNotZero = totalCredit !== 0 && totalDebit !== 0;
     const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
 
     setDisableConfirmButton(!(isCreditEqualDebit && isNotZero && isEveryLineItemHasAccount));
   }, [totalCredit, totalDebit, accountingVoucher]);
-
-  useEffect(() => {
-    if (createSuccess && result && journal) {
-      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
-      closeHandler();
-      resetVoucherHandler();
-      selectJournalHandler(undefined);
-
-      // Info: (20240527 - Julian) Toast notification
-      toastHandler({
-        id: `createVoucher-${result.id}`,
-        type: ToastType.SUCCESS,
-        content: (
-          <div className="flex items-center justify-between">
-            <p>{t('CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
-            <Link
-              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
-              className="font-semibold text-link-text-success hover:opacity-70"
-            >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
-            </Link>
-          </div>
-        ),
-        closeable: true,
-      });
-
-      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
-      window.location.href = `${ISUNFA_ROUTE.ACCOUNTING}/${result.journalId}`;
-    }
-    if (createSuccess === false) {
-      messageModalDataHandler({
-        title: 'Create Voucher Failed',
-        subMsg: 'Please try again later',
-        content: `Error code: ${createCode}`,
-        messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
-        submitBtnFunction: () => messageModalVisibilityHandler(),
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [createSuccess, createCode, result]);
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
 
@@ -369,7 +370,9 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = (
+    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+  );
 
   const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
 
@@ -390,7 +393,8 @@ const ConfirmModal = ({
   const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
 
   const displayedHint =
-    AIStatus === ProgressStatus.SUCCESS && AIResultSuccess === undefined ? (
+    (AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
+    AIResultSuccess === undefined ? (
       <p className="text-slider-surface-bar">
         {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
         <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>

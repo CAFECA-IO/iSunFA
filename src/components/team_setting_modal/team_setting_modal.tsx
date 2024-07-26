@@ -7,6 +7,7 @@ import { ICompany } from '@/interfaces/company';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface ITeamSettingModal {
   isModalVisible: boolean;
@@ -29,7 +30,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     APIName.COMPANY_UPDATE,
     {
       params: {
-        companyId: selectedCompany?.id ?? 0,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
     },
     false,
