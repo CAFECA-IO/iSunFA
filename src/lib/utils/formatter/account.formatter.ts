@@ -23,15 +23,15 @@ export function formatAccounts(accounts: Account[]): IAccount[] {
 }
 
 export function formatIPaginatedAccount(accounts: {
-    data: Account[];
-    page: number;
-    limit: number;
-    totalPage: number;
-    totalCount: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    sortOrder: "asc" | "desc";
-    sortBy: "code" | "createdAt";
+  data: Account[];
+  page: number;
+  limit: number;
+  totalPage: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  sortOrder: 'asc' | 'desc';
+  sortBy: 'code' | 'createdAt';
 }): IPaginatedAccount {
   const formattedAccounts: IAccount[] = formatAccounts(accounts.data);
 
@@ -43,10 +43,12 @@ export function formatIPaginatedAccount(accounts: {
     pageSize: accounts.limit,
     hasNextPage: accounts.hasNextPage,
     hasPreviousPage: accounts.hasPreviousPage,
-    sort: [{
+    sort: [
+      {
         sortBy: accounts.sortBy,
-        sortOrder: accounts.sortOrder
-    }]
+        sortOrder: accounts.sortOrder,
+      },
+    ],
   };
 
   return paginatedAccount;

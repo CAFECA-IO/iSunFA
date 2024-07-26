@@ -12,9 +12,7 @@ export async function getLineItemsInPrisma(
 ) {
   const startDateInSecond = setTimestampToDayStart(startDate);
   const endDateInSecond = setTimestampToDayEnd(endDate);
-  const deletedAt = isDeleted
-    ? { not: null }
-    : { equals: null };
+  const deletedAt = isDeleted ? { not: null } : { equals: null };
   const where: Prisma.LineItemWhereInput = {
     deletedAt,
     account: {
