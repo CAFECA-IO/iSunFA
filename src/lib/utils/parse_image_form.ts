@@ -61,7 +61,7 @@ export async function addPrefixToFile(
   prefix: string,
   ext: string
 ): Promise<string> {
-  const targetFolder = path.join(process.cwd(), folder); // 確保是從專案根目錄開始找目標資料夾
+  const targetFolder = path.join(BASE_STORAGE_FOLDER, folder); // 確保是從專案根目錄開始找目標資料夾
 
   // 檔案的完整路徑
   const oldFilePath = path.join(targetFolder, fileName);
