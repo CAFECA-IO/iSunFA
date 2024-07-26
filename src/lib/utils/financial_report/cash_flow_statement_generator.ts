@@ -11,6 +11,7 @@ import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/invest
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 import { noAdjustNetIncome } from '@/lib/utils/account/common';
+import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -415,6 +416,26 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return result;
   }
 
+  // Info: (20240710 - Murky) This method is only used in this class
+  // eslint-disable-next-line class-methods-use-this
+  private transformMapToArray(accountMap: Map<string, IAccountForSheetDisplay>): IAccountForSheetDisplay[] {
+    const result = CashFlowMapForDisplayJSON.map((account) => {
+      const accountCode = account.code;
+      const accountInfo = accountMap.get(accountCode);
+      if (accountInfo) {
+        return accountInfo;
+      }
+      return {
+        code: accountCode,
+        name: account.name,
+        amount: 0,
+        indent: account.indent,
+        percentage: 0,
+      };
+    });
+    return result;
+  }
+
   // ToDo: (20240710 - Murky) Need to implement later
   // eslint-disable-next-line class-methods-use-this
   public override async generateFinancialReportTree(): Promise<IAccountNode[]> {
@@ -455,7 +476,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       financingCashFlow
     );
 
-    const result = Array.from(concatCashFlow.values());
+    const result = this.transformMapToArray(concatCashFlow);
     return result;
   }
 }
