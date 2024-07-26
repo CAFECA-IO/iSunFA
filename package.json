@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.8+92",
+  "version": "0.1.8+95",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -20,8 +20,11 @@
     "@passwordless-id/webauthn": "^1.5.0",
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
+    "@types/react-chartjs-2": "^2.5.7",
     "apexcharts": "^3.48.0",
+    "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
+    "chart.js": "^4.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cookie": "^0.6.0",
@@ -37,6 +40,7 @@
     "nodemailer": "^6.9.8",
     "react": "^18",
     "react-apexcharts": "^1.4.1",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18",
     "react-i18next": "^14.1.2",
     "react-icons": "^5.0.1",
