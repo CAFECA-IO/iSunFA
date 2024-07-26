@@ -4,13 +4,13 @@ import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
-import { FIDO2_USER_HANDLE } from '@/constants/config';
+import { FIDO2_USER_HANDLE, FREE_COMPANY_ID } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 
 interface SignUpProps {
@@ -28,7 +28,7 @@ interface UserContextType {
   signedIn: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
-  selectCompany: (company: ICompany | null) => void;
+  selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -47,7 +47,7 @@ export const UserContext = createContext<UserContextType>({
   signedIn: false,
   isSignInError: false,
   selectedCompany: null,
-  selectCompany: () => {},
+  selectCompany: async () => {},
   successSelectCompany: undefined,
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -132,11 +132,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  const {
-    trigger: selectCompanyAPI,
-    success: companySelectSuccess,
-    code: companySelectCode,
-  } = APIHandler<number>(APIName.COMPANY_SELECT, {}, false, false);
+  const { trigger: selectCompanyAPI } = APIHandler<number>(
+    APIName.COMPANY_SELECT,
+    {},
+    false,
+    false
+  );
+
+  const { trigger: getCompanyAPI } = APIHandler<ICompanyAndRole>(
+    APIName.COMPANY_GET,
+    {},
+    false,
+    false
+  );
 
   const {
     trigger: getUserSessionData,
@@ -234,25 +242,57 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     getUserSessionData();
   };
 
+  const handleSelectCompanyResponse = async (response: {
+    success: boolean;
+    data: number | null; // Todo: (20240729 - tzuhan) change to ICompany when API is ready
+    code: string;
+    error: Error | null;
+  }) => {
+    if (response.success && response.data !== undefined) {
+      setSuccessSelectCompany(true);
+      const { success, code, data } = await getCompanyAPI({
+        params: {
+          companyId: response.data,
+        },
+      });
+      if (success && data?.company) {
+        setSelectedCompany(data.company);
+        setSuccessSelectCompany(true);
+      }
+      if (success === false) {
+        setErrorCode(code ?? '');
+        setSuccessSelectCompany(false);
+      }
+    }
+    if (response.success === false) {
+      setSelectedCompany(null);
+      setSuccessSelectCompany(false);
+      setErrorCode(response.code ?? '');
+    }
+  };
+
   // Info: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = (company: ICompany | null) => {
-    if (!company) {
+  const selectCompany = async (company: ICompany | null, isPublic = false) => {
+    if (!company && !isPublic) {
       setSelectedCompany(null);
       setSuccessSelectCompany(undefined);
+      /**
+       * TODO: ask Julian why TODO: (20240729 - tzuhan)
       // Info: (20240618 - Julian) 如果取消選擇公司，就把 companyId 設為 0
       selectCompanyAPI({
         params: {
           companyId: 0,
         },
       });
+      */
       return;
     }
-    setSelectedCompany(company);
-    selectCompanyAPI({
+    const res = await selectCompanyAPI({
       params: {
-        companyId: company.id,
+        companyId: company?.id ?? FREE_COMPANY_ID,
       },
     });
+    await handleSelectCompanyResponse(res);
   };
 
   const clearReturnUrl = () => {
@@ -369,17 +409,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setSelectedCompany(null);
     }
   }, [userSessionData, isGetUserSessionLoading, getUserSessionSuccess, getUserSessionCode]);
-
-  useEffect(() => {
-    if (companySelectSuccess) {
-      setSuccessSelectCompany(true);
-    }
-    if (companySelectSuccess === false) {
-      setSelectedCompany(null);
-      setSuccessSelectCompany(false);
-      setErrorCode(companySelectCode ?? '');
-    }
-  }, [companySelectSuccess, companySelectCode]);
 
   useEffect(() => {
     if (isSignInLoading || isSignUpLoading || isGetUserSessionLoading) {

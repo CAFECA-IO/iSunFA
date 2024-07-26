@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
@@ -78,7 +77,7 @@ const SelectCompanyPageBody = () => {
     if (selectedCompany === null) return;
     selectCompany(selectedCompany);
 
-    if (returnUrl) {
+    if (returnUrl && returnUrl !== ISUNFA_ROUTE.SELECT_COMPANY) {
       const urlString = decodeURIComponent(returnUrl);
       clearReturnUrl();
       router.push(urlString);
@@ -302,16 +301,14 @@ const SelectCompanyPageBody = () => {
               <p>{t('SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
               <FaArrowRight />
             </Button>
-
-            <Link href={ISUNFA_ROUTE.DASHBOARD} className="w-full">
-              <Button
-                variant={'tertiaryOutline'}
-                className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
-              >
-                <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
-                <FaArrowRight />
-              </Button>
-            </Link>
+            <Button
+              onClick={() => selectCompany(null, true)}
+              variant={'tertiaryOutline'}
+              className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
+            >
+              <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
+              <FaArrowRight />
+            </Button>
           </div>
         </div>
       </div>
