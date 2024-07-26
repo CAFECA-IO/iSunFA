@@ -124,7 +124,7 @@ const NewJournalForm = () => {
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
   const [inputFee, setInputFee] = useState<number>(0);
-  const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
+  const [selectedMethod, setSelectedMethod] = useState<string>(t(paymentMethodSelection[0]));
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
@@ -180,7 +180,7 @@ const NewJournalForm = () => {
         setTaxRate(invoice.payment.taxPercentage);
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
-        setSelectedMethod(invoice.payment.method);
+        setSelectedMethod(t(invoice.payment.method));
         // setInputAccountNumber(invoice.payment.accountNumber);
         setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
         setInputInstallment(invoice.payment.installmentPeriod);
