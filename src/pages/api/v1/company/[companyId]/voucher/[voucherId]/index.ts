@@ -5,7 +5,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { getSession } from '@/lib/utils/session';
-import { findUniqueJournalInPrisma, updateVoucherByJournalIdInPrisma } from '@/lib/utils/repo/voucher.repo';
+import {
+  findUniqueJournalInPrisma,
+  updateVoucherByJournalIdInPrisma,
+} from '@/lib/utils/repo/voucher.repo';
 
 type ApiResponseType = {
   id: number;

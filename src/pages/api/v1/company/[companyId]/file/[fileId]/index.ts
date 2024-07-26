@@ -67,9 +67,6 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
       const filename = `${companyIdStr}-${fileIdStr}`;
       const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
       const filePath = await findFileByName(tmpFolder, filename);
-      // eslint-disable-next-line no-console
-      console.log('🚀 ~ handleDeleteRequest ~ filePath:', filePath);
-
       if (filePath) {
         const stat = await fs.stat(filePath);
         await fs.unlink(filePath); // 删除文件
@@ -81,8 +78,6 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
       }
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log('🚀 ~ handleDeleteRequest ~ error:', error);
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
