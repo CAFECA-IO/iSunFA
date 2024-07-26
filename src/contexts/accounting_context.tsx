@@ -245,6 +245,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const getAIStatusHandler = useCallback(
     (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
       if (update) {
+        setAIStatus(ProgressStatus.IN_PROGRESS);
         setStopAskAI(false);
         const interval = setInterval(async () => {
           const { success, data } = await getAIStatus({
@@ -392,7 +393,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
         const newVoucher = [...prev];
         const targetId = prev.findIndex((voucher) => voucher.id === index);
-        newVoucher[targetId].account = account ?? null;
+        if (newVoucher[targetId]) newVoucher[targetId].account = account ?? null;
         return newVoucher;
       });
     },
@@ -448,7 +449,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
           newVoucher[targetId].debit = newAmount;
           newVoucher[targetId].credit = null;
         }
-
         return newVoucher;
       });
     },
