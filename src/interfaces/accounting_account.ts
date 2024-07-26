@@ -55,7 +55,7 @@ export interface IAccountReadyForFrontend {
 
 export type IAccountQueryArgs = {
   companyId: number;
-  includeDefaultAccount?: boolean,
+  includeDefaultAccount?: boolean;
   liquidity?: boolean;
   type?: AccountType;
   reportType?: ReportSheetType;

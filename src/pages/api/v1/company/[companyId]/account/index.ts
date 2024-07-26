@@ -4,7 +4,11 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, timestampInSeconds } from '@/lib/utils/common';
 import { AccountType, EquityType } from '@/constants/account';
-import { convertStringToAccountType, isAccountType, isEquityType } from '@/lib/utils/type_guard/account';
+import {
+  convertStringToAccountType,
+  isAccountType,
+  isEquityType,
+} from '@/lib/utils/type_guard/account';
 import { checkAdmin } from '@/lib/utils/auth_check';
 import {
   findFirstAccountInPrisma,
@@ -36,7 +40,12 @@ function formatCompanyIdAccountId(companyId: unknown, accountId: string | string
 function formatIncludeDefaultAccount(includeDefaultAccount: unknown): boolean | undefined {
   let formattedIncludeDefaultAccount: boolean | undefined;
   if (includeDefaultAccount && typeof includeDefaultAccount === 'string') {
-    formattedIncludeDefaultAccount = includeDefaultAccount === 'true' ? true : includeDefaultAccount === 'false' ? false : undefined;
+    formattedIncludeDefaultAccount =
+      includeDefaultAccount === 'true'
+        ? true
+        : includeDefaultAccount === 'false'
+          ? false
+          : undefined;
   }
   return formattedIncludeDefaultAccount;
 }
@@ -113,10 +122,7 @@ function formatSearchKey(searchKey: unknown): string | undefined {
   return formattedSearchKey;
 }
 
-export function formatGetQuery(
-  companyId: number,
-  req: NextApiRequest
-): IAccountQueryArgs {
+export function formatGetQuery(companyId: number, req: NextApiRequest): IAccountQueryArgs {
   // ToDo: (20240613 - Murky) - need to move to type guard
   const {
     includeDefaultAccount,
@@ -258,6 +264,9 @@ export default async function handler(
     console.log('error', error);
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }
