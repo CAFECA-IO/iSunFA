@@ -1,9 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
-import { LuTag } from 'react-icons/lu';
+// import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
@@ -38,8 +37,6 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmData,
 }: IConfirmModalProps) => {
-  const router = useRouter();
-
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const {
@@ -63,6 +60,8 @@ const ConfirmModal = ({
 
   const [eventType, setEventType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  // ToDo: (20240527 - Julian) Add paymentReason
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -302,8 +301,6 @@ const ConfirmModal = ({
       resetVoucherHandler();
       selectJournalHandler(undefined);
 
-      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`);
       // Info: (20240527 - Julian) Toast notification
       toastHandler({
         id: `createVoucher-${result.id}`,
@@ -321,6 +318,9 @@ const ConfirmModal = ({
         ),
         closeable: true,
       });
+
+      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      window.location.href = `${ISUNFA_ROUTE.ACCOUNTING}/${result.journalId}`;
     }
     if (createSuccess === false) {
       messageModalDataHandler({
@@ -333,23 +333,24 @@ const ConfirmModal = ({
       });
       messageModalVisibilityHandler();
     }
-  }, [createSuccess, createCode]);
+  }, [createSuccess, createCode, result]);
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
-    (
-      <div className="flex flex-col items-center gap-x-12px md:flex-row">
-        <p>{reason}</p>
-        {/* ToDo: (20240711 - Julian) Add Tag functionality */}
-        <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
-          <LuTag size={14} />
-          {t('CONFIRM_MODAL.PRINTER')}
-        </div>
-      </div>
-    );
+  // ToDo: (20240527 - Julian) Interface lacks paymentReason
+  // const displayReason =
+  //   (
+  //     <div className="flex flex-col items-center gap-x-12px md:flex-row">
+  //       <p>{reason}</p>
+  //       {/* ToDo: (20240711 - Julian) Add Tag functionality */}
+  //       <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+  //         <LuTag size={14} />
+  //         {t('CONFIRM_MODAL.PRINTER')}
+  //       </div>
+  //     </div>
+  //   );
 
   const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
 
@@ -543,7 +544,8 @@ const ConfirmModal = ({
             {/* Info: (20240429 - Julian) Reason */}
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.REASON')}</p>
-              {displayReason}
+              {/* ToDO: (20240723 - Julian) Tag */}
+              {/* displayReason */}
             </div>
             {/* Info: (20240429 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between">

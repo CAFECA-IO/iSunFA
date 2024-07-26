@@ -99,11 +99,11 @@ const CTASection = () => {
       </div>
       {/* Info: iSunFA 大字 (20240318 - Shirley) */}
       <div className={`mt-1/8 hidden items-start lg:flex`}>
-        {/* TODO: 用 <Image> 優化 (20240320 - Shirley) */}
-        {/* eslint-disable @next/next/no-img-element */}
         <Image
           alt="isunfa_pop"
           src="/elements/isunfa_pop.svg"
+          width={582}
+          height={670}
           className={`aspect-0.87 w-9/10 grow mix-blend-soft-light max-md:mt-10 max-md:max-w-full ${isAnimeRef1Visible ? 'animate-slideBottomToTop' : 'hidden'}`}
         />
       </div>
