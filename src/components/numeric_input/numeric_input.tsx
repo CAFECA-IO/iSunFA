@@ -1,46 +1,79 @@
 import React, { useState, useEffect } from 'react';
+import { numberWithCommas } from '@/lib/utils/common';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number;
   setValue: React.Dispatch<React.SetStateAction<number>>;
   isDecimal?: boolean;
+  hasComma?: boolean; // Info: (20240722 - Liz) 新增逗號顯示
 }
 
-const NumericInput = ({ value, setValue, isDecimal, ...props }: INumericInputProps) => {
-  const [valueStr, setValueStr] = useState<string>(value.toString());
+const formatDisplayValue = (
+  value: string | number,
+  isDecimal: boolean | undefined,
+  hasComma: boolean | undefined
+) => {
+  let stringValue = value.toString();
+
+  if (!isDecimal) {
+    const intValue = parseInt(stringValue, 10);
+    stringValue = Number.isNaN(intValue) ? '0' : intValue.toString();
+  }
+
+  return hasComma ? numberWithCommas(stringValue) : stringValue;
+};
+
+const NumericInput = ({ value, setValue, isDecimal, hasComma, ...props }: INumericInputProps) => {
+  // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
+  const [displayValue, setDisplayValue] = useState<string>(value.toString());
+  // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
+  const [dbValue, setDbValue] = useState<number>(value);
 
   useEffect(() => {
-    setValueStr(value.toString());
-  }, [value]);
+    setDisplayValue(formatDisplayValue(value, isDecimal, hasComma));
+  }, [value, hasComma, isDecimal]);
+
+  useEffect(() => {
+    setValue(dbValue);
+  }, [dbValue, setValue]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
 
-    // Info: (20240710 - Julian) 移除開頭零和所有小數點以外的非數字字符
-    const sanitizedValue = inputValue.replace(/^0+/, '').replace(/[^0-9.]/g, '');
-    setValueStr(sanitizedValue);
+    // Info: (20240723 - Liz) 整理輸入的值
+    const sanitizedValue =
+      inputValue
+        .replace(/^0+/, '') // 移除開頭的零
+        .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
+        .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
 
-    // Info: (20240710 - Julian) 回傳 number 類型的值
-    const numValue = isDecimal ? parseFloat(sanitizedValue) : parseInt(sanitizedValue, 10);
-    setValue(numValue);
+    // 轉換成數值 (整數或浮點數) 為了存入 DB
+    const numericValue = isDecimal
+      ? parseFloat(sanitizedValue) // 如果解析失敗，會是 NaN
+      : parseInt(sanitizedValue, 10); // 如果解析失敗，會是 NaN
+
+    // 處理 NaN 的情況
+    const validNumericValue = Number.isNaN(numericValue) ? 0 : numericValue;
+
+    // 根據 isDecimal 和 hasComma 的值來決定顯示值的格式
+    const formattedDisplayValue = formatDisplayValue(sanitizedValue, isDecimal, hasComma);
+
+    setDbValue(validNumericValue); // 更新儲存值
+    setDisplayValue(formattedDisplayValue); // 更新顯示值
   };
 
-  // Info: (20240710 - Julian) 如果值為空，則回傳 0
+  // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況
   const handleBlur = () => {
-    if (valueStr === '') {
-      setValueStr('0');
-      setValue(0);
-    } else {
-      const numericValue = isDecimal ? parseFloat(valueStr) : parseInt(valueStr, 10);
-      setValueStr(numericValue.toString());
-      setValue(numericValue);
+    if (!displayValue || displayValue === '.') {
+      setDisplayValue('0');
+      setDbValue(0);
     }
   };
 
   // Info: (20240710 - Julian) 當 input focus 時，如果值為 0，則清空
   const handleFocus = () => {
-    if (valueStr === '0') {
-      setValueStr('');
+    if (displayValue === '0') {
+      setDisplayValue('');
     }
   };
 
@@ -51,8 +84,8 @@ const NumericInput = ({ value, setValue, isDecimal, ...props }: INumericInputPro
 
   return (
     <input
-      type="number"
-      value={valueStr}
+      type="text" // Info: (20240722 - Liz) 保持輸入的 type 為 text 以允許顯示逗號
+      value={displayValue}
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}

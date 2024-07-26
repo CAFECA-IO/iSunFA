@@ -2,7 +2,7 @@ import {
   createSubscription,
   getSubscriptionById,
   updateSubscription,
-  deleteSubscription,
+  deleteSubscriptionForTesting,
   listSubscriptions,
 } from '@/lib/utils/repo/subscription.repo';
 import subscriptions from '@/seed_json/subscription.json';
@@ -39,7 +39,7 @@ describe('Subscription Repository', () => {
     it('should create a new subscription', async () => {
       const testStatus = true;
       const subscription = await createSubscription(testCompanyId, testPlanId, testStatus);
-      await deleteSubscription(subscription.id); // Clean up after test
+      await deleteSubscriptionForTesting(subscription.id); // Clean up after test
       expect(subscription).toBeDefined();
       expect(subscription.companyId).toBe(testCompanyId);
       expect(subscription.planId).toBe(testPlanId);

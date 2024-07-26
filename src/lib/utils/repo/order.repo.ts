@@ -1,6 +1,7 @@
 import prisma from '@/client';
 import { IOrder } from '@/interfaces/order';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma } from '@prisma/client';
 
 export async function listOrder(companyId: number): Promise<IOrder[]> {
   const listedOrder = await prisma.order.findMany({
@@ -64,10 +65,34 @@ export async function updateOrder(id: number, status: string): Promise<IOrder> {
 }
 
 export async function deleteOrder(id: number): Promise<IOrder> {
+  const nowInSecond = getTimestampNow();
+  const where: Prisma.OrderWhereUniqueInput = {
+    id,
+    deletedAt: null,
+  };
+
+  const data: Prisma.OrderUpdateInput = {
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs: Prisma.OrderUpdateArgs = {
+    where,
+    data,
+  };
+
+  const deletedOrder = await prisma.order.update(updateArgs);
+  return deletedOrder;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteOrderForTesting(id: number): Promise<IOrder> {
+  const where: Prisma.OrderWhereUniqueInput = {
+    id,
+  };
+
   const deletedOrder = await prisma.order.delete({
-    where: {
-      id,
-    },
+    where,
   });
+
   return deletedOrder;
 }

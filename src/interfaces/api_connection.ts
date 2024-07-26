@@ -1,5 +1,6 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
+import { ICompanyKYCForm } from './company_kyc';
 
 export type IAPIName =
   | 'CREATE_CHALLENGE'
@@ -27,12 +28,14 @@ export type IAPIName =
   | 'OCR_RESULT_GET_BY_ID'
   | 'OCR_LIST'
   | 'INVOICE_CREATE'
+  | 'INVOICE_UPDATE'
   | 'AI_ASK_STATUS'
   | 'AI_ASK_RESULT'
   | 'VOUCHER_CREATE'
+  | 'VOUCHER_UPDATE'
   | 'JOURNAL_GET_BY_ID'
   | 'JOURNAL_LIST'
-  | 'JOURNAL_UPDATE'
+  // | 'JOURNAL_UPDATE'
   | 'JOURNAL_DELETE'
   | 'REPORT_LIST_PENDING'
   | 'REPORT_LIST_GENERATED'
@@ -44,7 +47,7 @@ export type IAPIName =
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
   | 'FILE_DELETE'
-  | 'FILE_LIST_UPLOADED'
+  | 'FILE_GET'
   | 'COMPANY_GET_BY_ID'
   | 'COMPANY_DELETE'
   | 'COMPANY_UPDATE'
@@ -61,7 +64,12 @@ export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown } | FormData | IVoucher | IFinancialReportRequest;
+  body?:
+    | { [key: string]: unknown }
+    | FormData
+    | IVoucher
+    | IFinancialReportRequest
+    | ICompanyKYCForm;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };

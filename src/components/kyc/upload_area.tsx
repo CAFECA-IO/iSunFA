@@ -17,6 +17,7 @@ import {
 } from '@/constants/kyc';
 import { loadFileFromLocalStorage, deleteFileFromLocalStorage } from '@/lib/utils/common';
 import { ToastType } from '@/interfaces/toastify';
+import { IFile } from '@/interfaces/file';
 
 const UploadArea = ({
   loacalStorageFilesKey = KYCFiles,
@@ -35,21 +36,16 @@ const UploadArea = ({
   const [isError, setIsError] = useState<boolean>(false);
   const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const readerRef = useRef<FileReader | null>(null);
-  const { trigger: uploadFileAPI } = APIHandler<string>(APIName.FILE_UPLOAD, {}, false, false);
-  const { trigger: deleteFileAPI } = APIHandler<void>(APIName.FILE_DELETE, {}, false, false);
+  const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
+  const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE, {}, false, false);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
   const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
   const {
-    trigger: listUploadedFiles,
-    data: uploadedData,
+    trigger: getFile,
+    data: getData,
     success: getSuccess,
     code: getCode,
-  } = APIHandler<
-    {
-      fileId: string;
-      fileSize: number;
-    }[]
-  >(APIName.FILE_LIST_UPLOADED, {}, false, false);
+  } = APIHandler<IFile>(APIName.FILE_GET, {}, false, false);
 
   const handleError = useCallback(
     (title: string, content: string) => {
@@ -83,9 +79,6 @@ const UploadArea = ({
       params: {
         companyId: selectedCompany?.id,
       },
-      query: {
-        type,
-      },
       body: formData,
     });
     if (success === false) {
@@ -94,9 +87,9 @@ const UploadArea = ({
       setStatus(ProgressStatus.SYSTEM_ERROR);
     }
     if (success && data) {
-      onChange(type, data);
-      setUploadedFileId(data);
-      updateFileIdInLocalStorage(type, data);
+      onChange(type, data.id);
+      setUploadedFileId(data.id);
+      updateFileIdInLocalStorage(type, data.id);
       setStatus(ProgressStatus.SUCCESS);
     }
   };
@@ -216,7 +209,7 @@ const UploadArea = ({
           fileId: uploadedFileId,
         },
       });
-      success = result.success;
+      success = result.success && result.data?.existed === false;
       if (!success) {
         handleError(t('KYC.DELETE_FILE_FAILED'), t('KYC.FILE_DELETE_ERROR', { code: result.code }));
       }
@@ -237,15 +230,11 @@ const UploadArea = ({
       setUploadedFile(file);
       setUploadedFileId(id);
       setUploadProgress(100);
-      // eslint-disable-next-line no-console
-      console.log(`loadFileFromLocalStorage id: ${id}, filename: ${file?.name}, file:`, file);
       if (id && file) {
-        listUploadedFiles({
+        getFile({
           params: {
             companyId: selectedCompany?.id,
-          },
-          query: {
-            ids: id,
+            fileId: id,
           },
         });
       } else if (file) {
@@ -257,21 +246,23 @@ const UploadArea = ({
   }, []);
 
   useEffect(() => {
-    if (getSuccess && uploadedData && uploadedFile) {
-      const data = uploadedData.find((item) => item.fileId === uploadedFileId);
-      if (!data) {
+    if (getSuccess) {
+      if (uploadedFile && ((getData && !getData.existed) || !getData)) {
         handleFileUpload(uploadedFile);
       }
     }
     if (getSuccess === false) {
       toastHandler({
-        id: `listUploadedFiles-${getCode}`,
+        id: `getFile-${getCode}`,
         content: `Failed to list uploaded files: ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
+      if (uploadedFile) {
+        handleFileUpload(uploadedFile);
+      }
     }
-  }, [getSuccess, uploadedData, getCode, uploadedFile]);
+  }, [getSuccess, getData, getCode, uploadedFile]);
 
   return (
     <div

@@ -11,11 +11,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  default30DayPeriodInSec,
-  radioButtonStyle,
-} from '@/constants/display';
+import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
@@ -92,36 +88,22 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
-
+  const companyId = selectedCompany?.id;
   const { selectedOCR, selectOCRHandler, selectedJournal, getAIStatusHandler } = useAccountingCtx();
-
   const {
     trigger: getOCRResult,
     success: getSuccess,
     data: OCRResult,
     code: getCode,
   } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
-
-  const {
-    trigger: createInvoice,
-    data: invoiceReturn,
-    success: createSuccess,
-    code: createCode,
-  } = APIHandler<{ journalId: number; resultStatus: IAccountResultStatus }>(
-    APIName.INVOICE_CREATE,
-    {},
-    false,
-    false
-  );
-
-  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
-
-  const {
-    trigger: updateJournal,
-    success: updateSuccess,
-    code: updateCode,
-    data: updateAIResult,
-  } = APIHandler<IAccountResultStatus>(APIName.JOURNAL_UPDATE, {}, false, false);
+  const { trigger: createInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_CREATE, {}, false, false);
+  const { trigger: updateInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_UPDATE, {}, false, false);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -137,6 +119,7 @@ const NewJournalForm = () => {
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
+
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
@@ -160,6 +143,7 @@ const NewJournalForm = () => {
   });
   const [progressRate, setProgressRate] = useState<number>(0);
   const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+  const [journalId, setJournalId] = useState<number | null>(selectedJournal?.id || null);
 
   // Info: (20240723 - Julian) For Hint
   const [isSelectingDate, setIsSelectingDate] = useState<boolean>(true);
@@ -176,14 +160,14 @@ const NewJournalForm = () => {
   }, [selectedOCR]);
 
   useEffect(() => {
-    if (selectedJournal) {
+    if (selectedCompany && selectedJournal) {
       if (selectedJournal.invoice === null) {
         getOCRResult({
           params: {
             companyId,
             resultId: selectedJournal.aichResultId,
           },
-        }); // selectedOCR.aichResultId
+        });
       } else {
         const { invoice } = selectedJournal;
         setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
@@ -216,7 +200,7 @@ const NewJournalForm = () => {
       }
       getAIStatusHandler(
         {
-          companyId,
+          companyId: selectedCompany?.id,
           askAIId: selectedJournal.aichResultId,
         },
         true
@@ -227,7 +211,7 @@ const NewJournalForm = () => {
       });
       confirmModalVisibilityHandler();
     }
-  }, [selectedJournal, selectedOCR]);
+  }, [selectedCompany, selectedJournal, selectedOCR]);
 
   // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
@@ -400,10 +384,96 @@ const NewJournalForm = () => {
     messageModalVisibilityHandler();
   };
 
-  // Info: (20240429 - Julian) 上傳日記帳資料
-  const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
-    // Info: (20240723 - Julian) 防止表單預設行為
+  const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
+    const invoiceDataToUpdate: IInvoice = {
+      ...invoiceData,
+      journalId: updateJournalId,
+    };
+    const {
+      success: updateSuccess,
+      data: updateAIResult,
+      code: updateCode,
+    } = await updateInvoice({
+      params: { companyId, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
+      body: { invoice: invoiceDataToUpdate },
+    });
+    // eslint-disable-next-line no-console
+    console.log(
+      'updateSuccess',
+      updateSuccess,
+      'updateAIResult',
+      updateAIResult,
+      'updateCode',
+      updateCode
+    );
+    if (
+      updateSuccess &&
+      updateAIResult?.resultStatus?.resultId &&
+      updateAIResult?.resultStatus?.status
+    ) {
+      getAIStatusHandler(
+        {
+          companyId: companyId!,
+          askAIId: updateAIResult.resultStatus.resultId,
+        },
+        true
+      );
+      confirmModalDataHandler({
+        journalId: updateJournalId,
+        askAIId: updateAIResult.resultStatus.resultId,
+      });
+      confirmModalVisibilityHandler();
+    } else if (updateSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Update Invoice Failed',
+        content: `Update Invoice failed: ${updateCode}`,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  const createInvoiceHandler = async (invoiceData: IInvoice) => {
+    const {
+      data: invoice,
+      success: createSuccess,
+      code: createCode,
+    } = await createInvoice({
+      params: { companyId },
+      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+    });
+    if (createSuccess && invoice?.journalId && invoice?.resultStatus) {
+      setJournalId(invoice.journalId);
+      getAIStatusHandler(
+        {
+          companyId: companyId!,
+          askAIId: invoice.resultStatus.resultId,
+        },
+        true
+      );
+      confirmModalDataHandler({
+        journalId: invoice.journalId,
+        askAIId: invoice.resultStatus.resultId,
+      });
+      confirmModalVisibilityHandler();
+    } else if (createSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Create Invoice Failed',
+        content: `Create Invoice failed: ${createCode}`,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  // Info: (20240723 - Julian) 上傳日記帳資料
+  const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    getAIStatusHandler(undefined, false);
 
     // Info: (20240723 - Julian) 檢查日期填寫
     if (datePeriod.startTimeStamp === 0 && datePeriod.endTimeStamp === 0) {
@@ -415,7 +485,7 @@ const NewJournalForm = () => {
       setIsSelectingDate(true);
     }
 
-    // Info: (20240429 - Julian) 檢查金額是否為正數
+    // Info: (20240723 - Julian) 檢查金額是否為正數
     if (inputTotalPrice <= 0) {
       // Info: (20240723 - Julian) 將錨點指向 price
       document.getElementById('price')?.scrollIntoView();
@@ -425,7 +495,7 @@ const NewJournalForm = () => {
       setIsPriceValid(true);
     }
 
-    // Info: (20240429 - Julian) 檢查分期付款是否為正數
+    // Info: (20240723 - Julian) 檢查分期付款是否為正數
     if (paymentPeriod === PaymentPeriodType.INSTALLMENT && inputInstallment <= 0) {
       // Info: (20240723 - Julian) 將錨點指向 installment
       document.getElementById('installment')?.scrollIntoView();
@@ -435,7 +505,7 @@ const NewJournalForm = () => {
       setIsInstallmentValid(true);
     }
 
-    // Info: (20240429 - Julian) 檢查部分付款是否為正數
+    // Info: (20240723 - Julian) 檢查部分付款是否為正數
     if (paymentStatus === PaymentStatusType.PARTIAL && inputPartialPaid <= 0) {
       // Info: (20240723 - Julian) 將錨點指向 partial-paid
       document.getElementById('partial-paid')?.scrollIntoView();
@@ -445,7 +515,7 @@ const NewJournalForm = () => {
       setIsPartialPaidValid(true);
     }
 
-    // Info: (20240429 - Julian) 整理日記帳資料
+    // Info: (20240723 - Julian) 整理日記帳資料
     const invoiceData: IInvoice = {
       journalId: selectedJournal?.id || null,
       date: datePeriod.startTimeStamp,
@@ -472,57 +542,13 @@ const NewJournalForm = () => {
         status: paymentStatus,
       },
     };
-    if (selectedJournal || (createSuccess && invoiceReturn)) {
-      const journalId = selectedJournal?.id || invoiceReturn?.journalId;
-      updateJournal({
-        params: { companyId, journalId },
-        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
-      });
+    const updateJournalId = selectedJournal?.id || journalId;
+    if (updateJournalId) {
+      await updateInvoiceHandler(updateJournalId, invoiceData);
     } else {
-      createInvoice({
-        params: { companyId },
-        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
-      });
+      await createInvoiceHandler(invoiceData);
     }
   };
-
-  useEffect(() => {
-    if (createSuccess && invoiceReturn?.journalId && invoiceReturn?.resultStatus) {
-      confirmModalDataHandler({
-        journalId: invoiceReturn.journalId,
-        askAIId: invoiceReturn.resultStatus.resultId,
-      });
-      confirmModalVisibilityHandler();
-    } else if (createSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Create Invoice Failed',
-        content: `Create Invoice failed: ${createCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [createSuccess, invoiceReturn, createCode]);
-
-  useEffect(() => {
-    if (updateSuccess && updateAIResult?.resultId && updateAIResult?.status) {
-      confirmModalDataHandler({
-        journalId: selectedJournal!.id,
-        askAIId: updateAIResult.resultId,
-      });
-      confirmModalVisibilityHandler();
-    } else if (updateSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Update Journal Failed',
-        content: `Update Journal failed: ${updateCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [updateSuccess, updateCode]);
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
@@ -825,6 +851,7 @@ const NewJournalForm = () => {
                 setValue={setInputTotalPrice}
                 isDecimal
                 required
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -904,6 +931,7 @@ const NewJournalForm = () => {
                 setValue={setInputFee}
                 isDecimal
                 required={feeToggle}
+                hasComma
                 className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -989,6 +1017,7 @@ const NewJournalForm = () => {
         </div>
 
         {/* Info: (20240424 - Julian) Third Column */}
+
         <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240424 - Julian) Payment Period */}
           <div className="flex w-full flex-col items-start gap-8px md:w-fit">
@@ -1104,6 +1133,7 @@ const NewJournalForm = () => {
                       value={inputPartialPaid}
                       setValue={setInputPartialPaid}
                       isDecimal
+                      hasComma
                       required={paymentStatus === PaymentStatusType.PARTIAL}
                       disabled={paymentStatus !== PaymentStatusType.PARTIAL}
                       className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
@@ -1120,6 +1150,7 @@ const NewJournalForm = () => {
                     </div>
                   </div>
                 </div>
+
                 {/* ToDo: (20240723 - Julian) i18n */}
                 <div
                   className={`ml-auto text-sm text-input-text-error ${isPartialPaidValid ? 'opacity-0' : 'opacity-100'}`}
@@ -1161,6 +1192,7 @@ const NewJournalForm = () => {
             setValue={setInputEstimatedCost}
             isDecimal
             required={selectedEventType === EventType.INCOME}
+            hasComma
             className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
           />
           <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
@@ -1254,7 +1286,7 @@ const NewJournalForm = () => {
   return (
     <div>
       <form
-        onSubmit={createInvoiceHandler}
+        onSubmit={submitHandler}
         onChange={formChangedHandler}
         className="flex flex-col gap-8px"
       >

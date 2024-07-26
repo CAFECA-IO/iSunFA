@@ -1,10 +1,11 @@
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
+import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 
 export async function findUniqueJournalInPrisma(journalId: number | undefined) {
   try {
@@ -304,4 +305,97 @@ export async function findManyVoucherWithCashInPrisma(
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
+}
+
+export async function updateVoucherByJournalIdInPrisma(
+  journalId: number,
+  companyId: number,
+  voucherToUpdate: IVoucherDataForSavingToDB
+) {
+  const nowInSecond = getTimestampNow();
+
+  let newVoucher: {
+    id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
+    lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
+    }[];
+  } | null = null;
+
+  newVoucher = await prisma.$transaction(async (prismaClient) => {
+    const journalExists = await prismaClient.journal.findUnique({
+      where: {
+        id: journalId,
+        companyId,
+      },
+      include: {
+        voucher: {
+          include: {
+            lineItems: true,
+          },
+        },
+      },
+    });
+
+    // Info: (20240712 - Murky) If journal exists and voucher exists, update the voucher
+
+    if (journalExists && journalExists?.voucher && journalExists?.voucher?.id) {
+      if (journalExists?.voucher?.lineItems) {
+        await prismaClient.lineItem.deleteMany({
+          where: {
+            voucherId: journalExists.voucher.id,
+          },
+        });
+      }
+
+      await Promise.all(
+        voucherToUpdate.lineItems.map(async (lineItem) => {
+          await prismaClient.lineItem.create({
+            data: {
+              amount: lineItem.amount,
+              description: lineItem.description,
+              debit: lineItem.debit,
+              account: {
+                connect: {
+                  id: lineItem.accountId,
+                },
+              },
+              voucher: {
+                connect: { id: journalExists?.voucher?.id },
+              },
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            },
+          });
+        })
+      );
+      const voucherBeUpdated = await prismaClient.voucher.update({
+        where: {
+          id: journalExists.voucher.id,
+        },
+        data: {
+          updatedAt: nowInSecond,
+        },
+        include: {
+          lineItems: true,
+        },
+      });
+
+      return voucherBeUpdated;
+    }
+
+    return null;
+  });
+
+  return newVoucher;
 }

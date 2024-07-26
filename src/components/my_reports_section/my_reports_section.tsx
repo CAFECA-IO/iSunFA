@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import {
   SortOptions,
@@ -32,8 +32,8 @@ import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
 import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
-
-const MAX_TIME_STAMP = 2099999999;
+import { IDatePeriod } from '@/interfaces/date_period';
+import useStateRef from 'react-usestateref';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
@@ -52,9 +52,8 @@ const MyReportsSection = () => {
   } = useGlobalCtx();
 
   const { pending, history } = router.query;
-  const [mounted, setMounted] = useState(false);
 
-  const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
+  const [pendingPeriod, setPendingPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
@@ -65,7 +64,7 @@ const MyReportsSection = () => {
     FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
   );
 
-  const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
+  const [historyPeriod, setHistoryPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
@@ -86,9 +85,9 @@ const MyReportsSection = () => {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: {
       sortBy: sortOptionQuery[filteredPendingSort],
-      startDateInSecond: pendingPeriod.startTimeStamp,
-      endDateInSecond:
-        pendingPeriod.endTimeStamp === 0 ? MAX_TIME_STAMP : pendingPeriod.endTimeStamp,
+      startDateInSecond:
+        pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
+      endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
       searchQuery: searchPendingQuery,
       targetPage: pendingCurrentPage,
       pageSize: LIMIT_FOR_REPORT_PAGE,
@@ -105,9 +104,9 @@ const MyReportsSection = () => {
     params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
     query: {
       sortBy: sortOptionQuery[filteredHistorySort],
-      startDateInSecond: historyPeriod.startTimeStamp,
-      endDateInSecond:
-        historyPeriod.endTimeStamp === 0 ? MAX_TIME_STAMP : historyPeriod.endTimeStamp,
+      startDateInSecond:
+        historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
+      endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
       searchQuery: searchHistoryQuery,
       targetPage: historyCurrentPage,
       pageSize: LIMIT_FOR_REPORT_PAGE,
@@ -145,33 +144,6 @@ const MyReportsSection = () => {
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
-  // TODO: 嘗試改成用 DatePicker 裡面觸發 callback 來達成 (20240710 - Shirley)
-  useEffect(() => {
-    if (!pendingPeriod.endTimeStamp || !mounted) return;
-    fetchPendingReports();
-  }, [pendingPeriod]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    fetchPendingReports();
-  }, [filteredPendingSort, pendingCurrentPage, searchPendingQuery]);
-
-  // Info: 在日期沒有選擇完畢之前，不觸發 API request (20240710 - Shirley)
-  useEffect(() => {
-    if (!historyPeriod.endTimeStamp || !mounted) return;
-    fetchGeneratedReports();
-  }, [historyPeriod]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    fetchGeneratedReports();
-  }, [filteredHistorySort, historyCurrentPage, searchHistoryQuery]);
-
   const {
     targetRef: pendingSortMenuRef,
     componentVisible: isPendingSortMenuOpen,
@@ -183,6 +155,105 @@ const MyReportsSection = () => {
     componentVisible: isHistorySortMenuOpen,
     setComponentVisible: setIsHistorySortMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  const getPendingReports = useCallback(
+    async (query: {
+      currentPage?: number;
+      filteredPendingSort?: SortOptions;
+      pendingPeriod?: IDatePeriod;
+      searchPendingQuery?: string;
+    }) => {
+      const {
+        currentPage: page,
+        filteredPendingSort: sortBy,
+        pendingPeriod: period,
+        searchPendingQuery: searchString,
+      } = query;
+
+      // eslint-disable-next-line no-console
+      console.log('getPendingReports', pendingPeriod);
+
+      await fetchPendingReports({
+        params: {
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        },
+        query: {
+          sortBy: sortOptionQuery[sortBy ?? filteredPendingSort],
+          startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
+          endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
+          searchQuery: searchString ?? searchPendingQuery,
+          targetPage: page ?? pendingCurrentPage,
+          pageSize: LIMIT_FOR_REPORT_PAGE,
+        },
+      });
+    },
+    [
+      fetchPendingReports,
+      selectedCompany,
+      filteredPendingSort,
+      searchPendingQuery,
+      pendingCurrentPage,
+      pendingPeriod.endTimeStamp,
+    ]
+  );
+
+  const getGeneratedReports = useCallback(
+    async (query: {
+      currentPage?: number;
+      filteredHistorySort?: SortOptions;
+      historyPeriod?: IDatePeriod;
+      searchHistoryQuery?: string;
+    }) => {
+      const {
+        currentPage: page,
+        filteredHistorySort: sortBy,
+        historyPeriod: period,
+        searchHistoryQuery: searchString,
+      } = query;
+
+      // eslint-disable-next-line no-console
+      console.log('getGeneratedReports', historyPeriod);
+
+      await fetchGeneratedReports({
+        params: {
+          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        },
+        query: {
+          sortBy: sortOptionQuery[sortBy ?? filteredHistorySort],
+          startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
+          endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
+          searchQuery: searchString ?? searchHistoryQuery,
+          targetPage: page ?? historyCurrentPage,
+          pageSize: LIMIT_FOR_REPORT_PAGE,
+        },
+      });
+    },
+    [
+      fetchGeneratedReports,
+      selectedCompany,
+      filteredHistorySort,
+      searchHistoryQuery,
+      historyCurrentPage,
+      historyPeriod.endTimeStamp,
+    ]
+  );
+
+  const handlePendingDatePickerClose = async (start: number, end: number) => {
+    setPendingPeriod({ startTimeStamp: start, endTimeStamp: end });
+    await getPendingReports({
+      pendingPeriod: { startTimeStamp: start, endTimeStamp: end },
+    });
+  };
+
+  /* eslint-disable no-console */
+  const handleHistoryDatePickerClose = async (start: number, end: number) => {
+    console.log('start handleHistoryDatePickerClose', start);
+    console.log('end', end);
+    setHistoryPeriod({ startTimeStamp: start, endTimeStamp: end });
+    await getGeneratedReports({
+      historyPeriod: { startTimeStamp: start, endTimeStamp: end },
+    });
+  };
 
   const togglePendingSortMenu = () => {
     setIsPendingSortSelected(true);
@@ -201,6 +272,16 @@ const MyReportsSection = () => {
   const historyInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchHistoryQuery(e.target.value);
   };
+
+  // const handlePendingDatePickerClose = (startTimestamp: number, endTimestamp: number) => {
+  //   setPendingPeriod({ startTimeStamp: startTimestamp, endTimeStamp: endTimestamp });
+  //   fetchPendingReports();
+  // };
+
+  // const handleHistoryDatePickerClose = (startTimestamp: number, endTimestamp: number) => {
+  //   setHistoryPeriod({ startTimeStamp: startTimestamp, endTimeStamp: endTimestamp });
+  //   fetchGeneratedReports();
+  // };
 
   const displayedPendingSortMenu = (
     <div
@@ -289,6 +370,7 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
+          datePickerHandler={handlePendingDatePickerClose}
           type={DatePickerType.TEXT_PERIOD}
           period={pendingPeriod}
           setFilteredPeriod={setPendingPeriod}
@@ -499,6 +581,7 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
+          datePickerHandler={handleHistoryDatePickerClose}
           type={DatePickerType.TEXT_PERIOD}
           period={historyPeriod}
           setFilteredPeriod={setHistoryPeriod}

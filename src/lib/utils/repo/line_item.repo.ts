@@ -7,12 +7,14 @@ export async function getLineItemsInPrisma(
   companyId: number,
   type: AccountType,
   startDate: number,
-  endDate: number
+  endDate: number,
+  isDeleted?: boolean
 ) {
   const startDateInSecond = setTimestampToDayStart(startDate);
   const endDateInSecond = setTimestampToDayEnd(endDate);
-
+  const deletedAt = isDeleted ? { not: null } : { equals: null };
   const where: Prisma.LineItemWhereInput = {
+    deletedAt,
     account: {
       type,
     },

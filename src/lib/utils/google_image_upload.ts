@@ -6,7 +6,10 @@ import {
   GOOGLE_UPLOAD_FOLDER,
 } from '@/constants/google';
 import { Storage } from '@google-cloud/storage';
+import { SaveData } from 'node_modules/@google-cloud/storage/build/esm/src/file';
 import path from 'path';
+import fs from 'fs/promises';
+import { File } from 'formidable';
 
 // Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleStorage = new Storage({
@@ -28,17 +31,18 @@ export function generateDestinationFileNameInGoogleBucket(filePath: string) {
 // Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 
-export async function uploadSvgToGoogleCloud(
-  iconSvg: string,
-  destFileName: string
+export async function uploadFileToGoogleCloud(
+  uploadFile: SaveData,
+  destFileName: string,
+  mimeType: string
 ): Promise<string> {
   let url = '';
   try {
     const file = googleBucket.file(destFileName);
 
-    await file.save(iconSvg, {
+    await file.save(uploadFile, {
       metadata: {
-        contentType: 'image/svg+xml',
+        contentType: mimeType,
       },
     });
 
@@ -51,4 +55,19 @@ export async function uploadSvgToGoogleCloud(
     console.error('Failed to upload SVG to Google Cloud', error);
   }
   return url;
+}
+
+export async function uploadFiles(files: File[]) {
+  const uploadPromises = files.map(async (file) => {
+    const mimeType = file.mimetype ?? 'image/png';
+    const destFileName = generateDestinationFileNameInGoogleBucket(file.filepath);
+
+    const uploadFile = await fs.readFile(file.filepath);
+    const uploadPromise = uploadFileToGoogleCloud(uploadFile, destFileName, mimeType);
+    return uploadPromise;
+  });
+
+  // 等待所有文件上傳完成
+  const urls = await Promise.all(uploadPromises);
+  return urls; // 返回所有文件的URLs
 }

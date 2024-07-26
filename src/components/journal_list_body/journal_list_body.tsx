@@ -20,9 +20,13 @@ import {
 } from '@/constants/journal';
 import JournalList from '@/components/journal_list/journal_list';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { useGlobalCtx } from '@/contexts/global_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
+  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
     [key: string]: IPaginatedData<IJournalListItem[]>;
@@ -36,6 +40,7 @@ const JournalListBody = () => {
     false,
     false
   );
+  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE, {}, false, false);
 
   const types = [
     JOURNAL_TYPE.ALL,
@@ -122,7 +127,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
+          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
         },
       });
       setSuccess(response.success);
@@ -144,6 +149,35 @@ const JournalListBody = () => {
         endTimeStamp: end,
       },
     });
+  };
+
+  const deleteJournalHandler = async (companyId: number, journalId: number) => {
+    const { success: deleteSuccess, code: deleteCode } = await deleteJournalById({
+      params: { companyId, journalId },
+    });
+    if (deleteSuccess) {
+      toastHandler({
+        id: `deleteJournal-${journalId}`,
+        type: ToastType.SUCCESS,
+        content: (
+          <div className="flex items-center justify-between">
+            <p>{t('JOURNAL.DELETED_SUCCESSFULLY')}</p>
+          </div>
+        ),
+        closeable: true,
+      });
+      await getJournalList({});
+    } else {
+      messageModalDataHandler({
+        title: t('JOURNAL.FAILED_TO_DELETE'),
+        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        content: `Error code: ${deleteCode}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
   };
 
   useEffect(() => {
@@ -425,6 +459,7 @@ const JournalListBody = () => {
           setCurrentPage,
           totalPages,
         }}
+        onDelete={deleteJournalHandler}
       />
     </>
   );

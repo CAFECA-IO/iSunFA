@@ -2,7 +2,7 @@ import { USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
 import path from 'path';
 import {
   generateDestinationFileNameInGoogleBucket,
-  uploadSvgToGoogleCloud,
+  uploadFileToGoogleCloud,
 } from '@/lib/utils/google_image_upload';
 import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
 
@@ -77,14 +77,14 @@ function generateUserIconSvg(
   return cleanedSvg;
 }
 
-async function generateSvgSavePath() {
+export async function generateSavePath(fileExtension: string) {
   const tmpDir = savePath;
-  const filename = generateRandomUUID() + '.svg';
+  const filename = generateRandomUUID() + '.' + fileExtension;
   const filepath = `${tmpDir}/${filename}`;
   return filepath;
 }
 
-export async function generateUserIcon(name: string) {
+export async function generateIcon(name: string) {
   let iconUrl = '';
   try {
     // await mkUploadFolder();
@@ -95,11 +95,11 @@ export async function generateUserIcon(name: string) {
       backgroundColor.lightMode,
       backgroundColor.darkMode
     );
-    const filepath = await generateSvgSavePath();
+    const filepath = await generateSavePath('svg');
 
     const destFileName = generateDestinationFileNameInGoogleBucket(filepath);
 
-    iconUrl = await uploadSvgToGoogleCloud(iconSvg, destFileName);
+    iconUrl = await uploadFileToGoogleCloud(iconSvg, destFileName, 'image/svg+xml');
   } catch (error) {
     iconUrl = '';
   }
