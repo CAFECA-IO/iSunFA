@@ -328,5 +328,10 @@
     "code": "",
     "name": "收入提撥至研發費用比例",
     "indent": 0
+  },
+  {
+    "code": "RevenueAndExpenseRatio",
+    "name": "收入及費用成本比例",
+    "indent": 0
   }
 ]
