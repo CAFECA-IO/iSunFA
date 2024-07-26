@@ -24,7 +24,6 @@ module.exports = {
       parser: '@typescript-eslint/parser',
       plugins: ['@typescript-eslint'],
       rules: {
-        'eol-last': ['error', 'always'],
         'object-curly-newline': 'off',
         'react/jsx-props-no-spreading': 'off',
         'no-console': 'error',
