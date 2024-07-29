@@ -4,13 +4,13 @@ import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
-import { FIDO2_USER_HANDLE } from '@/constants/config';
+import { FIDO2_USER_HANDLE, FREE_COMPANY_ID } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 
 interface SignUpProps {
@@ -28,7 +28,7 @@ interface UserContextType {
   signedIn: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
-  selectCompany: (company: ICompany | null) => void;
+  selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -47,7 +47,7 @@ export const UserContext = createContext<UserContextType>({
   signedIn: false,
   isSignInError: false,
   selectedCompany: null,
-  selectCompany: () => {},
+  selectCompany: async () => {},
   successSelectCompany: undefined,
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -132,11 +132,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  const {
-    trigger: selectCompanyAPI,
-    success: companySelectSuccess,
-    code: companySelectCode,
-  } = APIHandler<number>(APIName.COMPANY_SELECT, {}, false, false);
+  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(
+    APIName.COMPANY_SELECT,
+    {},
+    false,
+    false
+  );
+
+  const { trigger: getCompanyAPI } = APIHandler<ICompanyAndRole>(
+    APIName.COMPANY_GET,
+    {},
+    false,
+    false
+  );
 
   const {
     trigger: getUserSessionData,
@@ -234,29 +242,69 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     getUserSessionData();
   };
 
-  // Info: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = (company: ICompany | null) => {
-    if (!company) {
-      setSelectedCompany(null);
-      setSuccessSelectCompany(undefined);
-      // Info: (20240618 - Julian) 如果取消選擇公司，就把 companyId 設為 0
-      selectCompanyAPI({
-        params: {
-          companyId: 0,
-        },
-      });
-      return;
-    }
-    setSelectedCompany(company);
-    selectCompanyAPI({
-      params: {
-        companyId: company.id,
-      },
-    });
-  };
-
   const clearReturnUrl = () => {
     setReturnUrl(null);
+  };
+
+  const handleReturnUrl = () => {
+    if (returnUrl) {
+      const urlString = decodeURIComponent(returnUrl);
+      clearReturnUrl();
+      router.push(urlString);
+    } else {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    }
+  };
+
+  // Info: (20240729 - tzuhan) un-used function
+  const getCompanyHandler = async (companyId: number) => {
+    const { success, code, data } = await getCompanyAPI({
+      params: {
+        companyId,
+      },
+    });
+    if (success && data?.company) {
+      setSelectedCompany(data.company);
+      setSuccessSelectCompany(true);
+      handleReturnUrl();
+    }
+    if (success === false) {
+      setErrorCode(code ?? '');
+      setSuccessSelectCompany(false);
+    }
+  };
+
+  const handleSelectCompanyResponse = async (response: {
+    success: boolean;
+    data: ICompany | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    if (response.success && response.data !== null) {
+      setSelectedCompany(response.data);
+      setSuccessSelectCompany(true);
+      handleReturnUrl();
+    }
+    if (response.success === false) {
+      setSelectedCompany(null);
+      setSuccessSelectCompany(false);
+      setErrorCode(response.code ?? '');
+    }
+  };
+
+  // Info: (20240513 - Julian) 選擇公司的功能
+  const selectCompany = async (company: ICompany | null, isPublic = false) => {
+    if (!company && !isPublic) {
+      setSelectedCompany(null);
+      setSuccessSelectCompany(undefined);
+      return;
+    }
+    const res = await selectCompanyAPI({
+      params: {
+        companyId: company?.id ?? FREE_COMPANY_ID,
+      },
+    });
+    await handleSelectCompanyResponse(res);
   };
 
   const clearState = () => {
@@ -329,7 +377,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!signedIn && isGetUserSessionLoading === false) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        setReturnUrl(encodeURIComponent(router.asPath));
+        if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
+          setReturnUrl(encodeURIComponent(router.asPath));
+        }
         router.push(ISUNFA_ROUTE.LOGIN);
       }
     }
@@ -358,6 +408,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
           setSuccessSelectCompany(true);
           setSelectedCompany(userSessionData.company);
+          handleReturnUrl();
         }
       }
     }
@@ -369,17 +420,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setSelectedCompany(null);
     }
   }, [userSessionData, isGetUserSessionLoading, getUserSessionSuccess, getUserSessionCode]);
-
-  useEffect(() => {
-    if (companySelectSuccess) {
-      setSuccessSelectCompany(true);
-    }
-    if (companySelectSuccess === false) {
-      setSelectedCompany(null);
-      setSuccessSelectCompany(false);
-      setErrorCode(companySelectCode ?? '');
-    }
-  }, [companySelectSuccess, companySelectCode]);
 
   useEffect(() => {
     if (isSignInLoading || isSignUpLoading || isGetUserSessionLoading) {
@@ -410,6 +450,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
       clearReturnUrl,
+      getCompanyHandler,
     }),
     [
       credentialRef.current,

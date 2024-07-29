@@ -3,10 +3,11 @@ import { IResponseData } from '@/interfaces/response_data';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
-import { checkAdmin, checkCompanyAdminMatch, checkRole } from '@/lib/utils/auth_check';
-import { ROLE_NAME } from '@/constants/role_name';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { deleteAdminById, getAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
 import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { getSession } from '@/lib/utils/session';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,8 +17,12 @@ export default async function handler(
     const { adminId } = req.query;
     const adminIdNum = convertStringToNumber(adminId);
     if (req.method === 'GET') {
-      const { companyId } = await checkAdmin(req, res);
-      const isAuth = await checkCompanyAdminMatch({ companyId, adminId: adminIdNum });
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization(
+        [AuthFunctionsKeyStr.CompanyAdminMatch, AuthFunctionsKeyStr.admin],
+        { userId, companyId, adminId: adminIdNum }
+      );
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }
@@ -34,9 +39,12 @@ export default async function handler(
       if (typeof status !== 'boolean' && !roleName) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      const session = await checkRole(req, res, ROLE_NAME.OWNER);
-      const { companyId } = session;
-      const isAuth = await checkCompanyAdminMatch({ companyId, adminId: adminIdNum });
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization(
+        [AuthFunctionsKeyStr.owner, AuthFunctionsKeyStr.CompanyAdminMatch],
+        { userId, companyId, adminId: adminIdNum }
+      );
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }
@@ -45,9 +53,12 @@ export default async function handler(
       const { httpCode, result } = formatApiResponse<IAdmin>(STATUS_MESSAGE.SUCCESS_UPDATE, admin);
       res.status(httpCode).json(result);
     } else if (req.method === 'DELETE') {
-      const session = await checkRole(req, res, ROLE_NAME.OWNER);
-      const { companyId } = session;
-      const isAuth = await checkCompanyAdminMatch({ companyId, adminId: adminIdNum });
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization(
+        [AuthFunctionsKeyStr.owner, AuthFunctionsKeyStr.CompanyAdminMatch],
+        { userId, companyId, adminId: adminIdNum }
+      );
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }
