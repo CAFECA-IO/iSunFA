@@ -161,9 +161,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       {/* Info: (20240423 - Julian) Dropmenu */}
       <ul
         ref={accountingRef}
-        className={`absolute left-0 top-50px z-10 w-full bg-dropdown-surface-menu-background-primary p-8px 
-        ${isAccountingMenuOpen ? 'h-200px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} 
-        overflow-y-auto rounded-xs border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px z-10 w-full bg-dropdown-surface-menu-background-primary p-8px ${isAccountingMenuOpen ? 'h-200px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} overflow-y-auto rounded-xs border transition-all duration-300 ease-in-out`}
       >
         {displayAccountingDropmenu}
       </ul>
