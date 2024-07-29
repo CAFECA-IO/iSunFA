@@ -12,6 +12,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IVoucherItem {
   id: string;
@@ -69,7 +70,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
-  const backClickHandler = () => window.history.back();
+  const backClickHandler = () => {
+    window.location.href = ISUNFA_ROUTE.JOURNAL_LIST;
+  };
 
   useEffect(() => {
     if (success === false && isLoading === false) {
@@ -250,7 +253,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{tax}%</span> {t('JOURNAL.Tax /')}{' '}
+        (<span className="font-semibold text-navyBlue2">{tax}%</span> {t('JOURNAL.TAX')} /
         <span className="font-semibold text-navyBlue2">{fee}</span> {t('JOURNAL.TWD_FEE')})
       </p>
     </div>
@@ -317,8 +320,8 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <hr className="flex-1 border-lightGray3" />
       </div>
       {/* Info: (20240503 - Julian) List */}
-      <div className="rounded-sm bg-lightGray3 p-20px">
-        <div className="flex w-full text-left text-navyBlue2">
+      <div className="w-90vw rounded-sm bg-lightGray3 p-20px">
+        <div className="flex text-left text-navyBlue2">
           {/* Info: (20240503 - Julian) Accounting */}
           <div className="w-1/4">
             <p>{t('JOURNAL.ACCOUNTING')}</p>
@@ -346,7 +349,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayDebitList = debitList.map((debit) => {
     return (
-      <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
@@ -374,7 +377,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayCreditList = creditList.map((credit) => {
     return (
-      <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>

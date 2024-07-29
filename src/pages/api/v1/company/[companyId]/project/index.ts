@@ -3,11 +3,12 @@ import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { checkUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
 import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.formatter';
 import { getSession } from '@/lib/utils/session';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,7 +20,7 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    shouldContinue = await checkUserAdmin({ userId, companyId });
+    shouldContinue = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
     if (shouldContinue) {
       switch (req.method) {
         case 'GET': {

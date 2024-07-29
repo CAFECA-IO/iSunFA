@@ -87,7 +87,7 @@ const JournalList = ({
       <p>{code}</p>
     </>
   ) : isLoading === true ? (
-    <div className="flex h-screen w-full items-center justify-center">
+    <div className="flex w-full items-center justify-center py-40px">
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : journals.length < 1 ? (
