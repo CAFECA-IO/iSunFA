@@ -132,7 +132,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     false
   );
 
-  const { trigger: selectCompanyAPI } = APIHandler<number>(
+  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(
     APIName.COMPANY_SELECT,
     {},
     false,
@@ -256,8 +256,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Todo: (20240729 - tzuhan) remove when API is ready
-  const handleSelectCompany = async (companyId: number) => {
+  // Info: (20240729 - tzuhan) un-used function
+  const getCompanyHandler = async (companyId: number) => {
     const { success, code, data } = await getCompanyAPI({
       params: {
         companyId,
@@ -276,18 +276,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
-    data: number | null; // Todo: (20240729 - tzuhan) change to ICompany when API is ready
+    data: ICompany | null;
     code: string;
     error: Error | null;
   }) => {
     if (response.success && response.data !== null) {
-      /** Todo: (20240729 - tzuhan) change to ICompany when API is ready
-      setSelectedCompany(data.company);
+      setSelectedCompany(response.data);
       setSuccessSelectCompany(true);
       handleReturnUrl();
-      */
-      // Todo: (20240729 - tzuhan) remove when API is ready
-      handleSelectCompany(response.data);
     }
     if (response.success === false) {
       setSelectedCompany(null);
@@ -454,6 +450,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
       clearReturnUrl,
+      getCompanyHandler,
     }),
     [
       credentialRef.current,
