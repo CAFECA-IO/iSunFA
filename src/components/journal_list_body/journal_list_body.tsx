@@ -128,12 +128,14 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
+          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
         },
       });
+
       setSuccess(response.success);
       setCode(response.code);
       setIsLoading(false);
+
       if (response.success && response.data) {
         setJournals(response.data[currentTab].data ?? []);
         setTotalPages(response.data[currentTab].totalPages ?? 0);
@@ -185,13 +187,21 @@ const JournalListBody = () => {
     getJournalList({});
   }, [currentPage, filteredJournalType, filteredJournalSortBy]);
 
+  useEffect(() => {
+    // Info: (20240729 - Julian) 將拿到的資料放入 journals
+    if (pagenatedJournalListItems) {
+      setJournals(pagenatedJournalListItems[currentTab]?.data ?? []);
+      setTotalPages(pagenatedJournalListItems[currentTab]?.totalPages ?? 0);
+    }
+  }, [pagenatedJournalListItems, currentTab]);
+
   const displayedTypeDropMenu = (
     <div
       onClick={toggleTypeMenu}
-      className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-input-stroke-input-hover text-primaryYellow' : 'border-input-stroke-input text-input-text-input-placeholder'} items-center justify-between rounded-sm border bg-white p-10px hover:border-input-stroke-input-hover hover:text-primaryYellow`}
     >
       <p
-        className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? '' : 'text-lightGray3'}`}
+        className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? 'text-primaryYellow' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredJournalType)}
       </p>
@@ -222,7 +232,7 @@ const JournalListBody = () => {
   const displayedSortByDropMenu = (
     <div
       onClick={toggleSortByMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isSortByMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm ${isSortByMenuOpen ? 'border-input-stroke-selected text-primaryYellow' : 'border-input-stroke-input text-input-text-input-placeholder'} border bg-white p-10px hover:border-input-stroke-selected hover:text-primaryYellow`}
     >
       <p
         className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? 'text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
