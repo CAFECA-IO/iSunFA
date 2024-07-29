@@ -484,6 +484,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return result;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private calculateOperatingStabilizedRatio(
     beforeIncomeTax?: IAccountReadyForFrontend,
     salesDepreciation?: IAccountReadyForFrontend,
@@ -530,6 +531,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return result;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private formatByPeriod(accountReadyForFrontend?: IAccountReadyForFrontend) {
     return {
       cur: accountReadyForFrontend?.curPeriodAmount || 0,
@@ -573,13 +575,12 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     };
   }
 
-  private;
-
+  // eslint-disable-next-line class-methods-use-this
   private ppeVSStrategyInvestMap(accountMap: Map<string, IAccountReadyForFrontend>) {
     const getPPE = accountMap.get('B02700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const salePPE = accountMap.get('B02800') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const getFVPL = accountMap.get('B00100') || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const getFVOCI = acountMap.get('B00010') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getFVOCI = accountMap.get('B00010') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const getAmortizedFA = accountMap.get('B00040') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const saleFVOCI = accountMap.get('B00020') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // const saleFVPL = accountMap.get('B00200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -587,6 +588,27 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const removeHedgeAsset = accountMap.get('B01700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const receiveStockDividend = accountMap.get('B07600') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // const equityDividend = accountMap.get('xxxx') || EMPTY_I_ACCOUNT_READY_FRONTEND; <= 沒有這個項目
+    const totalInvestCashFlow = accountMap.get('BBBB') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const curPPEInvest = -1 * (getPPE.curPeriodAmount - salePPE.curPeriodAmount);
+    const curStrategyInvest = -1 * (getFVPL.curPeriodAmount + getFVOCI.curPeriodAmount + getAmortizedFA.curPeriodAmount - saleFVOCI.curPeriodAmount - saleAmortizedFA.curPeriodAmount - removeHedgeAsset.curPeriodAmount + receiveStockDividend.curPeriodAmount);
+    const curOtherInvest = -1 * (totalInvestCashFlow.curPeriodAmount + curPPEInvest + curStrategyInvest);
+
+    const prePPEInvest = -1 * (getPPE.prePeriodAmount - salePPE.prePeriodAmount);
+    const preStrategyInvest = -1 * (getFVPL.prePeriodAmount + getFVOCI.prePeriodAmount + getAmortizedFA.prePeriodAmount - saleFVOCI.prePeriodAmount - saleAmortizedFA.prePeriodAmount - removeHedgeAsset.prePeriodAmount + receiveStockDividend.prePeriodAmount);
+    const preOtherInvest = -1 * (totalInvestCashFlow.prePeriodAmount + prePPEInvest + preStrategyInvest);
+    return {
+      cur: {
+        PPEInvest: curPPEInvest,
+        strategyInvest: curStrategyInvest,
+        otherInvest: curOtherInvest,
+      },
+      pre: {
+        PPEInvest: prePPEInvest,
+        strategyInvest: preStrategyInvest,
+        otherInvest: preOtherInvest,
+      },
+    };
   }
 
   public override generateOtherInfo(
@@ -602,6 +624,12 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
 
     const operatingStabilized = this.operatingStabilizedMap(accountMap);
+    const strategyInvest = this.ppeVSStrategyInvestMap(accountMap);
+
+    return {
+      operatingStabilized,
+      strategyInvest,
+    };
   }
 
   public override async generateReport(): Promise<{ content: IAccountReadyForFrontend[]; otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo; }> {

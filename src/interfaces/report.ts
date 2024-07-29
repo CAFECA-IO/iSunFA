@@ -140,7 +140,28 @@ export interface IncomeStatementOtherInfo {
   },
 }
 
-export interface CashFlowStatementOtherInfo {}
+export interface CashFlowStatementOtherInfo {
+  operatingStabilized: { [key: string]: {
+    cur: number;
+    curMinus1: number;
+    curMinus2: number;
+    curMinus3: number;
+    curMinus4: number;
+   } };
+  strategyInvest:{
+      cur: {
+      PPEInvest: number;
+      strategyInvest: number;
+      otherInvest: number;
+    };
+    pre: {
+      PPEInvest: number;
+      strategyInvest: number;
+      otherInvest: number;
+    };
+  }
+
+}
 
 // Todo Murky (20240729):
 export interface BalanceSheetReport extends FinancialReport {
