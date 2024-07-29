@@ -4,7 +4,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { ICompany } from '@/interfaces/company';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { checkUser } from '@/lib/utils/auth_check';
-import { setSession } from '@/lib/utils/session';
+import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 
@@ -13,14 +13,21 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   let payload: ICompany | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
-  const session = await checkUser(req, res);
-  const getCompany = await getCompanyById(companyIdNum);
-  statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-  if (getCompany) {
-    const company = formatCompany(getCompany);
-    await setSession(session, undefined, companyIdNum);
-    payload = company;
+  const session = await getSession(req, res);
+  const { userId } = session;
+  const isAuth = checkUser(userId);
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    const getCompany = await getCompanyById(companyIdNum);
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    if (getCompany) {
+      const company = formatCompany(getCompany);
+      await setSession(session, undefined, companyIdNum);
+      payload = company;
+    }
   }
+
   return { statusMessage, payload };
 }
 

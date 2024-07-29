@@ -1,7 +1,5 @@
-import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IUser } from '@/interfaces/user';
 import { RoleName } from '@/constants/role_name';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
@@ -14,6 +12,7 @@ import {
 import { Invitation } from '@prisma/client';
 import i18next from 'i18next';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
+import { getUserById } from './repo/user.repo';
 
 const getTranslatedRoleName = (roleName: RoleName): string => {
   const t = i18next.t.bind(i18next);
@@ -31,21 +30,9 @@ const getTranslatedRoleName = (roleName: RoleName): string => {
   return roleTranslations[roleName] || roleName;
 };
 
-export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession(req, res);
-  const { userId } = session;
-  if (!userId) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const user: IUser = (await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  })) as IUser;
-  if (!user) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-  return session;
+export async function checkUser(userId: number) {
+  const user = await getUserById(userId);
+  return !!user;
 }
 
 export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
