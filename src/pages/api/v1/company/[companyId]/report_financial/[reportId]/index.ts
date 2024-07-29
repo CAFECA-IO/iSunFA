@@ -10,7 +10,7 @@ import {
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
 import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
-import { IReport } from '@/interfaces/report';
+import { IReport, FinancialReport } from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
 import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
@@ -231,26 +231,12 @@ export async function handleGETRequest(companyId: number, req: NextApiRequest) {
   return payload;
 }
 
-interface APIResponse {
-  general: IAccountReadyForFrontend[];
-  details: IAccountReadyForFrontend[];
-  reportType: ReportSheetType;
-  preDate: {
-    from: number;
-    to: number;
-  };
-  curDate: {
-    from: number;
-    to: number;
-  };
-}
-
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<APIResponse | null>>
+  res: NextApiResponse<IResponseData<FinancialReport | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse | null = null;
+  let payload: FinancialReport | null = null;
   try {
     const session = await getSession(req, res);
     const { companyId } = session;
@@ -271,6 +257,6 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<APIResponse | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<FinancialReport | null>(statusMessage, payload);
   res.status(httpCode).json(result);
 }

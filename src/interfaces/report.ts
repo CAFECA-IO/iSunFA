@@ -82,11 +82,29 @@ export interface FinancialReportItem {
   indent: number;
 }
 
+// Info Murky (20240729): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
+  preDate: {
+    from: number;
+    to: number;
+  };
+  curDate: {
+    from: number;
+    to: number;
+  };
   reportType: ReportSheetType;
   general: FinancialReportItem[];
   details: FinancialReportItem[];
 }
+
+// Todo Murky (20240729):
+export interface balanceSheetReport extends FinancialReport {}
+
+// Todo Murky (20240729):
+export interface incomeStatementReport extends FinancialReport {}
+
+// Todo Murky (2024729):
+export interface cashFlowStatementReport extends FinancialReport {}
 
 export function isFinancialReportType(data: string): data is FinancialReportType {
   return (
