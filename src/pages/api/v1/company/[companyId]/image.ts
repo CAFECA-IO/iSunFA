@@ -3,13 +3,14 @@ import { FileFolder } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { getSession } from '@/lib/utils/session';
-import { checkUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { formatApiResponse } from '@/lib/utils/common';
 import { uploadFiles } from '@/lib/utils/google_image_upload';
 import { ICompany } from '@/interfaces/company';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 export const config = {
   api: {
@@ -26,7 +27,7 @@ async function handlePutRequest(
 
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkUserAdmin({ userId, companyId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {

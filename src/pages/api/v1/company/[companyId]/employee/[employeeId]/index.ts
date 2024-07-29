@@ -4,9 +4,10 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
-import { checkUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { updateEmployeeProject } from '@/lib/utils/repo/employee.repo';
 import prisma from '@/client';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
   const employee = await prisma.employee.findUnique({
@@ -179,7 +180,7 @@ export default async function handler(
       shouldContinue = false;
     }
     if (shouldContinue) {
-      shouldContinue = await checkUserAdmin({ userId, companyId });
+      shouldContinue = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
     }
     switch (req.method) {
       case 'GET': {

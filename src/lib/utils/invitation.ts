@@ -1,9 +1,10 @@
-import { checkInvitation } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { createAdminByInvitation } from '@/lib/utils/repo/transaction/admin_invitation.tx';
 import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 import { formatInvitation } from '@/lib/utils/formatter/invitation.formatter';
 import { IAdmin } from '@/interfaces/admin';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 export async function useInvitation(
   invitationCode: string,
@@ -13,8 +14,8 @@ export async function useInvitation(
 
   const invitation = await getInvitationByCode(invitationCode);
   if (invitation) {
-    const isValid = await checkInvitation({ invitation });
-    if (isValid) {
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.invitation], { invitation });
+    if (isAuth) {
       const getAdmin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
       if (!getAdmin) {
         const formattedInvitation = formatInvitation(invitation);
