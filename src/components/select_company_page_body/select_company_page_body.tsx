@@ -4,7 +4,6 @@ import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
 import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -14,23 +13,13 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { IRole } from '@/interfaces/role';
 import { cn } from '@/lib/utils/common';
-import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
   const { t } = useTranslation('common');
-  const router = useRouter();
 
-  const {
-    signedIn,
-    username,
-    selectCompany,
-    successSelectCompany,
-    errorCode,
-    userAuth,
-    returnUrl,
-    clearReturnUrl,
-  } = useUserCtx();
+  const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
+    useUserCtx();
   const {
     toastHandler,
     companyInvitationModalVisibilityHandler,
@@ -73,17 +62,9 @@ const SelectCompanyPageBody = () => {
     setSearchValue(event.target.value);
   };
 
-  const selectCompanyClickHandler = () => {
+  const selectCompanyClickHandler = async () => {
     if (selectedCompany === null) return;
-    selectCompany(selectedCompany);
-
-    if (returnUrl && returnUrl !== ISUNFA_ROUTE.SELECT_COMPANY) {
-      const urlString = decodeURIComponent(returnUrl);
-      clearReturnUrl();
-      router.push(urlString);
-    } else {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
-    }
+    await selectCompany(selectedCompany);
   };
 
   useEffect(() => {

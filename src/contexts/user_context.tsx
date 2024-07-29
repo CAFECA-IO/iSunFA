@@ -242,27 +242,52 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     getUserSessionData();
   };
 
+  const clearReturnUrl = () => {
+    setReturnUrl(null);
+  };
+
+  const handleReturnUrl = () => {
+    if (returnUrl) {
+      const urlString = decodeURIComponent(returnUrl);
+      clearReturnUrl();
+      router.push(urlString);
+    } else {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    }
+  };
+
+  // Todo: (20240729 - tzuhan) remove when API is ready
+  const handleSelectCompany = async (companyId: number) => {
+    const { success, code, data } = await getCompanyAPI({
+      params: {
+        companyId,
+      },
+    });
+    if (success && data?.company) {
+      setSelectedCompany(data.company);
+      setSuccessSelectCompany(true);
+      handleReturnUrl();
+    }
+    if (success === false) {
+      setErrorCode(code ?? '');
+      setSuccessSelectCompany(false);
+    }
+  };
+
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
     data: number | null; // Todo: (20240729 - tzuhan) change to ICompany when API is ready
     code: string;
     error: Error | null;
   }) => {
-    if (response.success && response.data !== undefined) {
+    if (response.success && response.data !== null) {
+      /** Todo: (20240729 - tzuhan) change to ICompany when API is ready
+      setSelectedCompany(data.company);
       setSuccessSelectCompany(true);
-      const { success, code, data } = await getCompanyAPI({
-        params: {
-          companyId: response.data,
-        },
-      });
-      if (success && data?.company) {
-        setSelectedCompany(data.company);
-        setSuccessSelectCompany(true);
-      }
-      if (success === false) {
-        setErrorCode(code ?? '');
-        setSuccessSelectCompany(false);
-      }
+      handleReturnUrl();
+      */
+      // Todo: (20240729 - tzuhan) remove when API is ready
+      handleSelectCompany(response.data);
     }
     if (response.success === false) {
       setSelectedCompany(null);
@@ -276,15 +301,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!company && !isPublic) {
       setSelectedCompany(null);
       setSuccessSelectCompany(undefined);
-      /**
-       * TODO: ask Julian why TODO: (20240729 - tzuhan)
-      // Info: (20240618 - Julian) 如果取消選擇公司，就把 companyId 設為 0
-      selectCompanyAPI({
-        params: {
-          companyId: 0,
-        },
-      });
-      */
       return;
     }
     const res = await selectCompanyAPI({
@@ -293,10 +309,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       },
     });
     await handleSelectCompanyResponse(res);
-  };
-
-  const clearReturnUrl = () => {
-    setReturnUrl(null);
   };
 
   const clearState = () => {
@@ -369,7 +381,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!signedIn && isGetUserSessionLoading === false) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        setReturnUrl(encodeURIComponent(router.asPath));
+        if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
+          setReturnUrl(encodeURIComponent(router.asPath));
+        }
         router.push(ISUNFA_ROUTE.LOGIN);
       }
     }
@@ -398,6 +412,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
           setSuccessSelectCompany(true);
           setSelectedCompany(userSessionData.company);
+          handleReturnUrl();
         }
       }
     }
