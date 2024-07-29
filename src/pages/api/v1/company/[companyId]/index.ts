@@ -48,7 +48,7 @@ export default async function handler(
             shouldContinue = false;
             statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
           } else {
-            const company = await formatCompany(updatedCompany);
+            const company = formatCompany(updatedCompany);
             statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
             payload = company;
           }
