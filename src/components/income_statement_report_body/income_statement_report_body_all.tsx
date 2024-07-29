@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -22,7 +22,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
       companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? '10000020',
+      reportId: reportId ?? NON_EXISTING_REPORT_ID,
     },
   });
 
@@ -37,7 +37,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   }
 
   const page1 = (
-    <div>
+    <div id="1" className="relative h-a4-height overflow-hidden">
       {/* Info: watermark logo (20240723 - Anna) */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -149,7 +149,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page2 = (
-    <div>
+    <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -233,7 +233,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page3 = (
-    <div>
+    <div id="3" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -357,7 +357,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page4 = (
-    <div>
+    <div id="4" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -441,7 +441,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page5 = (
-    <div>
+    <div id="5" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -525,7 +525,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page6 = (
-    <div>
+    <div id="6" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -609,7 +609,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page7 = (
-    <div>
+    <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -693,7 +693,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page8 = (
-    <div>
+    <div id="8" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -809,7 +809,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     </div>
   );
   const page9 = (
-    <div>
+    <div id="9" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1054,14 +1054,23 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   return (
     <div className="mx-auto w-a4-width">
       {page1}
+      <hr className="break-before-page" />
       {page2}
+      <hr className="break-before-page" />
       {page3}
+      <hr className="break-before-page" />
       {page4}
+      <hr className="break-before-page" />
       {page5}
+      <hr className="break-before-page" />
       {page6}
+      <hr className="break-before-page" />
       {page7}
+      <hr className="break-before-page" />
       {page8}
+      <hr className="break-before-page" />
       {page9}
+      <hr className="break-before-page" />
     </div>
   );
 };

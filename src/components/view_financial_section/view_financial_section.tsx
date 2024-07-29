@@ -31,7 +31,7 @@ const generateThumbnails = (count: number) => {
   return Array.from({ length: count }, (_, index) => ({
     number: index + 1,
     active: index === 0,
-    src: '/elements/placeholder.png',
+    src: `${count}`,
     alt: `${count}`,
   }));
 };
@@ -60,7 +60,7 @@ const ViewFinancialSection = ({
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
-    { number: number; alt: string; active: boolean; src: string }[]
+    { number: number; alt: string; active: boolean }[]
   >([]);
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [numPages, setNumPages] = useState<number>(1);
@@ -246,7 +246,7 @@ const ViewFinancialSection = ({
   );
 
   const renderedThumbnail = (
-    thumbnail: { number: number; active: boolean; alt: string; src: string },
+    thumbnail: { number: number; active: boolean; alt: string },
     index: number
   ) => (
     <button onClick={() => thumbnailClickHandler(index)} key={index}>
@@ -257,8 +257,8 @@ const ViewFinancialSection = ({
             : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
         }`}
       >
-        <div className="flex h-[106px] w-[150px] items-center justify-center border border-solid border-blue-950">
-          <Image src={thumbnail.src} alt={thumbnail.alt} width={150} height={106} />
+        <div className="flex h-[106px] w-[150px] items-center justify-center border border-solid border-blue-950 text-3xl font-bold">
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
         </div>
         <div
           className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${

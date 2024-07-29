@@ -37,6 +37,8 @@ const ACCOUNTINGS_WHOLE_COLUMN = [
   '其他權益',
 ];
 
+const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
+
 const COLOR_CLASSES = [
   'bg-[#FD6F8E]',
   'bg-[#6CDEA0]',
@@ -138,15 +140,25 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
     const sortedAssets = assets.items.sort((a, b) => b.percentage - a.percentage);
     const top5Assets = sortedAssets.slice(0, 5);
-    const otherAssetsPercentage =
-      100 - top5Assets.reduce((sum, asset) => sum + asset.percentage, 0);
+    const top5Total = top5Assets.reduce((sum, asset) => sum + asset.percentage, 0);
 
-    const percentages = [
-      ...top5Assets.map((asset) => Math.round(asset.percentage)),
-      Math.round(otherAssetsPercentage),
-    ];
-    const labels = [...top5Assets.map((asset) => asset.name), '其他'];
+    let percentages: number[];
+    let labels: string[];
 
+    if (top5Total === 0) {
+      // 如果前5項資產的總和為0，則所有百分比（包括"其他"）都設為0
+      percentages = [0, 0, 0, 0, 0, 0];
+      labels = [...top5Assets.map((asset) => asset.name), '其他'];
+    } else {
+      const otherAssetsPercentage = Math.max(0, 100 - top5Total);
+      percentages = [
+        ...top5Assets.map((asset) => Math.round(asset.percentage)),
+        Math.round(otherAssetsPercentage),
+      ];
+      labels = [...top5Assets.map((asset) => asset.name), '其他'];
+    }
+
+    // 確保陣列長度為6
     while (percentages.length < 6) percentages.push(0);
     while (labels.length < 6) labels.push('');
 
@@ -611,14 +623,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <header className="mb-12 flex justify-between pl-0 text-white">
         <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
-            <h1 className="mb-30px text-h6">
-              2330 <br />
-              台灣積體電路製造股份有限公司
-            </h1>
-            <p className="font-normal">
-              {curYear}年第4季 <br />
-              合併財務報告 - 資產負債表
-            </p>
+            {reportFinancial && reportFinancial.company && (
+              <>
+                <h1 className="mb-30px text-h6">
+                  {reportFinancial.company.code} <br />
+                  {reportFinancial.company.name}
+                </h1>
+                <p className="font-normal">
+                  {reportFinancial.curDate.to} <br />
+                  合併財務報告 - 資產負債表
+                </p>
+              </>
+            )}
           </div>
         </div>
         <div className="box-border w-35% text-right">
@@ -1296,37 +1312,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                     <span>{label}</span>
                   </li>
                 ))}
-
-                {/* <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
-                  <span>不動產、廠房及設備</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#6CDEA0]"></span>
-                  <span>現⾦及約當現⾦</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#F670C7]"></span>
-                  <span>存貨</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD853A]"></span>
-                  <span>應收帳款淨額</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
-                  <span className="flex-1">透過其他綜合損益按公允價值衡量之⾦融資產－流動</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
-                  <span>其他</span>
-                </li> */}
               </ul>
-              <PieChartAssets
-                data={curAssetMixRatio}
-                labels={curAssetMixLabels}
-                colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB']}
-              />
+              <PieChartAssets data={curAssetMixRatio} labels={curAssetMixLabels} colors={COLORS} />
             </div>
           </div>
 
@@ -1342,40 +1329,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                     <span>{label}</span>
                   </li>
                 ))}
-                {/* <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
-                  <span>不動產、廠房及設備</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#6CDEA0]"></span>
-                  <span>現⾦及約當現⾦</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#F670C7]"></span>
-                  <span>存貨</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD853A]"></span>
-                  <span>應收帳款淨額</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-tertiaryBlue"></span>
-                  <span>按攤銷後成本衡量之⾦融資產－流動</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
-                  <span className="flex-1">透過其他綜合損益按公允價值衡量之⾦融資產－流動</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
-                  <span>其他</span>
-                </li> */}
               </ul>
-              <PieChartAssets
-                data={preAssetMixRatio}
-                labels={preAssetMixLabels}
-                colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB']}
-              />
+              <PieChartAssets data={preAssetMixRatio} labels={preAssetMixLabels} colors={COLORS} />
             </div>
           </div>
         </div>
@@ -1461,6 +1416,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
                 rowsForPage12(reportFinancial.general)}
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">存貨週轉天數</td>
+              {/* TODO: API response (20240729 - Shirley) */}
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
             </tr>
