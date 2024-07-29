@@ -15,7 +15,7 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = checkUser(userId);
+  const isAuth = checkUser({ userId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {

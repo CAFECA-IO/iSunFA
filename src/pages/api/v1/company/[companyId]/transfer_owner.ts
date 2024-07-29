@@ -9,17 +9,22 @@ import { getSession } from '@/lib/utils/session';
 import { transferOwnership } from '@/lib/utils/repo/transaction/admin_role.tx';
 
 async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAdmin[] = [];
   const { newOwnerId } = req.body;
   const newOwnerIdNum = convertStringToNumber(newOwnerId);
   const session = await getSession(req, res);
   const { userId, companyId } = session;
   const isAuth = await checkUserCompanyOwner({ companyId, userId });
   if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    const updatedAdmin = await transferOwnership(userId, companyId, newOwnerIdNum);
+    const admin = await formatAdminList(updatedAdmin);
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = admin;
   }
-  const updatedAdmin = await transferOwnership(userId, companyId, newOwnerIdNum);
-  const admin = await formatAdminList(updatedAdmin);
-  return { statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE, payload: admin };
+  return { statusMessage, payload };
 }
 
 const methodHandlers: {

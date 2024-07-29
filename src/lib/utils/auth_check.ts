@@ -30,8 +30,8 @@ const getTranslatedRoleName = (roleName: RoleName): string => {
   return roleTranslations[roleName] || roleName;
 };
 
-export async function checkUser(userId: number) {
-  const user = await getUserById(userId);
+export async function checkUser(params: { userId: number }) {
+  const user = await getUserById(params.userId);
   return !!user;
 }
 
@@ -125,6 +125,7 @@ export async function checkInvitation(params: { invitation: Invitation }): Promi
 
 // 检查函数的映射表
 export const authFunctions: AuthFunctions = {
+  user: checkUser,
   admin: checkUserAdmin,
   CompanyAdminMatch: checkCompanyAdminMatch,
   projectCompanyMatch: checkProjectCompanyMatch,
