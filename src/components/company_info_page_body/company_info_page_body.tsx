@@ -117,8 +117,7 @@ const CompanyInfoPageBody = () => {
     <div className="">
       <Skeleton width={200} height={50} />
     </div>
-  ) : // role?.name === RoleName.OWNER  // ToDo: (今天 - Liz) 暫時關閉，記得打開欸！
-  true ? (
+  ) : role?.name === RoleName.OWNER ? (
     <>
       <div className="">
         <Button

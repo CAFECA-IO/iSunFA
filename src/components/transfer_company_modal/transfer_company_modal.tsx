@@ -6,7 +6,8 @@ import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-// import { NON_EXISTING_COMPANY_ID } from '@/constants/config'; // Deprecated: (今天丟棄 - Liz)
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { IAdmin } from '@/interfaces/admin';
 
 interface ITransferCompanyModal {
   isModalVisible: boolean;
@@ -22,25 +23,53 @@ const TransferCompanyModal = ({
 
   const { selectedCompany } = useUserCtx();
 
-  interface ITransferOwner {
-    userId: string;
-  }
+  // API Handler
+  const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER, {}, false, false);
 
-  const { trigger: transferOwner } = APIHandler<ITransferOwner>(
-    APIName.TRANSFER_OWNER,
-    {},
-    false,
-    false
-  );
-
-  const handleSubmit = () => {
+  const handleSubmit = (newOwnerId: string) => {
     transferOwner({
-      params: { companyId: selectedCompany!.id },
+      params: { companyId: selectedCompany?.id ?? NON_EXISTING_COMPANY_ID },
       body: {
-        // newOwnerId: '10000017',
-        newOwnerId: inputRef.current?.value,
+        newOwnerId,
       },
-    });
+    })
+      .then((res) => {
+        if (res.data?.length ?? 0) {
+          messageModalDataHandler({
+            messageType: MessageType.SUCCESS,
+            title: 'Transfer Owner',
+            content: 'Transfer owner successfully',
+            submitBtnStr: 'OK',
+            submitBtnFunction: () => {
+              // Info: (20240729 - Liz) reload this page to get the latest data and hide the UI
+              window.location.reload();
+            },
+          });
+        } else {
+          messageModalDataHandler({
+            messageType: MessageType.ERROR,
+            title: 'Transfer Owner',
+            content: 'Transfer owner failed',
+            submitBtnStr: 'OK',
+            submitBtnFunction: () => {
+              messageModalVisibilityHandler();
+            },
+          });
+        }
+        messageModalVisibilityHandler();
+      })
+      .catch(() => {
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Transfer Owner',
+          content: 'Transfer owner failed',
+          submitBtnStr: 'OK',
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+          },
+        });
+        messageModalVisibilityHandler();
+      });
   };
 
   const saveClickHandler = async () => {
@@ -50,6 +79,8 @@ const TransferCompanyModal = ({
         modalVisibilityHandler();
         return;
       }
+
+      const newOwnerId = inputRef.current.value;
       modalVisibilityHandler();
 
       // TODO: validate the userId (20240717 - Shirley)
@@ -68,7 +99,7 @@ const TransferCompanyModal = ({
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: message color (20240717 - Shirley)
         backBtnStr: 'Cancel',
         submitBtnStr: 'Transfer',
-        submitBtnFunction: handleSubmit, // TODO: send API request (20240717 - Shirley)
+        submitBtnFunction: () => handleSubmit(newOwnerId),
       });
 
       inputRef.current.value = '';
