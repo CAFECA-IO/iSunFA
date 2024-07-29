@@ -4,8 +4,10 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, convertDateToTimestamp, timestampInSeconds } from '@/lib/utils/common';
 import { isDateFormatYYYYMMDD } from '@/lib/utils/type_guard/date';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import prisma from '@/client';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function getWorkRates(companyId: number, date: number) {
   const workRates = await prisma.workRate.findMany({
@@ -161,8 +163,12 @@ export default async function handler(
   res: NextApiResponse<IResponseData<ILaborCostChartData>>
 ) {
   try {
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    if (!isAuth) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
     if (req.method !== 'GET') {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }

@@ -3,14 +3,16 @@ import { Invitation } from '@prisma/client';
 export interface AuthFunctions {
   user: (params: { userId: number }) => Promise<boolean>;
   admin: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  owner: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  superAdmin: (params: { userId: number; companyId: number }) => Promise<boolean>;
   CompanyAdminMatch: (params: { companyId: number; adminId: number }) => Promise<boolean>;
   invitation: (params: { invitation: Invitation }) => Promise<boolean>;
   projectCompanyMatch: (params: { projectId: number; companyId: number }) => Promise<boolean>;
 }
 
-// type AuthFunctions = typeof authFunctions;
 export type AuthFunctionsKeys = keyof AuthFunctions;
-type AuthFunctionsParams = {
+
+export type AuthFunctionsParams = {
   [K in AuthFunctionsKeys]: Parameters<AuthFunctions[K]>[0];
 };
 

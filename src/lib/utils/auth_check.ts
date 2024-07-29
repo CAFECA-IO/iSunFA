@@ -12,6 +12,7 @@ import {
 import { Invitation } from '@prisma/client';
 import i18next from 'i18next';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { getUserById } from './repo/user.repo';
 
 const getTranslatedRoleName = (roleName: RoleName): string => {
@@ -74,6 +75,18 @@ export async function checkUserCompanyOwner(params: {
   return !!admin;
 }
 
+export async function checkUserCompanySuperAdmin(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+    params.companyId,
+    params.userId,
+    RoleName.SUPER_ADMIN
+  );
+  return !!admin;
+}
+
 export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
   const translatedRoleName = getTranslatedRoleName(roleName);
   const session = await getSession(req, res);
@@ -127,6 +140,8 @@ export async function checkInvitation(params: { invitation: Invitation }): Promi
 export const authFunctions: AuthFunctions = {
   user: checkUser,
   admin: checkUserAdmin,
+  owner: checkUserCompanyOwner,
+  superAdmin: checkUserCompanySuperAdmin,
   CompanyAdminMatch: checkCompanyAdminMatch,
   projectCompanyMatch: checkProjectCompanyMatch,
   invitation: checkInvitation,
@@ -136,14 +151,29 @@ export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
   requiredChecks: T,
   authParams: AllRequiredParams<T>
 ): Promise<boolean> {
-  const results = await Promise.all(
-    requiredChecks.map(async (check) => {
-      const checkFunction = authFunctions[check] as (params: typeof authParams) => Promise<boolean>;
-      const checked = await checkFunction(authParams);
-      return checked; // Await the result directly in map
-    })
-  );
+  let isAuthorized = false;
 
-  const isAuthorized = results.every((result) => result); // Use Array.prototype.every for final check
-  return isAuthorized; // Use Array.prototype.every for final check
+  // 檢查 companyId 是否為 FREE_COMPANY_ID
+  if (
+    typeof authParams === 'object' &&
+    authParams !== null &&
+    'companyId' in authParams &&
+    authParams.companyId === FREE_COMPANY_ID
+  ) {
+    isAuthorized = true;
+  } else {
+    const results = await Promise.all(
+      requiredChecks.map(async (check) => {
+        const checkFunction = authFunctions[check] as (
+          params: typeof authParams
+        ) => Promise<boolean>;
+        const checked = await checkFunction(authParams);
+        return checked;
+      })
+    );
+
+    isAuthorized = results.every((result) => result);
+  }
+
+  return isAuthorized;
 }

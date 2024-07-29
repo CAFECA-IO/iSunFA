@@ -3,7 +3,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkUser, checkUserCompanyOwner } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import {
   getCompanyById,
@@ -13,6 +13,7 @@ import {
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import { getCompanyDetailAndRoleByCompanyId } from '@/lib/utils/repo/admin.repo';
 import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -21,7 +22,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = checkUser({ userId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.user], { userId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
@@ -44,7 +45,10 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const { code, name, regional } = req.body;
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = checkUserCompanyOwner({ userId, companyId: companyIdNum });
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.owner], {
+    userId,
+    companyId: companyIdNum,
+  });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
@@ -67,7 +71,10 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = checkUserCompanyOwner({ userId, companyId: companyIdNum });
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.owner], {
+    userId,
+    companyId: companyIdNum,
+  });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {

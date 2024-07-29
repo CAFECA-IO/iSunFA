@@ -3,10 +3,11 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { ICompany } from '@/interfaces/company';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkUser } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -15,7 +16,7 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = checkUser({ userId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.user], { userId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {

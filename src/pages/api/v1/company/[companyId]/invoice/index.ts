@@ -8,7 +8,9 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 export interface IPostApiResponseType {
   journalId: number;
@@ -158,8 +160,12 @@ export default async function handler(
   res: NextApiResponse<IResponseData<IPostApiResponseType>>
 ) {
   try {
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    if (!isAuth) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
 
     if (!isCompanyIdValid(companyId)) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
