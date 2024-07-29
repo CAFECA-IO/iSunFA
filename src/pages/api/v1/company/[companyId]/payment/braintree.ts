@@ -1,6 +1,7 @@
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { checkUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
 import { updateOrder } from '@/lib/utils/repo/order.repo';
 import { createPaymentRecord } from '@/lib/utils/repo/payment_record.repo';
@@ -19,7 +20,7 @@ export default async function handler(
     const session = await getSession(req, res);
     const { userId, companyId } = session;
     if (shouldContinue) {
-      shouldContinue = await checkUserAdmin({ userId, companyId });
+      shouldContinue = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
     }
     if (req.method === 'POST') {
       const { braintreeReturn } = req.body;

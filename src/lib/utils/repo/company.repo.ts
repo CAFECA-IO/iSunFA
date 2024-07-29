@@ -63,24 +63,21 @@ export async function updateCompanyById(
   name?: string,
   regional?: string,
   imageId?: string
-): Promise<Company | null> {
+): Promise<Company> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  let company: Company | null = null;
-  if (companyId > 0) {
-    company = await prisma.company.update({
-      where: {
-        id: companyId,
-      },
-      data: {
-        code,
-        name,
-        regional,
-        imageId,
-        updatedAt: nowTimestamp,
-      },
-    });
-  }
+  const company = await prisma.company.update({
+    where: {
+      id: companyId,
+    },
+    data: {
+      code,
+      name,
+      regional,
+      imageId,
+      updatedAt: nowTimestamp,
+    },
+  });
   return company;
 }
 
@@ -102,5 +99,14 @@ export async function deleteCompanyById(companyId: number): Promise<Company> {
   };
 
   const company = await prisma.company.update(updateArgs);
+  return company;
+}
+
+export async function deleteCompanyByIdForTesting(companyId: number): Promise<Company> {
+  const company = await prisma.company.delete({
+    where: {
+      id: companyId,
+    },
+  });
   return company;
 }

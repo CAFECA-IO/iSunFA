@@ -5,8 +5,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import prisma from '@/client';
 import { isTimestamp } from '@/lib/utils/type_guard/date';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { Prisma } from '@prisma/client';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function getProjectLists(companyId: number) {
   return prisma.project.findMany({
@@ -95,8 +97,12 @@ export default async function handler(
       isTimestamp(startDate as string) &&
       isTimestamp(endDate as string)
     ) {
-      const session = await checkAdmin(req, res);
-      const { companyId } = session;
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
       const startDateTimeStampToNumber = Number(startDate);
       const endDateTimeStampToNumber = Number(endDate);
       const projectLists = await getProjectLists(companyId);
