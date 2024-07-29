@@ -83,6 +83,10 @@ const ViewFinancialSection = ({
   // eslint-disable-next-line no-console
   console.log('reportFinancial in viewFinancialSection', reportFinancial);
 
+  const handleIframeLoad = () => {
+    setIsLoading(false);
+  };
+
   function onDocumentLoadSuccess(data: { numPages: number }): void {
     setNumPages(data.numPages);
     setIsLoading(false);
@@ -168,8 +172,6 @@ const ViewFinancialSection = ({
   };
 
   useEffect(() => {
-    if (!pdfFile) return;
-
     console.log('reportTypesName?.id', reportTypesName?.id);
 
     switch (reportTypesName?.id ?? '') {
@@ -185,11 +187,11 @@ const ViewFinancialSection = ({
       default:
         setReportThumbnails([]);
     }
-  }, [pdfFile]);
+  }, []);
 
-  // useEffect(() => {
-  //   fetchPDF();
-  // }, [reportLink]);
+  useEffect(() => {
+    fetchPDF();
+  }, [reportLink]);
 
   useEffect(() => {
     pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -577,6 +579,7 @@ const ViewFinancialSection = ({
             src={`${reportLink}#${pageNumber}`}
             className="h-full w-full border-none"
             title="Financial Report"
+            onLoad={handleIframeLoad}
           />
         </div>
 
