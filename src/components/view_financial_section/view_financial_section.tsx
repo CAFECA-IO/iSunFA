@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { pdfjs, Document, Page } from 'react-pdf';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
@@ -27,179 +27,18 @@ interface IViewReportSectionProps {
   reportId: string;
 }
 
-const balanceReportThumbnails = [
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-];
+const generateThumbnails = (count: number) => {
+  return Array.from({ length: count }, (_, index) => ({
+    number: index + 1,
+    active: index === 0,
+    src: `${count}`,
+    alt: `${count}`,
+  }));
+};
 
-const incomeReportThumbnails = [
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/income_statement/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-];
-
-const cashFlowReportThumbnails = [
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-];
+const balanceReportThumbnails = generateThumbnails(12);
+const incomeReportThumbnails = generateThumbnails(10);
+const cashFlowReportThumbnails = generateThumbnails(11);
 
 const ViewFinancialSection = ({
   reportId,
@@ -214,12 +53,14 @@ const ViewFinancialSection = ({
   const globalCtx = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
 
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
   const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
-    { src: string; alt: string; active: boolean }[]
+    { number: number; alt: string; active: boolean }[]
   >([]);
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [numPages, setNumPages] = useState<number>(1);
@@ -329,6 +170,8 @@ const ViewFinancialSection = ({
   useEffect(() => {
     if (!pdfFile) return;
 
+    console.log('reportTypesName?.id', reportTypesName?.id);
+
     switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
@@ -344,9 +187,9 @@ const ViewFinancialSection = ({
     }
   }, [pdfFile]);
 
-  useEffect(() => {
-    fetchPDF();
-  }, [reportLink]);
+  // useEffect(() => {
+  //   fetchPDF();
+  // }, [reportLink]);
 
   useEffect(() => {
     pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -398,6 +241,100 @@ const ViewFinancialSection = ({
     <Skeleton width={200} height={40} />
   ) : (
     <>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</>
+  );
+
+  const renderedThumbnail = (
+    thumbnail: { number: number; active: boolean; alt: string },
+    index: number
+  ) => (
+    <button onClick={() => thumbnailClickHandler(index)} key={index}>
+      <div
+        className={`flex flex-col rounded-2xl px-5 py-4 ${
+          index === activeIndex
+            ? 'bg-surface-brand-primary-soft'
+            : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+        }`}
+      >
+        <div className="flex h-[106px] w-[150px] items-center justify-center border border-solid border-blue-950 text-3xl font-bold">
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        </div>
+        <div
+          className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
+            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-text-neutral-primary'
+          }`}
+        >
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        </div>
+      </div>
+    </button>
+  );
+
+  const displayedPDF = (
+    <div className="flex w-screen flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
+      {/* Info: prev button (20240529 - Shirley) */}
+      <button
+        onClick={prevClickHandler}
+        disabled={pageNumber <= 1}
+        className="absolute left-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="none"
+          viewBox="0 0 17 16"
+        >
+          <path
+            fill="#001840"
+            fillRule="evenodd"
+            d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
+            clipRule="evenodd"
+          ></path>
+        </svg>
+      </button>
+
+      {/* Info: PDF 本體 for desktop (20240529 - Shirley) */}
+      <div className="hidden lg:flex">
+        <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+          <Page scale={1} pageNumber={pageNumber} />
+        </Document>
+      </div>
+
+      {/* Info: PDF 本體 for mobile (20240529 - Shirley) */}
+      <div className="flex h-screen md:mt-20 lg:hidden">
+        <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
+          <Page
+            scale={1}
+            pageNumber={pageNumber}
+            width={chartWidth}
+            height={chartHeight}
+            className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
+          />
+        </Document>
+      </div>
+
+      {/* Info: next button (20240529 - Shirley) */}
+      <button
+        onClick={nextClickHandler}
+        disabled={pageNumber >= numPages}
+        className="absolute right-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="none"
+          viewBox="0 0 17 16"
+        >
+          <path
+            fill="#001840"
+            fillRule="evenodd"
+            d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
+            clipRule="evenodd"
+          ></path>
+        </svg>
+      </button>
+    </div>
   );
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
@@ -626,108 +563,30 @@ const ViewFinancialSection = ({
             {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
             <div className="flex h-850px flex-col gap-3">
               {!isLoading ? (
-                reportThumbnails.map((thumbnail, index) => (
-                  <button onClick={() => thumbnailClickHandler(index)} key={index}>
-                    <div
-                      className={`flex flex-col rounded-2xl px-5 py-4 ${
-                        index === activeIndex
-                          ? 'bg-surface-brand-primary-soft'
-                          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center border border-solid border-blue-950">
-                        <Image width={150} height={106} src={thumbnail.src} alt={thumbnail.alt} />
-                      </div>
-                      <div
-                        className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
-                          thumbnail.active
-                            ? 'text-text-neutral-solid-dark'
-                            : 'text-text-text-neutral-primary'
-                        }`}
-                      >
-                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                      </div>
-                    </div>
-                  </button>
-                ))
+                reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
               ) : (
-                <p>Loading...</p>
+                <p>載入中...</p>
               )}
             </div>
           </div>
         </div>
 
-        {pdfFile ? (
-          <div className="flex w-screen flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
-            {/* Info: prev button (20240529 - Shirley) */}
-            <button
-              onClick={prevClickHandler}
-              disabled={pageNumber <= 1}
-              className="absolute left-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <path
-                  fill="#001840"
-                  fillRule="evenodd"
-                  d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
+        <div className="flex h-850px w-full flex-1 justify-center bg-white">
+          <iframe
+            ref={iframeRef}
+            src={`${reportLink}#${pageNumber}`}
+            className="h-full w-full border-none"
+            title="Financial Report"
+          />
+        </div>
 
-            {/* Info: PDF 本體 for desktop (20240529 - Shirley) */}
-            <div className="hidden lg:flex">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page scale={1} pageNumber={pageNumber} />
-              </Document>
-            </div>
-
-            {/* Info: PDF 本體 for mobile (20240529 - Shirley) */}
-            <div className="flex h-screen md:mt-20 lg:hidden">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
-                <Page
-                  scale={1}
-                  pageNumber={pageNumber}
-                  width={chartWidth}
-                  height={chartHeight}
-                  className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
-                />
-              </Document>
-            </div>
-
-            {/* Info: next button (20240529 - Shirley) */}
-            <button
-              onClick={nextClickHandler}
-              disabled={pageNumber >= numPages}
-              className="absolute right-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <path
-                  fill="#001840"
-                  fillRule="evenodd"
-                  d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
-          </div>
+        {/* {pdfFile ? (
+          { displayedPDF }
         ) : (
           <div className="flex h-850px w-full flex-1 justify-center bg-white">
             <p className="text-stroke-brand-secondary">Loading...</p>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

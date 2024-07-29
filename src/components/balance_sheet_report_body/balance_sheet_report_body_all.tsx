@@ -37,6 +37,15 @@ const ACCOUNTINGS_WHOLE_COLUMN = [
   '其他權益',
 ];
 
+const COLOR_CLASSES = [
+  'bg-[#FD6F8E]',
+  'bg-[#6CDEA0]',
+  'bg-[#F670C7]',
+  'bg-[#FD853A]',
+  'bg-[#53B1FD]',
+  'bg-[#9B8AFB]',
+];
+
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { selectedCompany } = useUserCtx();
 
@@ -45,6 +54,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<number>>([]);
   const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<number>>([]);
+  const [curAssetMixLabels, setCurAssetMixLabels] = useStateRef<Array<string>>([]);
+  const [preAssetMixLabels, setPreAssetMixLabels] = useStateRef<Array<string>>([]);
 
   const [curDate, setCurDate] = useStateRef<string>('');
   const [curYear, setCurYear] = useStateRef<string>('');
@@ -94,70 +105,77 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   // TODO: 改成拿後端的百分比，流動跟非流動資產的最大5筆 (20240726 - Shirley)
-  const gatherAMRData = (type: ReportColumnType) => {
-    if (!reportFinancial?.general || !reportFinancial?.details) return [0, 0, 0, 0, 0, 0];
+  const gatherAMRData = (type: ReportColumnType): { percentages: number[]; labels: string[] } => {
+    if (!reportFinancial?.details) {
+      return { percentages: [0, 0, 0, 0, 0, 0], labels: ['', '', '', '', '', '其他'] };
+    }
 
-    const periodAmount = type === ReportColumnType.CURRENT ? 'curPeriodAmount' : 'prePeriodAmount';
+    const periodPercentage =
+      type === ReportColumnType.CURRENT ? 'curPeriodPercentage' : 'prePeriodPercentage';
 
-    const totalAssets = Number(
-      reportFinancial.general.find((item) => item.name === '資產總計')?.[periodAmount] || 0
+    const assets = reportFinancial.details.reduce(
+      (acc, item) => {
+        if (item.name === '流動資產' || item.name === '非流動資產') {
+          return { ...acc, [item.name]: true };
+        }
+        if (item.name === '流動資產合計' || item.name === '非流動資產合計') {
+          return { ...acc, [item.name.replace('合計', '')]: false };
+        }
+        if (acc['流動資產'] || acc['非流動資產']) {
+          acc.items.push({
+            name: item.name,
+            percentage: item[periodPercentage],
+          });
+        }
+        return acc;
+      },
+      {
+        流動資產: false,
+        非流動資產: false,
+        items: [] as Array<{ name: string; percentage: number }>,
+      }
     );
 
-    const equipment = Number(
-      reportFinancial.details.find((item) => item.name === '不動產、廠房及設備')?.[periodAmount] ||
-        0
-    );
+    const sortedAssets = assets.items.sort((a, b) => b.percentage - a.percentage);
+    const top5Assets = sortedAssets.slice(0, 5);
+    const otherAssetsPercentage =
+      100 - top5Assets.reduce((sum, asset) => sum + asset.percentage, 0);
 
-    const cash = Number(
-      reportFinancial.details.find((item) => item.name === '現⾦及約當現⾦')?.[periodAmount] || 0
-    );
-
-    const inventory = Number(
-      reportFinancial.details.find((item) => item.name === '存貨')?.[periodAmount] || 0
-    );
-
-    const receivable = Number(
-      reportFinancial.details.find((item) => item.name === '應收帳款淨額')?.[periodAmount] || 0
-    );
-
-    const otherAssetsFromComprehensive = Number(
-      reportFinancial.details.find(
-        (item) => item.name === '透過其他綜合損益按公允價值衡量之⾦融資產－流動'
-      )?.[periodAmount] || 0
-    );
-
-    const remainingAssets =
-      totalAssets - equipment - cash - inventory - receivable - otherAssetsFromComprehensive;
-
-    if (totalAssets === 0) return [0, 0, 0, 0, 0, 0];
-
-    const result = [
-      Math.round((equipment / totalAssets) * 100),
-      Math.round((cash / totalAssets) * 100),
-      Math.round((inventory / totalAssets) * 100),
-      Math.round((receivable / totalAssets) * 100),
-      Math.round((otherAssetsFromComprehensive / totalAssets) * 100),
-      Math.round((remainingAssets / totalAssets) * 100),
+    const percentages = [
+      ...top5Assets.map((asset) => Math.round(asset.percentage)),
+      Math.round(otherAssetsPercentage),
     ];
+    const labels = [...top5Assets.map((asset) => asset.name), '其他'];
 
-    return result;
+    while (percentages.length < 6) percentages.push(0);
+    while (labels.length < 6) labels.push('');
+
+    return { percentages, labels };
   };
 
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
       const curALR = gatherALRData(ReportColumnType.CURRENT);
       const preALR = gatherALRData(ReportColumnType.PREVIOUS);
-      const curAMR = gatherAMRData(ReportColumnType.CURRENT);
-      const preAMR = gatherAMRData(ReportColumnType.PREVIOUS);
+
       const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
       const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
       const currentYear = currentDateString.year;
       const previousYear = previousDateString.year;
 
-      setCurAssetLiabilityRatio(curALR);
-      setPreAssetLiabilityRatio(preALR);
+      const { percentages: curAMR, labels: curAMRLabels } = gatherAMRData(ReportColumnType.CURRENT);
+      const { percentages: preAMR, labels: preAMRLabels } = gatherAMRData(
+        ReportColumnType.PREVIOUS
+      );
+
       setCurAssetMixRatio(curAMR);
       setPreAssetMixRatio(preAMR);
+      setCurAssetMixLabels(curAMRLabels);
+      setPreAssetMixLabels(preAMRLabels);
+
+      setCurAssetLiabilityRatio(curALR);
+      setPreAssetLiabilityRatio(preALR);
+
       setCurDate(currentDateString.date);
       setPreDate(previousDateString.date);
       setCurYear(currentYear);
@@ -170,6 +188,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   } else if (!getReportFinancialSuccess && reportFinancial) {
     return <div>Error {getReportFinancialCode}</div>;
   }
+
+  const renderedFooter = (page: number) => {
+    return (
+      <footer className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
+        <p className="m-0 text-[12px] text-white">{page}</p>
+        <div className="text-[16px] font-bold text-surface-brand-secondary">
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        </div>
+      </footer>
+    );
+  };
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 9).map((item, index) => {
@@ -279,7 +308,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 14).map((item, index) => {
+    const rows = items.slice(0, 13).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -315,7 +344,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage4 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(14, 26).map((item, index) => {
+    const rows = items.slice(13, 26).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -351,7 +380,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage5 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(26, 39).map((item, index) => {
+    const rows = items.slice(26, 40).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -387,7 +416,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage6 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(39, 56).map((item, index) => {
+    const rows = items.slice(40, 54).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -423,7 +452,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage7 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(56, 75).map((item, index) => {
+    const rows = items.slice(54, 68).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -459,7 +488,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage8 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(75, 90).map((item, index) => {
+    const rows = items.slice(68, 90).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -495,7 +524,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(90, 102).map((item, index) => {
+    const rows = items.slice(90, 101).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -567,7 +596,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const page1 = (
-    <div id="1">
+    <div id="1" className="relative h-a4-height overflow-hidden">
       {/* Info: watermark logo (20240723 - Shirley) */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -579,7 +608,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         />
       </div>
 
-      <header className="mb-[86px] flex justify-between pl-0 text-white">
+      <header className="mb-12 flex justify-between pl-0 text-white">
         <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
             <h1 className="mb-30px text-h6">
@@ -636,17 +665,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-[2px_solid_#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">1</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+
+      {renderedFooter(1)}
     </div>
   );
 
   const page2 = (
-    <div id="2">
+    <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
@@ -738,36 +763,14 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               reportFinancial.details &&
               Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
               rowsForPage2_1(reportFinancial.details)}
-            {/* <tr>
-              <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px]">
-                資產
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">11XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">流動資產合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,194,032,910
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">40</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,052,896,744
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">41</td>
-            </tr> */}
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">2</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(2)}
     </div>
   );
   const page3 = (
-    <div id="3">
+    <div id="3" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -820,16 +823,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">3</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(3)}
     </div>
   );
   const page4 = (
-    <div id="4">
+    <div id="4" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -882,17 +880,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">4</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
-      <div className="mt-4 flex justify-center"></div>
+      {renderedFooter(4)}
     </div>
   );
   const page5 = (
-    <div id="5">
+    <div id="5" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -945,16 +937,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">5</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(5)}
     </div>
   );
   const page6 = (
-    <div id="6">
+    <div id="6" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1007,16 +994,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">6</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(6)}
     </div>
   );
   const page7 = (
-    <div id="7">
+    <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1069,16 +1051,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">7</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(7)}
     </div>
   );
   const page8 = (
-    <div id="8">
+    <div id="8" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1137,16 +1114,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">8</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(8)}
     </div>
   );
   const page9 = (
-    <div id="9">
+    <div id="9" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1209,16 +1181,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">9</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(9)}
     </div>
   );
   const page10 = (
-    <div id="10">
+    <div id="10" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1239,7 +1206,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>三、資產負債比例表</p>
         </div>
-        <div className="flex flex-col space-y-10">
+        <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center space-x-10">
@@ -1291,16 +1258,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">10</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(10)}
     </div>
   );
   const page11 = (
-    <div id="11">
+    <div id="11" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1321,12 +1283,21 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>四、資產分布圖</p>
         </div>
-        <div className="flex flex-col space-y-10">
+        <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                <li className="flex items-center">
+                {curAssetMixLabels.map((label, index) => (
+                  <li key={label} className="flex items-center">
+                    <span
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                    ></span>
+                    <span>{label}</span>
+                  </li>
+                ))}
+
+                {/* <li className="flex items-center">
                   <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
                   <span>不動產、廠房及設備</span>
                 </li>
@@ -1349,18 +1320,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <li className="flex items-center">
                   <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
                   <span>其他</span>
-                </li>
+                </li> */}
               </ul>
               <PieChartAssets
                 data={curAssetMixRatio}
-                labels={[
-                  '不動產、廠房及設備',
-                  '現⾦及約當現⾦',
-                  '存貨',
-                  '應收帳款淨額',
-                  '透過其他綜合損益按公允價值衡量之金融資產－流動',
-                  '其他',
-                ]}
+                labels={curAssetMixLabels}
                 colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB']}
               />
             </div>
@@ -1370,7 +1334,15 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                <li className="flex items-center">
+                {preAssetMixLabels.map((label, index) => (
+                  <li key={label} className="flex items-center">
+                    <span
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                    ></span>
+                    <span>{label}</span>
+                  </li>
+                ))}
+                {/* <li className="flex items-center">
                   <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
                   <span>不動產、廠房及設備</span>
                 </li>
@@ -1397,28 +1369,12 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <li className="flex items-center">
                   <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
                   <span>其他</span>
-                </li>
+                </li> */}
               </ul>
               <PieChartAssets
                 data={preAssetMixRatio}
-                labels={[
-                  '不動產、廠房及設備',
-                  '現⾦及約當現⾦',
-                  '存貨',
-                  '應收帳款淨額',
-                  '透過其他綜合損益按公允價值衡量之金融資產－流動',
-                  '按攤銷後成本衡量之金融資產－流動',
-                  '其他',
-                ]}
-                colors={[
-                  '#FD6F8E',
-                  '#6CDEA0',
-                  '#F670C7',
-                  '#FD853A',
-                  '#53B1FD',
-                  '#304872',
-                  '#9B8AFB',
-                ]}
+                labels={preAssetMixLabels}
+                colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB']}
               />
             </div>
           </div>
@@ -1433,16 +1389,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      <footer className="mt-5 flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">11</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(11)}
     </div>
   );
   const page12 = (
-    <div id="12">
+    <div id="12" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1515,9 +1466,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </tbody>
         </table>
-        <div className="relative -z-10">
+        <div className="relative top-28rem -z-10">
           <Image
-            className="absolute -top-300px right-0"
+            className="absolute bottom-0 right-0"
             src="/logo/watermark_logo.svg"
             alt="isunfa logo"
             width={450}
@@ -1525,28 +1476,34 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">12</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(12)}
     </div>
   );
 
   return (
     <div className="mx-auto w-a4-width">
       {page1}
+      <hr className="break-before-page" />
       {page2}
+      <hr className="break-before-page" />
       {page3}
+      <hr className="break-before-page" />
       {page4}
+      <hr className="break-before-page" />
       {page5}
+      <hr className="break-before-page" />
       {page6}
+      <hr className="break-before-page" />
       {page7}
+      <hr className="break-before-page" />
       {page8}
+      <hr className="break-before-page" />
       {page9}
+      <hr className="break-before-page" />
       {page10}
+      <hr className="break-before-page" />
       {page11}
+      <hr className="break-before-page" />
       {page12}
     </div>
   );
