@@ -52,14 +52,26 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <header className="mb-[86px] flex justify-between text-white">
         <div className="w-[30%] bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
-            <h1 className="mb-30px text-h6">
+            {/* <h1 className="mb-30px text-h6">
               2330 <br />
               台灣積體電路製造股份有限公司
-            </h1>
-            <p className="font-normal">
+            </h1> */}
+            {reportFinancial && reportFinancial.company && (
+              <>
+                <h1 className="mb-30px text-h6">
+                  {reportFinancial.company.code} <br />
+                  {reportFinancial.company.name}
+                </h1>
+                <p className="font-normal">
+                  {reportFinancial.curDate.from}至{reportFinancial.curDate.to} <br />
+                  合併財務報告 - 綜合損益表
+                </p>
+              </>
+            )}
+            {/* <p className="font-normal">
               2023年第四季 <br />
               合併財務報告 - 綜合損益表
-            </p>
+            </p> */}
           </div>
         </div>
         <div className="box-border w-35% text-right">

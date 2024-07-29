@@ -83,9 +83,23 @@ export interface FinancialReportItem {
 }
 
 export interface FinancialReport {
+  company: {
+    id: number;
+    code: string;
+    name: string;
+  };
+  preDate: {
+    from: number;
+    to: number;
+  };
+  curDate: {
+    from: number;
+    to: number;
+  };
   reportType: ReportSheetType;
   general: FinancialReportItem[];
   details: FinancialReportItem[];
+  otherInfo: unknown;
 }
 
 export function isFinancialReportType(data: string): data is FinancialReportType {

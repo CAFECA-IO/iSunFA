@@ -24,7 +24,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
       companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? '10000003',
+      reportId: reportId ?? '10000021',
     },
   });
 
