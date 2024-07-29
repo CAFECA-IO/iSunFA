@@ -83,6 +83,14 @@ export interface FinancialReportItem {
 }
 
 export interface FinancialReport {
+  preDate: {
+    from: number;
+    to: number;
+  };
+  curDate: {
+    from: number;
+    to: number;
+  };
   reportType: ReportSheetType;
   general: FinancialReportItem[];
   details: FinancialReportItem[];
