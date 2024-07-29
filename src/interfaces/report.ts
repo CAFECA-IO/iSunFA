@@ -36,6 +36,7 @@ export interface IReport {
   blockChainExplorerLink: string;
   evidenceId: string;
   content: IAccountReadyForFrontend[];
+  otherInfo: unknown;
   createdAt: number;
   updatedAt: number;
 }

@@ -15,6 +15,10 @@ import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
 import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
 import incomeStatementLiteMapping from '@/constants/account_sheet_mapping/income_statement_lite_mapping.json';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { Company } from '@prisma/client';
+import { isBalanceSheetOtherInfo, isCashFlowStatementOtherInfo, isIncomeStatementOtherInfo } from '@/lib/utils/type_guard/report';
 
 export function formatGetRequestQueryParams(req: NextApiRequest) {
   const { reportId } = req.query;
@@ -126,14 +130,19 @@ export function getReportTypeFromReport(report: IReport | null) {
   return reportType;
 }
 
-export async function getPeriodReport(reportId: number) {
-  const curPeriodReportFromDB = await findUniqueReportById(reportId);
+export async function getPeriodReport(companyId: number, reportId: number) {
+  const curPeriodReportFromDB = await findUniqueReportById(companyId, reportId);
   let curPeriodReport: IReport | null = null;
-
+  let company: Company | null = null;
   if (curPeriodReportFromDB) {
     curPeriodReport = formatIReport(curPeriodReportFromDB);
+    company = curPeriodReportFromDB.company;
   }
-  return curPeriodReport;
+
+  return {
+    curPeriodReport,
+    company
+  };
 }
 
 export function getMappingByReportType(reportType: ReportSheetType): {
@@ -191,47 +200,34 @@ export function transformDetailsIntoGeneral(
   return general;
 }
 
-export async function formatPayloadFromIReport(report: IReport): Promise<FinancialReport> {
-  const { reportType } = report;
-  const details = report.content;
-  const general = transformDetailsIntoGeneral(reportType, details);
-  const curFrom = report.from;
-  const curTo = report.to;
+export function addBalanceSheetInfo(report: IReport): BalanceSheetOtherInfo | null {
+  let otherInfo = null;
 
-  const preFrom = getTimestampOfSameDateOfLastYear(curFrom);
-  const preTo = getTimestampOfSameDateOfLastYear(curTo);
-  return {
-    reportType,
-    preDate: {
-      from: preFrom,
-      to: preTo,
-    },
-    curDate: {
-      from: curFrom,
-      to: curTo,
-    },
-    details,
-    general,
-    otherInfo: null,
-  };
+  if (isBalanceSheetOtherInfo(report.otherInfo)) {
+    otherInfo = report.otherInfo;
+  }
+
+  return otherInfo;
 }
 
-export function addBalanceSheetInfo(report: IReport): BalanceSheetOtherInfo {
-  // eslint-disable-next-line no-console
-  console.log(report.reportType);
-  return {};
+export function addIncomeStatementInfo(report: IReport): IncomeStatementOtherInfo | null {
+  let otherInfo = null;
+
+  if (isIncomeStatementOtherInfo(report.otherInfo)) {
+    otherInfo = report.otherInfo;
+  }
+
+  return otherInfo;
 }
 
-export function addIncomeStatementInfo(report: IReport): IncomeStatementOtherInfo {
-  // eslint-disable-next-line no-console
-  console.log(report.reportType);
-  return {};
-}
+export function addCashFlowStatementInfo(report: IReport): CashFlowStatementOtherInfo | null {
+  let otherInfo = null;
 
-export function addCashFlowStatementInfo(report: IReport): CashFlowStatementOtherInfo {
-  // eslint-disable-next-line no-console
-  console.log(report.reportType);
-  return {};
+  if (isCashFlowStatementOtherInfo(report.otherInfo)) {
+    otherInfo = report.otherInfo;
+  }
+
+  return otherInfo;
 }
 
 export function getAdditionalInfo(report: IReport): BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo | null {
@@ -255,17 +251,48 @@ export function getAdditionalInfo(report: IReport): BalanceSheetOtherInfo | Inco
   return otherInfo;
 }
 
-export async function handleGETRequest(companyId: number, req: NextApiRequest) {
+export function formatPayloadFromIReport(report: IReport, company: Company): FinancialReport {
+  const { reportType } = report;
+  const details = report.content;
+  const general = transformDetailsIntoGeneral(reportType, details);
+  const curFrom = report.from;
+  const curTo = report.to;
+
+  const preFrom = getTimestampOfSameDateOfLastYear(curFrom);
+  const preTo = getTimestampOfSameDateOfLastYear(curTo);
+
+  const otherInfo = getAdditionalInfo(report);
+  return {
+    company: {
+      id: company.id,
+      code: company.code,
+      name: company.name,
+    },
+    reportType,
+    preDate: {
+      from: preFrom,
+      to: preTo,
+    },
+    curDate: {
+      from: curFrom,
+      to: curTo,
+    },
+    details,
+    general,
+    otherInfo
+  };
+}
+
+export async function handleGETRequest(companyId: number, req: NextApiRequest): Promise<FinancialReport | null> {
   const { reportIdNumber } = formatGetRequestQueryParams(req);
 
   let payload = null;
 
   if (reportIdNumber !== null) {
-    const curPeriodReport = await getPeriodReport(reportIdNumber);
+    const { curPeriodReport, company } = await getPeriodReport(companyId, reportIdNumber);
 
-    if (curPeriodReport) {
-      payload = await formatPayloadFromIReport(curPeriodReport);
-      payload.otherInfo = getAdditionalInfo(curPeriodReport);
+    if (curPeriodReport && company) {
+      payload = formatPayloadFromIReport(curPeriodReport, company);
     }
   }
 
@@ -280,18 +307,21 @@ export default async function handler(
   let payload: FinancialReport | null = null;
   try {
     const session = await getSession(req, res);
-    const { companyId } = session;
+    const { userId, companyId } = session;
 
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
     // ToDo: (20240703 - Murky) Need to check Auth
-    switch (req.method) {
-      case 'GET': {
-        payload = await handleGETRequest(companyId, req);
+    if (isAuth) {
+      switch (req.method) {
+        case 'GET': {
+          payload = await handleGETRequest(companyId, req);
 
-        statusMessage = STATUS_MESSAGE.SUCCESS;
-        break;
-      }
-      default: {
-        break;
+          statusMessage = STATUS_MESSAGE.SUCCESS;
+          break;
+        }
+        default: {
+          break;
+        }
       }
     }
   } catch (_error) {

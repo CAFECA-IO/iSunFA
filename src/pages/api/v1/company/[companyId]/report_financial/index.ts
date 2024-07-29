@@ -29,6 +29,8 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 // Info: (20240710 - Murky) Down below are Post related functions
 
@@ -387,20 +389,23 @@ export default async function handler(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
+
   try {
     const session = await getSession(req, res);
-    const { companyId } = session;
+    const { userId, companyId } = session;
 
-    // ToDo: (20240703 - Murky) Need to check Auth
-    switch (req.method) {
-      case 'POST': {
-        payload = await handlePostRequest(companyId, req);
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    if (isAuth) {
+      switch (req.method) {
+        case 'POST': {
+          payload = await handlePostRequest(companyId, req);
 
-        statusMessage = STATUS_MESSAGE.CREATED;
-        break;
-      }
-      default: {
-        break;
+          statusMessage = STATUS_MESSAGE.CREATED;
+          break;
+        }
+        default: {
+          break;
+        }
       }
     }
   } catch (_error) {

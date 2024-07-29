@@ -24,9 +24,15 @@ export function formatIReport(report: Report): IReport {
     ? report.reportType
     : ReportSheetType.BALANCE_SHEET;
   const reportContent = JSON.parse(report.content as string);
-  const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent)
+
+  // Info: (20240729 - Murky) Bad code, not robust
+  const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent.content)
     ? reportContent
     : [];
+
+  // Info: (20240729 - Murky) Bad code, not robust
+  const otherInfo = reportContent.otherInfo || {};
+
   const formattedReport: IReport = {
     id: report.id,
     companyId: report.companyId,
@@ -46,6 +52,7 @@ export function formatIReport(report: Report): IReport {
     blockChainExplorerLink: report.blockChainExplorerLink || '',
     evidenceId: report.evidenceId || '',
     content,
+    otherInfo,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
   };
