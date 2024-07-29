@@ -5,7 +5,7 @@ import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { EitherPattern, VoucherPattern } from '@/interfaces/cash_flow';
 import { AccountType } from '@/constants/account';
-import { balanceSheetOtherInfo, cashFlowStatementOtherInfo, incomeStatementOtherInfo } from '@/interfaces/report';
+import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
 import { formatNumberSeparateByComma, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
 
 export default abstract class FinancialReportGenerator {
@@ -237,10 +237,10 @@ export default abstract class FinancialReportGenerator {
 
   public abstract generateOtherInfo(
     ...contents: IAccountReadyForFrontend[][]
-  ): balanceSheetOtherInfo | cashFlowStatementOtherInfo | incomeStatementOtherInfo;
+  ): BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
 
   public abstract generateReport(): Promise<{
     content: IAccountReadyForFrontend[];
-    otherInfo: balanceSheetOtherInfo | cashFlowStatementOtherInfo | incomeStatementOtherInfo;
+    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
   }>;
 }

@@ -4,6 +4,11 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
 import { Prisma } from '@prisma/client';
 
+export type IReportIncludeCompany = Prisma.ReportGetPayload<{
+  include: {
+    company: true;
+  };
+}>;
 export interface IAnalysisReportRequest {
   project_id: string;
   type: string;
@@ -84,6 +89,11 @@ export interface FinancialReportItem {
 
 // Info Murky (20240729): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
+  company: {
+    id: number;
+    code: string;
+    name: string;
+  },
   preDate: {
     from: number;
     to: number;
@@ -98,7 +108,7 @@ export interface FinancialReport {
   otherInfo: unknown;
 }
 
-export interface balanceSheetOtherInfo {
+export interface BalanceSheetOtherInfo {
   dso: {
     curDso: number;
     preDso: number;
@@ -109,23 +119,42 @@ export interface balanceSheetOtherInfo {
   };
 }
 
-export interface incomeStatementOtherInfo {}
+export interface IncomeStatementOtherInfo {
+  revenueAndExpenseRatio: {
+    revenue: IAccountReadyForFrontend;
+    totalCost: IAccountReadyForFrontend;
+    salesExpense: IAccountReadyForFrontend;
+    administrativeExpense: IAccountReadyForFrontend;
+    ratio: {
+      curRatio: number;
+      preRatio: number;
+    },
+  },
+  revenueToRD: {
+    revenue: IAccountReadyForFrontend;
+    researchAndDevelopmentExpense: IAccountReadyForFrontend;
+    ratio: {
+      curRatio: number;
+      preRatio: number;
+    },
+  },
+}
 
-export interface cashFlowStatementOtherInfo {}
+export interface CashFlowStatementOtherInfo {}
 
 // Todo Murky (20240729):
-export interface balanceSheetReport extends FinancialReport {
-  otherInfo: balanceSheetOtherInfo;
+export interface BalanceSheetReport extends FinancialReport {
+  otherInfo: BalanceSheetOtherInfo;
 }
 
 // Todo Murky (20240729):
-export interface incomeStatementReport extends FinancialReport {
-  otherInfo: incomeStatementOtherInfo;
+export interface IncomeStatementReport extends FinancialReport {
+  otherInfo: IncomeStatementOtherInfo;
 }
 
 // Todo Murky (2024729):
-export interface cashFlowStatementReport extends FinancialReport {
-  otherInfo: cashFlowStatementOtherInfo;
+export interface CashFlowStatementReport extends FinancialReport {
+  otherInfo: CashFlowStatementOtherInfo;
 }
 
 export function isFinancialReportType(data: string): data is FinancialReportType {

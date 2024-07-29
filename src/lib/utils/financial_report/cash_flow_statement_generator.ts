@@ -2,7 +2,7 @@ import { ReportSheetType } from '@/constants/report';
 import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
 import BalanceSheetGenerator from '@/lib/utils/financial_report/balance_sheet_generator';
 import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
-import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
 import { IVoucherFromPrismaIncludeLineItems } from '@/interfaces/voucher';
@@ -12,6 +12,8 @@ import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financ
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 import { noAdjustNetIncome } from '@/lib/utils/account/common';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
+import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
+import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -167,12 +169,12 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       percentage: null,
     };
 
-    const newreportSheetMapping = new Map<string, IAccountForSheetDisplay>([
+    const newReportSheetMapping = new Map<string, IAccountForSheetDisplay>([
       ...childMap,
       [currentCode, accountForSheetDisplay],
     ]);
 
-    return newreportSheetMapping;
+    return newReportSheetMapping;
   }
 
   private generateIndirectOperatingCashFlow(
@@ -200,9 +202,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return sum;
   }
 
-  private async getIndirectOperatingCashFlow(): Promise<Map<string, IAccountForSheetDisplay>> {
-    const balanceSheetMap = await this.balanceSheetGenerator.generateFinancialReportMap();
-    const incomeStatementMap = await this.incomeStatementGenerator.generateFinancialReportMap();
+  private async getIndirectOperatingCashFlow(curPeriod: boolean): Promise<Map<string, IAccountForSheetDisplay>> {
+    const balanceSheetMap = await this.balanceSheetGenerator.generateFinancialReportMap(curPeriod);
+    const incomeStatementMap = await this.incomeStatementGenerator.generateFinancialReportMap(curPeriod);
 
     const mergedMap = this.mergeMap(balanceSheetMap, incomeStatementMap);
     const indirectOperatingCashFlow = this.generateIndirectOperatingCashFlow(mergedMap);
@@ -465,8 +467,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   // ToDo: (20240710 - Murky) Need to implement complete cash flow not just indirect
-  public override async generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]> {
-    const indirectOperatingCashFlow = await this.getIndirectOperatingCashFlow();
+  public override async generateFinancialReportArray(curPeriod: boolean): Promise<IAccountForSheetDisplay[]> {
+    const indirectOperatingCashFlow = await this.getIndirectOperatingCashFlow(curPeriod);
 
     const investingCashFlow = this.getInvestingCashFlow();
 
@@ -480,5 +482,123 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
     const result = this.transformMapToArray(concatCashFlow);
     return result;
+  }
+
+  private calculateOperatingStabilizedRatio(
+    beforeIncomeTax?: IAccountReadyForFrontend,
+    salesDepreciation?: IAccountReadyForFrontend,
+    salesAmortization?: IAccountReadyForFrontend,
+    manageDepreciation?: IAccountReadyForFrontend,
+    manageAmortization?: IAccountReadyForFrontend,
+    rdDepreciation?: IAccountReadyForFrontend,
+    tax?: IAccountReadyForFrontend,
+    operatingIncomeCashFlow?: IAccountReadyForFrontend
+  ) {
+    const result = {
+      curMinus4: 0,
+      curMinus3: 0,
+      curMinus2: 0,
+      curMinus1: 0,
+      cur: 0,
+    };
+
+    if (!(beforeIncomeTax && salesDepreciation && salesAmortization && manageDepreciation && manageAmortization && rdDepreciation && tax && operatingIncomeCashFlow)) {
+      return result;
+    }
+
+    result.cur = operatingIncomeCashFlow.curPeriodAmount !== 0
+      ? (
+      beforeIncomeTax.curPeriodAmount +
+      salesDepreciation.curPeriodAmount +
+      salesAmortization.curPeriodAmount +
+      manageDepreciation.curPeriodAmount +
+      manageAmortization.curPeriodAmount +
+      rdDepreciation.curPeriodAmount -
+      tax.curPeriodAmount) / operatingIncomeCashFlow.curPeriodAmount
+      : 0;
+
+    result.curMinus1 = operatingIncomeCashFlow.prePeriodAmount !== 0
+        ? (
+          beforeIncomeTax.prePeriodAmount +
+          salesDepreciation.prePeriodAmount +
+          salesAmortization.prePeriodAmount +
+          manageDepreciation.prePeriodAmount +
+          manageAmortization.prePeriodAmount +
+          rdDepreciation.prePeriodAmount -
+          tax.prePeriodAmount) / operatingIncomeCashFlow.prePeriodAmount
+        : 0;
+    return result;
+  }
+
+  private formatByPeriod(accountReadyForFrontend?: IAccountReadyForFrontend) {
+    return {
+      cur: accountReadyForFrontend?.curPeriodAmount || 0,
+      curMinus1: accountReadyForFrontend?.prePeriodAmount || 0,
+      curMinus2: 0,
+      curMinus3: 0,
+      curMinus4: 0,
+    };
+  }
+
+  private operatingStabilizedMap(accountMap: Map<string, IAccountReadyForFrontend>) {
+    const beforeIncomeTax = accountMap.get('A10000');
+    const salesDepreciation = accountMap.get('6124');
+    const salesAmortization = accountMap.get('6125');
+    const manageDepreciation = accountMap.get('6224');
+    const manageAmortization = accountMap.get('6225');
+    const rdDepreciation = accountMap.get('6324');
+    const tax = accountMap.get('A33500');
+    const operatingIncomeCashFlow = accountMap.get('AAAA');
+    const ratio = this.calculateOperatingStabilizedRatio(
+      beforeIncomeTax,
+      salesDepreciation,
+      salesAmortization,
+      manageDepreciation,
+      manageAmortization,
+      rdDepreciation,
+      tax,
+      operatingIncomeCashFlow
+    );
+
+    return {
+      beforeIncomeTax: this.formatByPeriod(beforeIncomeTax),
+      salesDepreciation: this.formatByPeriod(salesDepreciation),
+      salesAmortization: this.formatByPeriod(salesAmortization),
+      manageDepreciation: this.formatByPeriod(manageDepreciation),
+      manageAmortization: this.formatByPeriod(manageAmortization),
+      rdDepreciation: this.formatByPeriod(rdDepreciation),
+      tax: this.formatByPeriod(tax),
+      operatingIncomeCashFlow: this.formatByPeriod(operatingIncomeCashFlow),
+      ratio,
+    };
+  }
+
+  private ppeVSStrategyInvestMap(accountMap: Map<string, IAccountReadyForFrontend>) {
+    const getPPE = accountMap.get('B02700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const salePPE = accountMap.get('B02800') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getFVPL = accountMap.get('B00100') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getFVOCI = acountMap.get('B00010') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+  }
+
+  public override generateOtherInfo(
+    cashFlowAccounts: IAccountReadyForFrontend[],
+    incomeStatementAccounts: IAccountReadyForFrontend[]
+  ): CashFlowStatementOtherInfo {
+    const accountMap = new Map<string, IAccountReadyForFrontend>();
+    cashFlowAccounts.forEach((account) => {
+      accountMap.set(account.code, account);
+    });
+    incomeStatementAccounts.forEach((account) => {
+      accountMap.set(account.code, account);
+    });
+
+    const operatingStabilized = this.operatingStabilizedMap(accountMap);
+  }
+
+  public override async generateReport(): Promise<{ content: IAccountReadyForFrontend[]; otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo; }> {
+    const cashFlowAccounts = await this.generateIAccountReadyForFrontendArray();
+    const incomeStatementAccount = await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
+    const otherInfo = this.generateOtherInfo(cashFlowAccounts, incomeStatementAccount);
+    return { content: cashFlowAccounts, otherInfo };
   }
 }

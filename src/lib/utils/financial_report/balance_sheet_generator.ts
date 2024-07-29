@@ -8,7 +8,7 @@ import {
 } from '@/lib/utils/account/common';
 import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
-import { balanceSheetOtherInfo } from '@/interfaces/report';
+import { BalanceSheetOtherInfo } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
 
@@ -98,7 +98,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   public override generateOtherInfo(
     balanceSheetContent: IAccountReadyForFrontend[],
     incomeStatementContent: IAccountReadyForFrontend[]
-  ): balanceSheetOtherInfo {
+  ): BalanceSheetOtherInfo {
     const accountMap = new Map<string, IAccountReadyForFrontend>();
     balanceSheetContent.forEach((account) => {
       accountMap.set(account.code, account);

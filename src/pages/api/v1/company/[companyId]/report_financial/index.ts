@@ -30,7 +30,7 @@ import { createFinancialReport, getReportIdByFromTo } from '@/lib/utils/repo/rep
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 
 import { ReportLanguagesKey } from '@/interfaces/report_language';
-import { balanceSheetOtherInfo, cashFlowStatementOtherInfo, incomeStatementOtherInfo } from '@/interfaces/report';
+import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
 
 // Info: (20240710 - Murky) Down below are Post related functions
 
@@ -169,7 +169,7 @@ export async function generateFinancialReport(
 ) {
   // Info: (20240710 - Murky) Financial Report Generator
   let content: IAccountReadyForFrontend[] = [];
-  let otherInfo: balanceSheetOtherInfo | incomeStatementOtherInfo | cashFlowStatementOtherInfo = {};
+  let otherInfo: BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo = {};
   try {
     const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
       companyId,

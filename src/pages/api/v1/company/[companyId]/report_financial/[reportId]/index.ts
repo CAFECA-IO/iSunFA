@@ -10,7 +10,7 @@ import {
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
 import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
-import { IReport, FinancialReport, balanceSheetOtherInfo, incomeStatementOtherInfo, cashFlowStatementOtherInfo } from '@/interfaces/report';
+import { IReport, FinancialReport, BalanceSheetOtherInfo, IncomeStatementOtherInfo, CashFlowStatementOtherInfo } from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
 import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
@@ -216,25 +216,25 @@ export async function formatPayloadFromIReport(report: IReport): Promise<Financi
   };
 }
 
-export function addBalanceSheetInfo(report: IReport): balanceSheetOtherInfo {
+export function addBalanceSheetInfo(report: IReport): BalanceSheetOtherInfo {
   // eslint-disable-next-line no-console
   console.log(report.reportType);
   return {};
 }
 
-export function addIncomeStatementInfo(report: IReport): incomeStatementOtherInfo {
+export function addIncomeStatementInfo(report: IReport): IncomeStatementOtherInfo {
   // eslint-disable-next-line no-console
   console.log(report.reportType);
   return {};
 }
 
-export function addCashFlowStatementInfo(report: IReport): cashFlowStatementOtherInfo {
+export function addCashFlowStatementInfo(report: IReport): CashFlowStatementOtherInfo {
   // eslint-disable-next-line no-console
   console.log(report.reportType);
   return {};
 }
 
-export function getAdditionalInfo(report: IReport): balanceSheetOtherInfo | incomeStatementOtherInfo | cashFlowStatementOtherInfo | null {
+export function getAdditionalInfo(report: IReport): BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo | null {
   const { reportType } = report;
 
   let otherInfo = null;
