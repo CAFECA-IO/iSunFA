@@ -674,7 +674,7 @@ export const OPERATING_ACTIVITY_MAPPING: Map<string, IOperatingCashFlowMapping> 
           'A30000',
           {
             fromCode: [],
-            name: '與營業活動相關之資產∕負債變動數',
+            name: '與營業活動相關之資產及負債之淨變動合計',
             debit: true,
             operatingFunction: noAdjustNetIncome,
             child: new Map([

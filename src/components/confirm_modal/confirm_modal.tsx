@@ -341,6 +341,7 @@ const ConfirmModal = ({
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
   // ToDo: (20240527 - Julian) Interface lacks paymentReason
+  // ToDo: (20240729 - Julian) Add Tag functionality
   // const displayReason =
   //   (
   //     <div className="flex flex-col items-center gap-x-12px md:flex-row">
@@ -546,11 +547,10 @@ const ConfirmModal = ({
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <p>{t('JOURNAL.REASON')}</p>
-              {/* ToDO: (20240723 - Julian) Tag */}
-              {/* displayReason */}
-            </div>
+              {displayReason}
+            </div> */}
             {/* Info: (20240429 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>

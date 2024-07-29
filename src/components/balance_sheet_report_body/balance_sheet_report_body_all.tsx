@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -10,7 +10,6 @@ import React, { useEffect } from 'react';
 import PieChart from '@/components/balance_sheet_report_body/pie_chart';
 import PieChartAssets from '@/components/balance_sheet_report_body/pie_chart_assets';
 import useStateRef from 'react-usestateref';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { timestampToString } from '@/lib/utils/common';
 
 interface IBalanceSheetReportBodyAllProps {
