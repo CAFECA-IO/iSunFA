@@ -573,11 +573,20 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     };
   }
 
+  private;
+
   private ppeVSStrategyInvestMap(accountMap: Map<string, IAccountReadyForFrontend>) {
     const getPPE = accountMap.get('B02700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const salePPE = accountMap.get('B02800') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const getFVPL = accountMap.get('B00100') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const getFVOCI = acountMap.get('B00010') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getAmortizedFA = accountMap.get('B00040') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const saleFVOCI = accountMap.get('B00020') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    // const saleFVPL = accountMap.get('B00200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const saleAmortizedFA = accountMap.get('B00050') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const removeHedgeAsset = accountMap.get('B01700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const receiveStockDividend = accountMap.get('B07600') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    // const equityDividend = accountMap.get('xxxx') || EMPTY_I_ACCOUNT_READY_FRONTEND; <= 沒有這個項目
   }
 
   public override generateOtherInfo(

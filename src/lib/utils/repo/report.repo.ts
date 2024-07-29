@@ -139,7 +139,7 @@ export async function findManyReports(
 
   const where: Prisma.ReportWhereInput = {
     id: {
-      gte: 1000000
+      gte: 1000000 // Info
     },
     companyId,
     status,
