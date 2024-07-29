@@ -26,6 +26,24 @@ export interface IVoucher {
   lineItems: ILineItem[];
 }
 
+export interface IVocuherDataForAPIResponse {
+  id: number;
+  createdAt: number;
+  updatedAt: number;
+  journalId: number;
+  no: string;
+  lineItems: {
+    id: number;
+    amount: number;
+    description: string;
+    debit: boolean;
+    accountId: number;
+    voucherId: number;
+    createdAt: number;
+    updatedAt: number;
+  }[];
+}
+
 export interface IVoucherDataForSavingToDB {
   journalId?: number;
   lineItems: ILineItem[];

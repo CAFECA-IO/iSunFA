@@ -307,54 +307,59 @@ export async function findManyVoucherWithCashInPrisma(
   }
 }
 
-export async function updateVoucherByJournalIdInPrisma(journalId: number, companyId: number, voucherToUpdate: IVoucherDataForSavingToDB) {
-    const nowInSecond = getTimestampNow();
+export async function updateVoucherByJournalIdInPrisma(
+  journalId: number,
+  companyId: number,
+  voucherToUpdate: IVoucherDataForSavingToDB
+) {
+  const nowInSecond = getTimestampNow();
 
-    let newVoucher: {
+  let newVoucher: {
+    id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
+    lineItems: {
       id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number;
       createdAt: number;
       updatedAt: number;
-      journalId: number;
-      no: string;
-      lineItems: {
-        id: number;
-        amount: number;
-        description: string;
-        debit: boolean;
-        accountId: number;
-        voucherId: number;
-        createdAt: number;
-        updatedAt: number;
-      }[];
-    } | null = null;
+    }[];
+  } | null = null;
 
-    newVoucher = await prisma.$transaction(async (prismaClient) => {
-      const journalExists = await prismaClient.journal.findUnique({
-        where: {
-          id: journalId,
-          companyId,
-        },
-        include: {
-          voucher: {
-            include: {
-              lineItems: true,
-            },
+  newVoucher = await prisma.$transaction(async (prismaClient) => {
+    const journalExists = await prismaClient.journal.findUnique({
+      where: {
+        id: journalId,
+        companyId,
+      },
+      include: {
+        voucher: {
+          include: {
+            lineItems: true,
           },
         },
-      });
+      },
+    });
 
-      // Info: (20240712 - Murky) If journal exists and voucher exists, update the voucher
+    // Info: (20240712 - Murky) If journal exists and voucher exists, update the voucher
 
-      if (journalExists && journalExists?.voucher && journalExists?.voucher?.id) {
-        if (journalExists?.voucher?.lineItems) {
-          await prismaClient.lineItem.deleteMany({
-            where: {
-              voucherId: journalExists.voucher.id,
-            },
-          });
-        }
+    if (journalExists && journalExists?.voucher && journalExists?.voucher?.id) {
+      if (journalExists?.voucher?.lineItems) {
+        await prismaClient.lineItem.deleteMany({
+          where: {
+            voucherId: journalExists.voucher.id,
+          },
+        });
+      }
 
-        await Promise.all(voucherToUpdate.lineItems.map(async (lineItem) => {
+      await Promise.all(
+        voucherToUpdate.lineItems.map(async (lineItem) => {
           await prismaClient.lineItem.create({
             data: {
               amount: lineItem.amount,
@@ -366,31 +371,31 @@ export async function updateVoucherByJournalIdInPrisma(journalId: number, compan
                 },
               },
               voucher: {
-                connect:
-                  { id: journalExists?.voucher?.id },
+                connect: { id: journalExists?.voucher?.id },
               },
               createdAt: nowInSecond,
               updatedAt: nowInSecond,
             },
           });
-        }));
-        const voucherBeUpdated = await prismaClient.voucher.update({
-          where: {
-            id: journalExists.voucher.id,
-          },
-          data: {
-            updatedAt: nowInSecond,
-          },
-          include: {
-            lineItems: true,
-          }
-        });
+        })
+      );
+      const voucherBeUpdated = await prismaClient.voucher.update({
+        where: {
+          id: journalExists.voucher.id,
+        },
+        data: {
+          updatedAt: nowInSecond,
+        },
+        include: {
+          lineItems: true,
+        },
+      });
 
-        return voucherBeUpdated;
-      }
+      return voucherBeUpdated;
+    }
 
-      return null;
-    });
+    return null;
+  });
 
-    return newVoucher;
+  return newVoucher;
 }

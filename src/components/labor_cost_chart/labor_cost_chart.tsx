@@ -6,11 +6,7 @@ import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  DatePickerAlign,
-  MILLISECONDS_IN_A_SECOND,
-} from '@/constants/display';
+import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -19,6 +15,7 @@ import { cn, getTodayPeriodInSec } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -219,7 +216,7 @@ const LaborCostChart = () => {
     APIName.LABOR_COST_CHART,
     {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
@@ -273,7 +270,7 @@ const LaborCostChart = () => {
   useEffect(() => {
     getLaborCostChartData({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

@@ -10,7 +10,7 @@ const Toast = () => {
       pauseOnHover
       theme="light"
       limit={5}
-      style={{ width: 'max-content', marginTop: '80px', pointerEvents: 'none' }}
+      className={'toast-container'} // Info: (20240725 - Liz) 使用自定義樣式調整 toast container
     />
   );
 };

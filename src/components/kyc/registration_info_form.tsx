@@ -159,7 +159,7 @@ const RegistrationInfoForm = ({
   };
 
   return (
-    <section className="flex flex-col gap-40px md:w-600px">
+    <section className="flex w-full flex-col gap-40px md:w-600px">
       {/* ===== Country ===== */}
       <div className="flex flex-col items-start gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">

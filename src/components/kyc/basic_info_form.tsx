@@ -89,7 +89,7 @@ const BasicInfoForm = ({
   };
 
   return (
-    <section className="flex w-600px flex-col gap-40px">
+    <section className="flex flex-col gap-40px md:w-600px">
       {/* Legal Company Name */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">

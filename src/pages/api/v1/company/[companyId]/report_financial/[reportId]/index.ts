@@ -2,7 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { getSession } from '@/lib/utils/session';
-import { formatApiResponse, getTimestampOfSameDateOfLastYear, isParamNumeric } from '@/lib/utils/common';
+import {
+  formatApiResponse,
+  getTimestampOfSameDateOfLastYear,
+  isParamNumeric,
+} from '@/lib/utils/common';
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
 import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
@@ -200,14 +204,14 @@ export async function formatPayloadFromIReport(report: IReport) {
     reportType,
     preDate: {
       from: preFrom,
-      to: preTo
+      to: preTo,
     },
     curDate: {
       from: curFrom,
-      to: curTo
+      to: curTo,
     },
     details,
-    general
+    general,
   };
 }
 

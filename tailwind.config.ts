@@ -1392,6 +1392,9 @@ module.exports = {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
       },
+      width: {
+        'full-available': '-webkit-fill-available',
+      },
       maxWidth: {
         '80px': '80px',
         '140px': '140px',
@@ -1475,4 +1478,8 @@ module.exports = {
     },
   },
   plugins: [],
+  safelist: [
+    // Info: (20240726 - Liz) 在這裡添加自定義類別名稱
+    'toast-container',
+  ],
 };

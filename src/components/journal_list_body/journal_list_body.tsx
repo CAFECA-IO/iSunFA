@@ -23,6 +23,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
@@ -115,7 +116,7 @@ const JournalListBody = () => {
       } = query;
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
           ...toSort(sortBy ?? filteredJournalSortBy),
@@ -127,9 +128,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search)
-            ? undefined
-            : (searchString ?? search),
+          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
         },
       });
       setSuccess(response.success);

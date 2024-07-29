@@ -321,7 +321,8 @@
     "M": "M",
     "Y": "Y",
     "V": "V",
-    "OR": "OR"
+    "OR": "OR",
+    "ERROR_CODE": "Error Code: {{code}}"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",
@@ -530,6 +531,7 @@
   },
   "CONFIRM_MODAL": {
     "UPLOADED_SUCCESSFULLY": "Uploaded successfully.",
+    "UPLOAD_FAILED": "Upload failed.",
     "PRINTER": "Printer",
     "AI_TECHNOLOGY_PROCESSING": "AI technology processing",
     "AI_ANALYSIS_COMPLETE": "AI Analysis Complete",

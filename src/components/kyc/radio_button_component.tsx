@@ -40,7 +40,7 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
                 <span className="h-3 w-3 rounded-full bg-navy-blue-400" />
               )}
             </span>
-            <span className="ml-2 text-navy-blue-400">{option.label}</span>
+            <span className="ml-2 text-xs text-navy-blue-400 md:text-base">{option.label}</span>
           </label>
         );
       })}

@@ -13,9 +13,9 @@ import {
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -225,7 +225,7 @@ const IncomeExpenseTrendChart = () => {
     error: getError,
   } = APIHandler<IIncomeExpenseTrendChartData>(APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
     },
     query: {
       period: selectedPeriod,
@@ -239,7 +239,7 @@ const IncomeExpenseTrendChart = () => {
     setSelectedPeriod(period);
     getProfitMarginTrendInPeriod({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       query: {
         period,

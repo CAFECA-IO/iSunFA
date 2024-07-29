@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -58,7 +58,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       reportId: reportId ?? NON_EXISTING_REPORT_ID,
     },
   });
@@ -1322,105 +1322,90 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>四、資產分布圖</p>
         </div>
         <div className="flex flex-col space-y-10">
-          <div className="flex flex-col space-y-0">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
-            <div className="flex items-center justify-between">
-              <ul className="space-y-2">
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
-                  <span>不動產、廠房及設備</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#6CDEA0]"></span>
-                  <span>現⾦及約當現⾦</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#F670C7]"></span>
-                  <span>存貨</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD853A]"></span>
-                  <span>應收帳款淨額</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
-                  <span className="flex-1">透過其他綜合損益按公允價值衡量之⾦融資產－流動</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
-                  <span>其他</span>
-                </li>
-              </ul>
-              <PieChartAssets
-                data={curAssetMixRatio}
-                labels={[
-                  '不動產、廠房及設備',
-                  '現⾦及約當現⾦',
-                  '存貨',
-                  '應收帳款淨額',
-                  '透過其他綜合損益按公允價值衡量之金融資產－流動',
-                  '其他',
-                ]}
-                colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB']}
-              />
-            </div>
+          <div className="flex items-center justify-between">
+            <ul className="space-y-2">
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
+                <span>不動產、廠房及設備</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#6CDEA0]"></span>
+                <span>現⾦及約當現⾦</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#F670C7]"></span>
+                <span>存貨</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD853A]"></span>
+                <span>應收帳款淨額</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
+                <span className="flex-1">透過其他綜合損益按公允價值衡量之⾦融資產－流動</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
+                <span>其他</span>
+              </li>
+            </ul>
+            <PieChartAssets
+              data={curAssetMixRatio}
+              labels={[
+                '不動產、廠房及設備',
+                '現⾦及約當現⾦',
+                '存貨',
+                '應收帳款淨額',
+                '透過其他綜合損益按公允價值衡量之金融資產－流動',
+                '其他',
+              ]}
+              colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB']}
+            />
           </div>
-
-          <div className="flex flex-col space-y-5">
-            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
-            <div className="flex items-center justify-between">
-              <ul className="space-y-2">
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
-                  <span>不動產、廠房及設備</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#6CDEA0]"></span>
-                  <span>現⾦及約當現⾦</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#F670C7]"></span>
-                  <span>存貨</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD853A]"></span>
-                  <span>應收帳款淨額</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-tertiaryBlue"></span>
-                  <span>按攤銷後成本衡量之⾦融資產－流動</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
-                  <span className="flex-1">透過其他綜合損益按公允價值衡量之⾦融資產－流動</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
-                  <span>其他</span>
-                </li>
-              </ul>
-              <PieChartAssets
-                data={preAssetMixRatio}
-                labels={[
-                  '不動產、廠房及設備',
-                  '現⾦及約當現⾦',
-                  '存貨',
-                  '應收帳款淨額',
-                  '透過其他綜合損益按公允價值衡量之金融資產－流動',
-                  '按攤銷後成本衡量之金融資產－流動',
-                  '其他',
-                ]}
-                colors={[
-                  '#FD6F8E',
-                  '#6CDEA0',
-                  '#F670C7',
-                  '#FD853A',
-                  '#53B1FD',
-                  '#304872',
-                  '#9B8AFB',
-                ]}
-              />
-            </div>
+          <div className="flex items-center justify-between">
+            <ul className="space-y-2">
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
+                <span>不動產、廠房及設備</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#6CDEA0]"></span>
+                <span>現⾦及約當現⾦</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#F670C7]"></span>
+                <span>存貨</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD853A]"></span>
+                <span>應收帳款淨額</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#304872]"></span>
+                <span>按攤銷後成本衡量之⾦融資產－流動</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
+                <span className="flex-1">透過其他綜合損益按公允價值衡量之⾦融資產－流動</span>
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
+                <span>其他</span>
+              </li>
+            </ul>
+            <PieChartAssets
+              data={preAssetMixRatio}
+              labels={[
+                '不動產、廠房及設備',
+                '現⾦及約當現⾦',
+                '存貨',
+                '應收帳款淨額',
+                '透過其他綜合損益按公允價值衡量之金融資產－流動',
+                '按攤銷後成本衡量之金融資產－流動',
+                '其他',
+              ]}
+              colors={['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#304872', '#9B8AFB']}
+            />
           </div>
         </div>
         <div className="relative -z-10">

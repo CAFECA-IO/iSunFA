@@ -1,9 +1,41 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
-import React from 'react';
+import { APIName } from '@/constants/api_connection';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import { useUserCtx } from '@/contexts/user_context';
+import { FinancialReport } from '@/interfaces/report';
+import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
+import React from 'react';
 
-const IncomeStatementReportBodyAll = () => {
+interface IIncomeStatementReportBodyAllProps {
+  reportId: string;
+}
+
+const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
+  const { selectedCompany } = useUserCtx();
+  const {
+    data: reportFinancial,
+    code: getReportFinancialCode,
+    success: getReportFinancialSuccess,
+    isLoading: getReportFinancialIsLoading,
+  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
+    params: {
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      reportId: reportId ?? '10000037',
+    },
+  });
+
+  // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley)
+  // eslint-disable-next-line no-console
+  console.log('reportFinancial', reportFinancial);
+
+  if (getReportFinancialIsLoading) {
+    return <div>Loading...</div>;
+  } else if (!getReportFinancialSuccess) {
+    return <div>Error {getReportFinancialCode}</div>;
+  }
+
   const page1 = (
     <div>
       {/* Info: watermark logo (20240723 - Anna) */}
@@ -73,88 +105,26 @@ const IncomeStatementReportBodyAll = () => {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">4000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業收入</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,161,735,841
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">100</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,263,891,292
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">100</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">5000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業成本</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">986,625,213</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">46</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">915,536,486</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">40</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">5950</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業毛利（毛損）潤額</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,175,110,628
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">54</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,348,354,806
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">60</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6100</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">推銷費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">10,590,705</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">9,920,446</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6200</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">管理費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">60,872,841</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">3</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">53,524,898</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">2</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6300</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">研究發展費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">182,370,170</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">8</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">163,262,283</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">7</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業費用合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">253,833,716</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">11</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">226,707,525</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">10</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6500</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">其他收益及費損淨額</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">188,694</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">(368,403)</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6900</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業利益（損失）</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">921,465,606</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">43</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,121,278,851
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">50</td>
-            </tr>
+            {reportFinancial &&
+              reportFinancial.general &&
+              reportFinancial.general.slice(0, 10).map((value) => (
+                <tr key={value.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                    {value.curPeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                    {value.curPeriodPercentage}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                    {value.prePeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                    {value.prePeriodPercentage}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </section>
@@ -219,120 +189,26 @@ const IncomeStatementReportBodyAll = () => {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7100</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業外收入及支出</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">60,293,901</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">3</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">22,422,209</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7010</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">利息收入合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">479,984</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">947,697</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7020</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">其他收益及損失淨額</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">4,276,095</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">3,493,538</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7050</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">財務成本淨額</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">11,999,360</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">(1)</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">11,749,984</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">(1)</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7060</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                採用權益法認列之關聯企業及合資損益之份額淨額
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">4,655,098</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">7,798,359</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業外收入及支出合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">57,705,718</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">2</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">22,911,867</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7900</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                繼續營業單位稅前淨利（淨損）
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">979,171,324</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">45</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,144,190,764
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">51</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">7950</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                所得稅費用（利益）合計
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">141,403,807</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">6</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">127,290,065</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">6</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">8000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                繼續營業單位本期淨利（淨損）
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">837,767,517</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">39</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,016,900,515
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">45</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">8200</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">本期淨利（淨損）</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">837,767,517</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">39</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,016,900,515
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">45</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">8310</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">其他綜合損益淨額</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">1,538,305</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-198,396</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">8360</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                不重分類至損益之項目淨額
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                (10,351,949)
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-1</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">42,628,561</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">2</td>
-            </tr>
+            {reportFinancial &&
+              reportFinancial.general &&
+              reportFinancial.general.slice(10, 24).map((value) => (
+                <tr key={value.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                    {value.curPeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                    {value.curPeriodPercentage}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                    {value.prePeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                    {value.prePeriodPercentage}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </section>
@@ -396,7 +272,7 @@ const IncomeStatementReportBodyAll = () => {
               </th>
             </tr>
           </thead>
-          <tbody>
+          {/* <tbody>
             <tr>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">8300</td>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]">其他綜合損益（淨額）</td>
@@ -485,6 +361,59 @@ const IncomeStatementReportBodyAll = () => {
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
               <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
             </tr>
+          </tbody> */}
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.general &&
+              reportFinancial.general.slice(24, 33).map((value) => (
+                <tr key={value.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                    {value.curPeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                    {value.curPeriodPercentage}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                    {value.prePeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                    {value.prePeriodPercentage}
+                  </td>
+                </tr>
+              ))}
+
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
+              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
+            </tr>
+          </tbody>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.general &&
+              reportFinancial.general.slice(34, 36).map((value) => (
+                <tr key={value.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">
+                    {value.code}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px] font-semibold">
+                    {value.curPeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px] font-semibold"></td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px] font-semibold">
+                    {value.prePeriodAmount}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px] font-semibold"></td>
+                </tr>
+              ))}
           </tbody>
         </table>
         <div className="relative mt-6">

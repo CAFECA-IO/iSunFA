@@ -14,9 +14,9 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { FinancialReport } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -233,7 +233,7 @@ const ViewFinancialSection = ({
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       reportId: reportId ?? '10000003',
     },
   });

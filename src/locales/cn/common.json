@@ -321,7 +321,8 @@
     "M": "月",
     "Y": "年",
     "V": "版本",
-    "OR": "或"
+    "OR": "或",
+    "ERROR_CODE": "错误代码: {{code}}"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "获取数据失败",
@@ -530,6 +531,7 @@
   },
   "CONFIRM_MODAL": {
     "UPLOADED_SUCCESSFULLY": "上传成功。",
+    "UPLOAD_FAILED": "上传失败。",
     "PRINTER": "打印机",
     "AI_TECHNOLOGY_PROCESSING": "AI技术处理",
     "AI_ANALYSIS_COMPLETE": "AI分析完成",

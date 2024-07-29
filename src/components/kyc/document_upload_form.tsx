@@ -23,7 +23,7 @@ const DocumentUploadForm = ({
           onChange={onSelect}
         />
       </div>
-      <div className="flex w-full max-w-3xl flex-col space-y-6">
+      <div className="flex w-full max-w-3xl flex-col items-center space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <h3 className="mb-2 text-center text-base font-medium text-gray-700">
@@ -46,7 +46,7 @@ const DocumentUploadForm = ({
             />
           </div>
         </div>
-        <div>
+        <div className="flex flex-col items-center md:block md:w-full-available">
           <h3 className="mb-2 text-center text-base font-medium text-gray-700">
             {t('KYC.REPRESENTATIVE_ID_CERTIFICATE', {
               type: t(`KYC.${data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}`),
