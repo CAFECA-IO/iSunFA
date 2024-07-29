@@ -98,7 +98,16 @@ export interface FinancialReport {
   otherInfo: unknown;
 }
 
-export interface balanceSheetOtherInfo {}
+export interface balanceSheetOtherInfo {
+  dso: {
+    curDso: number;
+    preDso: number;
+  };
+  inventoryTurnoverDays: {
+    curInventoryTurnoverDays: number;
+    preInventoryTurnoverDays: number;
+  };
+}
 
 export interface incomeStatementOtherInfo {}
 

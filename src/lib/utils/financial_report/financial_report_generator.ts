@@ -120,7 +120,14 @@ export default abstract class FinancialReportGenerator {
     return forest;
   }
 
-  protected async getAllLineItemsByReportSheet(reportSheetType?: ReportSheetType) {
+  protected getDateInSecond(curPeriod: boolean) {
+    const startDateInSecond = curPeriod ? this.startDateInSecond : this.lastPeriodStartDateInSecond;
+    const endDateInSecond = curPeriod ? this.endDateInSecond : this.lastPeriodEndDateInSecond;
+    return { startDateInSecond, endDateInSecond };
+  }
+
+  protected async getAllLineItemsByReportSheet(curPeriod: boolean, reportSheetType?: ReportSheetType) {
+    const { startDateInSecond, endDateInSecond } = this.getDateInSecond(curPeriod);
     const reportSheetTypeForQuery = reportSheetType || this.reportSheetType;
     const accountTypes = ReportSheetAccountTypeMap[reportSheetTypeForQuery];
     const isLineItemDeleted = false;
@@ -129,8 +136,8 @@ export default abstract class FinancialReportGenerator {
         return getLineItemsInPrisma(
           this.companyId,
           type,
-          this.startDateInSecond,
-          this.endDateInSecond,
+          startDateInSecond,
+          endDateInSecond,
           isLineItemDeleted
         );
       })
@@ -140,7 +147,7 @@ export default abstract class FinancialReportGenerator {
     return lineItemsFromDB;
   }
 
-  protected async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
+  public async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
     const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
 
     this.curPeriodContent = await this.generateFinancialReportArray(true);
@@ -215,8 +222,9 @@ export default abstract class FinancialReportGenerator {
     return curPeriodAccountReadyForFrontendArray;
   }
 
-  public abstract generateFinancialReportTree(): Promise<IAccountNode[]>;
-  public abstract generateFinancialReportMap(): Promise<
+  public abstract generateFinancialReportTree(curPeriod: boolean): Promise<IAccountNode[]>;
+
+  public abstract generateFinancialReportMap(curPeriod: boolean): Promise<
     Map<
       string,
       {
@@ -227,7 +235,9 @@ export default abstract class FinancialReportGenerator {
   >;
   public abstract generateFinancialReportArray(curPeriod: boolean): Promise<IAccountForSheetDisplay[]>;
 
-  public abstract generateOtherInfo(): Promise<balanceSheetOtherInfo | cashFlowStatementOtherInfo | incomeStatementOtherInfo>;
+  public abstract generateOtherInfo(
+    ...contents: IAccountReadyForFrontend[][]
+  ): balanceSheetOtherInfo | cashFlowStatementOtherInfo | incomeStatementOtherInfo;
 
   public abstract generateReport(): Promise<{
     content: IAccountReadyForFrontend[];
