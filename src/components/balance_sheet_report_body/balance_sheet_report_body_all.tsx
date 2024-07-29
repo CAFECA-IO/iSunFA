@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -10,8 +10,9 @@ import React, { useEffect } from 'react';
 import PieChart from '@/components/balance_sheet_report_body/pie_chart';
 import PieChartAssets from '@/components/balance_sheet_report_body/pie_chart_assets';
 import useStateRef from 'react-usestateref';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { timestampToString } from '@/lib/utils/common';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -196,14 +197,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   }, [reportFinancial]);
 
   if (getReportFinancialIsLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+      </div>
+    );
   } else if (!getReportFinancialSuccess && reportFinancial) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
         <p className="m-0 text-[12px] text-white">{page}</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
@@ -799,7 +804,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -856,7 +861,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -913,7 +918,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -970,7 +975,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1027,7 +1032,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1084,7 +1089,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1147,7 +1152,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1214,7 +1219,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1291,7 +1296,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1361,7 +1366,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>

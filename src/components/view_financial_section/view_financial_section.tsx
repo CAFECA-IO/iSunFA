@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { EXTERNAL_API } from '@/constants/url';
+import { EXTERNAL_API, ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -17,6 +17,9 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
 import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
+import { useTranslation } from 'react-i18next';
+import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { useRouter } from 'next/router';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -37,7 +40,7 @@ const generateThumbnails = (count: number) => {
 };
 
 const balanceReportThumbnails = generateThumbnails(12);
-const incomeReportThumbnails = generateThumbnails(10);
+const incomeReportThumbnails = generateThumbnails(9);
 const cashFlowReportThumbnails = generateThumbnails(11);
 
 const ViewFinancialSection = ({
@@ -48,7 +51,8 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
-  console.log('reportLink in viewFinancialSection', reportLink);
+  const { t } = useTranslation('common');
+  const router = useRouter();
 
   const globalCtx = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
@@ -63,9 +67,10 @@ const ViewFinancialSection = ({
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
   const [pdfFile, setPdfFile] = useState<null | string>(null);
-  const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  console.log('ViewFinancialSection ${reportLink}#${pageNumber}', `${reportLink}#${pageNumber}`);
 
   const {
     data: reportFinancial,
@@ -79,32 +84,29 @@ const ViewFinancialSection = ({
     },
   });
 
-  // TODO: until API integration (20240726 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial in viewFinancialSection', reportFinancial);
-
+  // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
   const handleIframeLoad = () => {
-    setIsLoading(false);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, MILLISECONDS_IN_A_SECOND);
   };
-
-  function onDocumentLoadSuccess(data: { numPages: number }): void {
-    setNumPages(data.numPages);
-    setIsLoading(false);
-  }
 
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
     setPageNumber(index + 1);
   };
 
-  const prevClickHandler = () => {
-    setActiveIndex((prev) => prev - 1);
-    setPageNumber((prev) => prev - 1);
-  };
-
-  const nextClickHandler = () => {
-    setActiveIndex((prev) => prev + 1);
-    setPageNumber((prev) => prev + 1);
+  const printPDF = () => {
+    if (reportLink) {
+      const printWindow = window.open(reportLink, '_blank');
+      if (printWindow) {
+        printWindow.addEventListener('load', () => {
+          setTimeout(() => {
+            printWindow.print();
+          }, MILLISECONDS_IN_A_SECOND);
+        });
+      }
+    }
   };
 
   const copyTokenContract = () => {
@@ -140,13 +142,17 @@ const ViewFinancialSection = ({
   };
 
   const backClickHandler = () => {
-    window.history.back();
+    // Info: 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面 (20240729 - Shirley)
+    router.push(ISUNFA_ROUTE.USERS_MY_REPORTS);
   };
 
   const downloadClickHandler = () => {
-    if (pdfFile) {
-      window.open(pdfFile, '_blank');
+    if (reportLink) {
+      printPDF();
     }
+    // if (pdfFile) {
+    //   window.open(pdfFile, '_blank');
+    // }
   };
 
   const fetchPDF = async () => {
@@ -172,8 +178,6 @@ const ViewFinancialSection = ({
   };
 
   useEffect(() => {
-    console.log('reportTypesName?.id', reportTypesName?.id);
-
     switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
@@ -189,16 +193,18 @@ const ViewFinancialSection = ({
     }
   }, []);
 
-  useEffect(() => {
-    fetchPDF();
-  }, [reportLink]);
+  // useEffect(() => {
+  //   if (reportLink) {
+  //     fetchPDF();
+  //   }
+  // }, [reportLink]);
 
-  useEffect(() => {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.js',
-      import.meta.url
-    ).toString();
-  }, []);
+  // useEffect(() => {
+  //   pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  //     'pdfjs-dist/build/pdf.worker.js',
+  //     import.meta.url
+  //   ).toString();
+  // }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -271,6 +277,34 @@ const ViewFinancialSection = ({
     </button>
   );
 
+  const displayedReport = (
+    <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
+      {/* Info: Sidebar (20240426 - Shirley) */}
+      <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+        <div className="mt-9 flex w-full flex-col items-center justify-center">
+          {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
+          <div className="flex h-850px flex-col gap-3">
+            {!isLoading ? (
+              reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
+            ) : (
+              <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-white lg:mx-0">
+        <iframe
+          ref={iframeRef}
+          src={`${reportLink}#${pageNumber}`}
+          className={`h-full w-full ${isLoading ? `w-0` : `min-w-[320px]`} overflow-x-auto border-none`}
+          title="Financial Report"
+          onLoad={handleIframeLoad}
+        />
+      </div>
+    </div>
+  );
+
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
@@ -305,7 +339,8 @@ const ViewFinancialSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={isLoading || pdfFile === null}
+              disabled={!reportLink || isLoading}
+              // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -355,7 +390,7 @@ const ViewFinancialSection = ({
       </div>
 
       {/* Info: token contract and token id info (20240426 - Shirley) */}
-      <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
+      <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap sm:mx-0 lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">Token Contract </div>
@@ -479,42 +514,15 @@ const ViewFinancialSection = ({
               </div>
             </div>
             {/* TODO: link (20240507 - Shirley) */}
-
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>
           </div>
         </div>
-
-        <div className=""></div>
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-40 pb-2">
-        {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
-          <div className="mt-9 flex w-full flex-col items-center justify-center">
-            {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
-            <div className="flex h-850px flex-col gap-3">
-              {!isLoading ? (
-                reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
-              ) : (
-                <p>載入中...</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex h-850px w-full flex-1 justify-center bg-white">
-          <iframe
-            ref={iframeRef}
-            src={`${reportLink}#${pageNumber}`}
-            className="h-full w-full border-none"
-            title="Financial Report"
-            onLoad={handleIframeLoad}
-          />
-        </div>
-      </div>
+      {displayedReport}
     </div>
   );
 };

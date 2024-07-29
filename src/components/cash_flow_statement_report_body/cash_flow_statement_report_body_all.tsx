@@ -11,6 +11,8 @@ import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
 import BarChart from '@/components/cash_flow_statement_report_body/bar_chart';
 import Image from 'next/image';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
@@ -35,14 +37,18 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   console.log('reportFinancial', reportFinancial);
 
   if (getReportFinancialIsLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+      </div>
+    );
   } else if (!getReportFinancialSuccess) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
         <p className="m-0 text-[12px] text-white">{page}</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
@@ -56,10 +62,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <header className="mb-[86px] flex justify-between text-white">
         <div className="w-[30%] bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
-            {/* <h1 className="mb-30px text-h6">
-              2330 <br />
-              台灣積體電路製造股份有限公司
-            </h1> */}
             {reportFinancial && reportFinancial.company && (
               <>
                 <h1 className="mb-30px text-h6">
@@ -72,10 +74,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </p>
               </>
             )}
-            {/* <p className="font-normal">
-              2023年第四季 <br />
-              合併財務報告 - 現金流量表
-            </p> */}
           </div>
         </div>
         <div className="box-border w-35% text-right">

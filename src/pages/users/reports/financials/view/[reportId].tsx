@@ -71,12 +71,12 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <>
+    <div>
       <div className="flex w-full flex-1 flex-col overflow-x-hidden">
         <ReportsSidebar />
       </div>
 
-      <div className="h-800px bg-surface-neutral-main-background">
+      <div className="h-1400px bg-surface-neutral-main-background">
         <ViewFinancialSection
           reportTypesName={
             reportData.reportTypesName as {
@@ -90,7 +90,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           reportId={reportId}
         />
       </div>
-    </>
+    </div>
   );
 
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
@@ -101,7 +101,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        {/* <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title> */}
         <title>
           {
             FinancialReportTypesMap[

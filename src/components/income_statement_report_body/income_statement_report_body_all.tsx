@@ -1,7 +1,9 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
+import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -31,14 +33,18 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   console.log('reportFinancial', reportFinancial);
 
   if (getReportFinancialIsLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+      </div>
+    );
   } else if (!getReportFinancialSuccess) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
         <p className="m-0 text-[12px] text-white">{page}</p>
         <div className="text-[16px] font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
@@ -1036,7 +1042,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       {page8}
       <hr className="break-before-page" />
       {page9}
-      <hr className="break-before-page" />
     </div>
   );
 };
