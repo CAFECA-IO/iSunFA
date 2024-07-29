@@ -30,6 +30,7 @@ import { createFinancialReport, getReportIdByFromTo } from '@/lib/utils/repo/rep
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 
 import { ReportLanguagesKey } from '@/interfaces/report_language';
+import { balanceSheetOtherInfo, cashFlowStatementOtherInfo, incomeStatementOtherInfo } from '@/interfaces/report';
 
 // Info: (20240710 - Murky) Down below are Post related functions
 
@@ -167,7 +168,8 @@ export async function generateFinancialReport(
   reportSheetType: ReportSheetType
 ) {
   // Info: (20240710 - Murky) Financial Report Generator
-  let sheetDisplay: IAccountForSheetDisplay[] = [];
+  let content: IAccountReadyForFrontend[] = [];
+  let otherInfo: balanceSheetOtherInfo | incomeStatementOtherInfo | cashFlowStatementOtherInfo = {};
   try {
     const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
       companyId,
@@ -176,13 +178,18 @@ export async function generateFinancialReport(
       reportSheetType
     );
 
-    sheetDisplay = await financialReportGenerator.generateFinancialReportArray();
+    const report = await financialReportGenerator.generateReport();
+    content = report.content;
+    otherInfo = report.otherInfo;
   } catch (error) {
     // Deprecate: (20240710 - Murky) console.error
     // eslint-disable-next-line no-console
     console.error(error);
   }
-  return sheetDisplay;
+  return {
+    content,
+    otherInfo,
+  };
 }
 
 export async function generateReportName(
@@ -291,24 +298,35 @@ export async function generateReportIfNotExist(
     reportSheetType
   );
   if (!reportId) {
-    const reportContentCurPeriodJSON = await generateFinancialReport(
-      companyId,
-      startDateInSecond,
-      endDateInSecond,
-      reportSheetType
-    );
+    // const reportContentCurPeriodJSON = await generateFinancialReport(
+    //   companyId,
+    //   startDateInSecond,
+    //   endDateInSecond,
+    //   reportSheetType
+    // );
 
-    const reportContentPastPeriodJson = await generateFinancialReport(
-      companyId,
-      lastPeriodStartDateInSecond,
-      lastPeriodEndDateInSecond,
-      reportSheetType
-    );
+    // const reportContentPastPeriodJson = await generateFinancialReport(
+    //   companyId,
+    //   lastPeriodStartDateInSecond,
+    //   lastPeriodEndDateInSecond,
+    //   reportSheetType
+    // );
 
-    const reportContentSavingToDB = generateIAccountReadyForFrontendArray(
-      reportContentCurPeriodJSON,
-      reportContentPastPeriodJson
-    );
+    // const reportContentSavingToDB = generateIAccountReadyForFrontendArray(
+    //   reportContentCurPeriodJSON,
+    //   reportContentPastPeriodJson
+    // );
+    const { content, otherInfo } = await generateFinancialReport(
+        companyId,
+        startDateInSecond,
+        endDateInSecond,
+        reportSheetType
+      );
+
+    const reportContentSavingToDB = {
+      content,
+      otherInfo,
+    };
 
     const name = await generateReportName(
       companyId,

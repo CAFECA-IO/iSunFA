@@ -2,9 +2,11 @@ import { buildAccountForest } from '@/lib/utils/account/common';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
-import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { EitherPattern, VoucherPattern } from '@/interfaces/cash_flow';
 import { AccountType } from '@/constants/account';
+import { balanceSheetOtherInfo, cashFlowStatementOtherInfo, incomeStatementOtherInfo } from '@/interfaces/report';
+import { formatNumberSeparateByComma, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
 
 export default abstract class FinancialReportGenerator {
   protected companyId: number;
@@ -13,7 +15,15 @@ export default abstract class FinancialReportGenerator {
 
   protected endDateInSecond: number;
 
+  protected lastPeriodStartDateInSecond: number;
+
+  protected lastPeriodEndDateInSecond : number;
+
   protected reportSheetType: ReportSheetType;
+
+  protected curPeriodContent: IAccountForSheetDisplay[] = [];
+
+  protected prePeriodContent: IAccountForSheetDisplay[] = [];
 
   constructor(
     companyId: number,
@@ -25,6 +35,27 @@ export default abstract class FinancialReportGenerator {
     this.startDateInSecond = startDateInSecond;
     this.endDateInSecond = endDateInSecond;
     this.reportSheetType = reportSheetType;
+    const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = FinancialReportGenerator.getLastPeriodStartAndEndDate(
+      reportSheetType,
+      startDateInSecond,
+      endDateInSecond
+    );
+
+    this.lastPeriodStartDateInSecond = lastPeriodStartDateInSecond;
+    this.lastPeriodEndDateInSecond = lastPeriodEndDateInSecond;
+  }
+
+  static getLastPeriodStartAndEndDate(
+    reportSheetType: ReportSheetType,
+    startDateInSecond: number,
+    endDateInSecond: number
+  ) {
+    const lastPeriodStartDateInSecond =
+      reportSheetType === ReportSheetType.BALANCE_SHEET
+        ? 0
+        : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
+    const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
+    return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
   }
 
   protected matchPattern(pattern: VoucherPattern, codes: Set<string>): boolean {
@@ -109,6 +140,81 @@ export default abstract class FinancialReportGenerator {
     return lineItemsFromDB;
   }
 
+  protected async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
+    const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
+
+    this.curPeriodContent = await this.generateFinancialReportArray(true);
+    this.prePeriodContent = await this.generateFinancialReportArray(false);
+
+    if (
+      this.curPeriodContent &&
+      this.prePeriodContent &&
+      this.curPeriodContent.length > 0 &&
+      this.prePeriodContent.length > 0 &&
+      this.curPeriodContent.length === this.prePeriodContent.length
+    ) {
+      this.curPeriodContent.forEach((curPeriodAccount, index) => {
+        const lastPeriodAccount = this.prePeriodContent[index];
+        const curPeriodAmount = curPeriodAccount.amount || 0;
+        const prePeriodAmount = lastPeriodAccount.amount || 0;
+        const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
+        const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
+        const curPeriodPercentage = curPeriodAccount?.percentage
+          ? Math.round(curPeriodAccount.percentage * 100)
+          : 0;
+        const prePeriodPercentage = lastPeriodAccount?.percentage
+          ? Math.round(lastPeriodAccount.percentage * 100)
+          : 0;
+        const accountReadyForFrontend: IAccountReadyForFrontend = {
+          code: curPeriodAccount.code,
+          name: curPeriodAccount.name,
+          curPeriodAmount,
+          curPeriodPercentage,
+          curPeriodAmountString,
+          prePeriodAmount,
+          prePeriodPercentage,
+          prePeriodAmountString,
+          indent: curPeriodAccount.indent,
+        };
+        curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
+      });
+    }
+    if (
+      this.curPeriodContent &&
+      this.prePeriodContent &&
+      this.curPeriodContent.length > 0 &&
+      this.prePeriodContent.length > 0 &&
+      this.curPeriodContent.length === this.prePeriodContent.length
+    ) {
+      this.curPeriodContent.forEach((curPeriodAccount, index) => {
+        const lastPeriodAccount = this.prePeriodContent[index];
+        const curPeriodAmount = curPeriodAccount.amount || 0;
+        const prePeriodAmount = lastPeriodAccount.amount || 0;
+        const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
+        const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
+        const curPeriodPercentage = curPeriodAccount?.percentage
+          ? Math.round(curPeriodAccount.percentage * 100)
+          : 0;
+        const prePeriodPercentage = lastPeriodAccount?.percentage
+          ? Math.round(lastPeriodAccount.percentage * 100)
+          : 0;
+        const accountReadyForFrontend: IAccountReadyForFrontend = {
+          code: curPeriodAccount.code,
+          name: curPeriodAccount.name,
+          curPeriodAmount,
+          curPeriodPercentage,
+          curPeriodAmountString,
+          prePeriodAmount,
+          prePeriodPercentage,
+          prePeriodAmountString,
+          indent: curPeriodAccount.indent,
+        };
+        curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
+      });
+    }
+    return curPeriodAccountReadyForFrontendArray;
+  }
+
   public abstract generateFinancialReportTree(): Promise<IAccountNode[]>;
   public abstract generateFinancialReportMap(): Promise<
     Map<
@@ -119,5 +225,12 @@ export default abstract class FinancialReportGenerator {
       }
     >
   >;
-  public abstract generateFinancialReportArray(): Promise<IAccountForSheetDisplay[]>;
+  public abstract generateFinancialReportArray(curPeriod: boolean): Promise<IAccountForSheetDisplay[]>;
+
+  public abstract generateOtherInfo(): Promise<balanceSheetOtherInfo | cashFlowStatementOtherInfo | incomeStatementOtherInfo>;
+
+  public abstract generateReport(): Promise<{
+    content: IAccountReadyForFrontend[];
+    otherInfo: balanceSheetOtherInfo | cashFlowStatementOtherInfo | incomeStatementOtherInfo;
+  }>;
 }

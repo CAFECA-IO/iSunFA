@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { ReportSheetType, ReportStatusType, ReportType } from '@/constants/report';
-import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+// import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { Prisma, Report } from '@prisma/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -90,7 +90,7 @@ export async function createFinancialReport(
   toInSecond: number,
   reportType: ReportType,
   reportSheetType: ReportSheetType,
-  content: IAccountReadyForFrontend[],
+  content: object,
   status: ReportStatusType
 ) {
   const nowInSecond = getTimestampNow();

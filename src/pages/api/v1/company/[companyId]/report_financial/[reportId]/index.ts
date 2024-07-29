@@ -10,7 +10,7 @@ import {
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
 import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
-import { IReport, FinancialReport } from '@/interfaces/report';
+import { IReport, FinancialReport, balanceSheetOtherInfo, incomeStatementOtherInfo, cashFlowStatementOtherInfo } from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
 import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
@@ -191,7 +191,7 @@ export function transformDetailsIntoGeneral(
   return general;
 }
 
-export async function formatPayloadFromIReport(report: IReport) {
+export async function formatPayloadFromIReport(report: IReport): Promise<FinancialReport> {
   const { reportType } = report;
   const details = report.content;
   const general = transformDetailsIntoGeneral(reportType, details);
@@ -212,7 +212,47 @@ export async function formatPayloadFromIReport(report: IReport) {
     },
     details,
     general,
+    otherInfo: null,
   };
+}
+
+export function addBalanceSheetInfo(report: IReport): balanceSheetOtherInfo {
+  // eslint-disable-next-line no-console
+  console.log(report.reportType);
+  return {};
+}
+
+export function addIncomeStatementInfo(report: IReport): incomeStatementOtherInfo {
+  // eslint-disable-next-line no-console
+  console.log(report.reportType);
+  return {};
+}
+
+export function addCashFlowStatementInfo(report: IReport): cashFlowStatementOtherInfo {
+  // eslint-disable-next-line no-console
+  console.log(report.reportType);
+  return {};
+}
+
+export function getAdditionalInfo(report: IReport): balanceSheetOtherInfo | incomeStatementOtherInfo | cashFlowStatementOtherInfo | null {
+  const { reportType } = report;
+
+  let otherInfo = null;
+  switch (reportType) {
+    case ReportSheetType.BALANCE_SHEET:
+      otherInfo = addBalanceSheetInfo(report);
+      break;
+    case ReportSheetType.CASH_FLOW_STATEMENT:
+      otherInfo = addCashFlowStatementInfo(report);
+      break;
+    case ReportSheetType.INCOME_STATEMENT:
+      otherInfo = addIncomeStatementInfo(report);
+      break;
+    default:
+      break;
+  }
+
+  return otherInfo;
 }
 
 export async function handleGETRequest(companyId: number, req: NextApiRequest) {
@@ -225,6 +265,7 @@ export async function handleGETRequest(companyId: number, req: NextApiRequest) {
 
     if (curPeriodReport) {
       payload = await formatPayloadFromIReport(curPeriodReport);
+      payload.otherInfo = getAdditionalInfo(curPeriodReport);
     }
   }
 

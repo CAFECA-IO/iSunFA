@@ -95,16 +95,29 @@ export interface FinancialReport {
   reportType: ReportSheetType;
   general: FinancialReportItem[];
   details: FinancialReportItem[];
+  otherInfo: unknown;
+}
+
+export interface balanceSheetOtherInfo {}
+
+export interface incomeStatementOtherInfo {}
+
+export interface cashFlowStatementOtherInfo {}
+
+// Todo Murky (20240729):
+export interface balanceSheetReport extends FinancialReport {
+  otherInfo: balanceSheetOtherInfo;
 }
 
 // Todo Murky (20240729):
-export interface balanceSheetReport extends FinancialReport {}
-
-// Todo Murky (20240729):
-export interface incomeStatementReport extends FinancialReport {}
+export interface incomeStatementReport extends FinancialReport {
+  otherInfo: incomeStatementOtherInfo;
+}
 
 // Todo Murky (2024729):
-export interface cashFlowStatementReport extends FinancialReport {}
+export interface cashFlowStatementReport extends FinancialReport {
+  otherInfo: cashFlowStatementOtherInfo;
+}
 
 export function isFinancialReportType(data: string): data is FinancialReportType {
   return (
