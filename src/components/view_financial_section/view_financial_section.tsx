@@ -88,137 +88,57 @@ const balanceReportThumbnails = [
     alt: 'Report Thumbnail 12',
     active: false,
   },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
 ];
 
-const comprehensiveIncomeReportThumbnails = [
+const incomeReportThumbnails = [
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_01.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_01.png',
     alt: 'Report Thumbnail 01',
     active: true,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_02.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_02.png',
     alt: 'Report Thumbnail 02',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_03.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_03.png',
     alt: 'Report Thumbnail 03',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_04.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_04.png',
     alt: 'Report Thumbnail 04',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_05.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_05.png',
     alt: 'Report Thumbnail 05',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_06.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_06.png',
     alt: 'Report Thumbnail 06',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_07.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_07.png',
     alt: 'Report Thumbnail 07',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_08.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_08.png',
     alt: 'Report Thumbnail 08',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_09.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_09.png',
     alt: 'Report Thumbnail 09',
     active: false,
   },
   {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_10.png',
+    src: '/report_thumbnails/income_statement/report_thumbnail_10.png',
     alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_17.png',
-    alt: 'Report Thumbnail 17',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_18.png',
-    alt: 'Report Thumbnail 18',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_19.png',
-    alt: 'Report Thumbnail 19',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_20.png',
-    alt: 'Report Thumbnail 20',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_21.png',
-    alt: 'Report Thumbnail 21',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_22.png',
-    alt: 'Report Thumbnail 22',
     active: false,
   },
 ];
@@ -279,61 +199,6 @@ const cashFlowReportThumbnails = [
     alt: 'Report Thumbnail 11',
     active: false,
   },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_17.png',
-    alt: 'Report Thumbnail 17',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_18.png',
-    alt: 'Report Thumbnail 18',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_19.png',
-    alt: 'Report Thumbnail 19',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_20.png',
-    alt: 'Report Thumbnail 20',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_21.png',
-    alt: 'Report Thumbnail 21',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_22.png',
-    alt: 'Report Thumbnail 22',
-    active: false,
-  },
 ];
 
 const ViewFinancialSection = ({
@@ -373,6 +238,8 @@ const ViewFinancialSection = ({
     },
   });
 
+  // TODO: until API integration (20240726 - Shirley)
+  // eslint-disable-next-line no-console
   console.log('reportFinancial in viewFinancialSection', reportFinancial);
 
   function onDocumentLoadSuccess(data: { numPages: number }): void {
@@ -467,7 +334,7 @@ const ViewFinancialSection = ({
         setReportThumbnails(balanceReportThumbnails);
         break;
       case FinancialReportTypesKey.comprehensive_income_statement:
-        setReportThumbnails(comprehensiveIncomeReportThumbnails);
+        setReportThumbnails(incomeReportThumbnails);
         break;
       case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
