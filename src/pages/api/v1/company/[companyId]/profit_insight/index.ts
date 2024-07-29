@@ -4,9 +4,11 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { ONE_DAY_IN_MS } from '@/constants/time';
 import { ProjectStage } from '@/constants/project';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function getProfitChange(targetTime: number, companyId: number) {
   // Info: startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime (20240607 - Gibbs)
@@ -99,8 +101,12 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const session = await checkAdmin(req, res);
-      const { companyId } = session;
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
       const targetTime = new Date().getTime();
       const { profitChange, emptyProfitChange } = await getProfitChange(targetTime, companyId);
       const { preLaunchProject, emptyPreLaunchProject } = await getPreLaunchProject(companyId);

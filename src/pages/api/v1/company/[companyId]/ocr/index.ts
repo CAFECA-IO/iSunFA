@@ -23,7 +23,9 @@ import { IOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -233,8 +235,12 @@ export async function createOcrFromAichResults(
 }
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  if (!isAuth) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   // Info Murky (20240416): Check if companyId is string
   if (!isCompanyIdValid(companyId)) {
@@ -272,8 +278,12 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
 export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  if (!isAuth) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
   const { ocrtype } = req.query;
   if (!isCompanyIdValid(companyId)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

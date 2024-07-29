@@ -4,9 +4,11 @@ import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, changeDateToTimeStampOfDayEnd } from '@/lib/utils/common';
 import prisma from '@/client';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { isDateFormatYYYYMMDD } from '@/lib/utils/type_guard/date';
 import { stageList } from '@/constants/project';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 async function getStatusNumber(dateToTimeStamp: number, companyId: number) {
   const statusNumber = await prisma.milestone.groupBy({
@@ -49,8 +51,12 @@ export default async function handler(
   const { date } = req.query;
   try {
     if (date && isDateFormatYYYYMMDD(date as string)) {
-      const session = await checkAdmin(req, res);
-      const { companyId } = session;
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
       const dateToTimeStamp = changeDateToTimeStampOfDayEnd(date as string);
       const statusNumber = await getStatusNumber(dateToTimeStamp, companyId);
       const isEmpty = await checkEmpty(statusNumber);

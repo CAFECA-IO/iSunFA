@@ -3,18 +3,24 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAdmin } from '@/interfaces/admin';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { listAdminByCompanyId } from '@/lib/utils/repo/admin.repo';
 import { formatAdminList } from '@/lib/utils/formatter/admin.formatter';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAdmin | IAdmin[]>>
 ) {
   try {
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
     if (req.method === 'GET') {
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
       const listedAdmin = await listAdminByCompanyId(companyId);
       const adminList = await formatAdminList(listedAdmin);
       const { httpCode, result } = formatApiResponse<IAdmin[]>(

@@ -9,7 +9,7 @@ import {
   isAccountType,
   isEquityType,
 } from '@/lib/utils/type_guard/account';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import {
   findFirstAccountInPrisma,
   findLatestSubAccountInPrisma,
@@ -20,6 +20,7 @@ import { ReportSheetType } from '@/constants/report';
 import { convertStringToReportSheetType, isReportSheetType } from '@/lib/utils/type_guard/report';
 import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -206,8 +207,13 @@ export async function handlePostRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAccount>>
 ) {
-  const { companyId } = await checkAdmin(req, res);
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
   const { accountId, name } = req.body;
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  if (!isAuth) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
   const { companyIdNumber, accountIdNumber } = formatCompanyIdAccountId(companyId, accountId);
   const parentAccount = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
   const time = new Date().getTime();

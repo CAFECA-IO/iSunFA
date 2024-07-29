@@ -5,13 +5,15 @@ import { convertStringToNumber, formatApiResponse, timestampInSeconds } from '@/
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { listJournal } from '@/lib/utils/repo/journal.repo';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { EVENT_TYPE } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,8 +122,12 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const session = await checkAdmin(req, res);
-      const { companyId } = session;
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
       if (!isCompanyIdValid(companyId)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
