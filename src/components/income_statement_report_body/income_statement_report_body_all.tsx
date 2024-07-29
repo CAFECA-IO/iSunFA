@@ -906,14 +906,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
                   {reportFinancial.details[1].curPeriodAmount}
                 </td>
-                <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                  {reportFinancial.details[1].curPeriodPercentage}
-                </td>
                 <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
                   {reportFinancial.details[1].prePeriodAmount}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                  {reportFinancial.details[1].prePeriodPercentage}
                 </td>
               </tr>
             )}
@@ -923,9 +917,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
               <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
             </tr>
           </tbody>
           <tbody>
@@ -940,14 +932,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
                   {reportFinancial.details[3].curPeriodAmount}
                 </td>
-                <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                  {reportFinancial.details[3].curPeriodPercentage}
-                </td>
                 <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
                   {reportFinancial.details[3].prePeriodAmount}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                  {reportFinancial.details[3].prePeriodPercentage}
                 </td>
               </tr>
             )}
@@ -962,14 +948,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                    {value.curPeriodPercentage}
-                  </td>
                   <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
                     {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                    {value.prePeriodPercentage}
                   </td>
                 </tr>
               ))}
