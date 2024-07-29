@@ -19,7 +19,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { FinancialReport, IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
-import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { ReportUrlMap } from '@/constants/report';
 
 interface IServerSideProps {
@@ -114,7 +114,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           }
           tokenContract={reportData.tokenContract}
           tokenId={reportData.tokenId}
-          reportLink={`${DOMAIN}/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+          reportLink={`/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
           reportId={reportId}
         />
       </div>
