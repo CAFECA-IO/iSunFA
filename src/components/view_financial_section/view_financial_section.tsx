@@ -70,6 +70,8 @@ const ViewFinancialSection = ({
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // TODO: debug, 需要在reportLink 拿到之後再傳 props 到ViewFinancialSection (20240729 - Shirley)
+  // eslint-disable-next-line no-console
   console.log('ViewFinancialSection ${reportLink}#${pageNumber}', `${reportLink}#${pageNumber}`);
 
   const {
