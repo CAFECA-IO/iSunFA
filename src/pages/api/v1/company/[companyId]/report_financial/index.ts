@@ -410,6 +410,9 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+    // Deprecate: (20240710 - Murky) Debug
+    // eslint-disable-next-line no-console
+    console.log(error);
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<number | null>(statusMessage, payload);

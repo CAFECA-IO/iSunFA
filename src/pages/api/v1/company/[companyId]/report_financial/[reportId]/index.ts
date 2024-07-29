@@ -31,97 +31,6 @@ export function formatGetRequestQueryParams(req: NextApiRequest) {
   };
 }
 
-// Deprecated: (20240703 - Murky) These function is not used
-// export function getLastPeriodStartAndEndDate(
-//   reportSheetType: ReportSheetType,
-//   startDateInSecond: number,
-//   endDateInSecond: number
-// ) {
-//   const lastPeriodStartDateInSecond =
-//     reportSheetType === ReportSheetType.BALANCE_SHEET
-//       ? 0
-//       : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
-//   const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
-//   return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
-// }
-
-// export async function getCurrentAndLastPeriodReport(reportId: number) {
-//   const curPeriodReportFromDB = await findUniqueReportById(reportId);
-//   let curPeriodReport: IReport | null = null;
-//   let lastPeriodReport: IReport | null = null;
-
-//   if (curPeriodReportFromDB) {
-//     curPeriodReport = formatIReport(curPeriodReportFromDB);
-//     const { companyId, from, to, reportType } = curPeriodReport;
-//     const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
-//       reportType,
-//       from,
-//       to
-//     );
-
-//     const lastPeriodReportFromDB = await findFirstReportByFromTo(
-//       companyId,
-//       lastPeriodStartDateInSecond,
-//       lastPeriodEndDateInSecond,
-//       reportType
-//     );
-//     if (lastPeriodReportFromDB) {
-//       lastPeriodReport = formatIReport(lastPeriodReportFromDB);
-//     }
-//   }
-//   return { curPeriodReport, lastPeriodReport };
-// }
-
-// export function generateIAccountReadyForFrontendArray(
-//   curPeriodReport: IReport | null,
-//   prePeriodReport: IReport | null
-// ): IAccountReadyForFrontend[] {
-//   const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
-
-//   if (
-//     curPeriodReport &&
-//     prePeriodReport &&
-//     curPeriodReport.reportType === prePeriodReport.reportType
-//   ) {
-//     const { content: curPeriodContent } = curPeriodReport;
-//     const { content: prePeriodContent } = prePeriodReport;
-
-//     if (
-//       curPeriodContent &&
-//       prePeriodContent &&
-//       curPeriodContent.length > 0 &&
-//       prePeriodContent.length > 0 &&
-//       curPeriodContent.length === prePeriodContent.length
-//     ) {
-//       curPeriodContent.forEach((curPeriodAccount, index) => {
-//         const lastPeriodAccount = prePeriodContent[index];
-//         const curPeriodAmount = curPeriodAccount.amount || 0;
-//         const prePeriodAmount = lastPeriodAccount.amount || 0;
-//         const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-//         const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
-//         const curPeriodPercentage = curPeriodAccount?.percentage
-//           ? Math.round(curPeriodAccount.percentage * 100)
-//           : 0;
-//         const prePeriodPercentage = lastPeriodAccount?.percentage
-//           ? Math.round(lastPeriodAccount.percentage * 100)
-//           : 0;
-//         const accountReadyForFrontend: IAccountReadyForFrontend = {
-//           code: curPeriodAccount.code,
-//           name: curPeriodAccount.name,
-//           curPeriodAmount,
-//           curPeriodPercentage,
-//           curPeriodAmountString,
-//           prePeriodAmount,
-//           prePeriodPercentage,
-//           prePeriodAmountString,
-//           indent: curPeriodAccount.indent,
-//         };
-//         curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
-//       });
-//     }
-//   }
-//   return curPeriodAccountReadyForFrontendArray;
-// }
 export function getReportTypeFromReport(report: IReport | null) {
   let reportType = ReportSheetType.BALANCE_SHEET;
   if (report) {
@@ -254,6 +163,7 @@ export function getAdditionalInfo(report: IReport): BalanceSheetOtherInfo | Inco
 export function formatPayloadFromIReport(report: IReport, company: Company): FinancialReport {
   const { reportType } = report;
   const details = report.content;
+
   const general = transformDetailsIntoGeneral(reportType, details);
   const curFrom = report.from;
   const curTo = report.to;
@@ -262,6 +172,7 @@ export function formatPayloadFromIReport(report: IReport, company: Company): Fin
   const preTo = getTimestampOfSameDateOfLastYear(curTo);
 
   const otherInfo = getAdditionalInfo(report);
+
   return {
     company: {
       id: company.id,
@@ -326,6 +237,10 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
+
+    // Info: (20240729 - Murky) Debugging
+    // eslint-disable-next-line no-console
+    console.log(error);
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<FinancialReport | null>(statusMessage, payload);

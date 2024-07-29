@@ -27,7 +27,7 @@ export function formatIReport(report: Report): IReport {
 
   // Info: (20240729 - Murky) Bad code, not robust
   const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent.content)
-    ? reportContent
+    ? reportContent.content
     : [];
 
   // Info: (20240729 - Murky) Bad code, not robust
