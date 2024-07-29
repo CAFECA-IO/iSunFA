@@ -10,7 +10,7 @@ interface IBalanceSheetPageProps {
   reportId: string;
 }
 
-const BalanceSheetGeneralPage = ({ reportId }: IBalanceSheetPageProps) => {
+const IncomeStatementPage = ({ reportId }: IBalanceSheetPageProps) => {
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -52,4 +52,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default BalanceSheetGeneralPage;
+export default IncomeStatementPage;

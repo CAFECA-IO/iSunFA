@@ -36,6 +36,17 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     return <div>Error {getReportFinancialCode}</div>;
   }
 
+  const renderedFooter = (page: number) => {
+    return (
+      <footer className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
+        <p className="m-0 text-[12px] text-white">{page}</p>
+        <div className="text-[16px] font-bold text-surface-brand-secondary">
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        </div>
+      </footer>
+    );
+  };
+
   const page1 = (
     <div id="1" className="relative h-a4-height overflow-hidden">
       {/* Info: watermark logo (20240723 - Anna) */}
@@ -140,12 +151,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">1</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(1)}
     </div>
   );
   const page2 = (
@@ -224,12 +230,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">2</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(2)}
     </div>
   );
   const page3 = (
@@ -348,12 +349,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">3</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(3)}
     </div>
   );
   const page4 = (
@@ -432,12 +428,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">4</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(4)}
     </div>
   );
   const page5 = (
@@ -516,12 +507,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">5</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(5)}
     </div>
   );
   const page6 = (
@@ -600,12 +586,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">6</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(6)}
     </div>
   );
   const page7 = (
@@ -684,12 +665,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">7</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(7)}
     </div>
   );
   const page8 = (
@@ -800,12 +776,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">8</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(8)}
     </div>
   );
   const page9 = (
@@ -1042,12 +1013,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">9</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(9)}
     </div>
   );
 

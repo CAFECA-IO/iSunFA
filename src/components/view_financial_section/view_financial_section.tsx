@@ -16,7 +16,7 @@ import { FinancialReport } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -31,7 +31,7 @@ const generateThumbnails = (count: number) => {
   return Array.from({ length: count }, (_, index) => ({
     number: index + 1,
     active: index === 0,
-    src: `${count}`,
+    src: `/elements/placeholder.png`,
     alt: `${count}`,
   }));
 };
@@ -60,7 +60,7 @@ const ViewFinancialSection = ({
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
-    { number: number; alt: string; active: boolean }[]
+    { number: number; alt: string; active: boolean; src: string }[]
   >([]);
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [numPages, setNumPages] = useState<number>(1);
@@ -151,7 +151,7 @@ const ViewFinancialSection = ({
 
   const fetchPDF = async () => {
     try {
-      const uri = encodeURIComponent(reportLink);
+      const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
 
       const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
@@ -246,7 +246,7 @@ const ViewFinancialSection = ({
   );
 
   const renderedThumbnail = (
-    thumbnail: { number: number; active: boolean; alt: string },
+    thumbnail: { number: number; active: boolean; alt: string; src: string },
     index: number
   ) => (
     <button onClick={() => thumbnailClickHandler(index)} key={index}>
@@ -257,86 +257,18 @@ const ViewFinancialSection = ({
             : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
         }`}
       >
-        <div className="flex h-[106px] w-[150px] items-center justify-center border border-solid border-blue-950 text-3xl font-bold">
-          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        <div className="flex items-center justify-center border border-solid border-blue-950">
+          <Image width={100} height={142} src={thumbnail.src} alt={thumbnail.alt} />
         </div>
         <div
           className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
             thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-text-neutral-primary'
           }`}
         >
-          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+          {index + 1 < 10 ? `0${index + 1}` : index + 1}
         </div>
       </div>
     </button>
-  );
-
-  const displayedPDF = (
-    <div className="flex w-screen flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
-      {/* Info: prev button (20240529 - Shirley) */}
-      <button
-        onClick={prevClickHandler}
-        disabled={pageNumber <= 1}
-        className="absolute left-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          fill="none"
-          viewBox="0 0 17 16"
-        >
-          <path
-            fill="#001840"
-            fillRule="evenodd"
-            d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
-            clipRule="evenodd"
-          ></path>
-        </svg>
-      </button>
-
-      {/* Info: PDF 本體 for desktop (20240529 - Shirley) */}
-      <div className="hidden lg:flex">
-        <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-          <Page scale={1} pageNumber={pageNumber} />
-        </Document>
-      </div>
-
-      {/* Info: PDF 本體 for mobile (20240529 - Shirley) */}
-      <div className="flex h-screen md:mt-20 lg:hidden">
-        <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
-          <Page
-            scale={1}
-            pageNumber={pageNumber}
-            width={chartWidth}
-            height={chartHeight}
-            className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
-          />
-        </Document>
-      </div>
-
-      {/* Info: next button (20240529 - Shirley) */}
-      <button
-        onClick={nextClickHandler}
-        disabled={pageNumber >= numPages}
-        className="absolute right-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          fill="none"
-          viewBox="0 0 17 16"
-        >
-          <path
-            fill="#001840"
-            fillRule="evenodd"
-            d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
-            clipRule="evenodd"
-          ></path>
-        </svg>
-      </button>
-    </div>
   );
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
@@ -373,7 +305,7 @@ const ViewFinancialSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={isLoading}
+              disabled={isLoading || pdfFile === null}
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
