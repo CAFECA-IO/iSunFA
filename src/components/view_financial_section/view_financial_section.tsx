@@ -286,9 +286,6 @@ const ViewFinancialSection = ({
     </button>
   );
 
-  {
-    /* Info: 如果 displayedReportType 是字串，就使用它的值；如果不是字串，就設置為空字串。 (20240730 - Anna) */
-  }
   // const reportTypeString = typeof displayedReportType === 'string' ? displayedReportType : '';
   const displayedReport = (
     <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
