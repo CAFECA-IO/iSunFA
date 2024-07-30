@@ -94,7 +94,7 @@ export interface FinancialReport {
     id: number;
     code: string;
     name: string;
-  },
+  };
   preDate: {
     from: number;
     to: number;
@@ -129,42 +129,46 @@ export interface IncomeStatementOtherInfo {
     ratio: {
       curRatio: number;
       preRatio: number;
-    },
-  },
+    };
+  };
   revenueToRD: {
     revenue: IAccountReadyForFrontend;
     researchAndDevelopmentExpense: IAccountReadyForFrontend;
     ratio: {
       curRatio: number;
       preRatio: number;
-    },
-  },
+    };
+  };
 }
 
 export interface CashFlowStatementOtherInfo {
-  operatingStabilized: { [key: string]: {
-    [key: string]: number;
-   } };
+  operatingStabilized: {
+    [key: string]: {
+      [key: string]: number;
+    };
+  };
   lineChartDataForRatio: {
     data: number[];
     labels: string[];
   };
-  strategyInvest:{
+  strategyInvest: {
     [key: string]: {
       data: number[];
       labels: string[];
     };
-  },
+  };
   thirdTitle: string;
   fourthTitle: string;
   fourPointOneTitle: string;
   ourThoughts: string[];
-  freeCash: { [key: string]: {
-    operatingCashFlow: number,
-    ppe: number,
-    intangibleAsset: number,
-    freeCash: number,
-  } };
+  freeCash: {
+    [key: string]: {
+      operatingCashFlow: number;
+      ppe: number;
+      intangibleAsset: number;
+      freeCash: number;
+    };
+  };
 }
 
 // Todo Murky (20240729):
