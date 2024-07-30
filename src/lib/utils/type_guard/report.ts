@@ -1,7 +1,11 @@
-import { ReportSheetType, ReportStatusType, ReportType } from "@/constants/report";
-import { STATUS_MESSAGE } from "@/constants/status_code";
-import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from "@/interfaces/report";
-import { ReportLanguagesKey } from "@/interfaces/report_language";
+import { ReportSheetType, ReportStatusType, ReportType } from '@/constants/report';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import {
+  BalanceSheetOtherInfo,
+  CashFlowStatementOtherInfo,
+  IncomeStatementOtherInfo,
+} from '@/interfaces/report';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
 
 export function isReportType(data: string): data is ReportType {
   const isValid = Object.values(ReportType).includes(data as ReportType);
@@ -49,14 +53,16 @@ export function isBalanceSheetOtherInfo(obj: unknown): obj is BalanceSheetOtherI
   }
 
   const maybeObj = obj as Partial<BalanceSheetOtherInfo>;
-  return maybeObj.dso !== undefined &&
+  return (
+    maybeObj.dso !== undefined &&
     typeof maybeObj.dso === 'object' &&
     typeof maybeObj.dso.curDso === 'number' &&
     typeof maybeObj.dso.preDso === 'number' &&
     maybeObj.inventoryTurnoverDays !== undefined &&
     typeof maybeObj.inventoryTurnoverDays === 'object' &&
     typeof maybeObj.inventoryTurnoverDays.curInventoryTurnoverDays === 'number' &&
-    typeof maybeObj.inventoryTurnoverDays.preInventoryTurnoverDays === 'number';
+    typeof maybeObj.inventoryTurnoverDays.preInventoryTurnoverDays === 'number'
+  );
 }
 
 export function isIncomeStatementOtherInfo(obj: unknown): obj is IncomeStatementOtherInfo {
@@ -65,7 +71,8 @@ export function isIncomeStatementOtherInfo(obj: unknown): obj is IncomeStatement
   }
 
   const maybeObj = obj as Partial<IncomeStatementOtherInfo>;
-  return maybeObj.revenueAndExpenseRatio !== undefined &&
+  return (
+    maybeObj.revenueAndExpenseRatio !== undefined &&
     typeof maybeObj.revenueAndExpenseRatio === 'object' &&
     typeof maybeObj.revenueAndExpenseRatio.revenue === 'object' &&
     typeof maybeObj.revenueAndExpenseRatio.totalCost === 'object' &&
@@ -82,7 +89,8 @@ export function isIncomeStatementOtherInfo(obj: unknown): obj is IncomeStatement
     maybeObj.revenueToRD.ratio !== undefined &&
     typeof maybeObj.revenueToRD.ratio === 'object' &&
     typeof maybeObj.revenueToRD.ratio.curRatio === 'number' &&
-    typeof maybeObj.revenueToRD.ratio.preRatio === 'number';
+    typeof maybeObj.revenueToRD.ratio.preRatio === 'number'
+  );
 }
 
 export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowStatementOtherInfo {
@@ -91,32 +99,57 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
   }
 
   const maybeObj = obj as Partial<CashFlowStatementOtherInfo>;
-  return maybeObj.operatingStabilized !== undefined &&
+
+  const isValidOperatingStabilized =
+    maybeObj.operatingStabilized &&
     typeof maybeObj.operatingStabilized === 'object' &&
-    Object.values(maybeObj.operatingStabilized).every((val: unknown) => {
-      if (typeof val !== 'object' || val === null) {
-        return false;
-      }
+    Object.values(maybeObj.operatingStabilized).every(
+      (val) => typeof val === 'object' && Object.values(val).every((num) => typeof num === 'number')
+    );
 
-      const valForTest = val as Partial<{ cur: number; curMinus1: number; curMinus2: number; curMinus3: number; curMinus4: number }>;
+  const isValidLineChartDataForRatio =
+    maybeObj.lineChartDataForRatio &&
+    typeof maybeObj.lineChartDataForRatio === 'object' &&
+    Array.isArray(maybeObj.lineChartDataForRatio.data) &&
+    maybeObj.lineChartDataForRatio.data.every((num) => typeof num === 'number') &&
+    Array.isArray(maybeObj.lineChartDataForRatio.labels) &&
+    maybeObj.lineChartDataForRatio.labels.every((label) => typeof label === 'string');
 
-      return typeof val === 'object' &&
-        typeof valForTest.cur === 'number' &&
-        typeof valForTest.curMinus1 === 'number' &&
-        typeof valForTest.curMinus2 === 'number' &&
-        typeof valForTest.curMinus3 === 'number' &&
-        typeof valForTest.curMinus4 === 'number';
-}) &&
-    maybeObj.strategyInvest !== undefined &&
+  const isValidStrategyInvest =
+    maybeObj.strategyInvest &&
     typeof maybeObj.strategyInvest === 'object' &&
-    maybeObj.strategyInvest.cur !== undefined &&
-    typeof maybeObj.strategyInvest.cur === 'object' &&
-    typeof maybeObj.strategyInvest.cur.PPEInvest === 'number' &&
-    typeof maybeObj.strategyInvest.cur.strategyInvest === 'number' &&
-    typeof maybeObj.strategyInvest.cur.otherInvest === 'number' &&
-    maybeObj.strategyInvest.pre !== undefined &&
-    typeof maybeObj.strategyInvest.pre === 'object' &&
-    typeof maybeObj.strategyInvest.pre.PPEInvest === 'number' &&
-    typeof maybeObj.strategyInvest.pre.strategyInvest === 'number' &&
-    typeof maybeObj.strategyInvest.pre.otherInvest === 'number';
+    Object.values(maybeObj.strategyInvest).every(
+      (val) =>
+        typeof val === 'object' &&
+        Array.isArray(val.data) &&
+        val.data.every((num) => typeof num === 'number') &&
+        Array.isArray(val.labels) &&
+        val.labels.every((label) => typeof label === 'string')
+    );
+
+  const isValidOurThoughts =
+    maybeObj.ourThoughts &&
+    Array.isArray(maybeObj.ourThoughts) &&
+    maybeObj.ourThoughts.every((thought) => typeof thought === 'string');
+
+  const isValidFreeCash =
+    maybeObj.freeCash &&
+    typeof maybeObj.freeCash === 'object' &&
+    Object.values(maybeObj.freeCash).every(
+      (val) =>
+        typeof val === 'object' &&
+        typeof val.operatingCashFlow === 'number' &&
+        typeof val.ppe === 'number' &&
+        typeof val.intangibleAsset === 'number' &&
+        typeof val.freeCash === 'number'
+    );
+
+  return (
+    (isValidOperatingStabilized &&
+      isValidLineChartDataForRatio &&
+      isValidStrategyInvest &&
+      isValidOurThoughts &&
+      isValidFreeCash) ||
+    false
+  );
 }
