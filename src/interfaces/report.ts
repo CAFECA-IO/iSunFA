@@ -4,6 +4,11 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
 import { Prisma } from '@prisma/client';
 
+export type IReportIncludeCompany = Prisma.ReportGetPayload<{
+  include: {
+    company: true;
+  };
+}>;
 export interface IAnalysisReportRequest {
   project_id: string;
   type: string;
@@ -31,6 +36,7 @@ export interface IReport {
   blockChainExplorerLink: string;
   evidenceId: string;
   content: IAccountReadyForFrontend[];
+  otherInfo: unknown;
   createdAt: number;
   updatedAt: number;
 }
@@ -82,12 +88,13 @@ export interface FinancialReportItem {
   indent: number;
 }
 
+// Info Murky (20240729): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
   company: {
     id: number;
     code: string;
     name: string;
-  };
+  },
   preDate: {
     from: number;
     to: number;
@@ -100,6 +107,76 @@ export interface FinancialReport {
   general: FinancialReportItem[];
   details: FinancialReportItem[];
   otherInfo: unknown;
+}
+
+export interface BalanceSheetOtherInfo {
+  dso: {
+    curDso: number;
+    preDso: number;
+  };
+  inventoryTurnoverDays: {
+    curInventoryTurnoverDays: number;
+    preInventoryTurnoverDays: number;
+  };
+}
+
+export interface IncomeStatementOtherInfo {
+  revenueAndExpenseRatio: {
+    revenue: IAccountReadyForFrontend;
+    totalCost: IAccountReadyForFrontend;
+    salesExpense: IAccountReadyForFrontend;
+    administrativeExpense: IAccountReadyForFrontend;
+    ratio: {
+      curRatio: number;
+      preRatio: number;
+    },
+  },
+  revenueToRD: {
+    revenue: IAccountReadyForFrontend;
+    researchAndDevelopmentExpense: IAccountReadyForFrontend;
+    ratio: {
+      curRatio: number;
+      preRatio: number;
+    },
+  },
+}
+
+export interface CashFlowStatementOtherInfo {
+  operatingStabilized: { [key: string]: {
+    cur: number;
+    curMinus1: number;
+    curMinus2: number;
+    curMinus3: number;
+    curMinus4: number;
+   } };
+  strategyInvest:{
+      cur: {
+      PPEInvest: number;
+      strategyInvest: number;
+      otherInvest: number;
+    };
+    pre: {
+      PPEInvest: number;
+      strategyInvest: number;
+      otherInvest: number;
+    };
+  }
+
+}
+
+// Todo Murky (20240729):
+export interface BalanceSheetReport extends FinancialReport {
+  otherInfo: BalanceSheetOtherInfo;
+}
+
+// Todo Murky (20240729):
+export interface IncomeStatementReport extends FinancialReport {
+  otherInfo: IncomeStatementOtherInfo;
+}
+
+// Todo Murky (2024729):
+export interface CashFlowStatementReport extends FinancialReport {
+  otherInfo: CashFlowStatementOtherInfo;
 }
 
 export function isFinancialReportType(data: string): data is FinancialReportType {
