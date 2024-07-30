@@ -217,17 +217,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     );
   };
 
-  // const renderDataRow = (
-  //   label: string,
-  //   curValue: number | undefined,
-  //   preValue: number | undefined
-  // ) => (
-  //   <tr>
-  //     <td className="border border-[#dee2e6] p-[10px] text-[14px]">{label}</td>
-  //     <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">{curValue}</td>
-  //     <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">{preValue}</td>
-  //   </tr>
-  // );
+  const renderDataRow = (
+    label: string,
+    curValue: number | undefined,
+    preValue: number | undefined
+  ) => (
+    <tr>
+      <td className="border border-[#dee2e6] p-[10px] text-[14px]">{label}</td>
+      <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">{curValue}</td>
+      <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">{preValue}</td>
+    </tr>
+  );
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 9).map((item, index) => {
@@ -554,42 +554,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(90, 101).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
-        return (
-          <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
-              {item.name}
-            </td>
-          </tr>
-        );
-      }
-
-      return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-            {item.curPeriodAmountString}
-          </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-            {item.curPeriodPercentage}
-          </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-            {item.prePeriodAmountString}
-          </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-            {item.prePeriodPercentage}
-          </td>
-        </tr>
-      );
-    });
-    return rows;
-  };
-
-  const rowsForPage12 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(42, 54).map((item, index) => {
       if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
         return (
           <tr key={item.code}>
@@ -1317,9 +1281,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>四、資產分布圖</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
-          <div className="flex flex-col space-y-0">
+          <div className="flex flex-col space-y-5">
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
-            <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
@@ -1403,21 +1367,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">應收帳款週轉天數</td>
-              {reportFinancial &&
-                reportFinancial.otherInfo &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') && (
-                  <>
-                    <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                      {reportFinancial.otherInfo.dso.curDso}
-                    </td>
-                    <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                      {reportFinancial.otherInfo.dso.preDso}
-                    </td>
-                  </>
-                )}
-            </tr>
+            {renderDataRow(
+              '應收帳款週轉天數',
+              reportFinancial?.otherInfo?.dso.curDso,
+              reportFinancial?.otherInfo?.dso.preDso
+            )}
           </tbody>
         </table>
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
@@ -1437,25 +1391,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            <tr>
-              {reportFinancial &&
-                reportFinancial.general &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-                rowsForPage12(reportFinancial.general)}
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">存貨週轉天數</td>
-              {reportFinancial &&
-                reportFinancial.otherInfo &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') && (
-                  <>
-                    <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                      {reportFinancial.otherInfo.inventoryTurnoverDays.curInventoryTurnoverDays}
-                    </td>
-                    <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                      {reportFinancial.otherInfo.inventoryTurnoverDays.preInventoryTurnoverDays}
-                    </td>
-                  </>
-                )}
-            </tr>
+            {renderDataRow(
+              '存貨週轉天數',
+              reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
+              reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
+            )}
           </tbody>
         </table>
         <div className="relative top-28rem -z-10">
