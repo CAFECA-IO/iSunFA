@@ -24,6 +24,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private voucherLastPeriod: IVoucherFromPrismaIncludeLineItems[];
 
+  private YEAR_RANGE = 5;
+
   constructor(
     companyId: number,
     startDateInSecond: number,
@@ -486,6 +488,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // eslint-disable-next-line class-methods-use-this
   private calculateOperatingStabilizedRatio(
+    currentYear: number,
     beforeIncomeTax?: IAccountReadyForFrontend,
     salesDepreciation?: IAccountReadyForFrontend,
     salesAmortization?: IAccountReadyForFrontend,
@@ -495,54 +498,66 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     tax?: IAccountReadyForFrontend,
     operatingIncomeCashFlow?: IAccountReadyForFrontend
   ) {
-    const result = {
-      curMinus4: 0,
-      curMinus3: 0,
-      curMinus2: 0,
-      curMinus1: 0,
-      cur: 0,
-    };
+    const startYear = currentYear - this.YEAR_RANGE + 1;
 
-    if (!(beforeIncomeTax && salesDepreciation && salesAmortization && manageDepreciation && manageAmortization && rdDepreciation && tax && operatingIncomeCashFlow)) {
-      return result;
-    }
+    const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
+    const result: { [key: string]: number } = {};
 
-    result.cur = operatingIncomeCashFlow.curPeriodAmount !== 0
-      ? (
-      beforeIncomeTax.curPeriodAmount +
-      salesDepreciation.curPeriodAmount +
-      salesAmortization.curPeriodAmount +
-      manageDepreciation.curPeriodAmount +
-      manageAmortization.curPeriodAmount +
-      rdDepreciation.curPeriodAmount -
-      tax.curPeriodAmount) / operatingIncomeCashFlow.curPeriodAmount
-      : 0;
+    years.forEach((year) => {
+      result[year] = 0;
+    });
 
-    result.curMinus1 = operatingIncomeCashFlow.prePeriodAmount !== 0
+    if (beforeIncomeTax && salesDepreciation && salesAmortization && manageDepreciation && manageAmortization && rdDepreciation && tax && operatingIncomeCashFlow) {
+      result[years.length - 1] = operatingIncomeCashFlow.curPeriodAmount !== 0
         ? (
-          beforeIncomeTax.prePeriodAmount +
-          salesDepreciation.prePeriodAmount +
-          salesAmortization.prePeriodAmount +
-          manageDepreciation.prePeriodAmount +
-          manageAmortization.prePeriodAmount +
-          rdDepreciation.prePeriodAmount -
-          tax.prePeriodAmount) / operatingIncomeCashFlow.prePeriodAmount
+        beforeIncomeTax.curPeriodAmount +
+        salesDepreciation.curPeriodAmount +
+        salesAmortization.curPeriodAmount +
+        manageDepreciation.curPeriodAmount +
+        manageAmortization.curPeriodAmount +
+        rdDepreciation.curPeriodAmount -
+        tax.curPeriodAmount) / operatingIncomeCashFlow.curPeriodAmount
         : 0;
-    return result;
+
+      result[years.length - 2] = operatingIncomeCashFlow.prePeriodAmount !== 0
+          ? (
+            beforeIncomeTax.prePeriodAmount +
+            salesDepreciation.prePeriodAmount +
+            salesAmortization.prePeriodAmount +
+            manageDepreciation.prePeriodAmount +
+            manageAmortization.prePeriodAmount +
+            rdDepreciation.prePeriodAmount -
+            tax.prePeriodAmount) / operatingIncomeCashFlow.prePeriodAmount
+          : 0;
+    }
+    const lineChartDataForRatio = {
+      data: Object.values(result),
+      labels: years,
+    };
+    return {
+      ratio: result,
+      lineChartDataForRatio
+    };
   }
 
   // eslint-disable-next-line class-methods-use-this
-  private formatByPeriod(accountReadyForFrontend?: IAccountReadyForFrontend) {
-    return {
-      cur: accountReadyForFrontend?.curPeriodAmount || 0,
-      curMinus1: accountReadyForFrontend?.prePeriodAmount || 0,
-      curMinus2: 0,
-      curMinus3: 0,
-      curMinus4: 0,
-    };
+  private formatByPeriod(currentYear: number, accountReadyForFrontend?: IAccountReadyForFrontend) {
+    const startYear = currentYear - this.YEAR_RANGE + 1;
+
+    const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
+    const result: { [key: string]: number } = {};
+
+    years.forEach((year) => {
+      result[year] = 0;
+    });
+
+    result[years.length - 1] = accountReadyForFrontend?.curPeriodAmount || 0;
+
+    result[years.length - 2] = accountReadyForFrontend?.prePeriodAmount || 0;
+    return result;
   }
 
-  private operatingStabilizedMap(accountMap: Map<string, IAccountReadyForFrontend>) {
+  private operatingStabilizedMap(currentYear: number, accountMap: Map<string, IAccountReadyForFrontend>) {
     const beforeIncomeTax = accountMap.get('A10000');
     const salesDepreciation = accountMap.get('6124');
     const salesAmortization = accountMap.get('6125');
@@ -551,7 +566,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const rdDepreciation = accountMap.get('6324');
     const tax = accountMap.get('A33500');
     const operatingIncomeCashFlow = accountMap.get('AAAA');
-    const ratio = this.calculateOperatingStabilizedRatio(
+    const { ratio, lineChartDataForRatio } = this.calculateOperatingStabilizedRatio(
+      currentYear,
       beforeIncomeTax,
       salesDepreciation,
       salesAmortization,
@@ -563,15 +579,18 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     );
 
     return {
-      beforeIncomeTax: this.formatByPeriod(beforeIncomeTax),
-      salesDepreciation: this.formatByPeriod(salesDepreciation),
-      salesAmortization: this.formatByPeriod(salesAmortization),
-      manageDepreciation: this.formatByPeriod(manageDepreciation),
-      manageAmortization: this.formatByPeriod(manageAmortization),
-      rdDepreciation: this.formatByPeriod(rdDepreciation),
-      tax: this.formatByPeriod(tax),
-      operatingIncomeCashFlow: this.formatByPeriod(operatingIncomeCashFlow),
+      operatingStabilized: {
+      beforeIncomeTax: this.formatByPeriod(currentYear, beforeIncomeTax),
+      salesDepreciation: this.formatByPeriod(currentYear, salesDepreciation),
+      salesAmortization: this.formatByPeriod(currentYear, salesAmortization),
+      manageDepreciation: this.formatByPeriod(currentYear, manageDepreciation),
+      manageAmortization: this.formatByPeriod(currentYear, manageAmortization),
+      rdDepreciation: this.formatByPeriod(currentYear, rdDepreciation),
+      tax: this.formatByPeriod(currentYear, tax),
+      operatingIncomeCashFlow: this.formatByPeriod(currentYear, operatingIncomeCashFlow),
       ratio,
+      },
+      lineChartDataForRatio
     };
   }
 
@@ -615,6 +634,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     cashFlowAccounts: IAccountReadyForFrontend[],
     incomeStatementAccounts: IAccountReadyForFrontend[]
   ): CashFlowStatementOtherInfo {
+    const currentDate = new Date(this.startDateInSecond);
+    const currentYear = currentDate.getFullYear();
     const accountMap = new Map<string, IAccountReadyForFrontend>();
     cashFlowAccounts.forEach((account) => {
       accountMap.set(account.code, account);
@@ -623,11 +644,12 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountMap.set(account.code, account);
     });
 
-    const operatingStabilized = this.operatingStabilizedMap(accountMap);
+    const { operatingStabilized, lineChartDataForRatio } = this.operatingStabilizedMap(currentYear, accountMap);
     const strategyInvest = this.ppeVSStrategyInvestMap(accountMap);
 
     return {
       operatingStabilized,
+      lineChartDataForRatio,
       strategyInvest,
     };
   }

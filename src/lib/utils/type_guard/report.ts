@@ -91,32 +91,47 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
   }
 
   const maybeObj = obj as Partial<CashFlowStatementOtherInfo>;
-  return maybeObj.operatingStabilized !== undefined &&
-    typeof maybeObj.operatingStabilized === 'object' &&
-    Object.values(maybeObj.operatingStabilized).every((val: unknown) => {
-      if (typeof val !== 'object' || val === null) {
-        return false;
-      }
 
-      const valForTest = val as Partial<{ cur: number; curMinus1: number; curMinus2: number; curMinus3: number; curMinus4: number }>;
+  // Check operatingStabilized
+  if (typeof maybeObj.operatingStabilized !== 'object' || maybeObj.operatingStabilized === null) {
+    return false;
+  }
+  if (!Object.keys(maybeObj.operatingStabilized).every((key) => {
+    const value = maybeObj.operatingStabilized![key];
+    return typeof value === 'object' && value !== null && Object.values(value).every((val) => typeof val === 'number');
+  })) {
+    return false;
+  }
 
-      return typeof val === 'object' &&
-        typeof valForTest.cur === 'number' &&
-        typeof valForTest.curMinus1 === 'number' &&
-        typeof valForTest.curMinus2 === 'number' &&
-        typeof valForTest.curMinus3 === 'number' &&
-        typeof valForTest.curMinus4 === 'number';
-}) &&
-    maybeObj.strategyInvest !== undefined &&
-    typeof maybeObj.strategyInvest === 'object' &&
-    maybeObj.strategyInvest.cur !== undefined &&
-    typeof maybeObj.strategyInvest.cur === 'object' &&
-    typeof maybeObj.strategyInvest.cur.PPEInvest === 'number' &&
-    typeof maybeObj.strategyInvest.cur.strategyInvest === 'number' &&
-    typeof maybeObj.strategyInvest.cur.otherInvest === 'number' &&
-    maybeObj.strategyInvest.pre !== undefined &&
-    typeof maybeObj.strategyInvest.pre === 'object' &&
-    typeof maybeObj.strategyInvest.pre.PPEInvest === 'number' &&
-    typeof maybeObj.strategyInvest.pre.strategyInvest === 'number' &&
-    typeof maybeObj.strategyInvest.pre.otherInvest === 'number';
+  // Check lineChartDataForRatio
+  if (
+    typeof maybeObj.lineChartDataForRatio !== 'object' ||
+    maybeObj.lineChartDataForRatio === null ||
+    !Array.isArray(maybeObj.lineChartDataForRatio.data) ||
+    !maybeObj.lineChartDataForRatio.data.every((val) => typeof val === 'number') ||
+    !Array.isArray(maybeObj.lineChartDataForRatio.labels) ||
+    !maybeObj.lineChartDataForRatio.labels.every((val) => typeof val === 'string')
+  ) {
+    return false;
+  }
+
+  // Check strategyInvest
+  if (
+    typeof maybeObj.strategyInvest !== 'object' ||
+    maybeObj.strategyInvest === null ||
+    typeof maybeObj.strategyInvest.cur !== 'object' ||
+    maybeObj.strategyInvest.cur === null ||
+    typeof maybeObj.strategyInvest.cur.PPEInvest !== 'number' ||
+    typeof maybeObj.strategyInvest.cur.strategyInvest !== 'number' ||
+    typeof maybeObj.strategyInvest.cur.otherInvest !== 'number' ||
+    typeof maybeObj.strategyInvest.pre !== 'object' ||
+    maybeObj.strategyInvest.pre === null ||
+    typeof maybeObj.strategyInvest.pre.PPEInvest !== 'number' ||
+    typeof maybeObj.strategyInvest.pre.strategyInvest !== 'number' ||
+    typeof maybeObj.strategyInvest.pre.otherInvest !== 'number'
+  ) {
+    return false;
+  }
+
+  return true;
 }

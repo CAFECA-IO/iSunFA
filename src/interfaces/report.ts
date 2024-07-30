@@ -143,12 +143,12 @@ export interface IncomeStatementOtherInfo {
 
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: { [key: string]: {
-    cur: number;
-    curMinus1: number;
-    curMinus2: number;
-    curMinus3: number;
-    curMinus4: number;
+    [key: string]: number;
    } };
+  lineChartDataForRatio: {
+    data: number[];
+    labels: string[];
+  };
   strategyInvest:{
       cur: {
       PPEInvest: number;
