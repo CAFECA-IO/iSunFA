@@ -42,6 +42,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const [lineChartData, setLineChartData] = useStateRef<number[]>([]);
   const [lineChartLabels, setLineChartLabels] = useStateRef<string[]>([]);
 
+  const [curBarChartData, setCurBarChartData] = useStateRef<number[]>([]);
+  const [curBarChartLabels, setCurBarChartLabels] = useStateRef<string[]>([]);
+  const [preBarChartData, setPreBarChartData] = useStateRef<number[]>([]);
+  const [preBarChartLabels, setPreBarChartLabels] = useStateRef<string[]>([]);
+
   // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley Anna)
   // eslint-disable-next-line no-console
   console.log('reportFinancial', reportFinancial);
@@ -71,8 +76,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       //   }
       // }
 
-      setLineChartData([0, 0, 0]);
-      setLineChartLabels(['不動產、廠房、設備的收支項目', '策略性投資項目', '其他']);
+      setLineChartData([0, 0, 0, 0, 0]);
+      setLineChartLabels(['2020', '2021', '2022', '2023', '2024']);
+      setCurBarChartData([0, 0, 0]);
+      setCurBarChartLabels(['不動產、廠房、\n設備的收支項目', '策略性投資項目', '其他']);
+      setPreBarChartData([0, 0, 0]);
+      setPreBarChartLabels(['不動產、廠房、\n設備的收支項目', '策略性投資項目', '其他']);
 
       setCurDate({ from: currentFrom.date, to: currentTo.date });
       setCurYear(currentYear);
@@ -101,27 +110,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </footer>
     );
   };
-
-  // const renderHeader = (title: string) => {
-  //   return (
-  //     <header className="flex justify-between text-white">
-  //       <div className="mt-[29px] flex w-[28%]">
-  //         <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-  //         <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
-  //       </div>
-  //       <div className="flex flex-col">
-  //         <div className="h-1 bg-surface-brand-secondary"></div>
-  //         <div className="mt-1 h-1 bg-surface-brand-primary"></div>
-  //       </div>
-  //       <div className="w-35% text-right">
-  //         <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
-  //           {title}
-  //           <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
-  //         </h2>
-  //       </div>
-  //     </header>
-  //   );
-  // };
 
   const renderTable = (data: FinancialReportItem[], startIndex: number, endIndex: number) => {
     return (
@@ -157,6 +145,159 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           ))}
         </tbody>
       </table>
+    );
+  };
+
+  const renderedPage10_1 = () => {
+    return (
+      <div className="mt-4 text-text-neutral-primary">
+        <h3 className="text-base font-semibold leading-[24px] tracking-[0.16px]">
+          不動產、廠房、設備的收支項目：
+        </h3>
+        <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px]">
+          <li>
+            取得不動產、廠房及設備：本期支出較上期減少，表示公司可能正在優化其資本支出，減少對固定資產的投資，這可能是因為市場需求減弱或是公司在提高資產使用效率方面取得了進展。
+          </li>
+          <li>
+            處分不動產、廠房及設備價款：處分收入是公司在出售非核心或效益較低的資產，從而增加現金流，這是優化資源配置和提高資本回報率的策略。而本期收入較上期略為減少，可能是因為市場需求減弱或公司資源配置的改變。
+          </li>
+          <li>
+            收取政府補助款－不動產、廠房及設備：本期較上期大幅增加，表明公司正在積極參與政府鼓勵的項目或政策，或是政府於本年度撥款，這不僅能降低公司的資本支出壓力，還能促進其長期發展和技術升級。
+          </li>
+        </ol>
+        <h3 className="mt-4 text-base font-semibold leading-[24px] tracking-[0.16px]">
+          策略性投資項目：
+        </h3>
+        <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px]">
+          <li>
+            取得透過損益按公允價值衡量之金融資產：本期取得此類金融資產的金額大幅增加，表示公司可能在積極參與短期市場投資，尋求快速的收益增長。這種策略可能反映了公司對市場走勢的信心。
+          </li>
+          <li>
+            取得透過其他綜合損益按公允價值衡量之金融資產：本期取得此類金融資產支出較上期增加，反映公司在中長期投資上的策略調整。說明公司持續加大對中長期投資的力度，看好未來的市場前景並希望透過這些投資獲得穩定的回報。
+          </li>
+          <li>
+            取得按攤銷後成本衡量之金融資產：本期支出較上期減少，顯示公司在穩定的利息收入投資方面有所減少，可能是為了重新配置資源或降低風險。
+          </li>
+          <li>
+            處分透過其他綜合損益按公允價值衡量之金融資產價款：處分收入的增加可能顯示公司在調整投資組合，出售部分獲利或表現不佳的資產，以實現資本利得或重新配置資源。而本期收入較上期減少，可能表示市場條件變化或公司資源重新配置。
+          </li>
+          <li>
+            按攤銷後成本衡量之金融資產領回：本期較上期增加，說明公司正在回收先前的投資，這可能是因為資金需求增加或是對市場前景的重新評估。
+          </li>
+          <li>
+            透過其他綜合損益按公允價值衡量之權益工具投資成本收回：本期較上期增加，收回此類投資成本表明公司正在實現其長期投資收益，這有助於提高公司的現金流和財務靈活性。
+          </li>
+          <li>
+            除列避險之金融工具：本期較上期減少，表明公司風險管理策略有所調整，可能是出於市場風險變化或公司風險偏好的改變。
+          </li>
+          <li>
+            收取其他股利：本期較上期增加，表明公司持有的投資正在產生穩定的回報，這有助於增強公司的財務健康度和投資者信心。
+          </li>
+          <li>
+            收取採用權益法投資之股利：本期較上期增加，顯示公司在其聯營企業或子公司中的投資表現良好，反映出其投資策略的成功和相關企業的穩定增長。
+          </li>
+        </ol>
+      </div>
+    );
+  };
+
+  const renderedPage11_1 = () => {
+    return (
+      <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px] text-text-neutral-primary">
+        <li>
+          收取之利息：本期較上期增加，表示公司資金運用有效，現金流穩定，可能來自於更高的現金或短期投資。
+        </li>
+        <li>收取政府補助款 - 其他：兩期並無太大增減。</li>
+        <li>取得商標等資產：本期較上期減少，可能是在重新評估其投資優先級。</li>
+        <li>處分商標等資產價款：本期較上期減少，可能是資源重整，轉移業務。</li>
+        <li>
+          預付租金攤銷增加：本期對付租金攤銷增加，而上期數據較少，表示今年有新的租金付訖款需求，公司在擴展經營場所或設備價值取得。
+        </li>
+        <li>存出保證金增加：本期支出較上期增加，顯示公司在新業務或合作上的擔保。</li>
+        <li>
+          取得保證金收益：本期較上期增加，表明公司完成了一些業務合作或獲得更高的信用保障，釋放資金。
+        </li>
+      </ol>
+    );
+  };
+
+  const renderedPage11_2 = (
+    // TODO: change based on API (20240730 - Shirley)
+    data: FinancialReportItem[],
+    currentYear: string,
+    previousYear: string
+  ) => {
+    return (
+      <div className="mt-4">
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr className="bg-[#ffd892]">
+              <th className="border border-[#c1c9d5] p-[10px] text-left text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary"></th>
+              <th className="border border-[#c1c9d5] p-[10px] text-center text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary">
+                {currentYear}年度
+              </th>
+              <th className="border border-[#c1c9d5] p-[10px] text-center text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary">
+                {previousYear}年度
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                {reportFinancial &&
+                  reportFinancial.details &&
+                  reportFinancial.details[0] &&
+                  reportFinancial.details[0].name}
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                {reportFinancial &&
+                  reportFinancial.details &&
+                  reportFinancial.details[0] &&
+                  reportFinancial.details[0].curPeriodAmount}
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                {reportFinancial &&
+                  reportFinancial.details &&
+                  reportFinancial.details[0] &&
+                  reportFinancial.details[0].prePeriodAmount}
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                不動產、廠房及設備
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                949,816,825
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                1,082,672,130
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                無形資產支出
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                5,518,414
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                6,954,326
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                自由現金流量
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                286,632,108
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+                520,972,732
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     );
   };
 
@@ -728,8 +869,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             <table className="relative w-full border-collapse bg-white">
               <thead>
                 <tr className="text-xxs">
-                  <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
-                  <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                  {/* <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th> */}
+                  {lineChartLabels?.map((label) => (
+                    <th
+                      key={label}
+                      className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold"
+                    >
+                      {label}
+                    </th>
+                  ))}
+                  {/* <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                     2019
                   </th>
                   <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
@@ -743,7 +892,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   </th>
                   <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                     2023
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
 
@@ -915,10 +1064,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-darkBlue2"></div>
             </div>
-            <BarChart
-              data={[90, 5, 5]}
-              labels={['不動產、廠房、設備的收支項目', '策略性投資項目', '其他']}
-            />
+            <BarChart data={curBarChartData} labels={curBarChartLabels} />
           </div>
           <div className="w-1/2 pl-4">
             <div className="relative mb-0 flex items-center pb-1">
@@ -934,10 +1080,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-darkBlue2"></div>
             </div>
-            <BarChart
-              data={[0, 0, 0]}
-              labels={['不動產、廠房、設備的收支項目', '策略性投資項目', '其他']}
-            />
+            <BarChart data={preBarChartData} labels={preBarChartLabels} />
           </div>
         </div>
         <div className="mb-[16px] mt-4 font-semibold text-surface-brand-secondary">
@@ -972,56 +1115,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] text-xs font-semibold leading-[20px] tracking-[0.12px] text-surface-brand-secondary">
-          <p className="text-xs font-semibold">四之一，2023年度上圖組成項目之細項及iSunFa認為：</p>
+          <p className="text-xs font-semibold">
+            四之一，{curYear}年度上圖組成項目之細項及iSunFa認為：
+          </p>
         </div>
-        <div className="mt-4 text-text-neutral-primary">
-          <h3 className="text-base font-semibold leading-[24px] tracking-[0.16px]">
-            不動產、廠房、設備的收支項目：
-          </h3>
-          <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px]">
-            <li>
-              取得不動產、廠房及設備：本期支出較上期減少，表示公司可能正在優化其資本支出，減少對固定資產的投資，這可能是因為市場需求減弱或是公司在提高資產使用效率方面取得了進展。
-            </li>
-            <li>
-              處分不動產、廠房及設備價款：處分收入是公司在出售非核心或效益較低的資產，從而增加現金流，這是優化資源配置和提高資本回報率的策略。而本期收入較上期略為減少，可能是因為市場需求減弱或公司資源配置的改變。
-            </li>
-            <li>
-              收取政府補助款－不動產、廠房及設備：本期較上期大幅增加，表明公司正在積極參與政府鼓勵的項目或政策，或是政府於本年度撥款，這不僅能降低公司的資本支出壓力，還能促進其長期發展和技術升級。
-            </li>
-          </ol>
-          <h3 className="mt-4 text-base font-semibold leading-[24px] tracking-[0.16px]">
-            策略性投資項目：
-          </h3>
-          <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px]">
-            <li>
-              取得透過損益按公允價值衡量之金融資產：本期取得此類金融資產的金額大幅增加，表示公司可能在積極參與短期市場投資，尋求快速的收益增長。這種策略可能反映了公司對市場走勢的信心。
-            </li>
-            <li>
-              取得透過其他綜合損益按公允價值衡量之金融資產：本期取得此類金融資產支出較上期增加，反映公司在中長期投資上的策略調整。說明公司持續加大對中長期投資的力度，看好未來的市場前景並希望透過這些投資獲得穩定的回報。
-            </li>
-            <li>
-              取得按攤銷後成本衡量之金融資產：本期支出較上期減少，顯示公司在穩定的利息收入投資方面有所減少，可能是為了重新配置資源或降低風險。
-            </li>
-            <li>
-              處分透過其他綜合損益按公允價值衡量之金融資產價款：處分收入的增加可能顯示公司在調整投資組合，出售部分獲利或表現不佳的資產，以實現資本利得或重新配置資源。而本期收入較上期減少，可能表示市場條件變化或公司資源重新配置。
-            </li>
-            <li>
-              按攤銷後成本衡量之金融資產領回：本期較上期增加，說明公司正在回收先前的投資，這可能是因為資金需求增加或是對市場前景的重新評估。
-            </li>
-            <li>
-              透過其他綜合損益按公允價值衡量之權益工具投資成本收回：本期較上期增加，收回此類投資成本表明公司正在實現其長期投資收益，這有助於提高公司的現金流和財務靈活性。
-            </li>
-            <li>
-              除列避險之金融工具：本期較上期減少，表明公司風險管理策略有所調整，可能是出於市場風險變化或公司風險偏好的改變。
-            </li>
-            <li>
-              收取其他股利：本期較上期增加，表明公司持有的投資正在產生穩定的回報，這有助於增強公司的財務健康度和投資者信心。
-            </li>
-            <li>
-              收取採用權益法投資之股利：本期較上期增加，顯示公司在其聯營企業或子公司中的投資表現良好，反映出其投資策略的成功和相關企業的穩定增長。
-            </li>
-          </ol>
-        </div>
+        {renderedPage10_1()}
       </section>
       {renderedFooter(10)}
     </div>
@@ -1045,96 +1143,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <h3 className="mt-8 text-base font-semibold leading-[24px] tracking-[0.16px] text-black">
             其他：
           </h3>
-          <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px] text-text-neutral-primary">
-            <li>
-              收取之利息：本期較上期增加，表示公司資金運用有效，現金流穩定，可能來自於更高的現金或短期投資。
-            </li>
-            <li>收取政府補助款 - 其他：兩期並無太大增減。</li>
-            <li>取得商標等資產：本期較上期減少，可能是在重新評估其投資優先級。</li>
-            <li>處分商標等資產價款：本期較上期減少，可能是資源重整，轉移業務。</li>
-            <li>
-              預付租金攤銷增加：本期對付租金攤銷增加，而上期數據較少，表示今年有新的租金付訖款需求，公司在擴展經營場所或設備價值取得。
-            </li>
-            <li>存出保證金增加：本期支出較上期增加，顯示公司在新業務或合作上的擔保。</li>
-            <li>
-              取得保證金收益：本期較上期增加，表明公司完成了一些業務合作或獲得更高的信用保障，釋放資金。
-            </li>
-          </ol>
+          {renderedPage11_1()}
         </div>
         <div className="mb-4 mt-[32px] text-center text-xs font-semibold leading-[20px] tracking-[0.12px] text-surface-brand-secondary">
           <p className="text-start text-xs font-semibold">
             五、年度產生的自由現金：公司可以靈活運用的現金
           </p>
-          <div className="mt-4">
-            <table className="w-full border-collapse bg-white">
-              <thead>
-                <tr className="bg-[#ffd892]">
-                  <th className="border border-[#c1c9d5] p-[10px] text-left text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary"></th>
-                  <th className="border border-[#c1c9d5] p-[10px] text-center text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary">
-                    {curYear}年度
-                  </th>
-                  <th className="border border-[#c1c9d5] p-[10px] text-center text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary">
-                    {preYear}年度
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[0] &&
-                      reportFinancial.details[0].name}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[0] &&
-                      reportFinancial.details[0].curPeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[0] &&
-                      reportFinancial.details[0].prePeriodAmount}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    不動產、廠房及設備
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    949,816,825
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    1,082,672,130
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    無形資產支出
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    5,518,414
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    6,954,326
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    自由現金流量
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    286,632,108
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                    520,972,732
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {renderedPage11_2([], curYear, preYear)}
           <div className="relative -z-10">
             <Image
               className="absolute -top-180px right-0"
