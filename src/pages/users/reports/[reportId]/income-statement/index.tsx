@@ -4,13 +4,13 @@ import { GetServerSideProps } from 'next';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import BalanceSheetReportBodyAll from '@/components/balance_sheet_report_body/balance_sheet_report_body_all';
+import IncomeStatementReportBodyAll from '@/components/income_statement_report_body/income_statement_report_body_all';
 
 interface IBalanceSheetPageProps {
   reportId: string;
 }
 
-const BalanceSheetPage = ({ reportId }: IBalanceSheetPageProps) => {
+const IncomeStatementPage = ({ reportId }: IBalanceSheetPageProps) => {
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -19,7 +19,7 @@ const BalanceSheetPage = ({ reportId }: IBalanceSheetPageProps) => {
     </div>
   ) : (
     <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-      <BalanceSheetReportBodyAll reportId={reportId} />
+      <IncomeStatementReportBodyAll reportId={reportId} />
     </div>
   );
 
@@ -29,7 +29,7 @@ const BalanceSheetPage = ({ reportId }: IBalanceSheetPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>Balance Sheet - iSunFA</title>
+        <title>Income Statement - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">{displayedBody}</div>
@@ -52,4 +52,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default BalanceSheetPage;
+export default IncomeStatementPage;

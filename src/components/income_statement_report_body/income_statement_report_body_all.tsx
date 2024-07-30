@@ -1,7 +1,9 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
+import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -22,7 +24,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
       companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? '10000020',
+      reportId: reportId ?? NON_EXISTING_REPORT_ID,
     },
   });
 
@@ -31,13 +33,28 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   console.log('reportFinancial', reportFinancial);
 
   if (getReportFinancialIsLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+      </div>
+    );
   } else if (!getReportFinancialSuccess) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
+  const renderedFooter = (page: number) => {
+    return (
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
+        <p className="m-0 text-[12px] text-white">{page}</p>
+        <div className="text-[16px] font-bold text-surface-brand-secondary">
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        </div>
+      </footer>
+    );
+  };
+
   const page1 = (
-    <div>
+    <div id="1" className="relative h-a4-height overflow-hidden">
       {/* Info: watermark logo (20240723 - Anna) */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -140,16 +157,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">1</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(1)}
     </div>
   );
   const page2 = (
-    <div>
+    <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -224,16 +236,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">2</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(2)}
     </div>
   );
   const page3 = (
-    <div>
+    <div id="3" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -348,16 +355,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">3</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(3)}
     </div>
   );
   const page4 = (
-    <div>
+    <div id="4" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -432,16 +434,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">4</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(4)}
     </div>
   );
   const page5 = (
-    <div>
+    <div id="5" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -516,16 +513,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">5</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(5)}
     </div>
   );
   const page6 = (
-    <div>
+    <div id="6" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -600,16 +592,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">6</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(6)}
     </div>
   );
   const page7 = (
-    <div>
+    <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -684,16 +671,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">7</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(7)}
     </div>
   );
   const page8 = (
-    <div>
+    <div id="8" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -800,16 +782,11 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">8</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(8)}
     </div>
   );
   const page9 = (
-    <div>
+    <div id="9" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1022,25 +999,28 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           />
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">9</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(9)}
     </div>
   );
 
   return (
     <div className="mx-auto w-a4-width">
       {page1}
+      <hr className="break-before-page" />
       {page2}
+      <hr className="break-before-page" />
       {page3}
+      <hr className="break-before-page" />
       {page4}
+      <hr className="break-before-page" />
       {page5}
+      <hr className="break-before-page" />
       {page6}
+      <hr className="break-before-page" />
       {page7}
+      <hr className="break-before-page" />
       {page8}
+      <hr className="break-before-page" />
       {page9}
     </div>
   );

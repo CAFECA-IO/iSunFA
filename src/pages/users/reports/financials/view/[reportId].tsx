@@ -19,38 +19,13 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { FinancialReport, IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
-import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { ReportUrlMap } from '@/constants/report';
 
 interface IServerSideProps {
   reportId: string;
   reportType: keyof typeof BaifaReportTypeToReportType;
 }
-
-// TODO: dummy data to be replaced (20240429 - Shirley)
-const getBaseUrl = (): string => {
-  return 'https://baifa.io';
-};
-
-// TODO: dummy data to be replaced (20240429 - Shirley)
-const ReportLink = {
-  balance_sheet: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
-  comprehensive_income_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`,
-  cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
-  change_in_equity_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c10990000000000000000000000000000000000000007/change_in_equity_statement`,
-} as const;
-
-const DUMMY_DATA_FOR_REPORT = {
-  reportType: 'balance_sheet',
-  reportLanguage: 'en',
-  startTimestamp: '1711961114',
-  endTimestamp: '1714553114',
-
-  tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-  tokenId: '37002036',
-  reportLink:
-    'https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance',
-};
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { t } = useTranslation('common');
@@ -62,12 +37,9 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },
-    tokenContract: DUMMY_DATA_FOR_REPORT.tokenContract,
-    tokenId: DUMMY_DATA_FOR_REPORT.tokenId,
-    reportLink:
-      ReportLink[
-        BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-      ],
+    tokenContract: '',
+    tokenId: '',
+    reportLink: '',
   });
   const {
     data: reportFinancial,
@@ -99,7 +71,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <>
+    <div>
       <div className="flex w-full flex-1 flex-col overflow-x-hidden">
         <ReportsSidebar />
       </div>
@@ -114,11 +86,11 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           }
           tokenContract={reportData.tokenContract}
           tokenId={reportData.tokenId}
-          reportLink={`${DOMAIN}/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+          reportLink={`/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
           reportId={reportId}
         />
       </div>
-    </>
+    </div>
   );
 
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
@@ -129,7 +101,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        {/* <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title> */}
         <title>
           {
             FinancialReportTypesMap[
