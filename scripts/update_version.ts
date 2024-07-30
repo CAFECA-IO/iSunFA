@@ -63,7 +63,8 @@ if (lastCommittedVersion) {
 // Update package.json with the new version
 try {
   packageJson.version = newVersion;
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  // Info:(20240730 - Jacky) - Add last line to prevent EOF error
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 } catch (error) {
   // Info:(20240701-Jacky) - Log the error
   // eslint-disable-next-line no-console

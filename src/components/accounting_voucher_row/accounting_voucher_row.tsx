@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -18,7 +18,7 @@ interface IAccountingVoucherRow {
 
 const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   const { t } = useTranslation('common');
-  const { id, particulars, debit, credit } = accountingVoucher;
+  const { id, account, particulars, debit, credit } = accountingVoucher;
   const {
     accountList,
     generateAccountTitle,
@@ -28,9 +28,15 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     changeVoucherAmountHandler,
   } = useAccountingCtx();
 
-  const [selectAccount, setSelectAccount] = useState<IAccount | null>(accountingVoucher.account);
+  const [selectAccount, setSelectAccount] = useState<IAccount | null>(account);
   const [tempDebit, setTempDebit] = useState<string>(debit ? debit.toString() : '0');
   const [tempCredit, setTempCredit] = useState<string>(credit ? credit.toString() : '0');
+
+  useEffect(() => {
+    setSelectAccount(account);
+    setTempDebit(debit ? debit.toString() : '0');
+    setTempCredit(credit ? credit.toString() : '0');
+  }, [account, debit, credit]);
 
   const {
     targetRef: accountingRef,
@@ -123,15 +129,15 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   // Info: (20240430 - Julian) 顯示 Account 選單
   const displayAccountingDropmenu =
     accountList.length > 0 ? (
-      accountList.map((account: IAccount) => {
-        const title = generateAccountTitle(account);
+      accountList.map((accountItem: IAccount) => {
+        const title = generateAccountTitle(accountItem);
 
         const displayTitle = accountTitleMap[title] || title; // ToDo: (20240712 - Julian) Translate account title
 
         // Info: (20240430 - Julian) 點擊選單選項
         const clickHandler = () => {
-          setSelectAccount(account);
-          changeVoucherAccountHandler(id, account);
+          setSelectAccount(accountItem);
+          changeVoucherAccountHandler(id, accountItem);
           setAccountingMenuOpen(false);
         };
 

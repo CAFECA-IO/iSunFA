@@ -25,7 +25,15 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
       en: '/elements/login_bg.webp',
     }[currentLanguage] || '/elements/zh_tw_login_bg.webp';
 
-  const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
+  const {
+    checkIsRegistered,
+    handleExistingCredential,
+    signIn,
+    errorCode,
+    isSignInError,
+    signedIn,
+    toggleIsSignInError,
+  } = useUserCtx();
   const {
     registerModalDataHandler,
     registerModalVisibilityHandler,
@@ -33,9 +41,25 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
     toastHandler,
   } = useGlobalCtx();
 
-  const registerClickHandler = async () => {
+  const registerHandler = async () => {
     registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
+  };
+
+  const registerClickHandler = async () => {
+    try {
+      const { isRegistered, credentials } = await checkIsRegistered();
+
+      if (isRegistered && credentials) {
+        await handleExistingCredential(credentials, invitation);
+      } else {
+        registerHandler();
+      }
+    } catch (error) {
+      // Deprecated: (20240805 - tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log('registerClickHandler error', error);
+    }
   };
 
   const showPassKeySupport = () => {
@@ -73,7 +97,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
             <div>
               {t('LOGIN_PAGE_BODY.PLEASE')}{' '}
               <button
-                onClick={registerClickHandler}
+                onClick={registerHandler}
                 type="button"
                 className="text-base text-link-text-primary hover:opacity-70"
               >
@@ -81,6 +105,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                   {t('LOGIN_PAGE_BODY.REGISTER_YOUR_DEVICE')}
                 </div>
               </button>
+              {t('LOGIN_PAGE_BODY.OR_TRY_OTHER_PASSKY')}
               <span className="pl-3">({errorCode})</span>
             </div>
           </div>

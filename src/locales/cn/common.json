@@ -566,6 +566,7 @@
   "LOGIN_PAGE_BODY": {
     "PLEASE": "请",
     "REGISTER_YOUR_DEVICE": "注册您的设备。",
+    "OR_TRY_OTHER_PASSKY": "或尝试其他Passkey",
     "OOPS": "哎呀！出了些问题。请重试或联络客服。",
     "HELP": "帮助",
     "REGISTER_YOUR_DEVICE_ARROW": "注册您的装置 → ",

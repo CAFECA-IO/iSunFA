@@ -7,6 +7,7 @@ export async function getProjectValue(projectId: number): Promise<IValue | null>
     value = await prisma.value.findUnique({
       where: {
         projectId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }

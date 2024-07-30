@@ -9,6 +9,7 @@ export async function getCompanyById(companyId: number): Promise<Company | null>
     company = await prisma.company.findUnique({
       where: {
         id: companyId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -21,6 +22,7 @@ export async function getCompanyByCode(code: string): Promise<Company | null> {
     company = await prisma.company.findUnique({
       where: {
         code,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -42,6 +44,7 @@ export async function getCompanyWithOwner(companyId: number): Promise<
     company = await prisma.company.findUnique({
       where: {
         id: companyId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         admins: {
