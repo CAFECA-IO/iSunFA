@@ -101,3 +101,4 @@ export const LIMIT_FOR_REPORT_PAGE = 5;
 export const DEFAULT_PAGE_NUMBER = 1;
 
 export const DEFAULT_THROTTLE_TIME = 100;
+export const WAIT_FOR_REPORT_DATA = 2000;
