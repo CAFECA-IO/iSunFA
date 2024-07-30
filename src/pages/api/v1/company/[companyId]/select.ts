@@ -22,11 +22,10 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   } else {
     const getCompany = await getCompanyById(companyIdNum);
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    if (getCompany) {
-      const company = formatCompany(getCompany);
-      await setSession(session, undefined, companyIdNum);
-      payload = company;
-    }
+    const companyId = getCompany ? companyIdNum : 0;
+    const company = getCompany ? formatCompany(getCompany) : null;
+    await setSession(session, undefined, companyId);
+    payload = company;
   }
 
   return { statusMessage, payload };
