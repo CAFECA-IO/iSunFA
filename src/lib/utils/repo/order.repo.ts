@@ -7,6 +7,7 @@ export async function listOrder(companyId: number): Promise<IOrder[]> {
   const listedOrder = await prisma.order.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
       id: 'asc',

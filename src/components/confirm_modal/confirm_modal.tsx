@@ -74,7 +74,15 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
+
+  // Info: (20240527 - Julian) voucher verification
+  const [isEveryRowHasAccount, setIsEveryRowHasAccount] = useState<boolean>(false);
+  const [isNoEmptyRow, setIsNoEmptyRow] = useState<boolean>(false);
+  const [isBalance, setIsBalance] = useState<boolean>(false);
+
+  // Info: (20240730 - Julian)
+  const [isAILoading, setIsAILoading] = useState<boolean>(false);
+
   const [journal, setJournal] = useState<IJournal | null>(null);
 
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
@@ -118,25 +126,26 @@ const ConfirmModal = ({
   const addDebitRowHandler = () => addVoucherRowHandler(1, VoucherRowType.DEBIT);
   const addCreditRowHandler = () => addVoucherRowHandler(1, VoucherRowType.CREDIT);
 
-  const importVoucherHandler = (initiallineItems?: ILineItem[]) => {
-    // Info: (20240716 - Julian) 從 API response 取出傳票列表
+  const importVoucherHandler = (initialLineItems?: ILineItem[]) => {
     try {
-      const AILineItems = initiallineItems ?? AIResult?.lineItems ?? [];
+      // Info: (20240529 - Julian) 取得 AI 生成的傳票 or 日記帳的初始傳票
+      const items = initialLineItems ?? AIResult?.lineItems ?? [];
 
       // Info: (20240529 - Julian) 清空 accountingVoucher
       resetVoucherHandler();
 
       // Info: (20240716 - Julian) 根據 AI 生成的傳票數量，新增 accountingVoucher
-      addVoucherRowHandler(AILineItems.length - 1);
+      addVoucherRowHandler(items.length - 1);
 
       // Info: (20240716 - Julian) 將 AI 生成的傳票逐一寫入 accountingVoucher
-      AILineItems.forEach((lineItem, index) => {
+      items.forEach((lineItem, index) => {
         // Info: (20240716 - Julian) 在 accountList 中找到對應的 account
         const rowAccount = accountList.find((account) => account.id === lineItem.accountId);
         const rowAmount = lineItem.amount;
         // Info: (20240716 - Julian) 判斷 row type
         const rowType = lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
         const rowDescription = lineItem.description;
+
         // Info: (20240716 - Julian) 寫入 account
         changeVoucherAccountHandler(index, rowAccount);
         // Info: (20240716 - Julian) 寫入 description 和 amount
@@ -157,6 +166,7 @@ const ConfirmModal = ({
       subMsg: 'Are you sure you want to use Ai information?',
       content: 'The text you entered will be replaced.',
       submitBtnStr: 'Confirm',
+      // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
       backBtnStr: 'Cancel',
       backBtnFunction: () => {
@@ -171,6 +181,7 @@ const ConfirmModal = ({
     modalVisibilityHandler();
     getAIStatusHandler(undefined, false);
     resetVoucherHandler();
+    setIsAILoading(true);
   };
 
   const convertToLineItems = () => {
@@ -202,7 +213,6 @@ const ConfirmModal = ({
     if (res.success && res.data && journal) {
       // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
       closeHandler();
-      resetVoucherHandler();
       selectJournalHandler(undefined);
 
       // Info: (20240527 - Julian) Toast notification
@@ -310,6 +320,10 @@ const ConfirmModal = ({
   useEffect(() => {
     if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     openHandler();
+    // Info: (20240529 - Julian) 清空 accountingVoucher
+    resetVoucherHandler();
+    // Info: (20240730 - Julian) 顯示 AI loading
+    setIsAILoading(true);
 
     // Info: (20240528 - Julian) Call AI API first time
     getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
@@ -324,16 +338,22 @@ const ConfirmModal = ({
           resultId: askAIId,
         },
       });
+      setIsAILoading(false);
     }
     return () => getAIStatusHandler(undefined, false);
   }, [AIStatus]);
 
   useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;
-    const isNotZero = totalCredit !== 0 && totalDebit !== 0;
+    const isNotEmpty = accountingVoucher.every(
+      // Info: (20240530 - Julian) 檢查是否有 Debit 或 Credit
+      (voucher) => !!voucher.debit || !!voucher.credit
+    );
     const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
 
-    setDisableConfirmButton(!(isCreditEqualDebit && isNotZero && isEveryLineItemHasAccount));
+    setIsBalance(isCreditEqualDebit);
+    setIsNoEmptyRow(isNotEmpty);
+    setIsEveryRowHasAccount(isEveryLineItemHasAccount);
   }, [totalCredit, totalDebit, accountingVoucher]);
 
   const displayType = <p className="text-lightRed">{eventType}</p>;
@@ -394,7 +414,8 @@ const ConfirmModal = ({
   const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
 
   const displayedHint =
-    (AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
+    ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
+      isAILoading) ||
     AIResultSuccess === undefined ? (
       <p className="text-slider-surface-bar">
         {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
@@ -507,6 +528,45 @@ const ConfirmModal = ({
           <tbody>{accountingVoucherRow}</tbody>
         </table>
       </div>
+    </div>
+  );
+
+  const displayVerifyAcc = (
+    <div className="flex items-center gap-12px">
+      {isEveryRowHasAccount ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isEveryRowHasAccount ? 'text-text-state-success' : 'text-text-state-error'}>
+        Each row includes an accounting account.
+      </p>
+    </div>
+  );
+
+  const displayVerifyNoEmpty = (
+    <div className="flex items-center gap-12px">
+      {isNoEmptyRow ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isNoEmptyRow ? 'text-text-state-success' : 'text-text-state-error'}>
+        Each row includes a debit or credit.
+      </p>
+    </div>
+  );
+
+  const displayVerifyBalance = (
+    <div className="flex items-center gap-12px">
+      {isBalance ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isBalance ? 'text-text-state-success' : 'text-text-state-error'}>
+        Debits and credits balance out.
+      </p>
     </div>
   );
 
@@ -639,7 +699,7 @@ const ConfirmModal = ({
           </div>
 
           {/* Info: (20240429 - Julian) checkbox */}
-          <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
+          <div className="my-24px flex flex-wrap justify-between gap-y-4px">
             <p className="font-semibold text-navyBlue2">
               {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
               {t('CONFIRM_MODAL.ATTENTION')}
@@ -648,6 +708,16 @@ const ConfirmModal = ({
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
               <p>{t('CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
+          </div>
+
+          {/* Info: (20240730 - Julian) Verify Hints */}
+          <div className="mx-20px flex items-center justify-center gap-20px rounded-sm bg-surface-support-soft-maple px-20px py-5px text-sm font-semibold">
+            {/* Info: (20240730 - Julian) Verify all rows have account */}
+            {displayVerifyAcc}
+            {/* Info: (20240730 - Julian) Verify no empty row */}
+            {displayVerifyNoEmpty}
+            {/* Info: (20240730 - Julian) Verify balancing debits and credits */}
+            {displayVerifyBalance}
           </div>
         </div>
 
@@ -665,7 +735,7 @@ const ConfirmModal = ({
             id="confirm-btn"
             type="button"
             variant="tertiary"
-            disabled={disableConfirmButton}
+            disabled={!(isBalance && isNoEmptyRow && isEveryRowHasAccount)}
             onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >

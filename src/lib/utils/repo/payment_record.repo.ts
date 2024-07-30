@@ -38,6 +38,7 @@ export async function getPaymentRecordById(id: number): Promise<IPaymentRecord |
     paymentRecord = await prisma.paymentRecord.findUnique({
       where: {
         id,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -50,6 +51,7 @@ export async function listPaymentRecords(orderId: number): Promise<IPaymentRecor
   const listedPaymentRecords = await prisma.paymentRecord.findMany({
     where: {
       orderId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return listedPaymentRecords;

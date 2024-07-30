@@ -5,6 +5,7 @@ export async function listEmployeeProject(projectId: number): Promise<EmployeePr
   const employeeInProject = await prisma.employeeProject.findMany({
     where: {
       projectId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
       id: 'asc',
