@@ -45,7 +45,7 @@ export async function findUniqueReportById(companyId: number, reportId: number) 
       },
       include: {
         company: true,
-      }
+      },
     });
   } catch (error) {
     report = null;
@@ -140,7 +140,7 @@ export async function findManyReports(
 
   const where: Prisma.ReportWhereInput = {
     id: {
-      gte: 1000000 // Info
+      gte: 1000000, // Info
     },
     companyId,
     status,
@@ -148,13 +148,14 @@ export async function findManyReports(
       // { from: { gte: startDateInSecond } },
       { to: { lte: endDateInSecond } },
     ],
-    OR: searchQuery
+    OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    ...(searchQuery
       ? [
           { name: { contains: searchQuery, mode: 'insensitive' } },
           { type: { contains: searchQuery, mode: 'insensitive' } },
           { reportType: { contains: searchQuery, mode: 'insensitive' } },
         ]
-      : undefined,
+      : undefined),
   };
 
   const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };

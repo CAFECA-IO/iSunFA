@@ -7,6 +7,7 @@ export async function listProjectSale(projectId: number) {
     saleList = await prisma.sale.findMany({
       where: {
         projectId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }

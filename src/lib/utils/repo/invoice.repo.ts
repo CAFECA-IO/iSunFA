@@ -24,6 +24,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
     ocrIdInDB = await prisma.ocr.findUnique({
       where: {
         id: ocrId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
         id: true,
@@ -73,7 +74,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
 
   try {
     company = await prisma.company.findUnique({
-      where: { id: companyId },
+      where: { id: companyId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       select: { id: true },
     });
   } catch (error) {
@@ -101,7 +102,7 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId?: n
 
   try {
     journal = await prisma.journal.findUnique({
-      where: { id: journalId, companyId },
+      where: { id: journalId, companyId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       select: {
         id: true,
         projectId: true,
@@ -172,8 +173,8 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: n
   const where: Prisma.InvoiceWhereUniqueInput = {
     id: invoiceId,
     journal: {
-      companyId
-    }
+      companyId,
+    },
   };
 
   const include = {
@@ -189,7 +190,7 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: n
   try {
     invoice = await prisma.invoice.findUnique({
       where,
-      include
+      include,
     });
 
     if (!invoice) {
@@ -340,22 +341,22 @@ export async function updateInvoiceAndPaymentInPrisma(
   let updatedInvoiceId: number = -1;
 
   try {
-      const invoiceInDB = await findUniqueInvoiceInPrisma(invoiceIdToBeUpdated);
+    const invoiceInDB = await findUniqueInvoiceInPrisma(invoiceIdToBeUpdated);
 
-      if (!invoiceInDB) {
-        throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
-      }
+    if (!invoiceInDB) {
+      throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+    }
 
-      const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
-      const invoice = await updateInvoiceInPrisma(
-        invoiceIdToBeUpdated,
-        payment.id,
-        invoiceData,
-        journalId,
-        imageUrl
-      );
+    const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
+    const invoice = await updateInvoiceInPrisma(
+      invoiceIdToBeUpdated,
+      payment.id,
+      invoiceData,
+      journalId,
+      imageUrl
+    );
 
-      updatedInvoiceId = invoice.id;
+    updatedInvoiceId = invoice.id;
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
@@ -522,48 +523,48 @@ export async function handlePrismaSavingLogic(
 export async function handlePrismaUpdateLogic(
   formattedInvoice: IInvoice,
   aichResultId: string,
-  companyId: number,
+  companyId: number
 ) {
-    const { journalId, projectId, contractId } = formattedInvoice;
-    if (!journalId) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  const { journalId, projectId, contractId } = formattedInvoice;
+  if (!journalId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+
+  let journalIdBeUpdated: number = -1;
+  try {
+    const journalInDB = await findUniqueJournalInPrisma(journalId, companyId);
+
+    if (!journalInDB || !journalInDB.invoice) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    let journalIdBeUpdated: number = -1;
-    try {
-      const journalInDB = await findUniqueJournalInPrisma(journalId, companyId);
+    const invoiceIdToBeUpdated = journalInDB.invoice.id;
 
-      if (!journalInDB || !journalInDB.invoice) {
-          throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-
-      const invoiceIdToBeUpdated = journalInDB.invoice.id;
-
-      if (!invoiceIdToBeUpdated) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-
-      const invoiceBeUpdated = await updateInvoiceAndPaymentInPrisma(
-        invoiceIdToBeUpdated,
-        formattedInvoice,
-        journalId,
-      );
-
-      if (invoiceBeUpdated === -1) {
-        throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
-      }
-
-      journalIdBeUpdated = await updateJournalInPrisma(
-        journalId,
-        aichResultId,
-        projectId,
-        contractId
-      );
-    } catch (error) {
-        // Deprecate ( 20240522 - Murky ) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(error);
+    if (!invoiceIdToBeUpdated) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    return journalIdBeUpdated;
+    const invoiceBeUpdated = await updateInvoiceAndPaymentInPrisma(
+      invoiceIdToBeUpdated,
+      formattedInvoice,
+      journalId
+    );
+
+    if (invoiceBeUpdated === -1) {
+      throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+    }
+
+    journalIdBeUpdated = await updateJournalInPrisma(
+      journalId,
+      aichResultId,
+      projectId,
+      contractId
+    );
+  } catch (error) {
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+  }
+
+  return journalIdBeUpdated;
 }

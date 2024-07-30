@@ -7,6 +7,7 @@ export async function listProjectMilestone(projectId: number): Promise<Milestone
     listedMilestone = await prisma.milestone.findMany({
       where: {
         projectId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }

@@ -7,6 +7,7 @@ export async function listClient(companyId: number): Promise<IClient[]> {
   const listedClient = await prisma.client.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return listedClient;
@@ -18,6 +19,7 @@ export async function getClientById(clientId: number): Promise<IClient | null> {
     client = await prisma.client.findUnique({
       where: {
         id: clientId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }

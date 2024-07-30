@@ -6,6 +6,7 @@ export async function listWorkRate(employeeProjectIdList: number[]) {
       employeeProjectId: {
         in: employeeProjectIdList,
       },
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     include: {
       employeeProject: {

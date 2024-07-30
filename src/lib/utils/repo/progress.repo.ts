@@ -6,6 +6,7 @@ export async function listProjectProgress(projectId: number): Promise<number> {
     const projectProgress = await prisma.project.findFirst({
       where: {
         id: projectId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
         completedPercent: true,

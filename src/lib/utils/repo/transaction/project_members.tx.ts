@@ -14,7 +14,7 @@ export async function updateProjectMembers(
         employeeId: {
           notIn: memberIdList,
         },
-        endDate: null,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }, { endDate: null }, { endDate: 0 }],
       },
       data: {
         endDate: nowTimestamp,
@@ -28,7 +28,7 @@ export async function updateProjectMembers(
         employeeId: {
           in: memberIdList,
         },
-        endDate: null,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }, { endDate: null }, { endDate: 0 }],
       },
     });
 
