@@ -20,8 +20,22 @@ interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
 }
 
+const ACCOUNTINGS_WHOLE_COLUMN = [
+  '營業活動之現⾦流量－間接法',
+  '調整項目',
+  '投資活動之現金流量',
+  '籌資活動之現金流量',
+  '營業活動之現金流量-間接法',
+  '與營業活動相關之資產／負債變動數',
+  '與營業活動相關之資產之淨變動',
+  '與營業活動相關之負債之淨變動',
+  '投資活動之現金流量',
+  '籌資活動之現金流量',
+];
+
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { selectedCompany } = useUserCtx();
+
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
@@ -63,8 +77,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       const previousTo = timestampToString(reportFinancial.preDate.to ?? 0);
       const currentYear = currentTo.year;
       const previousYear = previousTo.year;
-      // const lineChartData = reportFinancial.otherInfo.operatingStabilized.map((item) => item.amount);
-      // const lineChartLabels = reportFinancial.otherInfo.operatingStabilized.map((item) => item.name);
 
       // eslint-disable-next-line no-console
       console.log('reportFinancial.otherInfo in CashFlow useEffect', reportFinancial.otherInfo);
@@ -75,8 +87,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       }
 
       if (reportFinancial.otherInfo?.strategyInvest) {
-        const curInvestment = reportFinancial.otherInfo.strategyInvest[curYear];
-        const preInvestment = reportFinancial.otherInfo.strategyInvest[preYear];
+        const curInvestment = reportFinancial.otherInfo.strategyInvest[currentYear];
+        const preInvestment = reportFinancial.otherInfo.strategyInvest[previousYear];
+
         setCurBarChartData(curInvestment.data);
         setCurBarChartLabels(curInvestment.labels);
         setPreBarChartData(preInvestment.data);
@@ -94,7 +107,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     }
   }, [reportFinancial]);
 
-  if (getReportFinancialIsLoading) {
+  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
@@ -135,18 +148,29 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tr>
         </thead>
         <tbody>
-          {data.slice(startIndex, endIndex).map((value) => (
-            <tr key={value.code}>
-              <td className="border border-[#dee2e6] p-[10px] text-xs">{value.code}</td>
-              <td className="border border-[#dee2e6] p-[10px] text-xs">{value.name}</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-xs">
-                {value.curPeriodAmount}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-xs">
-                {value.prePeriodAmount}
-              </td>
-            </tr>
-          ))}
+          {data.slice(startIndex, endIndex).map((value) => {
+            if (ACCOUNTINGS_WHOLE_COLUMN.includes(value.name)) {
+              return (
+                <tr key={value.code}>
+                  <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-xs font-bold">
+                    {value.name}
+                  </td>
+                </tr>
+              );
+            }
+            return (
+              <tr key={value.code}>
+                <td className="border border-[#dee2e6] p-[10px] text-xs">{value.code}</td>
+                <td className="border border-[#dee2e6] p-[10px] text-xs">{value.name}</td>
+                <td className="border border-[#dee2e6] p-[10px] text-end text-xs">
+                  {value.curPeriodAmount}
+                </td>
+                <td className="border border-[#dee2e6] p-[10px] text-end text-xs">
+                  {value.prePeriodAmount}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
@@ -198,6 +222,77 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     currentYear: string,
     previousYear: string
   ) => {
+    // eslint-disable-next-line no-console
+    console.log(
+      'reportFinancial?.otherInfo?.freeCash',
+      reportFinancial?.otherInfo?.freeCash,
+      `reportFinancial?.otherInfo?.freeCash[
+      currentYear
+    ]?.operatingCashFlow.toLocaleString()`,
+      reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow.toLocaleString()
+    );
+
+    if (!reportFinancial?.otherInfo?.freeCash) {
+      return null;
+    }
+    // ensure the freeCash of certain Year exists
+    const displayedTableBody =
+      reportFinancial?.otherInfo?.freeCash[currentYear] &&
+      reportFinancial?.otherInfo?.freeCash[previousYear] ? (
+        <tbody>
+          <tr>
+            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              營業活動現金流入
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[
+                currentYear
+              ]?.operatingCashFlow.toLocaleString()}
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[
+                previousYear
+              ]?.operatingCashFlow.toLocaleString()}
+            </td>
+          </tr>
+          <tr>
+            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              不動產、廠房及設備
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
+            </td>
+          </tr>
+          <tr>
+            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              無形資產支出
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset.toLocaleString()}
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset.toLocaleString()}
+            </td>
+          </tr>
+          <tr>
+            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              自由現金流量
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
+            </td>
+            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
+            </td>
+          </tr>
+        </tbody>
+      ) : (
+        <tbody></tbody>
+      );
+
     return (
       <div className="mt-4">
         <table className="w-full border-collapse bg-white">
@@ -212,58 +307,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                營業活動現金流入
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash['123']?.operatingCashFlow.toLocaleString()}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[
-                  previousYear
-                ]?.operatingCashFlow.toLocaleString()}
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                不動產、廠房及設備
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                無形資產支出
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[
-                  currentYear
-                ]?.intangibleAsset.toLocaleString()}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[
-                  previousYear
-                ]?.intangibleAsset.toLocaleString()}
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                自由現金流量
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
-              </td>
-            </tr>
-          </tbody>
+          {displayedTableBody}
         </table>
       </div>
     );
@@ -777,7 +821,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}
           </p>
         </div>
-        <div className="mt-8 flex items-end justify-between">
+        <div className="mx-1 mt-8 flex items-end justify-center gap-5">
           <div className="w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
               <Image
