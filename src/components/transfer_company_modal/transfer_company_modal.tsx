@@ -40,6 +40,7 @@ const TransferCompanyModal = ({
             title: 'Transfer Owner',
             content: 'Transfer owner successfully',
             submitBtnStr: 'OK',
+            hideCloseBtn: true,
             submitBtnFunction: () => {
               // Info: (20240729 - Liz) reload this page to get the latest data and hide the UI
               window.location.reload();
@@ -51,6 +52,7 @@ const TransferCompanyModal = ({
             title: 'Transfer Owner',
             content: 'Transfer owner failed',
             submitBtnStr: 'OK',
+            hideCloseBtn: true,
             submitBtnFunction: () => {
               messageModalVisibilityHandler();
             },
@@ -64,6 +66,7 @@ const TransferCompanyModal = ({
           title: 'Transfer Owner',
           content: 'Transfer owner failed',
           submitBtnStr: 'OK',
+          hideCloseBtn: true,
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
           },
