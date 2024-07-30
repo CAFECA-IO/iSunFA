@@ -68,24 +68,20 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
       // eslint-disable-next-line no-console
       console.log('reportFinancial.otherInfo in CashFlow useEffect', reportFinancial.otherInfo);
-      // 處理 operatingStabilized 數據
-      // if (reportFinancial.otherInfo && reportFinancial.otherInfo.operatingStabilized) {
-      //   const chartData = reportFinancial.otherInfo.operatingStabilized.lineChartData as {
-      //     data: number[];
-      //     labels: string[];
-      //   };
-      //   if (chartData && 'data' in chartData && 'labels' in chartData) {
-      //     setLineChartData(chartData.data);
-      //     setLineChartLabels(chartData.labels);
-      //   }
-      // }
 
-      setLineChartData([0, 0, 0, 0, 0]);
-      setLineChartLabels(['2000', '2021', '2022', '2023', '2024']);
-      setCurBarChartData([0, 0, 0]);
-      setCurBarChartLabels(['不動產、廠房、\n設備的收支項目', '策略性投資項目', '其他']);
-      setPreBarChartData([0, 0, 0]);
-      setPreBarChartLabels(['不動產、廠房、\n設備的收支項目', '策略性投資項目', '其他']);
+      if (reportFinancial.otherInfo?.lineChartDataForRatio) {
+        setLineChartData(reportFinancial.otherInfo.lineChartDataForRatio.data);
+        setLineChartLabels(reportFinancial.otherInfo.lineChartDataForRatio.labels);
+      }
+
+      if (reportFinancial.otherInfo?.strategyInvest) {
+        const curInvestment = reportFinancial.otherInfo.strategyInvest[curYear];
+        const preInvestment = reportFinancial.otherInfo.strategyInvest[preYear];
+        setCurBarChartData(curInvestment.data);
+        setCurBarChartLabels(curInvestment.labels);
+        setPreBarChartData(preInvestment.data);
+        setPreBarChartLabels(preInvestment.labels);
+      }
 
       setFirstThought(reportFinancial?.otherInfo?.ourThoughts?.[0]);
       setSecondThought(reportFinancial?.otherInfo?.ourThoughts?.[1]);
@@ -222,21 +218,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 營業活動現金流入
               </td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                {reportFinancial?.otherInfo?.freeCash[
-                  currentYear
-                ]?.operatingCashFlow.toLocaleString()}
+                {reportFinancial?.otherInfo?.freeCash['123']?.operatingCashFlow.toLocaleString()}
               </td>
               <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
                 {reportFinancial?.otherInfo?.freeCash[
                   previousYear
                 ]?.operatingCashFlow.toLocaleString()}
               </td>
-              {/* <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                123{' '}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
-                456
-              </td> */}
             </tr>
             <tr>
               <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
@@ -308,45 +296,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </div>
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-[16px] flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 0, 10)}
-        {/* <table className="relative z-10 w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                代號
-              </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                會計項目
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-1-1 至 2023-12-31
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-1-1 至 2022-12-31
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              reportFinancial.general.slice(0, 10).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.prePeriodAmount}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table> */}
       </section>
       {renderedFooter(1)}
     </div>
@@ -380,79 +334,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             height={300}
           />
         </div>
-        {/* <table className="relative z-10 w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                代號
-              </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                會計項目
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-1-1 至 2023-12-31
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-1-1 至 2022-12-31
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              reportFinancial.general.slice(10, 19).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.prePeriodAmount}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table> */}
+
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 3)}
-        {/* <table className="relative z-10 w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                代號
-              </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                會計項目
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-1-1 至 2023-12-31
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-1-1 至 <br /> 2022-12-31
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details.slice(0, 3).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.prePeriodAmount}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table> */}
+
         <div className="relative bottom-20 right-0 -z-10">
           <Image
             className="absolute right-0 top-0"
@@ -486,40 +374,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>單位：新台幣仟元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 13)}
-        {/* <table className="relative z-10 w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                代號
-              </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                會計項目
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-1-1 至 2023-12-31
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-1-1 至 2022-12-31
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details.slice(0, 13).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.prePeriodAmount}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table> */}
+
         <div className="relative bottom-20 right-0 -z-10">
           <Image
             className="absolute right-0 top-0"
@@ -553,40 +408,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p>單位：新台幣仟元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 13, 26)}
-        {/* <table className="relative z-10 w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                代號
-              </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
-                會計項目
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-1-1 至 2023-12-31
-              </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-1-1 至 2022-12-31
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details.slice(13, 26).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.prePeriodAmount}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table> */}
+
         <div className="relative bottom-20 right-0 -z-10">
           <Image
             className="absolute right-0 top-0"
@@ -718,7 +540,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       </header>
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>三、營業活動穩定度：A與B量現穩定比例關係，公司的營業活動穩定。</p>
+          <p>
+            {' '}
+            {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.thirdTitle}
+          </p>
         </div>
         {reportFinancial &&
         reportFinancial.otherInfo &&
@@ -761,8 +586,96 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   ))}
                 </tr>
               </thead>
-
               <tbody className="text-xs">
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px] font-semibold">A</td>
+                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                    (year) => (
+                      <td
+                        key={year}
+                        className="border border-[#dee2e6] p-[10px] font-semibold"
+                      ></td>
+                    )
+                  )}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px]">稅前淨利（淨損）</td>
+                  {Object.entries(
+                    reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                  ).map(([year, value]) => (
+                    <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                      {value.toLocaleString()}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px]">折舊及攤銷費用</td>
+                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                    (year) => (
+                      <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                        {(
+                          reportFinancial.otherInfo.operatingStabilized.salesDepreciation[year] +
+                          reportFinancial.otherInfo.operatingStabilized.salesAmortization[year] +
+                          reportFinancial.otherInfo.operatingStabilized.manageDepreciation[year] +
+                          reportFinancial.otherInfo.operatingStabilized.manageAmortization[year] +
+                          reportFinancial.otherInfo.operatingStabilized.rdDepreciation[year]
+                        ).toLocaleString()}
+                      </td>
+                    )
+                  )}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px]">支付的所得稅</td>
+                  {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
+                    ([year, value]) => (
+                      <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                        {value.toLocaleString()}
+                      </td>
+                    )
+                  )}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px] font-semibold">B</td>
+                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                    (year) => (
+                      <td
+                        key={year}
+                        className="border border-[#dee2e6] p-[10px] font-semibold"
+                      ></td>
+                    )
+                  )}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px]">營業活動的現金</td>
+                  {Object.entries(
+                    reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
+                  ).map(([year, value]) => (
+                    <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                      {value.toLocaleString()}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px]"></td>
+                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
+                    (year) => (
+                      <td key={year} className="border border-[#dee2e6] p-[10px]"></td>
+                    )
+                  )}
+                </tr>
+                <tr>
+                  <td className="border border-[#dee2e6] p-[10px]">A和B比例關係</td>
+                  {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
+                    ([year, value]) => (
+                      <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                        {value.toFixed(2)}
+                      </td>
+                    )
+                  )}
+                </tr>
+              </tbody>
+
+              {/* <tbody className="text-xs">
                 <tr>
                   <td className="border border-[#dee2e6] p-[10px] font-semibold">A</td>
                   <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
@@ -772,27 +685,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[2] &&
-                      reportFinancial.details[2].name}
-                  </td>
+                  <td className="border border-[#dee2e6] p-[10px]">稅前淨利（淨損）</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">389,845,336</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">584,777,180</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">663,126,314</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[2] &&
-                      reportFinancial.details[2].prePeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[2] &&
-                      reportFinancial.details[2].curPeriodAmount}
-                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end">2165415</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end">13213546</td>
                 </tr>
                 <tr>
                   <td className="border border-[#dee2e6] p-[10px]">折舊及攤銷費用</td>
@@ -803,30 +701,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-[#dee2e6] p-[10px] text-end">532,190,921</td>
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details.find(
-                        (detail) => detail.name === '退還（支付）之所得稅'
-                      )?.name}
-                  </td>
+                  <td className="border border-[#dee2e6] p-[10px]">支付的所得稅</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">52,044,071</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">51,362,365</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">83,497,851</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details.find(
-                        (detail) => detail.name === '退還（支付）之所得稅'
-                      )?.prePeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details.find(
-                        (detail) => detail.name === '退還（支付）之所得稅'
-                      )?.curPeriodAmount}
-                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end">54684</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end">574458</td>
                 </tr>
                 <tr>
                   <td className="border border-[#dee2e6] p-[10px] font-semibold">B</td>
@@ -837,27 +717,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[0] &&
-                      reportFinancial.details[0].name}
-                  </td>
+                  <td className="border border-[#dee2e6] p-[10px]">營業活動的現金</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">615,138,744</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">822,666,212</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">1,112,160,722</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[0] &&
-                      reportFinancial.details[0].prePeriodAmount}
-                  </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">
-                    {reportFinancial &&
-                      reportFinancial.details &&
-                      reportFinancial.details[0] &&
-                      reportFinancial.details[0].curPeriodAmount}
-                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end">24556450</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end">546</td>
                 </tr>
                 <tr>
                   <td className="border border-[#dee2e6] p-[10px]"></td>
@@ -875,7 +740,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   <td className="border border-[#dee2e6] p-[10px] text-end">0.93</td>
                   <td className="border border-[#dee2e6] p-[10px] text-end">0.79</td>
                 </tr>
-              </tbody>
+              </tbody> */}
             </table>
           </>
         ) : null}
@@ -913,7 +778,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </p>
         </div>
         <div className="mt-8 flex items-end justify-between">
-          <div className="w-1/2 pr-4">
+          <div className="w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
               <Image
                 src="/icons/bar_chart_icon.svg"
@@ -929,7 +794,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             </div>
             <BarChart data={curBarChartData} labels={curBarChartLabels} />
           </div>
-          <div className="w-1/2 pl-4">
+          <div className="w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
               <Image
                 src="/icons/bar_chart_icon.svg"
