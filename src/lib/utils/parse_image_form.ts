@@ -68,14 +68,12 @@ export async function addPrefixToFile(
   const currentExt = path.extname(fileName).slice(1); // Info: 去除開頭的點 (.) (20240726 - Jacky)
 
   // Info: 根據現有副檔名與新的副檔名來決定是否需要更改 (20240726 - Jacky)
-  const newFilePath = path.join(
-    targetFolder,
-    `${prefix}-${fileName}${currentExt === ext ? '' : `.${ext}`}`
-  );
+  const newFilename = `${prefix}-${fileName}${currentExt === ext ? '' : `.${ext}`}`;
+  const newFilePath = path.join(targetFolder, newFilename);
 
   // Info: 檢查檔案是否存在 (20240726 - Jacky)
   await fs.access(oldFilePath);
   // Info: 改名檔案 (20240726 - Jacky)
   await fs.rename(oldFilePath, newFilePath);
-  return newFilePath;
+  return newFilename;
 }
