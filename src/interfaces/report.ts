@@ -143,25 +143,28 @@ export interface IncomeStatementOtherInfo {
 
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: { [key: string]: {
-    cur: number;
-    curMinus1: number;
-    curMinus2: number;
-    curMinus3: number;
-    curMinus4: number;
+    [key: string]: number;
    } };
+  lineChartDataForRatio: {
+    data: number[];
+    labels: string[];
+  };
   strategyInvest:{
-      cur: {
-      PPEInvest: number;
-      strategyInvest: number;
-      otherInvest: number;
+    [key: string]: {
+      data: number[];
+      labels: string[];
     };
-    pre: {
-      PPEInvest: number;
-      strategyInvest: number;
-      otherInvest: number;
-    };
-  }
-
+  },
+  thirdTitle: string;
+  fourthTitle: string;
+  fourPointOneTitle: string;
+  ourThoughts: string[];
+  freeCash: { [key: string]: {
+    operatingCashFlow: number,
+    ppe: number,
+    intangibleAsset: number,
+    freeCash: number,
+  } };
 }
 
 // Todo Murky (20240729):

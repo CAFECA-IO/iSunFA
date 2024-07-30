@@ -712,7 +712,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
     }],
     // Info: Murky (20240710): 暫時先不implement
     ["C09900", {
-        name: "其他",
+        name: "其他籌資活動",
         cashInflow: false,
         voucherPattern: {
             debit: {
