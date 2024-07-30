@@ -1,9 +1,12 @@
+import React, { useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/dist/client/link';
+import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { FiPlusCircle } from 'react-icons/fi';
 import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import NavBar from '@/components/nav_bar/nav_bar';
 import AccountingSidebar from '@/components/accounting_sidebar/accounting_sidebar';
 import JournalListBody from '@/components/journal_list_body/journal_list_body';
@@ -11,11 +14,17 @@ import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { useTranslation } from 'next-i18next';
 
 const JournalListPage = () => {
   const { t } = useTranslation('common');
   const { selectedCompany, isAuthLoading } = useUserCtx();
+  const { getAccountListHandler } = useAccountingCtx();
+
+  useEffect(() => {
+    if (selectedCompany) {
+      getAccountListHandler(selectedCompany.id);
+    }
+  }, [selectedCompany]);
 
   const companyName = selectedCompany && selectedCompany.name ? `${selectedCompany.name} -` : '';
 
