@@ -16,13 +16,14 @@ export async function listEmployees(
   try {
     const where: Prisma.EmployeeWhereInput = {
       companyId,
-      OR: searchQuery
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      ...(searchQuery
         ? [
             { name: { contains: searchQuery, mode: 'insensitive' } },
             { department: { name: { contains: searchQuery, mode: 'insensitive' } } },
             { payFrequency: { contains: searchQuery, mode: 'insensitive' } },
           ]
-        : undefined,
+        : {}),
     };
 
     const totalCount = await prisma.employee.count({ where });

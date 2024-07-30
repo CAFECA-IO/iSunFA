@@ -9,6 +9,7 @@ export async function listAdminByCompanyId(
   const listedAdmin = await prisma.admin.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
       id: 'asc',
@@ -30,6 +31,7 @@ export async function getAdminById(
     admin = await prisma.admin.findUnique({
       where: {
         id: adminId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         user: true,
@@ -47,6 +49,7 @@ export async function getOwnerByCompanyId(
   const owner = await prisma.admin.findFirst({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
       role: {
         name: ROLE_NAME.OWNER,
       },
@@ -71,6 +74,7 @@ export async function getAdminByCompanyIdAndUserId(
       where: {
         userId,
         companyId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         user: true,
@@ -87,20 +91,24 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
   userId: number,
   roleName: RoleName
 ): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
-  const admin = await prisma.admin.findFirst({
-    where: {
-      userId,
-      companyId,
-      role: {
-        name: roleName,
+  let admin: (Admin & { company: Company; user: User; role: Role }) | null = null;
+  if (companyId > 0 && userId > 0) {
+    admin = await prisma.admin.findFirst({
+      where: {
+        userId,
+        companyId,
+        role: {
+          name: roleName,
+        },
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
-    },
-    include: {
-      user: true,
-      company: true,
-      role: true,
-    },
-  });
+      include: {
+        user: true,
+        company: true,
+        role: true,
+      },
+    });
+  }
   return admin;
 }
 
@@ -225,6 +233,7 @@ export async function listCompanyAndRole(
   const listedCompanyRole: Array<{ company: Company; role: Role }> = await prisma.admin.findMany({
     where: {
       userId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     select: {
       company: true,
@@ -254,6 +263,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
       where: {
         companyId,
         userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
         company: {

@@ -20,6 +20,7 @@ export async function transferOwnership(
           role: {
             name: ROLE_NAME.OWNER,
           },
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
         },
       });
 
