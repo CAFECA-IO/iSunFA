@@ -25,7 +25,15 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
       en: '/elements/login_bg.webp',
     }[currentLanguage] || '/elements/zh_tw_login_bg.webp';
 
-  const { signIn, errorCode, isSignInError, signedIn, toggleIsSignInError } = useUserCtx();
+  const {
+    checkIsRegistered,
+    handleExistingCredential,
+    signIn,
+    errorCode,
+    isSignInError,
+    signedIn,
+    toggleIsSignInError,
+  } = useUserCtx();
   const {
     registerModalDataHandler,
     registerModalVisibilityHandler,
@@ -33,9 +41,18 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
     toastHandler,
   } = useGlobalCtx();
 
-  const registerClickHandler = async () => {
+  const registerHandler = async () => {
     registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
+  };
+
+  const registerClickHandler = async () => {
+    const { isRegistered, credentials } = await checkIsRegistered();
+    if (isRegistered && credentials) {
+      await handleExistingCredential(credentials, invitation);
+    } else {
+      registerHandler();
+    }
   };
 
   const showPassKeySupport = () => {
