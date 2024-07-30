@@ -3,12 +3,10 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
+import { IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { DEFAULT_DISPLAYED_COMPANY_ID, default30DayPeriodInSec } from '@/constants/display';
+import { default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -18,13 +16,11 @@ import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
-import CashFlowDisplay from '@/components/financial_report_section/cash_flow_display_1';
 import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
-// import { ReportSheetType } from '@/constants/report';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const FinancialReportSection = () => {
   const { t } = useTranslation('common');
-  const [showCashFlow, setShowCashFlow] = useState(false);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -38,7 +34,7 @@ const FinancialReportSection = () => {
     APIName.REPORT_GENERATE_FINANCIAL,
     {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
     },
     false,
@@ -118,13 +114,7 @@ const FinancialReportSection = () => {
 
     generateFinancialReport({
       body,
-    }).then(() => {
-      setShowCashFlow(true);
     });
-  };
-
-  const tryAgainHandler = () => {
-    generateReportHandler();
   };
 
   useEffect(() => {
@@ -156,7 +146,9 @@ const FinancialReportSection = () => {
           subtitle: t('MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
           content: t('MY_REPORTS_SECTION.TAKE_MINUTES'),
           submitBtnStr: t('COMMON.CLOSE'),
-          submitBtnFunction: () => {},
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+          },
           messageType: MessageType.SUCCESS,
           submitBtnVariant: 'secondaryBorderless',
           submitBtnClassName: 'text-link-text-success hover:text-link-text-success-hover',
@@ -168,7 +160,9 @@ const FinancialReportSection = () => {
           subtitle: t('DASHBOARD.FAILED'),
           content: t('DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
           submitBtnStr: t('DASHBOARD.TRY_AGAIN'),
-          submitBtnFunction: tryAgainHandler,
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+          },
           messageType: MessageType.ERROR,
           submitBtnVariant: 'tertiaryBorderless',
           submitBtnIcon: (
@@ -296,6 +290,10 @@ const FinancialReportSection = () => {
                     .includes(searchQuery.toLowerCase())
                 // eslint-disable-next-line function-paren-newline
               )
+              // TODO: 串上 API 之後把 filter 拿掉 (20240726 - Shirley)
+              .filter((project) => {
+                return project.includes('Overall');
+              })
               .map((project) => (
                 <li
                   key={project}
@@ -490,255 +488,129 @@ const FinancialReportSection = () => {
       )}
     </Button>
   );
-  // return (
-  //   <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
-  //     <div className="flex gap-0 max-md:flex-wrap">
-  //       <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-  //         {/* Info: desktop heading (20240513 - Shirley) */}
-  //         <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-  //           <div className="w-full justify-center px-10 md:px-28">
-  //             {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
-  //           </div>
-  //         </div>
-  //         {/* Info: mobile heading (20240513 - Shirley) */}
-  //         <div className="flex w-600px max-w-full flex-1 md:hidden">
-  //           <div className="mx-4 flex space-x-2">
-  //             <div>
-  //               <Image
-  //                 src={'/icons/report.svg'}
-  //                 width={30}
-  //                 height={30}
-  //                 alt="report_icon"
-  //                 className="aspect-square shrink-0"
-  //               />
-  //             </div>
-  //             <div className="mt-1.5">{t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
-  //           </div>
-  //         </div>
-
-  //         <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
-  //           <div className="flex flex-col justify-center max-md:max-w-full">
-  //             <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
-  //     {/* Info: options for generation (20240513 - Shirley) */}
-  //     <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
-  //       <div className="flex flex-col justify-center max-md:max-w-full">
-  //         <div className="flex flex-col gap-3 max-md:max-w-full">
-  //           <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-  //             {t('REPORTS_HISTORY_LIST.PROJECT')}
-  //           </div>
-
-  //           {displayedProjectMenu}
-  //         </div>
-  //       </div>
-  //       <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
-  //         <div className="flex flex-col gap-3 max-md:max-w-full">
-  //           <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-  //             {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
-  //           </div>
-  //           {displayedReportTypeMenu}
-  //         </div>
-  //       </div>
-  //       <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
-  //         <div className="flex flex-col space-y-3 max-md:max-w-full">
-  //           <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-  //             {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
-  //           </div>
-  //           {displayedLanguageMenu}
-  //         </div>
-  //       </div>
-  //       <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
-  //         <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
-  //           {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
-  //           {/* Info: 左橫線 (20240425 - Shirley) */}
-  //           <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
-  //             <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
-  //           </div>
-
-  //           <div className="flex gap-2">
-  //             <div className="my-auto flex flex-col justify-center">
-  //               <div className="flex items-center justify-center">
-  //                 {' '}
-  //                 <svg
-  //                   xmlns="http://www.w3.org/2000/svg"
-  //                   width="16"
-  //                   height="16"
-  //                   fill="none"
-  //                   viewBox="0 0 16 16"
-  //                 >
-  //                   <g fillRule="evenodd" clipPath="url(#clip0_904_69620)" clipRule="evenodd">
-  //                     <path
-  //                       fill="#FFA502"
-  //                       d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
-  //                     ></path>
-  //                     <path
-  //                       fill="#002462"
-  //                       d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
-  //                     ></path>
-  //                   </g>
-  //                   <defs>
-  //                     <clipPath id="clip0_904_69620">
-  //                       <path fill="#fff" d="M0 0H16V16H0z"></path>
-  //                     </clipPath>
-  //                   </defs>
-  //                 </svg>
-  //               </div>
-  //             </div>
-  //             <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
-  //               {t('PENDING_REPORT_LIST.PERIOD')}
-  //             </div>
-  //           </div>
-
-  //           {/* Info: 右橫線 (20240425 - Shirley) */}
-  //           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-  //             <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
-  //           </div>
-  //         </div>
-  //         <div className="mt-6 flex flex-col justify-center">
-  //           <DatePicker
-  //             // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-  //             type={datePickerType}
-  //             period={period}
-  //             setFilteredPeriod={setPeriod}
-  //             btnClassName="px-6"
-  //           />
-  //         </div>
-  //       </div>
-  //       <div className="my-10 flex flex-col justify-center">
-  //         <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
-  //       </div>
-  //       {displayedButtonOrLink}{' '}
-  //     </div>
-  //   </div>
-  // );
   return (
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
-      {!showCashFlow ? (
-        <>
-          <div className="flex gap-0 max-md:flex-wrap">
-            <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-              {/* Info: desktop heading (20240513 - Shirley) */}
-              <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-                <div className="w-full justify-center px-10 md:px-28">
-                  {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
-                </div>
-              </div>
-              {/* Info: mobile heading (20240513 - Shirley) */}
-              <div className="flex w-600px max-w-full flex-1 md:hidden">
-                <div className="mx-4 flex space-x-2">
-                  <div>
-                    <Image
-                      src={'/icons/report.svg'}
-                      width={30}
-                      height={30}
-                      alt="report_icon"
-                      className="aspect-square shrink-0"
-                    />
-                  </div>
-                  <div className="mt-1.5">{t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
-                <div className="flex flex-col justify-center max-md:max-w-full">
-                  <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-                </div>
-              </div>
+      <div className="flex gap-0 max-md:flex-wrap">
+        <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
+          {/* Info: desktop heading (20240513 - Shirley) */}
+          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
+            <div className="w-full justify-center px-10 md:px-28">
+              {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
             </div>
           </div>
-          {/* Info: options for generation (20240513 - Shirley) */}
-          <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
-            <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="flex flex-col gap-3 max-md:max-w-full">
-                <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-                  {t('REPORTS_HISTORY_LIST.PROJECT')}
-                </div>
-                {displayedProjectMenu}
-              </div>
-            </div>
-            <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
-              <div className="flex flex-col gap-3 max-md:max-w-full">
-                <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-                  {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
-                </div>
-                {displayedReportTypeMenu}
-              </div>
-            </div>
-            <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
-              <div className="flex flex-col space-y-3 max-md:max-w-full">
-                <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-                  {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
-                </div>
-                {displayedLanguageMenu}
-              </div>
-            </div>
-            <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
-              <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
-                {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
-                {/* Info: 左橫線 (20240425 - Shirley) */}
-                <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
-                  <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="my-auto flex flex-col justify-center">
-                    <div className="flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        viewBox="0 0 16 16"
-                      >
-                        <g fillRule="evenodd" clipPath="url(#clip0_904_69620)" clipRule="evenodd">
-                          <path
-                            fill="#FFA502"
-                            d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
-                          ></path>
-                          <path
-                            fill="#002462"
-                            d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
-                          ></path>
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_904_69620">
-                            <path fill="#fff" d="M0 0H16V16H0z"></path>
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
-                    {t('PENDING_REPORT_LIST.PERIOD')}
-                  </div>
-                </div>
-                {/* Info: 右橫線 (20240425 - Shirley) */}
-                <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-                  <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
-                </div>
-              </div>
-              <div className="mt-6 flex flex-col justify-center">
-                <DatePicker
-                  // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
-                  type={datePickerType}
-                  period={period}
-                  setFilteredPeriod={setPeriod}
-                  btnClassName="px-6"
+          {/* Info: mobile heading (20240513 - Shirley) */}
+          <div className="flex w-600px max-w-full flex-1 md:hidden">
+            <div className="mx-4 flex space-x-2">
+              <div>
+                <Image
+                  src={'/icons/report.svg'}
+                  width={30}
+                  height={30}
+                  alt="report_icon"
+                  className="aspect-square shrink-0"
                 />
               </div>
+              <div className="mt-1.5">{t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
             </div>
-            <div className="my-10 flex flex-col justify-center">
-              <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
-            </div>
-            {displayedButtonOrLink}
           </div>
-        </>
-      ) : (
-        <CashFlowDisplay reportType={FinancialReportTypesKeyReportSheetTypeMapping} />
-      )}
+
+          <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
+            <div className="flex flex-col justify-center max-md:max-w-full">
+              <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Info: options for generation (20240513 - Shirley) */}
+      <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
+        <div className="flex flex-col justify-center max-md:max-w-full">
+          <div className="flex flex-col gap-3 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+              {t('REPORTS_HISTORY_LIST.PROJECT')}
+            </div>
+
+            {displayedProjectMenu}
+          </div>
+        </div>
+        <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
+          <div className="flex flex-col gap-3 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+              {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
+            </div>
+            {displayedReportTypeMenu}
+          </div>
+        </div>
+        <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
+          <div className="flex flex-col space-y-3 max-md:max-w-full">
+            <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+              {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+            </div>
+            {displayedLanguageMenu}
+          </div>
+        </div>
+        <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
+          <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
+            {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
+            {/* Info: 左橫線 (20240425 - Shirley) */}
+            <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
+              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
+            </div>
+
+            <div className="flex gap-2">
+              <div className="my-auto flex flex-col justify-center">
+                <div className="flex items-center justify-center">
+                  {' '}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    viewBox="0 0 16 16"
+                  >
+                    <g fillRule="evenodd" clipPath="url(#clip0_904_69620)" clipRule="evenodd">
+                      <path
+                        fill="#FFA502"
+                        d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
+                      ></path>
+                      <path
+                        fill="#002462"
+                        d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
+                      ></path>
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_904_69620">
+                        <path fill="#fff" d="M0 0H16V16H0z"></path>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
+                {t('PENDING_REPORT_LIST.PERIOD')}
+              </div>
+            </div>
+
+            {/* Info: 右橫線 (20240425 - Shirley) */}
+            <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col justify-center">
+            <DatePicker
+              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
+              type={datePickerType}
+              period={period}
+              setFilteredPeriod={setPeriod}
+              btnClassName="px-6"
+            />
+          </div>
+        </div>
+        <div className="my-10 flex flex-col justify-center">
+          <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
+        </div>
+        {displayedButtonOrLink}{' '}
+      </div>
     </div>
   );
 };
-
 export default FinancialReportSection;

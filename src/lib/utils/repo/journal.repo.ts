@@ -186,22 +186,22 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
     };
 
     const include = {
-        project: true,
-        contract: true,
-        invoice: {
-          include: {
-            payment: true,
-          },
+      project: true,
+      contract: true,
+      invoice: {
+        include: {
+          payment: true,
         },
-        voucher: {
-          include: {
-            lineItems: {
-              include: {
-                account: true,
-              },
+      },
+      voucher: {
+        include: {
+          lineItems: {
+            include: {
+              account: true,
             },
           },
         },
+      },
     };
 
     const findUniqueArgs = {
@@ -219,7 +219,10 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
   return journal;
 }
 
-export async function deleteJournalInPrisma(journalId: number, companyId: number): Promise<IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null> {
+export async function deleteJournalInPrisma(
+  journalId: number,
+  companyId: number
+): Promise<IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null> {
   let journal: IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null = null;
 
   let journalExists: IJournalFromPrismaIncludeProjectContractInvoiceVoucher | null = null;
@@ -258,16 +261,18 @@ export async function deleteJournalInPrisma(journalId: number, companyId: number
           });
         }
         if (journalExists?.voucher) {
-          await Promise.all(journalExists.voucher.lineItems.map(async (lineItem) => {
-            await prismaClient.lineItem.update({
-              data: {
-                deletedAt: nowInSecond,
-              },
-              where: {
-                id: lineItem.id,
-              },
-            });
-          }));
+          await Promise.all(
+            journalExists.voucher.lineItems.map(async (lineItem) => {
+              await prismaClient.lineItem.update({
+                data: {
+                  deletedAt: nowInSecond,
+                },
+                where: {
+                  id: lineItem.id,
+                },
+              });
+            })
+          );
 
           await prismaClient.voucher.update({
             data: {
@@ -286,8 +291,7 @@ export async function deleteJournalInPrisma(journalId: number, companyId: number
           where: {
             id: journalId,
           },
-          include:
-          {
+          include: {
             project: true,
             contract: true,
             invoice: {
@@ -304,7 +308,7 @@ export async function deleteJournalInPrisma(journalId: number, companyId: number
                 },
               },
             },
-          }
+          },
         });
       });
     } catch (error) {

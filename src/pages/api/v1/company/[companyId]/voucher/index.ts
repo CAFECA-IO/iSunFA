@@ -2,11 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVocuherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import {
   createLineItemInPrisma,
   createVoucherInPrisma,
@@ -14,24 +14,10 @@ import {
   findUniqueVoucherInPrisma,
   getLatestVoucherNoInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
-type ApiResponseType = {
-  id: number;
-  createdAt: number;
-  updatedAt: number;
-  journalId: number;
-  no: string;
-  lineItems: {
-    id: number;
-    amount: number;
-    description: string;
-    debit: boolean;
-    accountId: number;
-    voucherId: number;
-    createdAt: number;
-    updatedAt: number;
-  }[];
-} | null;
+type ApiResponseType = IVocuherDataForAPIResponse | null;
 
 async function handleVoucherCreatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,
@@ -101,8 +87,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  if (!isAuth) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
   // Deprecated: (20240613 - Murky) Need to replace by type guard after merge
   if (!companyId || typeof companyId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

@@ -72,17 +72,17 @@ const Operations = ({
     <td className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center justify-center gap-4px md:justify-end">
       <button
         type="button"
-        className="rounded-xs text-secondaryBlue hover:text-primaryYellow"
+        className="rounded-xs p-5px text-secondaryBlue hover:text-primaryYellow md:p-10px"
         onClick={editJournalHandler}
       >
         <svg
-          width="40"
-          height="40"
-          viewBox="0 0 40 40"
+          width="20"
+          height="20"
+          viewBox="10 10 20 20"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <g clipPath="url(#clip0_4605_41998)">
+          <g>
             <path
               className="fill-current"
               fillRule="evenodd"
@@ -91,26 +91,21 @@ const Operations = ({
               fill="#001840"
             />
           </g>
-          <defs>
-            <clipPath id="clip0_4605_41998">
-              <rect width="20" height="20" fill="white" transform="translate(10 10)" />
-            </clipPath>
-          </defs>
         </svg>
       </button>
       <button
         type="button"
-        className="rounded-xs text-secondaryBlue hover:text-primaryYellow"
+        className="rounded-xs p-5px text-secondaryBlue hover:text-primaryYellow md:p-10px"
         onClick={() => onDelete(companyId, journalId)}
       >
         <svg
-          width="40"
-          height="40"
-          viewBox="0 0 40 40"
+          width="20"
+          height="20"
+          viewBox="10 10 20 20"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <g clipPath="url(#clip0_4605_42004)">
+          <g>
             <path
               className="fill-current"
               fillRule="evenodd"
@@ -119,11 +114,6 @@ const Operations = ({
               fill="#001840"
             />
           </g>
-          <defs>
-            <clipPath id="clip0_4605_42004">
-              <rect width="20" height="20" fill="white" transform="translate(10 10)" />
-            </clipPath>
-          </defs>
         </svg>
       </button>
     </td>
@@ -240,7 +230,9 @@ const JournalItem = ({
           <div className="h-6px w-6px rounded border-3px border-successGreen"></div>
           <p>{t('JOURNAL.DEBIT')}</p>
         </div>
-        <p className="w-200px whitespace-nowrap text-lightGray4">{debit.account}</p>
+        <p className="w-200px whitespace-nowrap text-lightGray4">
+          {truncateString(debit.account, 10)}
+        </p>
         <p className="whitespace-nowrap text-navyBlue2">
           {debit.amount} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
         </p>
@@ -250,7 +242,9 @@ const JournalItem = ({
           <div className="h-6px w-6px rounded border-3px border-errorRed"></div>
           <p>{t('JOURNAL.CREDIT')}</p>
         </div>
-        <p className="w-200px whitespace-nowrap text-lightGray4">{credit.account}</p>
+        <p className="w-200px whitespace-nowrap text-lightGray4">
+          {truncateString(credit.account, 10)}
+        </p>
         <p className="whitespace-nowrap text-navyBlue2">
           {credit.amount} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
         </p>
@@ -265,7 +259,7 @@ const JournalItem = ({
     >
       {/* Info: (20240418 - Julian) 選取方塊 */}
       <td>
-        <div className="flex justify-center px-10px">
+        <div className="flex justify-center md:px-10px">
           <input
             id={voucherNo}
             type="checkbox"
@@ -394,7 +388,7 @@ export const JournalItemMobile = ({
   return (
     <tr key={id} className="relative border-b border-lightGray6 text-center text-lightGray4">
       {/* Info: (20240418 - Julian) 選取方塊 */}
-      <td className="w-50px align-middle">
+      <td className="align-middle md:w-50px">
         <div className="flex justify-center px-10px">
           <input
             id={`${id}`}
@@ -412,7 +406,7 @@ export const JournalItemMobile = ({
       </td>
       {/* Info: (20240418 - Julian) 重要資訊 */}
       <td className="align-middle">
-        <div className="flex items-center justify-center gap-16px px-16px py-8px">
+        <div className="flex w-180px items-center justify-center gap-4px p-8px">
           {/* Info: (20240517 - Julian) 類型 */}
           {displayedTypeMobile}
           <div className="flex flex-1 flex-col text-xs text-navyBlue2">

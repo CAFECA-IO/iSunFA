@@ -70,7 +70,7 @@ interface IAccountingContext {
     forUser?: boolean,
     sortBy?: string,
     sortOrder?: string,
-    searchKey?: string,
+    searchKey?: string
   ) => void;
   getAIStatusHandler: (
     params: { companyId: number; askAIId: string } | undefined,
@@ -119,37 +119,37 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => { },
+  updateOCRListHandler: () => {},
   accountList: [],
-  getAccountListHandler: () => { },
-  getAIStatusHandler: () => { },
+  getAccountListHandler: () => {},
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => { },
+  selectOCRHandler: () => {},
   selectedJournal: undefined,
-  selectJournalHandler: () => { },
+  selectJournalHandler: () => {},
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAccountHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  resetVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  resetVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => { },
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -229,9 +229,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         type,
         liquidity,
         page,
-        limit,
+        limit: Number.MAX_SAFE_INTEGER,
         // Info: (20240720 - Murky) @Julian, I set default value for these query params
-        includeDefaultAccount,
+        includeDefaultAccount: true,
         reportType,
         equityType,
         forUser,
@@ -245,6 +245,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const getAIStatusHandler = useCallback(
     (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
       if (update) {
+        setAIStatus(ProgressStatus.IN_PROGRESS);
         setStopAskAI(false);
         const interval = setInterval(async () => {
           const { success, data } = await getAIStatus({
@@ -328,13 +329,14 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     (count: number, type?: VoucherRowType) => {
       // Info: (20240530 - Julian) 檢查 accountingVoucher 是否有列
       const isNotEmpty = !!accountingVoucher && accountingVoucher.length > 0;
+      // Info: (20240729 - Julian) new row 的 id 為最後一列 id + 1 ，或是 0
       const newId = isNotEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
 
       switch (type) {
         // Info: (20240530 - Julian) 新增借方列
         case VoucherRowType.DEBIT: {
           const newDebitRow = Array.from({ length: count }, (_, i) => ({
-            id: i + (isNotEmpty ? 0 : 1) + newId,
+            id: i + newId, // Info: (20240729 - Julian) 根據 i 的數量新增 id
             account: null,
             particulars: '',
             debit: 1,
@@ -347,7 +349,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         // Info: (20240530 - Julian) 新增貸方列
         case VoucherRowType.CREDIT: {
           const newCreditRow = Array.from({ length: count }, (_, i) => ({
-            id: i + (isNotEmpty ? 0 : 1) + newId,
+            id: i + newId, // Info: (20240729 - Julian) 根據 i 的數量新增 id
             account: null,
             particulars: '',
             debit: 0,
@@ -360,7 +362,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         // Info: (20240530 - Julian) 新增空白列
         default: {
           const newRow = Array.from({ length: count }, (_, i) => ({
-            id: i + (isNotEmpty ? 0 : 1) + newId,
+            id: i + newId, // Info: (20240729 - Julian) 根據 i 的數量新增 id
             account: null,
             particulars: '',
             debit: 0,
@@ -386,12 +388,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const changeVoucherAccountHandler = useCallback(
     (index: number, account: IAccount | undefined) => {
       setAccountingVoucher((prev) => {
-        if (index > prev.length - 1) {
+        const newVoucher = [...prev];
+        const targetId = prev.findIndex((voucher) => voucher.id === index);
+
+        if (!newVoucher[targetId]) {
           return prev;
         }
 
-        const newVoucher = [...prev];
-        const targetId = prev.findIndex((voucher) => voucher.id === index);
         newVoucher[targetId].account = account ?? null;
         return newVoucher;
       });
@@ -419,11 +422,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const changeVoucherAmountHandler = useCallback(
     (index: number, value: number | null, type: VoucherRowType, description?: string) => {
       setAccountingVoucher((prev) => {
-        // Info: (20240716 - Julian) 若 index 大於傳票長度，則不寫入
-        if (index > prev.length - 1) {
-          return prev;
-        }
-
         // Info: (20240430 - Julian) 複製現有的傳票
         const newVoucher = [...prev];
 
@@ -432,6 +430,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
         // Info: (20240430 - Julian) 找到要寫入的傳票 id
         const targetId = prev.findIndex((voucher) => voucher.id === index) ?? index;
+
+        // Info: (20240430 - Julian) 若找不到對應的傳票，則不寫入
+        if (!newVoucher[targetId]) {
+          return prev;
+        }
 
         // Info: (20240710 - Julian) 如果有 description ，則寫入
         if (description) {
@@ -448,7 +451,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
           newVoucher[targetId].debit = newAmount;
           newVoucher[targetId].credit = null;
         }
-
         return newVoucher;
       });
     },

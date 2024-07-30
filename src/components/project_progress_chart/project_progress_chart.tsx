@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  DatePickerAlign,
-  MILLISECONDS_IN_A_SECOND,
-} from '@/constants/display';
+import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 // import { TranslateFunction } from '@/interfaces/locale';
 import Tooltip from '@/components/tooltip/tooltip';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
@@ -22,6 +18,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -199,7 +196,7 @@ const ProjectProgressChart = () => {
     error: listError,
   } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
     },
     query: {
       date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
@@ -248,7 +245,7 @@ const ProjectProgressChart = () => {
   useEffect(() => {
     listProjectProgress({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

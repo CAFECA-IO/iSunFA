@@ -8,11 +8,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  SortOptions,
-  default30DayPeriodInSec,
-} from '@/constants/display';
+import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
 import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PENDING_REPORT_ITEMS,
@@ -28,6 +24,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
 import { ReportType } from '@/constants/report';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation('common');
@@ -63,7 +60,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     code: listPendingCode,
     success: listPendingSuccess,
   } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
     query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
   });
 
@@ -72,7 +69,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     code: listGeneratedCode,
     success: listGeneratedSuccess,
   } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
+    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
     query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
   });
 

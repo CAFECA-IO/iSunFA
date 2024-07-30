@@ -21,30 +21,30 @@ export async function findManyAccountsInPrisma({
   sortBy = 'code',
   sortOrder = 'asc',
   searchKey,
-}:{
-  companyId: number,
-  includeDefaultAccount?: boolean,
-  liquidity?: boolean,
-  type?: AccountType,
-  reportType?: ReportSheetType,
-  equityType?: EquityType,
-  forUser?: boolean,
-  isDeleted?: boolean,
-  page: number,
-  limit: number,
-  sortBy: 'code' | 'createdAt',
-  sortOrder: 'asc' | 'desc',
-  searchKey?: string,
+}: {
+  companyId: number;
+  includeDefaultAccount?: boolean;
+  liquidity?: boolean;
+  type?: AccountType;
+  reportType?: ReportSheetType;
+  equityType?: EquityType;
+  forUser?: boolean;
+  isDeleted?: boolean;
+  page: number;
+  limit: number;
+  sortBy: 'code' | 'createdAt';
+  sortOrder: 'asc' | 'desc';
+  searchKey?: string;
 }): Promise<{
-  data: Account[],
-  page: number,
-  limit: number,
-  totalPage: number,
-  totalCount: number,
-  hasNextPage: boolean,
-  hasPreviousPage: boolean,
-  sortOrder: 'asc' | 'desc',
-  sortBy: 'code' | 'createdAt',
+  data: Account[];
+  page: number;
+  limit: number;
+  totalPage: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  sortOrder: 'asc' | 'desc';
+  sortBy: 'code' | 'createdAt';
 }> {
   let accounts: Account[] = [];
 
@@ -55,34 +55,32 @@ export async function findManyAccountsInPrisma({
     forUser,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     AND: [
-
       {
-        OR: type
-          ? [{ type }]
-          : accountTypes.length > 0
-            ? [{ type: { in: accountTypes, }, }]
+        OR: type ? [{ type }] : accountTypes.length > 0 ? [{ type: { in: accountTypes } }] : [],
+      },
+      {
+        OR:
+          includeDefaultAccount !== undefined
+            ? includeDefaultAccount
+              ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID }]
+              : [{ companyId }]
             : [],
       },
-      {
-        OR: includeDefaultAccount !== undefined
-          ? includeDefaultAccount
-            ? [{ companyId }, { companyId: PUBLIC_COMPANY_ID },]
-            : [{ companyId }]
-          : [],
-      },
-      type === AccountType.EQUITY && equityType ? {
-        code: {
-          in: EQUITY_TYPE_TO_CODE_MAP[equityType],
-        },
-      } : {},
+      type === AccountType.EQUITY && equityType
+        ? {
+            code: {
+              in: EQUITY_TYPE_TO_CODE_MAP[equityType],
+            },
+          }
+        : {},
       {
         OR: searchKey
           ? [
-            { name: { contains: searchKey, mode: 'insensitive' } },
-            { code: { contains: searchKey, mode: 'insensitive' } },
-          ]
+              { name: { contains: searchKey, mode: 'insensitive' } },
+              { code: { contains: searchKey, mode: 'insensitive' } },
+            ]
           : [],
-      }
+      },
     ],
   };
 

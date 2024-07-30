@@ -24,9 +24,15 @@ export function formatIReport(report: Report): IReport {
     ? report.reportType
     : ReportSheetType.BALANCE_SHEET;
   const reportContent = JSON.parse(report.content as string);
-  const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent)
-    ? reportContent
+
+  // Info: (20240729 - Murky) Bad code, not robust
+  const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent.content)
+    ? reportContent.content
     : [];
+
+  // Info: (20240729 - Murky) Bad code, not robust
+  const otherInfo = reportContent.otherInfo || {};
+
   const formattedReport: IReport = {
     id: report.id,
     companyId: report.companyId,
@@ -46,6 +52,7 @@ export function formatIReport(report: Report): IReport {
     blockChainExplorerLink: report.blockChainExplorerLink || '',
     evidenceId: report.evidenceId || '',
     content,
+    otherInfo,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
   };
@@ -101,19 +108,17 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
   return reportItem;
 }
 
-export function formatIPaginatedPendingReportItem(
-  reports:{
-  data: IReportIncludeProject[],
-  page: number,
-  totalPages: number,
-  totalCount: number, // 總數量
-  pageSize: number, // 每頁顯示的項目數量
-  hasNextPage: boolean, // 是否有下一頁
-  hasPreviousPage: boolean, // 是否有上一頁
-  sortBy: string, // 排序欄位
-  sortOrder: string // 排序方式
-}
-): IPaginatedPendingReportItem {
+export function formatIPaginatedPendingReportItem(reports: {
+  data: IReportIncludeProject[];
+  page: number;
+  totalPages: number;
+  totalCount: number; // 總數量
+  pageSize: number; // 每頁顯示的項目數量
+  hasNextPage: boolean; // 是否有下一頁
+  hasPreviousPage: boolean; // 是否有上一頁
+  sortBy: string; // 排序欄位
+  sortOrder: string; // 排序方式
+}): IPaginatedPendingReportItem {
   const pendingItems = reports.data.map((report) => formatIPendingReportItem(report));
   const paginatedPendingReportItem: IPaginatedPendingReportItem = {
     data: pendingItems,
@@ -126,26 +131,24 @@ export function formatIPaginatedPendingReportItem(
     sort: [
       {
         sortBy: reports.sortBy,
-        sortOrder: reports.sortOrder
+        sortOrder: reports.sortOrder,
       },
     ],
   };
   return paginatedPendingReportItem;
 }
 
-export function formatIPaginatedGeneratedReportItem(
-  reports:{
-    data: IReportIncludeProject[],
-    page: number,
-    totalPages: number,
-    totalCount: number, // 總數量
-    pageSize: number, // 每頁顯示的項目數量
-    hasNextPage: boolean, // 是否有下一頁
-    hasPreviousPage: boolean, // 是否有上一頁
-    sortBy: string, // 排序欄位
-    sortOrder: string // 排序方式
-  }
-): IPaginatedGeneratedReportItem {
+export function formatIPaginatedGeneratedReportItem(reports: {
+  data: IReportIncludeProject[];
+  page: number;
+  totalPages: number;
+  totalCount: number; // 總數量
+  pageSize: number; // 每頁顯示的項目數量
+  hasNextPage: boolean; // 是否有下一頁
+  hasPreviousPage: boolean; // 是否有上一頁
+  sortBy: string; // 排序欄位
+  sortOrder: string; // 排序方式
+}): IPaginatedGeneratedReportItem {
   const generatedItems = reports.data.map((report) => formatIGeneratedReportItem(report));
   const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
     data: generatedItems,
@@ -158,7 +161,7 @@ export function formatIPaginatedGeneratedReportItem(
     sort: [
       {
         sortBy: reports.sortBy,
-        sortOrder: reports.sortOrder
+        sortOrder: reports.sortOrder,
       },
     ],
   };

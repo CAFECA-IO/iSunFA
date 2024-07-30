@@ -1188,6 +1188,7 @@ module.exports = {
         '56%': '56%',
         '60%': '60%',
         '70%': '70%',
+        '75%': '75%',
         '83%': '83%',
         '100%': '100%',
         0.5: '50%',
@@ -1391,6 +1392,9 @@ module.exports = {
         inter: ['Inter', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
+      },
+      width: {
+        'full-available': '-webkit-fill-available',
       },
       maxWidth: {
         '80px': '80px',

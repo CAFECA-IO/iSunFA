@@ -12,10 +12,11 @@ import { ToastType } from '@/interfaces/toastify';
 import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -55,7 +56,7 @@ const ViewAnalysisReportPage = ({
     success: getARSuccess,
   } = APIHandler<IReportOld>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
     params: {
-      params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId: '1' },
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId: '1' },
     },
     query: { reportType, reportLanguage, startTimestamp, endTimestamp },
   });

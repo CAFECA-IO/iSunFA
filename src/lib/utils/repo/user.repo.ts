@@ -4,6 +4,9 @@ import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
 export async function listUser(): Promise<User[]> {
   const userList = await prisma.user.findMany({
+    where: {
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
     orderBy: {
       id: 'asc',
     },
@@ -17,6 +20,7 @@ export async function getUserById(userId: number): Promise<User | null> {
     user = await prisma.user.findUnique({
       where: {
         id: userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -29,6 +33,7 @@ export async function getUserByCredential(credentialId: string): Promise<User | 
     user = await prisma.user.findUnique({
       where: {
         credentialId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }

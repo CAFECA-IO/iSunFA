@@ -1,10 +1,10 @@
 /* eslint-disable */
 import { pdfjs, Document, Page } from 'react-pdf';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { EXTERNAL_API } from '@/constants/url';
+import { EXTERNAL_API, ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -14,9 +14,12 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { FinancialReport } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
+import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
+import { useTranslation } from 'react-i18next';
+import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { useRouter } from 'next/router';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -27,314 +30,18 @@ interface IViewReportSectionProps {
   reportId: string;
 }
 
-const balanceReportThumbnails = [
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-];
+const generateThumbnails = (count: number) => {
+  return Array.from({ length: count }, (_, index) => ({
+    number: index + 1,
+    active: index === 0,
+    src: `/elements/placeholder.png`,
+    alt: `${count}`,
+  }));
+};
 
-const comprehensiveIncomeReportThumbnails = [
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_17.png',
-    alt: 'Report Thumbnail 17',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_18.png',
-    alt: 'Report Thumbnail 18',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_19.png',
-    alt: 'Report Thumbnail 19',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_20.png',
-    alt: 'Report Thumbnail 20',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_21.png',
-    alt: 'Report Thumbnail 21',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_22.png',
-    alt: 'Report Thumbnail 22',
-    active: false,
-  },
-];
-
-const cashFlowReportThumbnails = [
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_17.png',
-    alt: 'Report Thumbnail 17',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_18.png',
-    alt: 'Report Thumbnail 18',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_19.png',
-    alt: 'Report Thumbnail 19',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_20.png',
-    alt: 'Report Thumbnail 20',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_21.png',
-    alt: 'Report Thumbnail 21',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_22.png',
-    alt: 'Report Thumbnail 22',
-    active: false,
-  },
-];
+const balanceReportThumbnails = generateThumbnails(12);
+const incomeReportThumbnails = generateThumbnails(9);
+const cashFlowReportThumbnails = generateThumbnails(11);
 
 const ViewFinancialSection = ({
   reportId,
@@ -344,22 +51,28 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
-  console.log('reportLink in viewFinancialSection', reportLink);
+  const { t } = useTranslation('common');
+  const router = useRouter();
 
   const globalCtx = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
   const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
-    { src: string; alt: string; active: boolean }[]
+    { number: number; alt: string; active: boolean; src: string }[]
   >([]);
   const [pdfFile, setPdfFile] = useState<null | string>(null);
-  const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // TODO: debug, 需要在reportLink 拿到之後再傳 props 到ViewFinancialSection (20240729 - Shirley)
+  // eslint-disable-next-line no-console
+  console.log('ViewFinancialSection ${reportLink}#${pageNumber}', `${reportLink}#${pageNumber}`);
 
   const {
     data: reportFinancial,
@@ -368,31 +81,34 @@ const ViewFinancialSection = ({
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       reportId: reportId ?? '10000003',
     },
   });
 
-  console.log('reportFinancial in viewFinancialSection', reportFinancial);
-
-  function onDocumentLoadSuccess(data: { numPages: number }): void {
-    setNumPages(data.numPages);
-    setIsLoading(false);
-  }
+  // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
+  const handleIframeLoad = () => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, MILLISECONDS_IN_A_SECOND);
+  };
 
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
     setPageNumber(index + 1);
   };
 
-  const prevClickHandler = () => {
-    setActiveIndex((prev) => prev - 1);
-    setPageNumber((prev) => prev - 1);
-  };
-
-  const nextClickHandler = () => {
-    setActiveIndex((prev) => prev + 1);
-    setPageNumber((prev) => prev + 1);
+  const printPDF = () => {
+    if (reportLink) {
+      const printWindow = window.open(reportLink, '_blank');
+      if (printWindow) {
+        printWindow.addEventListener('load', () => {
+          setTimeout(() => {
+            printWindow.print();
+          }, MILLISECONDS_IN_A_SECOND);
+        });
+      }
+    }
   };
 
   const copyTokenContract = () => {
@@ -428,18 +144,22 @@ const ViewFinancialSection = ({
   };
 
   const backClickHandler = () => {
-    window.history.back();
+    // Info: 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面 (20240729 - Shirley)
+    router.push(ISUNFA_ROUTE.USERS_MY_REPORTS);
   };
 
   const downloadClickHandler = () => {
-    if (pdfFile) {
-      window.open(pdfFile, '_blank');
+    if (reportLink) {
+      printPDF();
     }
+    // if (pdfFile) {
+    //   window.open(pdfFile, '_blank');
+    // }
   };
 
   const fetchPDF = async () => {
     try {
-      const uri = encodeURIComponent(reportLink);
+      const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
 
       const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
@@ -460,14 +180,12 @@ const ViewFinancialSection = ({
   };
 
   useEffect(() => {
-    if (!pdfFile) return;
-
     switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
         break;
       case FinancialReportTypesKey.comprehensive_income_statement:
-        setReportThumbnails(comprehensiveIncomeReportThumbnails);
+        setReportThumbnails(incomeReportThumbnails);
         break;
       case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
@@ -475,18 +193,20 @@ const ViewFinancialSection = ({
       default:
         setReportThumbnails([]);
     }
-  }, [pdfFile]);
-
-  useEffect(() => {
-    fetchPDF();
-  }, [reportLink]);
-
-  useEffect(() => {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.js',
-      import.meta.url
-    ).toString();
   }, []);
+
+  // useEffect(() => {
+  //   if (reportLink) {
+  //     fetchPDF();
+  //   }
+  // }, [reportLink]);
+
+  // useEffect(() => {
+  //   pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  //     'pdfjs-dist/build/pdf.worker.js',
+  //     import.meta.url
+  //   ).toString();
+  // }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -533,6 +253,60 @@ const ViewFinancialSection = ({
     <>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</>
   );
 
+  const renderedThumbnail = (
+    thumbnail: { number: number; active: boolean; alt: string; src: string },
+    index: number
+  ) => (
+    <button onClick={() => thumbnailClickHandler(index)} key={index}>
+      <div
+        className={`flex flex-col rounded-2xl px-5 py-4 ${
+          index === activeIndex
+            ? 'bg-surface-brand-primary-soft'
+            : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+        }`}
+      >
+        <div className="flex items-center justify-center border border-solid border-blue-950">
+          <Image width={100} height={142} src={thumbnail.src} alt={thumbnail.alt} />
+        </div>
+        <div
+          className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
+            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-text-neutral-primary'
+          }`}
+        >
+          {index + 1 < 10 ? `0${index + 1}` : index + 1}
+        </div>
+      </div>
+    </button>
+  );
+
+  const displayedReport = (
+    <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
+      {/* Info: Sidebar (20240426 - Shirley) */}
+      <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+        <div className="mt-9 flex w-full flex-col items-center justify-center">
+          {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
+          <div className="flex h-850px flex-col gap-3">
+            {!isLoading ? (
+              reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
+            ) : (
+              <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-white lg:mx-0">
+        <iframe
+          ref={iframeRef}
+          src={`${reportLink}#${pageNumber}`}
+          className={`h-full w-full ${isLoading ? `w-0` : `min-w-[320px]`} overflow-x-auto border-none`}
+          title="Financial Report"
+          onLoad={handleIframeLoad}
+        />
+      </div>
+    </div>
+  );
+
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
@@ -567,7 +341,8 @@ const ViewFinancialSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={isLoading}
+              disabled={!reportLink || isLoading}
+              // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -617,7 +392,7 @@ const ViewFinancialSection = ({
       </div>
 
       {/* Info: token contract and token id info (20240426 - Shirley) */}
-      <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
+      <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap sm:mx-0 lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">Token Contract </div>
@@ -741,127 +516,15 @@ const ViewFinancialSection = ({
               </div>
             </div>
             {/* TODO: link (20240507 - Shirley) */}
-
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>
           </div>
         </div>
-
-        <div className=""></div>
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-40 pb-2">
-        {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
-          <div className="mt-9 flex w-full flex-col items-center justify-center">
-            {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
-            <div className="flex h-850px flex-col gap-3">
-              {!isLoading ? (
-                reportThumbnails.map((thumbnail, index) => (
-                  <button onClick={() => thumbnailClickHandler(index)} key={index}>
-                    <div
-                      className={`flex flex-col rounded-2xl px-5 py-4 ${
-                        index === activeIndex
-                          ? 'bg-surface-brand-primary-soft'
-                          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center border border-solid border-blue-950">
-                        <Image width={150} height={106} src={thumbnail.src} alt={thumbnail.alt} />
-                      </div>
-                      <div
-                        className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
-                          thumbnail.active
-                            ? 'text-text-neutral-solid-dark'
-                            : 'text-text-text-neutral-primary'
-                        }`}
-                      >
-                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <p>Loading...</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {pdfFile ? (
-          <div className="flex w-screen flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
-            {/* Info: prev button (20240529 - Shirley) */}
-            <button
-              onClick={prevClickHandler}
-              disabled={pageNumber <= 1}
-              className="absolute left-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <path
-                  fill="#001840"
-                  fillRule="evenodd"
-                  d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
-
-            {/* Info: PDF 本體 for desktop (20240529 - Shirley) */}
-            <div className="hidden lg:flex">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page scale={1} pageNumber={pageNumber} />
-              </Document>
-            </div>
-
-            {/* Info: PDF 本體 for mobile (20240529 - Shirley) */}
-            <div className="flex h-screen md:mt-20 lg:hidden">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
-                <Page
-                  scale={1}
-                  pageNumber={pageNumber}
-                  width={chartWidth}
-                  height={chartHeight}
-                  className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
-                />
-              </Document>
-            </div>
-
-            {/* Info: next button (20240529 - Shirley) */}
-            <button
-              onClick={nextClickHandler}
-              disabled={pageNumber >= numPages}
-              className="absolute right-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <path
-                  fill="#001840"
-                  fillRule="evenodd"
-                  d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
-          </div>
-        ) : (
-          <div className="flex h-850px w-full flex-1 justify-center bg-white">
-            <p className="text-stroke-brand-secondary">Loading...</p>
-          </div>
-        )}
-      </div>
+      {displayedReport}
     </div>
   );
 };

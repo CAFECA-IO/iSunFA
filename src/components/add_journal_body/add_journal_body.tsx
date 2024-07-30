@@ -10,7 +10,8 @@ import { useTranslation } from 'next-i18next';
 
 const AddJournalBody = () => {
   const { t } = useTranslation('common');
-  const { selectedOCR, selectOCRHandler, selectedJournal } = useAccountingCtx();
+  const { selectedOCR, selectOCRHandler, selectedJournal, selectJournalHandler } =
+    useAccountingCtx();
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
@@ -19,9 +20,13 @@ const AddJournalBody = () => {
   const backClickHandler = () => {
     setCurrentStep(AccountingStep.STEP_ONE);
     selectOCRHandler(undefined);
+    selectJournalHandler(undefined);
   };
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
-  const skipClickHandler = () => setCurrentStep(AccountingStep.STEP_TWO);
+  const skipClickHandler = () => {
+    selectJournalHandler(undefined);
+    setCurrentStep(AccountingStep.STEP_TWO);
+  };
   // ToDo: (20240422 - Julian) Submit -> 提交 description of events
   // const submitClickHandler = () => { }
 
@@ -29,6 +34,9 @@ const AddJournalBody = () => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
     if (selectedOCR || selectedJournal) {
       setCurrentStep(AccountingStep.STEP_TWO);
+      if (selectedOCR) {
+        selectJournalHandler(undefined);
+      }
     }
   }, [selectedOCR, selectedJournal]);
 

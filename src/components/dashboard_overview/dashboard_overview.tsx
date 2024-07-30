@@ -5,9 +5,9 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { IProfitInsight } from '@/interfaces/project_insight';
 import { useTranslation } from 'next-i18next';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const DashboardOverview = () => {
   const { t } = useTranslation('common');
@@ -23,7 +23,7 @@ const DashboardOverview = () => {
     error: getError,
   } = APIHandler<IProfitInsight>(APIName.PROFIT_GET_INSIGHT, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
     },
   });
 

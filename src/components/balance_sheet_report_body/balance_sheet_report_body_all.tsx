@@ -1,19 +1,70 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
+import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
-import { FinancialReport } from '@/interfaces/report';
+import { FinancialReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect } from 'react';
+import PieChart from '@/components/balance_sheet_report_body/pie_chart';
+import PieChartAssets from '@/components/balance_sheet_report_body/pie_chart_assets';
+import useStateRef from 'react-usestateref';
+import { timestampToString } from '@/lib/utils/common';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
 }
 
+enum ReportColumnType {
+  CURRENT = 'current',
+  PREVIOUS = 'previous',
+}
+
+const ACCOUNTINGS_WHOLE_COLUMN = [
+  '資產',
+  '負債及權益',
+  '負債',
+  '權益',
+  '歸屬於⺟公司業主之權益',
+  '流動資產',
+  '股本',
+  '流動負債',
+  '非流動負債',
+  '資本公積',
+  '保留盈餘',
+  '其他權益',
+];
+
+const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
+
+const COLOR_CLASSES = [
+  'bg-[#FD6F8E]',
+  'bg-[#6CDEA0]',
+  'bg-[#F670C7]',
+  'bg-[#FD853A]',
+  'bg-[#53B1FD]',
+  'bg-[#9B8AFB]',
+];
+
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { selectedCompany } = useUserCtx();
+
+  const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
+  const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
+
+  const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<number>>([]);
+  const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<number>>([]);
+  const [curAssetMixLabels, setCurAssetMixLabels] = useStateRef<Array<string>>([]);
+  const [preAssetMixLabels, setPreAssetMixLabels] = useStateRef<Array<string>>([]);
+
+  const [curDate, setCurDate] = useStateRef<string>('');
+  const [curYear, setCurYear] = useStateRef<string>('');
+  const [preDate, setPreDate] = useStateRef<string>('');
+  const [preYear, setPreYear] = useStateRef<string>('');
+
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
@@ -21,8 +72,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
     params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
-      reportId: reportId ?? '10000003',
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      reportId: reportId ?? NON_EXISTING_REPORT_ID,
     },
   });
 
@@ -30,14 +81,539 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   // eslint-disable-next-line no-console
   console.log('reportFinancial', reportFinancial);
 
+  const gatherALRData = (type: ReportColumnType) => {
+    if (!reportFinancial?.general) return [0, 0, 0];
+
+    const periodAmount = type === ReportColumnType.CURRENT ? 'curPeriodAmount' : 'prePeriodAmount';
+
+    const totalAssets = Number(
+      reportFinancial.general.find((item) => item.name === '資產總計')?.[periodAmount] || 0
+    );
+    const totalLiabilities = Number(
+      reportFinancial.general.find((item) => item.name === '負債總計')?.[periodAmount] || 0
+    );
+    const totalEquity = Number(
+      reportFinancial.general.find((item) => item.name === '權益總額')?.[periodAmount] || 0
+    );
+
+    if (totalAssets === 0 || totalLiabilities === 0 || totalEquity === 0) return [0, 0, 0];
+
+    const total = totalAssets + totalLiabilities + totalEquity;
+
+    return [
+      (totalAssets / total) * 100,
+      (totalLiabilities / total) * 100,
+      (totalEquity / total) * 100,
+    ];
+  };
+
+  // TODO: 改成拿後端的百分比，流動跟非流動資產的最大5筆 (20240726 - Shirley)
+  const gatherAMRData = (type: ReportColumnType): { percentages: number[]; labels: string[] } => {
+    if (!reportFinancial?.details) {
+      return { percentages: [0, 0, 0, 0, 0, 0], labels: ['', '', '', '', '', '其他'] };
+    }
+
+    const periodPercentage =
+      type === ReportColumnType.CURRENT ? 'curPeriodPercentage' : 'prePeriodPercentage';
+
+    const assets = reportFinancial.details.reduce(
+      (acc, item) => {
+        if (item.name === '流動資產' || item.name === '非流動資產') {
+          return { ...acc, [item.name]: true };
+        }
+        if (item.name === '流動資產合計' || item.name === '非流動資產合計') {
+          return { ...acc, [item.name.replace('合計', '')]: false };
+        }
+        if (acc['流動資產'] || acc['非流動資產']) {
+          acc.items.push({
+            name: item.name,
+            percentage: item[periodPercentage],
+          });
+        }
+        return acc;
+      },
+      {
+        流動資產: false,
+        非流動資產: false,
+        items: [] as Array<{ name: string; percentage: number }>,
+      }
+    );
+
+    const sortedAssets = assets.items.sort((a, b) => b.percentage - a.percentage);
+    const top5Assets = sortedAssets.slice(0, 5);
+    const top5Total = top5Assets.reduce((sum, asset) => sum + asset.percentage, 0);
+
+    let percentages: number[];
+    let labels: string[];
+
+    if (top5Total === 0) {
+      // 如果前5項資產的總和為0，則所有百分比（包括"其他"）都設為0
+      percentages = [0, 0, 0, 0, 0, 0];
+      labels = [...top5Assets.map((asset) => asset.name), '其他'];
+    } else {
+      const otherAssetsPercentage = Math.max(0, 100 - top5Total);
+      percentages = [
+        ...top5Assets.map((asset) => Math.round(asset.percentage)),
+        Math.round(otherAssetsPercentage),
+      ];
+      labels = [...top5Assets.map((asset) => asset.name), '其他'];
+    }
+
+    // 確保陣列長度為6
+    while (percentages.length < 6) percentages.push(0);
+    while (labels.length < 6) labels.push('');
+
+    return { percentages, labels };
+  };
+
+  useEffect(() => {
+    if (getReportFinancialSuccess === true && reportFinancial) {
+      const curALR = gatherALRData(ReportColumnType.CURRENT);
+      const preALR = gatherALRData(ReportColumnType.PREVIOUS);
+
+      const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
+      const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
+      const currentYear = currentDateString.year;
+      const previousYear = previousDateString.year;
+
+      const { percentages: curAMR, labels: curAMRLabels } = gatherAMRData(ReportColumnType.CURRENT);
+      const { percentages: preAMR, labels: preAMRLabels } = gatherAMRData(
+        ReportColumnType.PREVIOUS
+      );
+
+      setCurAssetMixRatio(curAMR);
+      setPreAssetMixRatio(preAMR);
+      setCurAssetMixLabels(curAMRLabels);
+      setPreAssetMixLabels(preAMRLabels);
+
+      setCurAssetLiabilityRatio(curALR);
+      setPreAssetLiabilityRatio(preALR);
+
+      setCurDate(currentDateString.date);
+      setPreDate(previousDateString.date);
+      setCurYear(currentYear);
+      setPreYear(previousYear);
+    }
+  }, [reportFinancial]);
+
   if (getReportFinancialIsLoading) {
-    return <div>Loading...</div>;
-  } else if (!getReportFinancialSuccess) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+      </div>
+    );
+  } else if (!getReportFinancialSuccess && reportFinancial) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
+  const renderedFooter = (page: number) => {
+    return (
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
+        <p className="m-0 text-[12px] text-white">{page}</p>
+        <div className="text-[16px] font-bold text-surface-brand-secondary">
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        </div>
+      </footer>
+    );
+  };
+
+  const rowsForPage1 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(0, 9).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage2 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(9, 20).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage2_1 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(0, 2).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage3 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(0, 13).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage4 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(13, 26).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage5 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(26, 40).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage6 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(40, 54).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage7 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(54, 68).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage8 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(68, 90).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage9 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(90, 101).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
+  const rowsForPage12 = (items: Array<FinancialReportItem>) => {
+    const rows = items.slice(42, 54).map((item, index) => {
+      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+        return (
+          <tr key={item.code}>
+            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // eslint-disable-next-line react/no-array-index-key
+        <tr key={index}>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
+
   const page1 = (
-    <div className="">
+    <div id="1" className="relative h-a4-height overflow-hidden">
       {/* Info: watermark logo (20240723 - Shirley) */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -49,17 +625,21 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         />
       </div>
 
-      <header className="mb-[86px] flex justify-between pl-0 text-white">
+      <header className="mb-12 flex justify-between pl-0 text-white">
         <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
-            <h1 className="mb-30px text-h6">
-              2330 <br />
-              台灣積體電路製造股份有限公司
-            </h1>
-            <p className="font-normal">
-              2023年第4季 <br />
-              合併財務報告 - 資產負債表
-            </p>
+            {reportFinancial && reportFinancial.company && (
+              <>
+                <h1 className="mb-30px text-h6">
+                  {reportFinancial.company.code} <br />
+                  {reportFinancial.company.name}
+                </h1>
+                <p className="font-normal">
+                  {reportFinancial.curDate.to} <br />
+                  合併財務報告 - 資產負債表
+                </p>
+              </>
+            )}
           </div>
         </div>
         <div className="box-border w-35% text-right">
@@ -85,13 +665,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -99,106 +679,20 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px]">
-                資產
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">11XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">流動資產合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                {reportFinancial?.general[1].curPeriodAmountString}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                {reportFinancial?.general[1].curPeriodPercentage}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                {reportFinancial?.general[1].prePeriodAmountString}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                {reportFinancial?.general[1].prePeriodPercentage}
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">15XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">非流動資產合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                {reportFinancial?.general[2].curPeriodAmountString}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                {reportFinancial?.general[2].curPeriodPercentage}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                {reportFinancial?.general[2].prePeriodAmountString}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                {reportFinancial?.general[2].prePeriodPercentage}
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">1XXX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">資產總計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                {reportFinancial?.general[3].curPeriodAmountString}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                {reportFinancial?.general[3].curPeriodPercentage}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                {reportFinancial?.general[3].prePeriodAmountString}
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
-                {reportFinancial?.general[3].prePeriodPercentage}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px]">
-                負債及權益
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">21XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">流動負債合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">913,583,316</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">16</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">944,226,817</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">19</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">21XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">非流動負債合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,135,525,052
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">21</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">944,226,817</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">19</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">21XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">負債總計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,049,108,368
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">37</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">944,226,817</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">40</td>
-            </tr>
+            {reportFinancial &&
+              reportFinancial.general &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+              rowsForPage1(reportFinancial.general)}
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-[2px_solid_#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">1</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image src="/logo/white_isunfa_logo_light.svg" alt="" />
-        </div>
-      </footer>
+
+      {renderedFooter(1)}
     </div>
   );
 
   const page2 = (
-    <div className="">
+    <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
@@ -226,13 +720,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}{' '}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -240,95 +734,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px]">
-                權益
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">3100</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                歸屬於母公司業主之權益
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">259,320,710</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">5</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">259,303,805</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">5</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">3200</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">資本公積合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">69,876,381</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">69,330,340</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">3300</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">保留盈餘合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                3,158,030,792
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">57</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,637,524,688
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">53</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">3400</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">其他權益合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-28,314,256</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-20,505,626</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">-</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">31XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                歸屬於母公司業主之權益合計
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                3,458,913,627
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">63</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,945,653,195
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">59</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">36XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">非控制權益</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">24,349,220</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">14,835,672</td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">1</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">3XXX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">權益總額</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                3,483,262,847
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">63</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,960,488,867
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">60</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">3XX2</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">負債及權益總計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                5,532,371,215
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">100</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                4,964,778,878
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">100</td>
-            </tr>
+            {reportFinancial &&
+              reportFinancial.general &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+              rowsForPage2(reportFinancial.general)}
           </tbody>
         </table>
 
@@ -357,13 +766,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2023-12-31
+                {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
-                2022-12-31
+                {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
@@ -371,38 +780,692 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan={5} className="border border-[#dee2e6] p-[10px] text-[14px]">
-                資產
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">11XX</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">流動資產合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,194,032,910
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">40</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,052,896,744
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">41</td>
-            </tr>
+            {reportFinancial &&
+              reportFinancial.details &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage2_1(reportFinancial.details)}
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">2</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <Image src="/logo/white_isunfa_logo_light.svg" alt="" />
-        </div>
-      </footer>
+      {renderedFooter(2)}
     </div>
   );
+  const page3 = (
+    <div id="3" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.general &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+              rowsForPage3(reportFinancial.details)}
+          </tbody>
+        </table>
+      </section>
+      {renderedFooter(3)}
+    </div>
+  );
+  const page4 = (
+    <div id="4" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.general &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage4(reportFinancial.details)}
+          </tbody>
+        </table>
+      </section>
+      {renderedFooter(4)}
+    </div>
+  );
+  const page5 = (
+    <div id="5" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.details &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage5(reportFinancial.details)}
+          </tbody>
+        </table>
+      </section>
+      {renderedFooter(5)}
+    </div>
+  );
+  const page6 = (
+    <div id="6" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.details &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage6(reportFinancial.details)}
+          </tbody>
+        </table>
+      </section>
+      {renderedFooter(6)}
+    </div>
+  );
+  const page7 = (
+    <div id="7" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.details &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage7(reportFinancial.details)}
+          </tbody>
+        </table>
+      </section>
+      {renderedFooter(7)}
+    </div>
+  );
+  const page8 = (
+    <div id="8" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.details &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage8(reportFinancial.details)}
+          </tbody>
+        </table>
+      </section>
+      {renderedFooter(8)}
+    </div>
+  );
+  const page9 = (
+    <div id="9" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>二、細項分類格式</p>
+          <p>單位：新台幣仟元</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                代號
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+                會計項目
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preDate}
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportFinancial &&
+              reportFinancial.details &&
+              Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
+              rowsForPage9(reportFinancial.details)}
+          </tbody>
+        </table>
+        {/* Info: watermark logo (20240723 - Anna) */}
+        <div className="relative -z-10">
+          <Image
+            className="absolute -top-300px right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
+      </section>
+      {renderedFooter(9)}
+    </div>
+  );
+  const page10 = (
+    <div id="10" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>三、資產負債比例表</p>
+        </div>
+        <div className="mx-3 flex flex-col space-y-10">
+          <div className="flex flex-col space-y-0">
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
+            <div className="flex items-center space-x-10">
+              <ul className="space-y-2">
+                <li className="flex items-center">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
+                  資產
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
+                  負債
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
+                  權益
+                </li>
+              </ul>
+              <PieChart data={curAssetLiabilityRatio} />
+            </div>
+          </div>
+          <div className="flex flex-col space-y-0">
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
+            <div className="flex items-center space-x-10">
+              <ul className="space-y-2">
+                <li className="flex items-center">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
+                  資產
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
+                  負債
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
+                  權益
+                </li>
+              </ul>
+              <PieChart data={preAssetLiabilityRatio} />
+            </div>
+          </div>
+        </div>
+        <div className="relative -z-10">
+          <Image
+            className="absolute -top-300px right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
+      </section>
+      {renderedFooter(10)}
+    </div>
+  );
+  const page11 = (
+    <div id="11" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>四、資產分布圖</p>
+        </div>
+        <div className="mx-3 flex flex-col space-y-10">
+          <div className="flex flex-col space-y-0">
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
+            <div className="flex items-center justify-between">
+              <ul className="space-y-2">
+                {curAssetMixLabels.map((label, index) => (
+                  <li key={label} className="flex items-center">
+                    <span
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                    ></span>
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
+              <PieChartAssets data={curAssetMixRatio} labels={curAssetMixLabels} colors={COLORS} />
+            </div>
+          </div>
+
+          <div className="flex flex-col space-y-5">
+            <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
+            <div className="flex items-center justify-between">
+              <ul className="space-y-2">
+                {preAssetMixLabels.map((label, index) => (
+                  <li key={label} className="flex items-center">
+                    <span
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                    ></span>
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
+              <PieChartAssets data={preAssetMixRatio} labels={preAssetMixLabels} colors={COLORS} />
+            </div>
+          </div>
+        </div>
+        <div className="relative -z-10">
+          <Image
+            className="absolute -top-300px right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
+      </section>
+      {renderedFooter(11)}
+    </div>
+  );
+  const page12 = (
+    <div id="12" className="relative h-a4-height overflow-hidden">
+      <header className="flex justify-between text-white">
+        <div className="mt-[29px] flex w-[28%]">
+          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
+          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        </div>
+        <div className="flex flex-col">
+          <div className="h-1 bg-surface-brand-secondary"></div>
+          <div className="mt-1 h-1 bg-surface-brand-primary"></div>
+        </div>
+        <div className="w-35% text-right">
+          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+            Balance Sheet
+            <span className="w-75% absolute bottom-[-20px] right-0 h-[5px] bg-surface-brand-secondary"></span>
+          </h2>
+        </div>
+      </header>
+      <section className="text-text-neutral-secondary">
+        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
+          <p>五、應收帳款週轉天數</p>
+          <p>單位：天</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
+              <th
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {curYear}年度
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preYear}年度
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-[14px]">應收帳款週轉天數</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+          <p>六、存貨週轉天數</p>
+          <p>單位：天</p>
+        </div>
+        <table className="w-full border-collapse bg-white">
+          <thead>
+            <tr>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {curYear}年度
+              </th>
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+                {preYear}年度
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {reportFinancial &&
+                reportFinancial.general &&
+                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+                rowsForPage12(reportFinancial.general)}
+              <td className="border border-[#dee2e6] p-[10px] text-[14px]">存貨週轉天數</td>
+              {/* TODO: API response (20240729 - Shirley) */}
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">-</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="relative top-28rem -z-10">
+          <Image
+            className="absolute bottom-0 right-0"
+            src="/logo/watermark_logo.svg"
+            alt="isunfa logo"
+            width={450}
+            height={300}
+          />
+        </div>
+      </section>
+      {renderedFooter(12)}
+    </div>
+  );
+
   return (
     <div className="mx-auto w-a4-width">
       {page1}
+      <hr className="break-before-page" />
       {page2}
+      <hr className="break-before-page" />
+      {page3}
+      <hr className="break-before-page" />
+      {page4}
+      <hr className="break-before-page" />
+      {page5}
+      <hr className="break-before-page" />
+      {page6}
+      <hr className="break-before-page" />
+      {page7}
+      <hr className="break-before-page" />
+      {page8}
+      <hr className="break-before-page" />
+      {page9}
+      <hr className="break-before-page" />
+      {page10}
+      <hr className="break-before-page" />
+      {page11}
+      <hr className="break-before-page" />
+      {page12}
     </div>
   );
 };
