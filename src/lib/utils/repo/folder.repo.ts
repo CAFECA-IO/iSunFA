@@ -6,6 +6,7 @@ export async function getFolderList(companyId: number): Promise<IFolder[]> {
   const folderList = await prisma.voucherSalaryRecordFolder.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   const formattedFolderList = folderList.map((folder) => {

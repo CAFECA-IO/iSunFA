@@ -25,6 +25,7 @@ export async function getSalaryInfoByEmployeeId(id: number): Promise<{
   const employeeInfo = await prisma.employee.findFirst({
     where: {
       id,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     select: {
       id: true,
@@ -256,6 +257,7 @@ export async function getSalaryRecordsList(companyId: number): Promise<ISalaryRe
       employee: {
         companyId,
       },
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     select: {
       id: true,
@@ -313,6 +315,7 @@ export async function getSalaryRecordById(
       employee: {
         companyId,
       },
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     select: {
       id: true,

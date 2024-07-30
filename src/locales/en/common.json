@@ -565,7 +565,8 @@
   },
   "LOGIN_PAGE_BODY": {
     "PLEASE": "Please",
-    "REGISTER_YOUR_DEVICE": "register your device.",
+    "REGISTER_YOUR_DEVICE": "register your device,",
+    "OR_TRY_OTHER_PASSKY": "Or try other passkey methods.",
     "OOPS": "Oops! Something went wrong. Please try again or contact customer support.",
     "HELP": "Help",
     "REGISTER_YOUR_DEVICE_ARROW": "Register your device → ",
