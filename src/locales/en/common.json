@@ -206,8 +206,10 @@
     "AUDITING_REPORTS": "Supervision Reports",
     "LAST_UPDATED": "Last Updated",
     "COMPREHENSIVE_INCOME_STATEMENT": "Comprehensive Income Statement",
+    "STATEMENT_OF_COMPREHENSIVE_INCOME": "Statement of Comprehensive Income",
     "BALANCE_SHEET": "Balance Sheet",
     "CASH_FLOW_STATEMENT": "Cash Flow Statement",
+    "STATEMENT_OF_CASH_FLOWS": "Statement of Cash Flows",
     "CHANGE_IN_EQUITY_STATEMENT": "Change in Equity Statement",
     "RED_FLAG_ANALYSIS": "Red Flag Analysis",
     "POWERED_BY": "Powered by"
