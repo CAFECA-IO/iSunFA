@@ -329,8 +329,14 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     (count: number, type?: VoucherRowType) => {
       // Info: (20240530 - Julian) 檢查 accountingVoucher 是否有列
       const isNotEmpty = !!accountingVoucher && accountingVoucher.length > 0;
-      // Info: (20240729 - Julian) new row 的 id 為最後一列 id + 1 ，或是 0
-      const newId = isNotEmpty ? accountingVoucher[accountingVoucher.length - 1].id + 1 : 0;
+      // Info: (20240530 - Julian) 檢查 accountingVoucher 是否為預設值
+      const isDefault = accountingVoucher.length === 1 && accountingVoucher[0].id === 0;
+      // Info: (20240729 - Julian) 如果 accountingVoucher 有值，則取得最後一個 id；若為預設值，則 id 為 0；否則 id 為 1
+      const newId = isNotEmpty
+        ? accountingVoucher[accountingVoucher.length - 1].id + 1
+        : isDefault
+          ? 0
+          : 1;
 
       switch (type) {
         // Info: (20240530 - Julian) 新增借方列
@@ -462,7 +468,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setAccountingVoucher([defaultAccountingVoucher]); // Info: (20240503 - Julian) 清空傳票列表
     changeVoucherAmountHandler(0, 0, VoucherRowType.DEBIT); // Info: (20240503 - Julian) 清空借方 input
     changeVoucherAmountHandler(0, 0, VoucherRowType.CREDIT); // Info: (20240503 - Julian) 清空貸方 input
-    changeVoucherStringHandler(0, '', VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
+    changeVoucherStringHandler(0, undefined, VoucherString.ACCOUNT_TITLE); // Info: (20240503 - Julian) 清空科目 input
     changeVoucherStringHandler(0, '', VoucherString.PARTICULARS); // Info: (20240503 - Julian) 清空摘要 input
     // Info: (20240515 - Julian) 清空欄位資料
     setInvoiceId('');

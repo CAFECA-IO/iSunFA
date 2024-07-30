@@ -380,16 +380,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
-    if (!company && !isPublic) {
-      setSelectedCompany(null);
-      setSuccessSelectCompany(undefined);
-      return;
-    }
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+
     const res = await selectCompanyAPI({
       params: {
-        companyId: company?.id ?? FREE_COMPANY_ID,
+        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
+
+    if (!company && !isPublic) {
+      return;
+    }
     await handleSelectCompanyResponse(res);
   };
 
