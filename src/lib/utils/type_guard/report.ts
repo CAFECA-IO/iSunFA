@@ -126,9 +126,17 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
       typeof val.intangibleAsset === 'number' &&
       typeof val.freeCash === 'number');
 
+  const isValidThirdTitle = maybeObj.thirdTitle && typeof maybeObj.thirdTitle === 'string';
+  const isValidFourthTitle = maybeObj.fourthTitle && typeof maybeObj.fourthTitle === 'string';
+  const isValidFourPointOneTitle = maybeObj.fourPointOneTitle && typeof maybeObj.fourPointOneTitle === 'string';
+
   return (isValidOperatingStabilized &&
     isValidLineChartDataForRatio &&
     isValidStrategyInvest &&
     isValidOurThoughts &&
-    isValidFreeCash) || false;
+    isValidFreeCash &&
+    isValidThirdTitle &&
+    isValidFourthTitle &&
+    isValidFourPointOneTitle
+  ) || false;
 }

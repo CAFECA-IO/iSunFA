@@ -689,8 +689,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       operatingStabilized,
       lineChartDataForRatio,
       strategyInvest,
-      ourThoughts: ["", "", ""],
+      ourThoughts: ["無分析意見", "無分析意見", "無分析意見"],
       freeCash,
+      thirdTitle: "無分析意見",
+      fourthTitle: "無分析意見",
+      fourPointOneTitle: "無分析意見",
     };
   }
 
