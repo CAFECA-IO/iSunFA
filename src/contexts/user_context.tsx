@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
-import { FIDO2_USER_HANDLE, FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
@@ -35,6 +35,14 @@ interface UserContextType {
   isAuthLoading: boolean;
   returnUrl: string | null;
   clearReturnUrl: () => void;
+  checkIsRegistered: () => Promise<{
+    isRegistered: boolean;
+    credentials: PublicKeyCredential | null;
+  }>;
+  handleExistingCredential: (
+    credentials: PublicKeyCredential,
+    invitation: string | undefined
+  ) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -54,6 +62,10 @@ export const UserContext = createContext<UserContextType>({
   isAuthLoading: true,
   returnUrl: null,
   clearReturnUrl: () => {},
+  checkIsRegistered: async () => {
+    return { isRegistered: false, credentials: null };
+  },
+  handleExistingCredential: async () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -158,10 +170,79 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(!isSignInErrorRef.current);
   };
 
-  const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
-    const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
-
+  const handleExistingCredential = async (
+    credentials: PublicKeyCredential,
+    invitation: string | undefined
+  ) => {
     try {
+      const { id, response } = credentials;
+      if (response instanceof AuthenticatorAssertionResponse) {
+        const { authenticatorData, clientDataJSON, signature, userHandle } = response;
+
+        const authentication: AuthenticationEncoded = {
+          credentialId: id,
+          authenticatorData: btoa(String.fromCharCode(...new Uint8Array(authenticatorData))),
+          clientData: btoa(String.fromCharCode(...new Uint8Array(clientDataJSON))),
+          signature: btoa(String.fromCharCode(...new Uint8Array(signature))),
+          userHandle: userHandle
+            ? btoa(String.fromCharCode(...new Uint8Array(userHandle)))
+            : undefined,
+        };
+
+        if (invitation) {
+          await signInAPI({ body: { authentication }, query: { invitation } });
+        } else {
+          await signInAPI({ body: { authentication } });
+        }
+      } else {
+        throw new Error('Invalid response type: Expected AuthenticatorAssertionResponse');
+      }
+    } catch (error) {
+      // Deprecated: dev (20240730 - Tzuhan)
+      // eslint-disable-next-line no-console
+      console.error('handleExistingCredential error:', error);
+    }
+  };
+
+  const checkIsRegistered = async (): Promise<{
+    isRegistered: boolean;
+    credentials: PublicKeyCredential | null;
+  }> => {
+    // Info: (20240730 - Tzuhan) 生成挑戰
+    const { data: newChallengeBase64, success, code } = await createChallengeAPI();
+
+    if (!success || !newChallengeBase64) {
+      throw new Error(code);
+    }
+
+    // Info: (20240730 - Tzuhan) 將 base64 轉換成 Uint8Array
+    const newChallenge = Uint8Array.from(atob(newChallengeBase64), (c) => c.charCodeAt(0));
+
+    // Info: (20240730 - Tzuhan) 檢查是否已有綁定的憑證
+    const credentials = (await navigator.credentials.get({
+      publicKey: {
+        challenge: newChallenge, // Info: (20240730 - Tzuhan)  使用生成的挑戰
+        allowCredentials: [], // Info: (20240730 - Tzuhan)  查詢已綁定的憑證
+        timeout: 60000,
+        userVerification: 'required',
+      },
+    })) as PublicKeyCredential;
+
+    if (credentials) {
+      return {
+        isRegistered: true,
+        credentials,
+      };
+    }
+    return {
+      isRegistered: false,
+      credentials: null,
+    };
+  };
+
+  const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
+    try {
+      const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
       setIsSignInError(false);
 
       const { data: newChallenge, success, code } = await createChallengeAPI();
@@ -171,12 +252,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      // Info: (20240730 - Tzuhan) 生成 userHandle
+      const userHandleArray = new Uint8Array(32);
+      window.crypto.getRandomValues(userHandleArray);
+      const userHandle = btoa(String.fromCharCode(...userHandleArray));
+
       const registration = await client.register(name, newChallenge, {
         authenticatorType: 'both',
         userVerification: 'required',
         timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
         attestation: true,
-        userHandle: FIDO2_USER_HANDLE, // Info: optional userId less than 64 bytes (20240403 - Shirley)
+        userHandle, // Info: optional userId less than 64 bytes (20240403 - Shirley)
         debug: false,
         discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
@@ -408,7 +494,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
           setSuccessSelectCompany(true);
           setSelectedCompany(userSessionData.company);
-          handleReturnUrl();
         }
       }
     }
@@ -451,6 +536,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       returnUrl: returnUrlRef.current,
       clearReturnUrl,
       getCompanyHandler,
+      checkIsRegistered,
+      handleExistingCredential,
     }),
     [
       credentialRef.current,

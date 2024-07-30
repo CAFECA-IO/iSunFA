@@ -565,7 +565,8 @@
   },
   "LOGIN_PAGE_BODY": {
     "PLEASE": "請",
-    "REGISTER_YOUR_DEVICE": "註冊您的設備。",
+    "REGISTER_YOUR_DEVICE": "註冊您的設備",
+    "OR_TRY_OTHER_PASSKY": "或嘗試其他密鑰。",
     "OOPS": "哎呀！出了些問題。請重試或聯絡客服。",
     "HELP": "幫助",
     "REGISTER_YOUR_DEVICE_ARROW": "註冊您的裝置 → ",
