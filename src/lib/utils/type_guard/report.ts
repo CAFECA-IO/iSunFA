@@ -92,46 +92,43 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
 
   const maybeObj = obj as Partial<CashFlowStatementOtherInfo>;
 
-  // Check operatingStabilized
-  if (typeof maybeObj.operatingStabilized !== 'object' || maybeObj.operatingStabilized === null) {
-    return false;
-  }
-  if (!Object.keys(maybeObj.operatingStabilized).every((key) => {
-    const value = maybeObj.operatingStabilized![key];
-    return typeof value === 'object' && value !== null && Object.values(value).every((val) => typeof val === 'number');
-  })) {
-    return false;
-  }
+  const isValidOperatingStabilized = maybeObj.operatingStabilized &&
+    typeof maybeObj.operatingStabilized === 'object' &&
+    Object.values(maybeObj.operatingStabilized).every((val) =>
+      typeof val === 'object' && Object.values(val).every((num) => typeof num === 'number'));
 
-  // Check lineChartDataForRatio
-  if (
-    typeof maybeObj.lineChartDataForRatio !== 'object' ||
-    maybeObj.lineChartDataForRatio === null ||
-    !Array.isArray(maybeObj.lineChartDataForRatio.data) ||
-    !maybeObj.lineChartDataForRatio.data.every((val) => typeof val === 'number') ||
-    !Array.isArray(maybeObj.lineChartDataForRatio.labels) ||
-    !maybeObj.lineChartDataForRatio.labels.every((val) => typeof val === 'string')
-  ) {
-    return false;
-  }
+  const isValidLineChartDataForRatio = maybeObj.lineChartDataForRatio &&
+    typeof maybeObj.lineChartDataForRatio === 'object' &&
+    Array.isArray(maybeObj.lineChartDataForRatio.data) &&
+    maybeObj.lineChartDataForRatio.data.every((num) => typeof num === 'number') &&
+    Array.isArray(maybeObj.lineChartDataForRatio.labels) &&
+    maybeObj.lineChartDataForRatio.labels.every((label) => typeof label === 'string');
 
-  // Check strategyInvest
-  if (
-    typeof maybeObj.strategyInvest !== 'object' ||
-    maybeObj.strategyInvest === null ||
-    typeof maybeObj.strategyInvest.cur !== 'object' ||
-    maybeObj.strategyInvest.cur === null ||
-    typeof maybeObj.strategyInvest.cur.PPEInvest !== 'number' ||
-    typeof maybeObj.strategyInvest.cur.strategyInvest !== 'number' ||
-    typeof maybeObj.strategyInvest.cur.otherInvest !== 'number' ||
-    typeof maybeObj.strategyInvest.pre !== 'object' ||
-    maybeObj.strategyInvest.pre === null ||
-    typeof maybeObj.strategyInvest.pre.PPEInvest !== 'number' ||
-    typeof maybeObj.strategyInvest.pre.strategyInvest !== 'number' ||
-    typeof maybeObj.strategyInvest.pre.otherInvest !== 'number'
-  ) {
-    return false;
-  }
+  const isValidStrategyInvest = maybeObj.strategyInvest &&
+    typeof maybeObj.strategyInvest === 'object' &&
+    Object.values(maybeObj.strategyInvest).every((val) =>
+      typeof val === 'object' &&
+      Array.isArray(val.data) &&
+      val.data.every((num) => typeof num === 'number') &&
+      Array.isArray(val.labels) &&
+      val.labels.every((label) => typeof label === 'string'));
 
-  return true;
+  const isValidOurThoughts = maybeObj.ourThoughts &&
+    Array.isArray(maybeObj.ourThoughts) &&
+    maybeObj.ourThoughts.every((thought) => typeof thought === 'string');
+
+  const isValidFreeCash = maybeObj.freeCash &&
+    typeof maybeObj.freeCash === 'object' &&
+    Object.values(maybeObj.freeCash).every((val) =>
+      typeof val === 'object' &&
+      typeof val.operatingCashFlow === 'number' &&
+      typeof val.ppe === 'number' &&
+      typeof val.intangibleAsset === 'number' &&
+      typeof val.freeCash === 'number');
+
+  return (isValidOperatingStabilized &&
+    isValidLineChartDataForRatio &&
+    isValidStrategyInvest &&
+    isValidOurThoughts &&
+    isValidFreeCash) || false;
 }

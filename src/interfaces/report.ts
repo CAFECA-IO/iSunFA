@@ -150,18 +150,18 @@ export interface CashFlowStatementOtherInfo {
     labels: string[];
   };
   strategyInvest:{
-      cur: {
-      PPEInvest: number;
-      strategyInvest: number;
-      otherInvest: number;
+    [key: string]: {
+      data: number[];
+      labels: string[];
     };
-    pre: {
-      PPEInvest: number;
-      strategyInvest: number;
-      otherInvest: number;
-    };
-  }
-
+  },
+  ourThoughts: string[];
+  freeCash: { [key: string]: {
+    operatingCashFlow: number,
+    ppe: number,
+    intangibleAsset: number,
+    freeCash: number,
+  } };
 }
 
 // Todo Murky (20240729):

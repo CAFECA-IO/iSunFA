@@ -14,6 +14,7 @@ import { noAdjustNetIncome } from '@/lib/utils/account/common';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
 import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
+import { timestampInMilliSeconds } from '@/lib/utils/common';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -508,7 +509,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
 
     if (beforeIncomeTax && salesDepreciation && salesAmortization && manageDepreciation && manageAmortization && rdDepreciation && tax && operatingIncomeCashFlow) {
-      result[years.length - 1] = operatingIncomeCashFlow.curPeriodAmount !== 0
+      result[currentYear] = operatingIncomeCashFlow.curPeriodAmount !== 0
         ? (
         beforeIncomeTax.curPeriodAmount +
         salesDepreciation.curPeriodAmount +
@@ -519,7 +520,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         tax.curPeriodAmount) / operatingIncomeCashFlow.curPeriodAmount
         : 0;
 
-      result[years.length - 2] = operatingIncomeCashFlow.prePeriodAmount !== 0
+      result[currentYear - 1] = operatingIncomeCashFlow.prePeriodAmount !== 0
           ? (
             beforeIncomeTax.prePeriodAmount +
             salesDepreciation.prePeriodAmount +
@@ -551,9 +552,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       result[year] = 0;
     });
 
-    result[years.length - 1] = accountReadyForFrontend?.curPeriodAmount || 0;
+    result[currentYear] = accountReadyForFrontend?.curPeriodAmount || 0;
 
-    result[years.length - 2] = accountReadyForFrontend?.prePeriodAmount || 0;
+    result[currentYear - 1] = accountReadyForFrontend?.prePeriodAmount || 0;
     return result;
   }
 
@@ -595,7 +596,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   // eslint-disable-next-line class-methods-use-this
-  private ppeVSStrategyInvestMap(accountMap: Map<string, IAccountReadyForFrontend>) {
+  private ppeVSStrategyInvestMap(currentYear: number, accountMap: Map<string, IAccountReadyForFrontend>) {
     const getPPE = accountMap.get('B02700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const salePPE = accountMap.get('B02800') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const getFVPL = accountMap.get('B00100') || EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -616,16 +617,50 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const prePPEInvest = -1 * (getPPE.prePeriodAmount - salePPE.prePeriodAmount);
     const preStrategyInvest = -1 * (getFVPL.prePeriodAmount + getFVOCI.prePeriodAmount + getAmortizedFA.prePeriodAmount - saleFVOCI.prePeriodAmount - saleAmortizedFA.prePeriodAmount - removeHedgeAsset.prePeriodAmount + receiveStockDividend.prePeriodAmount);
     const preOtherInvest = -1 * (totalInvestCashFlow.prePeriodAmount + prePPEInvest + preStrategyInvest);
+
+    const labels = ["不動產、廠房、設備的收支項目", "策略性投資項目", "其他"];
+
+    const curYearString = currentYear.toString();
+    const preYearString = (currentYear - 1).toString();
     return {
-      cur: {
-        PPEInvest: curPPEInvest,
-        strategyInvest: curStrategyInvest,
-        otherInvest: curOtherInvest,
+      [curYearString]: {
+        data: [curPPEInvest, curStrategyInvest, curOtherInvest],
+        labels,
       },
-      pre: {
-        PPEInvest: prePPEInvest,
-        strategyInvest: preStrategyInvest,
-        otherInvest: preOtherInvest,
+      [preYearString]: {
+        data: [prePPEInvest, preStrategyInvest, preOtherInvest],
+        labels,
+      },
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private freeMoneyMap(currentYear: number, accountMap: Map<string, IAccountReadyForFrontend>) {
+    const operatingCashFlow = accountMap.get('AAAA') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getPPE = accountMap.get('B02700') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const salePPE = accountMap.get('B04500') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getIntangibleAsset = accountMap.get('B04500') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const saleIntangibleAsset = accountMap.get('B04600') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    // Info: get本來就是負的
+    const curFreeCash = operatingCashFlow.curPeriodAmount + getPPE.curPeriodAmount - salePPE.curPeriodAmount + getIntangibleAsset.curPeriodAmount - saleIntangibleAsset.curPeriodAmount;
+    const preFreeCash = operatingCashFlow.prePeriodAmount + getPPE.prePeriodAmount - salePPE.prePeriodAmount + getIntangibleAsset.prePeriodAmount - saleIntangibleAsset.prePeriodAmount;
+
+    const curYearString = currentYear.toString();
+    const preYearString = (currentYear - 1).toString();
+
+    return {
+      [curYearString]: {
+        operatingCashFlow: operatingCashFlow.curPeriodAmount,
+        ppe: Math.abs(getPPE.curPeriodAmount - salePPE.curPeriodAmount),
+        intangibleAsset: Math.abs(getIntangibleAsset.curPeriodAmount - saleIntangibleAsset.curPeriodAmount),
+        freeCash: curFreeCash,
+      },
+      [preYearString]: {
+        operatingCashFlow: operatingCashFlow.prePeriodAmount,
+        ppe: Math.abs(getPPE.prePeriodAmount - salePPE.prePeriodAmount),
+        intangibleAsset: Math.abs(getIntangibleAsset.prePeriodAmount - saleIntangibleAsset.prePeriodAmount),
+        freeCash: preFreeCash,
       },
     };
   }
@@ -634,7 +669,12 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     cashFlowAccounts: IAccountReadyForFrontend[],
     incomeStatementAccounts: IAccountReadyForFrontend[]
   ): CashFlowStatementOtherInfo {
-    const currentDate = new Date(this.startDateInSecond);
+    // eslint-disable-next-line no-console
+    const currentInMillisecond = timestampInMilliSeconds(this.endDateInSecond);
+    const currentDate = new Date(currentInMillisecond);
+
+    // eslint-disable-next-line no-console
+    console.log("currentDateBefore", currentDate);
     const currentYear = currentDate.getFullYear();
     const accountMap = new Map<string, IAccountReadyForFrontend>();
     cashFlowAccounts.forEach((account) => {
@@ -645,12 +685,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
 
     const { operatingStabilized, lineChartDataForRatio } = this.operatingStabilizedMap(currentYear, accountMap);
-    const strategyInvest = this.ppeVSStrategyInvestMap(accountMap);
+    const strategyInvest = this.ppeVSStrategyInvestMap(currentYear, accountMap);
+    const freeCash = this.freeMoneyMap(currentYear, accountMap);
 
     return {
       operatingStabilized,
       lineChartDataForRatio,
       strategyInvest,
+      ourThoughts: ["", "", ""],
+      freeCash,
     };
   }
 
