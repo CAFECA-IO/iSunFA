@@ -844,7 +844,7 @@ const NewJournalForm = () => {
           <div className="relative flex w-full flex-1 flex-col items-start gap-8px">
             <div id="price" className="absolute -top-20"></div>
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
-            <div className="flex w-full items-center justify-between">
+            <div className="flex w-full items-center">
               <NumericInput
                 id="input-total-price"
                 name="input-total-price"
@@ -853,7 +853,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required
                 hasComma
-                className="h-46px w-full flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
+                className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 bg-white p-12px text-sm text-lightGray4">
                 <Image
@@ -922,7 +922,7 @@ const NewJournalForm = () => {
               />
             </div>
             <div
-              className={`flex w-full items-center justify-between ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} rounded-sm transition-all duration-300 ease-in-out`}
+              className={`flex w-full items-center ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} rounded-sm transition-all duration-300 ease-in-out`}
             >
               <NumericInput
                 id="fee-input"
@@ -1063,7 +1063,7 @@ const NewJournalForm = () => {
                   </label>
                   {/* Info: (20240424 - Julian) input */}
                   <div
-                    className={`flex w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
+                    className={`flex w-full items-center ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
                   >
                     <NumericInput
                       id="input-installment-times"
@@ -1126,7 +1126,7 @@ const NewJournalForm = () => {
                   </label>
                   {/* Info: (20240424 - Julian) input */}
                   <div
-                    className={`flex w-full items-center justify-between ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
+                    className={`flex w-full items-center ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
                   >
                     <NumericInput
                       id="input-partial-paid-amount"
@@ -1183,9 +1183,7 @@ const NewJournalForm = () => {
       /* Info: (20240502 - Julian) Estimated Cost */
       <div className="flex w-full flex-col items-start gap-8px">
         <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
-        <div
-          className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
-        >
+        <div className="flex w-full items-center rounded-sm bg-white transition-all duration-300 ease-in-out">
           <NumericInput
             id="input-estimated-cost"
             name="input-estimated-cost"
@@ -1194,9 +1192,9 @@ const NewJournalForm = () => {
             isDecimal
             required={selectedEventType === EventType.INCOME}
             hasComma
-            className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
+            className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
           />
-          <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+          <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
             <Image
               src="/currencies/twd.svg"
               width={16}
