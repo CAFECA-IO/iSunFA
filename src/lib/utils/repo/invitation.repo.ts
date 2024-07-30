@@ -7,6 +7,7 @@ export async function getInvitationByCode(code: string): Promise<Invitation | nu
   const invitation = await prisma.invitation.findUnique({
     where: {
       code,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return invitation;

@@ -4,6 +4,13 @@ export enum FileFolder {
   TMP = 'tmp',
 }
 
+export enum UploadType {
+  KYC = 'kyc',
+  COMPANY = 'company',
+  USER = 'user',
+  PROJECT = 'project',
+}
+
 export enum UploadDocumentType {
   BUSINESS_REGISTRATION_CERTIFICATE = 'business_registration_certificate',
   TAX_STATUS_CERTIFICATE = 'tax_status_certificate',

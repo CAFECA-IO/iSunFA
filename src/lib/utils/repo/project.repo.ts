@@ -7,6 +7,7 @@ export async function listProject(companyId: number) {
   const listedProject = await prisma.project.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
       id: 'asc',
@@ -41,6 +42,7 @@ export async function getProjectById(projectId: number): Promise<
     project = await prisma.project.findUnique({
       where: {
         id: projectId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         employeeProjects: {
