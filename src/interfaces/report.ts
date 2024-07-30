@@ -157,6 +157,9 @@ export interface CashFlowStatementOtherInfo {
       labels: string[];
     };
   };
+  thirdTitle: string;
+  fourthTitle: string;
+  fourPointOneTitle: string;
   ourThoughts: string[];
   freeCash: {
     [key: string]: {
