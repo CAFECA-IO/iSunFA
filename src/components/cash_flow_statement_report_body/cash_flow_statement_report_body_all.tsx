@@ -78,9 +78,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       const currentYear = currentTo.year;
       const previousYear = previousTo.year;
 
-      // eslint-disable-next-line no-console
-      console.log('reportFinancial.otherInfo in CashFlow useEffect', reportFinancial.otherInfo);
-
       if (reportFinancial.otherInfo?.lineChartDataForRatio) {
         setLineChartData(reportFinancial.otherInfo.lineChartDataForRatio.data);
         setLineChartLabels(reportFinancial.otherInfo.lineChartDataForRatio.labels);
@@ -222,20 +219,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     currentYear: string,
     previousYear: string
   ) => {
-    // eslint-disable-next-line no-console
-    console.log(
-      'reportFinancial?.otherInfo?.freeCash',
-      reportFinancial?.otherInfo?.freeCash,
-      `reportFinancial?.otherInfo?.freeCash[
-      currentYear
-    ]?.operatingCashFlow.toLocaleString()`,
-      reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow.toLocaleString()
-    );
-
     if (!reportFinancial?.otherInfo?.freeCash) {
       return null;
     }
-    // ensure the freeCash of certain Year exists
+
     const displayedTableBody =
       reportFinancial?.otherInfo?.freeCash[currentYear] &&
       reportFinancial?.otherInfo?.freeCash[previousYear] ? (
@@ -821,7 +808,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}
           </p>
         </div>
-        <div className="mx-1 mt-8 flex items-end justify-center gap-5">
+        <div className="mx-1 mt-8 flex items-end justify-between">
           <div className="w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
               <Image
