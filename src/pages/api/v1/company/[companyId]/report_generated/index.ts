@@ -142,7 +142,7 @@ export default async function handler(
       switch (req.method) {
         case 'GET': {
           payload = await handleGetRequest(companyId, req);
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
           break;
         }
         default: {
