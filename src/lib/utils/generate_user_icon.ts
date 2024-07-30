@@ -1,13 +1,9 @@
 import { USER_ICON_BACKGROUND_COLORS } from '@/constants/config';
-import path from 'path';
 import {
   generateDestinationFileNameInGoogleBucket,
+  generateSavePath,
   uploadFileToGoogleCloud,
 } from '@/lib/utils/google_image_upload';
-import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
-
-const savePath =
-  process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, 'tmp');
 
 function isChinese(name: string): boolean {
   return /[\u3400-\u9FBF]/.test(name);
@@ -42,10 +38,6 @@ function generateRandomColor() {
   return USER_ICON_BACKGROUND_COLORS[randomIdx];
 }
 
-function generateRandomUUID() {
-  return crypto.randomUUID();
-}
-
 function generateUserIconSvg(
   initials: string,
   backgroundColor: string,
@@ -75,13 +67,6 @@ function generateUserIconSvg(
   `;
   const cleanedSvg = svgContent.replace(/\s+/g, ' ').trim();
   return cleanedSvg;
-}
-
-export async function generateSavePath(fileExtension: string) {
-  const tmpDir = savePath;
-  const filename = generateRandomUUID() + '.' + fileExtension;
-  const filepath = `${tmpDir}/${filename}`;
-  return filepath;
 }
 
 export async function generateIcon(name: string) {
