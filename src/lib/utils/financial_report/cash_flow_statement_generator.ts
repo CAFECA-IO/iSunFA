@@ -669,12 +669,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     cashFlowAccounts: IAccountReadyForFrontend[],
     incomeStatementAccounts: IAccountReadyForFrontend[]
   ): CashFlowStatementOtherInfo {
-    // eslint-disable-next-line no-console
     const currentInMillisecond = timestampInMilliSeconds(this.endDateInSecond);
     const currentDate = new Date(currentInMillisecond);
 
-    // eslint-disable-next-line no-console
-    console.log("currentDateBefore", currentDate);
     const currentYear = currentDate.getFullYear();
     const accountMap = new Map<string, IAccountReadyForFrontend>();
     cashFlowAccounts.forEach((account) => {
