@@ -626,7 +626,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
       </header>
 
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
@@ -681,7 +681,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
@@ -784,7 +784,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -841,7 +841,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -898,7 +898,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -955,7 +955,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -1012,7 +1012,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -1069,7 +1069,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -1083,19 +1083,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
                 會計項目
               </th>
-              <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
                 {curDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
                 %
               </th>
-              <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
                 {preDate}
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
@@ -1132,7 +1126,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
@@ -1199,7 +1193,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>三、資產負債比例表</p>
         </div>
@@ -1276,7 +1270,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
           <p>四、資產分布圖</p>
         </div>
@@ -1346,7 +1340,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </h2>
         </div>
       </header>
-      <section className="text-text-neutral-secondary">
+      <section className="mx-1 text-text-neutral-secondary">
         <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
           <p>五、應收帳款週轉天數</p>
           <p>單位：天</p>
@@ -1355,10 +1349,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <thead>
             <tr>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
-              <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
+              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
                 {curYear}年度
               </th>
               <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
