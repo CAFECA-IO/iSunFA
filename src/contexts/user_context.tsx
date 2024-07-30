@@ -408,7 +408,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
           setSuccessSelectCompany(true);
           setSelectedCompany(userSessionData.company);
-          handleReturnUrl();
         }
       }
     }
