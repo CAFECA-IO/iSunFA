@@ -9,6 +9,8 @@ import { ReportStatusType } from '@/constants/report';
 import { findManyReports } from '@/lib/utils/repo/report.repo';
 import { formatIPaginatedGeneratedReportItem } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeyStr } from '@/constants/auth';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -132,17 +134,20 @@ export default async function handler(
   let payload: IPaginatedGeneratedReportItem | null = null;
   try {
     const session = await getSession(req, res);
-    const { companyId } = session;
+    const { userId, companyId } = session;
 
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
     // ToDo: (20240703 - Murky) Need to check Auth
-    switch (req.method) {
-      case 'GET': {
-        payload = await handleGetRequest(companyId, req);
-        statusMessage = STATUS_MESSAGE.CREATED;
-        break;
-      }
-      default: {
-        break;
+    if (isAuth) {
+      switch (req.method) {
+        case 'GET': {
+          payload = await handleGetRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+          break;
+        }
+        default: {
+          break;
+        }
       }
     }
   } catch (_error) {

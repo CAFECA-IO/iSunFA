@@ -11,6 +11,8 @@ import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
 import BarChart from '@/components/cash_flow_statement_report_body/bar_chart';
 import Image from 'next/image';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 
 interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
@@ -35,20 +37,31 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   console.log('reportFinancial', reportFinancial);
 
   if (getReportFinancialIsLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+      </div>
+    );
   } else if (!getReportFinancialSuccess) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
+  const renderedFooter = (page: number) => {
+    return (
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
+        <p className="m-0 text-[12px] text-white">{page}</p>
+        <div className="text-[16px] font-bold text-surface-brand-secondary">
+          <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
+        </div>
+      </footer>
+    );
+  };
+
   const page1 = (
-    <div>
+    <div id="1" className="relative h-a4-height overflow-hidden">
       <header className="mb-[86px] flex justify-between text-white">
         <div className="w-[30%] bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
-            {/* <h1 className="mb-30px text-h6">
-              2330 <br />
-              台灣積體電路製造股份有限公司
-            </h1> */}
             {reportFinancial && reportFinancial.company && (
               <>
                 <h1 className="mb-30px text-h6">
@@ -61,10 +74,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 </p>
               </>
             )}
-            {/* <p className="font-normal">
-              2023年第四季 <br />
-              合併財務報告 - 現金流量表
-            </p> */}
           </div>
         </div>
         <div className="box-border w-35% text-right">
@@ -123,16 +132,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">1</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="Company Logo" />
-        </div>
-      </footer>
+      {renderedFooter(1)}
     </div>
   );
   const page2 = (
-    <div>
+    <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -242,16 +246,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">2</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(2)}
     </div>
   );
   const page3 = (
-    <div>
+    <div id="3" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -317,16 +316,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">3</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(3)}
     </div>
   );
   const page4 = (
-    <div>
+    <div id="4" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -392,16 +386,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">4</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(4)}
     </div>
   );
   const page5 = (
-    <div>
+    <div id="5" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -467,16 +456,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">5</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(5)}
     </div>
   );
   const page6 = (
-    <div>
+    <div id="6" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -542,16 +526,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">6</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(6)}
     </div>
   );
   const page7 = (
-    <div>
+    <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -617,16 +596,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">7</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(7)}
     </div>
   );
   const page8 = (
-    <div>
+    <div id="8" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -691,82 +665,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </th>
             </tr>
           </thead>
-          {/* <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">A</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">稅前淨利（淨損）</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">389,845,336</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">584,777,180</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">663,126,314</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,144,190,718
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">979,171,324</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">折舊及攤銷費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">286,884,241</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">331,724,691</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">422,394,869</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">437,254,273</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">532,190,921</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">支付的所得稅</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">52,044,071</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">51,362,365</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">83,497,851</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">86,561,247</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">159,875,065</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">B</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold"></td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                營業活動的現金流入（流出）
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">615,138,744</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">822,666,212</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,112,160,722
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,610,599,188
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,241,967,347
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">A和B比例關係</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">1.02</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">1.05</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">0.90</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">0.93</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">0.79</td>
-            </tr>
-          </tbody> */}
+
           <tbody>
             <tr>
               <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">A</td>
@@ -882,16 +781,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </tbody>
         </table>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">8</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(8)}
     </div>
   );
   const page9 = (
-    <div>
+    <div id="9" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -974,18 +868,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             height={300}
           />
         </div>
-        <div className="mb-72"></div> {/* Add this line to create the 300px space */}
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">9</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(9)}
     </div>
   );
   const page10 = (
-    <div>
+    <div id="10" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1053,16 +941,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </ol>
         </div>
       </section>
-      <footer className="mt-[40px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">10</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(10)}
     </div>
   );
   const page11 = (
-    <div>
+    <div id="11" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1179,27 +1062,32 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </div>
         </div>
       </section>
-      <footer className="mt-[164px] flex items-center justify-between border-t-2 border-[#e0e0e0] bg-surface-brand-secondary p-[10px]">
-        <p className="m-0 text-[12px] text-white">11</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
-          <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
-        </div>
-      </footer>
+      {renderedFooter(11)}
     </div>
   );
 
   return (
     <div className="mx-auto w-a4-width">
       {page1}
+      <hr className="break-before-page" />
       {page2}
+      <hr className="break-before-page" />
       {page3}
+      <hr className="break-before-page" />
       {page4}
+      <hr className="break-before-page" />
       {page5}
+      <hr className="break-before-page" />
       {page6}
+      <hr className="break-before-page" />
       {page7}
+      <hr className="break-before-page" />
       {page8}
+      <hr className="break-before-page" />
       {page9}
+      <hr className="break-before-page" />
       {page10}
+      <hr className="break-before-page" />
       {page11}
     </div>
   );
