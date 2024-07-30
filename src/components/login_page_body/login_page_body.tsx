@@ -47,11 +47,18 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   };
 
   const registerClickHandler = async () => {
-    const { isRegistered, credentials } = await checkIsRegistered();
-    if (isRegistered && credentials) {
-      await handleExistingCredential(credentials, invitation);
-    } else {
-      registerHandler();
+    try {
+      const { isRegistered, credentials } = await checkIsRegistered();
+
+      if (isRegistered && credentials) {
+        await handleExistingCredential(credentials, invitation);
+      } else {
+        registerHandler();
+      }
+    } catch (error) {
+      if ((error as Error).name === 'NotAllowedError') {
+        registerHandler();
+      }
     }
   };
 

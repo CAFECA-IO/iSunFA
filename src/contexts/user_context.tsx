@@ -35,7 +35,10 @@ interface UserContextType {
   isAuthLoading: boolean;
   returnUrl: string | null;
   clearReturnUrl: () => void;
-  checkIsRegistered: () => Promise<{ isRegistered: boolean; credentials: PublicKeyCredential | null }>;
+  checkIsRegistered: () => Promise<{
+    isRegistered: boolean;
+    credentials: PublicKeyCredential | null;
+  }>;
   handleExistingCredential: (
     credentials: PublicKeyCredential,
     invitation: string | undefined
@@ -216,29 +219,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const newChallenge = Uint8Array.from(atob(newChallengeBase64), (c) => c.charCodeAt(0));
 
     // Info: (20240730 - Tzuhan) 檢查是否已有綁定的憑證
-    try {
-      const credentials = (await navigator.credentials.get({
-        publicKey: {
-          challenge: newChallenge, // Info: (20240730 - Tzuhan)  使用生成的挑戰
-          allowCredentials: [], // Info: (20240730 - Tzuhan)  查詢已綁定的憑證
-          timeout: 60000,
-          userVerification: 'required',
-        },
-      })) as PublicKeyCredential;
+    const credentials = (await navigator.credentials.get({
+      publicKey: {
+        challenge: newChallenge, // Info: (20240730 - Tzuhan)  使用生成的挑戰
+        allowCredentials: [], // Info: (20240730 - Tzuhan)  查詢已綁定的憑證
+        timeout: 60000,
+        userVerification: 'required',
+      },
+    })) as PublicKeyCredential;
 
-      if (credentials) {
-        return {
-          isRegistered: true,
-          credentials,
-        };
-      }
+    if (credentials) {
       return {
-        isRegistered: false,
-        credentials: null,
+        isRegistered: true,
+        credentials,
       };
-    } catch (error) {
-      throw new Error('checkIsRegistered error thrown in userCtx');
     }
+    return {
+      isRegistered: false,
+      credentials: null,
+    };
   };
 
   const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
