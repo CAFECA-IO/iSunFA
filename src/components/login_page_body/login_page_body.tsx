@@ -56,9 +56,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
         registerHandler();
       }
     } catch (error) {
-      if ((error as Error).name === 'NotAllowedError') {
-        registerHandler();
-      }
+      // Deprecated: (20240805 - tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log('registerClickHandler error', error);
     }
   };
 
@@ -97,7 +97,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
             <div>
               {t('LOGIN_PAGE_BODY.PLEASE')}{' '}
               <button
-                onClick={registerClickHandler}
+                onClick={registerHandler}
                 type="button"
                 className="text-base text-link-text-primary hover:opacity-70"
               >
@@ -105,6 +105,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
                   {t('LOGIN_PAGE_BODY.REGISTER_YOUR_DEVICE')}
                 </div>
               </button>
+              {t('LOGIN_PAGE_BODY.OR_TRY_OTHER_PASSKY')}
               <span className="pl-3">({errorCode})</span>
             </div>
           </div>
