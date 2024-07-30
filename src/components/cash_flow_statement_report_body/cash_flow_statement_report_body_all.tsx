@@ -213,12 +213,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     );
   };
 
-  const renderedPage11_2 = (
-    // TODO: change based on API (20240730 - Shirley)
-    data: FinancialReportItem[],
-    currentYear: string,
-    previousYear: string
-  ) => {
+  const renderedPage11_2 = (currentYear: string, previousYear: string) => {
     if (!reportFinancial?.otherInfo?.freeCash) {
       return null;
     }
@@ -705,73 +700,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
               </tbody>
-
-              {/* <tbody className="text-xs">
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold">A</td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">稅前淨利（淨損）</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">389,845,336</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">584,777,180</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">663,126,314</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">2165415</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">13213546</td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">折舊及攤銷費用</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">286,884,241</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">331,724,691</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">422,394,869</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">437,254,273</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">532,190,921</td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">支付的所得稅</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">52,044,071</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">51,362,365</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">83,497,851</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">54684</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">574458</td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold">B</td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold"></td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">營業活動的現金</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">615,138,744</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">822,666,212</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">1,112,160,722</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">24556450</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">546</td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
-                </tr>
-                <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">A和B比例關係</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">1.02</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">1.05</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">0.90</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">0.93</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end">0.79</td>
-                </tr>
-              </tbody> */}
             </table>
           </>
         ) : null}
@@ -914,7 +842,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <p className="text-start text-xs font-semibold">
             五、年度產生的自由現金：公司可以靈活運用的現金
           </p>
-          {renderedPage11_2([], curYear, preYear)}
+          {renderedPage11_2(curYear, preYear)}
           <div className="relative -z-10">
             <Image
               className="absolute -top-180px right-0"
