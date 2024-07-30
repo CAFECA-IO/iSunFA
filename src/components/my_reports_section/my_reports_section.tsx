@@ -12,7 +12,6 @@ import {
   FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
-  FIXED_DUMMY_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
   IPaginatedGeneratedReportItem,
   IPaginatedPendingReportItem,
@@ -126,7 +125,7 @@ const MyReportsSection = () => {
         content: `${t('DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
-      setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
+      // setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
     }
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 

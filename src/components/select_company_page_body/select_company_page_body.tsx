@@ -63,9 +63,13 @@ const SelectCompanyPageBody = () => {
   };
 
   const selectCompanyClickHandler = async () => {
-    if (selectedCompany === null) return;
     await selectCompany(selectedCompany);
   };
+
+  useEffect(() => {
+    // Info: (20240730 - Julian) 一進入本頁，先清除已選擇的公司
+    selectCompany(null);
+  }, []);
 
   useEffect(() => {
     if (successSelectCompany === false) {
