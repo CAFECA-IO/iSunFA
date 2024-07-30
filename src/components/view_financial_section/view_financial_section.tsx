@@ -1,5 +1,4 @@
 /* eslint-disable */
-import { pdfjs, Document, Page } from 'react-pdf';
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
@@ -18,7 +17,7 @@ import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
 import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
 import { useTranslation } from 'react-i18next';
-import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
 
 interface IViewReportSectionProps {
@@ -105,7 +104,7 @@ const ViewFinancialSection = ({
         printWindow.addEventListener('load', () => {
           setTimeout(() => {
             printWindow.print();
-          }, MILLISECONDS_IN_A_SECOND);
+          }, WAIT_FOR_REPORT_DATA);
         });
       }
     }

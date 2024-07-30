@@ -66,32 +66,33 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 
-  const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
-      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-    </div>
-  ) : (
-    <div>
-      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-        <ReportsSidebar />
+  const displayedBody =
+    isAuthLoading || !getFRSuccess ? (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
+    ) : (
+      <div>
+        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+          <ReportsSidebar />
+        </div>
 
-      <div className="h-1400px bg-surface-neutral-main-background">
-        <ViewFinancialSection
-          reportTypesName={
-            reportData.reportTypesName as {
-              id: keyof typeof FinancialReportTypesMap;
-              name: string;
+        <div className="h-1400px bg-surface-neutral-main-background">
+          <ViewFinancialSection
+            reportTypesName={
+              reportData.reportTypesName as {
+                id: keyof typeof FinancialReportTypesMap;
+                name: string;
+              }
             }
-          }
-          tokenContract={reportData.tokenContract}
-          tokenId={reportData.tokenId}
-          reportLink={`/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
-          reportId={reportId}
-        />
+            tokenContract={reportData.tokenContract}
+            tokenId={reportData.tokenId}
+            reportLink={`/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+            reportId={reportId}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
 
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
