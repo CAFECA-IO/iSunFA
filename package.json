@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.1.8+103",
+  "version": "0.1.8+104",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cookie": "^0.6.0",
+    "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "eslint-config-airbnb": "^19.0.4",
     "formidable": "^3.5.1",
