@@ -220,7 +220,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
     const displayedTableBody =
       reportFinancial?.otherInfo?.freeCash[currentYear] &&
-      reportFinancial?.otherInfo?.freeCash[previousYear] ? (
+        reportFinancial?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
             <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
@@ -572,8 +572,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </p>
         </div>
         {reportFinancial &&
-        reportFinancial.otherInfo &&
-        Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ? (
+          reportFinancial.otherInfo &&
+          Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ? (
           <>
             <div className="relative mb-0 flex items-center pb-1">
               <Image
@@ -639,13 +639,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
-                        {(
-                          reportFinancial.otherInfo.operatingStabilized.salesDepreciation[year] +
-                          reportFinancial.otherInfo.operatingStabilized.salesAmortization[year] +
-                          reportFinancial.otherInfo.operatingStabilized.manageDepreciation[year] +
-                          reportFinancial.otherInfo.operatingStabilized.manageAmortization[year] +
-                          reportFinancial.otherInfo.operatingStabilized.rdDepreciation[year]
-                        ).toLocaleString()}
+                        {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[year].toLocaleString()}
                       </td>
                     )
                   )}

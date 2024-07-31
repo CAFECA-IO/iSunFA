@@ -126,11 +126,7 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
     maybeObj.operatingStabilized &&
     typeof maybeObj.operatingStabilized === 'object' &&
     isValidYearlyData(maybeObj.operatingStabilized.beforeIncomeTax) &&
-    isValidYearlyData(maybeObj.operatingStabilized.salesDepreciation) &&
-    isValidYearlyData(maybeObj.operatingStabilized.salesAmortization) &&
-    isValidYearlyData(maybeObj.operatingStabilized.manageDepreciation) &&
-    isValidYearlyData(maybeObj.operatingStabilized.manageAmortization) &&
-    isValidYearlyData(maybeObj.operatingStabilized.rdDepreciation) &&
+    isValidYearlyData(maybeObj.operatingStabilized.amortizationDepreciation) &&
     isValidYearlyData(maybeObj.operatingStabilized.tax) &&
     isValidYearlyData(maybeObj.operatingStabilized.operatingIncomeCashFlow) &&
     isValidYearlyData(maybeObj.operatingStabilized.ratio);

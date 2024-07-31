@@ -160,11 +160,7 @@ export interface IncomeStatementOtherInfo {
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: {
     beforeIncomeTax: YearlyData;
-    salesDepreciation: YearlyData;
-    salesAmortization: YearlyData;
-    manageDepreciation: YearlyData;
-    manageAmortization: YearlyData;
-    rdDepreciation: YearlyData;
+    amortizationDepreciation: YearlyData; // Info: 折舊攤銷費用 (20240730 - Shirley)
     tax: YearlyData;
     operatingIncomeCashFlow: YearlyData;
     ratio: YearlyData;
