@@ -80,14 +80,15 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const maxPercentage = Math.max(assetPercentage, liabilityPercentage, equityPercentage);
 
     // 判斷哪一項是最大的，並將surplus加上去
-    if (maxPercentage === assetPercentage) {
-      assetPercentage += surplus;
-    } else if (maxPercentage === liabilityPercentage) {
-      liabilityPercentage += surplus;
-    } else if (maxPercentage === equityPercentage) {
-      equityPercentage += surplus;
+    if (assetPercentage > 0 || liabilityPercentage > 0 || equityPercentage > 0) {
+      if (maxPercentage === assetPercentage) {
+        assetPercentage += surplus;
+      } else if (maxPercentage === liabilityPercentage) {
+        liabilityPercentage += surplus;
+      } else if (maxPercentage === equityPercentage) {
+        equityPercentage += surplus;
+      }
     }
-
     return {
       assetPercentage,
       liabilityPercentage,
