@@ -334,6 +334,7 @@
     "EVENTS": "會計事件",
     "TYPE": "類型",
     "JOURNAL_LIST": "日記帳",
+    "INVOICE_LIST": "發票列表",
     "ADD_NEW_JOURNAL": "新增日記帳",
     "ACCOUNTING": "會計",
     "JOURNAL": "日記帳",
