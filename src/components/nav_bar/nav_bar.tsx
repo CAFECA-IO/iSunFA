@@ -294,7 +294,7 @@ const NavBar = () => {
         </div>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
+            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           <button
             type="button"
@@ -452,7 +452,7 @@ const NavBar = () => {
       {/* ToDo: (20240516 - Julian) icon */}
       <Image
         alt={`${selectedCompany?.name}_icon`}
-        src={'/entities/happy.png'}
+        src={selectedCompany.imageId ?? DEFAULT_AVATAR_URL}
         width={16}
         height={16}
         className="rounded-full"
