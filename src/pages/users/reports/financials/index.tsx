@@ -38,7 +38,7 @@ const FinancialsReportsPage = () => {
         <title>{t('REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
         <meta
           name="description"
-          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
         />
         <meta name="author" content="CAFECA" />
         <meta name="keywords" content="區塊鏈,人工智慧,會計" />
@@ -46,7 +46,7 @@ const FinancialsReportsPage = () => {
         <meta property="og:title" content="iSunFA" />
         <meta
           property="og:description"
-          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
         />
       </Head>
 
