@@ -78,91 +78,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     },
   });
 
-  const gatherALRData = (type: ReportColumnType) => {
-    if (!reportFinancial?.general) return [0, 0, 0];
-
-    const periodAmount = type === ReportColumnType.CURRENT ? 'curPeriodAmount' : 'prePeriodAmount';
-
-    const totalAssets = Number(
-      reportFinancial.general.find((item) => item.name === '資產總計')?.[periodAmount] || 0
-    );
-    const totalLiabilities = Number(
-      reportFinancial.general.find((item) => item.name === '負債總計')?.[periodAmount] || 0
-    );
-    const totalEquity = Number(
-      reportFinancial.general.find((item) => item.name === '權益總額')?.[periodAmount] || 0
-    );
-
-    if (totalAssets === 0 || totalLiabilities === 0 || totalEquity === 0) return [0, 0, 0];
-
-    const total = totalAssets + totalLiabilities + totalEquity;
-
-    return [
-      (totalAssets / total) * 100,
-      (totalLiabilities / total) * 100,
-      (totalEquity / total) * 100,
-    ];
-  };
-
-  // Info: 改成拿後端的百分比，流動跟非流動資產的最大5筆 (20240726 - Shirley)
-  const gatherAMRData = (type: ReportColumnType): { percentages: number[]; labels: string[] } => {
-    if (!reportFinancial?.details) {
-      return { percentages: [0, 0, 0, 0, 0, 0], labels: ['', '', '', '', '', '其他'] };
-    }
-
-    const periodPercentage =
-      type === ReportColumnType.CURRENT ? 'curPeriodPercentage' : 'prePeriodPercentage';
-
-    const assets = reportFinancial.details.reduce(
-      (acc, item) => {
-        if (item.name === '流動資產' || item.name === '非流動資產') {
-          return { ...acc, [item.name]: true };
-        }
-        if (item.name === '流動資產合計' || item.name === '非流動資產合計') {
-          return { ...acc, [item.name.replace('合計', '')]: false };
-        }
-        if (acc['流動資產'] || acc['非流動資產']) {
-          acc.items.push({
-            name: item.name,
-            percentage: item[periodPercentage],
-          });
-        }
-        return acc;
-      },
-      {
-        流動資產: false,
-        非流動資產: false,
-        items: [] as Array<{ name: string; percentage: number }>,
-      }
-    );
-
-    const sortedAssets = assets.items.sort((a, b) => b.percentage - a.percentage);
-    const top5Assets = sortedAssets.slice(0, 5);
-    const top5Total = top5Assets.reduce((sum, asset) => sum + asset.percentage, 0);
-
-    let percentages: number[];
-    let labels: string[];
-
-    if (top5Total === 0) {
-      // Info: 如果前5項資產的總和為0，則所有百分比（包括"其他"）都設為0 (20240730 - Shirley)
-      percentages = [0, 0, 0, 0, 0, 0];
-      labels = [...top5Assets.map((asset) => asset.name), '其他'];
-    } else {
-      const otherAssetsPercentage = Math.max(0, 100 - top5Total);
-      percentages = [
-        ...top5Assets.map((asset) => Math.round(asset.percentage)),
-        Math.round(otherAssetsPercentage),
-      ];
-      labels = [...top5Assets.map((asset) => asset.name), '其他'];
-    }
-
-    // Info: 確保陣列長度為6 (20240730 - Shirley)
-    while (percentages.length < 6) percentages.push(0);
-    while (labels.length < 6) labels.push('');
-
-    return { percentages, labels };
-  };
-
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
       const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
@@ -1407,7 +1322,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   return (
-    <div className="scale-80 mx-auto w-a4-width origin-top overflow-x-auto md:scale-100 lg:scale-100">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       <hr className="break-before-page" />
       {page2}
