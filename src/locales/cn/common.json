@@ -206,8 +206,10 @@
     "AUDITING_REPORTS": "监管报告",
     "LAST_UPDATED": "最后更新",
     "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
+    "STATEMENT_OF_COMPREHENSIVE_INCOME": "综合损益表",
     "BALANCE_SHEET": "资产负债表",
     "CASH_FLOW_STATEMENT": "现金流量表",
+    "STATEMENT_OF_CASH_FLOWS": "现金流量表",
     "CHANGE_IN_EQUITY_STATEMENT": "权益变动表",
     "RED_FLAG_ANALYSIS": "风险分析",
     "POWERED_BY": "技术支持"

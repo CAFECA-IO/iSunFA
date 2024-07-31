@@ -263,13 +263,18 @@ const NavBar = () => {
       className={`${isUserMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute right-16 top-70px z-100 transition-all duration-300 ease-in-out`}
     >
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
-        <Image
-          alt="avatar"
-          src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
-          width={56}
-          height={56}
-          className="mx-auto aspect-square w-16 self-center"
-        />{' '}
+        <div className="mx-auto h-56px w-56px overflow-hidden rounded-full">
+          <Image
+            alt="avatar"
+            src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+            width={56}
+            height={56}
+            className="aspect-square"
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_AVATAR_URL;
+            }}
+          />
+        </div>
         <div className="group absolute inset-0 left-1/2 top-1.3rem h-3.3rem w-3.3rem -translate-x-1/2 rounded-full hover:cursor-pointer">
           {/* Info: black cover (20240605 - Shirley) */}
           <div className="h-3.3rem w-3.3rem rounded-full bg-black opacity-0 transition-opacity group-hover:opacity-50"></div>
@@ -294,7 +299,7 @@ const NavBar = () => {
         </div>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
+            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           <button
             type="button"
@@ -467,7 +472,11 @@ const NavBar = () => {
     <Skeleton width={44} height={40} />
   ) : signedIn ? (
     <div ref={userMenuRef}>
-      <button type="button" onClick={avatarClickHandler}>
+      <button
+        type="button"
+        onClick={avatarClickHandler}
+        className="h-40px w-40px overflow-hidden rounded-full"
+      >
         {/* Info: avatar svg (20240408 - Shirley) */}
         <Image
           alt="avatar"

@@ -65,10 +65,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const [secondThought, setSecondThought] = useStateRef<string>('');
   const [thirdThought, setThirdThought] = useStateRef<string>('');
 
-  // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley Anna)
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial', reportFinancial);
-
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
       const currentFrom = timestampToString(reportFinancial.curDate.from ?? 0);
@@ -639,13 +635,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
-                        {(
-                          reportFinancial.otherInfo.operatingStabilized.salesDepreciation[year] +
-                          reportFinancial.otherInfo.operatingStabilized.salesAmortization[year] +
-                          reportFinancial.otherInfo.operatingStabilized.manageDepreciation[year] +
-                          reportFinancial.otherInfo.operatingStabilized.manageAmortization[year] +
-                          reportFinancial.otherInfo.operatingStabilized.rdDepreciation[year]
-                        ).toLocaleString()}
+                        {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                          year
+                        ].toLocaleString()}
                       </td>
                     )
                   )}

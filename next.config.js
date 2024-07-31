@@ -33,6 +33,10 @@ const nextConfig = {
     I_SUN_FA_PHONE_NUMBER: process.env.I_SUN_FA_PHONE_NUMBER,
     GITHUB_LINK: process.env.REACT_APP_GITHUB_LINK,
   },
+  images: {
+    loader: 'custom',
+    loaderFile: '/src/lib/utils/image-loader.js',
+  },
   webpack: (config) => {
     const newConfig = cloneDeep(config);
     // Info: do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf) (20240502 - Shirley)
