@@ -6,11 +6,18 @@ import {
   transformLineItemsFromDBToMap,
   updateAccountAmounts,
 } from '@/lib/utils/account/common';
-import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import {
+  IAccountForSheetDisplay,
+  IAccountNode,
+  IAccountReadyForFrontend,
+} from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 import { BalanceSheetOtherInfo } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
+import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
+import { ASSET_CODE } from '@/constants/account';
+import { timestampToString } from '@/lib/utils/common';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private incomeStatementGenerator: IncomeStatementGenerator;
@@ -50,19 +57,167 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     return accountMap;
   }
 
-  public override async generateFinancialReportArray(curPeriod: boolean): Promise<IAccountForSheetDisplay[]> {
+  public override async generateFinancialReportArray(
+    curPeriod: boolean
+  ): Promise<IAccountForSheetDisplay[]> {
     const accountMap = await this.generateFinancialReportMap(curPeriod);
 
     return mappingAccountToSheetDisplay(accountMap, balanceSheetMapping);
   }
 
-  static calculateDaysSalesOutstanding(
-    accountReceivable: IAccountReadyForFrontend,
-    salesTotal: IAccountReadyForFrontend
+  static getAmount(account: IAccountReadyForFrontend) {
+    const cur = Math.abs(account.curPeriodAmount);
+    const pre = Math.abs(account.prePeriodAmount);
+
+    return {
+      cur,
+      pre,
+    };
+  }
+
+  static calculateAssetLiabilityRatio(asset: number, liability: number, equity: number) {
+    const total = asset + liability + equity;
+    let assetPercentage = total === 0 ? 0 : Math.round((asset / total) * 100);
+    let liabilityPercentage = total === 0 ? 0 : Math.round((liability / total) * 100);
+    let equityPercentage = total === 0 ? 0 : Math.round((equity / total) * 100);
+
+    const surplus = 100 - (assetPercentage + liabilityPercentage + equityPercentage);
+
+    const maxPercentage = Math.max(assetPercentage, liabilityPercentage, equityPercentage);
+
+    // 判斷哪一項是最大的，並將surplus加上去
+    if (total > 0 && surplus !== 0) {
+      if (maxPercentage === assetPercentage) {
+        assetPercentage += surplus;
+      } else if (maxPercentage === liabilityPercentage) {
+        liabilityPercentage += surplus;
+      } else if (maxPercentage === equityPercentage) {
+        equityPercentage += surplus;
+      }
+    }
+
+    return {
+      assetPercentage,
+      liabilityPercentage,
+      equityPercentage,
+    };
+  }
+
+  static getAssetLiabilityRatio(
+    curDateInSecond: number,
+    lastPeriodDateInSecond: number,
+    accountMap: Map<string, IAccountReadyForFrontend>
   ) {
+    const curDateString = timestampToString(curDateInSecond).date;
+    const lastPeriodDateString = timestampToString(lastPeriodDateInSecond).date;
+    const asset = accountMap.get('1XXX') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const liability = accountMap.get('2XXX') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const equity = accountMap.get('32XX') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const assetAmount = BalanceSheetGenerator.getAmount(asset);
+    const liabilityAmount = BalanceSheetGenerator.getAmount(liability);
+    const equityAmount = BalanceSheetGenerator.getAmount(equity);
+
+    const curRatio = BalanceSheetGenerator.calculateAssetLiabilityRatio(
+      assetAmount.cur,
+      liabilityAmount.cur,
+      equityAmount.cur
+    );
+
+    const preRatio = BalanceSheetGenerator.calculateAssetLiabilityRatio(
+      assetAmount.pre,
+      liabilityAmount.pre,
+      equityAmount.pre
+    );
+
+    const labels = ['資產', '負債', '權益'];
+    return {
+      [curDateString]: {
+        data: Object.values(curRatio),
+        labels,
+      },
+      [lastPeriodDateString]: {
+        data: Object.values(preRatio),
+        labels,
+      },
+    };
+  }
+
+  static getTopAssetsPercentage(asset: IAccountReadyForFrontend[]) {
+    const curTop5Asset = asset.sort((a, b) => b.curPeriodAmount - a.curPeriodAmount).slice(0, 5);
+    const preTop5Asset = asset.sort((a, b) => b.prePeriodAmount - a.prePeriodAmount).slice(0, 5);
+    const curSurplus = 100 - curTop5Asset.reduce((acc, cur) => acc + cur.curPeriodPercentage, 0);
+    const preSurplus = 100 - preTop5Asset.reduce((acc, cur) => acc + cur.prePeriodPercentage, 0);
+
+    const curPercentage = curTop5Asset.map((account) => account.curPeriodPercentage);
+    const curAssetName = curTop5Asset.map((account) => account.name);
+
+    const prePercentage = preTop5Asset.map((account) => account.prePeriodPercentage);
+    const preAssetName = preTop5Asset.map((account) => account.name);
+
+    if (curSurplus > 0) {
+      curPercentage.push(curSurplus);
+      curAssetName.push('其他');
+    }
+
+    if (preSurplus > 0) {
+      prePercentage.push(preSurplus);
+      preAssetName.push('其他');
+    }
+
+    return {
+      curPercentage,
+      curAssetName,
+      prePercentage,
+      preAssetName,
+    };
+  }
+
+  static getMaxAsset(
+    curDateInSecond: number,
+    lastPeriodDateInSecond: number,
+    accountMap: Map<string, IAccountReadyForFrontend>
+  ) {
+    const curDateString = timestampToString(curDateInSecond).date;
+    const lastPeriodDateString = timestampToString(lastPeriodDateInSecond).date;
+
+    const asset: IAccountReadyForFrontend[] = [];
+
+    ASSET_CODE.forEach((code) => {
+      const account = accountMap.get(code);
+      if (account) {
+        asset.push(account);
+      }
+    });
+
+    const { curPercentage, curAssetName, prePercentage, preAssetName } =
+      BalanceSheetGenerator.getTopAssetsPercentage(asset);
+
+    return {
+      [curDateString]: {
+        data: curPercentage,
+        labels: curAssetName,
+      },
+      [lastPeriodDateString]: {
+        data: prePercentage,
+        labels: preAssetName,
+      },
+    };
+  }
+
+  static calculateDaysSalesOutstanding(accountMap: Map<string, IAccountReadyForFrontend>) {
+    const accountReceivable = accountMap.get('5000') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const salesTotal = accountMap.get('130X') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // DSO = (Account Receivable / Sales) * 365
-    const curDso = salesTotal.curPeriodAmount !== 0 ? (accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR : 0;
-    const preDso = salesTotal.prePeriodAmount !== 0 ? (accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR : 0;
+
+    const curDso =
+      salesTotal.curPeriodAmount !== 0
+        ? (accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR
+        : 0;
+    const preDso =
+      salesTotal.prePeriodAmount !== 0
+        ? (accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR
+        : 0;
     const dso = {
       curDso,
       preDso,
@@ -73,14 +228,16 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
   // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
   // this function is wrong, need to be fixed
-  static calculateInventoryTurnoverDays(
-    operatingCost: IAccountReadyForFrontend,
-    inventory: IAccountReadyForFrontend
-  ) {
+  static calculateInventoryTurnoverDays(accountMap: Map<string, IAccountReadyForFrontend>) {
+    const operatingCost = accountMap.get('5000') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const inventory = accountMap.get('130X') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
     const curInventoryTurnoverDays =
       operatingCost.curPeriodAmount !== 0
-        ? (((inventory.curPeriodAmount + inventory.prePeriodAmount) / 2) / operatingCost.curPeriodAmount) * DAY_IN_YEAR
+        ? ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
+            2 /
+            operatingCost.curPeriodAmount) *
+          DAY_IN_YEAR
         : 0;
 
     // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
@@ -108,31 +265,25 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.set(account.code, account);
     });
 
-    const accountReceivable = accountMap.get('1170');
-    const salesTotal = accountMap.get('4100');
+    const assetLiabilityRatio = BalanceSheetGenerator.getAssetLiabilityRatio(
+      this.endDateInSecond,
+      this.lastPeriodEndDateInSecond,
+      accountMap
+    );
 
-    let dso = {
-      curDso: 0,
-      preDso: 0,
-    };
+    const assetMixRatio = BalanceSheetGenerator.getMaxAsset(
+      this.endDateInSecond,
+      this.lastPeriodEndDateInSecond,
+      accountMap
+    );
 
-    if (accountReceivable && salesTotal) {
-      dso = BalanceSheetGenerator.calculateDaysSalesOutstanding(accountReceivable, salesTotal);
-    }
+    const dso = BalanceSheetGenerator.calculateDaysSalesOutstanding(accountMap);
 
-    const operatingCost = accountMap.get('5000');
-    const inventory = accountMap.get('130X');
-
-    let inventoryTurnoverDays = {
-      curInventoryTurnoverDays: 0,
-      preInventoryTurnoverDays: 0,
-    };
-
-    if (operatingCost && inventory) {
-      inventoryTurnoverDays = BalanceSheetGenerator.calculateInventoryTurnoverDays(operatingCost, inventory);
-    }
+    const inventoryTurnoverDays = BalanceSheetGenerator.calculateInventoryTurnoverDays(accountMap);
 
     const otherInfo = {
+      assetLiabilityRatio,
+      assetMixRatio,
       dso,
       inventoryTurnoverDays,
     };
@@ -140,8 +291,13 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   public override async generateReport() {
+    // const currentDateInMillisecond = timestampInMilliSeconds(this.endDateInSecond);
+    // const currentDate = new Date(currentDateInMillisecond);
+    // const lastPeriodDateInMillisecond = timestampInMilliSeconds(this.lastPeriodEndDateInSecond);
+    // const lastPeriodDate = new Date(lastPeriodDateInMillisecond);
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
-    const incomeStatementContent = await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
+    const incomeStatementContent =
+      await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = await this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
     return {
       content: balanceSheetContent,
