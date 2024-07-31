@@ -515,12 +515,16 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const startYear = currentYear - this.YEAR_RANGE + 1;
 
     const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
-    const result: { [key: string]: number } = {};
+    const ratio: { [key: string]: number } = {};
+    const amortizationDepreciation: { [key: string]: number } = {};
 
     years.forEach((year) => {
-      result[year] = 0;
+      ratio[year] = 0;
+      amortizationDepreciation[year] = 0;
     });
 
+    let curDepreciateAndAmortize = 0;
+    let preDepreciateAndAmortize = 0;
     if (
       beforeIncomeTax &&
       salesDepreciation &&
@@ -531,37 +535,45 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       tax &&
       operatingIncomeCashFlow
     ) {
-      result[currentYear] =
+      curDepreciateAndAmortize = salesDepreciation.curPeriodAmount +
+      salesAmortization.curPeriodAmount +
+      manageDepreciation.curPeriodAmount +
+      manageAmortization.curPeriodAmount +
+      rdDepreciation.curPeriodAmount;
+
+      preDepreciateAndAmortize = salesDepreciation.prePeriodAmount +
+      salesAmortization.prePeriodAmount +
+      manageDepreciation.prePeriodAmount +
+      manageAmortization.prePeriodAmount +
+      rdDepreciation.prePeriodAmount;
+
+      amortizationDepreciation[currentYear] = curDepreciateAndAmortize;
+      amortizationDepreciation[currentYear - 1] = preDepreciateAndAmortize;
+
+      ratio[currentYear] =
         operatingIncomeCashFlow.curPeriodAmount !== 0
           ? (beforeIncomeTax.curPeriodAmount +
-              salesDepreciation.curPeriodAmount +
-              salesAmortization.curPeriodAmount +
-              manageDepreciation.curPeriodAmount +
-              manageAmortization.curPeriodAmount +
-              rdDepreciation.curPeriodAmount -
+              curDepreciateAndAmortize -
               tax.curPeriodAmount) /
             operatingIncomeCashFlow.curPeriodAmount
           : 0;
 
-      result[currentYear - 1] =
+      ratio[currentYear - 1] =
         operatingIncomeCashFlow.prePeriodAmount !== 0
           ? (beforeIncomeTax.prePeriodAmount +
-              salesDepreciation.prePeriodAmount +
-              salesAmortization.prePeriodAmount +
-              manageDepreciation.prePeriodAmount +
-              manageAmortization.prePeriodAmount +
-              rdDepreciation.prePeriodAmount -
+              preDepreciateAndAmortize -
               tax.prePeriodAmount) /
             operatingIncomeCashFlow.prePeriodAmount
           : 0;
     }
     const lineChartDataForRatio = {
-      data: Object.values(result),
+      data: Object.values(ratio),
       labels: years,
     };
     return {
-      ratio: result,
+      ratio,
       lineChartDataForRatio,
+      amortizationDepreciation,
     };
   }
 
@@ -594,7 +606,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const rdDepreciation = accountMap.get('6324');
     const tax = accountMap.get('A33500');
     const operatingIncomeCashFlow = accountMap.get('AAAA');
-    const { ratio, lineChartDataForRatio } = this.calculateOperatingStabilizedRatio(
+    const { ratio, lineChartDataForRatio, amortizationDepreciation } = this.calculateOperatingStabilizedRatio(
       currentYear,
       beforeIncomeTax,
       salesDepreciation,
@@ -609,11 +621,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return {
       operatingStabilized: {
         beforeIncomeTax: this.formatByPeriod(currentYear, beforeIncomeTax),
-        salesDepreciation: this.formatByPeriod(currentYear, salesDepreciation),
-        salesAmortization: this.formatByPeriod(currentYear, salesAmortization),
-        manageDepreciation: this.formatByPeriod(currentYear, manageDepreciation),
-        manageAmortization: this.formatByPeriod(currentYear, manageAmortization),
-        rdDepreciation: this.formatByPeriod(currentYear, rdDepreciation),
+        amortizationDepreciation,
         tax: this.formatByPeriod(currentYear, tax),
         operatingIncomeCashFlow: this.formatByPeriod(currentYear, operatingIncomeCashFlow),
         ratio,
