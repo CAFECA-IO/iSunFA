@@ -10,8 +10,14 @@ import { useTranslation } from 'next-i18next';
 
 const AddJournalBody = () => {
   const { t } = useTranslation('common');
-  const { selectedOCR, selectOCRHandler, selectedJournal, selectJournalHandler } =
-    useAccountingCtx();
+  const {
+    selectedOCR,
+    selectOCRHandler,
+    selectedJournal,
+    selectJournalHandler,
+    inputDescriptionHandler,
+  } = useAccountingCtx();
+  const [inputDescription, setInputDescription] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
@@ -21,14 +27,23 @@ const AddJournalBody = () => {
     setCurrentStep(AccountingStep.STEP_ONE);
     selectOCRHandler(undefined);
     selectJournalHandler(undefined);
+    setInputDescription('');
   };
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
   const skipClickHandler = () => {
     selectJournalHandler(undefined);
     setCurrentStep(AccountingStep.STEP_TWO);
+    setInputDescription('');
   };
-  // ToDo: (20240422 - Julian) Submit -> 提交 description of events
-  // const submitClickHandler = () => { }
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputDescription(event.target.value);
+  };
+
+  const handelClick = () => {
+    inputDescriptionHandler(inputDescription);
+    setCurrentStep(AccountingStep.STEP_TWO);
+  };
 
   useEffect(() => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
@@ -51,7 +66,15 @@ const AddJournalBody = () => {
     </button>
   );
 
-  const displayStepTab = isStepOne ? <StepOneTab /> : <StepTwoTab />;
+  const displayStepTab = isStepOne ? (
+    <StepOneTab
+      inputDescription={inputDescription}
+      handleInputChange={handleInputChange}
+      handelClick={handelClick}
+    />
+  ) : (
+    <StepTwoTab />
+  );
 
   const displayButtons = isStepOne ? (
     <div className="absolute right-0 hidden items-center gap-8px md:flex">
