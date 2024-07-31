@@ -515,7 +515,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const page1 = (
-    <div id="1" className="relative h-a4-height overflow-hidden">
+    <div id="1" className="relative h-a4-height overflow-y-hidden">
       {/* Info: watermark logo (20240723 - Shirley) */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -594,7 +594,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   const page2 = (
-    <div id="2" className="relative h-a4-height overflow-hidden">
+    <div id="2" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
@@ -693,7 +693,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page3 = (
-    <div id="3" className="relative h-a4-height overflow-hidden">
+    <div id="3" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -750,7 +750,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page4 = (
-    <div id="4" className="relative h-a4-height overflow-hidden">
+    <div id="4" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -807,7 +807,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page5 = (
-    <div id="5" className="relative h-a4-height overflow-hidden">
+    <div id="5" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -864,7 +864,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page6 = (
-    <div id="6" className="relative h-a4-height overflow-hidden">
+    <div id="6" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -921,7 +921,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page7 = (
-    <div id="7" className="relative h-a4-height overflow-hidden">
+    <div id="7" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -978,7 +978,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page8 = (
-    <div id="8" className="relative h-a4-height overflow-hidden">
+    <div id="8" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1035,7 +1035,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page9 = (
-    <div id="9" className="relative h-a4-height overflow-hidden">
+    <div id="9" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1102,7 +1102,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page10 = (
-    <div id="10" className="relative h-a4-height overflow-hidden">
+    <div id="10" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1171,7 +1171,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page11 = (
-    <div id="11" className="relative h-a4-height overflow-hidden">
+    <div id="11" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1241,7 +1241,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page12 = (
-    <div id="12" className="relative h-a4-height overflow-hidden">
+    <div id="12" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1322,7 +1322,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   return (
-    <div className="mx-auto w-a4-width">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       <hr className="break-before-page" />
       {page2}
