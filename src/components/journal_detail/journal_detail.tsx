@@ -228,7 +228,13 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       </div>
     ) : null;
 
-  const displayType = <p className="text-lightRed">{type}</p>;
+  // const displayType = <p className="text-lightRed">{type}</p>;
+
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
+  const typeString = type && typeof type === 'string' ? type : '';
+  const translatedType = typeString
+    ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
+    : '';
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
@@ -261,9 +267,15 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
+  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
+  const translatedPeriod = t(`JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`);
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
+  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
+  const translatedStatus = t(`JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`);
 
   // Info: (20240503 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
@@ -279,7 +291,16 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  // Info: (20240731 - Anna) 把合約None加上多語系
+  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+   const displayContract =
+     contract !== 'None' ? (
+       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+         <p className="font-semibold text-darkBlue">{contract}</p>
+       </div>
+     ) : (
+       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+     );
 
   const createVoucherLayout = (dataType: VoucherItem) => {
     const displayList = voucherList.map((voucher) => {
@@ -529,7 +550,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             {/* Info: (20240503 - Julian) Type */}
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.TYPE')}</p>
-              {displayType}
+              {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
+              {/* {displayType} */}
+              <p className="text-lightRed">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">
@@ -564,12 +587,20 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             {/* Info: (20240503 - Julian) Payment Period */}
             <div className="flex items-center justify-between gap-x-10px">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
-              {displayPeriod}
+              {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
+              {/* {displayPeriod} */}
+              {translatedPeriod && (
+                <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
+              )}
             </div>
             {/* Info: (20240503 - Julian) Payment Status */}
             <div className="flex items-center justify-between gap-x-10px">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
-              {displayStatus}
+              {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
+              {/* {displayStatus} */}
+              {translatedStatus && (
+                <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
+              )}
             </div>
             {/* Info: (20240503 - Julian) Project */}
             <div className="flex items-center justify-between gap-x-10px">

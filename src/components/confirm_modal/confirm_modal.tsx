@@ -55,6 +55,7 @@ const ConfirmModal = ({
     selectedJournal,
     selectJournalHandler,
   } = useAccountingCtx();
+
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 
   const { journalId, askAIId } = confirmData;
@@ -196,6 +197,7 @@ const ConfirmModal = ({
           accountId: voucher.account!.id,
           lineItemIndex: `${voucher.id}`,
           account: generateAccountTitle(voucher.account),
+          // account: generateAccountTitleWithTranslation(voucher.account),
           description: voucher.particulars,
           debit: isDebit,
           amount: isDebit ? debitAmount : creditAmount,
@@ -356,7 +358,12 @@ const ConfirmModal = ({
     setIsEveryRowHasAccount(isEveryLineItemHasAccount);
   }, [totalCredit, totalDebit, accountingVoucher]);
 
-  const displayType = <p className="text-lightRed">{eventType}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
+  // const displayType = <p className="text-lightRed">{eventType}</p>;
+  const typeString = eventType && typeof eventType === 'string' ? eventType : '';
+  const translatedType = typeString
+    ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
+    : '';
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
@@ -394,10 +401,15 @@ const ConfirmModal = ({
   const displayMethod = (
     <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
   );
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
+  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
+  const translatedPeriod = t(`JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`);
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
-
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
+  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
+  const translatedStatus = t(`JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`);
 
   const displayProject =
     project !== 'None' ? (
@@ -411,7 +423,16 @@ const ConfirmModal = ({
       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  // Info: (20240731 - Anna) 把合約None加上多語系
+  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  const displayContract =
+    contract !== 'None' ? (
+      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+        <p className="font-semibold text-darkBlue">{contract}</p>
+      </div>
+    ) : (
+      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+    );
 
   const displayedHint =
     ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
@@ -539,7 +560,8 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isEveryRowHasAccount ? 'text-text-state-success' : 'text-text-state-error'}>
-        Each row includes an accounting account.
+        {/* Each row includes an accounting account. */}
+        {t('JOURNAL.EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT')}
       </p>
     </div>
   );
@@ -552,7 +574,8 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isNoEmptyRow ? 'text-text-state-success' : 'text-text-state-error'}>
-        Each row includes a debit or credit.
+        {/* Each row includes a debit or credit. */}
+        {t('JOURNAL.EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT')}
       </p>
     </div>
   );
@@ -565,7 +588,8 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isBalance ? 'text-text-state-success' : 'text-text-state-error'}>
-        Debits and credits balance out.
+        {/* Debits and credits balance out. */}
+        {t('JOURNAL.DEBITS_AND_CREDITS_BALANCE_OUT')}
       </p>
     </div>
   );
@@ -599,7 +623,8 @@ const ConfirmModal = ({
             {/* Info: (20240429 - Julian) Type */}
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.TYPE')}</p>
-              {displayType}
+              {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
+              <p className="text-lightRed">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
@@ -634,12 +659,20 @@ const ConfirmModal = ({
             {/* Info: (20240429 - Julian) Payment Period */}
             <div className="flex items-center justify-between">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
-              {displayPeriod}
+              {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
+              {/* {displayPeriod} */}
+              {translatedPeriod && (
+                <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
+              )}
             </div>
             {/* Info: (20240429 - Julian) Payment Status */}
             <div className="flex items-center justify-between">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
-              {displayStatus}
+              {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
+              {translatedStatus && (
+                <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
+              )}
+              {/* {displayStatus} */}
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">

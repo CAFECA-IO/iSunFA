@@ -45,6 +45,9 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
+    // Deprecated: （ 20240522 - Murky）Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
