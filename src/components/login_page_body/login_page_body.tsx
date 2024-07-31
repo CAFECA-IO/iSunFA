@@ -28,7 +28,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   const {
     checkIsRegistered,
     handleExistingCredential,
-    signIn,
+    // signIn,
     errorCode,
     isSignInError,
     signedIn,
@@ -46,7 +46,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
     registerModalVisibilityHandler();
   };
 
-  const registerClickHandler = async () => {
+  const loginHandler = async () => {
     try {
       const { isRegistered, credentials } = await checkIsRegistered();
 
@@ -58,28 +58,29 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
     } catch (error) {
       // Deprecated: (20240805 - tzuhan) dev
       // eslint-disable-next-line no-console
-      console.log('registerClickHandler error', error);
+      console.log('loginHandler error', error);
     }
   };
 
   const showPassKeySupport = () => {
     passKeySupportModalVisibilityHandler();
   };
+  // Info: replaced by loginHandler (20240731 - Tzuhan)
 
-  const logInClickHandler = async () => {
-    try {
-      await signIn({ invitation });
-    } catch (error) {
-      // DO nothing
-    }
-  };
+  // const logInClickHandler = async () => {
+  //   try {
+  //     await signIn({ invitation });
+  //   } catch (error) {
+  //     // DO nothing
+  //   }
+  // };
 
   useEffect(() => {
     if (action === pageQueries.loginPage.actions.register) {
       registerModalDataHandler({ invitation });
       registerModalVisibilityHandler();
     } else if (action === pageQueries.loginPage.actions.login) {
-      logInClickHandler();
+      loginHandler();
     }
   }, [action]);
 
@@ -217,7 +218,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
               </div>
               <Button
                 variant={'tertiary'}
-                onClick={logInClickHandler}
+                onClick={loginHandler}
                 className="mx-auto mt-0 flex max-w-400px justify-center px-4 py-1 lg:gap-2 lg:space-x-2 lg:px-6 lg:py-3.5"
               >
                 <div className="text-sm leading-7 tracking-normal lg:text-lg lg:font-medium">
@@ -243,15 +244,6 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
               </Button>
             </div>
 
-            <Button
-              variant={'secondaryBorderless'}
-              onClick={registerClickHandler}
-              size={'medium'}
-              type="button"
-              className="mt-5 flex justify-center text-sm font-semibold leading-6 tracking-normal text-link-text-primary hover:opacity-70 lg:text-base"
-            >
-              {t('LOGIN_PAGE_BODY.REGISTER_MY_DEVICE')}
-            </Button>
             <Button
               variant={'secondaryBorderless'}
               size={'medium'}

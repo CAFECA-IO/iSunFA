@@ -1185,7 +1185,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   );
 
   return (
-    <div className="mx-auto w-a4-width">
+    <div className="scale-80 mx-auto w-a4-width origin-top overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       <hr className="break-before-page" />
       {page2}

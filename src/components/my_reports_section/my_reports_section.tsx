@@ -9,7 +9,6 @@ import {
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
-  FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
@@ -83,7 +82,7 @@ const MyReportsSection = () => {
   } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
     params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
     query: {
-      sortBy: sortOptionQuery[filteredPendingSort],
+      sortOrder: sortOptionQuery[filteredPendingSort],
       startDateInSecond:
         pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
       endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
@@ -102,7 +101,7 @@ const MyReportsSection = () => {
   } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
     params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
     query: {
-      sortBy: sortOptionQuery[filteredHistorySort],
+      sortOrder: sortOptionQuery[filteredHistorySort],
       startDateInSecond:
         historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
       endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
@@ -125,7 +124,6 @@ const MyReportsSection = () => {
         content: `${t('DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
-      // setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
     }
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
@@ -139,7 +137,6 @@ const MyReportsSection = () => {
         content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
         closeable: true,
       });
-      setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
@@ -164,20 +161,17 @@ const MyReportsSection = () => {
     }) => {
       const {
         currentPage: page,
-        filteredPendingSort: sortBy,
+        filteredPendingSort: sortOrder,
         pendingPeriod: period,
         searchPendingQuery: searchString,
       } = query;
-
-      // eslint-disable-next-line no-console
-      console.log('getPendingReports', pendingPeriod);
 
       await fetchPendingReports({
         params: {
           companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
-          sortBy: sortOptionQuery[sortBy ?? filteredPendingSort],
+          sortOrder: sortOptionQuery[sortOrder ?? filteredPendingSort],
           startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
           endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
           searchQuery: searchString ?? searchPendingQuery,
@@ -205,20 +199,17 @@ const MyReportsSection = () => {
     }) => {
       const {
         currentPage: page,
-        filteredHistorySort: sortBy,
+        filteredHistorySort: sortOrder,
         historyPeriod: period,
         searchHistoryQuery: searchString,
       } = query;
-
-      // eslint-disable-next-line no-console
-      console.log('getGeneratedReports', historyPeriod);
 
       await fetchGeneratedReports({
         params: {
           companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
         },
         query: {
-          sortBy: sortOptionQuery[sortBy ?? filteredHistorySort],
+          sortOrder: sortOptionQuery[sortOrder ?? filteredHistorySort],
           startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
           endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
           searchQuery: searchString ?? searchHistoryQuery,
@@ -246,8 +237,6 @@ const MyReportsSection = () => {
 
   /* eslint-disable no-console */
   const handleHistoryDatePickerClose = async (start: number, end: number) => {
-    console.log('start handleHistoryDatePickerClose', start);
-    console.log('end', end);
     setHistoryPeriod({ startTimeStamp: start, endTimeStamp: end });
     await getGeneratedReports({
       historyPeriod: { startTimeStamp: start, endTimeStamp: end },
@@ -272,15 +261,25 @@ const MyReportsSection = () => {
     setSearchHistoryQuery(e.target.value);
   };
 
-  // const handlePendingDatePickerClose = (startTimestamp: number, endTimestamp: number) => {
-  //   setPendingPeriod({ startTimeStamp: startTimestamp, endTimeStamp: endTimestamp });
-  //   fetchPendingReports();
-  // };
+  const pendingPaginationHandler = (newPage: number) => {
+    setPendingCurrentPage(newPage);
+    getPendingReports({ currentPage: newPage });
+  };
 
-  // const handleHistoryDatePickerClose = (startTimestamp: number, endTimestamp: number) => {
-  //   setHistoryPeriod({ startTimeStamp: startTimestamp, endTimeStamp: endTimestamp });
-  //   fetchGeneratedReports();
-  // };
+  const historyPaginationHandler = (newPage: number) => {
+    setHistoryCurrentPage(newPage);
+    getGeneratedReports({ currentPage: newPage });
+  };
+
+  const pendingSortClickHandler = (sorting: SortOptions) => {
+    setFilteredPendingSort(sorting);
+    getPendingReports({ filteredPendingSort: sorting });
+  };
+
+  const historySortClickHandler = (sorting: SortOptions) => {
+    setFilteredHistorySort(sorting);
+    getGeneratedReports({ filteredHistorySort: sorting });
+  };
 
   const displayedPendingSortMenu = (
     <div
@@ -316,7 +315,7 @@ const MyReportsSection = () => {
             <li
               key={sorting}
               onClick={() => {
-                setFilteredPendingSort(sorting);
+                pendingSortClickHandler(sorting);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -424,6 +423,7 @@ const MyReportsSection = () => {
           setCurrentPage={setPendingCurrentPage}
           totalPages={pendingTotalPages}
           pagePrefix="pending"
+          paginationHandler={pendingPaginationHandler}
         />
       </div>
     </div>
@@ -527,7 +527,7 @@ const MyReportsSection = () => {
             <li
               key={sorting}
               onClick={() => {
-                setFilteredHistorySort(sorting);
+                historySortClickHandler(sorting);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -635,6 +635,7 @@ const MyReportsSection = () => {
           setCurrentPage={setHistoryCurrentPage}
           totalPages={historyTotalPages}
           pagePrefix="history"
+          paginationHandler={historyPaginationHandler}
         />
       </div>
     </div>

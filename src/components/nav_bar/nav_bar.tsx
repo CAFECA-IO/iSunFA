@@ -457,7 +457,7 @@ const NavBar = () => {
       {/* ToDo: (20240516 - Julian) icon */}
       <Image
         alt={`${selectedCompany?.name}_icon`}
-        src={'/entities/happy.png'}
+        src={selectedCompany.imageId ?? DEFAULT_AVATAR_URL}
         width={16}
         height={16}
         className="rounded-full"

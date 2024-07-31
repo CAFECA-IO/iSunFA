@@ -119,7 +119,7 @@ const SelectCompanyPageBody = () => {
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
               alt={companyAndRole.company.name}
-              src={'/entities/happy.png'}
+              src={selectedCompany?.imageId ?? DEFAULT_AVATAR_URL}
               width={20}
               height={20}
             />
