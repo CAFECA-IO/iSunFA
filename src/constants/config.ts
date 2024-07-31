@@ -148,7 +148,7 @@ export const FORMIDABLE_OPTIONS: Partial<Options> = {
 
   // 過濾器例子，保留圖片類型
   filter({ mimetype }) {
-    return !!(mimetype && mimetype.includes('image'));
+    return !!(mimetype && (mimetype.includes('image') || mimetype.includes('pdf')));
   },
 };
 
