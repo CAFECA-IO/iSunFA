@@ -20,7 +20,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
-    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
+    super(companyId, 0, endDateInSecond, reportSheetType);
 
     this.incomeStatementGenerator = new IncomeStatementGenerator(
       companyId,
@@ -31,6 +31,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
   public override async generateFinancialReportTree(curPeriod: boolean): Promise<IAccountNode[]> {
     const lineItemsFromDB = await this.getAllLineItemsByReportSheet(curPeriod);
+
     const accountForest = await this.getAccountForestByReportSheet();
 
     const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
@@ -50,6 +51,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   > {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
     const accountMap = transformForestToMap(accountForest);
+
     return accountMap;
   }
 
