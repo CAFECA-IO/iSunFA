@@ -65,10 +65,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const [secondThought, setSecondThought] = useStateRef<string>('');
   const [thirdThought, setThirdThought] = useStateRef<string>('');
 
-  // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley Anna)
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial', reportFinancial);
-
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
       const currentFrom = timestampToString(reportFinancial.curDate.from ?? 0);
@@ -220,7 +216,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
     const displayedTableBody =
       reportFinancial?.otherInfo?.freeCash[currentYear] &&
-        reportFinancial?.otherInfo?.freeCash[previousYear] ? (
+      reportFinancial?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
             <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
@@ -572,8 +568,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </p>
         </div>
         {reportFinancial &&
-          reportFinancial.otherInfo &&
-          Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ? (
+        reportFinancial.otherInfo &&
+        Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ? (
           <>
             <div className="relative mb-0 flex items-center pb-1">
               <Image
@@ -639,7 +635,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
                       <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
-                        {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[year].toLocaleString()}
+                        {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                          year
+                        ].toLocaleString()}
                       </td>
                     )
                   )}
