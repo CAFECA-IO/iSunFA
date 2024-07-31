@@ -118,8 +118,6 @@ export default abstract class FinancialReportGenerator {
 
     const forest = forestArray.flat(1);
 
-    // eslint-disable-next-line no-console
-    console.log('forest', forest[0].children[0].children);
     return forest;
   }
 
