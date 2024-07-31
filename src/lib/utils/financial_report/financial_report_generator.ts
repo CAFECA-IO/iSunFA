@@ -87,7 +87,7 @@ export default abstract class FinancialReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
-    const forUser = false;
+    const forUser = undefined;
     const page = 1;
     const limit = Number.MAX_SAFE_INTEGER;
     const liquidity = undefined;
@@ -117,6 +117,9 @@ export default abstract class FinancialReportGenerator {
     );
 
     const forest = forestArray.flat(1);
+
+    // eslint-disable-next-line no-console
+    console.log('forest', forest[0].children[0].children);
     return forest;
   }
 
