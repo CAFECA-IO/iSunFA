@@ -206,8 +206,10 @@
     "AUDITING_REPORTS": "监管报告",
     "LAST_UPDATED": "最后更新",
     "COMPREHENSIVE_INCOME_STATEMENT": "综合损益表",
+    "STATEMENT_OF_COMPREHENSIVE_INCOME": "综合损益表",
     "BALANCE_SHEET": "资产负债表",
     "CASH_FLOW_STATEMENT": "现金流量表",
+    "STATEMENT_OF_CASH_FLOWS": "现金流量表",
     "CHANGE_IN_EQUITY_STATEMENT": "权益变动表",
     "RED_FLAG_ANALYSIS": "风险分析",
     "POWERED_BY": "技术支持"
@@ -566,6 +568,7 @@
   "LOGIN_PAGE_BODY": {
     "PLEASE": "请",
     "REGISTER_YOUR_DEVICE": "注册您的设备。",
+    "OR_TRY_OTHER_PASSKY": "或尝试其他Passkey",
     "OOPS": "哎呀！出了些问题。请重试或联络客服。",
     "HELP": "帮助",
     "REGISTER_YOUR_DEVICE_ARROW": "注册您的装置 → ",

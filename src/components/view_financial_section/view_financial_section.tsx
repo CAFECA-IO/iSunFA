@@ -1,5 +1,4 @@
 /* eslint-disable */
-import { pdfjs, Document, Page } from 'react-pdf';
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
@@ -18,7 +17,7 @@ import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
 import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
 import { useTranslation } from 'react-i18next';
-import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
 
 interface IViewReportSectionProps {
@@ -105,7 +104,7 @@ const ViewFinancialSection = ({
         printWindow.addEventListener('load', () => {
           setTimeout(() => {
             printWindow.print();
-          }, MILLISECONDS_IN_A_SECOND);
+          }, WAIT_FOR_REPORT_DATA);
         });
       }
     }
@@ -253,6 +252,13 @@ const ViewFinancialSection = ({
     <>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</>
   );
 
+  // Info:創建一個新的變數來儲存翻譯後的字串 (20240730 - Anna)
+  const reportTypeString =
+    !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
+      ? displayedReportType.props.children
+      : '';
+  const translatedReportType = t(`PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`);
+
   const renderedThumbnail = (
     thumbnail: { number: number; active: boolean; alt: string; src: string },
     index: number
@@ -279,6 +285,7 @@ const ViewFinancialSection = ({
     </button>
   );
 
+  // const reportTypeString = typeof displayedReportType === 'string' ? displayedReportType : '';
   const displayedReport = (
     <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
       {/* Info: Sidebar (20240426 - Shirley) */}
@@ -335,8 +342,15 @@ const ViewFinancialSection = ({
             </svg>
           </div>
         </Button>
-        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
+        {/* <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
           {displayedReportType}
+        </div> */}
+        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
+          {getReportFinancialIsLoading ? (
+            <Skeleton width={200} height={40} />
+          ) : (
+            translatedReportType
+          )}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">

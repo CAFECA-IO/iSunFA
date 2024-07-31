@@ -206,8 +206,10 @@
     "AUDITING_REPORTS": "監管報告",
     "LAST_UPDATED": "最後更新",
     "COMPREHENSIVE_INCOME_STATEMENT": "綜合損益表",
+    "STATEMENT_OF_COMPREHENSIVE_INCOME": "綜合損益表",
     "BALANCE_SHEET": "資產負債表",
     "CASH_FLOW_STATEMENT": "現金流量表",
+    "STATEMENT_OF_CASH_FLOWS": "現金流量表",
     "CHANGE_IN_EQUITY_STATEMENT": "權益變動表",
     "RED_FLAG_ANALYSIS": "風險分析",
     "POWERED_BY": "技術支持"
@@ -565,7 +567,8 @@
   },
   "LOGIN_PAGE_BODY": {
     "PLEASE": "請",
-    "REGISTER_YOUR_DEVICE": "註冊您的設備。",
+    "REGISTER_YOUR_DEVICE": "註冊您的設備",
+    "OR_TRY_OTHER_PASSKY": "或嘗試其他密鑰。",
     "OOPS": "哎呀！出了些問題。請重試或聯絡客服。",
     "HELP": "幫助",
     "REGISTER_YOUR_DEVICE_ARROW": "註冊您的裝置 → ",

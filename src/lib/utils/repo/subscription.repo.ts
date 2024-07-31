@@ -33,6 +33,7 @@ export async function getSubscriptionById(id: number): Promise<ISubscription | n
   const subscription = await prisma.subscription.findUnique({
     where: {
       id,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return subscription;

@@ -88,13 +88,16 @@ export interface FinancialReportItem {
   indent: number;
 }
 
+export interface YearlyData {
+  [year: string]: number;
+}
 // Info Murky (20240729): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
   company: {
     id: number;
     code: string;
     name: string;
-  },
+  };
   preDate: {
     from: number;
     to: number;
@@ -110,6 +113,19 @@ export interface FinancialReport {
 }
 
 export interface BalanceSheetOtherInfo {
+  assetLiabilityRatio: {
+    [date: string]: {
+      data: number[]; // Info: [資產,負債,權益] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      labels: string[]; // Info: ["資產", "負債", "權益"] (20240730 - Shirley)
+    }
+  };
+  assetMixRatio: {
+    // Info: 資產組成，包含數量最大的五種資產跟其他 (20240730 - Shirley)
+    [date: string]: {
+      data: number[]; // Info: [資產1, 資產2, 資產3, 資產4, 資產5, 其他] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      labels: string[];
+    }
+  };
   dso: {
     curDso: number;
     preDso: number;
@@ -129,39 +145,48 @@ export interface IncomeStatementOtherInfo {
     ratio: {
       curRatio: number;
       preRatio: number;
-    },
-  },
+    };
+  };
   revenueToRD: {
     revenue: IAccountReadyForFrontend;
     researchAndDevelopmentExpense: IAccountReadyForFrontend;
     ratio: {
       curRatio: number;
       preRatio: number;
-    },
-  },
+    };
+  };
 }
 
 export interface CashFlowStatementOtherInfo {
-  operatingStabilized: { [key: string]: {
-    cur: number;
-    curMinus1: number;
-    curMinus2: number;
-    curMinus3: number;
-    curMinus4: number;
-   } };
-  strategyInvest:{
-      cur: {
-      PPEInvest: number;
-      strategyInvest: number;
-      otherInvest: number;
+  operatingStabilized: {
+    beforeIncomeTax: YearlyData;
+    amortizationDepreciation: YearlyData; // Info: 折舊攤銷費用 (20240730 - Shirley)
+    tax: YearlyData;
+    operatingIncomeCashFlow: YearlyData;
+    ratio: YearlyData;
+  };
+  lineChartDataForRatio: {
+    data: number[];
+    labels: string[];
+  };
+  strategyInvest: {
+    [year: string]: {
+      data: number[];
+      labels: string[];
     };
-    pre: {
-      PPEInvest: number;
-      strategyInvest: number;
-      otherInvest: number;
+  };
+  thirdTitle: string;
+  fourthTitle: string;
+  fourPointOneTitle: string;
+  ourThoughts: string[];
+  freeCash: {
+    [year: string]: {
+      operatingCashFlow: number;
+      ppe: number;
+      intangibleAsset: number;
+      freeCash: number;
     };
-  }
-
+  };
 }
 
 // Todo Murky (20240729):

@@ -5,10 +5,11 @@ import { APIName } from '@/constants/api_connection';
 import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
-import { FinancialReport } from '@/interfaces/report';
+import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React from 'react';
+import { format } from 'date-fns';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -38,7 +39,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess) {
+  } else if (!getReportFinancialSuccess || !reportFinancial) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
@@ -52,6 +53,30 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </footer>
     );
   };
+  const otherInfo = reportFinancial?.otherInfo as IncomeStatementOtherInfo;
+
+  /* Info: 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 (20240730 - Anna) */
+  const curPeriodTotal =
+    (otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || 0) +
+    (otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || 0);
+  const prePeriodTotal =
+    (otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || 0) +
+    (otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || 0);
+  /* Info: 提取 curRatio 、 preRatio 、revenueToRD (20240730 - Anna) */
+  const curRatio = otherInfo?.revenueAndExpenseRatio.ratio.curRatio || 0;
+  const preRatio = otherInfo?.revenueAndExpenseRatio.ratio.preRatio || 0;
+  const revenueToRD = otherInfo?.revenueToRD;
+  /* Info: 格式化數字為千分位 (20240730 - Anna) */
+  const formatNumber = (num: number) => num.toLocaleString();
+  /* Info: 轉換和格式化日期 (20240730 - Anna) */
+  const curDateFrom = new Date(reportFinancial.curDate.from * 1000);
+  const curDateTo = new Date(reportFinancial.curDate.to * 1000);
+  const preDateFrom = new Date(reportFinancial.preDate.from * 1000);
+  const preDateTo = new Date(reportFinancial.preDate.to * 1000);
+  const formattedCurFromDate = format(curDateFrom, 'yyyy-MM-dd');
+  const formattedCurToDate = format(curDateTo, 'yyyy-MM-dd');
+  const formattedPreFromDate = format(preDateFrom, 'yyyy-MM-dd');
+  const formattedPreToDate = format(preDateTo, 'yyyy-MM-dd');
 
   const page1 = (
     <div id="1" className="relative h-a4-height overflow-hidden">
@@ -69,26 +94,18 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <header className="mb-[86px] flex justify-between text-white">
         <div className="w-[30%] bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
-            {/* <h1 className="mb-30px text-h6">
-              2330 <br />
-              台灣積體電路製造股份有限公司
-            </h1> */}
             {reportFinancial && reportFinancial.company && (
               <>
                 <h1 className="mb-30px text-h6">
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="font-normal">
-                  {reportFinancial.curDate.from}至{reportFinancial.curDate.to} <br />
+                <p className="text-left text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+                  {formattedCurFromDate}至{formattedCurToDate} <br />
                   合併財務報告 - 綜合損益表
                 </p>
               </>
             )}
-            {/* <p className="font-normal">
-              2023年第四季 <br />
-              合併財務報告 - 綜合損益表
-            </p> */}
           </div>
         </div>
         <div className="box-border w-35% text-right">
@@ -101,34 +118,41 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
 
       <section className="text-text-neutral-secondary">
         <div className="text-primary-surface-brand-secondary relative z-1 mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">一、項目彙總格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="relative z-1 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
-              <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                2023-1-1 至 2023-12-31
+              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold">
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -137,19 +161,24 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.general &&
               reportFinancial.general.slice(0, 10).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td
+                    className="border border-[#dee2e6] p-[10px] text-[12px]"
+                    style={{ width: '200px' }}
+                  >
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -180,34 +209,46 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">一、項目彙總格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -216,19 +257,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.general &&
               reportFinancial.general.slice(10, 24).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="min-w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -259,34 +302,44 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">一、項目彙總格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -295,52 +348,58 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.general &&
               reportFinancial.general.slice(24, 33).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
               ))}
 
             <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]"></td>
+              <td className="border border-[#dee2e6] p-[10px] text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">&nbsp;</td>
             </tr>
           </tbody>
           <tbody>
             {reportFinancial &&
               reportFinancial.general &&
               reportFinancial.general.slice(34, 36).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px] font-semibold">
                     {value.code}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px] font-semibold">
                     {value.name}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px] font-semibold">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-semibold">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px] font-semibold">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px] font-semibold">
+                    &nbsp;
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-semibold">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px] font-semibold"></td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px] font-semibold">
+                    &nbsp;
+                  </td>
                 </tr>
               ))}
           </tbody>
@@ -378,34 +437,44 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">二、細項分類格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -414,19 +483,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.details &&
               reportFinancial.details.slice(0, 15).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -457,34 +528,44 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">二、細項分類格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -493,19 +574,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.details &&
               reportFinancial.details.slice(15, 28).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -536,34 +619,44 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">二、細項分類格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -572,19 +665,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.details &&
               reportFinancial.details.slice(28, 39).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -615,34 +710,46 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">二、細項分類格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -651,19 +758,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.details &&
               reportFinancial.details.slice(39, 49).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="w-[177px] min-w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -694,34 +803,44 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="relative text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">二、細項分類格式</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            單位：新台幣仟元 每股盈餘單位：新台幣元
+          </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-left font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[12px] font-semibold">
                 %
               </th>
             </tr>
@@ -730,19 +849,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.details &&
               reportFinancial.details.slice(49, 58).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">{value.code}</td>
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px]">
+                    {value.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px]">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -752,21 +873,25 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             {reportFinancial &&
               reportFinancial.details &&
               reportFinancial.details.slice(58, 62).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">
+                <tr key={value.code} className="h-[40px]">
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px] font-semibold">
                     {value.code}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px] font-semibold">
+                  <td className="w-[177px] border border-[#dee2e6] p-[10px] text-[12px] font-semibold">
                     {value.name}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px] font-semibold">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-semibold">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px] font-semibold"></td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px] font-semibold">
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px] font-semibold">
+                    &nbsp;
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-semibold">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-center text-[14px] font-semibold"></td>
+                  <td className="border border-[#dee2e6] p-[10px] text-center text-[12px] font-semibold">
+                    &nbsp;
+                  </td>
                 </tr>
               ))}
           </tbody>
@@ -805,187 +930,243 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="relative text-text-neutral-secondary">
         <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>三、投入費用和成本，與收入的倍數關係</p>
-          <p>單位：新台幣仟元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            三、投入費用和成本，與收入的倍數關係
+          </p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">單位：新台幣仟元</p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
             </tr>
           </thead>
-          {/* <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">4000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業收入合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,161,735,841
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,263,891,292
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">5000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業成本合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">986,625,213</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">915,536,486</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6100</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">推銷費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">10,590,705</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">9,920,446</td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6200</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">管理費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">60,872,841</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">53,524,898</td>
-            </tr>
-            <tr className="font-semibold">
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-start text-[14px]">
-                投入費用和成本合計
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                1,058,088,759
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">978,981,830</td>
-            </tr>
-          </tbody> */}
           <tbody>
-            {reportFinancial && reportFinancial.details && reportFinancial.details[1] && (
-              <tr key={reportFinancial.details[1].code}>
-                <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                  {reportFinancial.details[1].code}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                  {reportFinancial.details[1].name}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                  {reportFinancial.details[1].curPeriodAmount}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                  {reportFinancial.details[1].prePeriodAmount}
-                </td>
-              </tr>
-            )}
-          </tbody>
-          <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-            </tr>
-          </tbody>
-          <tbody>
-            {reportFinancial && reportFinancial.details && reportFinancial.details[3] && (
-              <tr key={reportFinancial.details[3].code}>
-                <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                  {reportFinancial.details[3].code}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-[14px]">
-                  {reportFinancial.details[3].name}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                  {reportFinancial.details[3].curPeriodAmount}
-                </td>
-                <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                  {reportFinancial.details[3].prePeriodAmount}
-                </td>
-              </tr>
-            )}
-          </tbody>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details.slice(7, 9).map((value) => (
-                <tr key={value.code}>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.code}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-[14px]">{value.name}</td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.curPeriodAmount}
+            {otherInfo &&
+              otherInfo.revenueAndExpenseRatio &&
+              otherInfo.revenueAndExpenseRatio.revenue && (
+                <tr key={otherInfo.revenueAndExpenseRatio.revenue.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
-                  <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                    {value.prePeriodAmount}
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.revenue.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.revenue.curPeriodAmountString}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.revenue.prePeriodAmountString}
                   </td>
                 </tr>
-              ))}
+              )}
+          </tbody>
+          <tbody>
+            <tr>
+              <td className="border border-[#dee2e6] p-[10px] text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">&nbsp;</td>
+            </tr>
+          </tbody>
+          <tbody>
+            {otherInfo &&
+              otherInfo.revenueAndExpenseRatio &&
+              otherInfo.revenueAndExpenseRatio.totalCost && (
+                <tr key={otherInfo.revenueAndExpenseRatio.totalCost.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.totalCost.code}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.totalCost.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.totalCost.curPeriodAmountString}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.totalCost.prePeriodAmountString}
+                  </td>
+                </tr>
+              )}
+          </tbody>
+          <tbody>
+            {otherInfo &&
+              otherInfo.revenueAndExpenseRatio &&
+              otherInfo.revenueAndExpenseRatio.salesExpense && (
+                <tr key={otherInfo.revenueAndExpenseRatio.salesExpense.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.salesExpense.code}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.salesExpense.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.salesExpense.curPeriodAmountString}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.salesExpense.prePeriodAmountString}
+                  </td>
+                </tr>
+              )}
+          </tbody>
+          <tbody>
+            {otherInfo &&
+              otherInfo.revenueAndExpenseRatio &&
+              otherInfo.revenueAndExpenseRatio.administrativeExpense && (
+                <tr key={otherInfo.revenueAndExpenseRatio.administrativeExpense.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.administrativeExpense.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.administrativeExpense.curPeriodAmountString}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {otherInfo.revenueAndExpenseRatio.administrativeExpense.prePeriodAmountString}
+                  </td>
+                </tr>
+              )}
+          </tbody>
+          <tbody>
+            <tr className="font-semibold">
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">&nbsp;</td>
+              <td className="border border-[#dee2e6] p-[10px] text-start text-[12px]">
+                投入費用和成本合計
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                {formatNumber(curPeriodTotal)}
+              </td>
+              <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                {formatNumber(prePeriodTotal)}
+              </td>
+            </tr>
           </tbody>
         </table>
-        <p className="mt-4">2023年度營業收入，為當年度投入費用和成本的2.04倍</p>
-        <p className="mb-10 mt-4">2022年度營業收入，為當年度投入費用和成本的2.31倍</p>
+        {reportFinancial && reportFinancial.company && (
+          <p className="mt-4 text-[12px]">
+            {formattedCurFromDate}至{formattedCurToDate}
+            營業收入，為投入費用和成本的{curRatio.toFixed(2)}倍
+          </p>
+        )}
+        {reportFinancial && reportFinancial.company && (
+          <p className="mt-4 text-[12px]">
+            {formattedPreFromDate}至{formattedPreToDate}
+            營業收入，為投入費用和成本的{preRatio.toFixed(2)}倍
+          </p>
+        )}
         <div className="mb-4 mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
-          <p>四、收入提撥至研發費用比例</p>
-          <p>單位：新台幣仟元</p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+            四、收入提撥至研發費用比例
+          </p>
+          <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">單位：新台幣仟元</p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[12px] font-semibold">
                 會計項目
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2023-1-1 至 2023-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedCurFromDate}至{formattedCurToDate}
+                  </p>
+                )}
               </th>
               <th
-                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold"
+                className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[12px] font-semibold"
                 style={{ whiteSpace: 'nowrap' }}
               >
-                2022-1-1 至 2022-12-31
+                {reportFinancial && reportFinancial.company && (
+                  <p className="text-center font-barlow text-[12px] font-semibold leading-[20px] tracking-[0.01em]">
+                    {formattedPreFromDate}至{formattedPreToDate}
+                  </p>
+                )}
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">4000</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">營業收入合計</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,161,735,841
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
-                2,263,891,292
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">6300</td>
-              <td className="border border-[#dee2e6] p-[10px] text-[14px]">研究發展費用</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">182,370,170</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">163,262,283</td>
-            </tr>
-            <tr className="font-semibold">
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]"></td>
-              <td className="border border-[#dee2e6] p-[10px] text-start text-[14px]">
-                收入提撥至研發費用比例
-              </td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">8.44%</td>
-              <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">7.21%</td>
-            </tr>
+            {revenueToRD && (
+              <>
+                {' '}
+                <tr key={revenueToRD.revenue.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {revenueToRD.revenue.code}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {revenueToRD.revenue.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {revenueToRD.revenue.curPeriodAmountString}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {revenueToRD.revenue.prePeriodAmountString}
+                  </td>
+                </tr>
+                <tr key={revenueToRD.researchAndDevelopmentExpense.code}>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {revenueToRD.researchAndDevelopmentExpense.code}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-[12px]">
+                    {revenueToRD.researchAndDevelopmentExpense.name}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {revenueToRD.researchAndDevelopmentExpense.curPeriodAmountString}
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {revenueToRD.researchAndDevelopmentExpense.prePeriodAmountString}
+                  </td>
+                </tr>
+                <tr className="font-semibold">
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">&nbsp;</td>
+                  <td className="border border-[#dee2e6] p-[10px] text-start text-[12px]">
+                    收入提撥至研發費用比例
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {' '}
+                    {/* Info: 保留兩位小數 (20240724 - Anna) */}
+                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                  </td>
+                  <td className="border border-[#dee2e6] p-[10px] text-end text-[12px]">
+                    {' '}
+                    {revenueToRD.ratio.preRatio.toFixed(2)}%
+                  </td>
+                </tr>
+              </>
+            )}
           </tbody>
         </table>
         {/* Info: watermark logo (20240724 - Anna) */}
