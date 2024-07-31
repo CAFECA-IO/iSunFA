@@ -1,8 +1,8 @@
 import { SortOptions } from '@/constants/display';
 
 export enum SortOptionQuery {
-  newest = 'newest',
-  oldest = 'oldest',
+  newest = 'desc',
+  oldest = 'asc',
 }
 
 export const sortOptionQuery = {
