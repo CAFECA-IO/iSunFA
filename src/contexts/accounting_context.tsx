@@ -77,11 +77,13 @@ interface IAccountingContext {
     update: boolean
   ) => void;
   AIStatus: ProgressStatus;
+  inputDescription: string;
 
   selectedOCR: IOCR | undefined;
   selectOCRHandler: (journal: IOCR | undefined) => void;
   selectedJournal: IJournal | undefined;
   selectJournalHandler: (journal: IJournal | undefined) => void;
+  inputDescriptionHandler: (description: string) => void;
 
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
@@ -128,6 +130,8 @@ const initialAccountingContext: IAccountingContext = {
   selectOCRHandler: () => {},
   selectedJournal: undefined,
   selectJournalHandler: () => {},
+  inputDescription: '',
+  inputDescriptionHandler: () => {},
 
   invoiceId: '1',
   setInvoiceIdHandler: () => {},
@@ -206,6 +210,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [inputDescription, setInputDescription] = useState<string>('');
 
   const getAccountListHandler = (
     companyId: number,
@@ -540,13 +545,21 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // );
 
   const selectOCRHandler = useCallback(
-    (OCR: IOCR | undefined) => setSelectedOCR(OCR),
+    (OCR: IOCR | undefined) => {
+      setSelectedOCR(OCR);
+      setInputDescription('');
+    },
     [selectedOCR]
   );
 
   const selectJournalHandler = useCallback(
     (journal: IJournal | undefined) => setSelectedJournal(journal),
     [selectedJournal]
+  );
+
+  const inputDescriptionHandler = useCallback(
+    (description: string) => setInputDescription(description),
+    [inputDescription]
   );
 
   const value = useMemo(
@@ -582,6 +595,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       generateAccountTitle,
       changeVoucherAccountHandler,
       deleteOwnAccountTitle,
+      inputDescription,
+      inputDescriptionHandler,
     }),
     [
       OCRList,
@@ -605,6 +620,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectOCRHandler,
       selectedJournal,
       selectJournalHandler,
+      inputDescription,
     ]
   );
 

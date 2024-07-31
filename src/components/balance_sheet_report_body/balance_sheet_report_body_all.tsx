@@ -18,11 +18,6 @@ interface IBalanceSheetReportBodyAllProps {
   reportId: string;
 }
 
-enum ReportColumnType {
-  CURRENT = 'current',
-  PREVIOUS = 'previous',
-}
-
 const ACCOUNTINGS_WHOLE_COLUMN = [
   '資產',
   '負債及權益',
@@ -54,6 +49,12 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
+  const [curAssetLiabilityRatioLabels, setCurAssetLiabilityRatioLabels] = useStateRef<
+    Array<string>
+  >([]);
+  const [preAssetLiabilityRatioLabels, setPreAssetLiabilityRatioLabels] = useStateRef<
+    Array<string>
+  >([]);
 
   const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<number>>([]);
   const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<number>>([]);
@@ -164,26 +165,40 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
-      const curALR = gatherALRData(ReportColumnType.CURRENT);
-      const preALR = gatherALRData(ReportColumnType.PREVIOUS);
-
       const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
       const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
       const currentYear = currentDateString.year;
       const previousYear = previousDateString.year;
 
-      const { percentages: curAMR, labels: curAMRLabels } = gatherAMRData(ReportColumnType.CURRENT);
-      const { percentages: preAMR, labels: preAMRLabels } = gatherAMRData(
-        ReportColumnType.PREVIOUS
-      );
+      const curALR = reportFinancial.otherInfo.assetLiabilityRatio[currentDateString.date]
+        ?.data || [0, 0, 0];
+      const preALR = reportFinancial.otherInfo.assetLiabilityRatio[previousDateString.date]
+        ?.data || [0, 0, 0];
+      const curALRLabels = reportFinancial.otherInfo.assetLiabilityRatio[currentDateString.date]
+        ?.labels || ['', '', ''];
+      const preALRLabels = reportFinancial.otherInfo.assetLiabilityRatio[previousDateString.date]
+        ?.labels || ['', '', ''];
+
+      const curAMR = reportFinancial.otherInfo.assetMixRatio[currentDateString.date]?.data || [
+        0, 0, 0, 0, 0, 0,
+      ];
+      const curAMRLabels = reportFinancial.otherInfo.assetMixRatio[currentDateString.date]
+        ?.labels || ['', '', '', '', '', '其他'];
+      const preAMR = reportFinancial.otherInfo.assetMixRatio[previousDateString.date]?.data || [
+        0, 0, 0, 0, 0, 0,
+      ];
+      const preAMRLabels = reportFinancial.otherInfo.assetMixRatio[previousDateString.date]
+        ?.labels || ['', '', '', '', '', '其他'];
+
+      setCurAssetLiabilityRatio(curALR);
+      setPreAssetLiabilityRatio(preALR);
+      setCurAssetLiabilityRatioLabels(curALRLabels);
+      setPreAssetLiabilityRatioLabels(preALRLabels);
 
       setCurAssetMixRatio(curAMR);
       setPreAssetMixRatio(preAMR);
       setCurAssetMixLabels(curAMRLabels);
       setPreAssetMixLabels(preAMRLabels);
-
-      setCurAssetLiabilityRatio(curALR);
-      setPreAssetLiabilityRatio(preALR);
 
       setCurDate(currentDateString.date);
       setPreDate(previousDateString.date);
@@ -902,22 +917,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-xs font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-xs font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-xs font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -1198,18 +1213,14 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center space-x-10">
               <ul className="space-y-2">
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
-                  資產
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
-                  負債
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
-                  權益
-                </li>
+                {curAssetLiabilityRatioLabels.map((label, index) => (
+                  <li key={label} className="flex items-center">
+                    <span
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                    ></span>
+                    <span>{label}</span>
+                  </li>
+                ))}
               </ul>
               <PieChart data={curAssetLiabilityRatio} />
             </div>
@@ -1218,18 +1229,14 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center space-x-10">
               <ul className="space-y-2">
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#FD6F8E]"></span>
-                  資產
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#53B1FD]"></span>
-                  負債
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9B8AFB]"></span>
-                  權益
-                </li>
+                {preAssetLiabilityRatioLabels.map((label, index) => (
+                  <li key={label} className="flex items-center">
+                    <span
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                    ></span>
+                    <span>{label}</span>
+                  </li>
+                ))}
               </ul>
               <PieChart data={preAssetLiabilityRatio} />
             </div>

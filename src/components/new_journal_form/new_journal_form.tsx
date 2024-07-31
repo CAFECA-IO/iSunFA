@@ -90,7 +90,14 @@ const NewJournalForm = () => {
     confirmModalDataHandler,
   } = useGlobalCtx();
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
-  const { selectedOCR, selectOCRHandler, selectedJournal, getAIStatusHandler } = useAccountingCtx();
+  const {
+    selectedOCR,
+    selectOCRHandler,
+    selectedJournal,
+    getAIStatusHandler,
+    inputDescription: description,
+    inputDescriptionHandler
+  } = useAccountingCtx();
   const {
     trigger: getOCRResult,
     success: getSuccess,
@@ -116,7 +123,7 @@ const NewJournalForm = () => {
   const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.PAYMENT);
 
   const [inputReason, setInputReason] = useState<string>('');
-  const [inputDescription, setInputDescription] = useState<string>('');
+  const [inputDescription, setInputDescription] = useState<string>(description);
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
@@ -368,6 +375,7 @@ const NewJournalForm = () => {
     setInputEstimatedCost(0);
     // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
     selectOCRHandler(undefined);
+    inputDescriptionHandler('');
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -398,15 +406,6 @@ const NewJournalForm = () => {
       params: { companyId, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
       body: { invoice: invoiceDataToUpdate },
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      'updateSuccess',
-      updateSuccess,
-      'updateAIResult',
-      updateAIResult,
-      'updateCode',
-      updateCode
-    );
     if (
       updateSuccess &&
       updateAIResult?.resultStatus?.resultId &&
