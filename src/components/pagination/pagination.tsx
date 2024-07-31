@@ -17,6 +17,7 @@ export interface IPaginationProps {
   setCurrentPage: Dispatch<SetStateAction<number>>;
   totalPages: number;
   pagePrefix?: string;
+  paginationHandler?: (newPage: number) => void;
 }
 
 const Pagination = ({
@@ -24,6 +25,7 @@ const Pagination = ({
   setCurrentPage,
   totalPages,
   pagePrefix = 'page',
+  paginationHandler,
 }: IPaginationProps) => {
   const { t } = useTranslation('common');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -116,6 +118,9 @@ const Pagination = ({
         setCurrentPage(newPage);
         setTargetPage(newPage);
         updateUrl(newPage);
+        if (paginationHandler) {
+          paginationHandler(newPage);
+        }
       }
     },
     [currentPage, totalPages, setCurrentPage, updateUrl]
