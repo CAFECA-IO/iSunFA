@@ -535,34 +535,32 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       tax &&
       operatingIncomeCashFlow
     ) {
-      curDepreciateAndAmortize = salesDepreciation.curPeriodAmount +
-      salesAmortization.curPeriodAmount +
-      manageDepreciation.curPeriodAmount +
-      manageAmortization.curPeriodAmount +
-      rdDepreciation.curPeriodAmount;
+      curDepreciateAndAmortize =
+        salesDepreciation.curPeriodAmount +
+        salesAmortization.curPeriodAmount +
+        manageDepreciation.curPeriodAmount +
+        manageAmortization.curPeriodAmount +
+        rdDepreciation.curPeriodAmount;
 
-      preDepreciateAndAmortize = salesDepreciation.prePeriodAmount +
-      salesAmortization.prePeriodAmount +
-      manageDepreciation.prePeriodAmount +
-      manageAmortization.prePeriodAmount +
-      rdDepreciation.prePeriodAmount;
+      preDepreciateAndAmortize =
+        salesDepreciation.prePeriodAmount +
+        salesAmortization.prePeriodAmount +
+        manageDepreciation.prePeriodAmount +
+        manageAmortization.prePeriodAmount +
+        rdDepreciation.prePeriodAmount;
 
       amortizationDepreciation[currentYear] = curDepreciateAndAmortize;
       amortizationDepreciation[currentYear - 1] = preDepreciateAndAmortize;
 
       ratio[currentYear] =
         operatingIncomeCashFlow.curPeriodAmount !== 0
-          ? (beforeIncomeTax.curPeriodAmount +
-              curDepreciateAndAmortize -
-              tax.curPeriodAmount) /
+          ? (beforeIncomeTax.curPeriodAmount + curDepreciateAndAmortize - tax.curPeriodAmount) /
             operatingIncomeCashFlow.curPeriodAmount
           : 0;
 
       ratio[currentYear - 1] =
         operatingIncomeCashFlow.prePeriodAmount !== 0
-          ? (beforeIncomeTax.prePeriodAmount +
-              preDepreciateAndAmortize -
-              tax.prePeriodAmount) /
+          ? (beforeIncomeTax.prePeriodAmount + preDepreciateAndAmortize - tax.prePeriodAmount) /
             operatingIncomeCashFlow.prePeriodAmount
           : 0;
     }
@@ -606,17 +604,18 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const rdDepreciation = accountMap.get('6324');
     const tax = accountMap.get('A33500');
     const operatingIncomeCashFlow = accountMap.get('AAAA');
-    const { ratio, lineChartDataForRatio, amortizationDepreciation } = this.calculateOperatingStabilizedRatio(
-      currentYear,
-      beforeIncomeTax,
-      salesDepreciation,
-      salesAmortization,
-      manageDepreciation,
-      manageAmortization,
-      rdDepreciation,
-      tax,
-      operatingIncomeCashFlow
-    );
+    const { ratio, lineChartDataForRatio, amortizationDepreciation } =
+      this.calculateOperatingStabilizedRatio(
+        currentYear,
+        beforeIncomeTax,
+        salesDepreciation,
+        salesAmortization,
+        manageDepreciation,
+        manageAmortization,
+        rdDepreciation,
+        tax,
+        operatingIncomeCashFlow
+      );
 
     return {
       operatingStabilized: {

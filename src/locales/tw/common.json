@@ -396,11 +396,13 @@
     "FEE": "費用",
     "BANK_ACCOUNT": "銀行帳戶",
     "AT_ONCE": "立刻",
-    "INSTALLMENT": "分期付款:",
+    "ATONCE": "立即",
+    "INSTALLMENT": "分期付款",
     "TIMES": "次數",
     "PAYMENT_STATE": "付款狀態",
     "UNPAID": "未付",
     "PARTIAL_PAID": "部分付款:",
+    "PARTIAL": "部分付款",
     "PAID": "已經付款",
     "CLEAR_ALL": "全部清除",
     "ADDED_JOURNAL": "新增日記帳",
@@ -417,7 +419,11 @@
     "BANK_OF_TAIWAN": "004 台灣銀行",
     "LAND_BANK_OF_TAIWAN": "005 土地銀行",
     "TAIWAN_COOPERATIVE_BANK": "006 合庫銀行",
-    "FIRST_COMMERCIAL_BANK": "007 第一銀行"
+    "FIRST_COMMERCIAL_BANK": "007 第一銀行",
+    "EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT": "每行包含一個會計科目",
+    "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "每行都包含借方或貸方",
+    "DEBITS_AND_CREDITS_BALANCE_OUT": "借方和貸方平衡",
+    "ACCOUNT_TITLE": "科目名稱"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -466,6 +472,7 @@
     "ALL": "全部",
     "PAYMENT": "付款",
     "RECEIVING": "收款",
+    "INCOME": "收入",
     "TRANSFER": "轉帳"
   },
   "DASHBOARD": {

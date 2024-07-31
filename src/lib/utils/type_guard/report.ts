@@ -55,31 +55,47 @@ export function isBalanceSheetOtherInfo(obj: unknown): obj is BalanceSheetOtherI
 
   const maybeObj = obj as Partial<BalanceSheetOtherInfo>;
 
-  const isValidAssetLiabilityRatio = maybeObj.assetLiabilityRatio && typeof maybeObj.assetLiabilityRatio === 'object' &&
-    Object.values(maybeObj.assetLiabilityRatio).every((dateInfo) =>
-      Array.isArray(dateInfo.data) &&
-      dateInfo.data.every((item) => typeof item === 'number') &&
-      Array.isArray(dateInfo.labels) &&
-      dateInfo.labels.every((label) => typeof label === 'string'));
+  const isValidAssetLiabilityRatio =
+    maybeObj.assetLiabilityRatio &&
+    typeof maybeObj.assetLiabilityRatio === 'object' &&
+    Object.values(maybeObj.assetLiabilityRatio).every(
+      (dateInfo) =>
+        Array.isArray(dateInfo.data) &&
+        dateInfo.data.every((item) => typeof item === 'number') &&
+        Array.isArray(dateInfo.labels) &&
+        dateInfo.labels.every((label) => typeof label === 'string')
+    );
 
-  const isValidAssetMixRatio = maybeObj.assetMixRatio && typeof maybeObj.assetMixRatio === 'object' &&
-    Object.values(maybeObj.assetMixRatio).every((dateInfo) =>
-      Array.isArray(dateInfo.data) &&
-      dateInfo.data.every((item) => typeof item === 'number') &&
-      Array.isArray(dateInfo.labels) &&
-      dateInfo.labels.every((label) => typeof label === 'string'));
+  const isValidAssetMixRatio =
+    maybeObj.assetMixRatio &&
+    typeof maybeObj.assetMixRatio === 'object' &&
+    Object.values(maybeObj.assetMixRatio).every(
+      (dateInfo) =>
+        Array.isArray(dateInfo.data) &&
+        dateInfo.data.every((item) => typeof item === 'number') &&
+        Array.isArray(dateInfo.labels) &&
+        dateInfo.labels.every((label) => typeof label === 'string')
+    );
 
-  const isValidDso = maybeObj.dso !== undefined &&
+  const isValidDso =
+    maybeObj.dso !== undefined &&
     typeof maybeObj.dso === 'object' &&
     typeof maybeObj.dso.curDso === 'number' &&
     typeof maybeObj.dso.preDso === 'number';
 
-  const isValidInventoryTurnoverDays = maybeObj.inventoryTurnoverDays !== undefined &&
+  const isValidInventoryTurnoverDays =
+    maybeObj.inventoryTurnoverDays !== undefined &&
     typeof maybeObj.inventoryTurnoverDays === 'object' &&
     typeof maybeObj.inventoryTurnoverDays.curInventoryTurnoverDays === 'number' &&
     typeof maybeObj.inventoryTurnoverDays.preInventoryTurnoverDays === 'number';
 
-  return (isValidAssetLiabilityRatio && isValidAssetMixRatio && isValidDso && isValidInventoryTurnoverDays) || false;
+  return (
+    (isValidAssetLiabilityRatio &&
+      isValidAssetMixRatio &&
+      isValidDso &&
+      isValidInventoryTurnoverDays) ||
+    false
+  );
 }
 
 export function isIncomeStatementOtherInfo(obj: unknown): obj is IncomeStatementOtherInfo {
@@ -142,12 +158,14 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
   const isValidStrategyInvest =
     maybeObj.strategyInvest &&
     typeof maybeObj.strategyInvest === 'object' &&
-    Object.values(maybeObj.strategyInvest).every((yearInfo) =>
-      typeof yearInfo === 'object' &&
-      Array.isArray(yearInfo.data) &&
-      yearInfo.data.every((num) => typeof num === 'number') &&
-      Array.isArray(yearInfo.labels) &&
-      yearInfo.labels.every((label) => typeof label === 'string'));
+    Object.values(maybeObj.strategyInvest).every(
+      (yearInfo) =>
+        typeof yearInfo === 'object' &&
+        Array.isArray(yearInfo.data) &&
+        yearInfo.data.every((num) => typeof num === 'number') &&
+        Array.isArray(yearInfo.labels) &&
+        yearInfo.labels.every((label) => typeof label === 'string')
+    );
 
   const isValidOurThoughts =
     maybeObj.ourThoughts &&
@@ -157,12 +175,14 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
   const isValidFreeCash =
     maybeObj.freeCash &&
     typeof maybeObj.freeCash === 'object' &&
-    Object.values(maybeObj.freeCash).every((yearInfo) =>
-      typeof yearInfo === 'object' &&
-      typeof yearInfo.operatingCashFlow === 'number' &&
-      typeof yearInfo.ppe === 'number' &&
-      typeof yearInfo.intangibleAsset === 'number' &&
-      typeof yearInfo.freeCash === 'number');
+    Object.values(maybeObj.freeCash).every(
+      (yearInfo) =>
+        typeof yearInfo === 'object' &&
+        typeof yearInfo.operatingCashFlow === 'number' &&
+        typeof yearInfo.ppe === 'number' &&
+        typeof yearInfo.intangibleAsset === 'number' &&
+        typeof yearInfo.freeCash === 'number'
+    );
 
   const isValidThirdTitle = maybeObj.thirdTitle && typeof maybeObj.thirdTitle === 'string';
   const isValidFourthTitle = maybeObj.fourthTitle && typeof maybeObj.fourthTitle === 'string';
@@ -170,13 +190,14 @@ export function isCashFlowStatementOtherInfo(obj: unknown): obj is CashFlowState
     maybeObj.fourPointOneTitle && typeof maybeObj.fourPointOneTitle === 'string';
 
   return (
-    isValidOperatingStabilized &&
-    isValidLineChartDataForRatio &&
-    isValidStrategyInvest &&
-    isValidOurThoughts &&
-    isValidFreeCash &&
-    isValidThirdTitle &&
-    isValidFourthTitle &&
-    isValidFourPointOneTitle
-  ) || false;
+    (isValidOperatingStabilized &&
+      isValidLineChartDataForRatio &&
+      isValidStrategyInvest &&
+      isValidOurThoughts &&
+      isValidFreeCash &&
+      isValidThirdTitle &&
+      isValidFourthTitle &&
+      isValidFourPointOneTitle) ||
+    false
+  );
 }

@@ -396,11 +396,13 @@
     "FEE": "Fee",
     "BANK_ACCOUNT": "Bank Account",
     "AT_ONCE": "At Once",
-    "INSTALLMENT": "Installment:",
+    "ATONCE": "At Once",
+    "INSTALLMENT": "Installment",
     "TIMES": "Times",
     "PAYMENT_STATE": "Payment State",
     "UNPAID": "Unpaid",
     "PARTIAL_PAID": "Partial Paid:",
+    "PARTIAL": "Partial",
     "PAID": "Paid",
     "CLEAR_ALL": "Clear all",
     "ADDED_JOURNAL": "Added Journal",
@@ -417,7 +419,11 @@
     "BANK_OF_TAIWAN": "004 Bank of Taiwan",
     "LAND_BANK_OF_TAIWAN": "005 Land Bank of Taiwan",
     "TAIWAN_COOPERATIVE_BANK": "006 Taiwan Cooperative Bank",
-    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank"
+    "FIRST_COMMERCIAL_BANK": "007 First Commercial Bank",
+    "EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT": "Each row includes an accounting account.",
+    "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "Each row includes a debit or credit.",
+    "DEBITS_AND_CREDITS_BALANCE_OUT": "Debits and credits balance out.",
+    "ACCOUNT_TITLE": "Account Title"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -466,6 +472,7 @@
     "ALL": "All",
     "PAYMENT": "Payment",
     "RECEIVING": "Receiving",
+    "INCOME": "Income",
     "TRANSFER": "Transfer"
   },
   "DASHBOARD": {
