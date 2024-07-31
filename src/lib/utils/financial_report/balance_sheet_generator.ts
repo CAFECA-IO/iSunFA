@@ -60,8 +60,8 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getAmount(account: IAccountReadyForFrontend) {
-    const cur = account.curPeriodAmount === 0 ? 1 : Math.abs(account.curPeriodAmount);
-    const pre = account.prePeriodAmount === 0 ? 1 : Math.abs(account.prePeriodAmount);
+    const cur = Math.abs(account.curPeriodAmount);
+    const pre = Math.abs(account.prePeriodAmount);
 
     return {
       cur,
@@ -71,9 +71,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
   static calculateAssetLiabilityRatio(asset: number, liability: number, equity: number) {
     const total = asset + liability + equity;
-    let assetPercentage = Math.round((asset / total) * 100);
-    let liabilityPercentage = Math.round((liability / total) * 100);
-    let equityPercentage = Math.round((equity / total) * 100);
+    let assetPercentage = total === 0 ? 0 : Math.round((asset / total) * 100);
+    let liabilityPercentage = total === 0 ? 0 : Math.round((liability / total) * 100);
+    let equityPercentage = total === 0 ? 0 : Math.round((equity / total) * 100);
 
     const surplus = 100 - (assetPercentage + liabilityPercentage + equityPercentage);
 
