@@ -43,12 +43,7 @@ function ContactForm() {
     code: emailCode,
     success: enmailSuccess,
   } = APIHandler<void>(
-    APIName.EMAIL,
-    {
-      header: { 'Content-Type': 'application/json; charset=UTF-8' },
-    },
-    false,
-    false
+    APIName.EMAIL
   );
 
   // Info: (20230731 - Shirley) 送出失敗事件處理
@@ -94,7 +89,7 @@ function ContactForm() {
     //   },
     // });
 
-    email({ body: emailData });
+    email({ header: { 'Content-Type': 'application/json; charset=UTF-8' }, body: emailData });
     // const result = await res.json();
 
     // const { success } = result;

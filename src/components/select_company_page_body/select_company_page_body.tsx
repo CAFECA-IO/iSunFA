@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
-import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -37,7 +37,7 @@ const SelectCompanyPageBody = () => {
     data: companyAndRoleList,
     success: companyAndRoleListSuccess,
     isLoading: iscompanyAndRoleListLoading,
-  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST, {}, false, false);
+  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST);
 
   const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
@@ -66,10 +66,10 @@ const SelectCompanyPageBody = () => {
     await selectCompany(selectedCompany);
   };
 
-  useEffect(() => {
-    // Info: (20240730 - Julian) 一進入本頁，先清除已選擇的公司
-    selectCompany(null);
-  }, []);
+  // useEffect(() => {
+  //   // Info: (20240730 - Julian) 一進入本頁，先清除已選擇的公司
+  //   selectCompany(null);
+  // }, []);
 
   useEffect(() => {
     if (successSelectCompany === false) {
@@ -119,7 +119,7 @@ const SelectCompanyPageBody = () => {
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
               alt={companyAndRole.company.name}
-              src={selectedCompany?.imageId ?? DEFAULT_AVATAR_URL}
+              src={companyAndRole.company?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
               width={20}
               height={20}
             />
@@ -189,12 +189,13 @@ const SelectCompanyPageBody = () => {
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
           <div className="relative flex w-200px items-center justify-center">
-            <div className="h-200px w-200px overflow-hidden rounded-full">
+            <div className="h-200px w-200px overflow-hidden">
               <Image
                 alt="avatar"
-                src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
-                width={200}
-                height={200}
+                src={userAuth?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+                fill
+                style={{ objectFit: 'cover' }}
+                className="rounded-full"
               />
             </div>
 

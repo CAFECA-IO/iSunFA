@@ -38,10 +38,7 @@ const Operations = ({
   const { selectJournalHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { trigger: getJournalById } = APIHandler<IJournal>(
-    APIName.JOURNAL_GET_BY_ID,
-    {},
-    false,
-    false
+    APIName.JOURNAL_GET_BY_ID
   );
 
   const editJournalHandler = async () => {

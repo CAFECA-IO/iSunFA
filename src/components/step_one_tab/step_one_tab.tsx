@@ -15,7 +15,6 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const StepOneTab = ({
   inputDescription,
@@ -33,10 +32,10 @@ const StepOneTab = ({
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IOCR[]>(OCRList);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE, {}, false, false);
+  const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE);
 
   useEffect(() => {
-    const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+    const companyId = selectedCompany?.id;
     updateOCRListHandler(companyId, true);
 
     return () => updateOCRListHandler(companyId, false);

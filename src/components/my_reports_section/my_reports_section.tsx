@@ -31,13 +31,13 @@ import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
@@ -58,9 +58,7 @@ const MyReportsSection = () => {
   const [pendingCurrentPage, setPendingCurrentPage] = useState(
     pending ? +pending : DEFAULT_PAGE_NUMBER
   );
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>(
-    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
-  );
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
 
   const [historyPeriod, setHistoryPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
@@ -69,9 +67,7 @@ const MyReportsSection = () => {
   const [historyCurrentPage, setHistoryCurrentPage] = useState(
     history ? +history : DEFAULT_PAGE_NUMBER
   );
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>(
-    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
-  );
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
 
   const {
     trigger: fetchPendingReports,
@@ -79,18 +75,22 @@ const MyReportsSection = () => {
     code: listPendingCode,
     success: listPendingSuccess,
     isLoading: isPendingDataLoading,
-  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: {
-      sortOrder: sortOptionQuery[filteredPendingSort],
-      startDateInSecond:
-        pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
-      endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
-      searchQuery: searchPendingQuery,
-      targetPage: pendingCurrentPage,
-      pageSize: LIMIT_FOR_REPORT_PAGE,
+  } = APIHandler<IPaginatedPendingReportItem>(
+    APIName.REPORT_LIST_PENDING,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: {
+        sortOrder: sortOptionQuery[filteredPendingSort],
+        startDateInSecond:
+          pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
+        endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
+        searchQuery: searchPendingQuery,
+        targetPage: pendingCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
     },
-  });
+    hasCompanyId
+  );
 
   const {
     trigger: fetchGeneratedReports,
@@ -98,18 +98,22 @@ const MyReportsSection = () => {
     code: listGeneratedCode,
     success: listGeneratedSuccess,
     isLoading: isHistoryDataLoading,
-  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: {
-      sortOrder: sortOptionQuery[filteredHistorySort],
-      startDateInSecond:
-        historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
-      endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
-      searchQuery: searchHistoryQuery,
-      targetPage: historyCurrentPage,
-      pageSize: LIMIT_FOR_REPORT_PAGE,
+  } = APIHandler<IPaginatedGeneratedReportItem>(
+    APIName.REPORT_LIST_GENERATED,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: {
+        sortOrder: sortOptionQuery[filteredHistorySort],
+        startDateInSecond:
+          historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
+        endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
+        searchQuery: searchHistoryQuery,
+        targetPage: historyCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
     },
-  });
+    hasCompanyId
+  );
   const pendingTotalPages =
     pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
   const historyTotalPages =
@@ -159,6 +163,7 @@ const MyReportsSection = () => {
       pendingPeriod?: IDatePeriod;
       searchPendingQuery?: string;
     }) => {
+      if (!hasCompanyId) return;
       const {
         currentPage: page,
         filteredPendingSort: sortOrder,
@@ -168,7 +173,7 @@ const MyReportsSection = () => {
 
       await fetchPendingReports({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           sortOrder: sortOptionQuery[sortOrder ?? filteredPendingSort],
@@ -197,6 +202,7 @@ const MyReportsSection = () => {
       historyPeriod?: IDatePeriod;
       searchHistoryQuery?: string;
     }) => {
+      if (!hasCompanyId) return;
       const {
         currentPage: page,
         filteredHistorySort: sortOrder,
@@ -206,7 +212,7 @@ const MyReportsSection = () => {
 
       await fetchGeneratedReports({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           sortOrder: sortOptionQuery[sortOrder ?? filteredHistorySort],
@@ -235,7 +241,6 @@ const MyReportsSection = () => {
     });
   };
 
-  /* eslint-disable no-console */
   const handleHistoryDatePickerClose = async (start: number, end: number) => {
     setHistoryPeriod({ startTimeStamp: start, endTimeStamp: end });
     await getGeneratedReports({

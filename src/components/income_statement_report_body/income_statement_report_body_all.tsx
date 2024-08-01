@@ -2,7 +2,7 @@
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
@@ -16,31 +16,39 @@ interface IIncomeStatementReportBodyAllProps {
 }
 
 const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  } = APIHandler<FinancialReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+      },
     },
-  });
+    hasCompanyId
+  );
 
-  // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial', reportFinancial);
-
-  if (getReportFinancialIsLoading) {
+  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess || !reportFinancial) {
-    return <div>Error {getReportFinancialCode}</div>;
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueAndExpenseRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueToRD')
+  ) {
+    return <div>錯誤 {getReportFinancialCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
@@ -1185,7 +1193,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   );
 
   return (
-    <div className="scale-80 mx-auto w-a4-width origin-top overflow-x-auto md:scale-100 lg:scale-100">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       <hr className="break-before-page" />
       {page2}

@@ -25,7 +25,6 @@ import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -39,7 +38,7 @@ const ConfirmModal = ({
   confirmData,
 }: IConfirmModalProps) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
   const {
     AIStatus,
     getAIStatusHandler,
@@ -86,38 +85,24 @@ const ConfirmModal = ({
 
   const [journal, setJournal] = useState<IJournal | null>(null);
 
-  // Info: (20240527 - Julian) Get journal by id (上半部資料)
-  const { trigger: getJournalById } = APIHandler<IJournal>(
-    APIName.JOURNAL_GET_BY_ID,
-    {},
-    false,
-    false
-  );
-
   // Info: (20240527 - Julian) Get AI 生成的傳票
   const {
     trigger: getAIResult,
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT);
+  // Info: (20240527 - Julian) Get journal by id (上半部資料)
+  const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
   // Info: (20240527 - Julian) 建立傳票
   const { trigger: createVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
-    APIName.VOUCHER_CREATE,
-    {},
-    false,
-    false
+    APIName.VOUCHER_CREATE
   );
-
   const { trigger: updateVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
-    APIName.VOUCHER_UPDATE,
-    {},
-    false,
-    false
+    APIName.VOUCHER_UPDATE
   );
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   // ToDo: (20240711 - Julian) Check if AI result is successful
@@ -255,20 +240,20 @@ const ConfirmModal = ({
   const confirmHandler = async () => {
     const newLineItems = convertToLineItems();
 
-    if (journal && journal.invoice && newLineItems) {
+    if (hasCompanyId && journal && journal.invoice && newLineItems) {
       const voucher: IVoucherDataForSavingToDB = {
         journalId: journal.id,
         lineItems: newLineItems,
       };
       if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
         const updateRes = await updateVoucher({
-          params: { companyId },
+          params: { companyId: selectedCompany.id },
           body: { voucher },
         });
         handleAPIResponse(updateRes);
       } else {
         const createRes = await createVoucher({
-          params: { companyId },
+          params: { companyId: selectedCompany.id },
           body: { voucher },
         });
         handleAPIResponse(createRes);
@@ -277,12 +262,13 @@ const ConfirmModal = ({
   };
 
   const openHandler = async () => {
+    if (!hasCompanyId || !journalId) return;
     const {
       success: getJournalSuccess,
       data,
       code: getJournalCode,
     } = await getJournalById({
-      params: { companyId, journalId },
+      params: { companyId: selectedCompany.id, journalId },
     });
     if (data && getJournalSuccess) {
       setJournal(data);
@@ -320,7 +306,7 @@ const ConfirmModal = ({
   };
 
   useEffect(() => {
-    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    if (!isModalVisible || !hasCompanyId) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     openHandler();
     // Info: (20240529 - Julian) 清空 accountingVoucher
     resetVoucherHandler();
@@ -328,22 +314,22 @@ const ConfirmModal = ({
     setIsAILoading(true);
 
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
+    getAIStatusHandler({ companyId: selectedCompany.id!, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
-    if (AIStatus === ProgressStatus.SUCCESS) {
+    if (hasCompanyId && AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
-          companyId,
+          companyId: selectedCompany.id!,
           resultId: askAIId,
         },
       });
       setIsAILoading(false);
     }
     return () => getAIStatusHandler(undefined, false);
-  }, [AIStatus]);
+  }, [hasCompanyId, AIStatus]);
 
   useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;

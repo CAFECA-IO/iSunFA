@@ -17,7 +17,6 @@ import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const FinancialReportSection = () => {
   const { t } = useTranslation('common');
@@ -30,16 +29,7 @@ const FinancialReportSection = () => {
     code: generatedCode,
     isLoading: generatedLoading,
     success: generatedSuccess,
-  } = APIHandler<IAccountResultStatus>(
-    APIName.REPORT_GENERATE_FINANCIAL,
-    {
-      params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      },
-    },
-    false,
-    false
-  );
+  } = APIHandler<IAccountResultStatus>(APIName.REPORT_GENERATE_FINANCIAL);
 
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
@@ -112,9 +102,14 @@ const FinancialReportSection = () => {
       financialOrAnalysis: 'financial',
     };
 
-    generateFinancialReport({
-      body,
-    });
+    if (selectedCompany) {
+      generateFinancialReport({
+        params: {
+          companyId: selectedCompany.id,
+        },
+        body,
+      });
+    }
   };
 
   useEffect(() => {

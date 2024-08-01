@@ -53,7 +53,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     success: createCompanySuccess,
     error: createCompanyError,
     code: createCompanyCode,
-  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD, {}, false, false);
+  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD);
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
@@ -68,7 +68,9 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setNameValue(e.target.value);
   };
   const changeRegistrationNumberHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRegistrationNumberValue(e.target.value);
+    // Info: (20240801 - Julian) 只允許輸入數字
+    const valueOnlyNumber = e.target.value.replace(/[^0-9]/g, '');
+    setRegistrationNumberValue(valueOnlyNumber);
   };
 
   const resetValues = () => {

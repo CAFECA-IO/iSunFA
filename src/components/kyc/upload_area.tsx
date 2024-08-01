@@ -18,7 +18,6 @@ import {
 import { loadFileFromLocalStorage, deleteFileFromLocalStorage } from '@/lib/utils/common';
 import { ToastType } from '@/interfaces/toastify';
 import { IFile } from '@/interfaces/file';
-import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { UploadType } from '@/constants/file';
 
 const UploadArea = ({
@@ -31,15 +30,16 @@ const UploadArea = ({
   onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isError, setIsError] = useState<boolean>(false);
   const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const readerRef = useRef<FileReader | null>(null);
-  const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
-  const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE, {}, false, false);
+  const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
+  const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
   const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
   const {
@@ -47,7 +47,7 @@ const UploadArea = ({
     data: getData,
     success: getSuccess,
     code: getCode,
-  } = APIHandler<IFile>(APIName.FILE_GET, {}, false, false);
+  } = APIHandler<IFile>(APIName.FILE_GET);
 
   const handleError = useCallback(
     (title: string, content: string) => {
@@ -75,14 +75,15 @@ const UploadArea = ({
   };
 
   const handleFileUpload = async (file: File) => {
-    const selectedCompanyIdStr = String(selectedCompany?.id) ?? NON_EXISTING_COMPANY_ID;
+    if (!hasCompanyId) return;
+    const selectedCompanyIdStr = String(selectedCompany?.id);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', UploadType.KYC);
     formData.append('targetId', selectedCompanyIdStr);
     const { success, code, data } = await uploadFileAPI({
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       body: formData,
     });
@@ -163,7 +164,12 @@ const UploadArea = ({
     event.preventDefault();
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-      saveFileToLocalStorage(file);
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png']; // Info: (20240801 - tzuhan) 'image/bmp', 'image/tiff' is not supported
+      if (validTypes.includes(file.type)) {
+        saveFileToLocalStorage(file);
+      } else {
+        handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.ONLY_PDF_JPEG_PNG_SUPPORTED'));
+      }
     }
   };
 
@@ -203,6 +209,7 @@ const UploadArea = ({
   };
 
   const deleteClickHandler = async () => {
+    if (!hasCompanyId) return;
     if (readerRef.current) {
       readerRef.current.abort();
     }
@@ -210,7 +217,7 @@ const UploadArea = ({
     if (uploadedFileId) {
       const result = await deleteFileAPI({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
           fileId: uploadedFileId,
         },
       });
@@ -230,6 +237,7 @@ const UploadArea = ({
   };
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     try {
       const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
       setUploadedFile(file);
@@ -238,7 +246,7 @@ const UploadArea = ({
       if (id && file) {
         getFile({
           params: {
-            companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+            companyId: selectedCompany?.id,
             fileId: id,
           },
         });
@@ -342,10 +350,10 @@ const UploadArea = ({
           <input
             id={type}
             name={type}
+            accept="application/pdf, image/jpeg, image/png"
             type="file"
             className="hidden"
             onChange={handleFileChange}
-            disabled={uploadedFile !== undefined}
           />
         </label>
       )}
