@@ -2,7 +2,7 @@ import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { DEFAULT_COMPANY_IMAGE_URL } from '@/constants/display';
 import { RoleName } from '@/constants/role_name';
 import { UploadType } from '@/constants/file';
@@ -216,6 +216,7 @@ const CompanyInfoPageBody = () => {
             <div className="flex w-full justify-between lg:w-fit">
               <button
                 type="button"
+                disabled={!isEditNameAllowed}
                 className="group relative flex h-64px w-64px items-center justify-center overflow-hidden rounded-full lg:h-fit lg:w-fit"
                 onClick={updateImageClickHandler}
               >
@@ -224,9 +225,12 @@ const CompanyInfoPageBody = () => {
                   alt="company_image"
                   width={100}
                   height={100}
-                  className="group-hover:brightness-50"
+                  className="group-hover:brightness-50 group-disabled:brightness-100"
                 />
-                <FiEdit className="absolute hidden text-white group-hover:block" size={30} />
+                <FiEdit
+                  className="absolute hidden text-white group-hover:block group-disabled:hidden"
+                  size={30}
+                />
               </button>
               <div className="my-auto flex flex-col flex-wrap content-center self-stretch lg:hidden">
                 <div className="self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:self-start lg:font-semibold">
@@ -429,6 +433,7 @@ const CompanyInfoPageBody = () => {
               <Button
                 onClick={goKYCClickHandler}
                 variant={'secondaryOutline'}
+                disabled={selectedCompany?.id === FREE_COMPANY_ID}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
                 <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>

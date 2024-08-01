@@ -11,7 +11,11 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import {
+  DEFAULT_AVATAR_URL,
+  DEFAULT_COMPANY_IMAGE_URL,
+  DEFAULT_DISPLAYED_USER_NAME,
+} from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
@@ -445,7 +449,7 @@ const NavBar = () => {
       {/* ToDo: (20240516 - Julian) icon */}
       <Image
         alt={`${selectedCompany?.name}_icon`}
-        src={selectedCompany.imageId ?? DEFAULT_AVATAR_URL}
+        src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
         width={16}
         height={16}
         className="rounded-full"
