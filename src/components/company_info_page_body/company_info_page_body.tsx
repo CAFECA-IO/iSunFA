@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiEdit } from 'react-icons/fi';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation('common');

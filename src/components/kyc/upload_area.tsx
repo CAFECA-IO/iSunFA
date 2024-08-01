@@ -348,9 +348,9 @@ const UploadArea = ({
           <p className="text-center text-lightGray4">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
 
           <input
-            id="journal-upload-area"
-            name="journal-upload-area"
-            accept="image/*"
+            id={type}
+            name={type}
+            accept="application/pdf, image/jpeg, image/png"
             type="file"
             className="hidden"
             onChange={handleFileChange}

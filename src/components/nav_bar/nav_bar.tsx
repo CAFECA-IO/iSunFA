@@ -326,7 +326,7 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           onClick={companyChangeClickHandler}
-          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5`} // Info: (20240801 - Tzuhan) remove disabled: ${selectedCompany ? '' : 'pointer-events-none opacity-50'}
+          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${selectedCompany ? '' : 'pointer-events-none opacity-50'}`}
         >
           <div className="my-auto flex items-center justify-center">
             <svg
