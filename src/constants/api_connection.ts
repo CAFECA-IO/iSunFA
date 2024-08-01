@@ -78,7 +78,6 @@ export enum APIName {
   UPDATE_ACCOUNT_INFO_BY_ID = 'UPDATE_ACCOUNT_INFO_BY_ID',
   DELETE_ACCOUNT_BY_ID = 'DELETE_ACCOUNT_BY_ID',
   TRANSFER_OWNER = 'TRANSFER_OWNER',
-  CREATE_FILE = 'CREATE_FILE',
 }
 
 export enum APIPath {
@@ -140,7 +139,6 @@ export enum APIPath {
   UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   DELETE_ACCOUNT_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   TRANSFER_OWNER = `${apiPrefix}/company/:companyId/transfer_owner`,
-  CREATE_FILE = `${apiPrefix}/company/:companyId/file`,
 }
 const createConfig = ({
   name,
@@ -456,10 +454,5 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRANSFER_OWNER,
     method: HttpMethod.PUT,
     path: APIPath.TRANSFER_OWNER,
-  }),
-  [APIName.CREATE_FILE]: createConfig({
-    name: APIName.CREATE_FILE,
-    method: HttpMethod.POST,
-    path: APIPath.CREATE_FILE,
   }),
 };

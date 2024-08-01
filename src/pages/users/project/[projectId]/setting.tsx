@@ -256,10 +256,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     height={150}
                     className="group-hover:brightness-50"
                   />
-                  <FiEdit
-                    className="absolute hidden text-text-brand-primary-lv2 group-hover:block"
-                    size={40}
-                  />
+                  <FiEdit className="absolute hidden text-white group-hover:block" size={40} />
                 </button>
                 <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                   {/* Info: (20240617 - Julian) Project Name */}

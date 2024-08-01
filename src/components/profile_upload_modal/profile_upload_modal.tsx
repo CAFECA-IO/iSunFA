@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
@@ -8,9 +9,10 @@ import { APIName } from '@/constants/api_connection';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { MessageType } from '@/interfaces/message_modal';
 import { UploadType } from '@/constants/file';
+import { IFile } from '@/interfaces/file';
 
 interface IProfileUploadModalProps {
   isModalVisible: boolean;
@@ -24,7 +26,9 @@ const ProfileUploadModal = ({
   uploadType,
 }: IProfileUploadModalProps) => {
   const { t } = useTranslation('common');
+  const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
@@ -34,11 +38,7 @@ const ProfileUploadModal = ({
     success: uploadCompanySuccess,
     data: uploadCompanyData,
     code: uploadCompanyCode,
-  } = APIHandler<{
-    id: number;
-    size: number;
-    existed: boolean;
-  }>(APIName.CREATE_FILE, {}, false, false);
+  } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
 
   const modalTitle =
     uploadType === UploadType.USER
@@ -59,8 +59,16 @@ const ProfileUploadModal = ({
   useEffect(() => {
     if (!isModalVisible) {
       setUploadedImage(null);
+      setUploadSuccess(false);
     }
   }, [isModalVisible]);
+
+  useEffect(() => {
+    if (uploadSuccess) {
+      modalVisibilityHandler();
+      router.reload();
+    }
+  }, [uploadSuccess]);
 
   const cancelHandler = () => {
     setUploadedImage(null);
@@ -92,11 +100,12 @@ const ProfileUploadModal = ({
   };
 
   const saveImage = async () => {
-    // ToDo: (20240618 - Julian) Save image to server
+    const companyId = selectedCompany?.id ?? NON_EXISTING_COMPANY_ID;
+
     const formData = new FormData();
     formData.append('file', uploadedImage as File);
     formData.append('type', UploadType.COMPANY);
-    formData.append('targetId', selectedCompany?.id.toString() ?? FREE_COMPANY_ID.toString());
+    formData.append('targetId', companyId.toString());
 
     await uploadCompanyImage({
       params: {
@@ -119,7 +128,7 @@ const ProfileUploadModal = ({
 
     if (uploadCompanySuccess && uploadCompanyData) {
       setUploadedImage(null);
-      modalVisibilityHandler();
+      setUploadSuccess(true);
     }
   };
 

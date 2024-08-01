@@ -226,10 +226,7 @@ const CompanyInfoPageBody = () => {
                   height={100}
                   className="group-hover:brightness-50"
                 />
-                <FiEdit
-                  className="absolute hidden text-text-brand-primary-lv2 group-hover:block"
-                  size={40}
-                />
+                <FiEdit className="absolute hidden text-white group-hover:block" size={30} />
               </button>
               <div className="my-auto flex flex-col flex-wrap content-center self-stretch lg:hidden">
                 <div className="self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:self-start lg:font-semibold">

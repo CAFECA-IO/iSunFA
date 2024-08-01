@@ -119,7 +119,7 @@ const SelectCompanyPageBody = () => {
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
               alt={companyAndRole.company.name}
-              src={selectedCompany?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+              src={companyAndRole.company?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
               width={20}
               height={20}
             />
