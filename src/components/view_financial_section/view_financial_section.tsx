@@ -319,20 +319,10 @@ const ViewFinancialSection = ({
       </div>
 
       <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-transparent lg:mx-0">
-        {/* <iframe
-          ref={iframeRef}
-          src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full ${isLoading ? `w-0` : `min-w-[320px]`} overflow-x-auto border-none`}
-          title="Financial Report"
-          onLoad={handleIframeLoad}
-        /> */}
-
         <iframe
           ref={iframeRef}
           src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full origin-top-left ${
-            isLoading ? 'scale-0' : 'scale-[0.9] md:scale-100'
-          } overflow-x-auto border-none bg-white transition-transform duration-300`}
+          className={`h-full w-full origin-top-left scale-[0.9] overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
           title="Financial Report"
           onLoad={handleIframeLoad}
         />
