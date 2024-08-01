@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { FileFolder } from '@/constants/file';
+import { FileFolder, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
@@ -44,7 +44,7 @@ async function handlePostRequest(
         statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
       } else {
         switch (type[0]) {
-          case 'kyc': {
+          case UploadType.KYC: {
             const ext = file[0].originalFilename
               ? path.extname(file[0].originalFilename).slice(1)
               : '';
@@ -52,19 +52,19 @@ async function handlePostRequest(
             fileId = file[0].newFilename;
             break;
           }
-          case 'company': {
+          case UploadType.COMPANY: {
             const iconUrl = await uploadFile(file[0]);
             await updateCompanyById(targetIdNum, undefined, undefined, undefined, iconUrl);
             fileId = iconUrl;
             break;
           }
-          case 'user': {
+          case UploadType.USER: {
             const iconUrl = await uploadFile(file[0]);
             await updateUserById(targetIdNum, undefined, undefined, undefined, undefined, iconUrl);
             fileId = iconUrl;
             break;
           }
-          case 'project': {
+          case UploadType.PROJECT: {
             const iconUrl = await uploadFile(file[0]);
             await updateProjectById(targetIdNum, undefined, iconUrl);
             fileId = iconUrl;
