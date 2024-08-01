@@ -103,15 +103,15 @@ const NewJournalForm = () => {
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
+  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID);
   const { trigger: createInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
-  }>(APIName.INVOICE_CREATE, {}, false, false);
+  }>(APIName.INVOICE_CREATE);
   const { trigger: updateInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
-  }>(APIName.INVOICE_UPDATE, {}, false, false);
+  }>(APIName.INVOICE_UPDATE);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -42,7 +42,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     data: results,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);

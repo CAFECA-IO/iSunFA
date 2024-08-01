@@ -7,7 +7,6 @@ import { ICompany } from '@/interfaces/company';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface ITeamSettingModal {
   isModalVisible: boolean;
@@ -26,20 +25,14 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     error: updateTeamError,
     code: updateTeamCode,
     success: updateTeamSuccess,
-  } = APIHandler<ICompany>(
-    APIName.COMPANY_UPDATE,
-    {
-      params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      },
-    },
-    false,
-    false
-  );
+  } = APIHandler<ICompany>(APIName.COMPANY_UPDATE);
 
   const saveClickHandler = async () => {
     if (companyName && companyName !== selectedCompany?.name) {
       updateTeam({
+        params: {
+          companyId: selectedCompany?.id,
+        },
         body: {
           name: companyName,
           code: selectedCompany?.code,

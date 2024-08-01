@@ -59,19 +59,27 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
-  });
+  } = APIHandler<IPaginatedPendingReportItem>(
+    APIName.REPORT_LIST_PENDING,
+    {
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
+    },
+    true
+  );
 
   const {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
-  });
+  } = APIHandler<IPaginatedGeneratedReportItem>(
+    APIName.REPORT_LIST_GENERATED,
+    {
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
+    },
+    true
+  );
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports?.data) {

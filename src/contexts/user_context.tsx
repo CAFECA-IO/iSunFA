@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
@@ -96,78 +96,43 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
 
-  const { trigger: signOutAPI } = APIHandler<void>(
-    APIName.SIGN_OUT,
-    {
-      body: { credential: credentialRef.current },
-    },
-    false,
-    false
+  const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
+    body: { credential: credentialRef.current },
+  });
+  const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
+  const { trigger: signInAPI } = APIHandler<IUser>(APIName.SIGN_IN);
+  const { trigger: signUpAPI } = APIHandler<IUser>(APIName.SIGN_UP);
+  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  const { trigger: getCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_GET);
+  const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
+    APIName.SESSION_GET
   );
-
-  const { trigger: createChallengeAPI } = APIHandler<string>(
-    APIName.CREATE_CHALLENGE,
-    {
-      header: { 'Content-Type': 'application/json' },
-    },
-    false,
-    false
-  );
-
-  const {
-    trigger: signInAPI,
-    data: signInData,
-    success: signInSuccess,
-    isLoading: isSignInLoading,
-    code: signInCode,
-  } = APIHandler<IUser>(
-    APIName.SIGN_IN,
-    {
-      header: { 'Content-Type': 'application/json' },
-    },
-    false,
-    false
-  );
-
-  const {
-    trigger: signUpAPI,
-    data: signUpData,
-    success: signUpSuccess,
-    isLoading: isSignUpLoading,
-    code: signUpCode,
-  } = APIHandler<IUser>(
-    APIName.SIGN_UP,
-    {
-      header: { 'Content-Type': 'application/json' },
-    },
-    false,
-    false
-  );
-
-  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(
-    APIName.COMPANY_SELECT,
-    {},
-    false,
-    false
-  );
-
-  const { trigger: getCompanyAPI } = APIHandler<ICompanyAndRole>(
-    APIName.COMPANY_GET,
-    {},
-    false,
-    false
-  );
-
-  const {
-    trigger: getUserSessionData,
-    data: userSessionData,
-    success: getUserSessionSuccess,
-    isLoading: isGetUserSessionLoading,
-    code: getUserSessionCode,
-  } = APIHandler<{ user: IUser; company: ICompany }>(APIName.SESSION_GET, {}, false, false);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
+  };
+
+  const handleSignInAPIResponse = (response: {
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    setIsAuthLoading(false);
+    const { data: signInData, success: signInSuccess, code: signInCode } = response;
+    if (signInSuccess) {
+      if (signInData) {
+        setUsername(signInData.name);
+        setUserAuth(signInData);
+        setCredential(signInData.credentialId);
+        setSignedIn(true);
+        setIsSignInError(false);
+      }
+    }
+    if (signInSuccess === false) {
+      setIsSignInError(true);
+      setErrorCode(signInCode ?? '');
+    }
   };
 
   const handleExistingCredential = async (
@@ -189,11 +154,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             : undefined,
         };
 
+        let signInResponse: {
+          success: boolean;
+          data: IUser | null;
+          code: string;
+          error: Error | null;
+        };
+        setIsAuthLoading(true);
         if (invitation) {
-          await signInAPI({ body: { authentication }, query: { invitation } });
+          signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
         } else {
-          await signInAPI({ body: { authentication } });
+          signInResponse = await signInAPI({ body: { authentication } });
         }
+        handleSignInAPIResponse(signInResponse);
       } else {
         throw new Error('Invalid response type: Expected AuthenticatorAssertionResponse');
       }
@@ -240,6 +213,29 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
+  const handleSignUpAPIResponse = (response: {
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    setIsAuthLoading(false);
+    const { data: signUpData, success: signUpSuccess, code: signUpCode } = response;
+    if (signUpSuccess) {
+      if (signUpData) {
+        setUsername(signUpData.name);
+        setUserAuth(signUpData);
+        setCredential(signUpData.credentialId);
+        setSignedIn(true);
+        setIsSignInError(false);
+      }
+    }
+    if (signUpSuccess === false) {
+      setIsSignInError(true);
+      setErrorCode(signUpCode ?? '');
+    }
+  };
+
   const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
     try {
       const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
@@ -267,11 +263,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
 
+      let signUpResponse: {
+        success: boolean;
+        data: IUser | null;
+        code: string;
+        error: Error | null;
+      };
+      setIsAuthLoading(true);
       if (invitation) {
-        signUpAPI({ body: { registration }, query: { invitation } });
+        signUpResponse = await signUpAPI({ body: { registration }, query: { invitation } });
       } else {
-        signUpAPI({ body: { registration } });
+        signUpResponse = await signUpAPI({ body: { registration } });
       }
+      handleSignUpAPIResponse(signUpResponse);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -302,11 +306,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         debug: false,
       });
 
+      let signInResponse: {
+        success: boolean;
+        data: IUser | null;
+        code: string;
+        error: Error | null;
+      };
+      setIsAuthLoading(true);
       if (invitation) {
-        signInAPI({ body: { authentication }, query: { invitation } });
+        signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
       } else {
-        signInAPI({ body: { authentication } });
+        signInResponse = await signInAPI({ body: { authentication } });
       }
+      handleSignInAPIResponse(signInResponse);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -325,7 +337,41 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const setPrivateData = async () => {
-    getUserSessionData();
+    setIsAuthLoading(true);
+    const {
+      data: userSessionData,
+      success: getUserSessionSuccess,
+      code: getUserSessionCode,
+    } = await getUserSessionData();
+    setIsAuthLoading(false);
+    if (getUserSessionSuccess) {
+      if (userSessionData) {
+        if (
+          'user' in userSessionData &&
+          userSessionData.user &&
+          Object.keys(userSessionData.user).length > 0
+        ) {
+          setUserAuth(userSessionData.user);
+          setUsername(userSessionData.user.name);
+          setCredential(userSessionData.user.credentialId);
+          setSignedIn(true);
+          setIsSignInError(false);
+        } else {
+          setSignedIn(false);
+        }
+        if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
+          setSuccessSelectCompany(true);
+          setSelectedCompany(userSessionData.company);
+        }
+      }
+    }
+    if (getUserSessionSuccess === false) {
+      setSignedIn(false);
+      setIsSignInError(true);
+      setErrorCode(getUserSessionCode ?? '');
+      setSuccessSelectCompany(undefined);
+      setSelectedCompany(null);
+    }
   };
 
   const clearReturnUrl = () => {
@@ -385,7 +431,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
+        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
       },
     });
 
@@ -425,45 +471,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     })();
   }, []);
 
-  useEffect(() => {
-    if (isSignUpLoading) return;
-
-    if (signUpSuccess) {
-      if (signUpData) {
-        setUsername(signUpData.name);
-        setUserAuth(signUpData);
-        setCredential(signUpData.credentialId);
-        setSignedIn(true);
-        setIsSignInError(false);
-      }
-    }
-    if (signUpSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signUpCode ?? '');
-    }
-  }, [signUpData, isSignUpLoading, signUpSuccess, signUpCode]);
-
-  useEffect(() => {
-    if (isSignInLoading) return;
-
-    if (signInSuccess) {
-      if (signInData) {
-        setUsername(signInData.name);
-        setUserAuth(signInData);
-        setCredential(signInData.credentialId);
-        setSignedIn(true);
-        setIsSignInError(false);
-      }
-    }
-    if (signInSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signInCode ?? '');
-    }
-  }, [signInData, isSignInLoading, signInSuccess, signInCode]);
-
   // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
   useEffect(() => {
-    if (!signedIn && isGetUserSessionLoading === false) {
+    if (!signedIn) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
         if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
           setReturnUrl(encodeURIComponent(router.asPath));
@@ -471,52 +481,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         router.push(ISUNFA_ROUTE.LOGIN);
       }
     }
-  }, [signedIn, isGetUserSessionLoading, router]);
-
-  useEffect(() => {
-    if (isGetUserSessionLoading) return;
-
-    // Deprecated: dev (20240630 - Shirley)
-    // eslint-disable-next-line no-console
-    console.log('userSessionData:', userSessionData);
-
-    if (getUserSessionSuccess) {
-      if (userSessionData) {
-        if (
-          'user' in userSessionData &&
-          userSessionData.user &&
-          Object.keys(userSessionData.user).length > 0
-        ) {
-          setUserAuth(userSessionData.user);
-          setUsername(userSessionData.user.name);
-          setCredential(userSessionData.user.credentialId);
-          setSignedIn(true);
-          setIsSignInError(false);
-        }
-        if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
-          setSuccessSelectCompany(true);
-          setSelectedCompany(userSessionData.company);
-        }
-      }
-    }
-    if (getUserSessionSuccess === false) {
-      setIsSignInError(true);
-
-      setErrorCode(getUserSessionCode ?? '');
-      setSuccessSelectCompany(undefined);
-      setSelectedCompany(null);
-    }
-  }, [userSessionData, isGetUserSessionLoading, getUserSessionSuccess, getUserSessionCode]);
-
-  useEffect(() => {
-    if (isSignInLoading || isSignUpLoading || isGetUserSessionLoading) {
-      setIsAuthLoading(true);
-    } else {
-      setTimeout(() => {
-        setIsAuthLoading(false);
-      }, MILLISECONDS_IN_A_SECOND);
-    }
-  }, [isSignInLoading, isSignUpLoading, isGetUserSessionLoading]);
+  }, [signedIn, router]);
 
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(

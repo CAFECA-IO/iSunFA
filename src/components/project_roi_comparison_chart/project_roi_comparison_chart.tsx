@@ -218,7 +218,8 @@ const ProjectRoiComparisonChart = () => {
         startDate: period.startTimeStamp,
         endDate: period.endTimeStamp,
       },
-    }
+    },
+    true
   );
 
   const isNoData = profitComparison?.empty || !profitComparison || !listSuccess;

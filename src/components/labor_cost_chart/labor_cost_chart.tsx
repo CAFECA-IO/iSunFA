@@ -222,8 +222,7 @@ const LaborCostChart = () => {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
       },
     },
-    false,
-    false
+    true
   );
 
   const isNoData = laborCostData?.empty || !laborCostData || !getSuccess;

@@ -48,9 +48,13 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     // error,
     success,
     code,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, journalId },
-  });
+  } = APIHandler<IJournal>(
+    APIName.JOURNAL_GET_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, journalId },
+    },
+    true
+  );
 
   const [contractId, setContractId] = useState<string>('');
   const [journalTokenId, setJournalTokenId] = useState<string>('');
@@ -293,14 +297,14 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   // Info: (20240731 - Anna) 把合約None加上多語系
   // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
-   const displayContract =
-     contract !== 'None' ? (
-       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-         <p className="font-semibold text-darkBlue">{contract}</p>
-       </div>
-     ) : (
-       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
-     );
+  const displayContract =
+    contract !== 'None' ? (
+      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+        <p className="font-semibold text-darkBlue">{contract}</p>
+      </div>
+    ) : (
+      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+    );
 
   const createVoucherLayout = (dataType: VoucherItem) => {
     const displayList = voucherList.map((voucher) => {

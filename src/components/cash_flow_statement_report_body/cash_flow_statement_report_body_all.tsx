@@ -41,12 +41,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<CashFlowStatementReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  } = APIHandler<CashFlowStatementReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+      },
     },
-  });
+    true
+  );
 
   const [curDate, setCurDate] = useStateRef<{ from: string; to: string }>({ from: '', to: '' });
   const [curYear, setCurYear] = useStateRef<string>('');

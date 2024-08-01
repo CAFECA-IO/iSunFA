@@ -24,7 +24,7 @@ const TransferCompanyModal = ({
   const { selectedCompany } = useUserCtx();
 
   // API Handler
-  const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER, {}, false, false);
+  const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER);
 
   const handleSubmit = (newOwnerId: string) => {
     transferOwner({

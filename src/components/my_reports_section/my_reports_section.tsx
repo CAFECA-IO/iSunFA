@@ -79,18 +79,22 @@ const MyReportsSection = () => {
     code: listPendingCode,
     success: listPendingSuccess,
     isLoading: isPendingDataLoading,
-  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: {
-      sortOrder: sortOptionQuery[filteredPendingSort],
-      startDateInSecond:
-        pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
-      endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
-      searchQuery: searchPendingQuery,
-      targetPage: pendingCurrentPage,
-      pageSize: LIMIT_FOR_REPORT_PAGE,
+  } = APIHandler<IPaginatedPendingReportItem>(
+    APIName.REPORT_LIST_PENDING,
+    {
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      query: {
+        sortOrder: sortOptionQuery[filteredPendingSort],
+        startDateInSecond:
+          pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
+        endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
+        searchQuery: searchPendingQuery,
+        targetPage: pendingCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
     },
-  });
+    true
+  );
 
   const {
     trigger: fetchGeneratedReports,
@@ -98,18 +102,22 @@ const MyReportsSection = () => {
     code: listGeneratedCode,
     success: listGeneratedSuccess,
     isLoading: isHistoryDataLoading,
-  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: {
-      sortOrder: sortOptionQuery[filteredHistorySort],
-      startDateInSecond:
-        historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
-      endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
-      searchQuery: searchHistoryQuery,
-      targetPage: historyCurrentPage,
-      pageSize: LIMIT_FOR_REPORT_PAGE,
+  } = APIHandler<IPaginatedGeneratedReportItem>(
+    APIName.REPORT_LIST_GENERATED,
+    {
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      query: {
+        sortOrder: sortOptionQuery[filteredHistorySort],
+        startDateInSecond:
+          historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
+        endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
+        searchQuery: searchHistoryQuery,
+        targetPage: historyCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
     },
-  });
+    true
+  );
   const pendingTotalPages =
     pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
   const historyTotalPages =

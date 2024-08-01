@@ -37,7 +37,7 @@ const SelectCompanyPageBody = () => {
     data: companyAndRoleList,
     success: companyAndRoleListSuccess,
     isLoading: iscompanyAndRoleListLoading,
-  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST, {}, false, false);
+  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST);
 
   const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');

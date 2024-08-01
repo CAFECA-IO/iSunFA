@@ -163,25 +163,20 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     trigger: getAccountList,
     data: accountTitleList,
     success: accountSuccess,
-  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST, {}, false, false);
-  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(
-    APIName.AI_ASK_STATUS,
-    {},
-    false,
-    false
-  );
+  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
+  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS);
   const {
     trigger: listUnprocessedOCR,
     data: unprocessOCRs,
     error: listError,
     success: listSuccess,
     code: listCode,
-  } = APIHandler<IOCR[]>(APIName.OCR_LIST, {}, false, false);
+  } = APIHandler<IOCR[]>(APIName.OCR_LIST);
   const {
     trigger: deleteAccountById,
     data: deleteResult,
     success: deleteSuccess,
-  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);

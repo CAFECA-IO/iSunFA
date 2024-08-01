@@ -31,7 +31,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const formRef = useRef<HTMLFormElement>(null);
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD, {}, false, false);
+  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =

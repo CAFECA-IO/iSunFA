@@ -38,8 +38,8 @@ const UploadArea = ({
   const [isError, setIsError] = useState<boolean>(false);
   const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
   const readerRef = useRef<FileReader | null>(null);
-  const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
-  const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE, {}, false, false);
+  const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
+  const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
   const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
   const {
@@ -47,7 +47,7 @@ const UploadArea = ({
     data: getData,
     success: getSuccess,
     code: getCode,
-  } = APIHandler<IFile>(APIName.FILE_GET, {}, false, false);
+  } = APIHandler<IFile>(APIName.FILE_GET);
 
   const handleError = useCallback(
     (title: string, content: string) => {

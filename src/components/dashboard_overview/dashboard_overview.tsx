@@ -21,11 +21,15 @@ const DashboardOverview = () => {
     success: getSuccess,
     code: getCode,
     error: getError,
-  } = APIHandler<IProfitInsight>(APIName.PROFIT_GET_INSIGHT, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+  } = APIHandler<IProfitInsight>(
+    APIName.PROFIT_GET_INSIGHT,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
     },
-  });
+    true
+  );
 
   // TODO: i18n (20240620 - Shirley)
   const displayedProfitChangeRate =

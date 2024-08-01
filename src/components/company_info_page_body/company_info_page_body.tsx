@@ -49,11 +49,15 @@ const CompanyInfoPageBody = () => {
     isLoading: isCompanyDataLoading,
     code: getCompanyDataCode,
     success: getCompanyDataSuccessfully,
-  } = APIHandler<ICompanyAndRole>(APIName.COMPANY_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? PUBLIC_COMPANY_ID,
+  } = APIHandler<ICompanyAndRole>(
+    APIName.COMPANY_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? PUBLIC_COMPANY_ID,
+      },
     },
-  });
+    true
+  );
 
   const isEditNameAllowed = role?.name === RoleName.OWNER;
 

@@ -54,12 +54,16 @@ const ViewAnalysisReportPage = ({
     data: reportAnalysis,
     code: getARCode,
     success: getARSuccess,
-  } = APIHandler<IReportOld>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
-    params: {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId: '1' },
+  } = APIHandler<IReportOld>(
+    APIName.REPORT_ANALYSIS_GET_BY_ID,
+    {
+      params: {
+        params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId: '1' },
+      },
+      query: { reportType, reportLanguage, startTimestamp, endTimestamp },
     },
-    query: { reportType, reportLanguage, startTimestamp, endTimestamp },
-  });
+    true
+  );
 
   useEffect(() => {
     if (getARSuccess === false) {

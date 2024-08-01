@@ -38,14 +38,14 @@ const EditAccountTitleModal = ({
     isLoading: isAccountDataLoading,
     success: isAccountDataSuccess,
     code: errorCode,
-  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID);
 
   const {
     trigger: updateAccountInfoById,
     data: updateResult,
     success: updateSuccess,
     code: updateCode,
-  } = APIHandler<IAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID);
 
   const [accountingType, setAccountingType] = useState('');
   const [liquidity, setLiquidity] = useState(false);

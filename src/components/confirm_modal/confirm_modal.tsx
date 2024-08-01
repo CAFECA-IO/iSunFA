@@ -86,35 +86,21 @@ const ConfirmModal = ({
 
   const [journal, setJournal] = useState<IJournal | null>(null);
 
-  // Info: (20240527 - Julian) Get journal by id (上半部資料)
-  const { trigger: getJournalById } = APIHandler<IJournal>(
-    APIName.JOURNAL_GET_BY_ID,
-    {},
-    false,
-    false
-  );
-
   // Info: (20240527 - Julian) Get AI 生成的傳票
   const {
     trigger: getAIResult,
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT);
+  // Info: (20240527 - Julian) Get journal by id (上半部資料)
+  const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
   // Info: (20240527 - Julian) 建立傳票
   const { trigger: createVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
-    APIName.VOUCHER_CREATE,
-    {},
-    false,
-    false
+    APIName.VOUCHER_CREATE
   );
-
   const { trigger: updateVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
-    APIName.VOUCHER_UPDATE,
-    {},
-    false,
-    false
+    APIName.VOUCHER_UPDATE
   );
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;

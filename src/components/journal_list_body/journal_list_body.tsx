@@ -38,12 +38,9 @@ const JournalListBody = () => {
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [invoiceListToggle, setInvoiceListoggle] = useState<boolean>(false);
   const { trigger } = APIHandler<{ [key: string]: IPaginatedData<IJournalListItem[]> }>(
-    APIName.JOURNAL_LIST,
-    {},
-    false,
-    false
+    APIName.JOURNAL_LIST
   );
-  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE, {}, false, false);
+  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE);
 
   const types = [
     JOURNAL_TYPE.ALL,

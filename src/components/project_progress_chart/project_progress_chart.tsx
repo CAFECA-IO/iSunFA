@@ -194,14 +194,18 @@ const ProjectProgressChart = () => {
     success: listSuccess,
     code: listCode,
     error: listError,
-  } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+  } = APIHandler<IProjectProgressChartData>(
+    APIName.PROJECT_LIST_PROGRESS,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
     },
-    query: {
-      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
-    },
-  });
+    true
+  );
 
   const isNoData = projectProgress?.empty || !projectProgress || !listSuccess;
 

@@ -45,9 +45,13 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     data: reportFinancial,
     code: getFRCode,
     success: getFRSuccess,
-  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId },
-  });
+  } = APIHandler<FinancialReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId },
+    },
+    true
+  );
 
   // eslint-disable-next-line no-console
   console.log('reportFinancial in reportId', reportFinancial);

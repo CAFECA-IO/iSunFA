@@ -37,14 +37,14 @@ const AddAccountTitleModal = ({
     isLoading: isAccountDataLoading,
     success: isAccountDataSuccess,
     code: errorCode,
-  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID);
 
   const {
     trigger: createNewSubAccount,
     data: result,
     success: createSuccess,
     code: createCode,
-  } = APIHandler<IAccount>(APIName.CREATE_NEW_SUB_ACCOUNT, {}, false, false);
+  } = APIHandler<IAccount>(APIName.CREATE_NEW_SUB_ACCOUNT);
 
   const [accountingType, setAccountingType] = useState('');
   const [liquidity, setLiquidity] = useState(false);

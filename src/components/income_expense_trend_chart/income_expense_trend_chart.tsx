@@ -223,14 +223,18 @@ const IncomeExpenseTrendChart = () => {
     success: getSuccess,
     code: getCode,
     error: getError,
-  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+  } = APIHandler<IIncomeExpenseTrendChartData>(
+    APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
+      query: {
+        period: selectedPeriod,
+      },
     },
-    query: {
-      period: selectedPeriod,
-    },
-  });
+    true
+  );
 
   const isNoData =
     profitMarginTrendInPeriodData?.empty || !profitMarginTrendInPeriodData || !getSuccess;
