@@ -111,9 +111,6 @@ const ViewFinancialSection = ({
     }
   }, [reportFinancial]);
 
-  // eslint-disable-next-line no-console
-  console.log('isInvalidReport', isInvalidReport);
-
   function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
     return !!(
       report.general &&
@@ -168,7 +165,6 @@ const ViewFinancialSection = ({
   const nextClickHandler = () => {
     setActiveIndex((prev) => prev + 1);
     setPageNumber((prev) => prev + 1);
-    console.log(pageNumber, 'in next click');
   };
 
   const printPDF = () => {
@@ -255,25 +251,18 @@ const ViewFinancialSection = ({
   useEffect(() => {
     switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
-        console.log('reportTypesName?.id in balance sheet', reportTypesName?.id);
         setReportThumbnails(balanceReportThumbnails);
         setNumPages(NumPages.BALANCE_SHEET);
         break;
       case FinancialReportTypesKey.comprehensive_income_statement:
-        console.log('reportTypesName?.id in comprehensive_income_statement', reportTypesName?.id);
-
         setReportThumbnails(incomeReportThumbnails);
         setNumPages(NumPages.INCOME_STATEMENT);
         break;
       case FinancialReportTypesKey.cash_flow_statement:
-        console.log('reportTypesName?.id in cash_flow_statement', reportTypesName?.id);
-
         setReportThumbnails(cashFlowReportThumbnails);
         setNumPages(NumPages.CASH_FLOW_STATEMENT);
         break;
       default:
-        console.log('reportTypesName?.id in default', reportTypesName?.id);
-
         setReportThumbnails([]);
     }
   }, []);
