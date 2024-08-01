@@ -459,7 +459,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.CREATE_FILE]: createConfig({
     name: APIName.CREATE_FILE,
-    method: HttpMethod.PUT,
+    method: HttpMethod.POST,
     path: APIPath.CREATE_FILE,
   }),
 };

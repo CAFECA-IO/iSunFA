@@ -5,7 +5,7 @@ import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { DEFAULT_COMPANY_IMAGE_URL } from '@/constants/display';
 import { RoleName } from '@/constants/role_name';
-import { UploadImageType } from '@/constants/upload_image_type';
+import { UploadType } from '@/constants/file';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
@@ -75,7 +75,7 @@ const CompanyInfoPageBody = () => {
   }, [selectedCompany]);
 
   const updateImageClickHandler = () => {
-    profileUploadModalDataHandler(UploadImageType.COMPANY_IMAGE);
+    profileUploadModalDataHandler(UploadType.COMPANY);
     profileUploadModalVisibilityHandler();
   };
 

@@ -4,19 +4,18 @@ import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
-import { UploadImageType } from '@/constants/upload_image_type';
 import { APIName } from '@/constants/api_connection';
-import { ICompany } from '@/interfaces/company';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { MessageType } from '@/interfaces/message_modal';
+import { UploadType } from '@/constants/file';
 
 interface IProfileUploadModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  uploadType: UploadImageType;
+  uploadType: UploadType;
 }
 
 const ProfileUploadModal = ({
@@ -35,20 +34,24 @@ const ProfileUploadModal = ({
     success: uploadCompanySuccess,
     data: uploadCompanyData,
     code: uploadCompanyCode,
-  } = APIHandler<ICompany>(APIName.CREATE_FILE, {}, false, false);
+  } = APIHandler<{
+    id: number;
+    size: number;
+    existed: boolean;
+  }>(APIName.CREATE_FILE, {}, false, false);
 
   const modalTitle =
-    uploadType === UploadImageType.PROFILE
+    uploadType === UploadType.USER
       ? t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')
-      : uploadType === UploadImageType.COMPANY_IMAGE
+      : uploadType === UploadType.COMPANY
         ? // ToDo: (20240801 - Julian) i18n
           'Company Image'
         : 'Project Image';
 
   const modalDescription =
-    uploadType === UploadImageType.PROFILE
+    uploadType === UploadType.USER
       ? t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
-      : uploadType === UploadImageType.COMPANY_IMAGE
+      : uploadType === UploadType.COMPANY
         ? // ToDo: (20240801 - Julian) i18n
           'Please upload your company image'
         : 'Please upload your project image';
@@ -92,6 +95,8 @@ const ProfileUploadModal = ({
     // ToDo: (20240618 - Julian) Save image to server
     const formData = new FormData();
     formData.append('file', uploadedImage as File);
+    formData.append('type', UploadType.COMPANY);
+    formData.append('targetId', selectedCompany?.id.toString() ?? FREE_COMPANY_ID.toString());
 
     await uploadCompanyImage({
       params: {
