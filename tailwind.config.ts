@@ -761,7 +761,7 @@ module.exports = {
           'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
         pipe: 'url("/elements/pipe.svg")',
-        neon: 'url("/animations/neon.svg")',
+        // neon: 'url("/animations/neon.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
         101: 'url("/elements/101.png")',
         lightBalls: 'url("/elements/light_balls.svg")',
         lightBallsReverse: 'url("/elements/light_balls_reverse.svg")',
@@ -769,9 +769,9 @@ module.exports = {
         bubbleAbove: 'url("/elements/bubble_above.svg")',
         bubbleBelow: 'url("/elements/bubble_below.svg")',
 
-        reportCover: 'url("/documents/cover.svg")',
-        contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
-        headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
+        // reportCover: 'url("/documents/cover.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
+        // contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
+        // headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
 
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
       },
@@ -1338,6 +1338,7 @@ module.exports = {
         '1/50': '2%',
         '50px': '50px',
       },
+
       boxShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0 4px 24px rgba(0, 0, 0, 0.40)',

@@ -34,18 +34,21 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     hasCompanyId
   );
 
-  // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial', reportFinancial);
-
-  if (getReportFinancialIsLoading) {
+  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess || !reportFinancial) {
-    return <div>Error {getReportFinancialCode}</div>;
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueAndExpenseRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'revenueToRD')
+  ) {
+    return <div>錯誤 {getReportFinancialCode}</div>;
   }
 
   const renderedFooter = (page: number) => {
@@ -1190,7 +1193,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   );
 
   return (
-    <div className="scale-80 mx-auto w-a4-width origin-top overflow-x-auto md:scale-100 lg:scale-100">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       <hr className="break-before-page" />
       {page2}

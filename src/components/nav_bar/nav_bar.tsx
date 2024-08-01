@@ -1,28 +1,35 @@
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { FiLayout, FiMail } from 'react-icons/fi';
+import { FiEdit, FiLayout, FiMail } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { GoArrowSwitch } from 'react-icons/go';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import {
+  DEFAULT_AVATAR_URL,
+  DEFAULT_COMPANY_IMAGE_URL,
+  DEFAULT_DISPLAYED_USER_NAME,
+} from '@/constants/display';
 import version from '@/lib/version';
 import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
 import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
+import { UploadType } from '@/constants/file';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
     useUserCtx();
+  const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
@@ -62,6 +69,11 @@ const NavBar = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
     setLangIsOpen(false);
     setNotificationIsOpen(false);
+  };
+
+  const profileUploadClickHandler = () => {
+    profileUploadModalDataHandler(UploadType.USER);
+    profileUploadModalVisibilityHandler();
   };
 
   const logOutClickHandler = async () => {
@@ -263,43 +275,23 @@ const NavBar = () => {
       className={`${isUserMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute right-16 top-70px z-100 transition-all duration-300 ease-in-out`}
     >
       <div className="max-w-248px flex-col rounded-2xl bg-white p-4 shadow-xl">
-        <div className="mx-auto h-56px w-56px overflow-hidden rounded-full">
+        <button
+          type="button"
+          onClick={profileUploadClickHandler}
+          className="group relative mx-auto flex h-56px w-56px items-center justify-center overflow-hidden rounded-full lg:h-fit lg:w-fit"
+        >
           <Image
             alt="avatar"
             src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
             width={56}
             height={56}
-            className="aspect-square"
-            onError={(e) => {
-              e.currentTarget.src = DEFAULT_AVATAR_URL;
-            }}
+            className="group-hover:brightness-50"
           />
-        </div>
-        <div className="group absolute inset-0 left-1/2 top-1.3rem h-3.3rem w-3.3rem -translate-x-1/2 rounded-full hover:cursor-pointer">
-          {/* Info: black cover (20240605 - Shirley) */}
-          <div className="h-3.3rem w-3.3rem rounded-full bg-black opacity-0 transition-opacity group-hover:opacity-50"></div>
-          {/* Info: edit icon (20240605 - Shirley) */}
-          <div className="absolute left-1/3 top-4 opacity-0 group-hover:opacity-100">
-            {' '}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill="#FCFDFF"
-                fillRule="evenodd"
-                d="M14.712 1.377a2.768 2.768 0 113.914 3.915l-7.969 7.969-.053.052c-.235.236-.46.462-.732.628a2.666 2.666 0 01-.77.32c-.311.074-.63.074-.963.074H6.67a1 1 0 01-1-1v-1.396-.075c0-.333 0-.651.074-.962.065-.272.173-.532.319-.77.167-.273.392-.498.628-.733l.053-.053 7.969-7.969zm2.5 1.415c-.3-.3-.786-.3-1.086 0L8.157 10.76c-.322.321-.363.372-.39.415a.667.667 0 00-.08.193c-.011.05-.018.115-.018.57v.395h.396c.455 0 .52-.006.57-.018a.667.667 0 00.192-.08c.044-.027.094-.068.416-.39l7.969-7.969c.3-.3.3-.786 0-1.085zM5.629 2.334h3.54a1 1 0 110 2h-3.5c-.716 0-1.194.001-1.56.031-.356.03-.518.08-.62.133a1.5 1.5 0 00-.656.655c-.053.103-.104.266-.133.62-.03.368-.03.845-.03 1.561v7c0 .717 0 1.194.03 1.561.029.355.08.518.133.62l-.891.454.89-.454a1.5 1.5 0 00.656.656c.103.052.265.104.62.133.367.03.845.03 1.561.03h7c.717 0 1.194 0 1.56-.03.356-.03.518-.08.621-.133a1.5 1.5 0 00.656-.656c.052-.102.103-.265.132-.62.03-.367.031-.844.031-1.56v-3.5a1 1 0 112 0v3.54c0 .665 0 1.225-.037 1.683-.04.479-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.432.22-.887.305-1.365.344-.458.037-1.018.037-1.684.037H5.63c-.666 0-1.225 0-1.683-.037-.479-.04-.934-.124-1.366-.344a3.5 3.5 0 01-1.53-1.53c-.22-.431-.304-.886-.344-1.365C.67 15.6.67 15.04.67 14.375v-7.08c0-.667 0-1.226.037-1.684.04-.479.125-.934.345-1.366a3.5 3.5 0 011.53-1.53c.431-.22.886-.304 1.365-.343.458-.038 1.017-.038 1.683-.038z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
+          <FiEdit className="absolute hidden text-white group-hover:block" />
+        </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
+            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           <button
             type="button"
@@ -457,7 +449,7 @@ const NavBar = () => {
       {/* ToDo: (20240516 - Julian) icon */}
       <Image
         alt={`${selectedCompany?.name}_icon`}
-        src={selectedCompany.imageId ?? DEFAULT_AVATAR_URL}
+        src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
         width={16}
         height={16}
         className="rounded-full"

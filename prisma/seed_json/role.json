@@ -1,27 +1,27 @@
 [
     {
-        "id": 99999991,
+        "id":1001,
         "name": "Super Admin",
         "permissions": [],
         "createdAt": 1,
         "updatedAt": 1
     },
     {
-        "id": 99999992,
+        "id": 1002,
         "name": "Admin",
         "permissions": [],
         "createdAt": 1,
         "updatedAt": 1
     },
     {
-        "id": 99999993,
+        "id": 1003,
         "name": "Owner",
         "permissions": [],
         "createdAt": 1,
         "updatedAt": 1
     },
     {
-        "id": 99999994,
+        "id": 1004,
         "name": "Viewer",
         "permissions": [],
         "createdAt": 1,
