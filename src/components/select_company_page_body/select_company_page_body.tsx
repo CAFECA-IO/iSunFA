@@ -119,7 +119,7 @@ const SelectCompanyPageBody = () => {
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
               alt={companyAndRole.company.name}
-              src={'/entities/happy.png'}
+              src={selectedCompany?.imageId ?? DEFAULT_AVATAR_URL}
               width={20}
               height={20}
             />
@@ -188,15 +188,18 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) company selection */}
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
-          <div className="relative flex w-200px items-center justify-center py-0">
-            <Image
-              alt="avatar"
-              src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
-              width={200}
-              height={200}
-            />
+          <div className="relative flex w-200px items-center justify-center">
+            <div className="h-200px w-200px overflow-hidden rounded-full">
+              <Image
+                alt="avatar"
+                src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+                width={200}
+                height={200}
+              />
+            </div>
+
             {/* Info: (20240513 - Julian) green dot */}
-            <div className={cn('absolute right-4', userAuth?.imageId ? 'bottom-4' : 'bottom-0')}>
+            <div className={cn('absolute right-2', userAuth?.imageId ? 'bottom-2' : 'bottom-0')}>
               <svg
                 width="41"
                 height="40"

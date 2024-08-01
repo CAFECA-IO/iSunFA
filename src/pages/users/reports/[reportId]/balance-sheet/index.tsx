@@ -18,7 +18,7 @@ const BalanceSheetPage = ({ reportId }: IBalanceSheetPageProps) => {
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+    <div className="flex w-full flex-1 flex-col">
       <BalanceSheetReportBodyAll reportId={reportId} />
     </div>
   );
@@ -32,7 +32,7 @@ const BalanceSheetPage = ({ reportId }: IBalanceSheetPageProps) => {
         <title>Balance Sheet - iSunFA</title>
       </Head>
 
-      <div className="h-screen font-barlow">{displayedBody}</div>
+      <div className="h-full bg-white font-barlow">{displayedBody}</div>
     </>
   );
 };

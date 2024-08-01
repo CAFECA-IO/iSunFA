@@ -16,7 +16,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { DEFAULT_AVATAR_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 // Info: (2024704 - Anna) For list
@@ -39,11 +39,11 @@ interface IProjectSettingPageProps {
 
 const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const { t } = useTranslation('common');
-  const { isAuthLoading } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
 
   // ToDo: (20240617 - Julian) Replace with real data
   const projectName = 'BAIFA';
-  const projectImageSrc = '/entities/happy.png';
+  const projectImageSrc = selectedCompany?.imageId ?? DEFAULT_AVATAR_URL;
   const projectStage = stageList[0];
   const projectMembers = dummyMemberList;
 
@@ -128,9 +128,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
-      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input
-      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
-      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {stageList.map((stage) => {
         const clickHandler = () => {
@@ -187,9 +185,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const displayMembersMenu = (
     <div
       ref={membersRef}
-      className={`absolute bottom-full left-0 mb-10px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px md:bottom-auto md:top-50px md:mb-0
-      ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
-      `}
+      className={`absolute bottom-full left-0 mb-10px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px md:bottom-auto md:top-50px md:mb-0 ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
@@ -284,9 +280,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                     <div
                       onClick={stageMenuClickHandler}
-                      className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-      ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-      px-12px hover:cursor-pointer`}
+                      className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer`}
                     >
                       {changedStage}
                       <FaChevronDown />

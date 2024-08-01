@@ -3,6 +3,9 @@ module.exports = {
   content: ['./src/**/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      scale: {
+        80: '0.8',
+      },
       aspectRatio: {
         '1/1': '1 / 1',
         '1/1.18': '1 / 1.18',

@@ -88,6 +88,9 @@ export interface FinancialReportItem {
   indent: number;
 }
 
+export interface YearlyData {
+  [year: string]: number;
+}
 // Info Murky (20240729): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
   company: {
@@ -110,6 +113,19 @@ export interface FinancialReport {
 }
 
 export interface BalanceSheetOtherInfo {
+  assetLiabilityRatio: {
+    [date: string]: {
+      data: number[]; // Info: [資產,負債,權益] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      labels: string[]; // Info: ["資產", "負債", "權益"] (20240730 - Shirley)
+    };
+  };
+  assetMixRatio: {
+    // Info: 資產組成，包含數量最大的五種資產跟其他 (20240730 - Shirley)
+    [date: string]: {
+      data: number[]; // Info: [資產1, 資產2, 資產3, 資產4, 資產5, 其他] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      labels: string[];
+    };
+  };
   dso: {
     curDso: number;
     preDso: number;
@@ -143,16 +159,18 @@ export interface IncomeStatementOtherInfo {
 
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: {
-    [key: string]: {
-      [key: string]: number;
-    };
+    beforeIncomeTax: YearlyData;
+    amortizationDepreciation: YearlyData; // Info: 折舊攤銷費用 (20240730 - Shirley)
+    tax: YearlyData;
+    operatingIncomeCashFlow: YearlyData;
+    ratio: YearlyData;
   };
   lineChartDataForRatio: {
     data: number[];
     labels: string[];
   };
   strategyInvest: {
-    [key: string]: {
+    [year: string]: {
       data: number[];
       labels: string[];
     };
@@ -162,7 +180,7 @@ export interface CashFlowStatementOtherInfo {
   fourPointOneTitle: string;
   ourThoughts: string[];
   freeCash: {
-    [key: string]: {
+    [year: string]: {
       operatingCashFlow: number;
       ppe: number;
       intangibleAsset: number;

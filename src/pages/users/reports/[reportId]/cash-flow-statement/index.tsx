@@ -18,7 +18,7 @@ const CashFlowStatementPage = ({ reportId }: ICashFlowStatementPageProps) => {
       <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     </div>
   ) : (
-    <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+    <div className="flex w-full flex-1 flex-col">
       <CashFlowStatementReportBodyAll reportId={reportId} />
     </div>
   );
@@ -32,7 +32,7 @@ const CashFlowStatementPage = ({ reportId }: ICashFlowStatementPageProps) => {
         <title>Cash Flow Statement - iSunFA</title>
       </Head>
 
-      <div className="h-screen font-barlow">{displayedBody}</div>
+      <div className="h-full bg-white font-barlow">{displayedBody}</div>
     </>
   );
 };

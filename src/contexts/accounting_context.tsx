@@ -77,11 +77,13 @@ interface IAccountingContext {
     update: boolean
   ) => void;
   AIStatus: ProgressStatus;
+  inputDescription: string;
 
   selectedOCR: IOCR | undefined;
   selectOCRHandler: (journal: IOCR | undefined) => void;
   selectedJournal: IJournal | undefined;
   selectJournalHandler: (journal: IJournal | undefined) => void;
+  inputDescriptionHandler: (description: string) => void;
 
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
@@ -119,37 +121,39 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => {},
+  updateOCRListHandler: () => { },
   accountList: [],
-  getAccountListHandler: () => {},
-  getAIStatusHandler: () => {},
+  getAccountListHandler: () => { },
+  getAIStatusHandler: () => { },
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => {},
+  selectOCRHandler: () => { },
   selectedJournal: undefined,
-  selectJournalHandler: () => {},
+  selectJournalHandler: () => { },
+  inputDescription: '',
+  inputDescriptionHandler: () => { },
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => {},
+  setInvoiceIdHandler: () => { },
   voucherId: undefined,
-  setVoucherIdHandler: () => {},
+  setVoucherIdHandler: () => { },
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => {},
+  setVoucherPreviewHandler: () => { },
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => {},
-  deleteVoucherRowHandler: () => {},
-  changeVoucherStringHandler: () => {},
-  changeVoucherAccountHandler: () => {},
-  changeVoucherAmountHandler: () => {},
-  resetVoucherHandler: () => {},
+  addVoucherRowHandler: () => { },
+  deleteVoucherRowHandler: () => { },
+  changeVoucherStringHandler: () => { },
+  changeVoucherAccountHandler: () => { },
+  changeVoucherAmountHandler: () => { },
+  resetVoucherHandler: () => { },
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => {},
+  deleteOwnAccountTitle: () => { },
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -206,6 +210,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [inputDescription, setInputDescription] = useState<string>('');
 
   const getAccountListHandler = (
     companyId: number,
@@ -234,7 +239,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         includeDefaultAccount: true,
         reportType,
         equityType,
-        forUser,
+        forUser: true,
         sortBy,
         sortOrder,
         searchKey,
@@ -540,13 +545,21 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // );
 
   const selectOCRHandler = useCallback(
-    (OCR: IOCR | undefined) => setSelectedOCR(OCR),
+    (OCR: IOCR | undefined) => {
+      setSelectedOCR(OCR);
+      setInputDescription('');
+    },
     [selectedOCR]
   );
 
   const selectJournalHandler = useCallback(
     (journal: IJournal | undefined) => setSelectedJournal(journal),
     [selectedJournal]
+  );
+
+  const inputDescriptionHandler = useCallback(
+    (description: string) => setInputDescription(description),
+    [inputDescription]
   );
 
   const value = useMemo(
@@ -582,6 +595,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       generateAccountTitle,
       changeVoucherAccountHandler,
       deleteOwnAccountTitle,
+      inputDescription,
+      inputDescriptionHandler,
     }),
     [
       OCRList,
@@ -605,6 +620,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectOCRHandler,
       selectedJournal,
       selectJournalHandler,
+      inputDescription,
     ]
   );
 
