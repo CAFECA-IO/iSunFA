@@ -16,11 +16,14 @@ import { BalanceSheetOtherInfo } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
-import { ASSET_CODE } from '@/constants/account';
+import { AccountType, ASSET_CODE } from '@/constants/account';
 import { timestampToString } from '@/lib/utils/common';
+import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private incomeStatementGenerator: IncomeStatementGenerator;
+
+  private incomeStatementContent: IAccountReadyForFrontend[] = [];
 
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
@@ -33,8 +36,87 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     );
   }
 
+  /// //////////////////////////////////////////////////
+  // Info: (20240729 - Murky) this special function is to temporally  close account from income statement to retain earning, but this won't effect income statement
+  /// //////////////////////////////////////////////////
+  private async closeAccountFromIncomeStatement(curPeriod: boolean): Promise<ILineItemIncludeAccount[]> {
+    if (this.incomeStatementContent.length === 0) {
+      this.incomeStatementContent =
+        await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
+    }
+
+    const netIncome = this.incomeStatementContent.find((account) => account.code === '8200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const otherComprehensiveIncome = this.incomeStatementContent.find((account) => account.code === '8500') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const closeAccount: ILineItemIncludeAccount[] = [];
+
+    closeAccount.push({
+      id: -1,
+      amount: curPeriod ? netIncome.curPeriodAmount : netIncome.prePeriodAmount,
+      description: '本期損益',
+      debit: false,
+      accountId: -1,
+      voucherId: -1,
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
+      account: {
+        id: -1,
+        companyId: this.companyId,
+        system: "IFRS",
+        type: AccountType.EQUITY,
+        debit: false,
+        liquidity: false,
+        code: '3353',
+        name: '本期損益',
+        forUser: false,
+        parentCode: '3350',
+        rootCode: '3X2X',
+        level: 3,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+      },
+    });
+
+    closeAccount.push({
+      id: -1,
+      amount: curPeriod ? otherComprehensiveIncome.curPeriodAmount : otherComprehensiveIncome.prePeriodAmount,
+      description: '其他權益-其他',
+      debit: false,
+      accountId: -1,
+      voucherId: -1,
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
+      account: {
+        id: -1,
+        companyId: this.companyId,
+        system: "IFRS",
+        type: AccountType.EQUITY,
+        debit: false,
+        liquidity: false,
+        code: '3499',
+        name: '其他權益－其他',
+        forUser: false,
+        parentCode: '3490',
+        rootCode: '3X2X',
+        level: 3,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+      },
+    });
+
+    return closeAccount;
+  }
+
   public override async generateFinancialReportTree(curPeriod: boolean): Promise<IAccountNode[]> {
     const lineItemsFromDB = await this.getAllLineItemsByReportSheet(curPeriod);
+
+    // Info: (20240801 - Murky) 暫時關閉本期損益和其他其他綜合損益權益
+    const closeAccount = await this.closeAccountFromIncomeStatement(curPeriod);
+    lineItemsFromDB.push(...closeAccount);
 
     const accountForest = await this.getAccountForestByReportSheet();
 
@@ -298,9 +380,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     // const lastPeriodDateInMillisecond = timestampInMilliSeconds(this.lastPeriodEndDateInSecond);
     // const lastPeriodDate = new Date(lastPeriodDateInMillisecond);
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
-    const incomeStatementContent =
-      await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
-    const otherInfo = await this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
+
+    if (this.incomeStatementContent.length === 0) {
+      this.incomeStatementContent =
+        await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
+    }
+    const otherInfo = await this.generateOtherInfo(balanceSheetContent, this.incomeStatementContent);
     return {
       content: balanceSheetContent,
       otherInfo,

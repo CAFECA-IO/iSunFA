@@ -102,7 +102,7 @@ export function addAccountNodeToMapRecursively(
   rootAmount: number
 ) {
   const newAccountNode = { ...account, children: [] };
-  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount;
+  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
   accountMap.set(account.code, { accountNode: newAccountNode, percentage });
   account.children.forEach((child) => {
     addAccountNodeToMapRecursively(accountMap, child, rootAmount);
