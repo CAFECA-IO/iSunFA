@@ -16,7 +16,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { DEFAULT_AVATAR_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 // Info: (2024704 - Anna) For list
@@ -43,7 +43,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
 
   // ToDo: (20240617 - Julian) Replace with real data
   const projectName = 'BAIFA';
-  const projectImageSrc = selectedCompany?.imageId ?? DEFAULT_AVATAR_URL;
+  const projectImageSrc = selectedCompany?.imageId ?? DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
   const projectMembers = dummyMemberList;
 

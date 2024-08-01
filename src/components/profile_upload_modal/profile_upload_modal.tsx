@@ -1,20 +1,57 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
-import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { UploadImageType } from '@/constants/upload_image_type';
+import { APIName } from '@/constants/api_connection';
+import { ICompany } from '@/interfaces/company';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IProfileUploadModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  uploadType: UploadImageType;
 }
 
 const ProfileUploadModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  uploadType,
 }: IProfileUploadModalProps) => {
   const { t } = useTranslation('common');
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+
+  const { selectedCompany } = useUserCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+
+  const {
+    trigger: uploadCompanyImage,
+    success: uploadCompanySuccess,
+    data: uploadCompanyData,
+    code: uploadCompanyCode,
+  } = APIHandler<ICompany>(APIName.CREATE_FILE, {}, false, false);
+
+  const modalTitle =
+    uploadType === UploadImageType.PROFILE
+      ? t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')
+      : uploadType === UploadImageType.COMPANY_IMAGE
+        ? // ToDo: (20240801 - Julian) i18n
+          'Company Image'
+        : 'Project Image';
+
+  const modalDescription =
+    uploadType === UploadImageType.PROFILE
+      ? t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
+      : uploadType === UploadImageType.COMPANY_IMAGE
+        ? // ToDo: (20240801 - Julian) i18n
+          'Please upload your company image'
+        : 'Please upload your project image';
 
   useEffect(() => {
     if (!isModalVisible) {
@@ -51,8 +88,34 @@ const ProfileUploadModal = ({
     }
   };
 
-  const saveImage = () => {
+  const saveImage = async () => {
     // ToDo: (20240618 - Julian) Save image to server
+    const formData = new FormData();
+    formData.append('file', uploadedImage as File);
+
+    await uploadCompanyImage({
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
+      body: formData,
+    });
+
+    if (uploadCompanySuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        // ToDo: (20240801 - Julian) i18n
+        title: 'Upload Failed',
+        content: `Please try again later. Error code: ${uploadCompanyCode}`,
+        submitBtnStr: 'OK',
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
+    }
+
+    if (uploadCompanySuccess && uploadCompanyData) {
+      setUploadedImage(null);
+      modalVisibilityHandler();
+    }
   };
 
   const uploadArea = (
@@ -133,12 +196,8 @@ const ProfileUploadModal = ({
         </button>
         {/* Info: (20240617 - Julian) Header */}
         <div className="flex flex-col items-center p-16px">
-          <h1 className="text-xl font-bold text-card-text-primary">
-            {t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')}
-          </h1>
-          <p className="text-xs text-card-text-secondary">
-            {t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')}
-          </p>
+          <h1 className="text-xl font-bold text-card-text-primary">{modalTitle}</h1>
+          <p className="text-xs text-card-text-secondary">{modalDescription}</p>
         </div>
         {/* Info: (20240617 - Julian) Body */}
         <div className="flex items-center justify-center">{overview}</div>

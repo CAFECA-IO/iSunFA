@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
-import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
+import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -119,7 +119,7 @@ const SelectCompanyPageBody = () => {
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
               alt={companyAndRole.company.name}
-              src={selectedCompany?.imageId ?? DEFAULT_AVATAR_URL}
+              src={selectedCompany?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
               width={20}
               height={20}
             />
@@ -192,7 +192,7 @@ const SelectCompanyPageBody = () => {
             <div className="h-200px w-200px overflow-hidden rounded-full">
               <Image
                 alt="avatar"
-                src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+                src={userAuth?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
                 width={200}
                 height={200}
               />
