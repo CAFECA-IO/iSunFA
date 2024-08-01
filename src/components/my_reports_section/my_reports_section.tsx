@@ -58,9 +58,7 @@ const MyReportsSection = () => {
   const [pendingCurrentPage, setPendingCurrentPage] = useState(
     pending ? +pending : DEFAULT_PAGE_NUMBER
   );
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>(
-    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
-  );
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
 
   const [historyPeriod, setHistoryPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
@@ -69,9 +67,7 @@ const MyReportsSection = () => {
   const [historyCurrentPage, setHistoryCurrentPage] = useState(
     history ? +history : DEFAULT_PAGE_NUMBER
   );
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>(
-    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
-  );
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
 
   const {
     trigger: fetchPendingReports,
@@ -235,7 +231,6 @@ const MyReportsSection = () => {
     });
   };
 
-  /* eslint-disable no-console */
   const handleHistoryDatePickerClose = async (start: number, end: number) => {
     setHistoryPeriod({ startTimeStamp: start, endTimeStamp: end });
     await getGeneratedReports({

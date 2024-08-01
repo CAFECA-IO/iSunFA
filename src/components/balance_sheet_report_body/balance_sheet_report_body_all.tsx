@@ -84,7 +84,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
 
   useEffect(() => {
-    if (getReportFinancialSuccess === true && reportFinancial) {
+    if (getReportFinancialSuccess === true && reportFinancial && reportFinancial?.otherInfo) {
       const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
       const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
       const currentYear = currentDateString.year;
@@ -127,13 +127,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     }
   }, [reportFinancial]);
 
-  if (getReportFinancialIsLoading) {
+  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess && reportFinancial) {
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetLiabilityRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetMixRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'dso') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'inventoryTurnoverDays')
+  ) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
