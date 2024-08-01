@@ -2,8 +2,10 @@ import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_COMPANY_IMAGE_URL } from '@/constants/display';
 import { RoleName } from '@/constants/role_name';
+import { UploadType } from '@/constants/file';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
@@ -16,6 +18,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FiEdit } from 'react-icons/fi';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation('common');
@@ -27,6 +30,8 @@ const CompanyInfoPageBody = () => {
     messageModalVisibilityHandler,
     messageModalDataHandler,
     transferCompanyModalVisibilityHandler,
+    profileUploadModalVisibilityHandler,
+    profileUploadModalDataHandler,
   } = useGlobalCtx();
 
   const [company, setCompany] = useState<ICompany | null>(selectedCompany);
@@ -68,6 +73,11 @@ const CompanyInfoPageBody = () => {
   useEffect(() => {
     setCompany(selectedCompany);
   }, [selectedCompany]);
+
+  const updateImageClickHandler = () => {
+    profileUploadModalDataHandler(UploadType.COMPANY);
+    profileUploadModalVisibilityHandler();
+  };
 
   const editCompanyClickHandler = () => {
     teamSettingModalVisibilityHandler();
@@ -180,7 +190,6 @@ const CompanyInfoPageBody = () => {
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
             <div className="flex gap-2 text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -205,15 +214,24 @@ const CompanyInfoPageBody = () => {
           </div>
           <div className="mt-10 flex flex-col items-center justify-between gap-8 max-md:max-w-full max-md:flex-wrap lg:flex-row lg:gap-5 lg:pr-4">
             <div className="flex w-full justify-between lg:w-fit">
-              {' '}
-              <div className="w-64px lg:w-fit">
+              <button
+                type="button"
+                disabled={!isEditNameAllowed}
+                className="group relative flex h-64px w-64px items-center justify-center overflow-hidden rounded-full lg:h-fit lg:w-fit"
+                onClick={updateImageClickHandler}
+              >
                 <Image
-                  src={company?.imageId ?? '/elements/example_company_image.png'}
-                  alt="company image"
+                  src={company?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+                  alt="company_image"
                   width={100}
                   height={100}
+                  className="group-hover:brightness-50 group-disabled:brightness-100"
                 />
-              </div>
+                <FiEdit
+                  className="absolute hidden text-white group-hover:block group-disabled:hidden"
+                  size={30}
+                />
+              </button>
               <div className="my-auto flex flex-col flex-wrap content-center self-stretch lg:hidden">
                 <div className="self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:self-start lg:font-semibold">
                   {t('COMPANY_BASIC_INFO.COMPANY_INFO')}{' '}
@@ -226,7 +244,6 @@ const CompanyInfoPageBody = () => {
                     variant={'secondaryBorderless'}
                     size={'extraSmall'}
                   >
-                    {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="21"
@@ -258,7 +275,6 @@ const CompanyInfoPageBody = () => {
                   variant={'secondaryBorderless'}
                   size={'extraSmall'}
                 >
-                  {' '}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="21"
@@ -304,7 +320,6 @@ const CompanyInfoPageBody = () => {
           <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
             <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -374,7 +389,7 @@ const CompanyInfoPageBody = () => {
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
                             {t('COMPANY_BASIC_INFO.UNLOCK')}
-                          </span>{' '}
+                          </span>
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
                             {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
@@ -418,6 +433,7 @@ const CompanyInfoPageBody = () => {
               <Button
                 onClick={goKYCClickHandler}
                 variant={'secondaryOutline'}
+                disabled={selectedCompany?.id === FREE_COMPANY_ID}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
                 <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
@@ -447,7 +463,6 @@ const CompanyInfoPageBody = () => {
           <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
             <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
