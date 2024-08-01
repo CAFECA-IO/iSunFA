@@ -38,7 +38,7 @@ const ConfirmModal = ({
   confirmData,
 }: IConfirmModalProps) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
   const {
     AIStatus,
     getAIStatusHandler,
@@ -102,7 +102,7 @@ const ConfirmModal = ({
     APIName.VOUCHER_UPDATE
   );
 
-  const hasCompanyId = !!selectedCompany?.id;
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   // ToDo: (20240711 - Julian) Check if AI result is successful

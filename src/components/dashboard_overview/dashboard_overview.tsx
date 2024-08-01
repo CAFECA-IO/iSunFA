@@ -14,8 +14,8 @@ const DashboardOverview = () => {
     {} as IProfitInsight
   );
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     data: profitInsight,
     success: getSuccess,

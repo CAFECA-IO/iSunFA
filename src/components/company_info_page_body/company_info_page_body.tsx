@@ -19,8 +19,8 @@ const CompanyInfoPageBody = () => {
   const { t } = useTranslation('common');
 
   const router = useRouter();
-  const { selectedCompany, selectCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany, selectCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     teamSettingModalVisibilityHandler,
     messageModalVisibilityHandler,

@@ -27,8 +27,8 @@ import { ReportType } from '@/constants/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler } = useGlobalCtx();
 
   const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];

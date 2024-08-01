@@ -211,8 +211,8 @@ const LineChart = ({ data }: LineChartProps) => {
 const IncomeExpenseTrendChart = () => {
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.MONTH);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);

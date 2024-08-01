@@ -34,8 +34,8 @@ const ACCOUNTINGS_WHOLE_COLUMN = [
 ];
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     data: reportFinancial,
     code: getReportFinancialCode,

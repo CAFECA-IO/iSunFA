@@ -41,7 +41,7 @@ const ViewAnalysisReportPage = ({
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',

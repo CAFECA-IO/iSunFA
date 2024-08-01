@@ -28,8 +28,8 @@ import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslation('common');
   const formRef = useRef<HTMLFormElement>(null);
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD);
   const [step, setStep] = useState(0);

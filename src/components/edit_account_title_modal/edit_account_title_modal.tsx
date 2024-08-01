@@ -28,8 +28,8 @@ const EditAccountTitleModal = ({
 }: IEditAccountTitleModalProps) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { accountId } = modalData;
 
   const {

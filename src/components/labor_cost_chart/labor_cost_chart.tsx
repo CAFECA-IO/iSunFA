@@ -204,8 +204,8 @@ const LaborCostChart = () => {
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     trigger: getLaborCostChartData,
     data: laborCostData,

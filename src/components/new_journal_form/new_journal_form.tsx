@@ -78,8 +78,8 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 
 const NewJournalForm = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
   const {

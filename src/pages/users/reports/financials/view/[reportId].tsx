@@ -30,7 +30,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: refactor and delete it (20240723 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportData, setReportData] = React.useState<IReportOld>({

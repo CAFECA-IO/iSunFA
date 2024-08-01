@@ -34,7 +34,6 @@ interface UserContextType {
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
   returnUrl: string | null;
-  clearReturnUrl: () => void;
   checkIsRegistered: () => Promise<{
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
@@ -61,7 +60,6 @@ export const UserContext = createContext<UserContextType>({
   toggleIsSignInError: () => {},
   isAuthLoading: true,
   returnUrl: null,
-  clearReturnUrl: () => {},
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
@@ -148,6 +146,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUserAuth(signInData);
         setCredential(signInData.credentialId);
         setSignedIn(true);
+        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
         setIsSignInError(false);
       }
     }
@@ -249,6 +248,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUserAuth(signUpData);
         setCredential(signUpData.credentialId);
         setSignedIn(true);
+        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
         setIsSignInError(false);
       }
     }
@@ -357,10 +357,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleReturnUrl = () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `handleReturnUrl returnUrl: ${decodeURIComponent(returnUrl ?? '')}, router.pathname: ${router.pathname}, selectedCompanyRef.current:`,
+      selectedCompanyRef.current
+    );
+    if (returnUrl) {
+      const urlString = decodeURIComponent(returnUrl);
+      setReturnUrl(null);
+      router.push(urlString);
+    } else if (
+      router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
+      (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
+    ) {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
+    }
+  };
+
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const checkSession = async () => {
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
     setIsAuthLoading(true);
     const {
       data: userSessionData,
@@ -368,8 +384,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       code: getUserSessionCode,
     } = await getUserSessionData();
     setIsAuthLoading(false);
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
     if (getUserSessionSuccess) {
       if (userSessionData) {
+        // eslint-disable-next-line no-console
+        console.log(
+          'checkSession userSessionData',
+          userSessionData,
+          `'company' in userSessionData && Object.keys(userSessionData.company).length > 0: ${'company' in userSessionData && userSessionData.company && Object.keys(userSessionData.company).length > 0}`
+        );
         if (
           'user' in userSessionData &&
           userSessionData.user &&
@@ -380,12 +404,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
-          if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
-            setSuccessSelectCompany(true);
+          if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+          }
+          if (
+            'company' in userSessionData &&
+            userSessionData.company &&
+            Object.keys(userSessionData.company).length > 0
+          ) {
             setSelectedCompany(userSessionData.company);
+            setSuccessSelectCompany(true);
+            handleReturnUrl();
           } else {
             setSuccessSelectCompany(undefined);
             setSelectedCompany(null);
+            // eslint-disable-next-line no-console
+            console.log('checkSession: no company');
             router.push(ISUNFA_ROUTE.SELECT_COMPANY);
           }
         } else {
@@ -397,20 +431,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       handleNotSignedIn();
       setIsSignInError(true);
       setErrorCode(getUserSessionCode ?? '');
-    }
-  };
-
-  const clearReturnUrl = () => {
-    setReturnUrl(null);
-  };
-
-  const handleReturnUrl = () => {
-    if (returnUrl) {
-      const urlString = decodeURIComponent(returnUrl);
-      clearReturnUrl();
-      router.push(urlString);
-    } else {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
     }
   };
 
@@ -489,7 +509,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
-      clearReturnUrl,
       checkIsRegistered,
       handleExistingCredential,
     }),

@@ -36,8 +36,8 @@ const MyReportsSection = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars

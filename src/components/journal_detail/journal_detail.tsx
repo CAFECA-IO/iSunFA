@@ -34,8 +34,8 @@ interface IJournalDetailProps {
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     previewInvoiceModalDataHandler,
     previewInvoiceModalVisibilityHandler,

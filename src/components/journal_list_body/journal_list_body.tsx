@@ -28,8 +28,8 @@ import Toggle from '@/components/toggle/toggle';
 const JournalListBody = () => {
   const { t } = useTranslation('common');
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
     [key: string]: IPaginatedData<IJournalListItem[]>;
   } | null>(null);

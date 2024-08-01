@@ -168,8 +168,8 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { t } = useTranslation('common');
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');

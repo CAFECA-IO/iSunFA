@@ -30,8 +30,8 @@ const UploadArea = ({
   onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
 }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
-  const hasCompanyId = !!selectedCompany?.id;
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);

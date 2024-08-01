@@ -35,6 +35,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
     toggleIsSignInError,
   } = useUserCtx();
   const {
+    isRegisterModalVisible,
     registerModalDataHandler,
     registerModalVisibilityHandler,
     passKeySupportModalVisibilityHandler,
@@ -42,6 +43,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   } = useGlobalCtx();
 
   const registerHandler = async () => {
+    if (isRegisterModalVisible) return;
     registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
   };
@@ -59,6 +61,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
       // Deprecated: (20240805 - tzuhan) dev
       // eslint-disable-next-line no-console
       console.log('loginHandler error', error);
+      if ((error as Error).name === 'NotAllowedError') {
+        registerHandler(); // Info: 導入註冊流程 (20240801 - tzuhan)
+      }
     }
   };
 
