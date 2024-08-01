@@ -14,17 +14,22 @@ function checkInput(apiConfig: IAPIConfig, input?: IAPIInput) {
 
 function APIHandler<Data>(
   apiName: IAPIName,
-  options?: IAPIInput,
+  options: IAPIInput = {
+    header: {},
+    body: {},
+    params: {},
+    query: {},
+  },
   triggerImmediately: boolean = false,
-  cancel: boolean = false,
+  cancel: boolean = false
 ): IAPIResponse<Data> {
   const apiConfig = APIConfig[apiName];
   if (!apiConfig) throw new Error(`API ${apiName} is not defined`);
   checkInput(apiConfig, options);
 
   if (apiConfig.useWorker) {
-    return useAPIWorker<Data>(apiConfig, options ?? {}, cancel, triggerImmediately);
-  } else return useAPI<Data>(apiConfig, options ?? {}, cancel, triggerImmediately);
+    return useAPIWorker<Data>(apiConfig, options, cancel, triggerImmediately);
+  } else return useAPI<Data>(apiConfig, options, cancel, triggerImmediately);
 }
 
 export default APIHandler;

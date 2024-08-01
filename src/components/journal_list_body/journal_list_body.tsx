@@ -23,13 +23,13 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import Toggle from '@/components/toggle/toggle';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
     [key: string]: IPaginatedData<IJournalListItem[]>;
   } | null>(null);
@@ -102,6 +102,7 @@ const JournalListBody = () => {
       filteredPeriod?: IDatePeriod;
       search?: string;
     }) => {
+      if (!hasCompanyId) return;
       setIsLoading(true);
       setSuccess(undefined);
       setCode(undefined);
@@ -115,7 +116,7 @@ const JournalListBody = () => {
       } = query;
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           ...toSort(sortBy ?? filteredJournalSortBy),

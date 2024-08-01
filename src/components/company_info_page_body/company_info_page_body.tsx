@@ -1,8 +1,6 @@
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { RoleName } from '@/constants/role_name';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -22,6 +20,7 @@ const CompanyInfoPageBody = () => {
 
   const router = useRouter();
   const { selectedCompany, selectCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const {
     teamSettingModalVisibilityHandler,
     messageModalVisibilityHandler,
@@ -33,16 +32,7 @@ const CompanyInfoPageBody = () => {
   const [ownerId, setOwnerId] = useState<number | null>(null);
   const [role, setRole] = useState<IRole | null>(null);
 
-  const { trigger: deleteCompany } = APIHandler<ICompany>(
-    APIName.COMPANY_DELETE,
-    {
-      params: {
-        companyId: selectedCompany?.id ?? NON_EXISTING_COMPANY_ID,
-      },
-    },
-    false,
-    false
-  );
+  const { trigger: deleteCompany } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
 
   const {
     data: companyData,
@@ -53,10 +43,10 @@ const CompanyInfoPageBody = () => {
     APIName.COMPANY_GET_BY_ID,
     {
       params: {
-        companyId: selectedCompany?.id ?? PUBLIC_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
     },
-    true
+    hasCompanyId
   );
 
   const isEditNameAllowed = role?.name === RoleName.OWNER;
@@ -84,13 +74,18 @@ const CompanyInfoPageBody = () => {
   const procedureOfDelete = () => {
     if (!company) return;
     messageModalVisibilityHandler();
-    deleteCompany();
+    deleteCompany({
+      params: {
+        companyId: selectedCompany?.id,
+      },
+    });
 
     selectCompany(null);
     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const deleteCompanyClickHandler = () => {
+    if (!company) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
       title: 'Delete company',

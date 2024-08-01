@@ -15,7 +15,7 @@ import { FinancialReport } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
-import { DOMAIN, FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { DOMAIN, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useTranslation } from 'react-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
@@ -61,6 +61,7 @@ const ViewFinancialSection = ({
 
   const globalCtx = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -85,11 +86,11 @@ const ViewFinancialSection = ({
     APIName.REPORT_FINANCIAL_GET_BY_ID,
     {
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
         reportId: reportId ?? NON_EXISTING_REPORT_ID,
       },
     },
-    true
+    hasCompanyId
   );
 
   // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)

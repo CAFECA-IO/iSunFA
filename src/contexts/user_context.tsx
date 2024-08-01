@@ -112,6 +112,29 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(!isSignInErrorRef.current);
   };
 
+  const clearState = () => {
+    setUserAuth(null);
+    setUsername(null);
+    setCredential(null);
+    setSignedIn(false);
+    setIsSignInError(false);
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+
+    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
+  };
+
+  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  const handleNotSignedIn = () => {
+    clearState();
+    if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
+        setReturnUrl(encodeURIComponent(router.asPath));
+      }
+      router.push(ISUNFA_ROUTE.LOGIN);
+    }
+  };
+
   const handleSignInAPIResponse = (response: {
     success: boolean;
     data: IUser | null;
@@ -336,7 +359,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
-  const setPrivateData = async () => {
+  const checkSession = async () => {
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
     setIsAuthLoading(true);
     const {
       data: userSessionData,
@@ -356,21 +381,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
+          if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
+            setSuccessSelectCompany(true);
+            setSelectedCompany(userSessionData.company);
+          } else {
+            setSuccessSelectCompany(false);
+            setSelectedCompany(null);
+          }
         } else {
-          setSignedIn(false);
-        }
-        if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
-          setSuccessSelectCompany(true);
-          setSelectedCompany(userSessionData.company);
+          handleNotSignedIn();
         }
       }
     }
     if (getUserSessionSuccess === false) {
-      setSignedIn(false);
+      handleNotSignedIn();
       setIsSignInError(true);
       setErrorCode(getUserSessionCode ?? '');
-      setSuccessSelectCompany(undefined);
-      setSelectedCompany(null);
     }
   };
 
@@ -441,47 +467,27 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     await handleSelectCompanyResponse(res);
   };
 
-  const clearState = () => {
-    setUserAuth(null);
-    setUsername(null);
-    setCredential(null);
-    setSignedIn(false);
-    setIsSignInError(false);
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
-
-    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
-  };
-
-  const init = async () => {
-    await setPrivateData();
-    const result = await Promise.resolve();
-    return result;
-  };
-
   const signOut = async () => {
     signOutAPI();
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
   };
 
-  useEffect(() => {
-    (async () => {
-      await init();
-    })();
-  }, []);
-
-  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
-  useEffect(() => {
-    if (!signedIn) {
-      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
-          setReturnUrl(encodeURIComponent(router.asPath));
-        }
-        router.push(ISUNFA_ROUTE.LOGIN);
-      }
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      checkSession();
     }
-  }, [signedIn, router]);
+  };
+
+  useEffect(() => {
+    checkSession();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(

@@ -25,7 +25,6 @@ import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -103,7 +102,7 @@ const ConfirmModal = ({
     APIName.VOUCHER_UPDATE
   );
 
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const hasCompanyId = !!selectedCompany?.id;
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   // ToDo: (20240711 - Julian) Check if AI result is successful
@@ -241,20 +240,20 @@ const ConfirmModal = ({
   const confirmHandler = async () => {
     const newLineItems = convertToLineItems();
 
-    if (journal && journal.invoice && newLineItems) {
+    if (hasCompanyId && journal && journal.invoice && newLineItems) {
       const voucher: IVoucherDataForSavingToDB = {
         journalId: journal.id,
         lineItems: newLineItems,
       };
       if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
         const updateRes = await updateVoucher({
-          params: { companyId },
+          params: { companyId: selectedCompany.id },
           body: { voucher },
         });
         handleAPIResponse(updateRes);
       } else {
         const createRes = await createVoucher({
-          params: { companyId },
+          params: { companyId: selectedCompany.id },
           body: { voucher },
         });
         handleAPIResponse(createRes);
@@ -263,12 +262,13 @@ const ConfirmModal = ({
   };
 
   const openHandler = async () => {
+    if (!hasCompanyId || !journalId) return;
     const {
       success: getJournalSuccess,
       data,
       code: getJournalCode,
     } = await getJournalById({
-      params: { companyId, journalId },
+      params: { companyId: selectedCompany.id, journalId },
     });
     if (data && getJournalSuccess) {
       setJournal(data);
@@ -306,7 +306,7 @@ const ConfirmModal = ({
   };
 
   useEffect(() => {
-    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    if (!isModalVisible || !hasCompanyId) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
     openHandler();
     // Info: (20240529 - Julian) 清空 accountingVoucher
     resetVoucherHandler();
@@ -314,22 +314,22 @@ const ConfirmModal = ({
     setIsAILoading(true);
 
     // Info: (20240528 - Julian) Call AI API first time
-    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
+    getAIStatusHandler({ companyId: selectedCompany.id!, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
   // ToDo: (20240528 - Julian) Error handling
   useEffect(() => {
-    if (AIStatus === ProgressStatus.SUCCESS) {
+    if (hasCompanyId && AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
         params: {
-          companyId,
+          companyId: selectedCompany.id!,
           resultId: askAIId,
         },
       });
       setIsAILoading(false);
     }
     return () => getAIStatusHandler(undefined, false);
-  }, [AIStatus]);
+  }, [hasCompanyId, AIStatus]);
 
   useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;

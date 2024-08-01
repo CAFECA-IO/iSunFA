@@ -18,7 +18,6 @@ import {
 import { loadFileFromLocalStorage, deleteFileFromLocalStorage } from '@/lib/utils/common';
 import { ToastType } from '@/interfaces/toastify';
 import { IFile } from '@/interfaces/file';
-import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { UploadType } from '@/constants/file';
 
 const UploadArea = ({
@@ -32,6 +31,7 @@ const UploadArea = ({
 }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -75,14 +75,15 @@ const UploadArea = ({
   };
 
   const handleFileUpload = async (file: File) => {
-    const selectedCompanyIdStr = String(selectedCompany?.id) ?? NON_EXISTING_COMPANY_ID;
+    if (!hasCompanyId) return;
+    const selectedCompanyIdStr = String(selectedCompany?.id);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', UploadType.KYC);
     formData.append('targetId', selectedCompanyIdStr);
     const { success, code, data } = await uploadFileAPI({
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       body: formData,
     });
@@ -208,6 +209,7 @@ const UploadArea = ({
   };
 
   const deleteClickHandler = async () => {
+    if (!hasCompanyId) return;
     if (readerRef.current) {
       readerRef.current.abort();
     }
@@ -215,7 +217,7 @@ const UploadArea = ({
     if (uploadedFileId) {
       const result = await deleteFileAPI({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
           fileId: uploadedFileId,
         },
       });
@@ -235,6 +237,7 @@ const UploadArea = ({
   };
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     try {
       const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
       setUploadedFile(file);
@@ -243,7 +246,7 @@ const UploadArea = ({
       if (id && file) {
         getFile({
           params: {
-            companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+            companyId: selectedCompany?.id,
             fileId: id,
           },
         });

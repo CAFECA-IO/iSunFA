@@ -11,7 +11,6 @@ import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IVoucherItem {
@@ -36,6 +35,7 @@ interface IJournalDetailProps {
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const {
     previewInvoiceModalDataHandler,
     previewInvoiceModalVisibilityHandler,
@@ -45,15 +45,14 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const {
     data: journalDetail,
     isLoading,
-    // error,
     success,
     code,
   } = APIHandler<IJournal>(
     APIName.JOURNAL_GET_BY_ID,
     {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, journalId },
+      params: { companyId: selectedCompany?.id, journalId },
     },
-    true
+    hasCompanyId,
   );
 
   const [contractId, setContractId] = useState<string>('');

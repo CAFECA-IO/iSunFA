@@ -24,11 +24,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
 import { ReportType } from '@/constants/report';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const { toastHandler } = useGlobalCtx();
 
   const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];
@@ -62,10 +62,10 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   } = APIHandler<IPaginatedPendingReportItem>(
     APIName.REPORT_LIST_PENDING,
     {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      params: { companyId: selectedCompany?.id },
       query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
     },
-    true
+    hasCompanyId
   );
 
   const {
@@ -75,10 +75,10 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   } = APIHandler<IPaginatedGeneratedReportItem>(
     APIName.REPORT_LIST_GENERATED,
     {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      params: { companyId: selectedCompany?.id },
       query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
     },
-    true
+    hasCompanyId
   );
 
   useEffect(() => {

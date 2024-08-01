@@ -28,15 +28,15 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
   } = APIHandler<ICompany>(APIName.COMPANY_UPDATE);
 
   const saveClickHandler = async () => {
-    if (companyName && companyName !== selectedCompany?.name) {
+    if (companyName && selectedCompany && companyName !== selectedCompany.name) {
       updateTeam({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedCompany.id,
         },
         body: {
           name: companyName,
-          code: selectedCompany?.code,
-          regional: selectedCompany?.regional,
+          code: selectedCompany.code,
+          regional: selectedCompany.regional,
         },
       });
 
@@ -138,7 +138,10 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
             </Button>
             <Button
               disabled={
-                isUpdateTeamLoading || !companyName || companyName === selectedCompany?.name
+                isUpdateTeamLoading ||
+                !companyName ||
+                !selectedCompany ||
+                companyName === selectedCompany?.name
               }
               variant={'tertiary'}
               onClick={saveClickHandler}

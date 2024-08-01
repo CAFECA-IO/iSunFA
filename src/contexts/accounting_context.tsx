@@ -55,7 +55,7 @@ interface IAccountingContext {
   // removeTempJournal: (id: string) => void;
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
-  updateOCRListHandler: (companyId: number, update: boolean) => void;
+  updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
   accountList: IAccount[];
   getAccountListHandler: (
     companyId: number,
@@ -274,11 +274,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   }, [stopAskAI, intervalId]);
 
-  const updateOCRListHandler = (companyId: number, update: boolean) => {
-    setOCRListParams({
-      companyId,
-      update,
-    });
+  const updateOCRListHandler = (companyId: number | undefined, update: boolean) => {
+    if (companyId) {
+      setOCRListParams({
+        companyId,
+        update,
+      });
+    }
   };
 
   useEffect(() => {

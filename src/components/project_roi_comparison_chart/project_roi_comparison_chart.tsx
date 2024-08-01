@@ -22,7 +22,6 @@ import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -166,6 +165,7 @@ const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 const ProjectRoiComparisonChart = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const { toastHandler, layoutAssertion } = useGlobalCtx();
 
   const minDate = new Date(DUMMY_START_DATE);
@@ -210,7 +210,7 @@ const ProjectRoiComparisonChart = () => {
     APIName.PROJECT_LIST_PROFIT_COMPARISON,
     {
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         page: currentPage,
@@ -219,7 +219,7 @@ const ProjectRoiComparisonChart = () => {
         endDate: period.endTimeStamp,
       },
     },
-    true
+    hasCompanyId
   );
 
   const isNoData = profitComparison?.empty || !profitComparison || !listSuccess;
@@ -251,11 +251,11 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
+    if (hasCompanyId && currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           page: currentPage + 1,
@@ -268,11 +268,11 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const goToPrevPage = () => {
-    if (currentPage > 1) {
+    if (hasCompanyId && currentPage > 1) {
       setCurrentPage(currentPage - 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           page: currentPage - 1,
@@ -285,9 +285,10 @@ const ProjectRoiComparisonChart = () => {
   };
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     listProjectProfitComparison({
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         page: currentPage - 1,

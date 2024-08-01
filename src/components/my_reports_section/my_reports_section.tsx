@@ -31,13 +31,13 @@ import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
@@ -82,7 +82,7 @@ const MyReportsSection = () => {
   } = APIHandler<IPaginatedPendingReportItem>(
     APIName.REPORT_LIST_PENDING,
     {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      params: { companyId: selectedCompany?.id },
       query: {
         sortOrder: sortOptionQuery[filteredPendingSort],
         startDateInSecond:
@@ -93,7 +93,7 @@ const MyReportsSection = () => {
         pageSize: LIMIT_FOR_REPORT_PAGE,
       },
     },
-    true
+    hasCompanyId
   );
 
   const {
@@ -105,7 +105,7 @@ const MyReportsSection = () => {
   } = APIHandler<IPaginatedGeneratedReportItem>(
     APIName.REPORT_LIST_GENERATED,
     {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+      params: { companyId: selectedCompany?.id },
       query: {
         sortOrder: sortOptionQuery[filteredHistorySort],
         startDateInSecond:
@@ -116,7 +116,7 @@ const MyReportsSection = () => {
         pageSize: LIMIT_FOR_REPORT_PAGE,
       },
     },
-    true
+    hasCompanyId
   );
   const pendingTotalPages =
     pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
@@ -167,6 +167,7 @@ const MyReportsSection = () => {
       pendingPeriod?: IDatePeriod;
       searchPendingQuery?: string;
     }) => {
+      if (!hasCompanyId) return;
       const {
         currentPage: page,
         filteredPendingSort: sortOrder,
@@ -176,7 +177,7 @@ const MyReportsSection = () => {
 
       await fetchPendingReports({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           sortOrder: sortOptionQuery[sortOrder ?? filteredPendingSort],
@@ -205,6 +206,7 @@ const MyReportsSection = () => {
       historyPeriod?: IDatePeriod;
       searchHistoryQuery?: string;
     }) => {
+      if (!hasCompanyId) return;
       const {
         currentPage: page,
         filteredHistorySort: sortOrder,
@@ -214,7 +216,7 @@ const MyReportsSection = () => {
 
       await fetchGeneratedReports({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           sortOrder: sortOptionQuery[sortOrder ?? filteredHistorySort],

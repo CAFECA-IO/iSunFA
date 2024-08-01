@@ -12,7 +12,6 @@ import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -30,6 +29,7 @@ const EditAccountTitleModal = ({
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const { accountId } = modalData;
 
   const {
@@ -138,7 +138,8 @@ const EditAccountTitleModal = ({
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
       submitBtnFunction: () => {
-        deleteOwnAccountTitle(selectedCompany?.id ?? FREE_COMPANY_ID, accountId);
+        if (!hasCompanyId) return;
+        deleteOwnAccountTitle(selectedCompany?.id, accountId);
         modalVisibilityHandler();
       },
       backBtnStr: 'Cancel',

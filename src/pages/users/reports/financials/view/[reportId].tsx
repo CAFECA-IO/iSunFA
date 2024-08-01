@@ -19,7 +19,6 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { FinancialReport, IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ReportUrlMap } from '@/constants/report';
 
 interface IServerSideProps {
@@ -31,6 +30,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   // TODO: refactor and delete it (20240723 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportData, setReportData] = React.useState<IReportOld>({
@@ -48,9 +48,9 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   } = APIHandler<FinancialReport>(
     APIName.REPORT_FINANCIAL_GET_BY_ID,
     {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId },
+      params: { companyId: selectedCompany?.id, reportId },
     },
-    true
+    hasCompanyId
   );
 
   // eslint-disable-next-line no-console

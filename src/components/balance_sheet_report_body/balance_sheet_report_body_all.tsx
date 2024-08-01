@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -46,6 +46,7 @@ const COLOR_CLASSES = [
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -75,11 +76,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     APIName.REPORT_FINANCIAL_GET_BY_ID,
     {
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
         reportId: reportId ?? NON_EXISTING_REPORT_ID,
       },
     },
-    true
+    hasCompanyId
   );
 
   useEffect(() => {

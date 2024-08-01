@@ -6,7 +6,6 @@ import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { IAdmin } from '@/interfaces/admin';
 
 interface ITransferCompanyModal {
@@ -27,8 +26,9 @@ const TransferCompanyModal = ({
   const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER);
 
   const handleSubmit = (newOwnerId: string) => {
+    if (!selectedCompany?.id) return;
     transferOwner({
-      params: { companyId: selectedCompany?.id ?? NON_EXISTING_COMPANY_ID },
+      params: { companyId: selectedCompany?.id },
       body: {
         newOwnerId,
       },

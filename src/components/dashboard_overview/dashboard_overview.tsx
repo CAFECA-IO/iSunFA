@@ -7,7 +7,6 @@ import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { IProfitInsight } from '@/interfaces/project_insight';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const DashboardOverview = () => {
   const { t } = useTranslation('common');
@@ -16,6 +15,7 @@ const DashboardOverview = () => {
   );
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
+  const hasCompanyId = !!selectedCompany?.id;
   const {
     data: profitInsight,
     success: getSuccess,
@@ -25,10 +25,10 @@ const DashboardOverview = () => {
     APIName.PROFIT_GET_INSIGHT,
     {
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
     },
-    true
+    hasCompanyId
   );
 
   // TODO: i18n (20240620 - Shirley)

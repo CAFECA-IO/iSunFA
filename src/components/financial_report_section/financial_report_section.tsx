@@ -105,7 +105,7 @@ const FinancialReportSection = () => {
     if (selectedCompany) {
       generateFinancialReport({
         params: {
-          companyId: selectedCompany?.id,
+          companyId: selectedCompany.id,
         },
         body,
       });
