@@ -27,7 +27,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
       const { fileId } = req.query;
-      const fileIdStr = fileId as string;
+      const fileIdStr = String(fileId);
       const companyIdStr = companyId.toString();
       const filename = `${companyIdStr}-${fileIdStr}`;
       const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
@@ -37,11 +37,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
         await fs.access(filePath);
         const stat = await fs.stat(filePath);
         payload = { id: fileIdStr, size: stat.size, existed: true };
-        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
       } else {
-        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         payload = { id: fileIdStr, size: 0, existed: false };
       }
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     }
   } catch (error) {
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;

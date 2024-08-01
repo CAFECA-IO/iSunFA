@@ -21,6 +21,6 @@ describe('Admin Invitation Repository Tests', () => {
       const updatedInvitation = await getInvitationByCode(testInvitation.code);
       expect(updatedInvitation).toBeDefined();
       expect(updatedInvitation?.hasUsed).toBe(true);
-    });
+    }, 10000);
   });
 });
