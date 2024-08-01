@@ -189,12 +189,13 @@ const SelectCompanyPageBody = () => {
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
           <div className="relative flex w-200px items-center justify-center">
-            <div className="h-200px w-200px overflow-hidden rounded-full">
+            <div className="h-200px w-200px overflow-hidden">
               <Image
                 alt="avatar"
                 src={userAuth?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
-                width={200}
-                height={200}
+                fill
+                style={{ objectFit: 'cover' }}
+                className="rounded-full"
               />
             </div>
 
