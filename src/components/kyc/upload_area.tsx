@@ -163,7 +163,12 @@ const UploadArea = ({
     event.preventDefault();
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-      saveFileToLocalStorage(file);
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png']; // Info: (20240801 - tzuhan) 'image/bmp', 'image/tiff' is not supported
+      if (validTypes.includes(file.type)) {
+        saveFileToLocalStorage(file);
+      } else {
+        handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.ONLY_PDF_JPEG_PNG_SUPPORTED'));
+      }
     }
   };
 
@@ -340,12 +345,12 @@ const UploadArea = ({
           <p className="text-center text-lightGray4">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
 
           <input
-            id={type}
-            name={type}
+            id="journal-upload-area"
+            name="journal-upload-area"
+            accept="image/*"
             type="file"
             className="hidden"
             onChange={handleFileChange}
-            disabled={uploadedFile !== undefined}
           />
         </label>
       )}
