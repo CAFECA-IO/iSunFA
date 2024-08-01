@@ -110,9 +110,6 @@ export default abstract class FinancialReportGenerator {
     const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
     const forest = buildAccountForest(accounts);
 
-    if (accountType === AccountType.EQUITY) {
-    console.log('forest', forest);
-    }
     return forest;
   }
 
@@ -137,9 +134,6 @@ export default abstract class FinancialReportGenerator {
 
   protected async getAllLineItemsByReportSheet(curPeriod: boolean, reportSheetType?: ReportSheetType) {
     const { startDateInSecond, endDateInSecond } = this.getDateInSecond(curPeriod);
-
-    // eslint-disable-next-line no-console
-    console.log('startDateInSecond', startDateInSecond, 'endDateInSecond', endDateInSecond);
 
     const reportSheetTypeForQuery = reportSheetType || this.reportSheetType;
     const accountTypes = ReportSheetAccountTypeMap[reportSheetTypeForQuery];

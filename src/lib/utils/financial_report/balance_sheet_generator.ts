@@ -19,6 +19,7 @@ import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { AccountType, ASSET_CODE } from '@/constants/account';
 import { timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
+import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private incomeStatementGenerator: IncomeStatementGenerator;
@@ -50,21 +51,24 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
 
     const netIncome = incomeStatementContent.find((account) => account.code === '8200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const otherComprehensiveIncome = incomeStatementContent.find((account) => account.code === '8500') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const otherComprehensiveIncome = incomeStatementContent.find((account) => account.code === '8300') || EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     const closeAccount: ILineItemIncludeAccount[] = [];
+
+    const netIncomeAccount = await findUniqueAccountByCodeInPrisma('3353');
+    const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma('3499');
 
     closeAccount.push({
       id: -1,
       amount: curPeriod ? netIncome.curPeriodAmount : netIncome.prePeriodAmount,
       description: '本期損益',
       debit: false,
-      accountId: -1,
+      accountId: netIncomeAccount?.id || -1,
       voucherId: -1,
       createdAt: 1,
       updatedAt: 1,
       deletedAt: null,
-      account: {
+      account: netIncomeAccount || {
         id: -1,
         companyId: this.companyId,
         system: "IFRS",
@@ -88,12 +92,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       amount: curPeriod ? otherComprehensiveIncome.curPeriodAmount : otherComprehensiveIncome.prePeriodAmount,
       description: '其他權益-其他',
       debit: false,
-      accountId: -1,
+      accountId: otherComprehensiveIncomeAccount?.id || -1,
       voucherId: -1,
       createdAt: 1,
       updatedAt: 1,
       deletedAt: null,
-      account: {
+      account: otherComprehensiveIncomeAccount || {
         id: -1,
         companyId: this.companyId,
         system: "IFRS",
@@ -124,16 +128,22 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const accountForest = await this.getAccountForestByReportSheet();
 
-    // eslint-disable-next-line no-console
-    console.log('accountForest', accountForest);
-
     const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
 
-    // eslint-disable-next-line no-console
-    console.log('lineItemsMap', lineItemsMap);
-
     const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
+
     return updatedAccountForest;
+  }
+
+  static calculateLiabilityAndEquity(accountTree: IAccountNode[]) {
+    const liability = accountTree.find((account) => account.code === '2XXX');
+    const equity = accountTree.find((account) => account.code === '3XXX');
+    const liabilityAndEquity = accountTree.find((account) => account.code === '3X2X');
+
+    if (liabilityAndEquity) {
+      liabilityAndEquity.amount = liability?.amount || 0;
+      liabilityAndEquity.amount += equity?.amount || 0;
+    }
   }
 
   public override async generateFinancialReportMap(curPeriod: boolean): Promise<
@@ -146,6 +156,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     >
   > {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
+    BalanceSheetGenerator.calculateLiabilityAndEquity(accountForest);
     const accountMap = transformForestToMap(accountForest);
 
     return accountMap;

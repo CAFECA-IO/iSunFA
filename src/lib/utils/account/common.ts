@@ -1,4 +1,3 @@
-import { AccountType } from '@/constants/account';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
@@ -97,10 +96,6 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     (child) => child.companyId === PUBLIC_COMPANY_ID
   );
 
-  if (updatedAccount.type === AccountType.EQUITY || updatedAccount.type === AccountType.OTHER) {
-    // eslint-disable-next-line no-console
-    console.log('updatedAccount bbbb', updatedAccount);
-  }
   return updatedAccount;
 }
 
@@ -109,9 +104,6 @@ export function updateAccountAmountsInSingleTree(
   lineItemsMap: Map<number, number>
 ) {
   const updatedIAccountNode = updateAccountAmountsByDFS(accounts, lineItemsMap);
-
-  // eslint-disable-next-line no-console
-  // console.log('updatedIAccountNode', updatedIAccountNode);
   return updatedIAccountNode;
 }
 
@@ -120,7 +112,6 @@ export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<n
     return updateAccountAmountsInSingleTree(account, lineItemsMap);
   });
 
-  // console.log('updatedForest aaa', updatedForest[1].children);
   return updatedForest;
 }
 
@@ -399,4 +390,8 @@ export function adjustLiabilityIncreaseFromNetIncome(
  */
 export function noAdjustNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
   return netIncome + originalNumber;
+}
+
+export function reverseNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
+  return -1 * (netIncome + originalNumber);
 }

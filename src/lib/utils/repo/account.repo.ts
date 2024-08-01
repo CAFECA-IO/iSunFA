@@ -247,3 +247,19 @@ export async function easyFindManyAccountsInPrisma(
   });
   return accounts;
 }
+
+export async function findUniqueAccountByCodeInPrisma(
+  code: string,
+  companyId?: number,
+) {
+  const account: Account | null = await prisma.account.findUnique({
+    where: {
+      OR: [
+        { companyId },
+        { companyId: PUBLIC_COMPANY_ID },
+      ],
+      code,
+    },
+  });
+  return account;
+}

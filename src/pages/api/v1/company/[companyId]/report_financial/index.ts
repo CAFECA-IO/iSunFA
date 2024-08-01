@@ -391,12 +391,12 @@ export default async function handler(
   let payload: number | null = null;
 
   try {
-    // const session = await getSession(req, res);
-    // const { userId, companyId } = session;
-    const companyId = 10000001;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    // const companyId = 10000001;
 
-    // const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
-    const isAuth = true;
+    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    // const isAuth = true;
     if (isAuth) {
       switch (req.method) {
         case 'POST': {
