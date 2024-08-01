@@ -89,28 +89,12 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
        沒有註冊資料: 401ISF0000
        伺服器錯誤: 500ISF0000
     */
-
     if (!signedIn && isSignInError) {
-      const toastType = errorCode === `401ISF0000` ? ToastType.WARNING : ToastType.ERROR;
-      const toastContent =
-        errorCode === `401ISF0000` ? (
-          <div>
-            <div>
-              {t('LOGIN_PAGE_BODY.PLEASE')}{' '}
-              <button
-                onClick={registerHandler}
-                type="button"
-                className="text-base text-link-text-primary hover:opacity-70"
-              >
-                <div className="justify-center rounded-sm">
-                  {t('LOGIN_PAGE_BODY.REGISTER_YOUR_DEVICE')}
-                </div>
-              </button>
-              {t('LOGIN_PAGE_BODY.OR_TRY_OTHER_PASSKY')}
-              <span className="pl-3">({errorCode})</span>
-            </div>
-          </div>
-        ) : (
+      if (errorCode === `401ISF0000`) {
+        registerHandler();
+      } else {
+        const toastType = ToastType.ERROR;
+        const toastContent = (
           <div className="">
             <p className="">
               {t('LOGIN_PAGE_BODY.OOPS')}({errorCode})
@@ -122,15 +106,15 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
             </p>
           </div>
         );
-
-      toastHandler({
-        id: `${errorCode}`,
-        type: toastType,
-        content: toastContent,
-        closeable: true,
-        onClose: toggleIsSignInError,
-        autoClose: false,
-      });
+        toastHandler({
+          id: `${errorCode}`,
+          type: toastType,
+          content: toastContent,
+          closeable: true,
+          onClose: toggleIsSignInError,
+          autoClose: false,
+        });
+      }
     }
   }, [errorCode, signedIn, isSignInError]);
 
