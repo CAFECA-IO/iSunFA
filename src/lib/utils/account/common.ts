@@ -1,3 +1,4 @@
+import { AccountType } from '@/constants/account';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
@@ -70,14 +71,36 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   });
 
   // Info: (20240702 - Murky) Copy child to prevent call by reference
-  const updatedAccount: IAccountNode = { ...account, children: updatedChildren };
+  const updatedAccount: IAccountNode = {
+    id: account.id,
+    amount: newAmount,
+    companyId: account.companyId,
+    system: account.system,
+    type: account.type,
+    debit: account.debit,
+    liquidity: account.liquidity,
+    code: account.code,
+    name: account.name,
+    forUser: account.forUser,
+    parentCode: account.parentCode,
+    rootCode: account.rootCode,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt,
+    level: account.level,
+    deletedAt: account.deletedAt,
+    children: updatedChildren };
 
-  updatedAccount.amount = newAmount;
+  // updatedAccount.amount = newAmount;
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   updatedAccount.children = updatedAccount.children.filter(
     (child) => child.companyId === PUBLIC_COMPANY_ID
   );
+
+  if (updatedAccount.type === AccountType.EQUITY || updatedAccount.type === AccountType.OTHER) {
+    // eslint-disable-next-line no-console
+    console.log('updatedAccount bbbb', updatedAccount);
+  }
   return updatedAccount;
 }
 
@@ -86,6 +109,9 @@ export function updateAccountAmountsInSingleTree(
   lineItemsMap: Map<number, number>
 ) {
   const updatedIAccountNode = updateAccountAmountsByDFS(accounts, lineItemsMap);
+
+  // eslint-disable-next-line no-console
+  // console.log('updatedIAccountNode', updatedIAccountNode);
   return updatedIAccountNode;
 }
 
@@ -93,6 +119,8 @@ export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<n
   const updatedForest = forest.map((account) => {
     return updateAccountAmountsInSingleTree(account, lineItemsMap);
   });
+
+  // console.log('updatedForest aaa', updatedForest[1].children);
   return updatedForest;
 }
 

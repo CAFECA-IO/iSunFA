@@ -1,5 +1,5 @@
 import { buildAccountForest } from '@/lib/utils/account/common';
-import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
+import { easyFindManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
@@ -87,33 +87,41 @@ export default abstract class FinancialReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
-    const forUser = undefined;
-    const page = 1;
-    const limit = Number.MAX_SAFE_INTEGER;
-    const liquidity = undefined;
-    const isDeleted = false;
-    const accounts = await findManyAccountsInPrisma({
-      companyId: this.companyId,
-      includeDefaultAccount: true,
-      liquidity,
-      type: accountType,
-      reportType: undefined,
-      equityType: undefined,
-      forUser,
-      isDeleted,
-      page,
-      limit,
-      sortBy: 'code',
-      sortOrder: 'asc',
-    });
-    const forest = buildAccountForest(accounts.data);
+    // const forUser = undefined;
+    // const page = 1;
+    // const limit = Number.MAX_SAFE_INTEGER;
+    // const liquidity = undefined;
+    // const isDeleted = false;
+    // const accounts = await findManyAccountsInPrisma({
+    //   companyId: this.companyId,
+    //   includeDefaultAccount: undefined,
+    //   liquidity,
+    //   type: accountType,
+    //   reportType: undefined,
+    //   equityType: undefined,
+    //   forUser,
+    //   isDeleted,
+    //   page,
+    //   limit,
+    //   sortBy: 'code',
+    //   sortOrder: 'asc',
+    // });
+
+    const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
+    const forest = buildAccountForest(accounts);
+
+    if (accountType === AccountType.EQUITY) {
+    console.log('forest', forest);
+    }
     return forest;
   }
 
   protected async getAccountForestByReportSheet() {
     const accountTypes = ReportSheetAccountTypeMap[this.reportSheetType];
     const forestArray = await Promise.all(
-      accountTypes.map((type) => this.buildAccountForestFromDB(type))
+      accountTypes.map(async (type) => {
+        return this.buildAccountForestFromDB(type);
+      })
     );
 
     const forest = forestArray.flat(1);
@@ -129,6 +137,10 @@ export default abstract class FinancialReportGenerator {
 
   protected async getAllLineItemsByReportSheet(curPeriod: boolean, reportSheetType?: ReportSheetType) {
     const { startDateInSecond, endDateInSecond } = this.getDateInSecond(curPeriod);
+
+    // eslint-disable-next-line no-console
+    console.log('startDateInSecond', startDateInSecond, 'endDateInSecond', endDateInSecond);
+
     const reportSheetTypeForQuery = reportSheetType || this.reportSheetType;
     const accountTypes = ReportSheetAccountTypeMap[reportSheetTypeForQuery];
     const isLineItemDeleted = false;

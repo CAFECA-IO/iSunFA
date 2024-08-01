@@ -75,7 +75,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         name: '本期損益',
         forUser: false,
         parentCode: '3350',
-        rootCode: '3X2X',
+        rootCode: '3300',
         level: 3,
         createdAt: 1,
         updatedAt: 1,
@@ -104,7 +104,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         name: '其他權益－其他',
         forUser: false,
         parentCode: '3490',
-        rootCode: '3X2X',
+        rootCode: '3400',
         level: 3,
         createdAt: 1,
         updatedAt: 1,
@@ -116,15 +116,21 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   public override async generateFinancialReportTree(curPeriod: boolean): Promise<IAccountNode[]> {
-    const lineItemsFromDB = await this.getAllLineItemsByReportSheet(curPeriod);
+    let lineItemsFromDB = await this.getAllLineItemsByReportSheet(curPeriod);
 
     // Info: (20240801 - Murky) 暫時關閉本期損益和其他其他綜合損益權益
     const closeAccount = await this.closeAccountFromIncomeStatement(curPeriod);
-    lineItemsFromDB.push(...closeAccount);
+    lineItemsFromDB = lineItemsFromDB.concat(closeAccount);
 
     const accountForest = await this.getAccountForestByReportSheet();
 
+    // eslint-disable-next-line no-console
+    console.log('accountForest', accountForest);
+
     const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
+
+    // eslint-disable-next-line no-console
+    console.log('lineItemsMap', lineItemsMap);
 
     const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
     return updatedAccountForest;
@@ -386,7 +392,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
 
     const incomeStatementContent =
-        await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
+        await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = await this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
     return {
       content: balanceSheetContent,

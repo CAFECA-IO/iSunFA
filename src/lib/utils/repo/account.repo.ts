@@ -66,7 +66,7 @@ export async function findManyAccountsInPrisma({
               : [{ companyId }]
             : [],
       },
-      type === AccountType.EQUITY && equityType
+      equityType && type === AccountType.EQUITY
         ? {
             code: {
               in: EQUITY_TYPE_TO_CODE_MAP[equityType],
@@ -230,4 +230,20 @@ export async function findLatestSubAccountInPrisma(
     console.error(error);
   }
   return latestSubAccount;
+}
+
+export async function easyFindManyAccountsInPrisma(
+  companyId: number,
+  type: AccountType,
+) {
+  const accounts: Account[] = await prisma.account.findMany({
+    where: {
+      OR: [
+        { companyId },
+        { companyId: PUBLIC_COMPANY_ID },
+      ],
+      type,
+    },
+  });
+  return accounts;
 }
