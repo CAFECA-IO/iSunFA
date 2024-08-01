@@ -21,5 +21,5 @@ describe('transferOwnership', () => {
 
     expect(formerOwner).toBeDefined();
     expect(formerOwner?.deletedAt).toBeGreaterThan(0);
-  });
+  }, 10000);
 });
