@@ -23,7 +23,7 @@ import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private incomeStatementContent: IAccountReadyForFrontend[] = [];
+  private incomeStatementGeneratorFromTimeZero: IncomeStatementGenerator;
 
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
@@ -34,19 +34,23 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       startDateInSecond,
       endDateInSecond
     );
+
+    this.incomeStatementGeneratorFromTimeZero = new IncomeStatementGenerator(
+      companyId,
+      0,
+      endDateInSecond
+    );
   }
 
   /// //////////////////////////////////////////////////
   // Info: (20240729 - Murky) this special function is to temporally  close account from income statement to retain earning, but this won't effect income statement
   /// //////////////////////////////////////////////////
   private async closeAccountFromIncomeStatement(curPeriod: boolean): Promise<ILineItemIncludeAccount[]> {
-    if (this.incomeStatementContent.length === 0) {
-      this.incomeStatementContent =
-        await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
-    }
+    const incomeStatementContent =
+        await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
 
-    const netIncome = this.incomeStatementContent.find((account) => account.code === '8200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const otherComprehensiveIncome = this.incomeStatementContent.find((account) => account.code === '8500') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const netIncome = incomeStatementContent.find((account) => account.code === '8200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const otherComprehensiveIncome = incomeStatementContent.find((account) => account.code === '8500') || EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     const closeAccount: ILineItemIncludeAccount[] = [];
 
@@ -381,11 +385,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     // const lastPeriodDate = new Date(lastPeriodDateInMillisecond);
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
 
-    if (this.incomeStatementContent.length === 0) {
-      this.incomeStatementContent =
-        await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
-    }
-    const otherInfo = await this.generateOtherInfo(balanceSheetContent, this.incomeStatementContent);
+    const incomeStatementContent =
+        await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
+    const otherInfo = await this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
     return {
       content: balanceSheetContent,
       otherInfo,
