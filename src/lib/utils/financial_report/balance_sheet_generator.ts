@@ -404,7 +404,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const incomeStatementContent =
         await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
-    const otherInfo = await this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
+    const otherInfo = this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
     return {
       content: balanceSheetContent,
       otherInfo,

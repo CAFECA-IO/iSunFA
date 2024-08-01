@@ -149,8 +149,15 @@ export function mappingAccountToSheetDisplay(
   }[]
 ): IAccountForSheetDisplay[] {
   const sheetDisplay: IAccountForSheetDisplay[] = [];
+  const alreadyUsedAccountCode = new Set<string>();
 
   sheetMappingRow.forEach((row) => {
+    // Info: (20240702 - Murky) 如果已經有相同的code，則不再加入
+    if (alreadyUsedAccountCode.has(row.code)) {
+      return;
+    }
+
+    alreadyUsedAccountCode.add(row.code);
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
