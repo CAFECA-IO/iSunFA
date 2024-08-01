@@ -10,7 +10,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 
 interface SignUpProps {
@@ -103,7 +103,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: signInAPI } = APIHandler<IUser>(APIName.SIGN_IN);
   const { trigger: signUpAPI } = APIHandler<IUser>(APIName.SIGN_UP);
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
-  const { trigger: getCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_GET);
   const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
     APIName.SESSION_GET
   );
@@ -385,8 +384,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             setSuccessSelectCompany(true);
             setSelectedCompany(userSessionData.company);
           } else {
-            setSuccessSelectCompany(false);
+            setSuccessSelectCompany(undefined);
             setSelectedCompany(null);
+            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
           }
         } else {
           handleNotSignedIn();
@@ -411,24 +411,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       router.push(urlString);
     } else {
       router.push(ISUNFA_ROUTE.DASHBOARD);
-    }
-  };
-
-  // Info: (20240729 - tzuhan) un-used function
-  const getCompanyHandler = async (companyId: number) => {
-    const { success, code, data } = await getCompanyAPI({
-      params: {
-        companyId,
-      },
-    });
-    if (success && data?.company) {
-      setSelectedCompany(data.company);
-      setSuccessSelectCompany(true);
-      handleReturnUrl();
-    }
-    if (success === false) {
-      setErrorCode(code ?? '');
-      setSuccessSelectCompany(false);
     }
   };
 
@@ -508,7 +490,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
       clearReturnUrl,
-      getCompanyHandler,
       checkIsRegistered,
       handleExistingCredential,
     }),
