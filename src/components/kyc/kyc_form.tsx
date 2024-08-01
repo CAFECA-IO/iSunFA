@@ -23,14 +23,14 @@ import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'react-i18next';
 import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslation('common');
   const formRef = useRef<HTMLFormElement>(null);
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD, {}, false, false);
+  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
@@ -71,6 +71,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!hasCompanyId) return;
     const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
@@ -83,7 +84,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     if (isComplete) {
       const { success, code } = await triggerUpload({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         body: companyKYCForm,
       });

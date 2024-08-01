@@ -53,7 +53,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     success: createCompanySuccess,
     error: createCompanyError,
     code: createCompanyCode,
-  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD, {}, false, false);
+  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD);
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
