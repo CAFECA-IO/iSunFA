@@ -30,14 +30,14 @@ const ProfileUploadModal = ({
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
+  // Info: (20240801 - Julian) 上傳圖片 API
   const {
-    trigger: uploadCompanyImage,
-    success: uploadCompanySuccess,
-    data: uploadCompanyData,
-    code: uploadCompanyCode,
+    trigger: uploadImage,
+    success,
+    code,
   } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
 
   const modalTitle =
@@ -55,20 +55,6 @@ const ProfileUploadModal = ({
         ? // ToDo: (20240801 - Julian) i18n
           'Please upload your company image'
         : 'Please upload your project image';
-
-  useEffect(() => {
-    if (!isModalVisible) {
-      setUploadedImage(null);
-      setUploadSuccess(false);
-    }
-  }, [isModalVisible]);
-
-  useEffect(() => {
-    if (uploadSuccess) {
-      modalVisibilityHandler();
-      router.reload();
-    }
-  }, [uploadSuccess]);
 
   const cancelHandler = () => {
     setUploadedImage(null);
@@ -91,7 +77,7 @@ const ProfileUploadModal = ({
     }
   };
 
-  const uploadImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const printImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const file = event.target.files?.[0];
     if (file) {
@@ -99,38 +85,91 @@ const ProfileUploadModal = ({
     }
   };
 
+  // Info: (20240801 - Julian) 上傳失敗 -> 顯示錯誤訊息
+  const uploadedError = () => {
+    messageModalDataHandler({
+      messageType: MessageType.ERROR,
+      // ToDo: (20240801 - Julian) i18n
+      title: 'Upload Failed',
+      content: `Please try again later. Error code: ${code}`,
+      submitBtnStr: 'OK',
+      submitBtnFunction: messageModalVisibilityHandler,
+    });
+    messageModalVisibilityHandler();
+  };
+
+  // Info: (20240801 - Julian) 上傳成功 -> 清空 uploadedImage 並關閉 Modal
+  const uploadedSuccess = () => {
+    setUploadedImage(null);
+    setUploadSuccess(true);
+  };
+
+  // Info: (20240801 - Julian) --------------- API Functions ---------------
   const saveImage = async () => {
-    const companyId = selectedCompany?.id ?? NON_EXISTING_COMPANY_ID;
-
+    // Info: (20240801 - Julian) 建立 FormData
     const formData = new FormData();
-    formData.append('file', uploadedImage as File);
-    formData.append('type', UploadType.COMPANY);
-    formData.append('targetId', companyId.toString());
 
-    await uploadCompanyImage({
+    switch (uploadType) {
+      // Info: (20240801 - Julian) 上傳公司圖片
+      case UploadType.COMPANY: {
+        const companyId = selectedCompany?.id ?? NON_EXISTING_COMPANY_ID;
+
+        formData.append('file', uploadedImage as File);
+        formData.append('type', UploadType.COMPANY);
+        formData.append('targetId', companyId.toString());
+        break;
+      }
+      // Info: (20240801 - Julian) 上傳用戶頭貼
+      case UploadType.USER: {
+        const userId = userAuth?.id ?? -1;
+
+        formData.append('file', uploadedImage as File);
+        formData.append('type', UploadType.USER);
+        formData.append('targetId', userId.toString());
+        break;
+      }
+      // Info: (20240801 - Julian) 上傳專案圖片
+      case UploadType.PROJECT: {
+        const projectId = '-1'; // ToDo: (20240801 - Julian) get project id
+
+        formData.append('file', uploadedImage as File);
+        formData.append('type', UploadType.PROJECT);
+        formData.append('targetId', projectId);
+        break;
+      }
+      default:
+        break;
+    }
+    // Info: (20240801 - Julian) call API
+    await uploadImage({
       params: {
         companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
       },
       body: formData,
     });
-
-    if (uploadCompanySuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        // ToDo: (20240801 - Julian) i18n
-        title: 'Upload Failed',
-        content: `Please try again later. Error code: ${uploadCompanyCode}`,
-        submitBtnStr: 'OK',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-
-    if (uploadCompanySuccess && uploadCompanyData) {
-      setUploadedImage(null);
-      setUploadSuccess(true);
-    }
   };
+
+  useEffect(() => {
+    if (!isModalVisible) {
+      setUploadedImage(null);
+      setUploadSuccess(false);
+    }
+  }, [isModalVisible]);
+
+  useEffect(() => {
+    if (uploadSuccess) {
+      modalVisibilityHandler();
+      router.reload();
+    }
+  }, [uploadSuccess]);
+
+  useEffect(() => {
+    if (success) {
+      uploadedSuccess();
+    } else if (code) {
+      uploadedError();
+    }
+  }, [success, code]);
 
   const uploadArea = (
     // eslint-disable-next-line jsx-a11y/label-has-associated-control
@@ -145,7 +184,7 @@ const ProfileUploadModal = ({
         name="file"
         className="hidden"
         accept="image/*"
-        onChange={(event) => uploadImage(event)}
+        onChange={(event) => printImage(event)}
       />
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
       <p className="mt-20px font-semibold text-navyBlue2">
@@ -163,7 +202,7 @@ const ProfileUploadModal = ({
         <Image
           src={URL.createObjectURL(uploadedImage)}
           alt="preview"
-          layout="fill"
+          fill
           style={{ objectFit: 'contain' }}
         />
         {/* Info: (20240618 - Julian) spotlight */}

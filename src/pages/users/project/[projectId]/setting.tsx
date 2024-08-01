@@ -18,6 +18,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { UploadType } from '@/constants/file';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -39,15 +40,15 @@ interface IProjectSettingPageProps {
 
 const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const { t } = useTranslation('common');
-  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240617 - Julian) Replace with real data
   const projectName = 'BAIFA';
-  const projectImageSrc = selectedCompany?.imageId ?? DEFAULT_COMPANY_IMAGE_URL;
+  const projectImageSrc = DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
   const projectMembers = dummyMemberList;
 
-  const { profileUploadModalVisibilityHandler } = useGlobalCtx();
+  const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
 
   const [changedProjectName, setChangedProjectName] = useState(projectName);
   const [changedStage, setChangedStage] = useState(projectStage);
@@ -91,6 +92,11 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
 
   const saveClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+  };
+
+  const profileUploadClickHandler = () => {
+    profileUploadModalDataHandler(UploadType.PROJECT);
+    profileUploadModalVisibilityHandler();
   };
 
   // ToDo: (20240612 - Julian) get member list from API
@@ -246,7 +252,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                 {/* ToDo: (20240617 - Julian) open profile update modal */}
                 <button
                   type="button"
-                  onClick={profileUploadModalVisibilityHandler}
+                  onClick={profileUploadClickHandler}
                   className="group relative flex h-150px w-150px items-center justify-center overflow-hidden rounded-full"
                 >
                   <Image
