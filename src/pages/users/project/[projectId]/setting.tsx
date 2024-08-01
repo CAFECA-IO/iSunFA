@@ -16,8 +16,9 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { DEFAULT_AVATAR_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { UploadType } from '@/constants/file';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -39,15 +40,15 @@ interface IProjectSettingPageProps {
 
 const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const { t } = useTranslation('common');
-  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240617 - Julian) Replace with real data
   const projectName = 'BAIFA';
-  const projectImageSrc = selectedCompany?.imageId ?? DEFAULT_AVATAR_URL;
+  const projectImageSrc = DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
   const projectMembers = dummyMemberList;
 
-  const { profileUploadModalVisibilityHandler } = useGlobalCtx();
+  const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
 
   const [changedProjectName, setChangedProjectName] = useState(projectName);
   const [changedStage, setChangedStage] = useState(projectStage);
@@ -91,6 +92,11 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
 
   const saveClickHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+  };
+
+  const profileUploadClickHandler = () => {
+    profileUploadModalDataHandler(UploadType.PROJECT);
+    profileUploadModalVisibilityHandler();
   };
 
   // ToDo: (20240612 - Julian) get member list from API
@@ -246,7 +252,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                 {/* ToDo: (20240617 - Julian) open profile update modal */}
                 <button
                   type="button"
-                  onClick={profileUploadModalVisibilityHandler}
+                  onClick={profileUploadClickHandler}
                   className="group relative flex h-150px w-150px items-center justify-center overflow-hidden rounded-full"
                 >
                   <Image
@@ -256,10 +262,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     height={150}
                     className="group-hover:brightness-50"
                   />
-                  <FiEdit
-                    className="absolute hidden text-text-brand-primary-lv2 group-hover:block"
-                    size={40}
-                  />
+                  <FiEdit className="absolute hidden text-white group-hover:block" size={40} />
                 </button>
                 <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                   {/* Info: (20240617 - Julian) Project Name */}

@@ -30,11 +30,11 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
 
   const displayedCompanyName = companyName ? (
     <Link
-      href={ISUNFA_ROUTE.SELECT_COMPANY}
+      href={ISUNFA_ROUTE.PROJECT_LIST}
       className={`my-20px flex ${isExpanded ? 'h-60px w-60px text-3xl' : 'h-40px w-40px text-2xl'} items-center justify-center rounded-full bg-avatar-surface-background-indigo font-bold text-avatar-text-in-dark-background transition-all duration-300 ease-in-out`}
     >
-      {/* Info: (20240423 - Julian) Display company name's first letter */}
-      {companyName.charAt(0)}
+      {/* ToDo: (20240801 - Julian) Replace to real project image */}
+      {projectId.charAt(0)}
     </Link>
   ) : null;
 

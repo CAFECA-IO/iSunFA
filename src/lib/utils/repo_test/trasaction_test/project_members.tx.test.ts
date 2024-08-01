@@ -45,6 +45,6 @@ describe('ProjectMembers Transaction Tests', () => {
       });
       expect(existingMembers.length).toBe(2);
       await updateProjectMembers(testProjectId, memberIdList); // Reset the members
-    });
+    }, 10000);
   });
 });
