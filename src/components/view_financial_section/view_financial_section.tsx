@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
@@ -11,7 +11,12 @@ import { ToastType } from '@/interfaces/toastify';
 import useStateRef from 'react-usestateref';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { FinancialReport } from '@/interfaces/report';
+import {
+  BalanceSheetReport,
+  CashFlowStatementReport,
+  FinancialReport,
+  IncomeStatementReport,
+} from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
@@ -81,12 +86,64 @@ const ViewFinancialSection = ({
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? NON_EXISTING_REPORT_ID,
-    },
-  });
+  } = APIHandler<BalanceSheetReport | IncomeStatementReport | CashFlowStatementReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+      },
+    }
+  );
+
+  const isInvalidReport = useMemo(() => {
+    if (!reportFinancial) return true;
+
+    switch (reportFinancial.reportType) {
+      case ReportSheetType.INCOME_STATEMENT:
+        return !isValidIncomeStatementReport(reportFinancial as IncomeStatementReport);
+      case ReportSheetType.BALANCE_SHEET:
+        return !isValidBalanceSheetReport(reportFinancial as BalanceSheetReport);
+      case ReportSheetType.CASH_FLOW_STATEMENT:
+        return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
+      default:
+        return true;
+    }
+  }, [reportFinancial]);
+
+  function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
+    return !!(
+      report.general &&
+      report.details &&
+      report.otherInfo &&
+      report.otherInfo.revenueAndExpenseRatio &&
+      report.otherInfo.revenueToRD
+    );
+  }
+
+  function isValidBalanceSheetReport(report: BalanceSheetReport): boolean {
+    return !!(
+      report.general &&
+      report.details &&
+      report.otherInfo &&
+      report.otherInfo.assetLiabilityRatio &&
+      report.otherInfo.assetMixRatio &&
+      report.otherInfo.dso &&
+      report.otherInfo.inventoryTurnoverDays
+    );
+  }
+
+  function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolean {
+    return !!(
+      report.general &&
+      report.details &&
+      report.otherInfo &&
+      report.otherInfo.operatingStabilized &&
+      report.otherInfo.lineChartDataForRatio &&
+      report.otherInfo.strategyInvest &&
+      report.otherInfo.freeCash
+    );
+  }
 
   // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
   const handleIframeLoad = () => {
@@ -108,7 +165,6 @@ const ViewFinancialSection = ({
   const nextClickHandler = () => {
     setActiveIndex((prev) => prev + 1);
     setPageNumber((prev) => prev + 1);
-    console.log(pageNumber, 'in next click');
   };
 
   const printPDF = () => {
@@ -319,20 +375,10 @@ const ViewFinancialSection = ({
       </div>
 
       <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-transparent lg:mx-0">
-        {/* <iframe
-          ref={iframeRef}
-          src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full ${isLoading ? `w-0` : `min-w-[320px]`} overflow-x-auto border-none`}
-          title="Financial Report"
-          onLoad={handleIframeLoad}
-        /> */}
-
         <iframe
           ref={iframeRef}
           src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full origin-top-left ${
-            isLoading ? 'scale-0' : 'scale-[0.9] md:scale-100'
-          } overflow-x-auto border-none bg-white transition-transform duration-300`}
+          className={`h-full w-full origin-top-left scale-[0.9] overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
           title="Financial Report"
           onLoad={handleIframeLoad}
         />
@@ -381,7 +427,7 @@ const ViewFinancialSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={!reportLink || isLoading}
+              disabled={!reportLink || isLoading || isInvalidReport}
               // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
               onClick={downloadClickHandler}
               variant={'tertiary'}
@@ -587,50 +633,52 @@ const ViewFinancialSection = ({
         </div>
       </div>
 
-      <div className="pointer-events-auto z-50 flex lg:hidden">
+      <div className="pointer-events-auto z-0 flex lg:hidden">
         {/* Info: prev button (20240529 - Shirley) */}
-        <button
+        <Button
+          variant={'secondaryBorderless'}
+          size={'extraSmall'}
           onClick={prevClickHandler}
-          disabled={pageNumber <= 1}
-          className="absolute left-0 top-40rem z-10 m-4"
+          disabled={pageNumber <= 1 || isInvalidReport || isLoading}
+          className="fixed left-4 top-2/3 z-10 -translate-y-1/2 transform fill-current disabled:opacity-80"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"
-            fill="none"
+            fill="currentColor"
             viewBox="0 0 17 16"
           >
             <path
-              fill="#001840"
               fillRule="evenodd"
               d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
               clipRule="evenodd"
             ></path>
           </svg>
-        </button>
+        </Button>
 
         {/* Info: next button (20240529 - Shirley) */}
-        <button
+        <Button
+          variant={'secondaryBorderless'}
+          size={'extraSmall'}
           onClick={nextClickHandler}
-          disabled={pageNumber >= numPages}
-          className="absolute right-0 top-40rem z-10 m-4"
+          disabled={pageNumber >= numPages || isInvalidReport || isLoading}
+          className="fixed right-4 top-2/3 z-10 -translate-y-1/2 transform fill-current disabled:opacity-80"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"
-            fill="none"
+            fill="currentColor"
             viewBox="0 0 17 16"
           >
             <path
-              fill="#001840"
               fillRule="evenodd"
               d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
               clipRule="evenodd"
             ></path>
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}

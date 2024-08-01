@@ -13,6 +13,7 @@ import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'react-i18next';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -45,6 +46,7 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -78,8 +80,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     },
   });
 
+  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
+  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
+
   useEffect(() => {
-    if (getReportFinancialSuccess === true && reportFinancial) {
+    if (getReportFinancialSuccess === true && reportFinancial && reportFinancial?.otherInfo) {
       const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
       const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
       const currentYear = currentDateString.year;
@@ -122,15 +127,64 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     }
   }, [reportFinancial]);
 
-  if (getReportFinancialIsLoading) {
+  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess && reportFinancial) {
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetLiabilityRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetMixRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'dso') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'inventoryTurnoverDays')
+  ) {
     return <div>Error {getReportFinancialCode}</div>;
   }
+
+  const displayedCurALRChart = isNoDataForCurALR ? (
+    <div className="">
+      {' '}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="200"
+        height="200"
+        fill="none"
+        viewBox="0 0 200 200"
+      >
+        <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+          {t('PROJECT.NO_DATA')}
+        </text>
+      </svg>
+    </div>
+  ) : (
+    <PieChart data={curAssetLiabilityRatio} />
+  );
+
+  const displayedPreALRChart = isNoDataForPreALR ? (
+    <div className="">
+      {' '}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="200"
+        height="200"
+        fill="none"
+        viewBox="0 0 200 200"
+      >
+        <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+          {t('PROJECT.NO_DATA')}
+        </text>
+      </svg>
+    </div>
+  ) : (
+    <PieChart data={preAssetLiabilityRatio} />
+  );
 
   const renderedFooter = (page: number) => {
     return (
@@ -1137,7 +1191,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </li>
                 ))}
               </ul>
-              <PieChart data={curAssetLiabilityRatio} />
+              {displayedCurALRChart}{' '}
             </div>
           </div>
           <div className="flex flex-col space-y-0">
@@ -1153,7 +1207,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </li>
                 ))}
               </ul>
-              <PieChart data={preAssetLiabilityRatio} />
+              {displayedPreALRChart}{' '}
             </div>
           </div>
         </div>

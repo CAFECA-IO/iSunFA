@@ -106,7 +106,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess) {
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'lineChartDataForRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'strategyInvest') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'freeCash')
+  ) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
@@ -851,7 +860,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   );
 
   return (
-    <div className="scale-80 mx-auto w-a4-width origin-top overflow-x-auto md:scale-100 lg:scale-100">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       {page2}
       {page3}
