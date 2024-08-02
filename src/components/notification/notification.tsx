@@ -130,7 +130,7 @@ const Notification = ({ mobileMenuIsOpen, setMobileMenuIsOpen }: INotificationPr
     <div
       className={`transition-all duration-300 ${
         openMenu
-          ? 'visible -translate-y-19rem opacity-100'
+          ? 'visible -translate-y-12rem opacity-100'
           : 'invisible -translate-y-36rem opacity-0'
       } lg:hidden`}
     >
