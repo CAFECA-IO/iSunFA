@@ -8,7 +8,7 @@ import { listWorkRate } from '@/lib/utils/repo/work_rate.repo';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { listEmployeeProject } from '@/lib/utils/repo/employee_project.repo';
 import { formatWorkRateList } from '@/lib/utils/formatter/work_rate.formatter';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
 async function checkInput(projectId: string) {
@@ -21,7 +21,7 @@ async function checkInput(projectId: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {
@@ -50,7 +50,7 @@ export default async function handler(
       } else {
         const session = await getSession(req, res);
         const { userId, companyId } = session;
-        const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+        const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
         if (!isAuth) {
           throw new Error(STATUS_MESSAGE.FORBIDDEN);
         }

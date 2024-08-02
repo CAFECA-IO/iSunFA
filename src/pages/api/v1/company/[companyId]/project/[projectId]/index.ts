@@ -1,4 +1,4 @@
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
@@ -41,7 +41,7 @@ async function checkInput(
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {

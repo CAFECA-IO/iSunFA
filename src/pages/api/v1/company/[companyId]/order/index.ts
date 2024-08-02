@@ -6,7 +6,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { createOrder, listOrder } from '@/lib/utils/repo/order.repo';
 import { IOrder } from '@/interfaces/order';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,7 +22,7 @@ export default async function handler(
       shouldContinue = false;
     }
     if (shouldContinue) {
-      shouldContinue = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      shouldContinue = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     }
     if (req.method === 'GET' && shouldContinue) {
       const orderList = await listOrder(companyId);
