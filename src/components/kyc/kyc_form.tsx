@@ -23,9 +23,13 @@ import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'react-i18next';
 import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useRouter } from 'next/router';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslation('common');
+  const router = useRouter();
+
   const formRef = useRef<HTMLFormElement>(null);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -68,6 +72,10 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     }
   };
 
+  const goCompanyInfo = () => {
+    router.push(ISUNFA_ROUTE.COMPANY_INFO);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -93,9 +101,12 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
           messageType: MessageType.SUCCESS,
           title: t('KYC.SUBMIT_SUCCESS'),
           content: t('KYC.SUBMIT_SUCCESS_MESSAGE'),
-          submitBtnStr: t('KYC.CONFIRM'),
-          submitBtnFunction: messageModalVisibilityHandler,
           backBtnStr: t('KYC.CANCEL'),
+          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+            goCompanyInfo();
+          },
         });
         messageModalVisibilityHandler();
       } else if (success === false) {
@@ -104,9 +115,12 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
           title: t('KYC.SUBMIT_FAILED'),
           content: t('KYC.CONTACT_SERVICE_TEAM'),
           subMsg: t('KYC.SUBMIT_FAILED_MESSAGE', code),
-          submitBtnStr: t('KYC.CONFIRM'),
-          submitBtnFunction: messageModalVisibilityHandler,
           backBtnStr: t('KYC.CANCEL'),
+          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+            goCompanyInfo();
+          },
         });
       }
     } else {
@@ -116,8 +130,11 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
         subMsg: t('KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
         content: t('KYC.CONTACT_SERVICE_TEAM'),
         submitBtnStr: t('KYC.CONFIRM'),
-        submitBtnFunction: messageModalVisibilityHandler,
         backBtnStr: t('KYC.CANCEL'),
+        submitBtnFunction: () => {
+          messageModalVisibilityHandler();
+          goCompanyInfo();
+        },
       });
       messageModalVisibilityHandler();
     }

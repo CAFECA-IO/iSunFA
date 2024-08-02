@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const BackButton = () => {
   const { t } = useTranslation('common');
@@ -9,7 +10,8 @@ const BackButton = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
   const handleBack = () => {
-    router.back();
+    // router.back();
+    router.push(ISUNFA_ROUTE.COMPANY_INFO);
   };
 
   const leaveClickHandler = () => {

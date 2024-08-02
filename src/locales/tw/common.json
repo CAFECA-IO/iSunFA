@@ -768,6 +768,8 @@
     "GO_KYC": "前往 KYC",
     "ACCOUNT": "帳號",
     "DELETE_COMPANY": "刪除公司",
-    "TRANSFER_ADMINISTRATION": "轉移管理權"
+    "TRANSFER_ADMINISTRATION": "轉移管理權",
+    "UNDER_REVIEW": "Under Review",
+    "VERIFIED": "Verified"
   }
 }
