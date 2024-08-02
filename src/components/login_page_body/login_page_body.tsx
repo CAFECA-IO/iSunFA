@@ -28,13 +28,14 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   const {
     checkIsRegistered,
     handleExistingCredential,
-    signIn,
+    // signIn,
     errorCode,
     isSignInError,
     signedIn,
     toggleIsSignInError,
   } = useUserCtx();
   const {
+    isRegisterModalVisible,
     registerModalDataHandler,
     registerModalVisibilityHandler,
     passKeySupportModalVisibilityHandler,
@@ -42,11 +43,12 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   } = useGlobalCtx();
 
   const registerHandler = async () => {
+    if (isRegisterModalVisible) return;
     registerModalDataHandler({ invitation });
     registerModalVisibilityHandler();
   };
 
-  const registerClickHandler = async () => {
+  const loginHandler = async () => {
     try {
       const { isRegistered, credentials } = await checkIsRegistered();
 
@@ -58,28 +60,32 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
     } catch (error) {
       // Deprecated: (20240805 - tzuhan) dev
       // eslint-disable-next-line no-console
-      console.log('registerClickHandler error', error);
+      console.log('loginHandler error', error);
+      if ((error as Error).name === 'NotAllowedError') {
+        registerHandler(); // Info: 導入註冊流程 (20240801 - tzuhan)
+      }
     }
   };
 
   const showPassKeySupport = () => {
     passKeySupportModalVisibilityHandler();
   };
+  // Info: replaced by loginHandler (20240731 - Tzuhan)
 
-  const logInClickHandler = async () => {
-    try {
-      await signIn({ invitation });
-    } catch (error) {
-      // DO nothing
-    }
-  };
+  // const logInClickHandler = async () => {
+  //   try {
+  //     await signIn({ invitation });
+  //   } catch (error) {
+  //     // DO nothing
+  //   }
+  // };
 
   useEffect(() => {
     if (action === pageQueries.loginPage.actions.register) {
       registerModalDataHandler({ invitation });
       registerModalVisibilityHandler();
     } else if (action === pageQueries.loginPage.actions.login) {
-      logInClickHandler();
+      loginHandler();
     }
   }, [action]);
 
@@ -88,28 +94,12 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
        沒有註冊資料: 401ISF0000
        伺服器錯誤: 500ISF0000
     */
-
     if (!signedIn && isSignInError) {
-      const toastType = errorCode === `401ISF0000` ? ToastType.WARNING : ToastType.ERROR;
-      const toastContent =
-        errorCode === `401ISF0000` ? (
-          <div>
-            <div>
-              {t('LOGIN_PAGE_BODY.PLEASE')}{' '}
-              <button
-                onClick={registerHandler}
-                type="button"
-                className="text-base text-link-text-primary hover:opacity-70"
-              >
-                <div className="justify-center rounded-sm">
-                  {t('LOGIN_PAGE_BODY.REGISTER_YOUR_DEVICE')}
-                </div>
-              </button>
-              {t('LOGIN_PAGE_BODY.OR_TRY_OTHER_PASSKY')}
-              <span className="pl-3">({errorCode})</span>
-            </div>
-          </div>
-        ) : (
+      if (errorCode === `401ISF0000`) {
+        registerHandler();
+      } else {
+        const toastType = ToastType.ERROR;
+        const toastContent = (
           <div className="">
             <p className="">
               {t('LOGIN_PAGE_BODY.OOPS')}({errorCode})
@@ -121,15 +111,15 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
             </p>
           </div>
         );
-
-      toastHandler({
-        id: `${errorCode}`,
-        type: toastType,
-        content: toastContent,
-        closeable: true,
-        onClose: toggleIsSignInError,
-        autoClose: false,
-      });
+        toastHandler({
+          id: `${errorCode}`,
+          type: toastType,
+          content: toastContent,
+          closeable: true,
+          onClose: toggleIsSignInError,
+          autoClose: false,
+        });
+      }
     }
   }, [errorCode, signedIn, isSignInError]);
 
@@ -217,7 +207,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
               </div>
               <Button
                 variant={'tertiary'}
-                onClick={logInClickHandler}
+                onClick={loginHandler}
                 className="mx-auto mt-0 flex max-w-400px justify-center px-4 py-1 lg:gap-2 lg:space-x-2 lg:px-6 lg:py-3.5"
               >
                 <div className="text-sm leading-7 tracking-normal lg:text-lg lg:font-medium">
@@ -243,15 +233,6 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
               </Button>
             </div>
 
-            <Button
-              variant={'secondaryBorderless'}
-              onClick={registerClickHandler}
-              size={'medium'}
-              type="button"
-              className="mt-5 flex justify-center text-sm font-semibold leading-6 tracking-normal text-link-text-primary hover:opacity-70 lg:text-base"
-            >
-              {t('LOGIN_PAGE_BODY.REGISTER_MY_DEVICE')}
-            </Button>
             <Button
               variant={'secondaryBorderless'}
               size={'medium'}

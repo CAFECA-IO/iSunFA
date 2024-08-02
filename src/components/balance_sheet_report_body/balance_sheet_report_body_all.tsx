@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/no-arbitrary-value */
 // TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -13,6 +13,7 @@ import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { useTranslation } from 'react-i18next';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -45,7 +46,10 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
-  const { selectedCompany } = useUserCtx();
+  const { t } = useTranslation('common');
+
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -71,15 +75,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<BalanceSheetReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  } = APIHandler<BalanceSheetReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+      },
     },
-  });
+    hasCompanyId
+  );
+
+  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
+  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
 
   useEffect(() => {
-    if (getReportFinancialSuccess === true && reportFinancial) {
+    if (getReportFinancialSuccess === true && reportFinancial && reportFinancial?.otherInfo) {
       const currentDateString = timestampToString(reportFinancial.curDate.to ?? 0);
       const previousDateString = timestampToString(reportFinancial.preDate.to ?? 0);
       const currentYear = currentDateString.year;
@@ -122,15 +133,64 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     }
   }, [reportFinancial]);
 
-  if (getReportFinancialIsLoading) {
+  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess && reportFinancial) {
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetLiabilityRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'assetMixRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'dso') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'inventoryTurnoverDays')
+  ) {
     return <div>Error {getReportFinancialCode}</div>;
   }
+
+  const displayedCurALRChart = isNoDataForCurALR ? (
+    <div className="">
+      {' '}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="200"
+        height="200"
+        fill="none"
+        viewBox="0 0 200 200"
+      >
+        <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+          {t('PROJECT.NO_DATA')}
+        </text>
+      </svg>
+    </div>
+  ) : (
+    <PieChart data={curAssetLiabilityRatio} />
+  );
+
+  const displayedPreALRChart = isNoDataForPreALR ? (
+    <div className="">
+      {' '}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="200"
+        height="200"
+        fill="none"
+        viewBox="0 0 200 200"
+      >
+        <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
+        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+          {t('PROJECT.NO_DATA')}
+        </text>
+      </svg>
+    </div>
+  ) : (
+    <PieChart data={preAssetLiabilityRatio} />
+  );
 
   const renderedFooter = (page: number) => {
     return (
@@ -515,7 +575,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const page1 = (
-    <div id="1" className="relative h-a4-height overflow-hidden">
+    <div id="1" className="relative h-a4-height overflow-y-hidden">
       {/* Info: watermark logo (20240723 - Shirley) */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -594,7 +654,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   const page2 = (
-    <div id="2" className="relative h-a4-height overflow-hidden">
+    <div id="2" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
@@ -693,7 +753,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page3 = (
-    <div id="3" className="relative h-a4-height overflow-hidden">
+    <div id="3" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -750,7 +810,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page4 = (
-    <div id="4" className="relative h-a4-height overflow-hidden">
+    <div id="4" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -807,7 +867,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page5 = (
-    <div id="5" className="relative h-a4-height overflow-hidden">
+    <div id="5" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -864,7 +924,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page6 = (
-    <div id="6" className="relative h-a4-height overflow-hidden">
+    <div id="6" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -921,7 +981,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page7 = (
-    <div id="7" className="relative h-a4-height overflow-hidden">
+    <div id="7" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -978,7 +1038,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page8 = (
-    <div id="8" className="relative h-a4-height overflow-hidden">
+    <div id="8" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1035,7 +1095,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page9 = (
-    <div id="9" className="relative h-a4-height overflow-hidden">
+    <div id="9" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1102,7 +1162,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page10 = (
-    <div id="10" className="relative h-a4-height overflow-hidden">
+    <div id="10" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1137,7 +1197,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </li>
                 ))}
               </ul>
-              <PieChart data={curAssetLiabilityRatio} />
+              {displayedCurALRChart}{' '}
             </div>
           </div>
           <div className="flex flex-col space-y-0">
@@ -1153,7 +1213,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </li>
                 ))}
               </ul>
-              <PieChart data={preAssetLiabilityRatio} />
+              {displayedPreALRChart}{' '}
             </div>
           </div>
         </div>
@@ -1171,7 +1231,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page11 = (
-    <div id="11" className="relative h-a4-height overflow-hidden">
+    <div id="11" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1241,7 +1301,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   );
   const page12 = (
-    <div id="12" className="relative h-a4-height overflow-hidden">
+    <div id="12" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
         <div className="mt-[29px] flex w-[28%]">
           <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
@@ -1322,7 +1382,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   return (
-    <div className="mx-auto w-a4-width">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       <hr className="break-before-page" />
       {page2}

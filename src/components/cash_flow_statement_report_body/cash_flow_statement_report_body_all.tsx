@@ -10,7 +10,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
 import BarChart from '@/components/cash_flow_statement_report_body/bar_chart';
 import Image from 'next/image';
-import { FREE_COMPANY_ID, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import useStateRef from 'react-usestateref';
@@ -34,19 +34,23 @@ const ACCOUNTINGS_WHOLE_COLUMN = [
 ];
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
-  const { selectedCompany } = useUserCtx();
-
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<CashFlowStatementReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  } = APIHandler<CashFlowStatementReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+      },
     },
-  });
+    hasCompanyId
+  );
 
   const [curDate, setCurDate] = useStateRef<{ from: string; to: string }>({ from: '', to: '' });
   const [curYear, setCurYear] = useStateRef<string>('');
@@ -106,7 +110,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
     );
-  } else if (!getReportFinancialSuccess) {
+  } else if (
+    !getReportFinancialSuccess ||
+    !reportFinancial ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial, 'otherInfo') ||
+    !reportFinancial.otherInfo ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'operatingStabilized') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'lineChartDataForRatio') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'strategyInvest') ||
+    !Object.prototype.hasOwnProperty.call(reportFinancial.otherInfo, 'freeCash')
+  ) {
     return <div>Error {getReportFinancialCode}</div>;
   }
 
@@ -851,7 +864,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   );
 
   return (
-    <div className="mx-auto w-a4-width">
+    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
       {page1}
       {page2}
       {page3}

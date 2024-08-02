@@ -24,11 +24,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
 import { ReportType } from '@/constants/report';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler } = useGlobalCtx();
 
   const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];
@@ -59,19 +59,27 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
-  });
+  } = APIHandler<IPaginatedPendingReportItem>(
+    APIName.REPORT_LIST_PENDING,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
+    },
+    hasCompanyId
+  );
 
   const {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
-  });
+  } = APIHandler<IPaginatedGeneratedReportItem>(
+    APIName.REPORT_LIST_GENERATED,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
+    },
+    hasCompanyId
+  );
 
   useEffect(() => {
     if (listPendingSuccess && pendingReports?.data) {

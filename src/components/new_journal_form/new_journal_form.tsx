@@ -18,7 +18,6 @@ import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
@@ -79,7 +78,8 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 
 const NewJournalForm = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
   const {
@@ -89,22 +89,28 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
-  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
-  const { selectedOCR, selectOCRHandler, selectedJournal, getAIStatusHandler } = useAccountingCtx();
+  const {
+    selectedOCR,
+    selectOCRHandler,
+    selectedJournal,
+    getAIStatusHandler,
+    inputDescription: description,
+    inputDescriptionHandler,
+  } = useAccountingCtx();
   const {
     trigger: getOCRResult,
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
+  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID);
   const { trigger: createInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
-  }>(APIName.INVOICE_CREATE, {}, false, false);
+  }>(APIName.INVOICE_CREATE);
   const { trigger: updateInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
-  }>(APIName.INVOICE_UPDATE, {}, false, false);
+  }>(APIName.INVOICE_UPDATE);
 
   // Info: (20240425 - Julian) check if form has changed
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -116,7 +122,7 @@ const NewJournalForm = () => {
   const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.PAYMENT);
 
   const [inputReason, setInputReason] = useState<string>('');
-  const [inputDescription, setInputDescription] = useState<string>('');
+  const [inputDescription, setInputDescription] = useState<string>(description);
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
@@ -153,19 +159,19 @@ const NewJournalForm = () => {
   const [isPartialPaidValid, setIsPartialPaidValid] = useState<boolean>(true);
 
   useEffect(() => {
-    if (selectedOCR !== undefined) {
+    if (selectedOCR !== undefined && hasCompanyId) {
       getOCRResult({
-        params: { companyId, resultId: selectedOCR.aichResultId },
+        params: { companyId: selectedCompany.id, resultId: selectedOCR.aichResultId },
       });
     }
   }, [selectedOCR]);
 
   useEffect(() => {
-    if (selectedCompany && selectedJournal) {
+    if (hasCompanyId && selectedJournal) {
       if (selectedJournal.invoice === null) {
         getOCRResult({
           params: {
-            companyId,
+            companyId: selectedCompany.id,
             resultId: selectedJournal.aichResultId,
           },
         });
@@ -201,7 +207,7 @@ const NewJournalForm = () => {
       }
       getAIStatusHandler(
         {
-          companyId,
+          companyId: selectedCompany.id,
           askAIId: selectedJournal.aichResultId,
         },
         true
@@ -368,6 +374,7 @@ const NewJournalForm = () => {
     setInputEstimatedCost(0);
     // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
     selectOCRHandler(undefined);
+    inputDescriptionHandler('');
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
@@ -386,6 +393,7 @@ const NewJournalForm = () => {
   };
 
   const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
+    if (!hasCompanyId) return;
     const invoiceDataToUpdate: IInvoice = {
       ...invoiceData,
       journalId: updateJournalId,
@@ -395,18 +403,9 @@ const NewJournalForm = () => {
       data: updateAIResult,
       code: updateCode,
     } = await updateInvoice({
-      params: { companyId, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
+      params: { companyId: selectedCompany.id, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
       body: { invoice: invoiceDataToUpdate },
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      'updateSuccess',
-      updateSuccess,
-      'updateAIResult',
-      updateAIResult,
-      'updateCode',
-      updateCode
-    );
     if (
       updateSuccess &&
       updateAIResult?.resultStatus?.resultId &&
@@ -414,7 +413,7 @@ const NewJournalForm = () => {
     ) {
       getAIStatusHandler(
         {
-          companyId: companyId!,
+          companyId: selectedCompany.id,
           askAIId: updateAIResult.resultStatus.resultId,
         },
         true
@@ -437,19 +436,20 @@ const NewJournalForm = () => {
   };
 
   const createInvoiceHandler = async (invoiceData: IInvoice) => {
+    if (!hasCompanyId) return;
     const {
       data: invoice,
       success: createSuccess,
       code: createCode,
     } = await createInvoice({
-      params: { companyId },
+      params: { companyId: selectedCompany.id },
       body: { invoice: invoiceData, ocrId: selectedOCR?.id },
     });
     if (createSuccess && invoice?.journalId && invoice?.resultStatus) {
       setJournalId(invoice.journalId);
       getAIStatusHandler(
         {
-          companyId: companyId!,
+          companyId: selectedCompany.id,
           askAIId: invoice.resultStatus.resultId,
         },
         true

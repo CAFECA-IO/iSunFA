@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
@@ -11,11 +11,16 @@ import { ToastType } from '@/interfaces/toastify';
 import useStateRef from 'react-usestateref';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { FinancialReport } from '@/interfaces/report';
+import {
+  BalanceSheetReport,
+  CashFlowStatementReport,
+  FinancialReport,
+  IncomeStatementReport,
+} from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
-import { DOMAIN, FREE_COMPANY_ID } from '@/constants/config';
+import { DOMAIN, NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useTranslation } from 'react-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
@@ -42,6 +47,12 @@ const balanceReportThumbnails = generateThumbnails(12);
 const incomeReportThumbnails = generateThumbnails(9);
 const cashFlowReportThumbnails = generateThumbnails(11);
 
+enum NumPages {
+  BALANCE_SHEET = 12,
+  INCOME_STATEMENT = 9,
+  CASH_FLOW_STATEMENT = 11,
+}
+
 const ViewFinancialSection = ({
   reportId,
 
@@ -54,13 +65,15 @@ const ViewFinancialSection = ({
   const router = useRouter();
 
   const globalCtx = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
   const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
 
+  const [numPages, setNumPages] = useState<number>(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
     { number: number; alt: string; active: boolean; src: string }[]
@@ -69,21 +82,70 @@ const ViewFinancialSection = ({
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // TODO: debug, 需要在reportLink 拿到之後再傳 props 到ViewFinancialSection (20240729 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('ViewFinancialSection ${reportLink}#${pageNumber}', `${reportLink}#${pageNumber}`);
-
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<FinancialReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      reportId: reportId ?? '10000003',
+  } = APIHandler<FinancialReport>(
+    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+      },
     },
-  });
+    hasCompanyId
+  );
+
+  const isInvalidReport = useMemo(() => {
+    if (!reportFinancial) return true;
+
+    switch (reportFinancial.reportType) {
+      case ReportSheetType.INCOME_STATEMENT:
+        return !isValidIncomeStatementReport(reportFinancial as IncomeStatementReport);
+      case ReportSheetType.BALANCE_SHEET:
+        return !isValidBalanceSheetReport(reportFinancial as BalanceSheetReport);
+      case ReportSheetType.CASH_FLOW_STATEMENT:
+        return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
+      default:
+        return true;
+    }
+  }, [reportFinancial]);
+
+  function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
+    return !!(
+      report.general &&
+      report.details &&
+      report.otherInfo &&
+      report.otherInfo.revenueAndExpenseRatio &&
+      report.otherInfo.revenueToRD
+    );
+  }
+
+  function isValidBalanceSheetReport(report: BalanceSheetReport): boolean {
+    return !!(
+      report.general &&
+      report.details &&
+      report.otherInfo &&
+      report.otherInfo.assetLiabilityRatio &&
+      report.otherInfo.assetMixRatio &&
+      report.otherInfo.dso &&
+      report.otherInfo.inventoryTurnoverDays
+    );
+  }
+
+  function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolean {
+    return !!(
+      report.general &&
+      report.details &&
+      report.otherInfo &&
+      report.otherInfo.operatingStabilized &&
+      report.otherInfo.lineChartDataForRatio &&
+      report.otherInfo.strategyInvest &&
+      report.otherInfo.freeCash
+    );
+  }
 
   // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
   const handleIframeLoad = () => {
@@ -95,6 +157,16 @@ const ViewFinancialSection = ({
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
     setPageNumber(index + 1);
+  };
+
+  const prevClickHandler = () => {
+    setActiveIndex((prev) => prev - 1);
+    setPageNumber((prev) => prev - 1);
+  };
+
+  const nextClickHandler = () => {
+    setActiveIndex((prev) => prev + 1);
+    setPageNumber((prev) => prev + 1);
   };
 
   const printPDF = () => {
@@ -182,12 +254,15 @@ const ViewFinancialSection = ({
     switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
+        setNumPages(NumPages.BALANCE_SHEET);
         break;
       case FinancialReportTypesKey.comprehensive_income_statement:
         setReportThumbnails(incomeReportThumbnails);
+        setNumPages(NumPages.INCOME_STATEMENT);
         break;
       case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
+        setNumPages(NumPages.CASH_FLOW_STATEMENT);
         break;
       default:
         setReportThumbnails([]);
@@ -285,7 +360,6 @@ const ViewFinancialSection = ({
     </button>
   );
 
-  // const reportTypeString = typeof displayedReportType === 'string' ? displayedReportType : '';
   const displayedReport = (
     <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
       {/* Info: Sidebar (20240426 - Shirley) */}
@@ -302,11 +376,11 @@ const ViewFinancialSection = ({
         </div>
       </div>
 
-      <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-white lg:mx-0">
+      <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-transparent lg:mx-0">
         <iframe
           ref={iframeRef}
           src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full ${isLoading ? `w-0` : `min-w-[320px]`} overflow-x-auto border-none`}
+          className={`h-full w-full origin-top-left scale-[0.9] overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
           title="Financial Report"
           onLoad={handleIframeLoad}
         />
@@ -355,7 +429,7 @@ const ViewFinancialSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={!reportLink || isLoading}
+              disabled={!reportLink || isLoading || isInvalidReport}
               // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
               onClick={downloadClickHandler}
               variant={'tertiary'}
@@ -406,7 +480,7 @@ const ViewFinancialSection = ({
       </div>
 
       {/* Info: token contract and token id info (20240426 - Shirley) */}
-      <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap sm:mx-0 lg:mx-40">
+      <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">Token Contract </div>
@@ -417,7 +491,13 @@ const ViewFinancialSection = ({
               </Link> */}
               <div className="font-semibold text-link-text-primary">{tokenContract} </div>
 
-              <button onClick={copyTokenContractClickHandler} type="button">
+              <Button
+                disabled={!tokenContract}
+                variant={'secondaryBorderless'}
+                size={'extraSmall'}
+                onClick={copyTokenContractClickHandler}
+                type="button"
+              >
                 {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -433,7 +513,7 @@ const ViewFinancialSection = ({
                     clipRule="evenodd"
                   ></path>
                 </svg>
-              </button>
+              </Button>
             </div>
           </div>
           <div className="flex space-x-5">
@@ -447,7 +527,13 @@ const ViewFinancialSection = ({
 
               <div className="font-semibold text-link-text-primary">{tokenId} </div>
 
-              <button onClick={copyTokenIdClickHandler} type="button">
+              <Button
+                disabled={!tokenId}
+                variant={'secondaryBorderless'}
+                size={'extraSmall'}
+                onClick={copyTokenIdClickHandler}
+                type="button"
+              >
                 {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -463,7 +549,7 @@ const ViewFinancialSection = ({
                     clipRule="evenodd"
                   ></path>
                 </svg>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -476,7 +562,13 @@ const ViewFinancialSection = ({
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
-                  <button onClick={copyTokenContractClickHandler} type="button">
+                  <Button
+                    disabled={!tokenContract}
+                    variant={'secondaryBorderless'}
+                    size={'extraSmall'}
+                    onClick={copyTokenContractClickHandler}
+                    type="button"
+                  >
                     {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -492,7 +584,7 @@ const ViewFinancialSection = ({
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -509,7 +601,13 @@ const ViewFinancialSection = ({
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
-                  <button onClick={copyTokenIdClickHandler} type="button">
+                  <Button
+                    disabled={!tokenId}
+                    variant={'secondaryBorderless'}
+                    size={'extraSmall'}
+                    onClick={copyTokenIdClickHandler}
+                    type="button"
+                  >
                     {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -525,7 +623,7 @@ const ViewFinancialSection = ({
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -535,6 +633,54 @@ const ViewFinancialSection = ({
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="pointer-events-auto z-0 flex lg:hidden">
+        {/* Info: prev button (20240529 - Shirley) */}
+        <Button
+          variant={'secondaryBorderless'}
+          size={'extraSmall'}
+          onClick={prevClickHandler}
+          disabled={pageNumber <= 1 || isInvalidReport || isLoading}
+          className="fixed left-4 top-2/3 z-10 -translate-y-1/2 transform fill-current disabled:opacity-80"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 17 16"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+
+        {/* Info: next button (20240529 - Shirley) */}
+        <Button
+          variant={'secondaryBorderless'}
+          size={'extraSmall'}
+          onClick={nextClickHandler}
+          disabled={pageNumber >= numPages || isInvalidReport || isLoading}
+          className="fixed right-4 top-2/3 z-10 -translate-y-1/2 transform fill-current disabled:opacity-80"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 17 16"
+          >
+            <path
+              fillRule="evenodd"
+              d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}

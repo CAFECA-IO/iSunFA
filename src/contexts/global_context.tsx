@@ -52,6 +52,7 @@ import AddAccountTitleModal from '@/components/add_account_title_modal/add_accou
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
+import { UploadType } from '@/constants/file';
 
 interface IGlobalContext {
   width: number;
@@ -110,6 +111,7 @@ interface IGlobalContext {
 
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
+  profileUploadModalDataHandler: (type: UploadType) => void;
 
   isAddAccountTitleModalVisible: boolean;
   addAccountTitleModalVisibilityHandler: () => void;
@@ -207,6 +209,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   );
 
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
+  const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
 
   const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
 
@@ -311,6 +314,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const profileUploadModalVisibilityHandler = () => {
     setProfileUploadModalVisible(!profileUploadModalVisible);
+  };
+
+  const profileUploadModalDataHandler = (type: UploadType) => {
+    setUploadImageType(type);
   };
 
   const salaryBookConfirmModalVisibilityHandler = () => {
@@ -610,6 +617,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addProjectModalDataHandler,
     profileUploadModalVisible,
     profileUploadModalVisibilityHandler,
+    profileUploadModalDataHandler,
 
     isTeamSettingModalVisible,
     teamSettingModalVisibilityHandler,
@@ -715,6 +723,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ProfileUploadModal
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
+        uploadType={uploadImageType}
       />
 
       <SalaryBookConfirmModal

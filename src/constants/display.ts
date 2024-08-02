@@ -82,6 +82,7 @@ export enum SortOptions {
 }
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';
+export const DEFAULT_COMPANY_IMAGE_URL = '/elements/example_company_image.png';
 
 export enum DatePickerAlign {
   LEFT = 'left',

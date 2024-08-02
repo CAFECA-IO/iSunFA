@@ -159,7 +159,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       onClick={accountingMenuHandler}
       className={`group relative flex h-46px w-271px cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
-      <p>{t(accountTitle)}</p>
+      <div className="line-clamp-2 w-200px">{t(accountTitle)}</div>
       <FaChevronDown />
       {/* Info: (20240423 - Julian) Dropmenu */}
       <ul

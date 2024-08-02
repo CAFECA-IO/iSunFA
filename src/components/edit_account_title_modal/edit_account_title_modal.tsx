@@ -12,7 +12,6 @@ import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -29,7 +28,8 @@ const EditAccountTitleModal = ({
 }: IEditAccountTitleModalProps) => {
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { accountId } = modalData;
 
   const {
@@ -38,14 +38,14 @@ const EditAccountTitleModal = ({
     isLoading: isAccountDataLoading,
     success: isAccountDataSuccess,
     code: errorCode,
-  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.ACCOUNT_GET_BY_ID);
 
   const {
     trigger: updateAccountInfoById,
     data: updateResult,
     success: updateSuccess,
     code: updateCode,
-  } = APIHandler<IAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID);
 
   const [accountingType, setAccountingType] = useState('');
   const [liquidity, setLiquidity] = useState(false);
@@ -138,7 +138,8 @@ const EditAccountTitleModal = ({
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
       submitBtnFunction: () => {
-        deleteOwnAccountTitle(selectedCompany?.id ?? FREE_COMPANY_ID, accountId);
+        if (!hasCompanyId) return;
+        deleteOwnAccountTitle(selectedCompany?.id, accountId);
         modalVisibilityHandler();
       },
       backBtnStr: 'Cancel',

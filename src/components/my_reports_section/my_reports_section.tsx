@@ -9,7 +9,6 @@ import {
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
-  FIXED_DUMMY_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
   IGeneratedReportItem,
@@ -32,13 +31,13 @@ import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
@@ -59,9 +58,7 @@ const MyReportsSection = () => {
   const [pendingCurrentPage, setPendingCurrentPage] = useState(
     pending ? +pending : DEFAULT_PAGE_NUMBER
   );
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>(
-    FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.data
-  );
+  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
 
   const [historyPeriod, setHistoryPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
@@ -70,9 +67,7 @@ const MyReportsSection = () => {
   const [historyCurrentPage, setHistoryCurrentPage] = useState(
     history ? +history : DEFAULT_PAGE_NUMBER
   );
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>(
-    FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.data
-  );
+  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
 
   const {
     trigger: fetchPendingReports,
@@ -80,18 +75,22 @@ const MyReportsSection = () => {
     code: listPendingCode,
     success: listPendingSuccess,
     isLoading: isPendingDataLoading,
-  } = APIHandler<IPaginatedPendingReportItem>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: {
-      sortBy: sortOptionQuery[filteredPendingSort],
-      startDateInSecond:
-        pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
-      endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
-      searchQuery: searchPendingQuery,
-      targetPage: pendingCurrentPage,
-      pageSize: LIMIT_FOR_REPORT_PAGE,
+  } = APIHandler<IPaginatedPendingReportItem>(
+    APIName.REPORT_LIST_PENDING,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: {
+        sortOrder: sortOptionQuery[filteredPendingSort],
+        startDateInSecond:
+          pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
+        endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
+        searchQuery: searchPendingQuery,
+        targetPage: pendingCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
     },
-  });
+    hasCompanyId
+  );
 
   const {
     trigger: fetchGeneratedReports,
@@ -99,18 +98,22 @@ const MyReportsSection = () => {
     code: listGeneratedCode,
     success: listGeneratedSuccess,
     isLoading: isHistoryDataLoading,
-  } = APIHandler<IPaginatedGeneratedReportItem>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
-    query: {
-      sortBy: sortOptionQuery[filteredHistorySort],
-      startDateInSecond:
-        historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
-      endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
-      searchQuery: searchHistoryQuery,
-      targetPage: historyCurrentPage,
-      pageSize: LIMIT_FOR_REPORT_PAGE,
+  } = APIHandler<IPaginatedGeneratedReportItem>(
+    APIName.REPORT_LIST_GENERATED,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: {
+        sortOrder: sortOptionQuery[filteredHistorySort],
+        startDateInSecond:
+          historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
+        endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
+        searchQuery: searchHistoryQuery,
+        targetPage: historyCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
     },
-  });
+    hasCompanyId
+  );
   const pendingTotalPages =
     pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
   const historyTotalPages =
@@ -125,7 +128,6 @@ const MyReportsSection = () => {
         content: `${t('DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
-      // setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
     }
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
@@ -139,7 +141,6 @@ const MyReportsSection = () => {
         content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
         closeable: true,
       });
-      setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
@@ -162,22 +163,20 @@ const MyReportsSection = () => {
       pendingPeriod?: IDatePeriod;
       searchPendingQuery?: string;
     }) => {
+      if (!hasCompanyId) return;
       const {
         currentPage: page,
-        filteredPendingSort: sortBy,
+        filteredPendingSort: sortOrder,
         pendingPeriod: period,
         searchPendingQuery: searchString,
       } = query;
 
-      // eslint-disable-next-line no-console
-      console.log('getPendingReports', pendingPeriod);
-
       await fetchPendingReports({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
-          sortBy: sortOptionQuery[sortBy ?? filteredPendingSort],
+          sortOrder: sortOptionQuery[sortOrder ?? filteredPendingSort],
           startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
           endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
           searchQuery: searchString ?? searchPendingQuery,
@@ -203,22 +202,20 @@ const MyReportsSection = () => {
       historyPeriod?: IDatePeriod;
       searchHistoryQuery?: string;
     }) => {
+      if (!hasCompanyId) return;
       const {
         currentPage: page,
-        filteredHistorySort: sortBy,
+        filteredHistorySort: sortOrder,
         historyPeriod: period,
         searchHistoryQuery: searchString,
       } = query;
 
-      // eslint-disable-next-line no-console
-      console.log('getGeneratedReports', historyPeriod);
-
       await fetchGeneratedReports({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
-          sortBy: sortOptionQuery[sortBy ?? filteredHistorySort],
+          sortOrder: sortOptionQuery[sortOrder ?? filteredHistorySort],
           startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
           endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
           searchQuery: searchString ?? searchHistoryQuery,
@@ -244,10 +241,7 @@ const MyReportsSection = () => {
     });
   };
 
-  /* eslint-disable no-console */
   const handleHistoryDatePickerClose = async (start: number, end: number) => {
-    console.log('start handleHistoryDatePickerClose', start);
-    console.log('end', end);
     setHistoryPeriod({ startTimeStamp: start, endTimeStamp: end });
     await getGeneratedReports({
       historyPeriod: { startTimeStamp: start, endTimeStamp: end },
@@ -272,15 +266,25 @@ const MyReportsSection = () => {
     setSearchHistoryQuery(e.target.value);
   };
 
-  // const handlePendingDatePickerClose = (startTimestamp: number, endTimestamp: number) => {
-  //   setPendingPeriod({ startTimeStamp: startTimestamp, endTimeStamp: endTimestamp });
-  //   fetchPendingReports();
-  // };
+  const pendingPaginationHandler = (newPage: number) => {
+    setPendingCurrentPage(newPage);
+    getPendingReports({ currentPage: newPage });
+  };
 
-  // const handleHistoryDatePickerClose = (startTimestamp: number, endTimestamp: number) => {
-  //   setHistoryPeriod({ startTimeStamp: startTimestamp, endTimeStamp: endTimestamp });
-  //   fetchGeneratedReports();
-  // };
+  const historyPaginationHandler = (newPage: number) => {
+    setHistoryCurrentPage(newPage);
+    getGeneratedReports({ currentPage: newPage });
+  };
+
+  const pendingSortClickHandler = (sorting: SortOptions) => {
+    setFilteredPendingSort(sorting);
+    getPendingReports({ filteredPendingSort: sorting });
+  };
+
+  const historySortClickHandler = (sorting: SortOptions) => {
+    setFilteredHistorySort(sorting);
+    getGeneratedReports({ filteredHistorySort: sorting });
+  };
 
   const displayedPendingSortMenu = (
     <div
@@ -316,7 +320,7 @@ const MyReportsSection = () => {
             <li
               key={sorting}
               onClick={() => {
-                setFilteredPendingSort(sorting);
+                pendingSortClickHandler(sorting);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -424,6 +428,7 @@ const MyReportsSection = () => {
           setCurrentPage={setPendingCurrentPage}
           totalPages={pendingTotalPages}
           pagePrefix="pending"
+          paginationHandler={pendingPaginationHandler}
         />
       </div>
     </div>
@@ -527,7 +532,7 @@ const MyReportsSection = () => {
             <li
               key={sorting}
               onClick={() => {
-                setFilteredHistorySort(sorting);
+                historySortClickHandler(sorting);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
@@ -635,6 +640,7 @@ const MyReportsSection = () => {
           setCurrentPage={setHistoryCurrentPage}
           totalPages={historyTotalPages}
           pagePrefix="history"
+          paginationHandler={historyPaginationHandler}
         />
       </div>
     </div>

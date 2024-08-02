@@ -55,7 +55,7 @@ interface IAccountingContext {
   // removeTempJournal: (id: string) => void;
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
-  updateOCRListHandler: (companyId: number, update: boolean) => void;
+  updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
   accountList: IAccount[];
   getAccountListHandler: (
     companyId: number,
@@ -77,11 +77,13 @@ interface IAccountingContext {
     update: boolean
   ) => void;
   AIStatus: ProgressStatus;
+  inputDescription: string;
 
   selectedOCR: IOCR | undefined;
   selectOCRHandler: (journal: IOCR | undefined) => void;
   selectedJournal: IJournal | undefined;
   selectJournalHandler: (journal: IJournal | undefined) => void;
+  inputDescriptionHandler: (description: string) => void;
 
   invoiceId: string | undefined;
   setInvoiceIdHandler: (id: string | undefined) => void;
@@ -128,6 +130,8 @@ const initialAccountingContext: IAccountingContext = {
   selectOCRHandler: () => {},
   selectedJournal: undefined,
   selectJournalHandler: () => {},
+  inputDescription: '',
+  inputDescriptionHandler: () => {},
 
   invoiceId: '1',
   setInvoiceIdHandler: () => {},
@@ -159,25 +163,20 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     trigger: getAccountList,
     data: accountTitleList,
     success: accountSuccess,
-  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST, {}, false, false);
-  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(
-    APIName.AI_ASK_STATUS,
-    {},
-    false,
-    false
-  );
+  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
+  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS);
   const {
     trigger: listUnprocessedOCR,
     data: unprocessOCRs,
     error: listError,
     success: listSuccess,
     code: listCode,
-  } = APIHandler<IOCR[]>(APIName.OCR_LIST, {}, false, false);
+  } = APIHandler<IOCR[]>(APIName.OCR_LIST);
   const {
     trigger: deleteAccountById,
     data: deleteResult,
     success: deleteSuccess,
-  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);
@@ -206,6 +205,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [inputDescription, setInputDescription] = useState<string>('');
 
   const getAccountListHandler = (
     companyId: number,
@@ -234,7 +234,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         includeDefaultAccount: true,
         reportType,
         equityType,
-        forUser,
+        forUser: true,
         sortBy,
         sortOrder,
         searchKey,
@@ -274,11 +274,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   }, [stopAskAI, intervalId]);
 
-  const updateOCRListHandler = (companyId: number, update: boolean) => {
-    setOCRListParams({
-      companyId,
-      update,
-    });
+  const updateOCRListHandler = (companyId: number | undefined, update: boolean) => {
+    if (companyId) {
+      setOCRListParams({
+        companyId,
+        update,
+      });
+    }
   };
 
   useEffect(() => {
@@ -540,13 +542,21 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   // );
 
   const selectOCRHandler = useCallback(
-    (OCR: IOCR | undefined) => setSelectedOCR(OCR),
+    (OCR: IOCR | undefined) => {
+      setSelectedOCR(OCR);
+      setInputDescription('');
+    },
     [selectedOCR]
   );
 
   const selectJournalHandler = useCallback(
     (journal: IJournal | undefined) => setSelectedJournal(journal),
     [selectedJournal]
+  );
+
+  const inputDescriptionHandler = useCallback(
+    (description: string) => setInputDescription(description),
+    [inputDescription]
   );
 
   const value = useMemo(
@@ -582,6 +592,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       generateAccountTitle,
       changeVoucherAccountHandler,
       deleteOwnAccountTitle,
+      inputDescription,
+      inputDescriptionHandler,
     }),
     [
       OCRList,
@@ -605,6 +617,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectOCRHandler,
       selectedJournal,
       selectJournalHandler,
+      inputDescription,
     ]
   );
 

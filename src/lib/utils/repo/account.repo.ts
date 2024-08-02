@@ -14,7 +14,7 @@ export async function findManyAccountsInPrisma({
   type,
   reportType,
   equityType,
-  forUser = true,
+  forUser,
   isDeleted,
   page = DEFAULT_PAGE_OFFSET,
   limit = DEFAULT_PAGE_LIMIT,
