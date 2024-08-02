@@ -148,7 +148,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const enabledButtonStyle = 'bg-button-surface-strong-primary text-button-text-primary-solid';
 
   return (
-    <section className="mx-auto flex w-full flex-col items-center gap-40px md:w-fit">
+    <section className="flex w-full flex-col items-center gap-40px">
       <KYCStepper currentStep={step} />
       <form ref={formRef} onSubmit={handleSubmit}>
         {step === 0 && (
