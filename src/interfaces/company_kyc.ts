@@ -30,6 +30,10 @@ export interface ICompanyKYC {
   registrationCertificateId: string;
   taxCertificateId: string;
   representativeIdCardId: string;
+  status: string;
+  reviewer: string;
+  note: string;
+  reviewAt: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;

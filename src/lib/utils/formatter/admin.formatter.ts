@@ -1,5 +1,5 @@
 import { IAdmin } from '@/interfaces/admin';
-import { Admin, Company, Role, User } from '@prisma/client';
+import { Admin, Company, CompanyKYC, Role, User } from '@prisma/client';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
@@ -65,6 +65,7 @@ export async function formatCompanyAndRole(companyAndRole: {
 export function formatCompanyDetailAndRole(companyDetailAndRole: {
   company: Company & {
     admins: Admin[];
+    companyKYCs: CompanyKYC[];
   };
   role: Role;
 }): ICompanyAndRole {
