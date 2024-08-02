@@ -1382,7 +1382,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   return (
-    <div className="scale-80 mx-auto w-a4-width origin-top overflow-x-auto md:scale-100 lg:scale-100">
+    <div className="mx-auto w-a4-width origin-top overflow-x-auto">
       {page1}
       <hr className="break-before-page" />
       {page2}

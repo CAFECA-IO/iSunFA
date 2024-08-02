@@ -115,13 +115,14 @@ const FinancialReportSection = () => {
   useEffect(() => {
     setDatePickerType(() => {
       if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
+        setPeriod(default30DayPeriodInSec);
         return DatePickerType.TEXT_DATE;
       } else {
+        setPeriod(default30DayPeriodInSec);
         return DatePickerType.TEXT_PERIOD;
       }
     });
   }, [selectedReportType]);
-
   useEffect(() => {
     // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
     if (isProjectMenuOpen) {
@@ -135,9 +136,6 @@ const FinancialReportSection = () => {
       if (generatedSuccess) {
         messageModalDataHandler({
           title: '',
-          // subtitle: 'We received your application',
-          // content: `It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later.`,
-          // submitBtnStr: 'Close',
           subtitle: t('MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
           content: t('MY_REPORTS_SECTION.TAKE_MINUTES'),
           submitBtnStr: t('COMMON.CLOSE'),
@@ -592,7 +590,7 @@ const FinancialReportSection = () => {
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
+              key={`${selectedReportType}-${period.startTimeStamp}-${period.endTimeStamp}`}
               type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
