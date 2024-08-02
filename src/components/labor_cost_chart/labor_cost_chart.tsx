@@ -15,7 +15,6 @@ import { cn, getTodayPeriodInSec } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -205,7 +204,8 @@ const LaborCostChart = () => {
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     trigger: getLaborCostChartData,
     data: laborCostData,
@@ -216,14 +216,13 @@ const LaborCostChart = () => {
     APIName.LABOR_COST_CHART,
     {
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
       },
     },
-    false,
-    false
+    hasCompanyId
   );
 
   const isNoData = laborCostData?.empty || !laborCostData || !getSuccess;
@@ -268,9 +267,10 @@ const LaborCostChart = () => {
   }, [getSuccess, getCode, getError]);
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     getLaborCostChartData({
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

@@ -1,12 +1,6 @@
 import { useTranslation } from 'next-i18next';
 
-const KYCStepper = ({
-  currentStep,
-  onClick,
-}: {
-  currentStep: number;
-  onClick: (step: number) => void;
-}) => {
+const KYCStepper = ({ currentStep }: { currentStep: number }) => {
   const { t } = useTranslation('common');
 
   const doneStepStyle = 'text-navyBlue2';
@@ -17,7 +11,6 @@ const KYCStepper = ({
     <div className="relative flex w-full justify-between text-center md:w-500px">
       <div
         className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 0 ? doneStepStyle : currentStepStyle}`}
-        onClick={() => onClick(0)}
       >
         {currentStep > 0 ? (
           <svg
@@ -79,7 +72,6 @@ const KYCStepper = ({
 
       <div
         className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 1 ? doneStepStyle : currentStep === 1 ? currentStepStyle : futureStepStyle}`}
-        onClick={() => onClick(1)}
       >
         <svg
           width="30"
@@ -118,7 +110,6 @@ const KYCStepper = ({
 
       <div
         className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 2 ? doneStepStyle : currentStep === 2 ? currentStepStyle : futureStepStyle}`}
-        onClick={() => onClick(2)}
       >
         <svg
           width="30"
@@ -157,7 +148,6 @@ const KYCStepper = ({
 
       <div
         className={`z-10 flex w-120px flex-col items-center gap-2px text-sm ${currentStep > 3 ? doneStepStyle : currentStep === 3 ? currentStepStyle : futureStepStyle}`}
-        onClick={() => onClick(3)}
       >
         <svg
           width="30"

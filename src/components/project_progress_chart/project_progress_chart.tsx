@@ -18,7 +18,6 @@ import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -169,7 +168,8 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { t } = useTranslation('common');
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -194,14 +194,18 @@ const ProjectProgressChart = () => {
     success: listSuccess,
     code: listCode,
     error: listError,
-  } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+  } = APIHandler<IProjectProgressChartData>(
+    APIName.PROJECT_LIST_PROGRESS,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
     },
-    query: {
-      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
-    },
-  });
+    hasCompanyId
+  );
 
   const isNoData = projectProgress?.empty || !projectProgress || !listSuccess;
 
@@ -243,9 +247,10 @@ const ProjectProgressChart = () => {
   }, [listSuccess, listCode, listError, projectProgress]);
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     listProjectProgress({
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

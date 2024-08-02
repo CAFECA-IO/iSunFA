@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import KYCStepper from '@/components/kyc/kyc_stepper';
-import KYCFormController from '@/components/kyc/kyc_form_controller';
 import { IBasicInfo, initialBasicInfo } from '@/interfaces/kyc_basic_info';
 import BasicInfoForm from '@/components/kyc/basic_info_form';
 import { initialRegistrationInfo, IRegistrationInfo } from '@/interfaces/kyc_registration_info';
@@ -24,14 +23,14 @@ import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'react-i18next';
 import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslation('common');
   const formRef = useRef<HTMLFormElement>(null);
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD, {}, false, false);
+  const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
   const [registrationInfoValues, setRegistrationInfoValues] =
@@ -72,6 +71,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!hasCompanyId) return;
     const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
@@ -84,7 +84,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     if (isComplete) {
       const { success, code } = await triggerUpload({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         body: companyKYCForm,
       });
@@ -123,34 +123,130 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     }
   };
 
+  // Info: (20240801 - Liz) 確認每個步驟的表格是否填寫完整
+  const isBasicInfoFormComplete = Object.values(basicInfoValues).every((value) => value !== '');
+
+  const isRegistrationInfoFormComplete = Object.values(registrationInfoValues).every(
+    (value) => value !== ''
+  );
+
+  const isContactInfoFormComplete = () => {
+    const {
+      [ContactInfoKeys.COMPANY_WEBSITE]: _, // Info: (20240801 - Liz) _ means ignore this value
+      [ContactInfoKeys.CONTACT_PHONE]: __, // Info: (20240801 - Liz) __ means ignore this value
+      ...requiredFields
+    } = contactInfoValues;
+    return Object.values(requiredFields).every((value) => value !== '');
+  };
+
+  const isDocumentUploadFormComplete = Object.values(uploadDocuments).every(
+    (value) => value !== '' && value !== undefined
+  );
+
+  // Info: (20240801 - Liz) 按鈕的樣式 (disabled or enabled)
+  const disabledButtonStyle = 'text-button-text-disable bg-button-surface-strong-disable';
+  const enabledButtonStyle = 'bg-button-surface-strong-primary text-button-text-primary-solid';
+
   return (
     <section className="mx-auto flex w-full flex-col items-center gap-40px md:w-fit">
-      <KYCStepper currentStep={step} onClick={handleStepChange} />
+      <KYCStepper currentStep={step} />
       <form ref={formRef} onSubmit={handleSubmit}>
-        {step === 0 && <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />}
+        {step === 0 && (
+          <>
+            <BasicInfoForm data={basicInfoValues} onChange={handleBasicInfoChange} />
+            <div className="mt-40px flex justify-end gap-20px">
+              <button
+                type="button"
+                className="rounded px-4 py-2 text-secondaryBlue"
+                onClick={onCancel}
+              >
+                {t('KYC.CANCEL')}
+              </button>
+              <button
+                type="button"
+                className={`rounded px-4 py-2 ${isBasicInfoFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
+                onClick={() => handleStepChange(step + 1)}
+                disabled={!isBasicInfoFormComplete}
+              >
+                {t('KYC.NEXT')}
+              </button>
+            </div>
+          </>
+        )}
         {step === 1 && (
-          <RegistrationInfoForm
-            data={registrationInfoValues}
-            onChange={handleRegistrationInfoChange}
-          />
+          <>
+            <RegistrationInfoForm
+              data={registrationInfoValues}
+              onChange={handleRegistrationInfoChange}
+            />
+            <div className="mt-40px flex justify-end gap-20px">
+              <button
+                type="button"
+                className="rounded px-4 py-2 text-secondaryBlue"
+                onClick={onCancel}
+              >
+                {t('KYC.CANCEL')}
+              </button>
+              <button
+                type="button"
+                className={`rounded px-4 py-2 ${isRegistrationInfoFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
+                onClick={() => handleStepChange(step + 1)}
+                disabled={!isRegistrationInfoFormComplete}
+              >
+                {t('KYC.NEXT')}
+              </button>
+            </div>
+          </>
         )}
         {step === 2 && (
-          <ContactInfoForm data={contactInfoValues} onChange={handleContactInfoChange} />
+          <>
+            <ContactInfoForm data={contactInfoValues} onChange={handleContactInfoChange} />
+            <div className="mt-40px flex justify-end gap-20px">
+              <button
+                type="button"
+                className="rounded px-4 py-2 text-secondaryBlue"
+                onClick={onCancel}
+              >
+                {t('KYC.CANCEL')}
+              </button>
+              <button
+                type="button"
+                className={`rounded px-4 py-2 ${isContactInfoFormComplete() ? enabledButtonStyle : disabledButtonStyle}`}
+                onClick={() => handleStepChange(step + 1)}
+                disabled={!isContactInfoFormComplete()}
+              >
+                {t('KYC.NEXT')}
+              </button>
+            </div>
+          </>
         )}
         {step === 3 && (
-          <DocumentUploadForm
-            data={uploadDocuments}
-            onChange={handleDocumentChange}
-            onSelect={handleSelectRepresentativeType}
-          />
+          <>
+            <DocumentUploadForm
+              data={uploadDocuments}
+              onChange={handleDocumentChange}
+              onSelect={handleSelectRepresentativeType}
+            />
+            <div className="mt-40px flex justify-end gap-20px">
+              <button
+                type="button"
+                className="rounded px-4 py-2 text-secondaryBlue"
+                onClick={onCancel}
+              >
+                {t('KYC.CANCEL')}
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitClick}
+                className={`rounded px-4 py-2 ${isDocumentUploadFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
+                disabled={!isDocumentUploadFormComplete}
+              >
+                {t('KYC.SUBMIT')}
+              </button>
+            </div>
+          </>
         )}
       </form>
-      <KYCFormController
-        step={step}
-        onCancel={onCancel}
-        onNext={() => handleStepChange(step + 1)}
-        onSubmit={handleSubmitClick}
-      />
     </section>
   );
 };

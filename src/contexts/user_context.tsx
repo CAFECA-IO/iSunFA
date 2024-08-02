@@ -5,12 +5,12 @@ import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 
 interface SignUpProps {
@@ -34,7 +34,6 @@ interface UserContextType {
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
   returnUrl: string | null;
-  clearReturnUrl: () => void;
   checkIsRegistered: () => Promise<{
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
@@ -61,7 +60,6 @@ export const UserContext = createContext<UserContextType>({
   toggleIsSignInError: () => {},
   isAuthLoading: true,
   returnUrl: null,
-  clearReturnUrl: () => {},
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
@@ -96,78 +94,66 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
 
-  const { trigger: signOutAPI } = APIHandler<void>(
-    APIName.SIGN_OUT,
-    {
-      body: { credential: credentialRef.current },
-    },
-    false,
-    false
+  const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
+    body: { credential: credentialRef.current },
+  });
+  const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
+  const { trigger: signInAPI } = APIHandler<IUser>(APIName.SIGN_IN);
+  const { trigger: signUpAPI } = APIHandler<IUser>(APIName.SIGN_UP);
+  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
+    APIName.SESSION_GET
   );
-
-  const { trigger: createChallengeAPI } = APIHandler<string>(
-    APIName.CREATE_CHALLENGE,
-    {
-      header: { 'Content-Type': 'application/json' },
-    },
-    false,
-    false
-  );
-
-  const {
-    trigger: signInAPI,
-    data: signInData,
-    success: signInSuccess,
-    isLoading: isSignInLoading,
-    code: signInCode,
-  } = APIHandler<IUser>(
-    APIName.SIGN_IN,
-    {
-      header: { 'Content-Type': 'application/json' },
-    },
-    false,
-    false
-  );
-
-  const {
-    trigger: signUpAPI,
-    data: signUpData,
-    success: signUpSuccess,
-    isLoading: isSignUpLoading,
-    code: signUpCode,
-  } = APIHandler<IUser>(
-    APIName.SIGN_UP,
-    {
-      header: { 'Content-Type': 'application/json' },
-    },
-    false,
-    false
-  );
-
-  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(
-    APIName.COMPANY_SELECT,
-    {},
-    false,
-    false
-  );
-
-  const { trigger: getCompanyAPI } = APIHandler<ICompanyAndRole>(
-    APIName.COMPANY_GET,
-    {},
-    false,
-    false
-  );
-
-  const {
-    trigger: getUserSessionData,
-    data: userSessionData,
-    success: getUserSessionSuccess,
-    isLoading: isGetUserSessionLoading,
-    code: getUserSessionCode,
-  } = APIHandler<{ user: IUser; company: ICompany }>(APIName.SESSION_GET, {}, false, false);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
+  };
+
+  const clearState = () => {
+    setUserAuth(null);
+    setUsername(null);
+    setCredential(null);
+    setSignedIn(false);
+    setIsSignInError(false);
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+
+    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
+  };
+
+  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  const handleNotSignedIn = () => {
+    clearState();
+    if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
+        setReturnUrl(encodeURIComponent(router.asPath));
+      }
+      router.push(ISUNFA_ROUTE.LOGIN);
+    }
+  };
+
+  const handleSignInAPIResponse = (response: {
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    setIsAuthLoading(false);
+    const { data: signInData, success: signInSuccess, code: signInCode } = response;
+    if (signInSuccess) {
+      if (signInData) {
+        setUsername(signInData.name);
+        setUserAuth(signInData);
+        setCredential(signInData.credentialId);
+        setSignedIn(true);
+        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+        setIsSignInError(false);
+      }
+    }
+    if (signInSuccess === false) {
+      setIsSignInError(true);
+      setErrorCode(signInCode ?? '');
+    }
   };
 
   const handleExistingCredential = async (
@@ -189,11 +175,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             : undefined,
         };
 
+        let signInResponse: {
+          success: boolean;
+          data: IUser | null;
+          code: string;
+          error: Error | null;
+        };
+        setIsAuthLoading(true);
         if (invitation) {
-          await signInAPI({ body: { authentication }, query: { invitation } });
+          signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
         } else {
-          await signInAPI({ body: { authentication } });
+          signInResponse = await signInAPI({ body: { authentication } });
         }
+        handleSignInAPIResponse(signInResponse);
       } else {
         throw new Error('Invalid response type: Expected AuthenticatorAssertionResponse');
       }
@@ -240,6 +234,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
+  const handleSignUpAPIResponse = (response: {
+    success: boolean;
+    data: IUser | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    setIsAuthLoading(false);
+    const { data: signUpData, success: signUpSuccess, code: signUpCode } = response;
+    if (signUpSuccess) {
+      if (signUpData) {
+        setUsername(signUpData.name);
+        setUserAuth(signUpData);
+        setCredential(signUpData.credentialId);
+        setSignedIn(true);
+        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+        setIsSignInError(false);
+      }
+    }
+    if (signUpSuccess === false) {
+      setIsSignInError(true);
+      setErrorCode(signUpCode ?? '');
+    }
+  };
+
   const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
     try {
       const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
@@ -267,11 +285,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
       });
 
+      let signUpResponse: {
+        success: boolean;
+        data: IUser | null;
+        code: string;
+        error: Error | null;
+      };
+      setIsAuthLoading(true);
       if (invitation) {
-        signUpAPI({ body: { registration }, query: { invitation } });
+        signUpResponse = await signUpAPI({ body: { registration }, query: { invitation } });
       } else {
-        signUpAPI({ body: { registration } });
+        signUpResponse = await signUpAPI({ body: { registration } });
       }
+      handleSignUpAPIResponse(signUpResponse);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -302,11 +328,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         debug: false,
       });
 
+      let signInResponse: {
+        success: boolean;
+        data: IUser | null;
+        code: string;
+        error: Error | null;
+      };
+      setIsAuthLoading(true);
       if (invitation) {
-        signInAPI({ body: { authentication }, query: { invitation } });
+        signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
       } else {
-        signInAPI({ body: { authentication } });
+        signInResponse = await signInAPI({ body: { authentication } });
       }
+      handleSignInAPIResponse(signInResponse);
     } catch (error) {
       // Deprecated: dev (20240410 - Shirley)
       // eslint-disable-next-line no-console
@@ -323,40 +357,80 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
-  const setPrivateData = async () => {
-    getUserSessionData();
-  };
-
-  const clearReturnUrl = () => {
-    setReturnUrl(null);
-  };
-
   const handleReturnUrl = () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `handleReturnUrl returnUrl: ${decodeURIComponent(returnUrl ?? '')}, router.pathname: ${router.pathname}, selectedCompanyRef.current:`,
+      selectedCompanyRef.current
+    );
     if (returnUrl) {
       const urlString = decodeURIComponent(returnUrl);
-      clearReturnUrl();
+      setReturnUrl(null);
       router.push(urlString);
-    } else {
+    } else if (
+      router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
+      (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
+    ) {
       router.push(ISUNFA_ROUTE.DASHBOARD);
     }
   };
 
-  // Info: (20240729 - tzuhan) un-used function
-  const getCompanyHandler = async (companyId: number) => {
-    const { success, code, data } = await getCompanyAPI({
-      params: {
-        companyId,
-      },
-    });
-    if (success && data?.company) {
-      setSelectedCompany(data.company);
-      setSuccessSelectCompany(true);
-      handleReturnUrl();
+  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
+  const checkSession = async () => {
+    setIsAuthLoading(true);
+    const {
+      data: userSessionData,
+      success: getUserSessionSuccess,
+      code: getUserSessionCode,
+    } = await getUserSessionData();
+    setIsAuthLoading(false);
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+    if (getUserSessionSuccess) {
+      if (userSessionData) {
+        // eslint-disable-next-line no-console
+        console.log(
+          'checkSession userSessionData',
+          userSessionData,
+          `'company' in userSessionData && Object.keys(userSessionData.company).length > 0: ${'company' in userSessionData && userSessionData.company && Object.keys(userSessionData.company).length > 0}`
+        );
+        if (
+          'user' in userSessionData &&
+          userSessionData.user &&
+          Object.keys(userSessionData.user).length > 0
+        ) {
+          setUserAuth(userSessionData.user);
+          setUsername(userSessionData.user.name);
+          setCredential(userSessionData.user.credentialId);
+          setSignedIn(true);
+          setIsSignInError(false);
+          if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+          }
+          if (
+            'company' in userSessionData &&
+            userSessionData.company &&
+            Object.keys(userSessionData.company).length > 0
+          ) {
+            setSelectedCompany(userSessionData.company);
+            setSuccessSelectCompany(true);
+            handleReturnUrl();
+          } else {
+            setSuccessSelectCompany(undefined);
+            setSelectedCompany(null);
+            // eslint-disable-next-line no-console
+            console.log('checkSession: no company');
+            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+          }
+        } else {
+          handleNotSignedIn();
+        }
+      }
     }
-    if (success === false) {
-      setErrorCode(code ?? '');
-      setSuccessSelectCompany(false);
+    if (getUserSessionSuccess === false) {
+      handleNotSignedIn();
+      setIsSignInError(true);
+      setErrorCode(getUserSessionCode ?? '');
     }
   };
 
@@ -395,128 +469,27 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     await handleSelectCompanyResponse(res);
   };
 
-  const clearState = () => {
-    setUserAuth(null);
-    setUsername(null);
-    setCredential(null);
-    setSignedIn(false);
-    setIsSignInError(false);
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
-
-    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
-  };
-
-  const init = async () => {
-    await setPrivateData();
-    const result = await Promise.resolve();
-    return result;
-  };
-
   const signOut = async () => {
     signOutAPI();
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
   };
 
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      checkSession();
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      await init();
-    })();
+    checkSession();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
-
-  useEffect(() => {
-    if (isSignUpLoading) return;
-
-    if (signUpSuccess) {
-      if (signUpData) {
-        setUsername(signUpData.name);
-        setUserAuth(signUpData);
-        setCredential(signUpData.credentialId);
-        setSignedIn(true);
-        setIsSignInError(false);
-      }
-    }
-    if (signUpSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signUpCode ?? '');
-    }
-  }, [signUpData, isSignUpLoading, signUpSuccess, signUpCode]);
-
-  useEffect(() => {
-    if (isSignInLoading) return;
-
-    if (signInSuccess) {
-      if (signInData) {
-        setUsername(signInData.name);
-        setUserAuth(signInData);
-        setCredential(signInData.credentialId);
-        setSignedIn(true);
-        setIsSignInError(false);
-      }
-    }
-    if (signInSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signInCode ?? '');
-    }
-  }, [signInData, isSignInLoading, signInSuccess, signInCode]);
-
-  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
-  useEffect(() => {
-    if (!signedIn && isGetUserSessionLoading === false) {
-      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
-          setReturnUrl(encodeURIComponent(router.asPath));
-        }
-        router.push(ISUNFA_ROUTE.LOGIN);
-      }
-    }
-  }, [signedIn, isGetUserSessionLoading, router]);
-
-  useEffect(() => {
-    if (isGetUserSessionLoading) return;
-
-    // Deprecated: dev (20240630 - Shirley)
-    // eslint-disable-next-line no-console
-    console.log('userSessionData:', userSessionData);
-
-    if (getUserSessionSuccess) {
-      if (userSessionData) {
-        if (
-          'user' in userSessionData &&
-          userSessionData.user &&
-          Object.keys(userSessionData.user).length > 0
-        ) {
-          setUserAuth(userSessionData.user);
-          setUsername(userSessionData.user.name);
-          setCredential(userSessionData.user.credentialId);
-          setSignedIn(true);
-          setIsSignInError(false);
-        }
-        if ('company' in userSessionData && Object.keys(userSessionData.company).length > 0) {
-          setSuccessSelectCompany(true);
-          setSelectedCompany(userSessionData.company);
-        }
-      }
-    }
-    if (getUserSessionSuccess === false) {
-      setIsSignInError(true);
-
-      setErrorCode(getUserSessionCode ?? '');
-      setSuccessSelectCompany(undefined);
-      setSelectedCompany(null);
-    }
-  }, [userSessionData, isGetUserSessionLoading, getUserSessionSuccess, getUserSessionCode]);
-
-  useEffect(() => {
-    if (isSignInLoading || isSignUpLoading || isGetUserSessionLoading) {
-      setIsAuthLoading(true);
-    } else {
-      setTimeout(() => {
-        setIsAuthLoading(false);
-      }, MILLISECONDS_IN_A_SECOND);
-    }
-  }, [isSignInLoading, isSignUpLoading, isGetUserSessionLoading]);
 
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(
@@ -536,8 +509,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
-      clearReturnUrl,
-      getCompanyHandler,
       checkIsRegistered,
       handleExistingCredential,
     }),

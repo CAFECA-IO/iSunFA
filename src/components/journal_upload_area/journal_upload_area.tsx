@@ -21,7 +21,7 @@ const JournalUploadArea = () => {
     data: results,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD);
 
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<File | null>(null);

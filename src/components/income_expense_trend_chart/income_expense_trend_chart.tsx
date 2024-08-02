@@ -15,7 +15,6 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -212,7 +211,8 @@ const LineChart = ({ data }: LineChartProps) => {
 const IncomeExpenseTrendChart = () => {
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.MONTH);
   const [data, setData] = React.useState(originalDataRef.current[selectedPeriod]);
@@ -223,23 +223,28 @@ const IncomeExpenseTrendChart = () => {
     success: getSuccess,
     code: getCode,
     error: getError,
-  } = APIHandler<IIncomeExpenseTrendChartData>(APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD, {
-    params: {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+  } = APIHandler<IIncomeExpenseTrendChartData>(
+    APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+      },
+      query: {
+        period: selectedPeriod,
+      },
     },
-    query: {
-      period: selectedPeriod,
-    },
-  });
+    hasCompanyId
+  );
 
   const isNoData =
     profitMarginTrendInPeriodData?.empty || !profitMarginTrendInPeriodData || !getSuccess;
 
   const periodChangeHandler = (period: Period) => {
+    if (!hasCompanyId) return;
     setSelectedPeriod(period);
     getProfitMarginTrendInPeriod({
       params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         period,

@@ -16,7 +16,6 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IServerSideProps {
   reportType: AnalysisReportTypesKey;
@@ -42,6 +41,7 @@ const ViewAnalysisReportPage = ({
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: AnalysisReportTypesMap[reportType],
     tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
@@ -54,12 +54,16 @@ const ViewAnalysisReportPage = ({
     data: reportAnalysis,
     code: getARCode,
     success: getARSuccess,
-  } = APIHandler<IReportOld>(APIName.REPORT_ANALYSIS_GET_BY_ID, {
-    params: {
-      params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID, reportId: '1' },
+  } = APIHandler<IReportOld>(
+    APIName.REPORT_ANALYSIS_GET_BY_ID,
+    {
+      params: {
+        params: { companyId: selectedCompany?.id, reportId: '1' },
+      },
+      query: { reportType, reportLanguage, startTimestamp, endTimestamp },
     },
-    query: { reportType, reportLanguage, startTimestamp, endTimestamp },
-  });
+    hasCompanyId
+  );
 
   useEffect(() => {
     if (getARSuccess === false) {

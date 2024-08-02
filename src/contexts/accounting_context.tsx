@@ -55,7 +55,7 @@ interface IAccountingContext {
   // removeTempJournal: (id: string) => void;
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
-  updateOCRListHandler: (companyId: number, update: boolean) => void;
+  updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
   accountList: IAccount[];
   getAccountListHandler: (
     companyId: number,
@@ -121,39 +121,39 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => { },
+  updateOCRListHandler: () => {},
   accountList: [],
-  getAccountListHandler: () => { },
-  getAIStatusHandler: () => { },
+  getAccountListHandler: () => {},
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => { },
+  selectOCRHandler: () => {},
   selectedJournal: undefined,
-  selectJournalHandler: () => { },
+  selectJournalHandler: () => {},
   inputDescription: '',
-  inputDescriptionHandler: () => { },
+  inputDescriptionHandler: () => {},
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAccountHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  resetVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  resetVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => { },
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -163,25 +163,20 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     trigger: getAccountList,
     data: accountTitleList,
     success: accountSuccess,
-  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST, {}, false, false);
-  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(
-    APIName.AI_ASK_STATUS,
-    {},
-    false,
-    false
-  );
+  } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
+  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS);
   const {
     trigger: listUnprocessedOCR,
     data: unprocessOCRs,
     error: listError,
     success: listSuccess,
     code: listCode,
-  } = APIHandler<IOCR[]>(APIName.OCR_LIST, {}, false, false);
+  } = APIHandler<IOCR[]>(APIName.OCR_LIST);
   const {
     trigger: deleteAccountById,
     data: deleteResult,
     success: deleteSuccess,
-  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID, {}, false, false);
+  } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
   >(undefined);
@@ -279,11 +274,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   }, [stopAskAI, intervalId]);
 
-  const updateOCRListHandler = (companyId: number, update: boolean) => {
-    setOCRListParams({
-      companyId,
-      update,
-    });
+  const updateOCRListHandler = (companyId: number | undefined, update: boolean) => {
+    if (companyId) {
+      setOCRListParams({
+        companyId,
+        update,
+      });
+    }
   };
 
   useEffect(() => {

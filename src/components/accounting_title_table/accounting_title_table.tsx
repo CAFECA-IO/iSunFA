@@ -8,7 +8,6 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { FREE_COMPANY_ID } from '@/constants/config';
 
 export enum ActionType {
   FAV_AND_ADD = 'favorite_and_add',
@@ -59,13 +58,14 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   };
 
   const handleRemove = () => {
+    if (!selectedCompany?.id) return;
     messageModalDataHandler({
       title: 'Remove Accounting title',
       content: 'Are you sure you want to remove this accounting title?',
       notes: name,
       messageType: MessageType.WARNING,
       submitBtnStr: 'Remove',
-      submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany?.id ?? FREE_COMPANY_ID, id),
+      submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany.id, id),
       backBtnStr: 'Cancel',
     });
     messageModalVisibilityHandler();

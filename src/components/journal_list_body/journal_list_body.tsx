@@ -23,13 +23,13 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import Toggle from '@/components/toggle/toggle';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{
     [key: string]: IPaginatedData<IJournalListItem[]>;
   } | null>(null);
@@ -38,12 +38,9 @@ const JournalListBody = () => {
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
   const [invoiceListToggle, setInvoiceListoggle] = useState<boolean>(false);
   const { trigger } = APIHandler<{ [key: string]: IPaginatedData<IJournalListItem[]> }>(
-    APIName.JOURNAL_LIST,
-    {},
-    false,
-    false
+    APIName.JOURNAL_LIST
   );
-  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE, {}, false, false);
+  const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE);
 
   const types = [
     JOURNAL_TYPE.ALL,
@@ -105,6 +102,7 @@ const JournalListBody = () => {
       filteredPeriod?: IDatePeriod;
       search?: string;
     }) => {
+      if (!hasCompanyId) return;
       setIsLoading(true);
       setSuccess(undefined);
       setCode(undefined);
@@ -118,7 +116,7 @@ const JournalListBody = () => {
       } = query;
       const response = await trigger({
         params: {
-          companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           ...toSort(sortBy ?? filteredJournalSortBy),
@@ -130,7 +128,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
+          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
         },
       });
 
