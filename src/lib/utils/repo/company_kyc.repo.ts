@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { KYCStatus } from '@/constants/kyc';
 import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { CompanyKYC, Prisma } from '@prisma/client';
@@ -18,6 +19,7 @@ export async function createCompanyKYC(
         },
       },
       ...companyKYCForm,
+      status: KYCStatus.PENDING,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },

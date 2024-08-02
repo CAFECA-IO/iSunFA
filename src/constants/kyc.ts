@@ -109,6 +109,13 @@ export enum UploadDocumentKeys {
   REPRESENTATIVE_CERTIFICATE_ID = 'representativeIdCardId',
 }
 
+export enum KYCStatus {
+  NOT_STARTED = 'NOT_STARTED',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
 export const MAX_FILE_SIZE_IN_MB = 50;
 
 export const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes

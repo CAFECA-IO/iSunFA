@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Admin, Company, Prisma, Role, User } from '@prisma/client';
+import { Admin, Company, CompanyKYC, Prisma, Role, User } from '@prisma/client';
 
 export async function listAdminByCompanyId(
   companyId: number
@@ -254,12 +254,14 @@ export async function getCompanyDetailAndRoleByCompanyId(
 ): Promise<{
   company: Company & {
     admins: Admin[];
+    companyKYCs: CompanyKYC[];
   };
   role: Role;
 } | null> {
   let companyDetail: {
     company: Company & {
       admins: Admin[];
+      companyKYCs: CompanyKYC[];
     };
     role: Role;
   } | null = null;
@@ -278,7 +280,17 @@ export async function getCompanyDetailAndRoleByCompanyId(
                 role: {
                   name: ROLE_NAME.OWNER,
                 },
+                OR: [{ deletedAt: 0 }, { deletedAt: null }],
               },
+            },
+            companyKYCs: {
+              where: {
+                OR: [{ deletedAt: 0 }, { deletedAt: null }],
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+              take: 1,
             },
           },
         },
