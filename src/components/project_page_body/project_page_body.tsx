@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { FiGrid, FiSearch, FiPlusCircle, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaChevronLeft, FaChevronRight, FaListUl } from 'react-icons/fa6';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { dummyProjects } from '@/interfaces/project';
+import { IProject } from '@/interfaces/project';
 import { ProjectStage, stageList } from '@/constants/project';
 import { Button } from '@/components/button/button';
 import ProjectList from '@/components/project_list/project_list';
 import { Layout } from '@/constants/layout';
 import ProjectStageBlock from '@/components/project_stage_block/project_stage_block';
 import { useTranslation } from 'next-i18next';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 // Info: (2024704 - Anna) For list
 interface StageNameMap {
@@ -28,13 +31,20 @@ const stageNameMap: StageNameMap = {
 
 const ProjectPageBody = () => {
   const { t } = useTranslation('common');
+
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
+
   const [search, setSearch] = useState<string>('');
   const [filteredStage, setFilteredStage] = useState<string>(t('STAGE_NAME_MAP.ALL')); // Info: (2024704 - Anna) For list
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const totalPages = 10; // ToDo: (2024606 - Julian) Get total page from API
+
+  const { trigger: getProjectList, data: projectList } = APIHandler<IProject[]>(
+    APIName.PROJECT_LIST
+  );
 
   const {
     targetRef: stageOptionsRef,
@@ -82,7 +92,13 @@ const ProjectPageBody = () => {
     if (currentLayout === Layout.LIST) {
       setFilteredStage(t('STAGE_NAME_MAP.ALL'));
     }
-  }, [currentLayout, t]);
+  }, [currentLayout]);
+
+  useEffect(() => {
+    getProjectList({
+      params: { companyId: selectedCompany?.id },
+    });
+  }, []);
 
   const stageOptions = ['All', ...stageList]; // Info: (2024611 - Julian) Add All option
 
@@ -100,9 +116,7 @@ const ProjectPageBody = () => {
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
-      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-xs border border-input-stroke-input
-      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
-      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-xs border border-input-stroke-input ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {stageOptions.map((stage) => (
         <button
@@ -117,16 +131,17 @@ const ProjectPageBody = () => {
     </div>
   );
 
-  // ToDo: (20240611 - Julian) Replace to real data
-  const filteredProjects = dummyProjects
-    .filter((project) => {
-      // Info: (2024607 - Julian) 如果選擇 All，則顯示所有 Project
-      if (filteredStage === t('STAGE_NAME_MAP.ALL')) return true;
-      return project.stage === stageNameMapReverse[filteredStage]; // Info: (2024704 - Anna) 使用反向映射來比較階段名稱
-    })
-    .filter((project) => {
-      return project.name.toLowerCase().includes(search.toLowerCase());
-    });
+  const filteredProjects = projectList
+    ? projectList
+        .filter((project) => {
+          // Info: (2024607 - Julian) 如果選擇 All，則顯示所有 Project
+          if (filteredStage === t('STAGE_NAME_MAP.ALL')) return true;
+          return project.stage === stageNameMapReverse[filteredStage]; // Info: (2024704 - Anna) 使用反向映射來比較階段名稱
+        })
+        .filter((project) => {
+          return project.name.toLowerCase().includes(search.toLowerCase());
+        })
+    : [];
 
   const projectStageBlocksDesktop = (
     <div className="hidden items-start gap-12px overflow-x-auto scroll-smooth md:flex">
@@ -251,9 +266,7 @@ const ProjectPageBody = () => {
               <p className="font-semibold">{t('PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
-                className={`relative flex h-44px w-full items-center justify-between rounded-xs border bg-input-surface-input-background 
-            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px hover:cursor-pointer md:w-200px`}
+                className={`relative flex h-44px w-full items-center justify-between rounded-xs border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
               >
                 {filteredStage}
                 <FaChevronDown />

@@ -78,6 +78,8 @@ export enum APIName {
   UPDATE_ACCOUNT_INFO_BY_ID = 'UPDATE_ACCOUNT_INFO_BY_ID',
   DELETE_ACCOUNT_BY_ID = 'DELETE_ACCOUNT_BY_ID',
   TRANSFER_OWNER = 'TRANSFER_OWNER',
+  PROJECT_LIST = 'PROJECT_LIST',
+  CREATE_PROJECT = 'CREATE_PROJECT',
 }
 
 export enum APIPath {
@@ -139,6 +141,8 @@ export enum APIPath {
   UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   DELETE_ACCOUNT_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   TRANSFER_OWNER = `${apiPrefix}/company/:companyId/transfer_owner`,
+  PROJECT_LIST = `${apiPrefix}/company/:companyId/project`,
+  CREATE_PROJECT = `${apiPrefix}/company/:companyId/project`,
 }
 const createConfig = ({
   name,
@@ -454,5 +458,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRANSFER_OWNER,
     method: HttpMethod.PUT,
     path: APIPath.TRANSFER_OWNER,
+  }),
+  [APIName.PROJECT_LIST]: createConfig({
+    name: APIName.PROJECT_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.PROJECT_LIST,
+  }),
+  [APIName.CREATE_PROJECT]: createConfig({
+    name: APIName.CREATE_PROJECT,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_PROJECT,
   }),
 };

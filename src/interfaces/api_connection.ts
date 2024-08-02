@@ -60,7 +60,9 @@ export type IAPIName =
   | 'CREATE_NEW_SUB_ACCOUNT'
   | 'UPDATE_ACCOUNT_INFO_BY_ID'
   | 'DELETE_ACCOUNT_BY_ID'
-  | 'TRANSFER_OWNER';
+  | 'TRANSFER_OWNER'
+  | 'PROJECT_LIST'
+  | 'CREATE_PROJECT';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
