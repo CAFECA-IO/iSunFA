@@ -206,6 +206,7 @@ export async function deleteProjectById(projectId: number) {
   };
 
   const data = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

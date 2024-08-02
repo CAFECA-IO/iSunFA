@@ -52,7 +52,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     {
       params: { companyId: selectedCompany?.id, journalId },
     },
-    hasCompanyId,
+    hasCompanyId
   );
 
   const [contractId, setContractId] = useState<string>('');

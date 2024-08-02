@@ -442,7 +442,7 @@ const NewJournalForm = () => {
       success: createSuccess,
       code: createCode,
     } = await createInvoice({
-      params: { companyId: selectedCompany.id, },
+      params: { companyId: selectedCompany.id },
       body: { invoice: invoiceData, ocrId: selectedOCR?.id },
     });
     if (createSuccess && invoice?.journalId && invoice?.resultStatus) {

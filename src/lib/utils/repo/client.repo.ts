@@ -57,6 +57,7 @@ export async function deleteClientById(clientId: number): Promise<IClient> {
   };
 
   const data: Prisma.ClientUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 
