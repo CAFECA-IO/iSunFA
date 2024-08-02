@@ -7,7 +7,7 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { updateEmployeeProject } from '@/lib/utils/repo/employee.repo';
 import prisma from '@/client';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
   const employee = await prisma.employee.findUnique({
@@ -180,7 +180,7 @@ export default async function handler(
       shouldContinue = false;
     }
     if (shouldContinue) {
-      shouldContinue = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      shouldContinue = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     }
     switch (req.method) {
       case 'GET': {

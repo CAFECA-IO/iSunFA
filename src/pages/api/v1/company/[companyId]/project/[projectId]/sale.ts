@@ -6,7 +6,7 @@ import { formatApiResponse, convertStringToNumber } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { listProjectSale } from '@/lib/utils/repo/sale.repo';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
 async function checkInput(projectId: string) {
@@ -19,7 +19,7 @@ async function checkInput(projectId: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {
@@ -49,7 +49,7 @@ export default async function handler(
         } else {
           const session = await getSession(req, res);
           const { userId, companyId } = session;
-          const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], {
+          const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
             userId,
             companyId,
           });

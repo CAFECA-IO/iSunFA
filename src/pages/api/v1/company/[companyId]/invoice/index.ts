@@ -10,7 +10,7 @@ import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export interface IPostApiResponseType {
   journalId: number;
@@ -162,7 +162,7 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (!isAuth) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }

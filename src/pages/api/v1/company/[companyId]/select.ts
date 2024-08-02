@@ -7,7 +7,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 
 async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.user], { userId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
