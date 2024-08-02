@@ -219,11 +219,23 @@ const DatePicker = ({
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 0 (January) to 11 (December).
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
 
+  // useEffect(() => {
+  //   setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //   setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
+  // }, [period]);
+
   useEffect(() => {
     // Info: (20240417 - Shirley) 如果已取得兩個日期，則將日期區間傳回父層
     // Info: (20240417 - Shirley) 如果兩個日期相同，則將日期區間設為當天 00:00:00 ~ 23:59:59
-    const dateOneStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
-    const dateTwoStamp = dateTwo ? dateTwo.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+    let dateOneStamp = 0;
+    let dateTwoStamp = 0;
+    if (type === DatePickerType.ICON_PERIOD || type === DatePickerType.TEXT_PERIOD) {
+      dateOneStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+      dateTwoStamp = dateTwo ? dateTwo.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+    } else {
+      dateOneStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+      dateTwoStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+    }
 
     if (dateOneStamp && dateTwoStamp) {
       const isSameDate = dateOneStamp === dateTwoStamp;
@@ -258,19 +270,7 @@ const DatePicker = ({
         endTimeStamp: 0,
       });
     }
-  }, [dateOne, dateTwo]);
-
-  // TODO: 在不讓 parent component re-render 造成多次 API call 的情況下，將 period 從一段期間改成一個日期 (20240527 - Shirley)
-  // Info: If type changed, reset the date (20240425 - Shirley)
-  // useEffect(() => {
-  //   if (type === DatePickerType.CHOOSE_PERIOD || type === DatePickerType.ICON) {
-  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //     setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //   } else {
-  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //     setDateTwo(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //   }
-  // }, [type]);
+  }, [dateOne, dateTwo, type]);
 
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {
