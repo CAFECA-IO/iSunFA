@@ -73,6 +73,7 @@ export async function deleteOrder(id: number): Promise<IOrder> {
   };
 
   const data: Prisma.OrderUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

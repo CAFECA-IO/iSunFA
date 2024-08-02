@@ -7,7 +7,7 @@ import { MONTH_FULL_LIST_SHORT } from '@/constants/display';
 import prisma from '@/client';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function makeSeriesAnnotations(
   totalIncome: number[],
@@ -154,7 +154,7 @@ export default async function handler(
     }
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (!isAuth) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }

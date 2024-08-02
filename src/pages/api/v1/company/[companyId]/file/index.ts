@@ -7,12 +7,12 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { addPrefixToFile, parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
 import path from 'path';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export const config = {
   api: {
@@ -27,28 +27,34 @@ async function handlePostRequest(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
   let fileId: string = '';
+  let isAuth = false;
 
+  const { type, targetId } = req.query;
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  if (type && targetId && type === UploadType.USER) {
+    isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+  } else {
+    isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  }
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     try {
       const parsedForm = await parseForm(req, FileFolder.TMP);
-      const { files, fields } = parsedForm;
+      const { files } = parsedForm;
       const { file } = files;
-      const { type = [], targetId = [] } = fields;
-      const targetIdNum = convertStringToNumber(targetId[0]);
+      const targetIdStr = targetId as string;
+      const targetIdNum = convertStringToNumber(targetId);
       if (!file) {
         statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
       } else {
-        switch (type[0]) {
+        switch (type) {
           case UploadType.KYC: {
             const ext = file[0].originalFilename
               ? path.extname(file[0].originalFilename).slice(1)
               : '';
-            await addPrefixToFile(FileFolder.TMP, file[0].newFilename, targetId[0], ext);
+            await addPrefixToFile(FileFolder.TMP, file[0].newFilename, targetIdStr, ext);
             fileId = file[0].newFilename;
             break;
           }

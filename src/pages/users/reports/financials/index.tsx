@@ -34,7 +34,6 @@ const FinancialsReportsPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
         <title>{t('REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
         <meta
           name="description"

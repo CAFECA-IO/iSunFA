@@ -28,9 +28,13 @@ import { createFinancialReport, getReportIdByFromTo } from '@/lib/utils/repo/rep
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 
 import { ReportLanguagesKey } from '@/interfaces/report_language';
-import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
+import {
+  BalanceSheetOtherInfo,
+  CashFlowStatementOtherInfo,
+  IncomeStatementOtherInfo,
+} from '@/interfaces/report';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 // Info: (20240710 - Murky) Down below are Post related functions
 
@@ -177,7 +181,11 @@ export async function generateFinancialReport(
 ) {
   // Info: (20240710 - Murky) Financial Report Generator
   let content: IAccountReadyForFrontend[] = [];
-  let otherInfo: BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo | null = null;
+  let otherInfo:
+    | BalanceSheetOtherInfo
+    | IncomeStatementOtherInfo
+    | CashFlowStatementOtherInfo
+    | null = null;
   try {
     const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
       companyId,
@@ -309,11 +317,11 @@ export async function generateReportIfNotExist(
   );
   if (!reportId) {
     const { content, otherInfo } = await generateFinancialReport(
-        companyId,
-        startDateInSecond,
-        endDateInSecond,
-        reportSheetType
-      );
+      companyId,
+      startDateInSecond,
+      endDateInSecond,
+      reportSheetType
+    );
 
     const reportContentSavingToDB = {
       content,
@@ -393,8 +401,9 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
+    // const companyId = 10000001;
 
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (isAuth) {
       switch (req.method) {
         case 'POST': {

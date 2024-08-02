@@ -10,15 +10,25 @@ import {
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
 import { ReportSheetType } from '@/constants/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
-import { IReport, FinancialReport, BalanceSheetOtherInfo, IncomeStatementOtherInfo, CashFlowStatementOtherInfo } from '@/interfaces/report';
+import {
+  IReport,
+  FinancialReport,
+  BalanceSheetOtherInfo,
+  IncomeStatementOtherInfo,
+  CashFlowStatementOtherInfo,
+} from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
 import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
 import incomeStatementLiteMapping from '@/constants/account_sheet_mapping/income_statement_lite_mapping.json';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { Company } from '@prisma/client';
-import { isBalanceSheetOtherInfo, isCashFlowStatementOtherInfo, isIncomeStatementOtherInfo } from '@/lib/utils/type_guard/report';
+import {
+  isBalanceSheetOtherInfo,
+  isCashFlowStatementOtherInfo,
+  isIncomeStatementOtherInfo,
+} from '@/lib/utils/type_guard/report';
 
 export function formatGetRequestQueryParams(req: NextApiRequest) {
   const { reportId } = req.query;
@@ -50,7 +60,7 @@ export async function getPeriodReport(companyId: number, reportId: number) {
 
   return {
     curPeriodReport,
-    company
+    company,
   };
 }
 
@@ -139,7 +149,9 @@ export function addCashFlowStatementInfo(report: IReport): CashFlowStatementOthe
   return otherInfo;
 }
 
-export function getAdditionalInfo(report: IReport): BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo | null {
+export function getAdditionalInfo(
+  report: IReport
+): BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo | null {
   const { reportType } = report;
 
   let otherInfo = null;
@@ -190,11 +202,14 @@ export function formatPayloadFromIReport(report: IReport, company: Company): Fin
     },
     details,
     general,
-    otherInfo
+    otherInfo,
   };
 }
 
-export async function handleGETRequest(companyId: number, req: NextApiRequest): Promise<FinancialReport | null> {
+export async function handleGETRequest(
+  companyId: number,
+  req: NextApiRequest
+): Promise<FinancialReport | null> {
   const { reportIdNumber } = formatGetRequestQueryParams(req);
 
   let payload = null;
@@ -220,7 +235,7 @@ export default async function handler(
     const session = await getSession(req, res);
     const { userId, companyId } = session;
 
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     // ToDo: (20240703 - Murky) Need to check Auth
     if (isAuth) {
       switch (req.method) {

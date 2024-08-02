@@ -63,6 +63,7 @@ export async function deleteSubscription(id: number): Promise<ISubscription> {
   };
 
   const data: Prisma.SubscriptionUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

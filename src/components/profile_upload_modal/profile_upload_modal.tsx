@@ -108,33 +108,29 @@ const ProfileUploadModal = ({
   const saveImage = async () => {
     // Info: (20240801 - Julian) 建立 FormData
     const formData = new FormData();
-
+    let targetId = '';
     switch (uploadType) {
       // Info: (20240801 - Julian) 上傳公司圖片
       case UploadType.COMPANY: {
         const companyId = selectedCompany?.id ?? NON_EXISTING_COMPANY_ID;
+        targetId = companyId.toString();
 
         formData.append('file', uploadedImage as File);
-        formData.append('type', UploadType.COMPANY);
-        formData.append('targetId', companyId.toString());
         break;
       }
       // Info: (20240801 - Julian) 上傳用戶頭貼
       case UploadType.USER: {
         const userId = userAuth?.id ?? -1;
+        targetId = userId.toString();
 
         formData.append('file', uploadedImage as File);
-        formData.append('type', UploadType.USER);
-        formData.append('targetId', userId.toString());
         break;
       }
       // Info: (20240801 - Julian) 上傳專案圖片
       case UploadType.PROJECT: {
-        const projectId = '-1'; // ToDo: (20240801 - Julian) get project id
+        targetId = '-1'; // ToDo: (20240801 - Julian) get project id
 
         formData.append('file', uploadedImage as File);
-        formData.append('type', UploadType.PROJECT);
-        formData.append('targetId', projectId);
         break;
       }
       default:
@@ -144,6 +140,10 @@ const ProfileUploadModal = ({
     await uploadImage({
       params: {
         companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
+      query: {
+        type: uploadType,
+        targetId,
       },
       body: formData,
     });

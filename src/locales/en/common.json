@@ -423,7 +423,8 @@
     "EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT": "Each row includes an accounting account.",
     "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "Each row includes a debit or credit.",
     "DEBITS_AND_CREDITS_BALANCE_OUT": "Debits and credits balance out.",
-    "ACCOUNT_TITLE": "Account Title"
+    "ACCOUNT_TITLE": "Account Title",
+    "CREATE_INVOICE_FAILED": "Create Invoice Failed"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -769,5 +770,18 @@
     "ACCOUNT": "Account",
     "DELETE_COMPANY": "Delete Company",
     "TRANSFER_ADMINISTRATION": "Transfer Administration"
+  },
+  "SETTING": {
+    "PERSONAL_SETTING": "Personal Setting",
+    "COMPANY_SETTING": "Company Setting",
+    "BASIC_INFO": "Basic Info",
+    "ACCOUNTING_TITLE": "Accounting Title",
+    "TRADING_PARTNER_LIST": "Trading Partner List",
+    "ADMINISTRATOR": "Administrator",
+    "SUBSCRIPTION_BILLS": "Subscription&Bills",
+    "ACCOUNTING_TITLE_MANAGEMENT": "Accounting Title Management",
+    "ASSETS": "Assets",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity"
   }
 }
