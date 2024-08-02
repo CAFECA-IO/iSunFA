@@ -191,7 +191,7 @@ const ProjectPageBody = () => {
     </>
   );
 
-  // ToDo: (2024606 - Julian) Grid Layout
+  // Info: (20240606 - Julian) Grid Layout
   const displayedProjects =
     currentLayout === Layout.LIST ? (
       <ProjectList

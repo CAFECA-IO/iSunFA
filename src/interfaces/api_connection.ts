@@ -62,7 +62,8 @@ export type IAPIName =
   | 'DELETE_ACCOUNT_BY_ID'
   | 'TRANSFER_OWNER'
   | 'PROJECT_LIST'
-  | 'CREATE_PROJECT';
+  | 'CREATE_PROJECT'
+  | 'GET_PROJECT_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
