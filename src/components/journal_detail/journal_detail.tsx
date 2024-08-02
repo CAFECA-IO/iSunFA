@@ -12,6 +12,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IVoucherItem {
   id: string;
@@ -52,7 +53,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     {
       params: { companyId: selectedCompany?.id, journalId },
     },
-    hasCompanyId,
+    hasCompanyId
   );
 
   const [contractId, setContractId] = useState<string>('');
@@ -459,6 +460,60 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     </div>
   );
 
+  // Info: (20240802 - Julian) No token contract and token id in free company
+  const displayToken =
+    selectedCompany?.id !== FREE_COMPANY_ID ? (
+      <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
+        {/* Info: (20240503 - Julian) Token Contract */}
+        <div className="flex flex-wrap items-center text-base text-lightGray4">
+          <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
+            <div className="flex items-center">
+              <p>{t('JOURNAL.TOKEN_CONTRACT')}</p>
+              <button
+                type="button"
+                onClick={copyTokenContractHandler}
+                className="block p-10px text-secondaryBlue md:hidden"
+              >
+                <PiCopySimpleBold size={16} />
+              </button>
+            </div>
+
+            <p className="break-all text-darkBlue">{contractId}</p>
+          </div>
+          <button
+            type="button"
+            onClick={copyTokenContractHandler}
+            className="hidden p-10px text-secondaryBlue md:block"
+          >
+            <PiCopySimpleBold size={16} />
+          </button>
+        </div>
+        {/* Info: (20240503 - Julian) Token ID */}
+        <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
+          <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
+            <div className="flex items-center">
+              <p>{t('JOURNAL.TOKEN_ID')}</p>
+              <button
+                type="button"
+                onClick={copyTokenIdHandler}
+                className="block p-10px text-secondaryBlue md:hidden"
+              >
+                <PiCopySimpleBold size={16} />
+              </button>
+            </div>
+            <p className="text-darkBlue">{journalTokenId}</p>
+          </div>
+          <button
+            type="button"
+            onClick={copyTokenIdHandler}
+            className="hidden p-10px text-secondaryBlue md:block"
+          >
+            <PiCopySimpleBold size={16} />
+          </button>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
       {/* Info: (20240503 - Julian) Title */}
@@ -479,55 +534,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       <hr className="my-20px w-full border-lightGray6" />
       {/* Info: (20240503 - Julian) Journal detail */}
       <div className="flex flex-col py-10px">
-        <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
-          {/* Info: (20240503 - Julian) Token Contract */}
-          <div className="flex flex-wrap items-center text-base text-lightGray4">
-            <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
-              <div className="flex items-center">
-                <p>{t('JOURNAL.TOKEN_CONTRACT')}</p>
-                <button
-                  type="button"
-                  onClick={copyTokenContractHandler}
-                  className="block p-10px text-secondaryBlue md:hidden"
-                >
-                  <PiCopySimpleBold size={16} />
-                </button>
-              </div>
-
-              <p className="break-all text-darkBlue">{contractId}</p>
-            </div>
-            <button
-              type="button"
-              onClick={copyTokenContractHandler}
-              className="hidden p-10px text-secondaryBlue md:block"
-            >
-              <PiCopySimpleBold size={16} />
-            </button>
-          </div>
-          {/* Info: (20240503 - Julian) Token ID */}
-          <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
-            <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
-              <div className="flex items-center">
-                <p>{t('JOURNAL.TOKEN_ID')}</p>
-                <button
-                  type="button"
-                  onClick={copyTokenIdHandler}
-                  className="block p-10px text-secondaryBlue md:hidden"
-                >
-                  <PiCopySimpleBold size={16} />
-                </button>
-              </div>
-              <p className="text-darkBlue">{journalTokenId}</p>
-            </div>
-            <button
-              type="button"
-              onClick={copyTokenIdHandler}
-              className="hidden p-10px text-secondaryBlue md:block"
-            >
-              <PiCopySimpleBold size={16} />
-            </button>
-          </div>
-        </div>
+        {displayToken}
         <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
           {/* Info: (20240503 - Julian) certificate */}
           <div className="flex w-fit flex-col gap-y-30px">

@@ -69,9 +69,16 @@ const SalarySidebar = () => {
               </p>
             </Link>
 
-            <Link
+            {/* <Link
               href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default hover:text-tabs-text-active"
+            > */}
+            <button
+              type="button"
+              // ToDo: (20240802 - Julian) Not released yet
+              // eslint-disable-next-line react/jsx-boolean-value
+              disabled={true}
+              className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +101,8 @@ const SalarySidebar = () => {
               >
                 {t('SALARY.SALARY_LIST')}
               </p>
-            </Link>
+            </button>
+            {/* </Link> */}
           </div>
         </div>
       </div>

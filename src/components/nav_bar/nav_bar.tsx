@@ -116,15 +116,23 @@ const NavBar = () => {
             d="M15.533 5.47a.75.75 0 010 1.061l-5.47 5.47 5.47 5.47a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z"
             clipRule="evenodd"
           ></path>
-        </svg>{' '}
+        </svg>
       </button>
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50"
       >
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+          className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        > */}
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
-        <p>Project</p>
-      </Link>
+        <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+        {/* </Link> */}
+      </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -137,18 +145,26 @@ const NavBar = () => {
         // TODO: temp disabled (20240517 - Shirley)
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
         <p>{t('JOURNAL.CONTRACT')}</p>
       </button>
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50"
       >
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
+          className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        > */}
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
         <p>{t('SALARY.SALARY')}</p>
-      </Link>
+        {/* </Link> */}
+      </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -220,25 +236,34 @@ const NavBar = () => {
       className={`absolute right-0 top-52px grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Project button */}
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="mx-auto"
+
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex flex-col items-center gap-8px disabled:opacity-50"
       >
-        <button type="button" className="flex flex-col items-center gap-8px">
-          <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-          <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
-        </button>
-      </Link>
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        > */}
+        <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
+        <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+        {/* </Link> */}
+      </button>
+
       {/* Info: (20240416 - Julian) Account button */}
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="mx-auto"
-      >
-        <button type="button" className="flex flex-col items-center gap-8px">
+      <button type="button" className="mx-auto">
+        <Link
+          href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        >
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
           <p>{t('NAV_BAR.ACCOUNT')}</p>
-        </button>
-      </Link>
+        </Link>
+      </button>
+
       {/* Info: (20240416 - Julian) Contract button */}
       <button
         type="button"
@@ -251,22 +276,31 @@ const NavBar = () => {
         <p>{t('JOURNAL.CONTRACT')}</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
-      <Link href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`} className="mx-auto">
-        <button type="button" className="flex flex-col items-center gap-8px">
-          <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
-          <p>{t('SALARY.SALARY')}</p>
-        </button>
-      </Link>
-      {/* Info: (20240416 - Julian) Report button */}
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
-        className="mx-auto"
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex flex-col items-center gap-8px disabled:opacity-50"
       >
-        <button type="button" className="flex flex-col items-center gap-8px">
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        > */}
+        <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
+        <p>{t('SALARY.SALARY')}</p>
+        {/* </Link> */}
+      </button>
+      {/* Info: (20240416 - Julian) Report button */}
+      <button type="button" className="mx-auto disabled:opacity-50">
+        <Link
+          href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
           <p>{t('REPORTS_SIDEBAR.REPORT')}</p>
-        </button>
-      </Link>
+        </Link>
+      </button>
     </div>
   );
 
@@ -336,7 +370,7 @@ const NavBar = () => {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <g clipPath="url(#clip0_1966_131937)">
+              <g>
                 <path
                   className="fill-current"
                   clipRule="evenodd"
@@ -344,11 +378,6 @@ const NavBar = () => {
                   fill="#001840"
                 />
               </g>
-              <defs>
-                <clipPath id="clip0_1966_131937">
-                  <rect width="20" height="20" fill="white" />
-                </clipPath>
-              </defs>
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
