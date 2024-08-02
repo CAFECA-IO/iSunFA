@@ -35,6 +35,7 @@ export async function deleteCompanyKYC(id: number): Promise<CompanyKYC> {
   };
 
   const data: Prisma.CompanyKYCUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

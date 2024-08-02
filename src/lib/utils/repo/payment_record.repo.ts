@@ -66,6 +66,7 @@ export async function deletePaymentRecord(id: number): Promise<IPaymentRecord> {
   };
 
   const data: Prisma.PaymentRecordUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

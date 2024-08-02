@@ -11,7 +11,10 @@ import {
   updateCompanyById,
 } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
-import { getCompanyDetailAndRoleByCompanyId } from '@/lib/utils/repo/admin.repo';
+import {
+  deleteAdminListByCompanyId,
+  getCompanyDetailAndRoleByCompanyId,
+} from '@/lib/utils/repo/admin.repo';
 import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
 import { AuthFunctionsKeyStr } from '@/constants/auth';
 
@@ -81,6 +84,7 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
     const getCompany = await getCompanyById(companyIdNum);
     if (getCompany) {
       const deletedCompany = await deleteCompanyById(companyIdNum);
+      await deleteAdminListByCompanyId(companyIdNum);
       const company = formatCompany(deletedCompany);
       payload = company;
     }
