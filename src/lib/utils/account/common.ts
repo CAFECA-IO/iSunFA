@@ -70,14 +70,33 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   });
 
   // Info: (20240702 - Murky) Copy child to prevent call by reference
-  const updatedAccount: IAccountNode = { ...account, children: updatedChildren };
+  const updatedAccount: IAccountNode = {
+    id: account.id,
+    amount: newAmount,
+    companyId: account.companyId,
+    system: account.system,
+    type: account.type,
+    debit: account.debit,
+    liquidity: account.liquidity,
+    code: account.code,
+    name: account.name,
+    forUser: account.forUser,
+    parentCode: account.parentCode,
+    rootCode: account.rootCode,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt,
+    level: account.level,
+    deletedAt: account.deletedAt,
+    children: updatedChildren,
+  };
 
-  updatedAccount.amount = newAmount;
+  // updatedAccount.amount = newAmount;
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   updatedAccount.children = updatedAccount.children.filter(
     (child) => child.companyId === PUBLIC_COMPANY_ID
   );
+
   return updatedAccount;
 }
 
@@ -93,6 +112,7 @@ export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<n
   const updatedForest = forest.map((account) => {
     return updateAccountAmountsInSingleTree(account, lineItemsMap);
   });
+
   return updatedForest;
 }
 
@@ -102,7 +122,7 @@ export function addAccountNodeToMapRecursively(
   rootAmount: number
 ) {
   const newAccountNode = { ...account, children: [] };
-  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount;
+  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
   accountMap.set(account.code, { accountNode: newAccountNode, percentage });
   account.children.forEach((child) => {
     addAccountNodeToMapRecursively(accountMap, child, rootAmount);
@@ -130,8 +150,15 @@ export function mappingAccountToSheetDisplay(
   }[]
 ): IAccountForSheetDisplay[] {
   const sheetDisplay: IAccountForSheetDisplay[] = [];
+  const alreadyUsedAccountName = new Set<string>();
 
   sheetMappingRow.forEach((row) => {
+    // Info: (20240702 - Murky) 如果已經有相同的code，則不再加入
+    if (alreadyUsedAccountName.has(row.name)) {
+      return;
+    }
+
+    alreadyUsedAccountName.add(row.name);
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
@@ -142,17 +169,16 @@ export function mappingAccountToSheetDisplay(
         debit: undefined,
         percentage: 0,
       });
-      return;
+    } else {
+      sheetDisplay.push({
+        code: row.code,
+        name: row.name,
+        amount: account.accountNode.amount,
+        indent: row.indent,
+        debit: account.accountNode.debit,
+        percentage: account.percentage,
+      });
     }
-
-    sheetDisplay.push({
-      code: row.code,
-      name: row.name,
-      amount: account.accountNode.amount,
-      indent: row.indent,
-      debit: account.accountNode.debit,
-      percentage: account.percentage,
-    });
   });
 
   return sheetDisplay;
@@ -371,4 +397,8 @@ export function adjustLiabilityIncreaseFromNetIncome(
  */
 export function noAdjustNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
   return netIncome + originalNumber;
+}
+
+export function reverseNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
+  return -1 * (netIncome + originalNumber);
 }

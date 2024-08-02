@@ -5,6 +5,7 @@ module.exports = {
     extend: {
       scale: {
         80: '0.8',
+        90: '0.9',
       },
       aspectRatio: {
         '1/1': '1 / 1',
