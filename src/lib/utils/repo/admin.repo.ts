@@ -193,6 +193,7 @@ export async function deleteAdminById(
   };
 
   const data: Prisma.AdminUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 
@@ -215,6 +216,7 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
   };
 
   const data: Prisma.AdminUpdateManyMutationInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 
@@ -234,6 +236,9 @@ export async function listCompanyAndRole(
     where: {
       userId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      company: {
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
     },
     select: {
       company: true,

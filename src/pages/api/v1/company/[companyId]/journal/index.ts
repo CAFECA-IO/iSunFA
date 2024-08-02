@@ -13,7 +13,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { EVENT_TYPE } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 // ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,7 +124,7 @@ export default async function handler(
     if (req.method === 'GET') {
       const session = await getSession(req, res);
       const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }

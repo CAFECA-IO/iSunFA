@@ -79,11 +79,13 @@ const UploadArea = ({
     const selectedCompanyIdStr = String(selectedCompany?.id);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('type', UploadType.KYC);
-    formData.append('targetId', selectedCompanyIdStr);
     const { success, code, data } = await uploadFileAPI({
       params: {
         companyId: selectedCompany?.id,
+      },
+      query: {
+        type: UploadType.KYC,
+        targetId: selectedCompanyIdStr,
       },
       body: formData,
     });

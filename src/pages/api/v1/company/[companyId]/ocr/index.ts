@@ -25,7 +25,7 @@ import { ProgressStatus } from '@/constants/account';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -237,7 +237,7 @@ export async function createOcrFromAichResults(
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -280,7 +280,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   // Info Murky (20240416): Check if companyId is string
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }

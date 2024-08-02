@@ -6,7 +6,7 @@ import { IAdmin } from '@/interfaces/admin';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { deleteAdminById, getAdminById, updateAdminById } from '@/lib/utils/repo/admin.repo';
 import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
 export default async function handler(
@@ -20,7 +20,7 @@ export default async function handler(
       const session = await getSession(req, res);
       const { userId, companyId } = session;
       const isAuth = await checkAuthorization(
-        [AuthFunctionsKeyStr.CompanyAdminMatch, AuthFunctionsKeyStr.admin],
+        [AuthFunctionsKeys.CompanyAdminMatch, AuthFunctionsKeys.admin],
         { userId, companyId, adminId: adminIdNum }
       );
       if (!isAuth) {
@@ -42,7 +42,7 @@ export default async function handler(
       const session = await getSession(req, res);
       const { userId, companyId } = session;
       const isAuth = await checkAuthorization(
-        [AuthFunctionsKeyStr.owner, AuthFunctionsKeyStr.CompanyAdminMatch],
+        [AuthFunctionsKeys.owner, AuthFunctionsKeys.CompanyAdminMatch],
         { userId, companyId, adminId: adminIdNum }
       );
       if (!isAuth) {
@@ -56,7 +56,7 @@ export default async function handler(
       const session = await getSession(req, res);
       const { userId, companyId } = session;
       const isAuth = await checkAuthorization(
-        [AuthFunctionsKeyStr.owner, AuthFunctionsKeyStr.CompanyAdminMatch],
+        [AuthFunctionsKeys.owner, AuthFunctionsKeys.CompanyAdminMatch],
         { userId, companyId, adminId: adminIdNum }
       );
       if (!isAuth) {

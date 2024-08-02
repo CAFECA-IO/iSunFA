@@ -112,6 +112,7 @@ export async function deleteUserById(userId: number): Promise<User> {
   };
 
   const data: Prisma.UserUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

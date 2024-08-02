@@ -11,9 +11,12 @@ import {
   updateCompanyById,
 } from '@/lib/utils/repo/company.repo';
 import { formatCompany } from '@/lib/utils/formatter/company.formatter';
-import { getCompanyDetailAndRoleByCompanyId } from '@/lib/utils/repo/admin.repo';
+import {
+  deleteAdminListByCompanyId,
+  getCompanyDetailAndRoleByCompanyId,
+} from '@/lib/utils/repo/admin.repo';
 import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -22,7 +25,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.user], { userId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
@@ -45,7 +48,7 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const { code, name, regional } = req.body;
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.owner], {
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
     userId,
     companyId: companyIdNum,
   });
@@ -71,7 +74,7 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.owner], {
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
     userId,
     companyId: companyIdNum,
   });
@@ -81,6 +84,7 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
     const getCompany = await getCompanyById(companyIdNum);
     if (getCompany) {
       const deletedCompany = await deleteCompanyById(companyIdNum);
+      await deleteAdminListByCompanyId(companyIdNum);
       const company = formatCompany(deletedCompany);
       payload = company;
     }
