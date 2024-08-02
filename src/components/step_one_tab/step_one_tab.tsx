@@ -220,7 +220,10 @@ const StepOneTab = ({
           <button
             type="button"
             onClick={qrCodeScanClickHandler}
-            className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px"
+            // ToDo: (20240802 - Julian) Not released yet
+            // eslint-disable-next-line react/jsx-boolean-value
+            disabled={true}
+            className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable disabled:text-drag-n-drop-text-disable md:p-48px"
           >
             <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
             <div className="mt-20px flex items-center gap-10px">
