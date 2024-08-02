@@ -2,10 +2,18 @@ import { buildAccountForest } from '@/lib/utils/account/common';
 import { easyFindManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { getLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
-import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import {
+  IAccountForSheetDisplay,
+  IAccountNode,
+  IAccountReadyForFrontend,
+} from '@/interfaces/accounting_account';
 import { EitherPattern, VoucherPattern } from '@/interfaces/cash_flow';
 import { AccountType } from '@/constants/account';
-import { BalanceSheetOtherInfo, CashFlowStatementOtherInfo, IncomeStatementOtherInfo } from '@/interfaces/report';
+import {
+  BalanceSheetOtherInfo,
+  CashFlowStatementOtherInfo,
+  IncomeStatementOtherInfo,
+} from '@/interfaces/report';
 import { formatNumberSeparateByComma, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
 
 export default abstract class FinancialReportGenerator {
@@ -17,7 +25,7 @@ export default abstract class FinancialReportGenerator {
 
   protected lastPeriodStartDateInSecond: number;
 
-  protected lastPeriodEndDateInSecond : number;
+  protected lastPeriodEndDateInSecond: number;
 
   protected reportSheetType: ReportSheetType;
 
@@ -35,11 +43,12 @@ export default abstract class FinancialReportGenerator {
     this.startDateInSecond = startDateInSecond;
     this.endDateInSecond = endDateInSecond;
     this.reportSheetType = reportSheetType;
-    const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = FinancialReportGenerator.getLastPeriodStartAndEndDate(
-      reportSheetType,
-      startDateInSecond,
-      endDateInSecond
-    );
+    const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } =
+      FinancialReportGenerator.getLastPeriodStartAndEndDate(
+        reportSheetType,
+        startDateInSecond,
+        endDateInSecond
+      );
 
     this.lastPeriodStartDateInSecond = lastPeriodStartDateInSecond;
     this.lastPeriodEndDateInSecond = lastPeriodEndDateInSecond;
@@ -54,7 +63,10 @@ export default abstract class FinancialReportGenerator {
       reportSheetType === ReportSheetType.BALANCE_SHEET
         ? 0
         : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
-    const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
+    const lastPeriodEndDateInSecond = Math.max(
+      getTimestampOfSameDateOfLastYear(endDateInSecond),
+      0
+    );
     return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
   }
 
@@ -132,7 +144,10 @@ export default abstract class FinancialReportGenerator {
     return { startDateInSecond, endDateInSecond };
   }
 
-  protected async getAllLineItemsByReportSheet(curPeriod: boolean, reportSheetType?: ReportSheetType) {
+  protected async getAllLineItemsByReportSheet(
+    curPeriod: boolean,
+    reportSheetType?: ReportSheetType
+  ) {
     const { startDateInSecond, endDateInSecond } = this.getDateInSecond(curPeriod);
 
     const reportSheetTypeForQuery = reportSheetType || this.reportSheetType;
@@ -209,7 +224,9 @@ export default abstract class FinancialReportGenerator {
       }
     >
   >;
-  public abstract generateFinancialReportArray(curPeriod: boolean): Promise<IAccountForSheetDisplay[]>;
+  public abstract generateFinancialReportArray(
+    curPeriod: boolean
+  ): Promise<IAccountForSheetDisplay[]>;
 
   public abstract generateOtherInfo(
     ...contents: IAccountReadyForFrontend[][]

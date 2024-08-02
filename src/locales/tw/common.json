@@ -367,7 +367,7 @@
     "TWD_FEE": "新台幣費用",
     "NONE": "無",
     "ACCOUNTING_VOUCHER": "會計憑證",
-    "PARTICULARS": "細節",
+    "PARTICULARS": "摘要",
     "DEBIT": "借方",
     "CREDIT": "貸方",
     "VIEW_JOURNAL": "查看日記帳 - ",
@@ -423,7 +423,8 @@
     "EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT": "每行包含一個會計科目",
     "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "每行都包含借方或貸方",
     "DEBITS_AND_CREDITS_BALANCE_OUT": "借方和貸方平衡",
-    "ACCOUNT_TITLE": "科目名稱"
+    "ACCOUNT_TITLE": "科目名稱",
+    "CREATE_INVOICE_FAILED": "建立發票失敗"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -755,7 +756,7 @@
     "BASIC_INFO": "基本資訊",
     "COMPANY_NAME": "公司名稱",
     "COMPANY_INFO": "公司資訊",
-    "TAX_ID_NUMBER": "公司識別碼",
+    "TAX_ID_NUMBER": "公司統一編號",
     "ADMIN_ACCOUNT_ID": "管理員帳號ID",
     "CREATED_DATE": "創建日期",
     "KYC": "KYC",
@@ -769,5 +770,18 @@
     "ACCOUNT": "帳號",
     "DELETE_COMPANY": "刪除公司",
     "TRANSFER_ADMINISTRATION": "轉移管理權"
+  },
+  "SETTING": {
+    "PERSONAL_SETTING": "個人設定",
+    "COMPANY_SETTING": "公司設定",
+    "BASIC_INFO": "基本資訊",
+    "ACCOUNTING_TITLE": "會計科目",
+    "TRADING_PARTNER_LIST": "交易夥伴名單",
+    "ADMINISTRATOR": "管理人",
+    "SUBSCRIPTION_BILLS": "訂閱及帳單",
+    "ACCOUNTING_TITLE_MANAGEMENT": "會計科目管理",
+    "ASSETS": "資產",
+    "LIABILITY": "負債",
+    "EQUITY": "權益"
   }
 }

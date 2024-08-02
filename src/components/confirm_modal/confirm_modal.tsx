@@ -55,6 +55,17 @@ const ConfirmModal = ({
     selectJournalHandler,
   } = useAccountingCtx();
 
+  // // Info: (20240801 - Anna) 函數用來生成會計科目的標題，並進行多語系翻譯
+  // const generateAccountTitleWithTranslation = (account: IAccount | null) => {
+  //   if (account) {
+  //     const title = generateAccountTitle(account);
+  //     // 如果標題是 'Account Title'，則進行多語系翻譯
+  //     return title === 'Account Title' ? t('JOURNAL.ACCOUNT_TITLE') : title;
+  //   }
+  //   // 如果 account 是 null 或 undefined，返回預設值或其他處理方式
+  //   return '';
+  // };
+
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 
   const { journalId, askAIId } = confirmData;
@@ -182,6 +193,7 @@ const ConfirmModal = ({
           accountId: voucher.account!.id,
           lineItemIndex: `${voucher.id}`,
           account: generateAccountTitle(voucher.account),
+          // // Info: (20240801 - Anna) 使用 generateAccountTitleWithTranslation 函數生成會計科目的標題(翻譯後的)，取代原本的 generateAccountTitle 函數）
           // account: generateAccountTitleWithTranslation(voucher.account),
           description: voucher.particulars,
           debit: isDebit,
