@@ -30,8 +30,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   });
 
   // TODO: 測試用，正式上線時需刪除 (20240723 - Shirley)
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial', reportFinancial);
 
   if (getReportFinancialIsLoading) {
     return (

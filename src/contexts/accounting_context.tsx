@@ -315,7 +315,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const generateAccountTitle = (account: IAccount | null) => {
     if (account) return account.code.substring(0, 4) + ' - ' + account.name;
-    return 'Account Title';
+    return `JOURNAL.ACCOUNT_TITLE`;
   };
 
   const deleteOwnAccountTitle = (companyId: number, id: number) => {

@@ -125,15 +125,12 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
 
   // Info: (20240711 - Julian) 刪除該列
   const deleteClickHandler = () => deleteVoucherRowHandler(id);
-
   // Info: (20240430 - Julian) 顯示 Account 選單
   const displayAccountingDropmenu =
     accountList.length > 0 ? (
       accountList.map((accountItem: IAccount) => {
         const title = generateAccountTitle(accountItem);
-
-        const displayTitle = accountTitleMap[title] || title; // ToDo: (20240712 - Julian) Translate account title
-
+        const displayTitle = t(accountTitleMap[title]) || t(title); // ToDo: (20240712 - Julian) Translate account title
         // Info: (20240430 - Julian) 點擊選單選項
         const clickHandler = () => {
           setSelectAccount(accountItem);
@@ -153,7 +150,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         );
       })
     ) : (
-      <div>loading...</div>
+      <div>{t(`MY_REPORTS_SECTION.LOADING`)}</div>
     );
 
   const displayAccounting = (
