@@ -367,7 +367,7 @@
     "TWD_FEE": "新台币费用",
     "NONE": "无",
     "ACCOUNTING_VOUCHER": "会计凭证",
-    "PARTICULARS": "细节",
+    "PARTICULARS": "摘要",
     "DEBIT": "借方",
     "CREDIT": "贷方",
     "VIEW_JOURNAL": "查看日记帐 - ",
@@ -423,7 +423,8 @@
     "EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT": "每行包含一个会计科目",
     "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "每行都包含借方或贷方",
     "DEBITS_AND_CREDITS_BALANCE_OUT": "借方和贷方平衡",
-    "ACCOUNT_TITLE": "科目名称"
+    "ACCOUNT_TITLE": "科目名称",
+    "CREATE_INVOICE_FAILED": "创建发票失败"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -769,5 +770,18 @@
     "ACCOUNT": "账号",
     "DELETE_COMPANY": "删除公司",
     "TRANSFER_ADMINISTRATION": "转移管理权"
+  },
+  "SETTING": {
+    "PERSONAL_SETTING": "个人设置",
+    "COMPANY_SETTING": "公司设置",
+    "BASIC_INFO": "基本信息",
+    "ACCOUNTING_TITLE": "会计科目",
+    "TRADING_PARTNER_LIST": "交易伙伴名单",
+    "ADMINISTRATOR": "管理人",
+    "SUBSCRIPTION_BILLS": "订阅及账单",
+    "ACCOUNTING_TITLE_MANAGEMENT": "会计科目管理",
+    "ASSETS": "资产",
+    "LIABILITY": "负债",
+    "EQUITY": "权益"
   }
 }

@@ -1,4 +1,4 @@
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkAuthorization } from '@/lib/utils/auth_check';
@@ -20,7 +20,7 @@ export default async function handler(
     const session = await getSession(req, res);
     const { userId, companyId } = session;
     if (shouldContinue) {
-      shouldContinue = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      shouldContinue = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     }
     if (req.method === 'POST') {
       const { braintreeReturn } = req.body;

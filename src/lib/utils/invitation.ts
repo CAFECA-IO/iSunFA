@@ -4,7 +4,7 @@ import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 import { formatInvitation } from '@/lib/utils/formatter/invitation.formatter';
 import { IAdmin } from '@/interfaces/admin';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export async function useInvitation(
   invitationCode: string,
@@ -14,7 +14,7 @@ export async function useInvitation(
 
   const invitation = await getInvitationByCode(invitationCode);
   if (invitation) {
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.invitation], { invitation });
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.invitation], { invitation });
     if (isAuth) {
       const getAdmin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
       if (!getAdmin) {

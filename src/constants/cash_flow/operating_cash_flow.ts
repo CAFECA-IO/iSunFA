@@ -630,21 +630,9 @@ export const OPERATING_LIABILITIES_MAPPING: Map<string, IOperatingCashFlowMappin
 ]);
 
 export const OPERATING_ACTIVITY_MAPPING: Map<string, IOperatingCashFlowMapping> = new Map([
-  // Info: (20240710 - Murky) 暫時不做分類
-  // ['A00010', {
-  //     fromCode: ['7900'],
-  //     name: "繼續營業單位稅前淨利（淨損）",
-  //     debit: false,
-  //     operatingFunction: noAdjustNetIncome
-  // }],
-  // ['A00020', {
-  //     fromCode: ['8100'],
-  //     name: "停業單位稅前淨利（淨損）",
-  //     debit: false,
-  //     operatingFunction: noAdjustNetIncome
-  // }],
+
   [
-    'A00030',
+    'A10000',
     {
       fromCode: ['7900', '8100'],
       name: '本期稅前淨利（淨損）',
@@ -708,6 +696,19 @@ export const OPERATING_ACTIVITY_MAPPING: Map<string, IOperatingCashFlowMapping> 
 
 export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlowMapping> = new Map(
   [
+    // Info: (20240710 - Murky) 暫時不做分類
+    ['A00010', {
+        fromCode: ['7900'],
+        name: "繼續營業單位稅前淨利（淨損）",
+        debit: false,
+        operatingFunction: noAdjustNetIncome
+    }],
+    ['A00020', {
+        fromCode: ['8100'],
+        name: "停業單位稅前淨利（淨損）",
+        debit: false,
+        operatingFunction: noAdjustNetIncome
+    }],
     [
       'A33000',
       {

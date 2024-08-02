@@ -7,7 +7,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { createUser, listUser } from '@/lib/utils/repo/user.repo';
 import { formatUser, formatUserList } from '@/lib/utils/formatter/user.formatter';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,7 +18,7 @@ export default async function handler(
     if (req.method === 'GET') {
       const session = await getSession(req, res);
       const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.superAdmin], {
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.superAdmin], {
         userId,
         companyId,
       });
@@ -42,7 +42,7 @@ export default async function handler(
       }
       const session = await getSession(req, res);
       const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.superAdmin], {
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.superAdmin], {
         userId,
         companyId,
       });

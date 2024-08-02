@@ -11,7 +11,7 @@ import {
   softDeleteAccountInPrisma,
 } from '@/lib/utils/repo/account.repo';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 function formatParams(companyId: unknown, accountId: string | string[] | undefined) {
   // ToDo: (20240613 - Murky) - need to use type guard instead
@@ -33,7 +33,7 @@ function formatParams(companyId: unknown, accountId: string | string[] | undefin
 async function getCompanyIdAccountId(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }

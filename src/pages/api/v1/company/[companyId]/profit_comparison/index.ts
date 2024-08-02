@@ -8,7 +8,7 @@ import { isTimestamp } from '@/lib/utils/type_guard/date';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { Prisma } from '@prisma/client';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function getProjectLists(companyId: number) {
   return prisma.project.findMany({
@@ -99,7 +99,7 @@ export default async function handler(
     ) {
       const session = await getSession(req, res);
       const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }

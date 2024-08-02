@@ -9,7 +9,7 @@ import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
 import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function checkInput(projectId: string, stage: string, startDate: string) {
   let isValid = true;
@@ -21,7 +21,7 @@ async function checkInput(projectId: string, stage: string, startDate: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {
