@@ -1,14 +1,12 @@
-/* eslint-disable */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { EXTERNAL_API, ISUNFA_ROUTE } from '@/constants/url';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { ToastType } from '@/interfaces/toastify';
-import useStateRef from 'react-usestateref';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import {
@@ -20,7 +18,7 @@ import {
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
-import { DOMAIN, NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useTranslation } from 'react-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
@@ -47,10 +45,44 @@ const balanceReportThumbnails = generateThumbnails(12);
 const incomeReportThumbnails = generateThumbnails(9);
 const cashFlowReportThumbnails = generateThumbnails(11);
 
-enum NumPages {
+enum TotalPages {
   BALANCE_SHEET = 12,
   INCOME_STATEMENT = 9,
   CASH_FLOW_STATEMENT = 11,
+}
+
+function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
+  return !!(
+    report.general &&
+    report.details &&
+    report.otherInfo &&
+    report.otherInfo.revenueAndExpenseRatio &&
+    report.otherInfo.revenueToRD
+  );
+}
+
+function isValidBalanceSheetReport(report: BalanceSheetReport): boolean {
+  return !!(
+    report.general &&
+    report.details &&
+    report.otherInfo &&
+    report.otherInfo.assetLiabilityRatio &&
+    report.otherInfo.assetMixRatio &&
+    report.otherInfo.dso &&
+    report.otherInfo.inventoryTurnoverDays
+  );
+}
+
+function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolean {
+  return !!(
+    report.general &&
+    report.details &&
+    report.otherInfo &&
+    report.otherInfo.operatingStabilized &&
+    report.otherInfo.lineChartDataForRatio &&
+    report.otherInfo.strategyInvest &&
+    report.otherInfo.freeCash
+  );
 }
 
 const ViewFinancialSection = ({
@@ -70,33 +102,28 @@ const ViewFinancialSection = ({
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
-  const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
-
   const [numPages, setNumPages] = useState<number>(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
+  // TODO: download PDF file (20240802 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const {
-    data: reportFinancial,
-    code: getReportFinancialCode,
-    success: getReportFinancialSuccess,
-    isLoading: getReportFinancialIsLoading,
-  } = APIHandler<FinancialReport>(
-    APIName.REPORT_FINANCIAL_GET_BY_ID,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+  const { data: reportFinancial, isLoading: getReportFinancialIsLoading } =
+    APIHandler<FinancialReport>(
+      APIName.REPORT_FINANCIAL_GET_BY_ID,
+      {
+        params: {
+          companyId: selectedCompany?.id,
+          reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        },
       },
-    },
-    hasCompanyId
-  );
+      hasCompanyId
+    );
 
   const isInvalidReport = useMemo(() => {
     if (!reportFinancial) return true;
@@ -112,40 +139,6 @@ const ViewFinancialSection = ({
         return true;
     }
   }, [reportFinancial]);
-
-  function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
-    return !!(
-      report.general &&
-      report.details &&
-      report.otherInfo &&
-      report.otherInfo.revenueAndExpenseRatio &&
-      report.otherInfo.revenueToRD
-    );
-  }
-
-  function isValidBalanceSheetReport(report: BalanceSheetReport): boolean {
-    return !!(
-      report.general &&
-      report.details &&
-      report.otherInfo &&
-      report.otherInfo.assetLiabilityRatio &&
-      report.otherInfo.assetMixRatio &&
-      report.otherInfo.dso &&
-      report.otherInfo.inventoryTurnoverDays
-    );
-  }
-
-  function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolean {
-    return !!(
-      report.general &&
-      report.details &&
-      report.otherInfo &&
-      report.otherInfo.operatingStabilized &&
-      report.otherInfo.lineChartDataForRatio &&
-      report.otherInfo.strategyInvest &&
-      report.otherInfo.freeCash
-    );
-  }
 
   // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
   const handleIframeLoad = () => {
@@ -223,46 +216,48 @@ const ViewFinancialSection = ({
     if (reportLink) {
       printPDF();
     }
+    // TODO: get PDF file (20240802 - Shirley)
     // if (pdfFile) {
     //   window.open(pdfFile, '_blank');
     // }
   };
 
-  const fetchPDF = async () => {
-    try {
-      const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
+  // TODO: get PDF file (20240802 - Shirley)
+  // const fetchPDF = async () => {
+  //   try {
+  //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
 
-      const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
+  //     const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
-      // TODO: use API service (20240502 - Shirley)
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-      });
+  //     // TODO: use API service (20240502 - Shirley)
+  //     const response = await fetch(apiUrl, {
+  //       method: 'GET',
+  //     });
 
-      const blob = await response.blob();
-      const pdfUrl = URL.createObjectURL(blob);
+  //     const blob = await response.blob();
+  //     const pdfUrl = URL.createObjectURL(blob);
 
-      setPdfFile(pdfUrl);
-    } catch (error) {
-      // TODO: error handling (20240502 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error(error);
-    }
-  };
+  //     setPdfFile(pdfUrl);
+  //   } catch (error) {
+  //     // TODO: error handling (20240502 - Shirley)
+  //     // eslint-disable-next-line no-console
+  //     console.error(error);
+  //   }
+  // };
 
   useEffect(() => {
     switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
-        setNumPages(NumPages.BALANCE_SHEET);
+        setNumPages(TotalPages.BALANCE_SHEET);
         break;
       case FinancialReportTypesKey.comprehensive_income_statement:
         setReportThumbnails(incomeReportThumbnails);
-        setNumPages(NumPages.INCOME_STATEMENT);
+        setNumPages(TotalPages.INCOME_STATEMENT);
         break;
       case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
-        setNumPages(NumPages.CASH_FLOW_STATEMENT);
+        setNumPages(TotalPages.CASH_FLOW_STATEMENT);
         break;
       default:
         setReportThumbnails([]);
@@ -282,49 +277,10 @@ const ViewFinancialSection = ({
   //   ).toString();
   // }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const windowWidth = globalCtx.width;
-      const windowHeight = window.innerHeight;
-      const DESKTOP_WIDTH = 1024;
-      const TABLET_WIDTH = 910;
-      const MOBILE_WIDTH = 500;
-
-      if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 350 + (windowWidth - 375);
-        const presentHeight = 150;
-
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else if (windowWidth <= TABLET_WIDTH) {
-        // Info: 為了讓 ipad mini 跟 ipad air 可以在 left:x 參數不改動的情況下置中，以 ipad mini 去水平跟垂直置中，超過 ipad mini (768 px) 的部分就變大，以維持比例 (20240529 - Shirley)
-        const presentWidth = 650 + (windowWidth - 768);
-        const presentHeight = 250;
-
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 500;
-        const presentHeight = 250;
-
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else {
-        const presentWidth = windowWidth / 12;
-        const presentHeight = windowHeight / 3.5;
-
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      }
-    };
-
-    handleResize();
-  }, [globalCtx.width]);
-
   const displayedReportType = getReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
   ) : (
-    <>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</>
+    <p>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
   );
 
   // Info:創建一個新的變數來儲存翻譯後的字串 (20240730 - Anna)
@@ -338,7 +294,7 @@ const ViewFinancialSection = ({
     thumbnail: { number: number; active: boolean; alt: string; src: string },
     index: number
   ) => (
-    <button onClick={() => thumbnailClickHandler(index)} key={index}>
+    <button type="button" onClick={() => thumbnailClickHandler(index)} key={index}>
       <div
         className={`flex flex-col rounded-2xl px-5 py-4 ${
           index === activeIndex
@@ -365,7 +321,6 @@ const ViewFinancialSection = ({
       {/* Info: Sidebar (20240426 - Shirley) */}
       <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
         <div className="mt-9 flex w-full flex-col items-center justify-center">
-          {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
           <div className="flex h-850px flex-col gap-3">
             {!isLoading ? (
               reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
@@ -380,7 +335,7 @@ const ViewFinancialSection = ({
         <iframe
           ref={iframeRef}
           src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full origin-top-left scale-[0.9] overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
+          className={`h-full w-full origin-top-left scale-90 overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
           title="Financial Report"
           onLoad={handleIframeLoad}
         />
@@ -454,7 +409,7 @@ const ViewFinancialSection = ({
             </Button>
             <Button
               // TODO: yet to dev (20240507 - Shirley)
-              disabled={true}
+              disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -642,7 +597,7 @@ const ViewFinancialSection = ({
           size={'extraSmall'}
           onClick={prevClickHandler}
           disabled={pageNumber <= 1 || isInvalidReport || isLoading}
-          className="fixed left-4 top-2/3 z-10 -translate-y-1/2 transform fill-current disabled:opacity-80"
+          className="fixed left-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -665,7 +620,7 @@ const ViewFinancialSection = ({
           size={'extraSmall'}
           onClick={nextClickHandler}
           disabled={pageNumber >= numPages || isInvalidReport || isLoading}
-          className="fixed right-4 top-2/3 z-10 -translate-y-1/2 transform fill-current disabled:opacity-80"
+          className="fixed right-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

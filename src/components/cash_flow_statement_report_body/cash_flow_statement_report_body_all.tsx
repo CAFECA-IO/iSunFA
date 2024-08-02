@@ -864,7 +864,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   );
 
   return (
-    <div className="mx-auto w-a4-width origin-top scale-80 overflow-x-auto md:scale-100 lg:scale-100">
+    <div className="mx-auto w-a4-width origin-top overflow-x-auto">
       {page1}
       {page2}
       {page3}
