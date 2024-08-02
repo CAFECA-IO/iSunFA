@@ -237,16 +237,6 @@ const DatePicker = ({
       dateTwoStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
     }
 
-    // eslint-disable-next-line no-console
-    console.log(
-      'type in DatePicker',
-      type,
-      'dateOneStamp',
-      dateOneStamp,
-      'dateTwoStamp',
-      dateTwoStamp
-    );
-
     if (dateOneStamp && dateTwoStamp) {
       const isSameDate = dateOneStamp === dateTwoStamp;
       setFilteredPeriod({

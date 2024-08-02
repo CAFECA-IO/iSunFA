@@ -322,10 +322,10 @@ const ViewFinancialSection = ({
       <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
-            {!isLoading ? (
-              reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
-            ) : (
+            {isLoading ? (
               <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+            ) : isInvalidReport ? null : (
+              reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
             )}
           </div>
         </div>
