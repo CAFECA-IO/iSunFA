@@ -126,7 +126,7 @@ const JournalItem = ({
   const { t } = useTranslation('common');
   const {
     id: journalId,
-    date,
+    date: createdTimestamp,
     type: eventType,
     particulars: description,
     projectName,
@@ -134,8 +134,6 @@ const JournalItem = ({
     voucherId,
     voucherNo,
   } = journal;
-
-  const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
   const defaultItem = {
     account: '',

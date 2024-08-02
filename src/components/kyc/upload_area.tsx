@@ -284,7 +284,7 @@ const UploadArea = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1`}
+      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-full`}
     >
       {uploadedFile ? (
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px">
@@ -292,7 +292,12 @@ const UploadArea = ({
             <Image src="/icons/upload_cloud.svg" width={24} height={24} alt="error_icon" />
             <div className="flex flex-col items-start gap-5px">
               <div>
-                {uploadedFile.name}
+                {/* Info: (20240802 - Julian) 超過 10 個字元時，只顯示前 3 個字元 + ... + 最後 3 個字元（檔名） */}
+                <p>
+                  {uploadedFile.name.length > 10
+                    ? uploadedFile.name.slice(0, 3) + '...' + uploadedFile.name.slice(-3)
+                    : uploadedFile.name}
+                </p>
                 <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
                   {sizeFormatter(uploadedFile.size)}
                 </p>

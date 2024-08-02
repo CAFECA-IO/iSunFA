@@ -29,7 +29,7 @@ export enum AccountType {
   GAIN_OR_LOSS = 'gainOrLoss',
   OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
   CASH_FLOW = 'cashFlow',
-  CHANGE_IN_EQUITY = 'changeInEquity',
+  //  CHANGE_IN_EQUITY = 'changeInEquity', // ToDo: (20240802 - Julian) change in equity statement is not released yet
   OTHER = 'other',
 }
 

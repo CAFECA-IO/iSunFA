@@ -1,15 +1,16 @@
+// ToDo: (20240802 - Julian) change in equity statement is not released yet
 export enum FinancialReportTypesKey {
   balance_sheet = 'balance_sheet',
   comprehensive_income_statement = 'comprehensive_income_statement',
   cash_flow_statement = 'cash_flow_statement',
-  change_in_equity_statement = 'change_in_equity_statement'
+  //  change_in_equity_statement = 'change_in_equity_statement'
 }
 
 export enum FinancialReportTypeName {
   balance_sheet = 'Balance Sheet',
   comprehensive_income_statement = 'Comprehensive Income Statement',
   cash_flow_statement = 'Cash Flow Statement',
-  change_in_equity_statement = 'change_in_equity_statement'
+  //  change_in_equity_statement = 'change_in_equity_statement'
 }
 
 export enum AnalysisReportTypesKey {
@@ -27,14 +28,14 @@ export enum ReportTypeToBaifaReportType {
   balance_sheet = 'balance',
   comprehensive_income_statement = 'comprehensive-income',
   cash_flow_statement = 'cash-flow',
-  change_in_equity_statement = 'change-in-equity'
+  //  change_in_equity_statement = 'change-in-equity'
 }
 
 export enum BaifaReportTypeToReportType {
   balance = 'balance_sheet',
   'comprehensive-income' = 'comprehensive_income_statement',
   'cash-flow' = 'cash_flow_statement',
-  'change-in-equity' = 'change_in_equity_statement'
+  //  'change-in-equity' = 'change_in_equity_statement'
 }
 
 // TODO: i18n (20240430 - Shirley)
@@ -54,11 +55,10 @@ export const FinancialReportTypesMap: Record<
     id: FinancialReportTypesKey.cash_flow_statement,
     name: 'Cash Flow Statement',
   },
-  [FinancialReportTypesKey.change_in_equity_statement]: {
-    id: FinancialReportTypesKey.change_in_equity_statement,
-    name: 'Change in Equity Statement',
-
-  }
+  // [FinancialReportTypesKey.change_in_equity_statement]: {
+  //   id: FinancialReportTypesKey.change_in_equity_statement,
+  //   name: 'Change in Equity Statement',
+  // }
 };
 
 export const AllFinancialReportTypesMap: Record<
