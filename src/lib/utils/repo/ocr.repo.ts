@@ -126,6 +126,7 @@ export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
   };
 
   const data: Prisma.OcrUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

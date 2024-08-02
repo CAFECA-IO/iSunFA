@@ -17,6 +17,6 @@ export enum UploadDocumentType {
   REPRESENTATIVE_ID_CERTIFICATE = 'representative_id_certificate',
 }
 
-export const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || '/tmp';
+export const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || '.';
 
 export const VERCEL_STORAGE_FOLDER = '/tmp';

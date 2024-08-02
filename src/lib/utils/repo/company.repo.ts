@@ -93,6 +93,7 @@ export async function deleteCompanyById(companyId: number): Promise<Company> {
   };
 
   const data: Prisma.CompanyUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

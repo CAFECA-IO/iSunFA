@@ -245,6 +245,7 @@ export async function deleteJournalInPrisma(
         if (journalExists?.invoice?.payment) {
           await prismaClient.payment.update({
             data: {
+              updatedAt: nowInSecond,
               deletedAt: nowInSecond,
             },
             where: {
@@ -256,6 +257,7 @@ export async function deleteJournalInPrisma(
         if (journalExists?.invoice) {
           await prismaClient.invoice.update({
             data: {
+              updatedAt: nowInSecond,
               deletedAt: nowInSecond,
             },
             where: {
@@ -268,6 +270,7 @@ export async function deleteJournalInPrisma(
             journalExists.voucher.lineItems.map(async (lineItem) => {
               await prismaClient.lineItem.update({
                 data: {
+                  updatedAt: nowInSecond,
                   deletedAt: nowInSecond,
                 },
                 where: {
@@ -279,6 +282,7 @@ export async function deleteJournalInPrisma(
 
           await prismaClient.voucher.update({
             data: {
+              updatedAt: nowInSecond,
               deletedAt: nowInSecond,
             },
             where: {
@@ -289,6 +293,7 @@ export async function deleteJournalInPrisma(
 
         return prismaClient.journal.update({
           data: {
+            updatedAt: nowInSecond,
             deletedAt: nowInSecond,
           },
           where: {
