@@ -20,19 +20,6 @@ interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
 }
 
-const ACCOUNTINGS_WHOLE_COLUMN = [
-  '營業活動之現⾦流量－間接法',
-  '調整項目',
-  '投資活動之現金流量',
-  '籌資活動之現金流量',
-  '營業活動之現金流量-間接法',
-  '與營業活動相關之資產／負債變動數',
-  '與營業活動相關之資產之淨變動',
-  '與營業活動相關之負債之淨變動',
-  '投資活動之現金流量',
-  '籌資活動之現金流量',
-];
-
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -155,7 +142,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </thead>
         <tbody>
           {data.slice(startIndex, endIndex).map((value) => {
-            if (ACCOUNTINGS_WHOLE_COLUMN.includes(value.name)) {
+            if (!value.code) {
               return (
                 <tr key={value.code}>
                   <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-xs font-bold">

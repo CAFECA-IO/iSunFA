@@ -19,21 +19,6 @@ interface IBalanceSheetReportBodyAllProps {
   reportId: string;
 }
 
-const ACCOUNTINGS_WHOLE_COLUMN = [
-  '資產',
-  '負債及權益',
-  '負債',
-  '權益',
-  '歸屬於⺟公司業主之權益',
-  '流動資產',
-  '股本',
-  '流動負債',
-  '非流動負債',
-  '資本公積',
-  '保留盈餘',
-  '其他權益',
-];
-
 const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
 
 const COLOR_CLASSES = [
@@ -153,7 +138,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
-    <div className="">
+    <div className="ml-20">
       {' '}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -169,11 +154,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </svg>
     </div>
   ) : (
-    <PieChart data={curAssetLiabilityRatio} />
+    <div className="ml-10">
+      <PieChart data={curAssetLiabilityRatio} />
+    </div>
   );
 
   const displayedPreALRChart = isNoDataForPreALR ? (
-    <div className="">
+    <div className="ml-20">
       {' '}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -189,7 +176,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </svg>
     </div>
   ) : (
-    <PieChart data={preAssetLiabilityRatio} />
+    <div className="ml-10">
+      <PieChart data={preAssetLiabilityRatio} />
+    </div>
   );
 
   const renderedFooter = (page: number) => {
@@ -217,7 +206,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 9).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -253,7 +242,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage2 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(9, 20).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -289,7 +278,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage2_1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 2).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -324,7 +313,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 13).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -360,7 +349,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage4 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(13, 26).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -396,7 +385,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage5 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(26, 40).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -432,7 +421,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage6 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(40, 54).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -468,7 +457,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const rowsForPage7 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(54, 68).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -503,8 +492,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage8 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(68, 90).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+    const rows = items.slice(68, 80).map((item, index) => {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -539,8 +528,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(90, 101).map((item, index) => {
-      if (ACCOUNTINGS_WHOLE_COLUMN.includes(item.name)) {
+    const rows = items.slice(80, 91).map((item, index) => {
+      if (!item.code) {
         return (
           <tr key={item.code}>
             <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
@@ -1186,7 +1175,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
-            <div className="flex items-center space-x-10">
+            <div className="flex items-center">
               <ul className="space-y-2">
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
@@ -1202,7 +1191,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
           <div className="flex flex-col space-y-0">
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
-            <div className="flex items-center space-x-10">
+            <div className="flex items-center">
               <ul className="space-y-2">
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
