@@ -149,15 +149,15 @@ export function mappingAccountToSheetDisplay(
   }[]
 ): IAccountForSheetDisplay[] {
   const sheetDisplay: IAccountForSheetDisplay[] = [];
-  const alreadyUsedAccountCode = new Set<string>();
+  const alreadyUsedAccountName = new Set<string>();
 
   sheetMappingRow.forEach((row) => {
     // Info: (20240702 - Murky) 如果已經有相同的code，則不再加入
-    if (alreadyUsedAccountCode.has(row.code)) {
+    if (alreadyUsedAccountName.has(row.name)) {
       return;
     }
 
-    alreadyUsedAccountCode.add(row.code);
+    alreadyUsedAccountName.add(row.name);
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
@@ -168,17 +168,16 @@ export function mappingAccountToSheetDisplay(
         debit: undefined,
         percentage: 0,
       });
-      return;
+    } else {
+      sheetDisplay.push({
+        code: row.code,
+        name: row.name,
+        amount: account.accountNode.amount,
+        indent: row.indent,
+        debit: account.accountNode.debit,
+        percentage: account.percentage,
+      });
     }
-
-    sheetDisplay.push({
-      code: row.code,
-      name: row.name,
-      amount: account.accountNode.amount,
-      indent: row.indent,
-      debit: account.accountNode.debit,
-      percentage: account.percentage,
-    });
   });
 
   return sheetDisplay;

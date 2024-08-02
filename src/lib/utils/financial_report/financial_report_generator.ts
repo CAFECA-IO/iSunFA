@@ -158,6 +158,7 @@ export default abstract class FinancialReportGenerator {
     const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
 
     this.curPeriodContent = await this.generateFinancialReportArray(true);
+
     this.prePeriodContent = await this.generateFinancialReportArray(false);
 
     if (
@@ -193,39 +194,7 @@ export default abstract class FinancialReportGenerator {
         curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
       });
     }
-    if (
-      this.curPeriodContent &&
-      this.prePeriodContent &&
-      this.curPeriodContent.length > 0 &&
-      this.prePeriodContent.length > 0 &&
-      this.curPeriodContent.length === this.prePeriodContent.length
-    ) {
-      this.curPeriodContent.forEach((curPeriodAccount, index) => {
-        const lastPeriodAccount = this.prePeriodContent[index];
-        const curPeriodAmount = curPeriodAccount.amount || 0;
-        const prePeriodAmount = lastPeriodAccount.amount || 0;
-        const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-        const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
-        const curPeriodPercentage = curPeriodAccount?.percentage
-          ? Math.round(curPeriodAccount.percentage * 100)
-          : 0;
-        const prePeriodPercentage = lastPeriodAccount?.percentage
-          ? Math.round(lastPeriodAccount.percentage * 100)
-          : 0;
-        const accountReadyForFrontend: IAccountReadyForFrontend = {
-          code: curPeriodAccount.code,
-          name: curPeriodAccount.name,
-          curPeriodAmount,
-          curPeriodPercentage,
-          curPeriodAmountString,
-          prePeriodAmount,
-          prePeriodPercentage,
-          prePeriodAmountString,
-          indent: curPeriodAccount.indent,
-        };
-        curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
-      });
-    }
+
     return curPeriodAccountReadyForFrontendArray;
   }
 
