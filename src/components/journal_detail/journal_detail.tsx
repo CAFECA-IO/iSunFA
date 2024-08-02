@@ -268,7 +268,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     </div>
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = (
+    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+  );
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
   // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;

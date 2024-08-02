@@ -9,6 +9,7 @@ import Pagination from '@/components/pagination/pagination';
 import AccountingTitleTable, {
   ActionType,
 } from '@/components/accounting_title_table/accounting_title_table';
+import { useTranslation } from 'next-i18next';
 
 enum AssetOptions {
   ALL = 'All',
@@ -30,6 +31,7 @@ enum EquityOptions {
 }
 
 const AccountingTitlePageBody = () => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler, accountList } = useAccountingCtx();
 
@@ -163,14 +165,16 @@ const AccountingTitlePageBody = () => {
     <div className="flex flex-1 flex-col">
       {/* Info: (20240717 - Julian) Title */}
       <div className="text-base font-semibold text-text-neutral-secondary lg:text-36px">
-        <h1>Accounting Title Management</h1>
+        {/* <h1>Accounting Title Management</h1> */}
+        <h1> {t('SETTING.ACCOUNTING_TITLE_MANAGEMENT')} </h1>
       </div>
       <hr className="my-16px border-divider-stroke-lv-4" />
       {/* Info: (20240717 - Julian) Filter */}
       <div className="mt-40px flex flex-col items-center gap-x-20px gap-y-8px lg:mt-0 lg:flex-row">
         {/* Info: (20240717 - Julian) Assets */}
         <div className="flex w-full flex-col gap-8px lg:w-200px">
-          <p className="font-semibold text-input-text-primary">Assets</p>
+          {/* <p className="font-semibold text-input-text-primary">Assets</p> */}
+          <p className="font-semibold text-input-text-primary">{t('SETTING.ASSETS')}</p>
           <div
             onClick={assetDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
@@ -182,7 +186,8 @@ const AccountingTitlePageBody = () => {
         </div>
         {/* Info: (20240717 - Julian) Liability */}
         <div className="flex w-full flex-col gap-8px lg:w-200px">
-          <p className="font-semibold text-input-text-primary">Liability</p>
+          {/* <p className="font-semibold text-input-text-primary">Liability</p> */}
+          <p className="font-semibold text-input-text-primary">{t('SETTING.LIABILITY')}</p>
           <div
             onClick={liabilityDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${liabilityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
@@ -194,7 +199,8 @@ const AccountingTitlePageBody = () => {
         </div>
         {/* Info: (20240717 - Julian) Equity */}
         <div className="flex w-full flex-col gap-8px lg:w-200px">
-          <p className="font-semibold text-input-text-primary">Equity</p>
+          {/* <p className="font-semibold text-input-text-primary">Equity</p> */}
+          <p className="font-semibold text-input-text-primary">{t('SETTING.EQUITY')}</p>
           <div
             onClick={equityDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${equityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}

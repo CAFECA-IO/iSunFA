@@ -401,6 +401,7 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
+    // const companyId = 10000001;
 
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (isAuth) {

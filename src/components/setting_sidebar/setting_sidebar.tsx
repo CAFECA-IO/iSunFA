@@ -3,8 +3,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { cn } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 
 const SettingSidebar = () => {
+  const { t } = useTranslation('common');
   const router = useRouter();
 
   return (
@@ -16,7 +18,10 @@ const SettingSidebar = () => {
         {/* Info: Main icon (20240423 - Shirley) */}
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
-          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>Setting</p>
+          {/* <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>Setting</p> */}
+          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>
+            {t('NAV_BAR.SETTING')}
+          </p>
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
@@ -54,7 +59,8 @@ const SettingSidebar = () => {
                 </g>
               </svg>
               <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                Personal Setting
+                {/* Personal Setting */}
+                {t('SETTING.PERSONAL_SETTING')}
               </p>
               {/* </Link> */}
             </div>
@@ -64,7 +70,8 @@ const SettingSidebar = () => {
             <div className="mt-4 flex gap-4 text-sm leading-5 tracking-normal text-divider-text-lv-1">
               <div className="flex gap-2">
                 <Image src="/icons/real_home.svg" width={20} height={20} alt="setting_icon" />
-                <div>Company Setting</div>
+                {/* <div>Company Setting</div> */}
+                <div>{t('SETTING.COMPANY_SETTING')}</div>
               </div>
               <div className="my-auto h-px w-80px flex-1 shrink-0 bg-divider-stroke-lv-4" />
             </div>
@@ -96,7 +103,8 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  Basic Info{' '}
+                  {/* Basic Info{' '} */}
+                  {t('SETTING.BASIC_INFO')}{' '}
                 </p>
               </Link>
 
@@ -128,7 +136,8 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  Accounting Title{' '}
+                  {/* Accounting Title{' '} */}
+                  {t('SETTING.ACCOUNTING_TITLE')}{' '}
                 </p>
               </Link>
 
@@ -162,7 +171,8 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  Trading Partner List{' '}
+                  {/* Trading Partner List{' '} */}
+                  {t('SETTING.TRADING_PARTNER_LIST')}{' '}
                 </p>
                 {/* </Link> */}
               </div>
@@ -196,7 +206,8 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  Administrator{' '}
+                  {/* Administrator{' '} */}
+                  {t('SETTING.ADMINISTRATOR')}{' '}
                 </p>
                 {/* </Link> */}
               </div>
@@ -231,7 +242,8 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  Subscription&Bills{' '}
+                  {/* Subscription&Bills{' '} */}
+                  {t('SETTING.SUBSCRIPTION_BILLS')}{' '}
                 </p>
                 {/* </Link> */}
               </div>
