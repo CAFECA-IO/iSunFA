@@ -286,7 +286,8 @@
     "DAYS": "天",
     "HOURS": "小时",
     "MINUTES": "分",
-    "SECONDS": "秒"
+    "SECONDS": "秒",
+    "YES_DELETE_IT": "是的，请删除"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "嵌入程式码",
@@ -385,7 +386,7 @@
     "CONTRACTS": "合同",
     "ADD_NEW_CONTRACT": "添加新合同",
     "PROJECT_CONTRACT_ISUNFA": "项目合同 - iSunFA",
-    "FROM_TO": "起迄期间",
+    "FROM_TO": "供应商/客户",
     "VOUCHER_NO": "凭证号码",
     "OPERATIONS": "操作",
     "INFO": "信息",
@@ -424,7 +425,15 @@
     "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "每行都包含借方或贷方",
     "DEBITS_AND_CREDITS_BALANCE_OUT": "借方和贷方平衡",
     "ACCOUNT_TITLE": "科目名称",
-    "CREATE_INVOICE_FAILED": "创建发票失败"
+    "CREATE_INVOICE_FAILED": "创建发票失败",
+    "AMOUNT": "会计分录",
+    "UPLOAD_SUCCESSFUL": "上传成功",
+    "DONE": "完成",
+    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "已成功删除未处理的OCR:{{code}}",
+    "FAILED_TO_LIST_UNPROCESSED_OCRS": "列出未处理的OCR失败:{{code}}",
+    "FAILED_TO_DELETE_UNPROCESSED_OCR": "删除未处理的OCR失败：{{code}}",
+    "GO_BACK_TO_JOURNAL_LIST": "返回日记帐",
+    "DOWNLOAD": "下载"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -467,7 +476,8 @@
     "PROJECT_LIST_ISUNFA": "项目清单 - iSunFA",
     "NAME_YOUR_PROJECT": "为您的项目命名",
     "ENTER_NEW_PROJECT_NAME": "输入新项目名称",
-    "OVERALL": "全部"
+    "OVERALL": "全部",
+    "OK": "好"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -769,7 +779,11 @@
     "GO_KYC": "前往 KYC",
     "ACCOUNT": "账号",
     "DELETE_COMPANY": "删除公司",
-    "TRANSFER_ADMINISTRATION": "转移管理权"
+    "TRANSFER_ADMINISTRATION": "转移管理权",
+    "DELETE": "删除",
+    "EXISTED_COMPANY": "已经存在的公司",
+    "COMPANY_ALREADY_REGISTERED": "该公司已注册",
+    "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。错误代码:{{code}}"
   },
   "SETTING": {
     "PERSONAL_SETTING": "个人设置",
@@ -782,6 +796,44 @@
     "ACCOUNTING_TITLE_MANAGEMENT": "会计科目管理",
     "ASSETS": "资产",
     "LIABILITY": "负债",
-    "EQUITY": "权益"
+    "EQUITY": "权益",
+    "ALL": "全部",
+    "ASSET": "资产",
+    "INCOME": "收入",
+    "EXPENSE": "费用",
+    "CURRENT": "流动",
+    "NON_CURRENT": "非流动",
+    "ENTER_NAME": "输入科目名称",
+    "FAVORITE_ACCOUNTING_TITLE": "最喜欢的会计科目",
+    "MY_NEW_ACCOUNTING_TITLE": "我的新会计科目",
+    "NAME": "科目名称",
+    "CODE_NAME": "科目编号和名称",
+    "CODE": "科目编号",
+    "ACTION": "操作",
+    "ADD_NEW_ACCOUNTING_TITLE": "新增会计科目",
+    "ACCOUNTING_TYPE": "科目类型",
+    "LIQUIDITY": "流动/非流动",
+    "CURRENT_ASSET": "流动资产",
+    "ADD_NEW_SUB": "新增子科目",
+    "FAVORITE": "我的最爱",
+    "EDIT": "编辑",
+    "REMOVE": "移除",
+    "SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT": "子科目创建成功:{{name}} ",
+    "FAILED_TO_CREATE_NEW_SUB_ACCOUNT": "创建子科目失败，请稍后重试。",
+    "EDIT_MY_NEW_ACCOUNTING_TITLE": "编辑会计科目",
+    "CURRENT_LIQUIDITY": "流动/非流动",
+    "REMOVE_ACCOUNTING_TITLE": "删除会计科目",
+    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？"
+  },
+  "PROGRESSSTATUS": {
+    "SUCCESS": "上传成功",
+    "INPROGRESS": "上传中",
+    "NOTFOUND": "未找到文件",
+    "ALREADYUPLOAD": "已上传",
+    "INVALIDINPUT": "无效输入",
+    "LLMERROR": "LLM错误",
+    "SYSTEMERROR": "系统错误",
+    "PAUSED": "已暂停",
+    "HASBEENUSED": "凭证已使用"
   }
 }

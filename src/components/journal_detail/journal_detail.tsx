@@ -86,7 +86,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         title: 'Journal Detail Failed',
         content: `Error code: ${code}`,
         subMsg: 'Get journal detail failed',
-        submitBtnStr: 'Go back to journal list',
+        submitBtnStr: t('JOURNAL.GO_BACK_TO_JOURNAL_LIST'),
         hideCloseBtn: true,
         submitBtnFunction: backClickHandler,
       });

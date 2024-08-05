@@ -95,16 +95,17 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
         messageModalDataHandler({
           messageType: MessageType.WARNING,
-          title: 'Existed Company',
-          subMsg: 'This company has already been registered.',
-          content: `If you are the owner of this company, 
-          please complete KYC to get access back. Error code: ${createCompanyCode}`,
-          submitBtnStr: 'Go to KYC',
+          title: t('COMPANY_BASIC_INFO.EXISTED_COMPANY'),
+          subMsg: t('COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
+          // content: `If you are the owner of this company,
+          // please complete KYC to get access back. Error code: ${createCompanyCode}`,
+          content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
+          submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             router.push(ISUNFA_ROUTE.KYC);
           },
-          backBtnStr: 'Cancel',
+          backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
         });
         messageModalVisibilityHandler();
       } else if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE]) {
@@ -113,7 +114,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           title: 'Verified Company',
           subMsg: 'This company has already been registered and verified.',
           content: `Please check the information again, or contact with us. Error code: ${createCompanyCode}`,
-          submitBtnStr: 'Close',
+          submitBtnStr: t('COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
@@ -124,7 +125,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           title: 'Create Company Failed',
           subMsg: 'Please try again later',
           content: `Error code: ${createCompanyCode}`,
-          submitBtnStr: 'Close',
+          submitBtnStr: t('COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();

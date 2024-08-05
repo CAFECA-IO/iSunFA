@@ -286,7 +286,8 @@
     "DAYS": "天",
     "HOURS": "小時",
     "MINUTES": "分",
-    "SECONDS": "秒"
+    "SECONDS": "秒",
+    "YES_DELETE_IT": "是的，請删除"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "嵌入程式碼",
@@ -385,7 +386,7 @@
     "CONTRACTS": "合約",
     "ADD_NEW_CONTRACT": "新增合約",
     "PROJECT_CONTRACT_ISUNFA": "專案合約 - iSunFA",
-    "FROM_TO": "起迄期間",
+    "FROM_TO": "供應商/客戶",
     "VOUCHER_NO": "憑證號碼",
     "OPERATIONS": "操作",
     "INFO": "資訊",
@@ -424,7 +425,15 @@
     "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "每行都包含借方或貸方",
     "DEBITS_AND_CREDITS_BALANCE_OUT": "借方和貸方平衡",
     "ACCOUNT_TITLE": "科目名稱",
-    "CREATE_INVOICE_FAILED": "建立發票失敗"
+    "CREATE_INVOICE_FAILED": "建立發票失敗",
+    "AMOUNT": "會計分錄",
+    "UPLOAD_SUCCESSFUL": "上傳成功",
+    "DONE": "完成",
+    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "已成功刪除未處理的OCR:{{code}}",
+    "FAILED_TO_LIST_UNPROCESSED_OCRS": "列出未處理的OCR失敗:{{code}}",
+    "FAILED_TO_DELETE_UNPROCESSED_OCR": "刪除未處理的OCR失敗：{{code}}",
+    "GO_BACK_TO_JOURNAL_LIST": "返回日記帳",
+    "DOWNLOAD": "下載"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -467,7 +476,8 @@
     "PROJECT_LIST_ISUNFA": "項目清單 - iSunFA",
     "NAME_YOUR_PROJECT": "為您的專案命名",
     "ENTER_NEW_PROJECT_NAME": "輸入新項目名稱",
-    "OVERALL": "全部"
+    "OVERALL": "全部",
+    "OK": "好"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -769,7 +779,11 @@
     "GO_KYC": "前往 KYC",
     "ACCOUNT": "帳號",
     "DELETE_COMPANY": "刪除公司",
-    "TRANSFER_ADMINISTRATION": "轉移管理權"
+    "TRANSFER_ADMINISTRATION": "轉移管理權",
+    "DELETE": "刪除",
+    "EXISTED_COMPANY": "已經存在的公司",
+    "COMPANY_ALREADY_REGISTERED": "該公司已註冊",
+    "PLEASE_COMPLETE_KYC": "如果您是該公司的所有者，請完成KYC以重新獲得存取權限。錯誤代碼:{{code}}"
   },
   "SETTING": {
     "PERSONAL_SETTING": "個人設定",
@@ -782,6 +796,44 @@
     "ACCOUNTING_TITLE_MANAGEMENT": "會計科目管理",
     "ASSETS": "資產",
     "LIABILITY": "負債",
-    "EQUITY": "權益"
+    "EQUITY": "權益",
+    "ALL": "全部",
+    "ASSET": "資產",
+    "INCOME": "收入",
+    "EXPENSE": "費用",
+    "CURRENT": "流動",
+    "NON_CURRENT": "非流動",
+    "ENTER_NAME": "輸入科目名稱",
+    "FAVORITE_ACCOUNTING_TITLE": "最喜歡的會計科目",
+    "MY_NEW_ACCOUNTING_TITLE": "我的新會計科目",
+    "NAME": "科目名稱",
+    "CODE_NAME": "科目編號和名稱",
+    "CODE": "科目編號",
+    "ACTION": "操作",
+    "ADD_NEW_ACCOUNTING_TITLE": "新增會計科目",
+    "ACCOUNTING_TYPE": "科目類型",
+    "LIQUIDITY": "流動/非流動",
+    "CURRENT_ASSET": "流動資產",
+    "ADD_NEW_SUB": "新增子科目",
+    "FAVORITE": "我的最愛",
+    "EDIT": "編輯",
+    "REMOVE": "移除",
+    "SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT": "子科目創建成功:{{name}} ",
+    "FAILED_TO_CREATE_NEW_SUB_ACCOUNT": "建立子科目失敗，請稍後重試。",
+    "EDIT_MY_NEW_ACCOUNTING_TITLE": "編輯會計科目",
+    "CURRENT_LIQUIDITY": "流動/非流動",
+    "REMOVE_ACCOUNTING_TITLE": "刪除會計科目",
+    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您確定要刪除這個會計科目嗎？"
+  },
+  "PROGRESS_STATUS": {
+    "SUCCESS": "上傳成功",
+    "INPROGRESS": "上傳中",
+    "NOTFOUND": "未找到檔案",
+    "ALREADYUPLOAD": "已上傳",
+    "INVALIDINPUT": "無效輸入",
+    "LLMERROR": "LLM錯誤",
+    "SYSTEMERROR": "系統錯誤",
+    "PAUSED": "已暫停",
+    "HASBEENUSED": "憑證已使用"
   }
 }

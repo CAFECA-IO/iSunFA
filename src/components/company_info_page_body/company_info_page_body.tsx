@@ -103,8 +103,8 @@ const CompanyInfoPageBody = () => {
       title: 'Delete company',
       content:
         'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
-      backBtnStr: 'Cancel',
-      submitBtnStr: 'Delete',
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      submitBtnStr: t('COMPANY_BASIC_INFO.DELETE'),
       submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
