@@ -66,4 +66,5 @@ export type IAccountQueryArgs = {
   sortBy?: 'code' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
   searchKey?: string;
+  isDeleted?: boolean;
 };
