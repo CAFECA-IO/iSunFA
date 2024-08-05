@@ -7,7 +7,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { listAdminByCompanyId } from '@/lib/utils/repo/admin.repo';
 import { formatAdminList } from '@/lib/utils/formatter/admin.formatter';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,7 +17,7 @@ export default async function handler(
     if (req.method === 'GET') {
       const session = await getSession(req, res);
       const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }

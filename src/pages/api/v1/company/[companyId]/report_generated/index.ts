@@ -10,7 +10,7 @@ import { findManyReports } from '@/lib/utils/repo/report.repo';
 import { formatIPaginatedGeneratedReportItem } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -136,7 +136,7 @@ export default async function handler(
     const session = await getSession(req, res);
     const { userId, companyId } = session;
 
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     // ToDo: (20240703 - Murky) Need to check Auth
     if (isAuth) {
       switch (req.method) {

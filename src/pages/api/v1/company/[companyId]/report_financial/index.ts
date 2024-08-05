@@ -34,7 +34,7 @@ import {
   IncomeStatementOtherInfo,
 } from '@/interfaces/report';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 // Info: (20240710 - Murky) Down below are Post related functions
 
@@ -403,8 +403,7 @@ export default async function handler(
     const { userId, companyId } = session;
     // const companyId = 10000001;
 
-    const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
-    // const isAuth = true;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (isAuth) {
       switch (req.method) {
         case 'POST': {

@@ -121,39 +121,39 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => { },
+  updateOCRListHandler: () => {},
   accountList: [],
-  getAccountListHandler: () => { },
-  getAIStatusHandler: () => { },
+  getAccountListHandler: () => {},
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => { },
+  selectOCRHandler: () => {},
   selectedJournal: undefined,
-  selectJournalHandler: () => { },
+  selectJournalHandler: () => {},
   inputDescription: '',
-  inputDescriptionHandler: () => { },
+  inputDescriptionHandler: () => {},
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAccountHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  resetVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  resetVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => { },
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -317,7 +317,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const generateAccountTitle = (account: IAccount | null) => {
     if (account) return account.code.substring(0, 4) + ' - ' + account.name;
-    return 'Account Title';
+    return `JOURNAL.ACCOUNT_TITLE`;
   };
 
   const deleteOwnAccountTitle = (companyId: number, id: number) => {

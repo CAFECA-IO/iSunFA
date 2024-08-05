@@ -61,6 +61,7 @@ export async function deleteInvitation(id: number): Promise<Invitation> {
   };
 
   const data: Prisma.InvitationUpdateInput = {
+    updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
 

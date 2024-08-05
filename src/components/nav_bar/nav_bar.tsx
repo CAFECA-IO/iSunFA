@@ -5,7 +5,6 @@ import { FiEdit, FiLayout, FiMail } from 'react-icons/fi';
 import { TbGridDots } from 'react-icons/tb';
 import { GoArrowSwitch } from 'react-icons/go';
 import { Button } from '@/components/button/button';
-import { cn } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import Image from 'next/image';
@@ -116,15 +115,23 @@ const NavBar = () => {
             d="M15.533 5.47a.75.75 0 010 1.061l-5.47 5.47 5.47 5.47a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z"
             clipRule="evenodd"
           ></path>
-        </svg>{' '}
+        </svg>
       </button>
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50"
       >
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+          className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        > */}
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
-        <p>Project</p>
-      </Link>
+        <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+        {/* </Link> */}
+      </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -137,18 +144,26 @@ const NavBar = () => {
         // TODO: temp disabled (20240517 - Shirley)
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow disabled:opacity-50 disabled:hover:text-button-text-secondary"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50 disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
         <p>{t('JOURNAL.CONTRACT')}</p>
       </button>
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50"
       >
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
+          className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
+        > */}
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
         <p>{t('SALARY.SALARY')}</p>
-      </Link>
+        {/* </Link> */}
+      </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
@@ -220,25 +235,34 @@ const NavBar = () => {
       className={`absolute right-0 top-52px grid w-max grid-cols-3 grid-rows-2 ${isAppMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'} gap-20px rounded-3xl bg-white p-24px text-lg font-semibold text-navyBlue2 shadow-xl transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240416 - Julian) Project button */}
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="mx-auto"
+
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex flex-col items-center gap-8px disabled:opacity-50"
       >
-        <button type="button" className="flex flex-col items-center gap-8px">
-          <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-          <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
-        </button>
-      </Link>
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        > */}
+        <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
+        <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+        {/* </Link> */}
+      </button>
+
       {/* Info: (20240416 - Julian) Account button */}
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="mx-auto"
-      >
-        <button type="button" className="flex flex-col items-center gap-8px">
+      <button type="button" className="mx-auto">
+        <Link
+          href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        >
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
           <p>{t('NAV_BAR.ACCOUNT')}</p>
-        </button>
-      </Link>
+        </Link>
+      </button>
+
       {/* Info: (20240416 - Julian) Contract button */}
       <button
         type="button"
@@ -251,22 +275,31 @@ const NavBar = () => {
         <p>{t('JOURNAL.CONTRACT')}</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
-      <Link href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`} className="mx-auto">
-        <button type="button" className="flex flex-col items-center gap-8px">
-          <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
-          <p>{t('SALARY.SALARY')}</p>
-        </button>
-      </Link>
-      {/* Info: (20240416 - Julian) Report button */}
-      <Link
-        href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
-        className="mx-auto"
+      <button
+        type="button"
+        // ToDo: (20240802 - Julian) Not released
+        // eslint-disable-next-line react/jsx-boolean-value
+        disabled={true}
+        className="mx-auto flex flex-col items-center gap-8px disabled:opacity-50"
       >
-        <button type="button" className="flex flex-col items-center gap-8px">
+        {/* <Link
+          href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        > */}
+        <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
+        <p>{t('SALARY.SALARY')}</p>
+        {/* </Link> */}
+      </button>
+      {/* Info: (20240416 - Julian) Report button */}
+      <button type="button" className="mx-auto disabled:opacity-50">
+        <Link
+          href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
+          className="flex flex-col items-center gap-8px"
+        >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
           <p>{t('REPORTS_SIDEBAR.REPORT')}</p>
-        </button>
-      </Link>
+        </Link>
+      </button>
     </div>
   );
 
@@ -336,7 +369,7 @@ const NavBar = () => {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <g clipPath="url(#clip0_1966_131937)">
+              <g>
                 <path
                   className="fill-current"
                   clipRule="evenodd"
@@ -344,11 +377,6 @@ const NavBar = () => {
                   fill="#001840"
                 />
               </g>
-              <defs>
-                <clipPath id="clip0_1966_131937">
-                  <rect width="20" height="20" fill="white" />
-                </clipPath>
-              </defs>
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
@@ -383,7 +411,7 @@ const NavBar = () => {
         <Button
           onClick={() => redirectTo(ISUNFA_ROUTE.COMPANY_INFO)}
           variant={'secondaryBorderless'}
-          // disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+          disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:opacity-50"
         >
           <div className="my-auto flex items-center justify-center">
@@ -460,7 +488,7 @@ const NavBar = () => {
     </button>
   ) : null;
 
-  const displayedLogInBtn = isAuthLoading ? (
+  const displayedAvatar = isAuthLoading ? (
     <Skeleton width={44} height={40} />
   ) : signedIn ? (
     <div ref={userMenuRef}>
@@ -480,53 +508,7 @@ const NavBar = () => {
       </button>
       {displayedUserMenu}
     </div>
-  ) : (
-    <Link href={ISUNFA_ROUTE.LOGIN}>
-      {/* Info: desktop version (20240530 - Shirley) */}
-      <Button className="hidden h-40px bg-button-surface-strong-primary lg:flex">
-        <p className={cn('text-sm leading-6 tracking-normal text-button-text-primary-solid')}>
-          {t('NAV_BAR.LOGIN')}
-        </p>
-
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          fill="none"
-          viewBox="0 0 20 20"
-        >
-          <g>
-            <path
-              className={cn(`fill-current`, `text-button-text-primary-solid`)}
-              fillRule="evenodd"
-              d="M8.21 1.501H13.542c.667 0 1.226 0 1.684.037.479.04.934.125 1.365.345l-.454.89.454-.89a3.5 3.5 0 011.53 1.53c.22.431.305.886.344 1.365.038.458.038 1.017.037 1.683v7.08c0 .666 0 1.226-.037 1.684-.04.478-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.431.22-.886.305-1.365.344-.458.037-1.018.037-1.683.037H8.21c-.65 0-1.165.001-1.613-.12a3.5 3.5 0 01-2.475-2.474c-.12-.448-.12-.963-.12-1.613v-.126a1 1 0 112 0c0 .84.009 1.063.052 1.221l-.961.258.96-.258a1.5 1.5 0 001.061 1.061c.159.043.382.051 1.222.051h5.166c.717 0 1.194 0 1.561-.03.355-.03.518-.081.62-.133a1.5 1.5 0 00.656-.656c.052-.103.104-.265.133-.62.03-.367.03-.844.03-1.56v-7c0-.717 0-1.195-.03-1.561-.03-.356-.08-.518-.133-.62l.891-.455-.891.454a1.5 1.5 0 00-.656-.655c-.102-.053-.265-.104-.62-.133-.367-.03-.844-.03-1.56-.03H8.335c-.84 0-1.063.008-1.222.05a1.5 1.5 0 00-1.06 1.06c-.043.16-.052.383-.052 1.222a1 1 0 11-2 0v-.126c0-.65 0-1.164.12-1.613A3.5 3.5 0 016.597 1.62c.448-.12.962-.12 1.613-.119zm1.085 4.46a1 1 0 011.415 0l3.333 3.333a1 1 0 010 1.414l-3.333 3.333a1 1 0 11-1.415-1.414l1.627-1.626h-8.42a1 1 0 110-2h8.42L9.295 7.375a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-        </svg>
-      </Button>
-
-      {/* Info: mobile version (20240530 - Shirley) */}
-      <Button className="flex h-40px bg-button-surface-strong-primary px-3 lg:hidden">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          fill="none"
-          viewBox="0 0 20 20"
-        >
-          <g>
-            <path
-              className={cn(`fill-current`, `text-button-text-primary-solid`)}
-              fillRule="evenodd"
-              d="M8.21 1.501H13.542c.667 0 1.226 0 1.684.037.479.04.934.125 1.365.345l-.454.89.454-.89a3.5 3.5 0 011.53 1.53c.22.431.305.886.344 1.365.038.458.038 1.017.037 1.683v7.08c0 .666 0 1.226-.037 1.684-.04.478-.124.933-.344 1.365a3.5 3.5 0 01-1.53 1.53c-.431.22-.886.305-1.365.344-.458.037-1.018.037-1.683.037H8.21c-.65 0-1.165.001-1.613-.12a3.5 3.5 0 01-2.475-2.474c-.12-.448-.12-.963-.12-1.613v-.126a1 1 0 112 0c0 .84.009 1.063.052 1.221l-.961.258.96-.258a1.5 1.5 0 001.061 1.061c.159.043.382.051 1.222.051h5.166c.717 0 1.194 0 1.561-.03.355-.03.518-.081.62-.133a1.5 1.5 0 00.656-.656c.052-.103.104-.265.133-.62.03-.367.03-.844.03-1.56v-7c0-.717 0-1.195-.03-1.561-.03-.356-.08-.518-.133-.62l.891-.455-.891.454a1.5 1.5 0 00-.656-.655c-.102-.053-.265-.104-.62-.133-.367-.03-.844-.03-1.56-.03H8.335c-.84 0-1.063.008-1.222.05a1.5 1.5 0 00-1.06 1.06c-.043.16-.052.383-.052 1.222a1 1 0 11-2 0v-.126c0-.65 0-1.164.12-1.613A3.5 3.5 0 016.597 1.62c.448-.12.962-.12 1.613-.119zm1.085 4.46a1 1 0 011.415 0l3.333 3.333a1 1 0 010 1.414l-3.333 3.333a1 1 0 11-1.415-1.414l1.627-1.626h-8.42a1 1 0 110-2h8.42L9.295 7.375a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-        </svg>
-      </Button>
-    </Link>
-  );
+  ) : null;
 
   return (
     <div className="fixed top-0 z-20 flex w-screen">
@@ -659,14 +641,18 @@ const NavBar = () => {
           </div>
         </div>
 
-        <div className="hidden flex-col items-start justify-center lg:flex">
+        {/* Info: hide the login button for now (20240802 - Shirley) */}
+        <div
+          className={`hidden flex-col items-start justify-center ${signedIn ? 'lg:flex' : 'hidden'}`}
+        >
           <div className="h-40px w-px shrink-0 bg-lightGray6" />
         </div>
 
         {/* Info: (20240521 - Julian) Company change button */}
         {displayedCompanyChangeBtn}
 
-        {displayedLogInBtn}
+        {/* Info: hide the login button for now (20240802 - Shirley) */}
+        {displayedAvatar}
       </div>
       {displayedBurgerMenu}
     </div>

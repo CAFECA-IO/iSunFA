@@ -1,5 +1,6 @@
+import { KYCStatus } from '@/constants/kyc';
 import { ICompany, ICompanyDetail } from '@/interfaces/company';
-import { Admin, Company } from '@prisma/client';
+import { Admin, Company, CompanyKYC } from '@prisma/client';
 
 export async function formatCompanyList(companyList: Company[]): Promise<ICompany[]> {
   const formattedCompanyList: ICompany[] = companyList.map((company) => {
@@ -24,13 +25,15 @@ export function formatCompany(company: Company): ICompany {
 export function formatCompanyDetail(
   company: Company & {
     admins: Admin[];
+    companyKYCs: CompanyKYC[];
   }
 ): ICompanyDetail {
-  const { admins, ...companyWithoutAdmins } = company;
+  const { admins, companyKYCs, ...companyWithoutAdmins } = company;
   const formattedCompanyDetail: ICompanyDetail = {
     ...companyWithoutAdmins,
     imageId: companyWithoutAdmins.imageId ?? '',
-    ownerId: admins[0].userId ?? 0,
+    ownerId: admins[0]?.userId ?? 0,
+    kycStatusDetail: companyKYCs[0]?.status ?? KYCStatus.NOT_STARTED,
   };
   return formattedCompanyDetail;
 }

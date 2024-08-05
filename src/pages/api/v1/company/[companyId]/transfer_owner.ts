@@ -7,7 +7,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatAdminList } from '@/lib/utils/formatter/admin.formatter';
 import { getSession } from '@/lib/utils/session';
 import { transferOwnership } from '@/lib/utils/repo/transaction/admin_role.tx';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -16,7 +16,7 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const newOwnerIdNum = convertStringToNumber(newOwnerId);
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.owner], { userId, companyId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], { userId, companyId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {

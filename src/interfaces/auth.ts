@@ -1,16 +1,33 @@
 import { Invitation } from '@prisma/client';
 
-export interface AuthFunctions {
-  user: (params: { userId: number }) => Promise<boolean>;
-  admin: (params: { userId: number; companyId: number }) => Promise<boolean>;
-  owner: (params: { userId: number; companyId: number }) => Promise<boolean>;
-  superAdmin: (params: { userId: number; companyId: number }) => Promise<boolean>;
-  CompanyAdminMatch: (params: { companyId: number; adminId: number }) => Promise<boolean>;
-  invitation: (params: { invitation: Invitation }) => Promise<boolean>;
-  projectCompanyMatch: (params: { projectId: number; companyId: number }) => Promise<boolean>;
+export enum AuthFunctionsKeys {
+  user = 'user',
+  admin = 'admin',
+  owner = 'owner',
+  superAdmin = 'superAdmin',
+  CompanyAdminMatch = 'CompanyAdminMatch',
+  invitation = 'invitation',
+  projectCompanyMatch = 'projectCompanyMatch',
 }
 
-export type AuthFunctionsKeys = keyof AuthFunctions;
+export interface AuthFunctions {
+  [AuthFunctionsKeys.user]: (params: { userId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.admin]: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.owner]: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.superAdmin]: (params: {
+    userId: number;
+    companyId: number;
+  }) => Promise<boolean>;
+  [AuthFunctionsKeys.CompanyAdminMatch]: (params: {
+    companyId: number;
+    adminId: number;
+  }) => Promise<boolean>;
+  [AuthFunctionsKeys.invitation]: (params: { invitation: Invitation }) => Promise<boolean>;
+  [AuthFunctionsKeys.projectCompanyMatch]: (params: {
+    projectId: number;
+    companyId: number;
+  }) => Promise<boolean>;
+}
 
 export type AuthFunctionsParams = {
   [K in AuthFunctionsKeys]: Parameters<AuthFunctions[K]>[0];

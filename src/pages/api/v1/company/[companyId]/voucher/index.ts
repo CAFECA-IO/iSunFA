@@ -15,7 +15,7 @@ import {
   getLatestVoucherNoInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeyStr } from '@/constants/auth';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 type ApiResponseType = IVocuherDataForAPIResponse | null;
 
@@ -89,7 +89,7 @@ export default async function handler(
 ) {
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeyStr.admin], { userId, companyId });
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }

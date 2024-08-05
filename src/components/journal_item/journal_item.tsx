@@ -37,9 +37,7 @@ const Operations = ({
   const { t } = useTranslation('common');
   const { selectJournalHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
-  const { trigger: getJournalById } = APIHandler<IJournal>(
-    APIName.JOURNAL_GET_BY_ID
-  );
+  const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
 
   const editJournalHandler = async () => {
     const {
@@ -128,7 +126,7 @@ const JournalItem = ({
   const { t } = useTranslation('common');
   const {
     id: journalId,
-    date,
+    date: createdTimestamp,
     type: eventType,
     particulars: description,
     projectName,
@@ -137,15 +135,13 @@ const JournalItem = ({
     voucherNo,
   } = journal;
 
-  const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
-
   const defaultItem = {
     account: '',
     amount: 0,
   };
 
   const debitItem = lineItems
-    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -153,7 +149,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
     : defaultItem;
   const credit = {
     account: creditItem.account,

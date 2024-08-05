@@ -14,6 +14,7 @@ export interface ICompany {
 
 export interface ICompanyDetail extends ICompany {
   ownerId: number;
+  kycStatusDetail: string;
 }
 
 export interface ICompanyAndRole {
