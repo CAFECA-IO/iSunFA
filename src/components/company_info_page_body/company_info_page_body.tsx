@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
