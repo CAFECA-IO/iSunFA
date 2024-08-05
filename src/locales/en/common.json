@@ -769,7 +769,9 @@
     "GO_KYC": "Go KYC",
     "ACCOUNT": "Account",
     "DELETE_COMPANY": "Delete Company",
-    "TRANSFER_ADMINISTRATION": "Transfer Administration"
+    "TRANSFER_ADMINISTRATION": "Transfer Administration",
+    "UNDER_REVIEW": "Under Review",
+    "VERIFIED": "Verified"
   },
   "SETTING": {
     "PERSONAL_SETTING": "Personal Setting",

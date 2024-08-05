@@ -769,7 +769,9 @@
     "GO_KYC": "前往 KYC",
     "ACCOUNT": "账号",
     "DELETE_COMPANY": "删除公司",
-    "TRANSFER_ADMINISTRATION": "转移管理权"
+    "TRANSFER_ADMINISTRATION": "转移管理权",
+    "UNDER_REVIEW": "正在审核中",
+    "VERIFIED": "已验证"
   },
   "SETTING": {
     "PERSONAL_SETTING": "个人设置",

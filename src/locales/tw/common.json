@@ -769,7 +769,9 @@
     "GO_KYC": "前往 KYC",
     "ACCOUNT": "帳號",
     "DELETE_COMPANY": "刪除公司",
-    "TRANSFER_ADMINISTRATION": "轉移管理權"
+    "TRANSFER_ADMINISTRATION": "轉移管理權",
+    "UNDER_REVIEW": "正在審核中",
+    "VERIFIED": "已驗證"
   },
   "SETTING": {
     "PERSONAL_SETTING": "個人設定",

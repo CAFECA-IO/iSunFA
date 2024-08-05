@@ -113,12 +113,12 @@ const BasicInfoForm = ({
             {t('KYC.COMPANY_ADDRESS')}
           </h6>
 
-          <div className="relative flex rounded-sm border border-lightGray3 bg-white p-10px">
+          <div className="relative flex rounded-sm bg-white">
             {/* Country */}
             <div
               id="country-flag-menu"
               onClick={countryFlagMenuOpenHandler}
-              className={`group mr-16px flex cursor-pointer items-center gap-8px px-12px text-input-text-input-placeholder ${isCountryFlagMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'text-navyBlue2'} items-center bg-white hover:text-primaryYellow`}
+              className={`group flex cursor-pointer items-center gap-8px rounded-l-sm border border-lightGray3 px-12px text-input-text-input-placeholder ${isCountryFlagMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'text-navyBlue2'} items-center bg-white hover:text-primaryYellow`}
             >
               {/* // Info: (20240719 - Liz) 不拿後端回傳的值，因為這裡 country 不傳給後端 */}
               <Image
@@ -128,7 +128,7 @@ const BasicInfoForm = ({
                 alt={countryFlag}
                 className="h-16px w-16px rounded-full object-cover"
               ></Image>
-              <div>
+              <div className="pr-6px">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -163,7 +163,7 @@ const BasicInfoForm = ({
               type="text"
               placeholder={t('KYC.CITY')}
               required
-              className="w-full cursor-pointer bg-white outline-none placeholder:text-input-text-input-placeholder"
+              className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
               onChange={cityInputHandler}
             />
           </div>
