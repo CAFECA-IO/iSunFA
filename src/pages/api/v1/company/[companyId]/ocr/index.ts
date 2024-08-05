@@ -63,6 +63,9 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
       body: formData,
     });
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -87,6 +90,9 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -151,6 +157,9 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
     const parsedForm = await parseForm(req, FileFolder.INVOICE);
     files = parsedForm.files;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
   }
   return files;
@@ -168,6 +177,9 @@ export async function fetchStatus(aichResultId: string) {
     const status: ProgressStatus = (await result.json()).payload;
     return status;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 }
@@ -233,6 +245,9 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return resultJson;
@@ -269,6 +284,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   } catch (error) {
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -291,7 +307,7 @@ export default async function handler(
   let payload: ApiReturnType = [];
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
 
-  if (!isAuth) {
+  if (isAuth) {
     try {
       switch (req.method) {
         case 'GET': {

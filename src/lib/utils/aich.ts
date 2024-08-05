@@ -17,7 +17,7 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
             if (!aichResultId) {
                 throw new Error('AICH Result ID is required');
             }
-            return `${AICH_URI}/api/v1/ocr/result/${aichResultId}`;
+            return `${AICH_URI}/api/v1/ocr/${aichResultId}/process_status`;
         default:
             throw new Error('Invalid AICH API Type');
     }
