@@ -239,7 +239,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         sortBy,
         sortOrder,
         searchKey,
-        isDeleted
+        isDeleted: false,
       },
     });
   };
