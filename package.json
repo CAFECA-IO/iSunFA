@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
+    "@next/third-parties": "^14.2.5",
     "@passwordless-id/webauthn": "^1.5.0",
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
@@ -35,7 +36,7 @@
     "i18next": "^23.11.5",
     "jest-mock-extended": "^3.0.7",
     "lodash-es": "^4.17.21",
-    "next": "^14.2.3",
+    "next": "^14.2.5",
     "next-i18next": "^15.2.0",
     "next-session": "^4.0.5",
     "nodemailer": "^6.9.8",
