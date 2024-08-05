@@ -5,67 +5,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, convertDateToTimestamp, timestampInSeconds } from '@/lib/utils/common';
 import { isDateFormatYYYYMMDD } from '@/lib/utils/type_guard/date';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import prisma from '@/client';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-
-async function getWorkRates(companyId: number, date: number) {
-  const workRates = await prisma.workRate.findMany({
-    where: {
-      createdAt: {
-        lte: date,
-      },
-      employeeProject: {
-        project: {
-          companyId,
-        },
-      },
-    },
-    select: {
-      employeeProjectId: true,
-      actualHours: true,
-      createdAt: true,
-      employeeProject: {
-        select: {
-          employeeId: true,
-          projectId: true,
-          project: {
-            select: {
-              companyId: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  return workRates;
-}
-
-async function getSalaryRecords(date: number) {
-  const salaryRecordsResult = await prisma.salaryRecord.findMany({
-    where: {
-      createdAt: {
-        lte: date,
-      },
-    },
-    select: {
-      employeeId: true,
-      salary: true,
-      insurancePayment: true,
-      bonus: true,
-      createdAt: true,
-    },
-  });
-  const salaryRecords = salaryRecordsResult.map((sr) => {
-    return {
-      employee_id: sr.employeeId,
-      total_payment: sr.salary + sr.insurancePayment + sr.bonus,
-      created_at: sr.createdAt,
-    };
-  });
-  return salaryRecords;
-}
+import { getWorkRatesByCompanyId, getSalaryRecords } from '@/lib/utils/repo/labor_cost_chart.repo';
 
 async function calculateProjectCosts(
   workRates: {
@@ -176,7 +118,7 @@ export default async function handler(
     if (date && isDateFormatYYYYMMDD(date as string)) {
       const dateTimestamp = convertDateToTimestamp(date as string);
       const dateTimestampInSeconds = timestampInSeconds(dateTimestamp);
-      const workRates = await getWorkRates(companyId, dateTimestampInSeconds);
+      const workRates = await getWorkRatesByCompanyId(companyId, dateTimestampInSeconds);
       // Deprecated: using console.log to debug (20240619 - Gibbs)
       // eslint-disable-next-line no-console
       // console.log("workRates", workRates);
