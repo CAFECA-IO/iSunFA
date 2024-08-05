@@ -8,6 +8,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import Link from 'next/link';
 import { pageQueries } from '@/interfaces/page_query';
 import { useTranslation } from 'next-i18next';
+import { sendGAEvent } from '@next/third-parties/google';
 
 interface ILoginPageBodyProps {
   invitation?: string;
@@ -49,6 +50,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
   };
 
   const loginHandler = async () => {
+    sendGAEvent({ event: 'buttonClicked', value: 'login' });
     try {
       const { isRegistered, credentials } = await checkIsRegistered();
 
