@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from '@next/third-parties/google';
 import { NotificationProvider } from '@/contexts/notification_context';
 import 'react-toastify/dist/ReactToastify.css';
 import { appWithTranslation } from 'next-i18next';
@@ -10,8 +11,10 @@ import { AccountingProvider } from '@/contexts/accounting_context';
 import '@/styles/globals.css';
 
 function App({ Component, pageProps }: AppProps) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID || '';
   return (
     <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
+      <GoogleAnalytics gaId={gaId} />
       <NotificationProvider>
         <UserProvider>
           <DashboardProvider>

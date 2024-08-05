@@ -307,7 +307,7 @@ const ViewFinancialSection = ({
         </div>
         <div
           className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
-            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-text-neutral-primary'
+            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
           }`}
         >
           {index + 1 < 10 ? `0${index + 1}` : index + 1}
