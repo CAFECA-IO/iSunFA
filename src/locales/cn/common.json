@@ -771,7 +771,10 @@
     "DELETE_COMPANY": "删除公司",
     "TRANSFER_ADMINISTRATION": "转移管理权",
     "UNDER_REVIEW": "正在审核中",
-    "VERIFIED": "已验证"
+    "VERIFIED": "已验证",
+    "PENDING": "验证中",
+    "COMPLETE_KYC": "已完成 KYC",
+    "VERIFICATION_FAILED_PLEASE_RE_UPLOAD": "验证失败，请重新上传"
   },
   "SETTING": {
     "PERSONAL_SETTING": "个人设置",
