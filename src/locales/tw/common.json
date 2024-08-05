@@ -299,7 +299,7 @@
   },
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "報告類型",
-    "ATTENTION": "注意：產生報告大約需要 30 到 40 分鐘。完成後，它將存儲在“我的報告”中。感謝您的耐心等待。"
+    "ATTENTION": "注意：產生報告大約需要 30 到 40 分鐘。完成後，它將儲存在“我的報告”中。感謝您的耐心等待。"
   },
   "SALARY": {
     "SALARY": "薪資",
@@ -771,7 +771,10 @@
     "DELETE_COMPANY": "刪除公司",
     "TRANSFER_ADMINISTRATION": "轉移管理權",
     "UNDER_REVIEW": "正在審核中",
-    "VERIFIED": "已驗證"
+    "VERIFIED": "已驗證",
+    "PENDING": "驗證中",
+    "COMPLETE_KYC": "已完成 KYC",
+    "VERIFICATION_FAILED_PLEASE_RE_UPLOAD": "驗證失敗，請重新上傳"
   },
   "SETTING": {
     "PERSONAL_SETTING": "個人設定",
